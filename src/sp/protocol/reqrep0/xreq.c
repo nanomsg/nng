@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -42,7 +42,7 @@ static void xreq0_send_cb(void *);
 static void xreq0_recv_cb(void *);
 static void xreq0_putq_cb(void *);
 
-static int
+static void
 xreq0_sock_init(void *arg, nni_sock *sock)
 {
 	xreq0_sock *s = arg;
@@ -51,8 +51,6 @@ xreq0_sock_init(void *arg, nni_sock *sock)
 	nni_atomic_set(&s->ttl, 8);
 	s->uwq = nni_sock_sendq(sock);
 	s->urq = nni_sock_recvq(sock);
-
-	return (0);
 }
 
 static void

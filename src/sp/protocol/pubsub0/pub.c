@@ -64,7 +64,7 @@ pub0_sock_fini(void *arg)
 	nni_mtx_fini(&s->mtx);
 }
 
-static int
+static void
 pub0_sock_init(void *arg, nni_sock *ns)
 {
 	pub0_sock *sock = arg;
@@ -74,7 +74,6 @@ pub0_sock_init(void *arg, nni_sock *ns)
 	nni_mtx_init(&sock->mtx);
 	NNI_LIST_INIT(&sock->pipes, pub0_pipe, node);
 	sock->sendbuf = 16; // fairly arbitrary
-	return (0);
 }
 
 static void

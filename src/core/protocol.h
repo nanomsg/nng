@@ -63,7 +63,7 @@ struct nni_proto_ctx_ops {
 
 	// ctx_init initializes a new context. The second argument is the
 	// protocol specific socket structure.
-	int (*ctx_init)(void *, void *);
+	void (*ctx_init)(void *, void *);
 
 	// ctx_fini destroys a context.
 	void (*ctx_fini)(void *);
@@ -85,7 +85,7 @@ struct nni_proto_sock_ops {
 
 	// sock_init initializes the protocol instance, which will be stored
 	// on the socket. This is run without the sock lock held.
-	int (*sock_init)(void *, nni_sock *);
+	void (*sock_init)(void *, nni_sock *);
 
 	// sock_fini destroys the protocol instance.  This is run without the
 	// socket lock held, and is intended to release resources.  It may

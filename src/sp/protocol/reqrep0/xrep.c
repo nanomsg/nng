@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -58,7 +58,7 @@ xrep0_sock_fini(void *arg)
 	nni_mtx_fini(&s->lk);
 }
 
-static int
+static void
 xrep0_sock_init(void *arg, nni_sock *sock)
 {
 	xrep0_sock *s = arg;
@@ -71,7 +71,6 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 	s->urq = nni_sock_recvq(sock);
 
 	nni_id_map_init(&s->pipes, 0, 0, false);
-	return (0);
 }
 
 static void

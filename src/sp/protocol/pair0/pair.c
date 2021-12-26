@@ -55,7 +55,7 @@ struct pair0_pipe {
 	nni_aio     aio_recv;
 };
 
-static int
+static void
 pair0_sock_init(void *arg, nni_sock *sock)
 {
 	pair0_sock *s = arg;
@@ -71,7 +71,6 @@ pair0_sock_init(void *arg, nni_sock *sock)
 	nni_pollable_init(&s->readable);
 
 	s->p = NULL;
-	return (0);
 }
 
 static void

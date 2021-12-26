@@ -103,7 +103,7 @@ surv0_ctx_fini(void *arg)
 	nni_lmq_fini(&ctx->recv_lmq);
 }
 
-static int
+static void
 surv0_ctx_init(void *c, void *s)
 {
 	surv0_ctx *  ctx  = c;
@@ -130,7 +130,6 @@ surv0_ctx_init(void *c, void *s)
 
 	nni_lmq_init(&ctx->recv_lmq, len);
 	nni_timer_init(&ctx->timer, surv0_ctx_timeout, ctx);
-	return (0);
 }
 
 static void
@@ -280,11 +279,10 @@ surv0_sock_fini(void *arg)
 	nni_mtx_fini(&sock->mtx);
 }
 
-static int
+static void
 surv0_sock_init(void *arg, nni_sock *s)
 {
 	surv0_sock *sock = arg;
-	int         rv;
 
 	NNI_ARG_UNUSED(s);
 
@@ -295,7 +293,7 @@ surv0_sock_init(void *arg, nni_sock *s)
 	// We are always writable.
 	nni_pollable_raise(&sock->writable);
 
-	// We allow for some buffering on a per pipe basis, to allow for
+	// We allow for some buffering on a per-pipe basis, to allow for
 	// multiple contexts to have surveys outstanding.  It is recommended
 	// to increase this if many contexts will want to publish
 	// at nearly the same time.
@@ -307,14 +305,9 @@ surv0_sock_init(void *arg, nni_sock *s)
 	// accidental collision across restarts.
 	nni_id_map_init(&sock->surveys, 0x80000000u, 0xffffffffu, true);
 
-	if ((rv = surv0_ctx_init(&sock->ctx, sock)) != 0) {
-		surv0_sock_fini(sock);
-		return (rv);
-	}
+	surv0_ctx_init(&sock->ctx, sock);
 
 	sock->ttl = 8;
-
-	return (0);
 }
 
 static void

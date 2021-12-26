@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -93,7 +93,7 @@ rep0_ctx_fini(void *arg)
 	rep0_ctx_close(ctx);
 }
 
-static int
+static void
 rep0_ctx_init(void *carg, void *sarg)
 {
 	rep0_sock *s   = sarg;
@@ -104,8 +104,6 @@ rep0_ctx_init(void *carg, void *sarg)
 	ctx->btrace_len = 0;
 	ctx->sock       = s;
 	ctx->pipe_id    = 0;
-
-	return (0);
 }
 
 static void
@@ -217,7 +215,7 @@ rep0_sock_fini(void *arg)
 	nni_mtx_fini(&s->lk);
 }
 
-static int
+static void
 rep0_sock_init(void *arg, nni_sock *sock)
 {
 	rep0_sock *s = arg;
@@ -231,14 +229,12 @@ rep0_sock_init(void *arg, nni_sock *sock)
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
 
-	(void) rep0_ctx_init(&s->ctx, s);
+	rep0_ctx_init(&s->ctx, s);
 
 	// We start off without being either readable or writable.
 	// Readability comes when there is something on the socket.
 	nni_pollable_init(&s->writable);
 	nni_pollable_init(&s->readable);
-
-	return (0);
 }
 
 static void

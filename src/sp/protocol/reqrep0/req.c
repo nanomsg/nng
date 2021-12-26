@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -24,22 +24,22 @@ static void req0_ctx_reset(req0_ctx *);
 static void req0_ctx_timeout(void *);
 static void req0_pipe_fini(void *);
 static void req0_ctx_fini(void *);
-static int  req0_ctx_init(void *, void *);
+static void req0_ctx_init(void *, void *);
 
 // A req0_ctx is a "context" for the request.  It uses most of the
 // socket, but keeps track of its own outstanding replays, the request ID,
 // and so forth.
 struct req0_ctx {
-	req0_sock *    sock;
+	req0_sock     *sock;
 	nni_list_node  sock_node;  // node on the socket context list
 	nni_list_node  send_node;  // node on the send_queue
 	nni_list_node  pipe_node;  // node on the pipe list
 	uint32_t       request_id; // request ID, without high bit set
-	nni_aio *      recv_aio;   // user aio waiting to recv - only one!
-	nni_aio *      send_aio;   // user aio waiting to send
-	nng_msg *      req_msg;    // request message (owned by protocol)
+	nni_aio       *recv_aio;   // user aio waiting to recv - only one!
+	nni_aio       *send_aio;   // user aio waiting to send
+	nng_msg       *req_msg;    // request message (owned by protocol)
 	size_t         req_len;    // length of request message (for stats)
-	nng_msg *      rep_msg;    // reply message
+	nng_msg       *rep_msg;    // reply message
 	nni_timer_node timer;
 	nni_duration   retry;
 	bool           conn_reset; // sent message w/o retry, peer disconnect
@@ -64,8 +64,8 @@ struct req0_sock {
 
 // A req0_pipe is our per-pipe protocol private structure.
 struct req0_pipe {
-	nni_pipe *    pipe;
-	req0_sock *   req;
+	nni_pipe     *pipe;
+	req0_sock    *req;
 	nni_list_node node;
 	nni_list      contexts; // contexts with pending traffic
 	bool          closed;
@@ -77,7 +77,7 @@ static void req0_sock_fini(void *);
 static void req0_send_cb(void *);
 static void req0_recv_cb(void *);
 
-static int
+static void
 req0_sock_init(void *arg, nni_sock *sock)
 {
 	req0_sock *s = arg;
@@ -100,14 +100,13 @@ req0_sock_init(void *arg, nni_sock *sock)
 	// this is "semi random" start for request IDs.
 	s->retry = NNI_SECOND * 60;
 
-	(void) req0_ctx_init(&s->master, s);
+	req0_ctx_init(&s->master, s);
 
 	nni_pollable_init(&s->writable);
 	nni_pollable_init(&s->readable);
 
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
-	return (0);
 }
 
 static void
@@ -205,7 +204,7 @@ req0_pipe_close(void *arg)
 {
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
-	req0_ctx * ctx;
+	req0_ctx  *ctx;
 
 	nni_aio_close(&p->aio_recv);
 	nni_aio_close(&p->aio_send);
@@ -231,7 +230,7 @@ req0_pipe_close(void *arg)
 			if ((aio = ctx->recv_aio) != NULL) {
 				ctx->recv_aio = NULL;
 				nni_aio_finish_error(aio, NNG_ECONNRESET);
-                                req0_ctx_reset(ctx);
+				req0_ctx_reset(ctx);
 			} else {
 				req0_ctx_reset(ctx);
 				ctx->conn_reset = true;
@@ -258,7 +257,7 @@ req0_send_cb(void *arg)
 {
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
-	nni_aio *  aio;
+	nni_aio   *aio;
 	nni_list   sent_list;
 
 	nni_aio_list_init(&sent_list);
@@ -299,9 +298,9 @@ req0_recv_cb(void *arg)
 {
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
-	req0_ctx * ctx;
-	nni_msg *  msg;
-	nni_aio *  aio;
+	req0_ctx  *ctx;
+	nni_msg   *msg;
+	nni_aio   *aio;
 	uint32_t   id;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
@@ -370,7 +369,7 @@ malformed:
 static void
 req0_ctx_timeout(void *arg)
 {
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -383,11 +382,11 @@ req0_ctx_timeout(void *arg)
 	nni_mtx_unlock(&s->mtx);
 }
 
-static int
+static void
 req0_ctx_init(void *arg, void *sock)
 {
 	req0_sock *s   = sock;
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 
 	nni_timer_init(&ctx->timer, req0_ctx_timeout, ctx);
 
@@ -397,16 +396,14 @@ req0_ctx_init(void *arg, void *sock)
 	ctx->retry    = s->retry;
 	nni_list_append(&s->contexts, ctx);
 	nni_mtx_unlock(&s->mtx);
-
-	return (0);
 }
 
 static void
 req0_ctx_fini(void *arg)
 {
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
-	nni_aio *  aio;
+	nni_aio   *aio;
 
 	nni_mtx_lock(&s->mtx);
 	if ((aio = ctx->recv_aio) != NULL) {
@@ -445,7 +442,7 @@ static void
 req0_run_send_queue(req0_sock *s, nni_list *sent_list)
 {
 	req0_ctx *ctx;
-	nni_aio * aio;
+	nni_aio  *aio;
 
 	// Note: This routine should be called with the socket lock held.
 	while ((ctx = nni_list_first(&s->send_queue)) != NULL) {
@@ -540,7 +537,7 @@ req0_ctx_reset(req0_ctx *ctx)
 static void
 req0_ctx_cancel_recv(nni_aio *aio, void *arg, int rv)
 {
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -564,9 +561,9 @@ req0_ctx_cancel_recv(nni_aio *aio, void *arg, int rv)
 static void
 req0_ctx_recv(void *arg, nni_aio *aio)
 {
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
-	nni_msg *  msg;
+	nni_msg   *msg;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -616,7 +613,7 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 static void
 req0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 {
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -647,9 +644,9 @@ req0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 static void
 req0_ctx_send(void *arg, nni_aio *aio)
 {
-	req0_ctx * ctx = arg;
+	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
-	nng_msg *  msg = nni_aio_get_msg(aio);
+	nng_msg   *msg = nni_aio_get_msg(aio);
 	int        rv;
 
 	if (nni_aio_begin(aio) != 0) {

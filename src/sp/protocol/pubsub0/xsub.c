@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -44,13 +44,12 @@ struct xsub0_pipe {
 	nni_aio    aio_recv;
 };
 
-static int
+static void
 xsub0_sock_init(void *arg, nni_sock *sock)
 {
 	xsub0_sock *s = arg;
 
 	s->urq = nni_sock_recvq(sock);
-	return (0);
 }
 
 static void

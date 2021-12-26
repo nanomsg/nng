@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -104,7 +104,7 @@ resp0_ctx_fini(void *arg)
 	resp0_ctx_close(ctx);
 }
 
-static int
+static void
 resp0_ctx_init(void *carg, void *sarg)
 {
 	resp0_sock *s   = sarg;
@@ -115,8 +115,6 @@ resp0_ctx_init(void *carg, void *sarg)
 	ctx->btrace_len = 0;
 	ctx->sock       = s;
 	ctx->pipe_id    = 0;
-
-	return (0);
 }
 
 static void
@@ -220,7 +218,7 @@ resp0_sock_fini(void *arg)
 	nni_mtx_fini(&s->mtx);
 }
 
-static int
+static void
 resp0_sock_init(void *arg, nni_sock *nsock)
 {
 	resp0_sock *s = arg;
@@ -236,13 +234,12 @@ resp0_sock_init(void *arg, nni_sock *nsock)
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8); // Per RFC
 
-	(void) resp0_ctx_init(&s->ctx, s);
+	resp0_ctx_init(&s->ctx, s);
 
 	// We start off without being either readable or writable.
 	// Readability comes when there is something on the socket.
 	nni_pollable_init(&s->writable);
 	nni_pollable_init(&s->readable);
-	return (0);
 }
 
 static void
@@ -492,7 +489,7 @@ resp0_pipe_recv_cb(void *arg)
 	// Move backtrace from body to header
 	hops = 1;
 	for (;;) {
-		bool     end = 0;
+		bool     end;
 		uint8_t *body;
 
 		if (hops > ttl) {

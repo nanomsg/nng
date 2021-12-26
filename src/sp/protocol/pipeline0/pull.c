@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -47,7 +47,7 @@ struct pull0_pipe {
 	nni_list_node node;
 };
 
-static int
+static void
 pull0_sock_init(void *arg, nni_sock *sock)
 {
 	pull0_sock *s = arg;
@@ -57,7 +57,6 @@ pull0_sock_init(void *arg, nni_sock *sock)
 	NNI_LIST_INIT(&s->pl, pull0_pipe, node);
 	nni_mtx_init(&s->m);
 	nni_pollable_init(&s->readable);
-	return (0);
 }
 
 static void

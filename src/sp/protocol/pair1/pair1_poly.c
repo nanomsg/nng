@@ -13,9 +13,9 @@
 #include "core/nng_impl.h"
 #include "nng/protocol/pair1/pair.h"
 
-// Pair1 polyamorous mode.  The PAIRv1 protocol is normally a simple 1:1
+// Pair1 poly-amorous mode.  The PAIRv1 protocol is normally a simple 1:1
 // messaging pattern, but this mode offers the ability to use a best-effort
-// multicast type of communication.  There are limitations however.
+// multicast type of communication.  There are limitations, however.
 // Most notably this does not interact well with nng_device type
 // proxies, and there is no support for raw mode.
 
@@ -90,7 +90,7 @@ pair1_add_sock_stat(
 }
 #endif
 
-static int
+static void
 pair1poly_sock_init(void *arg, nni_sock *sock)
 {
 	pair1poly_sock *s = arg;
@@ -173,8 +173,6 @@ pair1poly_sock_init(void *arg, nni_sock *sock)
 	s->urq = nni_sock_recvq(sock);
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
-
-	return (0);
 }
 
 static void
@@ -250,7 +248,7 @@ pair1poly_pipe_start(void *arg)
 	s->started = true;
 	nni_mtx_unlock(&s->mtx);
 
-	// Schedule a get.  In polyamorous mode we get on the per pipe
+	// Schedule a get.  In poly-amorous mode we get on the per pipe
 	// send_queue, as the socket distributes to us. In monogamous mode
 	// we bypass and get from the upper write queue directly (saving a
 	// set of context switches).
@@ -398,12 +396,12 @@ pair1poly_pipe_get_cb(void *arg)
 	msg = nni_aio_get_msg(&p->aio_get);
 	nni_aio_set_msg(&p->aio_get, NULL);
 
-	// Cooked mode messages have no header so we have to add one.
+	// Cooked mode messages have no header, so we have to add one.
 	// Strip off any previously existing header, such as when
-	// replying to messages.
+	// replying to a message.
 	nni_msg_header_clear(msg);
 
-	// Insert the hops header.
+	// Insert the hop count header.
 	nni_msg_header_append_u32(msg, 1);
 
 	nni_aio_set_msg(&p->aio_send, msg);

@@ -72,7 +72,7 @@ bus0_sock_fini(void *arg)
 	nni_mtx_fini(&s->mtx);
 }
 
-static int
+static void
 bus0_sock_init(void *arg, nni_sock *nsock)
 {
 	bus0_sock *s = arg;
@@ -83,11 +83,9 @@ bus0_sock_init(void *arg, nni_sock *nsock)
 	s->uwq = nni_sock_sendq(nsock);
 	s->urq = nni_sock_recvq(nsock);
 	s->raw = false;
-
-	return (0);
 }
 
-static int
+static void
 bus0_sock_init_raw(void *arg, nni_sock *nsock)
 {
 	bus0_sock *s = arg;
@@ -98,8 +96,6 @@ bus0_sock_init_raw(void *arg, nni_sock *nsock)
 	s->uwq = nni_sock_sendq(nsock);
 	s->urq = nni_sock_recvq(nsock);
 	s->raw = true;
-
-	return (0);
 }
 
 static void

@@ -27,7 +27,7 @@
 #define NNI_PROTO_PUB_V0 NNI_PROTO(2, 0)
 #endif
 
-// By default we accept 128 messages.
+// By default, we accept 128 messages.
 #define SUB0_DEFAULT_RECV_BUF_LEN 128
 
 // By default, prefer new messages when the queue is full.
@@ -175,7 +175,7 @@ sub0_ctx_fini(void *arg)
 	nni_lmq_fini(&ctx->lmq);
 }
 
-static int
+static void
 sub0_ctx_init(void *ctx_arg, void *sock_arg)
 {
 	sub0_sock *sock = sock_arg;
@@ -198,8 +198,6 @@ sub0_ctx_init(void *ctx_arg, void *sock_arg)
 	nni_list_append(&sock->contexts, ctx);
 	sock->num_contexts++;
 	nni_mtx_unlock(&sock->lk);
-
-	return (0);
 }
 
 static void
@@ -212,11 +210,10 @@ sub0_sock_fini(void *arg)
 	nni_mtx_fini(&sock->lk);
 }
 
-static int
+static void
 sub0_sock_init(void *arg, nni_sock *unused)
 {
 	sub0_sock *sock = arg;
-	int        rv;
 
 	NNI_ARG_UNUSED(unused);
 
@@ -226,12 +223,7 @@ sub0_sock_init(void *arg, nni_sock *unused)
 	sock->prefer_new   = SUB0_DEFAULT_PREFER_NEW;
 	nni_pollable_init(&sock->readable);
 
-	if ((rv = sub0_ctx_init(&sock->master, sock)) != 0) {
-		sub0_sock_fini(sock);
-		return (rv);
-	}
-
-	return (0);
+	sub0_ctx_init(&sock->master, sock);
 }
 
 static void
@@ -456,7 +448,7 @@ sub0_ctx_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	return (0);
 }
 
-// For now we maintain subscriptions on a sorted linked list.  As we do not
+// For now, we maintain subscriptions on a sorted linked list.  As we do not
 // expect to have huge numbers of subscriptions, and as the operation is
 // really O(n), we think this is acceptable.  In the future we might decide
 // to replace this with a patricia trie, like old nanomsg had.

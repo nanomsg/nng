@@ -91,7 +91,7 @@ pair1_add_sock_stat(
 }
 #endif
 
-static int
+static void
 pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 {
 	pair1_sock *s = arg;
@@ -179,20 +179,18 @@ pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 	nni_stat_set_bool(&s->stat_raw, raw);
 	nni_stat_set_bool(&s->stat_poly, false);
 #endif
-
-	return (0);
 }
 
-static int
+static void
 pair1_sock_init(void *arg, nni_sock *sock)
 {
-	return (pair1_sock_init_impl(arg, sock, false));
+	pair1_sock_init_impl(arg, sock, false);
 }
 
-static int
+static void
 pair1_sock_init_raw(void *arg, nni_sock *sock)
 {
-	return (pair1_sock_init_impl(arg, sock, true));
+	pair1_sock_init_impl(arg, sock, true);
 }
 
 static void
@@ -540,7 +538,7 @@ pair1_sock_send(void *arg, nni_aio *aio)
 #endif
 
 	// Raw mode messages have the header already formed, with a hop count.
-	// Cooked mode messages have no header so we have to add one.
+	// Cooked mode messages have no header, so we have to add one.
 	if (s->raw) {
 		if ((nni_msg_header_len(m) != sizeof(uint32_t)) ||
 		    (nni_msg_header_peek_u32(m) >= 0xff)) {
@@ -551,7 +549,7 @@ pair1_sock_send(void *arg, nni_aio *aio)
 
 	} else {
 		// Strip off any previously existing header, such as when
-		// replying to messages.
+		// replying to a message.
 		nni_msg_header_clear(m);
 		nni_msg_header_append_u32(m, 0);
 	}
@@ -573,7 +571,7 @@ inject:
 		return;
 	}
 
-	// Can we maybe queue it.
+	// Can we queue it?
 	if (nni_lmq_put(&s->wmq, m) == 0) {
 		// Yay, we can.  So we're done.
 		nni_aio_set_msg(aio, NULL);

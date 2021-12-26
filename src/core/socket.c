@@ -577,25 +577,26 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 #endif
 
 	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
-	    ((rv = nni_msgq_init(&s->s_urq, 1)) != 0) ||
-	    ((rv = s->s_sock_ops.sock_init(s->s_data, s)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
-	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
-	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONNMINT, &s->s_reconn,
-	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONNMAXT, &s->s_reconnmax,
-	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVMAXSZ, &s->s_rcvmaxsz,
-	          sizeof(size_t), NNI_TYPE_SIZE)) != 0)) {
+	    ((rv = nni_msgq_init(&s->s_urq, 1)) != 0)) {
 		sock_destroy(s);
 		return (rv);
 	}
+	s->s_sock_ops.sock_init(s->s_data, s);
 
-	// These we *attempt* to call so that we are likely to have initial
+	// These we *attempt* to set so that we are likely to have initial
 	// values loaded.  They should not fail, but if they do we don't
 	// worry about it.
+	(void) nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
+	    sizeof(nni_duration), NNI_TYPE_DURATION);
+	(void) nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
+	    sizeof(nni_duration), NNI_TYPE_DURATION);
+	(void) nni_sock_setopt(s, NNG_OPT_RECONNMINT, &s->s_reconn,
+	    sizeof(nni_duration), NNI_TYPE_DURATION);
+	(void) nni_sock_setopt(s, NNG_OPT_RECONNMAXT, &s->s_reconnmax,
+	    sizeof(nni_duration), NNI_TYPE_DURATION);
+	(void) nni_sock_setopt(s, NNG_OPT_RECVMAXSZ, &s->s_rcvmaxsz,
+	    sizeof(size_t), NNI_TYPE_SIZE);
+
 	on = true;
 	(void) nni_sock_setopt(
 	    s, NNG_OPT_TCP_NODELAY, &on, sizeof(on), NNI_TYPE_BOOL);
@@ -1292,12 +1293,7 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 		return (rv);
 	}
 
-	if ((rv = sock->s_ctx_ops.ctx_init(ctx->c_data, sock->s_data)) != 0) {
-		nni_id_remove(&ctx_ids, ctx->c_id);
-		nni_mtx_unlock(&sock_lk);
-		nni_free(ctx, ctx->c_size);
-		return (rv);
-	}
+	sock->s_ctx_ops.ctx_init(ctx->c_data, sock->s_data);
 
 	nni_list_append(&sock->s_ctxs, ctx);
 	nni_mtx_unlock(&sock_lk);
