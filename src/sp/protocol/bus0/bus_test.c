@@ -43,9 +43,9 @@ test_bus_star(void)
 	NUTS_PASS(nng_bus0_open(&s2));
 	NUTS_PASS(nng_bus0_open(&s3));
 
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_ms(s3, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s3, NNG_OPT_RECVTIMEO, SECOND));
 
 	NUTS_MARRY(s1, s2);
 	NUTS_MARRY(s1, s3);
@@ -77,9 +77,9 @@ test_bus_device(void)
 	NUTS_PASS(nng_bus0_open(&s3));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_ms(s3, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s3, NNG_OPT_RECVTIMEO, SECOND));
 
 	NUTS_MARRY(s1, s2);
 	NUTS_MARRY(s1, s3);

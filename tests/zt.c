@@ -50,7 +50,7 @@ check_props(nng_msg *msg)
 	// Check local address.
 	Convey("Local address property works", {
 		nng_sockaddr la;
-		So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
+		So(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la) == 0);
 
 		So(la.s_family == NNG_AF_ZT);
 		So(la.s_zt.sa_port == (trantest_port - 1));
@@ -63,12 +63,12 @@ check_props(nng_msg *msg)
 		uint64_t     mynode;
 		nng_sockaddr ra;
 
-		So(nng_pipe_getopt_sockaddr(p, NNG_OPT_REMADDR, &ra) == 0);
+		So(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra) == 0);
 		So(ra.s_family == NNG_AF_ZT);
 		So(ra.s_zt.sa_port != 0);
 		So(ra.s_zt.sa_nwid == NWID_NUM);
 
-		So(nng_pipe_getopt_uint64(p, NNG_OPT_ZT_NODE, &mynode) == 0);
+		So(nng_pipe_get_uint64(p, NNG_OPT_ZT_NODE, &mynode) == 0);
 		So(mynode != 0);
 		So(ra.s_zt.sa_nodeid == mynode);
 	});
@@ -76,14 +76,14 @@ check_props(nng_msg *msg)
 	Convey("NWID property works", {
 		uint64_t nwid = 0;
 
-		So(nng_pipe_getopt_uint64(p, NNG_OPT_ZT_NWID, &nwid) == 0);
+		So(nng_pipe_get_uint64(p, NNG_OPT_ZT_NWID, &nwid) == 0);
 		So(nwid = 0xa09acf02337b057bull);
 	});
 
 	Convey("Network status property works", {
 		int s = 0;
 
-		So(nng_pipe_getopt_int(p, NNG_OPT_ZT_NETWORK_STATUS, &s) == 0);
+		So(nng_pipe_get_int(p, NNG_OPT_ZT_NETWORK_STATUS, &s) == 0);
 		So(s == NNG_ZT_STATUS_UP);
 	});
 
@@ -91,16 +91,16 @@ check_props(nng_msg *msg)
 		int          c = 0;
 		nng_duration t = 0;
 
-		So(nng_pipe_getopt_int(p, NNG_OPT_ZT_PING_TRIES, &c) == 0);
+		So(nng_pipe_get_int(p, NNG_OPT_ZT_PING_TRIES, &c) == 0);
 		So(c > 0 && c <= 10);
 
-		So(nng_pipe_getopt_ms(p, NNG_OPT_ZT_PING_TIME, &t) == 0);
+		So(nng_pipe_get_ms(p, NNG_OPT_ZT_PING_TIME, &t) == 0);
 		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
 	});
 
 	Convey("Home property works", {
 		char *v;
-		So(nng_pipe_getopt_string(p, NNG_OPT_ZT_HOME, &v) == 0);
+		So(nng_pipe_get_string(p, NNG_OPT_ZT_HOME, &v) == 0);
 		nng_strfree(v);
 	});
 
@@ -108,14 +108,14 @@ check_props(nng_msg *msg)
 		size_t mtu;
 
 		// Check MTU
-		So(nng_pipe_getopt_size(p, NNG_OPT_ZT_MTU, &mtu) == 0);
+		So(nng_pipe_get_size(p, NNG_OPT_ZT_MTU, &mtu) == 0);
 		So(mtu >= 1000 && mtu <= 10000);
 	});
 
 	Convey("Network name property works", {
 		char *name;
 
-		So(nng_pipe_getopt_string(p, NNG_OPT_ZT_NETWORK_NAME, &name) ==
+		So(nng_pipe_get_string(p, NNG_OPT_ZT_NETWORK_NAME, &name) ==
 		    0);
 		So(strcmp(name, "nng_test_open") == 0);
 		nng_strfree(name);
@@ -158,7 +158,7 @@ TestMain("ZeroTier Transport", {
 
 			Convey("It has the right local address", {
 				nng_sockaddr sa;
-				So(nng_listener_getopt_sockaddr(
+				So(nng_listener_get_addr(
 				       l, NNG_OPT_LOCADDR, &sa) == 0);
 				So(sa.s_zt.sa_family == NNG_AF_ZT);
 				So(sa.s_zt.sa_nwid == NWID_NUM);
@@ -218,7 +218,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s, addr) == 0);
 
-		So(nng_listener_getopt_uint64(l, NNG_OPT_ZT_NODE, &node1) ==
+		So(nng_listener_get_uint64(l, NNG_OPT_ZT_NODE, &node1) ==
 		    0);
 		So(node1 != 0);
 
@@ -226,7 +226,7 @@ TestMain("ZeroTier Transport", {
 			snprintf(addr, sizeof(addr), "zt://%llx." NWID ":%u",
 			    (unsigned long long) node1, 42u);
 			So(nng_dialer_create(&d, s, addr) == 0);
-			So(nng_dialer_getopt_uint64(
+			So(nng_dialer_get_uint64(
 			       d, NNG_OPT_ZT_NODE, &node2) == 0);
 			So(node2 == node1);
 			So(nng_dialer_start(d, 0) == NNG_ECONNREFUSED);
@@ -262,7 +262,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_start(l, 0) == 0);
 		node = 0;
-		So(nng_listener_getopt_uint64(l, NNG_OPT_ZT_NODE, &node) == 0);
+		So(nng_listener_get_uint64(l, NNG_OPT_ZT_NODE, &node) == 0);
 		So(node != 0);
 		nng_msleep(40);
 		snprintf(addr2, sizeof(addr2), "zt://%llx." NWID ":%u",
@@ -285,7 +285,7 @@ TestMain("ZeroTier Transport", {
 	So(nng_pair_open(&s_test) == 0);
 	So(nng_listener_create(&l_test, s_test, "zt://*." NWID ":0") == 0);
 	So(nng_listener_start(l_test, 0) == 0);
-	So(nng_listener_getopt_uint64(l_test, NNG_OPT_ZT_NODE, &node) == 0);
+	So(nng_listener_get_uint64(l_test, NNG_OPT_ZT_NODE, &node) == 0);
 	snprintf(fmt, sizeof(fmt), "zt://%llx." NWID ":%%u",
 	    (unsigned long long) node);
 	nng_listener_close(l_test);

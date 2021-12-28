@@ -36,7 +36,7 @@ repthr(void *arg)
 
 	nng_listen(rep, addr, &l, NNG_FLAG_NONBLOCK);
 
-	nng_getopt_int(rep, NNG_OPT_RECVFD, &ifd);
+	nng_socket_get_int(rep, NNG_OPT_RECVFD, &ifd);
 	fd = ifd;
 
 	for (;;) {

@@ -161,7 +161,7 @@ test_socket_name_oversize(void)
 	NUTS_PASS(nng_socket_set(s1, NNG_OPT_SOCKNAME, name, sz));
 	sz = sizeof(name);
 	memset(name, 'B', sz);
-	NUTS_PASS(nng_getopt(s1, NNG_OPT_SOCKNAME, name, &sz));
+	NUTS_PASS(nng_socket_get(s1, NNG_OPT_SOCKNAME, name, &sz));
 	NUTS_TRUE(sz == 6);
 	NUTS_MATCH(name, "hello");
 	NUTS_CLOSE(s1);
@@ -222,7 +222,7 @@ test_send_recv_zero_length(void)
 	NUTS_OPEN(s2);
 
 	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_RECVBUF, 1));
-	NUTS_PASS(nng_getopt_int(s1, NNG_OPT_RECVBUF, &len));
+	NUTS_PASS(nng_socket_get_int(s1, NNG_OPT_RECVBUF, &len));
 	NUTS_TRUE(len == 1);
 
 	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_SENDBUF, 1));

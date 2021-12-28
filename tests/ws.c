@@ -33,14 +33,14 @@ check_props_v4(nng_msg *msg)
 	p = nng_msg_get_pipe(msg);
 	So(nng_pipe_id(p) > 0);
 
-	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
+	So(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_INET);
 	So(la.s_in.sa_port == htons(trantest_port - 1));
 	So(la.s_in.sa_port != 0);
 	So(la.s_in.sa_addr == htonl(0x7f000001));
 
 	z = sizeof(nng_sockaddr);
-	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 	So(z == sizeof(ra));
 	So(ra.s_family == NNG_AF_INET);
 	So(ra.s_in.sa_port != 0);
@@ -49,32 +49,32 @@ check_props_v4(nng_msg *msg)
 	// Request Header
 	z   = 0;
 	buf = NULL;
-	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
+	So(nng_pipe_get(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
 	    NNG_EINVAL);
 	So(z > 0);
 	len = z;
 	So((buf = nng_alloc(len)) != NULL);
-	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
+	So(nng_pipe_get(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
 	So(strstr(buf, "Sec-WebSocket-Key") != NULL);
 	So(z == len);
 	nng_free(buf, len);
-	So(nng_pipe_getopt_string(p, NNG_OPT_WS_REQUEST_HEADERS, &buf) == 0);
+	So(nng_pipe_get_string(p, NNG_OPT_WS_REQUEST_HEADERS, &buf) == 0);
 	So(strlen(buf) == len - 1);
 	nng_strfree(buf);
 
 	// Response Header
 	z   = 0;
 	buf = NULL;
-	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
+	So(nng_pipe_get(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
 	    NNG_EINVAL);
 	So(z > 0);
 	len = z;
 	So((buf = nng_alloc(len)) != NULL);
-	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
+	So(nng_pipe_get(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
 	So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
 	So(z == len);
 	nng_free(buf, len);
-	So(nng_pipe_getopt_string(p, NNG_OPT_WS_RESPONSE_HEADERS, &buf) == 0);
+	So(nng_pipe_get_string(p, NNG_OPT_WS_RESPONSE_HEADERS, &buf) == 0);
 	So(strlen(buf) == len - 1);
 	nng_strfree(buf);
 

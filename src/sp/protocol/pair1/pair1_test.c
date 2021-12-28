@@ -81,10 +81,10 @@ test_mono_faithful(void)
 	NUTS_PASS(nng_pair1_open(&s1));
 	NUTS_PASS(nng_pair1_open(&c1));
 	NUTS_PASS(nng_pair1_open(&c2));
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 4));
-	NUTS_PASS(nng_setopt_ms(c1, NNG_OPT_SENDTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_ms(c2, NNG_OPT_SENDTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_int(c2, NNG_OPT_SENDBUF, 2));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 4));
+	NUTS_PASS(nng_socket_set_ms(c1, NNG_OPT_SENDTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(c2, NNG_OPT_SENDTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_int(c2, NNG_OPT_SENDBUF, 2));
 
 	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
 	NUTS_MARRY(s1, c1);
@@ -121,10 +121,10 @@ test_mono_back_pressure(void)
 
 	NUTS_PASS(nng_pair1_open(&s1));
 	NUTS_PASS(nng_pair1_open(&c1));
-	NUTS_PASS(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1));
-	NUTS_PASS(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1));
-	NUTS_PASS(nng_setopt_int(c1, NNG_OPT_RECVBUF, 1));
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to));
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_SENDBUF, 1));
+	NUTS_PASS(nng_socket_set_int(c1, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, to));
 
 	NUTS_MARRY(s1, c1);
 
@@ -151,7 +151,7 @@ test_send_no_peer(void)
 	nng_duration to = 100;
 
 	NUTS_PASS(nng_pair1_open(&s1));
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, to));
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_FAIL(nng_sendmsg(s1, msg, 0), NNG_ETIMEDOUT);
@@ -171,8 +171,8 @@ test_mono_raw_exchange(void)
 	NUTS_PASS(nng_pair1_open_raw(&s1));
 	NUTS_PASS(nng_pair1_open_raw(&c1));
 
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
-	NUTS_PASS(nng_setopt_ms(c1, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
+	NUTS_PASS(nng_socket_set_ms(c1, NNG_OPT_RECVTIMEO, SECOND));
 	NUTS_MARRY(s1, c1);
 
 	nng_pipe p = NNG_PIPE_INITIALIZER;
@@ -220,8 +220,8 @@ test_mono_raw_header(void)
 	NUTS_PASS(nng_pair1_open_raw(&s1));
 	NUTS_PASS(nng_pair1_open_raw(&c1));
 
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 5));
-	NUTS_PASS(nng_setopt_ms(c1, NNG_OPT_RECVTIMEO, SECOND / 5));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 5));
+	NUTS_PASS(nng_socket_set_ms(c1, NNG_OPT_RECVTIMEO, SECOND / 5));
 	NUTS_MARRY(s1, c1);
 
 	// Missing bits in the header
@@ -292,15 +292,15 @@ test_pair1_raw(void)
 	bool       raw;
 
 	NUTS_PASS(nng_pair1_open(&s1));
-	NUTS_PASS(nng_getopt_bool(s1, NNG_OPT_RAW, &raw));
+	NUTS_PASS(nng_socket_get_bool(s1, NNG_OPT_RAW, &raw));
 	NUTS_TRUE(raw == false);
-	NUTS_FAIL(nng_setopt_bool(s1, NNG_OPT_RAW, true), NNG_EREADONLY);
+	NUTS_FAIL(nng_socket_set_bool(s1, NNG_OPT_RAW, true), NNG_EREADONLY);
 	NUTS_PASS(nng_close(s1));
 
 	NUTS_PASS(nng_pair1_open_raw(&s1));
-	NUTS_PASS(nng_getopt_bool(s1, NNG_OPT_RAW, &raw));
+	NUTS_PASS(nng_socket_get_bool(s1, NNG_OPT_RAW, &raw));
 	NUTS_TRUE(raw == true);
-	NUTS_FAIL(nng_setopt_bool(s1, NNG_OPT_RAW, false), NNG_EREADONLY);
+	NUTS_FAIL(nng_socket_set_bool(s1, NNG_OPT_RAW, false), NNG_EREADONLY);
 	NUTS_PASS(nng_close(s1));
 }
 
@@ -315,21 +315,21 @@ test_pair1_ttl(void)
 
 	NUTS_PASS(nng_pair1_open_raw(&s1));
 	NUTS_PASS(nng_pair1_open_raw(&c1));
-	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 5));
-	NUTS_PASS(nng_setopt_ms(c1, NNG_OPT_RECVTIMEO, SECOND / 5));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 5));
+	NUTS_PASS(nng_socket_set_ms(c1, NNG_OPT_RECVTIMEO, SECOND / 5));
 
 	// cannot set insane TTLs
-	NUTS_FAIL(nng_setopt_int(s1, NNG_OPT_MAXTTL, 0), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_int(s1, NNG_OPT_MAXTTL, 1000), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_int(s1, NNG_OPT_MAXTTL, 0), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_int(s1, NNG_OPT_MAXTTL, 1000), NNG_EINVAL);
 	ttl = 8;
-	NUTS_FAIL(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl, 1), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_bool(s1, NNG_OPT_MAXTTL, true), NNG_EBADTYPE);
+	NUTS_FAIL(nng_socket_set(s1, NNG_OPT_MAXTTL, &ttl, 1), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_bool(s1, NNG_OPT_MAXTTL, true), NNG_EBADTYPE);
 
 	NUTS_MARRY(s1, c1);
 
 	// Let's check enforcement of TTL
-	NUTS_PASS(nng_setopt_int(s1, NNG_OPT_MAXTTL, 4));
-	NUTS_PASS(nng_getopt_int(s1, NNG_OPT_MAXTTL, &ttl));
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_MAXTTL, 4));
+	NUTS_PASS(nng_socket_get_int(s1, NNG_OPT_MAXTTL, &ttl));
 	NUTS_TRUE(ttl == 4);
 
 	// Bad TTL bounces
@@ -351,7 +351,7 @@ test_pair1_ttl(void)
 	nng_msg_free(msg);
 
 	// Large TTL passes
-	NUTS_PASS(nng_setopt_int(s1, NNG_OPT_MAXTTL, 15));
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_MAXTTL, 15));
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_msg_append_u32(msg, 1234));
 	NUTS_PASS(nng_msg_header_append_u32(msg, 14));
@@ -364,7 +364,7 @@ test_pair1_ttl(void)
 	nng_msg_free(msg);
 
 	// Max TTL fails
-	NUTS_PASS(nng_setopt_int(s1, NNG_OPT_MAXTTL, 15));
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_MAXTTL, 15));
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_msg_header_append_u32(msg, 15));
 	NUTS_PASS(nng_sendmsg(c1, msg, 0));
@@ -413,9 +413,9 @@ test_pair1_recv_no_header(void)
 
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_pair1_open(&c));
-	NUTS_PASS(nng_setopt_bool(c, "pair1_test_inject_header", true));
-	NUTS_PASS(nng_setopt_ms(s, NNG_OPT_RECVTIMEO, 100));
-	NUTS_PASS(nng_setopt_ms(s, NNG_OPT_SENDTIMEO, 200));
+	NUTS_PASS(nng_socket_set_bool(c, "pair1_test_inject_header", true));
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_SENDTIMEO, 200));
 
 	NUTS_MARRY(c, s);
 
@@ -436,9 +436,9 @@ test_pair1_recv_garbage(void)
 
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_pair1_open(&c));
-	NUTS_PASS(nng_setopt_bool(c, "pair1_test_inject_header", true));
-	NUTS_PASS(nng_setopt_ms(s, NNG_OPT_RECVTIMEO, 100));
-	NUTS_PASS(nng_setopt_ms(s, NNG_OPT_SENDTIMEO, 200));
+	NUTS_PASS(nng_socket_set_bool(c, "pair1_test_inject_header", true));
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_SENDTIMEO, 200));
 
 	NUTS_MARRY(c, s);
 
@@ -472,17 +472,17 @@ test_pair1_send_buffer(void)
 	size_t     sz;
 
 	NUTS_PASS(nng_pair1_open(&s));
-	NUTS_PASS(nng_getopt_int(s, NNG_OPT_SENDBUF, &v));
+	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_SENDBUF, &v));
 	NUTS_TRUE(v == 0);
-	NUTS_FAIL(nng_getopt_bool(s, NNG_OPT_SENDBUF, &b), NNG_EBADTYPE);
+	NUTS_FAIL(nng_socket_get_bool(s, NNG_OPT_SENDBUF, &b), NNG_EBADTYPE);
 	sz = 1;
-	NUTS_FAIL(nng_getopt(s, NNG_OPT_SENDBUF, &b, &sz), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_SENDBUF, -1), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_SENDBUF, 100000), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_bool(s, NNG_OPT_SENDBUF, false), NNG_EBADTYPE);
-	NUTS_FAIL(nng_setopt(s, NNG_OPT_SENDBUF, &b, 1), NNG_EINVAL);
-	NUTS_PASS(nng_setopt_int(s, NNG_OPT_SENDBUF, 100));
-	NUTS_PASS(nng_getopt_int(s, NNG_OPT_SENDBUF, &v));
+	NUTS_FAIL(nng_socket_get(s, NNG_OPT_SENDBUF, &b, &sz), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_int(s, NNG_OPT_SENDBUF, -1), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_int(s, NNG_OPT_SENDBUF, 100000), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_bool(s, NNG_OPT_SENDBUF, false), NNG_EBADTYPE);
+	NUTS_FAIL(nng_socket_set(s, NNG_OPT_SENDBUF, &b, 1), NNG_EINVAL);
+	NUTS_PASS(nng_socket_set_int(s, NNG_OPT_SENDBUF, 100));
+	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_SENDBUF, &v));
 	NUTS_TRUE(v == 100);
 	NUTS_CLOSE(s);
 }
@@ -496,17 +496,17 @@ test_pair1_recv_buffer(void)
 	size_t     sz;
 
 	NUTS_PASS(nng_pair1_open(&s));
-	NUTS_PASS(nng_getopt_int(s, NNG_OPT_RECVBUF, &v));
+	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_RECVBUF, &v));
 	NUTS_TRUE(v == 0);
-	NUTS_FAIL(nng_getopt_bool(s, NNG_OPT_RECVBUF, &b), NNG_EBADTYPE);
+	NUTS_FAIL(nng_socket_get_bool(s, NNG_OPT_RECVBUF, &b), NNG_EBADTYPE);
 	sz = 1;
-	NUTS_FAIL(nng_getopt(s, NNG_OPT_RECVBUF, &b, &sz), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_RECVBUF, -1), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_RECVBUF, 100000), NNG_EINVAL);
-	NUTS_FAIL(nng_setopt_bool(s, NNG_OPT_RECVBUF, false), NNG_EBADTYPE);
-	NUTS_FAIL(nng_setopt(s, NNG_OPT_RECVBUF, &b, 1), NNG_EINVAL);
-	NUTS_PASS(nng_setopt_int(s, NNG_OPT_RECVBUF, 100));
-	NUTS_PASS(nng_getopt_int(s, NNG_OPT_RECVBUF, &v));
+	NUTS_FAIL(nng_socket_get(s, NNG_OPT_RECVBUF, &b, &sz), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_int(s, NNG_OPT_RECVBUF, -1), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_int(s, NNG_OPT_RECVBUF, 100000), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_bool(s, NNG_OPT_RECVBUF, false), NNG_EBADTYPE);
+	NUTS_FAIL(nng_socket_set(s, NNG_OPT_RECVBUF, &b, 1), NNG_EINVAL);
+	NUTS_PASS(nng_socket_set_int(s, NNG_OPT_RECVBUF, 100));
+	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_RECVBUF, &v));
 	NUTS_TRUE(v == 100);
 	NUTS_CLOSE(s);
 }

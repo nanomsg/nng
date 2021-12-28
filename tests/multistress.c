@@ -585,7 +585,7 @@ pubsub0_test(int ntests)
 		if ((rv = nng_aio_alloc(&cli->recd, sub0_recd, cli)) != 0) {
 			fatal("nng_aio_alloc", rv);
 		}
-		rv = nng_setopt(cli->sock, NNG_OPT_SUB_SUBSCRIBE, "", 0);
+		rv = nng_socket_set(cli->sock, NNG_OPT_SUB_SUBSCRIBE, "", 0);
 		if (rv != 0) {
 			fatal("subscribe", rv);
 		}

@@ -282,7 +282,7 @@ trantest_send_recv(trantest *tt)
 		So(strcmp(nng_msg_body(recv), "acknowledge") == 0);
 		p = nng_msg_get_pipe(recv);
 		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt_string(p, NNG_OPT_URL, &url) == 0);
+		So(nng_pipe_get_string(p, NNG_OPT_URL, &url) == 0);
 		So(strcmp(url, tt->addr) == 0);
 		nng_strfree(url);
 		nng_msg_free(recv);
@@ -336,7 +336,7 @@ trantest_send_recv_multi(trantest *tt)
 			So(strcmp(nng_msg_body(recv), msgbuf) == 0);
 			p = nng_msg_get_pipe(recv);
 			So(nng_pipe_id(p) > 0);
-			So(nng_pipe_getopt_string(p, NNG_OPT_URL, &url) == 0);
+			So(nng_pipe_get_string(p, NNG_OPT_URL, &url) == 0);
 			So(strcmp(url, tt->addr) == 0);
 			nng_strfree(url);
 			nng_msg_free(recv);

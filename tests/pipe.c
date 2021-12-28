@@ -138,10 +138,10 @@ TestMain("Pipe notify works", {
 			nng_mtx_free(pull.lk);
 		});
 
-		So(nng_setopt_ms(push.s, NNG_OPT_RECONNMINT, 10) == 0);
-		So(nng_setopt_ms(push.s, NNG_OPT_RECONNMAXT, 10) == 0);
-		So(nng_setopt_ms(pull.s, NNG_OPT_RECONNMINT, 10) == 0);
-		So(nng_setopt_ms(pull.s, NNG_OPT_RECONNMAXT, 10) == 0);
+		So(nng_socket_set_ms(push.s, NNG_OPT_RECONNMINT, 10) == 0);
+		So(nng_socket_set_ms(push.s, NNG_OPT_RECONNMAXT, 10) == 0);
+		So(nng_socket_set_ms(pull.s, NNG_OPT_RECONNMINT, 10) == 0);
+		So(nng_socket_set_ms(pull.s, NNG_OPT_RECONNMAXT, 10) == 0);
 
 		So(nng_pipe_notify(
 		       push.s, NNG_PIPE_EV_ADD_PRE, notify, &push) == 0);
@@ -161,9 +161,9 @@ TestMain("Pipe notify works", {
 			So(nng_dialer_create(&push.d, push.s, addr) == 0);
 			So(nng_listener_id(pull.l) > 0);
 			So(nng_dialer_id(push.d) > 0);
-			So(nng_dialer_setopt_ms(
+			So(nng_dialer_set_ms(
 			       push.d, NNG_OPT_RECONNMINT, 10) == 0);
-			So(nng_dialer_setopt_ms(
+			So(nng_dialer_set_ms(
 			       push.d, NNG_OPT_RECONNMAXT, 10) == 0);
 			So(nng_listener_start(pull.l, 0) == 0);
 			So(nng_dialer_start(push.d, 0) == 0);
