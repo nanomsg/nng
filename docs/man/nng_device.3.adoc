@@ -1,6 +1,6 @@
 = nng_device(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,14 +20,16 @@ nng_device - message forwarding device
 #include <nng/nng.h>
 
 int nng_device(nng_socket s1, nng_socket s2);
+
+void nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2);
 ----
 
 == DESCRIPTION
 
-The `nng_device()` function forwards messages received from one
+The `nng_device()` and `nng_device_aio()` functions forward messages received from one
 xref:nng_socket.5.adoc[socket] _s1_ to another socket _s2_, and vice versa.
 
-This function is used to create forwarders, which can be used to create
+These functions are used to create forwarders, which can be used to create
 complex network topologies to provide for improved ((horizontal scalability)),
 reliability, and isolation.
 
@@ -38,6 +40,8 @@ such as xref:nng_req_open.3.adoc[`nng_req0_open_raw()`].
 
 The `nng_device()` function does not return until one of the sockets
 is closed.
+The `nng_device_aio()` function returns immediately, and operates completely in
+the background.
 
 === Reflectors
 
@@ -49,7 +53,7 @@ xref:nng_pair.7.adoc[_pair_] or
 xref:nng_bus.7.adoc[_bus_].)
 In this case the device acts as a ((reflector)) or loop-back device,
 where messages received from the valid socket are merely returned
-back to the sender.
+to the sender.
 
 === Forwarders
 
@@ -75,6 +79,9 @@ adjustments to add or remove routing headers as needed.
 This allows replies to be
 returned to requesters, and responses to be routed back to surveyors.
 
+The caller of these functions is required to close the sockets when the
+device is stopped.
+
 Additionally, some protocols have a maximum ((time-to-live)) to protect
 against forwarding loops and especially amplification loops.
 In these cases, the default limit (usually 8), ensures that messages will
@@ -88,7 +95,7 @@ IMPORTANT: Not all protocols have support for guarding against forwarding loops,
 and even for those that do, forwarding loops can be extremely detrimental
 to network performance.
 
-NOTE: Devices (forwarders and reflectors) act in best effort delivery mode only.
+NOTE: Devices (forwarders and reflectors) act in best-effort delivery mode only.
 If a message is received from one socket that cannot be accepted by the
 other (due to backpressure or other issues), then the message is discarded.
 

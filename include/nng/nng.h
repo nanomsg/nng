@@ -973,7 +973,17 @@ NNG_DECL uint64_t nng_stat_timestamp(nng_stat *);
 
 // Device functionality.  This connects two sockets together in a device,
 // which means that messages from one side are forwarded to the other.
+// This version is synchronous, which means the caller will block until
+// one of the sockets is closed. Note that caller is responsible for
+// finally closing both sockets when this function returns.
 NNG_DECL int nng_device(nng_socket, nng_socket);
+
+// Asynchronous form of nng_device.  When this succeeds, the device is
+// left intact and functioning in the background, until one of the sockets
+// is closed or the application exits.  The sockets may be shut down if
+// the device fails, but the caller is responsible for ultimately closing
+// the sockets properly after the device is torn down.
+NNG_DECL void nng_device_aio(nng_aio *, nng_socket, nng_socket);
 
 // Symbol name and visibility.  TBD.  The only symbols that really should
 // be directly exported to runtimes IMO are the option symbols.  And frankly

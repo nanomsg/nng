@@ -379,6 +379,14 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 }
 
 void
+nni_sock_hold(nni_sock *s)
+{
+	nni_mtx_lock(&sock_lk);
+	s->s_ref++;
+	nni_mtx_unlock(&sock_lk);
+}
+
+void
 nni_sock_rele(nni_sock *s)
 {
 	nni_mtx_lock(&sock_lk);

@@ -1158,8 +1158,8 @@ nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg)
 	return (0);
 }
 
-int
-nng_device(nng_socket s1, nng_socket s2)
+void
+nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2)
 {
 	int       rv;
 	nni_sock *sock1 = NULL;
@@ -1167,23 +1167,44 @@ nng_device(nng_socket s1, nng_socket s2)
 
 	if ((s1.id > 0) && (s1.id != (uint32_t) -1)) {
 		if ((rv = nni_sock_find(&sock1, s1.id)) != 0) {
-			return (rv);
+			if (nni_aio_begin(aio) == 0) {
+				nni_aio_finish_error(aio, rv);
+			}
+			return;
 		}
 	}
 	if (((s2.id > 0) && (s2.id != (uint32_t) -1)) && (s2.id != s1.id)) {
 		if ((rv = nni_sock_find(&sock2, s2.id)) != 0) {
 			nni_sock_rele(sock1);
-			return (rv);
+			if (nni_aio_begin(aio) == 0) {
+				nni_aio_finish_error(aio, rv);
+			}
+			return;
 		}
 	}
 
-	rv = nni_device(sock1, sock2);
+	nni_device(aio, sock1, sock2);
 	if (sock1 != NULL) {
 		nni_sock_rele(sock1);
 	}
 	if (sock2 != NULL) {
 		nni_sock_rele(sock2);
 	}
+}
+
+int
+nng_device(nng_socket s1, nng_socket s2)
+{
+	nni_aio aio;
+	int     rv;
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	nni_aio_init(&aio, NULL, NULL);
+	nng_device_aio(&aio, s1, s2);
+	nni_aio_wait(&aio);
+	rv = nni_aio_result(&aio);
+	nni_aio_fini(&aio);
 	return (rv);
 }
 
