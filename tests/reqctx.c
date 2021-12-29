@@ -117,7 +117,7 @@ TestMain("REQ concurrent contexts", {
 			nng_aio_set_timeout(saios[i], 5000);
 		}
 
-		So(nng_setopt_int(rep_state.s, NNG_OPT_SENDBUF, NCTX) == 0);
+		So(nng_socket_set_int(rep_state.s, NNG_OPT_SENDBUF, NCTX) == 0);
 		So(i == NCTX);
 		for (i = 0; i < NCTX; i++) {
 			uint32_t tmp;

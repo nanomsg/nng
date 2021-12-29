@@ -19,7 +19,6 @@ test_msg_option(void)
 {
 	nng_msg *msg;
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
-	NUTS_FAIL(nng_msg_getopt(msg, 0, NULL, NULL), NNG_ENOTSUP);
 	nng_msg_free(msg);
 }
 

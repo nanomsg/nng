@@ -53,8 +53,8 @@ openclients(nng_socket *clients, int num)
 		t = 100; // 100ms
 		nng_socket c;
 		if (((rv = nng_req_open(&c)) != 0) ||
-		    ((rv = nng_setopt_ms(c, NNG_OPT_RECVTIMEO, t)) != 0) ||
-		    ((rv = nng_setopt_ms(c, NNG_OPT_SENDTIMEO, t)) != 0) ||
+		    ((rv = nng_socket_set_ms(c, NNG_OPT_RECVTIMEO, t)) != 0) ||
+		    ((rv = nng_socket_set_ms(c, NNG_OPT_SENDTIMEO, t)) != 0) ||
 		    ((rv = nng_dial(c, addr, NULL, 0)) != 0)) {
 			return (rv);
 		}
@@ -93,8 +93,8 @@ Main({
 	results = calloc(nclients, sizeof(int));
 
 	if ((nng_rep_open(&rep) != 0) ||
-	    (nng_setopt_int(rep, NNG_OPT_RECVBUF, 256) != 0) ||
-	    (nng_setopt_int(rep, NNG_OPT_SENDBUF, 256) != 0) ||
+	    (nng_socket_set_int(rep, NNG_OPT_RECVBUF, 256) != 0) ||
+	    (nng_socket_set_int(rep, NNG_OPT_SENDBUF, 256) != 0) ||
 	    (nng_listen(rep, addr, NULL, 0) != 0) ||
 	    (nng_thread_create(&server, serve, NULL) != 0)) {
 		fprintf(stderr, "Unable to set up server!\n");

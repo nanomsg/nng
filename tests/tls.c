@@ -92,7 +92,7 @@ check_props_v4(nng_msg *msg)
 	So(nng_pipe_id(p) > 0);
 
 	// Typed access
-	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
+	So(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_INET);
 	So(la.s_in.sa_port == htons(trantest_port - 1));
 	So(la.s_in.sa_port != 0);
@@ -100,24 +100,24 @@ check_props_v4(nng_msg *msg)
 
 	// Untyped access
 	z = sizeof(nng_sockaddr);
-	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 	So(z == sizeof(ra));
 	So(ra.s_family == NNG_AF_INET);
 	So(ra.s_in.sa_port != 0);
 	So(ra.s_in.sa_addr == htonl(0x7f000001));
 
-	So(nng_pipe_getopt_bool(p, NNG_OPT_TCP_KEEPALIVE, &b) == 0);
+	So(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b) == 0);
 	So(b == false); // default
 
-	So(nng_pipe_getopt_bool(p, NNG_OPT_TCP_NODELAY, &b) == 0);
+	So(nng_pipe_get_bool(p, NNG_OPT_TCP_NODELAY, &b) == 0);
 	So(b == true); // default
 
 	// Check for type enforcement
 	int i;
-	So(nng_pipe_getopt_int(p, NNG_OPT_REMADDR, &i) == NNG_EBADTYPE);
+	So(nng_pipe_get_int(p, NNG_OPT_REMADDR, &i) == NNG_EBADTYPE);
 
 	z = 1;
-	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == NNG_EINVAL);
+	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == NNG_EINVAL);
 
 	return (0);
 }
@@ -148,7 +148,7 @@ init_dialer_tls_ex(nng_dialer d, bool own_cert)
 		}
 	}
 
-	rv = nng_dialer_setopt_ptr(d, NNG_OPT_TLS_CONFIG, cfg);
+	rv = nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, cfg);
 
 out:
 	nng_tls_config_free(cfg);
@@ -173,7 +173,7 @@ init_listener_tls_ex(nng_listener l, int auth_mode)
 	if ((rv = nng_tls_config_own_cert(cfg, cert, key, NULL)) != 0) {
 		goto out;
 	}
-	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_TLS_CONFIG, cfg)) != 0) {
+	if ((rv = nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, cfg)) != 0) {
 		goto out;
 	}
 	switch (auth_mode) {
@@ -221,7 +221,7 @@ init_dialer_tls_file(nng_dialer d)
 		return (rv);
 	}
 
-	rv = nng_dialer_setopt_string(d, NNG_OPT_TLS_CA_FILE, pth);
+	rv = nng_dialer_set_string(d, NNG_OPT_TLS_CA_FILE, pth);
 	nni_file_delete(pth);
 	nni_strfree(pth);
 
@@ -258,7 +258,7 @@ init_listener_tls_file(nng_listener l)
 		return (rv);
 	}
 
-	rv = nng_listener_setopt_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth);
+	rv = nng_listener_set_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth);
 	if (rv != 0) {
 		// We can wind up with EBUSY from the server already
 		// running.
@@ -321,7 +321,7 @@ TestMain("TLS Transport", {
 		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls(d) == 0);
-		So(nng_dialer_setopt_int(
+		So(nng_dialer_set_int(
 		       d, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_NONE) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		So(nng_dialer_start(d, 0) == 0);
@@ -344,10 +344,10 @@ TestMain("TLS Transport", {
 		So(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0") == 0);
 		So(init_listener_tls(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
-		So(nng_listener_getopt_string(l, NNG_OPT_URL, &addr) == 0);
+		So(nng_listener_get_string(l, NNG_OPT_URL, &addr) == 0);
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls(d) == 0);
-		So(nng_dialer_setopt_int(
+		So(nng_dialer_set_int(
 		       d, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_NONE) == 0);
 		So(nng_dialer_start(d, 0) == 0);
 		nng_strfree(addr);
@@ -444,7 +444,7 @@ TestMain("TLS Transport", {
 
 		// reset port back one
 		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
-		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
+		So(nng_socket_set_int(s2, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_REQUIRED) == 0);
 
 		So(nng_dial(s2, addr, NULL, 0) == NNG_EPEERAUTH);
@@ -469,17 +469,17 @@ TestMain("TLS Transport", {
 		trantest_next_address(addr, "tls+tcp://*:%u");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls_file(l) == 0);
-		So(nng_listener_setopt_int(l, NNG_OPT_TLS_AUTH_MODE,
+		So(nng_listener_set_int(l, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		nng_msleep(100);
 
 		// reset port back one
 		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
-		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls_file(d) == 0);
-		So(nng_dialer_setopt_string(
+		So(nng_dialer_set_string(
 		       d, NNG_OPT_TLS_SERVER_NAME, "localhost") == 0);
 		So(nng_dialer_start(d, 0) == 0);
 
@@ -490,7 +490,7 @@ TestMain("TLS Transport", {
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
 		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
+		So(nng_pipe_get_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
 		So(b == false);
 		nng_msg_free(msg);
 	});
@@ -523,7 +523,7 @@ TestMain("TLS Transport", {
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls_ex(d, true) == 0);
 
-		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dialer_start(d, 0) == 0);
 		nng_msleep(100);
 
@@ -536,10 +536,10 @@ TestMain("TLS Transport", {
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
 		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
+		So(nng_pipe_get_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
 		So(b == true);
 		int i;
-		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &i) ==
+		So(nng_pipe_get_int(p, NNG_OPT_TLS_VERIFIED, &i) ==
 		    NNG_EBADTYPE);
 		nng_msg_free(msg);
 	});
@@ -553,44 +553,44 @@ TestMain("TLS Transport", {
 
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
-		So(nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(nng_socket_get_bool(s, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == true);
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == true);
-		So(nng_dialer_setopt_bool(d, NNG_OPT_TCP_NODELAY, false) == 0);
-		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(nng_dialer_set_bool(d, NNG_OPT_TCP_NODELAY, false) == 0);
+		So(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == false);
-		So(nng_dialer_getopt_int(d, NNG_OPT_TCP_NODELAY, &x) ==
+		So(nng_dialer_get_int(d, NNG_OPT_TCP_NODELAY, &x) ==
 		    NNG_EBADTYPE);
 		x = 0;
-		So(nng_dialer_setopt_int(d, NNG_OPT_TCP_NODELAY, x) ==
+		So(nng_dialer_set_int(d, NNG_OPT_TCP_NODELAY, x) ==
 		    NNG_EBADTYPE);
 		// This assumes sizeof (bool) != sizeof (int)
-		So(nng_dialer_setopt(d, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) ==
+		So(nng_dialer_set(d, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) ==
 		    NNG_EINVAL);
 
 		So(nng_listener_create(&l, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_listener_getopt_bool(l, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(nng_listener_get_bool(l, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == true);
 		x = 0;
-		So(nng_listener_setopt_int(l, NNG_OPT_TCP_NODELAY, x) ==
+		So(nng_listener_set_int(l, NNG_OPT_TCP_NODELAY, x) ==
 		    NNG_EBADTYPE);
 		// This assumes sizeof (bool) != sizeof (int)
-		So(nng_listener_setopt(
+		So(nng_listener_set(
 		       l, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) == NNG_EINVAL);
 
 		nng_dialer_close(d);
 		nng_listener_close(l);
 
 		// Make sure socket wide defaults apply.
-		So(nng_setopt_bool(s, NNG_OPT_TCP_NODELAY, true) == 0);
+		So(nng_socket_set_bool(s, NNG_OPT_TCP_NODELAY, true) == 0);
 		v = false;
-		So(nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(nng_socket_get_bool(s, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == true);
-		So(nng_setopt_bool(s, NNG_OPT_TCP_NODELAY, false) == 0);
+		So(nng_socket_set_bool(s, NNG_OPT_TCP_NODELAY, false) == 0);
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == false);
 	});
 
@@ -603,40 +603,40 @@ TestMain("TLS Transport", {
 
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
-		So(nng_getopt_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(nng_socket_get_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == false);
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == false);
-		So(nng_dialer_setopt_bool(d, NNG_OPT_TCP_KEEPALIVE, true) ==
+		So(nng_dialer_set_bool(d, NNG_OPT_TCP_KEEPALIVE, true) ==
 		    0);
-		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == true);
-		So(nng_dialer_getopt_int(d, NNG_OPT_TCP_KEEPALIVE, &x) ==
+		So(nng_dialer_get_int(d, NNG_OPT_TCP_KEEPALIVE, &x) ==
 		    NNG_EBADTYPE);
 		x = 1;
-		So(nng_dialer_setopt_int(d, NNG_OPT_TCP_KEEPALIVE, x) ==
+		So(nng_dialer_set_int(d, NNG_OPT_TCP_KEEPALIVE, x) ==
 		    NNG_EBADTYPE);
 
 		So(nng_listener_create(&l, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_listener_getopt_bool(l, NNG_OPT_TCP_KEEPALIVE, &v) ==
+		So(nng_listener_get_bool(l, NNG_OPT_TCP_KEEPALIVE, &v) ==
 		    0);
 		So(v == false);
 		x = 1;
-		So(nng_listener_setopt_int(l, NNG_OPT_TCP_KEEPALIVE, x) ==
+		So(nng_listener_set_int(l, NNG_OPT_TCP_KEEPALIVE, x) ==
 		    NNG_EBADTYPE);
 
 		nng_dialer_close(d);
 		nng_listener_close(l);
 
 		// Make sure socket wide defaults apply.
-		So(nng_setopt_bool(s, NNG_OPT_TCP_KEEPALIVE, false) == 0);
+		So(nng_socket_set_bool(s, NNG_OPT_TCP_KEEPALIVE, false) == 0);
 		v = true;
-		So(nng_getopt_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(nng_socket_get_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == false);
-		So(nng_setopt_bool(s, NNG_OPT_TCP_KEEPALIVE, true) == 0);
+		So(nng_socket_set_bool(s, NNG_OPT_TCP_KEEPALIVE, true) == 0);
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == true);
 	});
 })

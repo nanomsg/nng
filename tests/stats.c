@@ -42,17 +42,17 @@ TestMain("Stats Test", {
 			So(nng_pair_open(&s2) == 0);
 			Reset({ nng_close(s2); });
 
-			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_RECVBUF, &len) == 0);
+			So(nng_socket_set_int(s1, NNG_OPT_RECVBUF, 1) == 0);
+			So(nng_socket_get_int(s1, NNG_OPT_RECVBUF, &len) == 0);
 			So(len == 1);
 
-			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1) == 0);
-			So(nng_setopt_int(s2, NNG_OPT_SENDBUF, 1) == 0);
+			So(nng_socket_set_int(s1, NNG_OPT_SENDBUF, 1) == 0);
+			So(nng_socket_set_int(s2, NNG_OPT_SENDBUF, 1) == 0);
 
-			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
-			So(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, to) == 0);
-			So(nng_setopt_ms(s2, NNG_OPT_SENDTIMEO, to) == 0);
-			So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, to) == 0);
+			So(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
+			So(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, to) == 0);
+			So(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, to) == 0);
+			So(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, to) == 0);
 
 			So(nng_listen(s1, a, NULL, 0) == 0);
 			So(nng_dial(s2, a, NULL, 0) == 0);

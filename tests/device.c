@@ -82,8 +82,8 @@ Main({
 			So(nng_dial(end2, addr2, NULL, 0) == 0);
 
 			tmo = SECOND(1);
-			So(nng_setopt_ms(end1, NNG_OPT_RECVTIMEO, tmo) == 0);
-			So(nng_setopt_ms(end2, NNG_OPT_RECVTIMEO, tmo) == 0);
+			So(nng_socket_set_ms(end1, NNG_OPT_RECVTIMEO, tmo) == 0);
+			So(nng_socket_set_ms(end2, NNG_OPT_RECVTIMEO, tmo) == 0);
 
 			nng_msleep(100);
 			Convey("Device can send and receive", {
