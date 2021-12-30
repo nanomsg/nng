@@ -658,6 +658,7 @@ ipc_ep_close(void *arg)
 	nni_mtx_lock(&ep->mtx);
 	ep->closed = true;
 	nni_aio_close(ep->time_aio);
+	nni_aio_close(ep->conn_aio);
 	if (ep->dialer != NULL) {
 		nng_stream_dialer_close(ep->dialer);
 	}
