@@ -78,6 +78,10 @@ device_cb(void *arg)
 
 	if ((rv = nni_aio_result(&p->aio)) != 0) {
 		nni_mtx_lock(&device_mtx);
+		if (p->state == NNI_DEVICE_STATE_SEND) {
+			nni_msg_free(nni_aio_get_msg(&p->aio));
+			nni_aio_set_msg(&p->aio, NULL);
+		}
 		p->state = NNI_DEVICE_STATE_FINI;
 		d->running--;
 		if (d->rv == 0) {
