@@ -37,9 +37,9 @@ ipc_dialer_close(void *arg)
 		while ((aio = nni_list_first(&d->connq)) != NULL) {
 			nni_ipc_conn *c;
 			nni_list_remove(&d->connq, aio);
-			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
+			if ((c = nni_aio_get_prov_data(aio)) != NULL) {
 				c->dial_aio = NULL;
-				nni_aio_set_prov_extra(aio, 0, NULL);
+				nni_aio_set_prov_data(aio, NULL);
 				nng_stream_close(&c->stream);
 				nng_stream_free(&c->stream);
 			}
@@ -84,13 +84,13 @@ ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 
 	nni_mtx_lock(&d->mtx);
 	if ((!nni_aio_list_active(aio)) ||
-	    ((c = nni_aio_get_prov_extra(aio, 0)) == NULL)) {
+	    ((c = nni_aio_get_prov_data(aio)) == NULL)) {
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}
 	nni_aio_list_remove(aio);
 	c->dial_aio = NULL;
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
 
 	nni_aio_finish_error(aio, rv);
@@ -133,7 +133,7 @@ ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 
 	c->dial_aio = NULL;
 	nni_aio_list_remove(aio);
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
 
 	if (rv != 0) {
@@ -217,14 +217,14 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 			goto error;
 		}
 		c->dial_aio = aio;
-		nni_aio_set_prov_extra(aio, 0, c);
+		nni_aio_set_prov_data(aio, c);
 		nni_list_append(&d->connq, aio);
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}
 	// Immediate connect, cool!  This probably only happens
-	// on loopback, and probably not on every platform.
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	// on loop back, and probably not on every platform.
+	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
 	nni_posix_ipc_start(c);
 	nni_aio_set_output(aio, 0, c);
@@ -232,7 +232,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	return;
 
 error:
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
 	nng_stream_free(&c->stream);
 	nni_aio_finish_error(aio, rv);

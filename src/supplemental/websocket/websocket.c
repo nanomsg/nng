@@ -714,7 +714,7 @@ ws_write_cancel(nni_aio *aio, void *arg, int rv)
 		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
-	frame = nni_aio_get_prov_extra(aio, 0);
+	frame = nni_aio_get_prov_data(aio);
 	if (frame == ws->txframe) {
 		nni_aio_abort(ws->txaio, rv);
 		// We will wait for callback on the txaio to finish aio.
@@ -2739,7 +2739,7 @@ ws_str_send(void *arg, nni_aio *aio)
 		ws_frame_fini(frame);
 		return;
 	}
-	nni_aio_set_prov_extra(aio, 0, frame);
+	nni_aio_set_prov_data(aio, frame);
 	nni_list_append(&ws->sendq, aio);
 	nni_list_append(&ws->txq, frame);
 	ws_start_write(ws);

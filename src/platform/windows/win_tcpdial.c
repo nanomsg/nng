@@ -79,7 +79,7 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 		NNI_LIST_FOREACH (&d->aios, aio) {
 			nni_tcp_conn *c;
 
-			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
+			if ((c = nni_aio_get_prov_data(aio)) != NULL) {
 				c->conn_rv = NNG_ECLOSED;
 				CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 			}
@@ -116,7 +116,7 @@ tcp_dial_cancel(nni_aio *aio, void *arg, int rv)
 	nni_tcp_conn *  c;
 
 	nni_mtx_lock(&d->mtx);
-	if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
+	if ((c = nni_aio_get_prov_data(aio)) != NULL) {
 		if (c->conn_rv == 0) {
 			c->conn_rv = rv;
 		}
@@ -144,7 +144,7 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 	}
 
 	c->conn_aio = NULL;
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 	nni_aio_list_remove(aio);
 	if (c->conn_rv != 0) {
 		rv = c->conn_rv;
@@ -240,7 +240,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	}
 
 	c->dialer = d;
-	nni_aio_set_prov_extra(aio, 0, c);
+	nni_aio_set_prov_data(aio, c);
 	if ((rv = nni_aio_schedule(aio, tcp_dial_cancel, d)) != 0) {
 		nni_mtx_unlock(&d->mtx);
 		nng_stream_free(&c->ops);

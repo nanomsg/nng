@@ -56,11 +56,11 @@ resolv_cancel(nni_aio *aio, void *arg, int rv)
 	resolv_item *item = arg;
 
 	nni_mtx_lock(&resolv_mtx);
-	if (item != nni_aio_get_prov_extra(aio, 0)) {
+	if (item != nni_aio_get_prov_data(aio)) {
 		nni_mtx_unlock(&resolv_mtx);
 		return;
 	}
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 	if (nni_aio_list_active(aio)) {
 		// We have not been picked up by a resolver thread yet,
 		// so we can just discard everything.
@@ -248,7 +248,7 @@ nni_resolv_ip(const char *host, const char *serv, int family, bool passive,
 	if (resolv_fini) {
 		rv = NNG_ECLOSED;
 	} else {
-		nni_aio_set_prov_extra(aio, 0, item);
+		nni_aio_set_prov_data(aio, item);
 		rv = nni_aio_schedule(aio, resolv_cancel, item);
 	}
 	if (rv != 0) {
@@ -282,7 +282,7 @@ resolv_worker(void *notused)
 			continue;
 		}
 
-		item = nni_aio_get_prov_extra(aio, 0);
+		item = nni_aio_get_prov_data(aio);
 		nni_aio_list_remove(aio);
 
 		// Now attempt to do the work.  This runs synchronously.
@@ -292,7 +292,7 @@ resolv_worker(void *notused)
 
 		// Check to make sure we were not canceled.
 		if ((aio = item->aio) != NULL) {
-			nni_aio_set_prov_extra(aio, 0, NULL);
+			nni_aio_set_prov_data(aio, NULL);
 			item->aio = NULL;
 			item->sa  = NULL;
 

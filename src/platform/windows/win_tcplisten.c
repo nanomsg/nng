@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -102,7 +102,7 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 		return;
 	}
 	c->conn_aio = NULL;
-	nni_aio_set_prov_extra(aio, 0, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 	nni_aio_list_remove(aio);
 	if (c->conn_rv != 0) {
 		rv = c->conn_rv;
@@ -174,7 +174,7 @@ nni_tcp_listener_close(nni_tcp_listener *l)
 		NNI_LIST_FOREACH (&l->aios, aio) {
 			nni_tcp_conn *c;
 
-			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
+			if ((c = nni_aio_get_prov_data(aio)) != NULL) {
 				c->conn_rv = NNG_ECLOSED;
 				CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 			}
@@ -275,7 +275,7 @@ tcp_accept_cancel(nni_aio *aio, void *arg, int rv)
 	nni_tcp_conn *    c;
 
 	nni_mtx_lock(&l->mtx);
-	if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
+	if ((c = nni_aio_get_prov_data(aio)) != NULL) {
 		if (c->conn_rv == 0) {
 			c->conn_rv = rv;
 		}
@@ -323,10 +323,10 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 	}
 	c->listener = l;
 	c->conn_aio = aio;
-	nni_aio_set_prov_extra(aio, 0, c);
+	nni_aio_set_prov_data(aio, c);
 	if (((rv = nni_win_io_init(&c->conn_io, tcp_accept_cb, c)) != 0) ||
 	    ((rv = nni_aio_schedule(aio, tcp_accept_cancel, l)) != 0)) {
-		nni_aio_set_prov_extra(aio, 0, NULL);
+		nni_aio_set_prov_data(aio, NULL);
 		nni_mtx_unlock(&l->mtx);
 		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);

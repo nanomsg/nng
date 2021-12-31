@@ -618,15 +618,15 @@ nni_aio_expire_loop(void *arg)
 }
 
 void *
-nni_aio_get_prov_extra(nni_aio *aio, unsigned index)
+nni_aio_get_prov_data(nni_aio *aio)
 {
-	return (aio->a_prov_extra[index]);
+	return (aio->a_prov_data);
 }
 
 void
-nni_aio_set_prov_extra(nni_aio *aio, unsigned index, void *data)
+nni_aio_set_prov_data(nni_aio *aio, void *data)
 {
-	aio->a_prov_extra[index] = data;
+	aio->a_prov_data = data;
 }
 
 void

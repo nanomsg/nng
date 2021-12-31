@@ -133,8 +133,8 @@ extern void nni_aio_abort(nni_aio *, int rv);
 // nng_aio_finish family of functions.)
 extern int nni_aio_begin(nni_aio *);
 
-extern void *nni_aio_get_prov_extra(nni_aio *, unsigned);
-extern void  nni_aio_set_prov_extra(nni_aio *, unsigned, void *);
+extern void *nni_aio_get_prov_data(nni_aio *);
+extern void  nni_aio_set_prov_data(nni_aio *, void *);
 // nni_aio_advance_iov moves up the iov, reflecting that some I/O as
 // been performed.  It returns the amount of data remaining in the argument;
 // i.e. if the count refers to more data than the iov can support, then
@@ -200,9 +200,8 @@ struct nng_aio {
 	// Provider-use fields.
 	nni_aio_cancel_fn a_cancel_fn;
 	void	     *a_cancel_arg;
-	nni_list_node     a_prov_node;     // Linkage on provider list.
-	void	     *a_prov_extra[2]; // Extra data used by provider
-
+	void	     *a_prov_data;
+	nni_list_node     a_prov_node; // Linkage on provider list.
 	nni_aio_expire_q *a_expire_q;
 	nni_list_node     a_expire_node; // Expiration node
 	nni_reap_node     a_reap_node;

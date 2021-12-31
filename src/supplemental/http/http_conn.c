@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -40,16 +40,9 @@ enum write_flavor {
 	HTTP_WR_RES,
 };
 
-#define SET_RD_FLAVOR(aio, f) \
-	nni_aio_set_prov_extra(aio, 0, ((void *) (intptr_t)(f)))
-#define GET_RD_FLAVOR(aio) (int) ((intptr_t) nni_aio_get_prov_extra(aio, 0))
-#define SET_WR_FLAVOR(aio, f) \
-	nni_aio_set_prov_extra(aio, 0, ((void *) (intptr_t)(f)))
-#define GET_WR_FLAVOR(aio) (int) ((intptr_t) nni_aio_get_prov_extra(aio, 0))
-
 struct nng_http_conn {
 	nng_stream *sock;
-	void *      ctx;
+	void       *ctx;
 	bool        closed;
 	nni_list    rdq; // high level http read requests
 	nni_list    wrq; // high level http write requests
@@ -61,11 +54,14 @@ struct nng_http_conn {
 
 	nni_mtx mtx;
 
-	uint8_t *rd_buf;
-	size_t   rd_get;
-	size_t   rd_put;
-	size_t   rd_bufsz;
-	bool     rd_buffered;
+	enum read_flavor rd_flavor;
+	uint8_t         *rd_buf;
+	size_t           rd_get;
+	size_t           rd_put;
+	size_t           rd_bufsz;
+	bool             rd_buffered;
+
+	enum write_flavor wr_flavor;
 };
 
 void
@@ -140,7 +136,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 
 	rbuf += conn->rd_get;
 
-	switch (GET_RD_FLAVOR(aio)) {
+	switch (conn->rd_flavor) {
 	case HTTP_RD_RAW:
 		raw = true; // FALLTHROUGH
 	case HTTP_RD_FULL:
@@ -185,7 +181,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 
 	case HTTP_RD_REQ:
 		rv = nni_http_req_parse(
-		    nni_aio_get_prov_extra(aio, 1), rbuf, cnt, &n);
+		    nni_aio_get_prov_data(aio), rbuf, cnt, &n);
 		conn->rd_get += n;
 		if (conn->rd_get == conn->rd_put) {
 			conn->rd_get = conn->rd_put = 0;
@@ -202,7 +198,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 
 	case HTTP_RD_RES:
 		rv = nni_http_res_parse(
-		    nni_aio_get_prov_extra(aio, 1), rbuf, cnt, &n);
+		    nni_aio_get_prov_data(aio), rbuf, cnt, &n);
 		conn->rd_get += n;
 		if (conn->rd_get == conn->rd_put) {
 			conn->rd_get = conn->rd_put = 0;
@@ -219,7 +215,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 
 	case HTTP_RD_CHUNK:
 		rv = nni_http_chunks_parse(
-		    nni_aio_get_prov_extra(aio, 1), rbuf, cnt, &n);
+		    nni_aio_get_prov_data(aio), rbuf, cnt, &n);
 		conn->rd_get += n;
 		if (conn->rd_get == conn->rd_put) {
 			conn->rd_get = conn->rd_put = 0;
@@ -278,12 +274,12 @@ static void
 http_rd_cb(void *arg)
 {
 	nni_http_conn *conn = arg;
-	nni_aio *      aio  = conn->rd_aio;
-	nni_aio *      uaio;
+	nni_aio       *aio  = conn->rd_aio;
+	nni_aio       *uaio;
 	size_t         cnt;
 	int            rv;
 	unsigned       niov;
-	nni_iov *      iov;
+	nni_iov       *iov;
 
 	nni_mtx_lock(&conn->mtx);
 
@@ -365,7 +361,7 @@ http_rd_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-http_rd_submit(nni_http_conn *conn, nni_aio *aio)
+http_rd_submit(nni_http_conn *conn, nni_aio *aio, enum read_flavor flavor)
 {
 	int rv;
 
@@ -380,6 +376,7 @@ http_rd_submit(nni_http_conn *conn, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+	conn->rd_flavor = flavor;
 	nni_list_append(&conn->rdq, aio);
 	if (conn->rd_uaio == NULL) {
 		http_rd_start(conn);
@@ -411,8 +408,8 @@ static void
 http_wr_cb(void *arg)
 {
 	nni_http_conn *conn = arg;
-	nni_aio *      aio  = conn->wr_aio;
-	nni_aio *      uaio;
+	nni_aio       *aio  = conn->wr_aio;
+	nni_aio       *uaio;
 	int            rv;
 	size_t         n;
 
@@ -442,7 +439,7 @@ http_wr_cb(void *arg)
 	n = nni_aio_count(aio);
 	nni_aio_bump_count(uaio, n);
 
-	if (GET_WR_FLAVOR(uaio) == HTTP_WR_RAW) {
+	if (conn->wr_flavor == HTTP_WR_RAW) {
 		// For raw data, we just send partial completion
 		// notices to the consumer.
 		goto done;
@@ -484,7 +481,7 @@ http_wr_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-http_wr_submit(nni_http_conn *conn, nni_aio *aio)
+http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 {
 	int rv;
 
@@ -499,6 +496,7 @@ http_wr_submit(nni_http_conn *conn, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+	conn->wr_flavor = flavor;
 	nni_list_append(&conn->wrq, aio);
 
 	if (conn->wr_uaio == NULL) {
@@ -509,55 +507,50 @@ http_wr_submit(nni_http_conn *conn, nni_aio *aio)
 void
 nni_http_read_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
 {
-	SET_RD_FLAVOR(aio, HTTP_RD_REQ);
-	nni_aio_set_prov_extra(aio, 1, req);
+	nni_aio_set_prov_data(aio, req);
 
 	nni_mtx_lock(&conn->mtx);
-	http_rd_submit(conn, aio);
+	http_rd_submit(conn, aio, HTTP_RD_REQ);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
 nni_http_read_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
 {
-	SET_RD_FLAVOR(aio, HTTP_RD_RES);
-	nni_aio_set_prov_extra(aio, 1, res);
+	nni_aio_set_prov_data(aio, res);
 
 	nni_mtx_lock(&conn->mtx);
-	http_rd_submit(conn, aio);
+	http_rd_submit(conn, aio, HTTP_RD_RES);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
 nni_http_read_chunks(nni_http_conn *conn, nni_http_chunks *cl, nni_aio *aio)
 {
-	SET_RD_FLAVOR(aio, HTTP_RD_CHUNK);
-	nni_aio_set_prov_extra(aio, 1, cl);
+	nni_aio_set_prov_data(aio, cl);
 
 	nni_mtx_lock(&conn->mtx);
-	http_rd_submit(conn, aio);
+	http_rd_submit(conn, aio, HTTP_RD_CHUNK);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
 nni_http_read_full(nni_http_conn *conn, nni_aio *aio)
 {
-	SET_RD_FLAVOR(aio, HTTP_RD_FULL);
-	nni_aio_set_prov_extra(aio, 1, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 
 	nni_mtx_lock(&conn->mtx);
-	http_rd_submit(conn, aio);
+	http_rd_submit(conn, aio, HTTP_RD_FULL);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
 nni_http_read(nni_http_conn *conn, nni_aio *aio)
 {
-	SET_RD_FLAVOR(aio, HTTP_RD_RAW);
-	nni_aio_set_prov_extra(aio, 1, NULL);
+	nni_aio_set_prov_data(aio, NULL);
 
 	nni_mtx_lock(&conn->mtx);
-	http_rd_submit(conn, aio);
+	http_rd_submit(conn, aio, HTTP_RD_RAW);
 	nni_mtx_unlock(&conn->mtx);
 }
 
@@ -565,9 +558,9 @@ void
 nni_http_write_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
 {
 	int     rv;
-	void *  buf;
+	void   *buf;
 	size_t  bufsz;
-	void *  data;
+	void   *data;
 	size_t  size;
 	nni_iov iov[2];
 	int     niov;
@@ -587,10 +580,8 @@ nni_http_write_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
 	}
 	nni_aio_set_iov(aio, niov, iov);
 
-	SET_WR_FLAVOR(aio, HTTP_WR_REQ);
-
 	nni_mtx_lock(&conn->mtx);
-	http_wr_submit(conn, aio);
+	http_wr_submit(conn, aio, HTTP_WR_REQ);
 	nni_mtx_unlock(&conn->mtx);
 }
 
@@ -598,9 +589,9 @@ void
 nni_http_write_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
 {
 	int     rv;
-	void *  buf;
+	void   *buf;
 	size_t  bufsz;
-	void *  data;
+	void   *data;
 	size_t  size;
 	nni_iov iov[2];
 	int     nio;
@@ -620,30 +611,24 @@ nni_http_write_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
 	}
 	nni_aio_set_iov(aio, nio, iov);
 
-	SET_WR_FLAVOR(aio, HTTP_WR_RES);
-
 	nni_mtx_lock(&conn->mtx);
-	http_wr_submit(conn, aio);
+	http_wr_submit(conn, aio, HTTP_WR_RES);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
 nni_http_write(nni_http_conn *conn, nni_aio *aio)
 {
-	SET_WR_FLAVOR(aio, HTTP_WR_RAW);
-
 	nni_mtx_lock(&conn->mtx);
-	http_wr_submit(conn, aio);
+	http_wr_submit(conn, aio, HTTP_WR_RAW);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
 nni_http_write_full(nni_http_conn *conn, nni_aio *aio)
 {
-	SET_WR_FLAVOR(aio, HTTP_WR_FULL);
-
 	nni_mtx_lock(&conn->mtx);
-	http_wr_submit(conn, aio);
+	http_wr_submit(conn, aio, HTTP_WR_FULL);
 	nni_mtx_unlock(&conn->mtx);
 }
 
