@@ -26,7 +26,7 @@ typedef void (*nni_aio_cancel_fn)(nni_aio *, void *, int);
 extern void nni_aio_init(nni_aio *, nni_cb, void *arg);
 
 // nni_aio_fini finalizes an aio object, releasing associated resources.
-// It waits for the callback to complete.
+// It should only be called if the aio is already stopped.
 extern void nni_aio_fini(nni_aio *);
 
 // nni_aio_reap is used to asynchronously reap the aio.  It can
@@ -42,7 +42,7 @@ extern int nni_aio_alloc(nni_aio **, nni_cb, void *arg);
 // nni_aio_free frees the aio, releasing resources (locks)
 // associated with it. This is safe to call on zeroed memory.
 // This must only be called on an object that was allocated
-// with nni_aio_allocate.
+// with nni_aio_alloc.  It stops the aio implicitly.
 extern void nni_aio_free(nni_aio *aio);
 
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,

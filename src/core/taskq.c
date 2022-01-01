@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -223,11 +223,9 @@ nni_task_init(nni_task *task, nni_taskq *tq, nni_cb cb, void *arg)
 void
 nni_task_fini(nni_task *task)
 {
-	nni_mtx_lock(&task->task_mtx);
-	while (task->task_busy) {
-		nni_cv_wait(&task->task_cv);
+	if (task->task_busy) {
+		nni_panic("fini called on busy task");
 	}
-	nni_mtx_unlock(&task->task_mtx);
 	nni_cv_fini(&task->task_cv);
 	nni_mtx_fini(&task->task_mtx);
 }
