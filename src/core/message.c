@@ -24,11 +24,22 @@ typedef struct {
 
 // Underlying message structure.
 struct nng_msg {
-	uint32_t       m_header_buf[(NNI_MAX_MAX_TTL + 1)];
-	size_t         m_header_len;
-	nni_chunk      m_body;
-	uint32_t       m_pipe; // set on receive
-	nni_atomic_int m_refcnt;
+	uint32_t            m_header_buf[(NNI_MAX_MAX_TTL + 1)];
+	size_t              m_header_len;
+	nni_chunk           m_body;
+	uint32_t            m_pipe; // set on receive
+	nni_atomic_int      m_refcnt;
+	struct nni_msg_opt *m_opts;
+};
+
+//  Message options. For protocol use only.
+struct nni_msg_opt {
+	struct nni_msg_opt *mo_next;
+	const char *        mo_name;
+	void *              mo_value;
+	size_t              mo_size;
+	void (*mo_free)(void *, size_t);        // called by nni_msg_free
+	int (*mo_dup)(void **, void *, size_t); // called by nni_msg_dup
 };
 
 #if 0
@@ -112,7 +123,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 
 	if ((ch->ch_ptr >= ch->ch_buf) && (ch->ch_ptr != NULL) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
-		size_t headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
+		size_t headroom = (size_t) (ch->ch_ptr - ch->ch_buf);
 		if (headwanted < headroom) {
 			headwanted = headroom; // Never shrink this.
 		}
@@ -268,7 +279,7 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap)) &&
-	    (len <= (size_t)(ch->ch_ptr - ch->ch_buf))) {
+	    (len <= (size_t) (ch->ch_ptr - ch->ch_buf))) {
 		// There is already enough room at the beginning.
 		ch->ch_ptr -= len;
 	} else if ((ch->ch_len + len) <= ch->ch_cap) {
@@ -408,8 +419,11 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 int
 nni_msg_dup(nni_msg **dup, const nni_msg *src)
 {
-	nni_msg *m;
-	int      rv;
+	nni_msg *            m;
+	struct nni_msg_opt * os;
+	struct nni_msg_opt * od;
+	struct nni_msg_opt **opp;
+	int                  rv;
 
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
@@ -427,6 +441,32 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 	nni_atomic_init(&m->m_refcnt);
 	nni_atomic_set(&m->m_refcnt, 1);
 
+	// clone message options -- we use the supplied cloner function
+	// if one was provided.
+	opp = &m->m_opts;
+	for (os = src->m_opts; os != NULL; os = os->mo_next) {
+		if ((od = NNI_ALLOC_STRUCT(od)) != NULL) {
+			nni_msg_free(m);
+			return (NNG_ENOMEM);
+		}
+		if ((os->mo_dup) != NULL) {
+			rv = os->mo_dup(
+			    &od->mo_value, os->mo_value, os->mo_size);
+			if (rv != 0) {
+				nni_msg_free(m);
+				return (rv);
+			}
+			od->mo_size = os->mo_size;
+			od->mo_free = os->mo_free;
+			od->mo_dup  = os->mo_dup;
+		} else {
+			od->mo_value = os->mo_value;
+			od->mo_size  = os->mo_size;
+		}
+		*opp = od;
+		opp  = &od->mo_next;
+	}
+
 	*dup = m;
 	return (0);
 }
@@ -435,7 +475,16 @@ void
 nni_msg_free(nni_msg *m)
 {
 	if ((m != NULL) && (nni_atomic_dec_nv(&m->m_refcnt) == 0)) {
+		struct nni_msg_opt *mo;
 		nni_chunk_free(&m->m_body);
+
+		while ((mo = m->m_opts) != NULL) {
+			m->m_opts = mo->mo_next;
+			if (mo->mo_free != NULL) {
+				mo->mo_free(mo->mo_value, mo->mo_size);
+			}
+			NNI_FREE_STRUCT(mo);
+		}
 		NNI_FREE_STRUCT(m);
 	}
 }
@@ -633,4 +682,113 @@ uint32_t
 nni_msg_get_pipe(const nni_msg *m)
 {
 	return (m->m_pipe);
+}
+
+int
+nni_msg_set_opt(nng_msg *m, const char *name, void *val, size_t size,
+    void (*free_func)(void *, size_t),
+    int (*dup_func)(void **, void *, size_t))
+{
+	struct nni_msg_opt **opp;
+	struct nni_msg_opt * op;
+
+	for (opp = &m->m_opts; (op = *opp) != NULL; opp = &op->mo_next) {
+		if (strcmp(op->mo_name, name) == 0) {
+			break;
+		}
+	}
+	if (op == NULL) {
+		if ((op = NNI_ALLOC_STRUCT(op)) == NULL) {
+			return (NNG_ENOMEM);
+		}
+		if ((op->mo_name = nni_strdup(name)) == NULL) {
+			NNI_FREE_STRUCT(op);
+			return (NNG_ENOMEM);
+		}
+		*opp = op;
+	}
+	op->mo_value = val;
+	op->mo_size  = size;
+	op->mo_free  = free_func;
+	op->mo_dup   = dup_func;
+	return (0);
+}
+
+int
+nni_msg_add_opt(nng_msg *m, const char *name, void *val, size_t size,
+    void (*free_func)(void *, size_t),
+    int (*dup_func)(void **, void *, size_t))
+{
+	struct nni_msg_opt **opp;
+	struct nni_msg_opt * op;
+
+	opp = &m->m_opts;
+	while ((op = *opp) != NULL) {
+		opp = &op->mo_next;
+	}
+	if ((op = NNI_ALLOC_STRUCT(op)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((op->mo_name = nni_strdup(name)) == NULL) {
+		NNI_FREE_STRUCT(op);
+		return (NNG_ENOMEM);
+	}
+	*opp         = op;
+	op->mo_value = val;
+	op->mo_size  = size;
+	op->mo_free  = free_func;
+	op->mo_dup   = dup_func;
+	return (0);
+}
+
+// nni_msg_rem_opt removes *all* options with the given name.
+int
+nni_msg_rem_opt(nng_msg *m, const char *name)
+{
+	struct nni_msg_opt **opp;
+	struct nni_msg_opt * op;
+	int                  rv = NNG_ENOENT;
+
+	opp = &m->m_opts;
+	while ((op = *opp) != NULL) {
+		if (strcmp(name, op->mo_name) == 0) {
+			if (op->mo_free != NULL) {
+				op->mo_free(op->mo_value, op->mo_size);
+			}
+			*opp = op->mo_next;
+			NNI_FREE_STRUCT(op);
+			rv = 0;
+		} else {
+			*opp = op->mo_next;
+		}
+	}
+	return (rv);
+}
+
+void
+nni_msg_walk_opt(
+    nng_msg *m, void *arg, bool (*fn)(void *, const char *, void *, size_t))
+{
+	struct nni_msg_opt *op;
+
+	for (op = m->m_opts; op != NULL; op = op->mo_next) {
+		if (!fn(arg, op->mo_name, op->mo_value, op->mo_size)) {
+			break;
+		}
+	}
+}
+
+int
+nni_msg_get_opt(nng_msg *m, const char *name, void **vp, size_t *szp)
+{
+	struct nni_msg_opt *op;
+
+	for (op = m->m_opts; op != NULL; op = op->mo_next) {
+		if (strcmp(op->mo_name, name) == 0) {
+			*vp  = op->mo_value;
+			*szp = op->mo_size;
+			return 0;
+		}
+	}
+	return (NNG_ENOENT);
 }
