@@ -287,6 +287,9 @@ NNG_DECL int nng_dialer_create(nng_dialer *, nng_socket, const char *);
 // nng_listener_create creates a new listener, that is not yet started.
 NNG_DECL int nng_listener_create(nng_listener *, nng_socket, const char *);
 
+// nng_dialer_set_cb set the cb to the dialer. Cb runs when dialer finished.
+NNG_DECL int nng_dialer_set_cb(nng_dialer, void *);
+
 // nng_dialer_start starts the endpoint dialing.  This is only possible if
 // the dialer is not already dialing.
 NNG_DECL int nng_dialer_start(nng_dialer, int);
@@ -677,7 +680,7 @@ NNG_DECL nng_dialer   nng_pipe_dialer(nng_pipe);
 NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // Flags.
-#define NNG_FLAG_ALLOC 1u // Recv to allocate receive buffer
+#define NNG_FLAG_ALLOC 1u    // Recv to allocate receive buffer
 #define NNG_FLAG_NONBLOCK 2u // Non-blocking operations
 
 // Options.
@@ -1206,7 +1209,6 @@ NNG_DECL int nng_stream_listener_set_ptr(
     nng_stream_listener *, const char *, void *);
 NNG_DECL int nng_stream_listener_set_addr(
     nng_stream_listener *, const char *, const nng_sockaddr *);
-
 
 #ifndef NNG_ELIDE_DEPRECATED
 // These are legacy APIs that have been deprecated.

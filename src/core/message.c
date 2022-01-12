@@ -487,7 +487,8 @@ nni_msg_reserve(nni_msg *m, size_t capacity)
 size_t
 nni_msg_capacity(nni_msg *m)
 {
-	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr));
+	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) -
+	    m->m_body.ch_ptr));
 }
 
 void *
@@ -671,4 +672,22 @@ void *
 nni_msg_get_proto_data(nng_msg *m)
 {
 	return (m->m_proto_data);
+}
+
+uint8_t
+nni_msg_cmd_type(nni_msg *m)
+{
+	return ((uint8_t)m->m_header_buf[0] & 0xF0);
+}
+
+uint8_t
+nni_msg_get_pub_qos(nni_msg *m)
+{
+	uint8_t qos;
+
+	if (nni_msg_cmd_type(m) != 0x30) {
+		return -1;
+	}
+	qos = (m->m_header_buf[0] & 0x06) >> 1;
+	return qos;
 }
