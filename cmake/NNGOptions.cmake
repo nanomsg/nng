@@ -76,6 +76,9 @@ mark_as_advanced(NNG_PROTO_RESPONDENT0)
 option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
 mark_as_advanced(NNG_PROTO_SURVEYOR0)
 
+option (NNG_PROTO_MQTT_CLIENT "Enable MQTT Client protocol." ON)
+mark_as_advanced(NNG_PROTO_MQTT_CLIENT)
+
 # TLS support.
 
 # Enabling TLS is required to enable support for the TLS transport
@@ -115,9 +118,17 @@ mark_as_advanced(NNG_TRANSPORT_IPC)
 option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TCP)
 
+# MQTT TCP transport
+option (NNG_TRANSPORT_MQTT_TCP "Enable MQTT TCP transport." ON)
+mark_as_advanced(NNG_TRANSPORT_MQTT_TCP)
+
 # TLS transport
 option (NNG_TRANSPORT_TLS "Enable TLS transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TLS)
+
+# MQTT TLS transport
+option (NNG_TRANSPORT_MQTT_TLS "Enable MQTT TLS transport." ON )
+mark_as_advanced(NNG_TRANSPORT_MQTT_TLS)
 
 # WebSocket
 option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
