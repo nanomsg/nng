@@ -43,6 +43,7 @@ nni_init_helper(void)
 
 	// following never fail
 	nni_sp_tran_sys_init();
+	nni_mqtt_tran_sys_init();
 
 	nni_inited = true;
 
@@ -61,6 +62,7 @@ nni_fini(void)
 	if (!nni_inited) {
 		return;
 	}
+	nni_mqtt_tran_sys_fini();
 	nni_sp_tran_sys_fini();
 	nni_tls_sys_fini();
 	nni_reap_drain();

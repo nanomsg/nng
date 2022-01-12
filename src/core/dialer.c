@@ -217,14 +217,15 @@ int
 nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 {
 	nni_sp_tran *tran;
-	nni_dialer  *d;
+	nni_dialer * d;
 	int          rv;
-	nni_url     *url;
+	nni_url *    url;
 
 	if ((rv = nni_url_parse(&url, url_str)) != 0) {
 		return (rv);
 	}
-	if (((tran = nni_sp_tran_find(url)) == NULL) ||
+	if ((((tran = nni_sp_tran_find(url)) == NULL) &&
+	        ((tran = nni_mqtt_tran_find(url)) == NULL)) ||
 	    (tran->tran_dialer == NULL)) {
 		nni_url_free(url);
 		return (NNG_ENOTSUP);
@@ -360,8 +361,8 @@ static void
 dialer_connect_cb(void *arg)
 {
 	nni_dialer *d   = arg;
-	nni_aio    *aio = &d->d_con_aio;
-	nni_aio    *user_aio;
+	nni_aio *   aio = &d->d_con_aio;
+	nni_aio *   user_aio;
 	int         rv;
 
 	nni_mtx_lock(&d->d_mtx);
@@ -554,4 +555,12 @@ nni_dialer_add_stat(nni_dialer *d, nni_stat_item *item)
 	NNI_ARG_UNUSED(d);
 	NNI_ARG_UNUSED(item);
 #endif
+}
+
+// NNG-MQTT
+
+void
+nni_dialer_setcb(nni_dialer *d, void *cb)
+{
+	d->d_ops.d_connsetcb(d->d_data, cb);
 }
