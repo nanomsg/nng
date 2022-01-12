@@ -1,0 +1,75 @@
+= nng_mqtt_msg_set_connect(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_mqtt_msg_set_connect - set mqtt connect message 
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_mqtt_msg_set_connect_proto_version(nng_msg *msgp, uint8_t proto_version);
+void nng_mqtt_msg_set_connect_keep_alive(nng_msg *msgp, uint16_t keep_alive);
+void nng_mqtt_msg_set_connect_client_id(nng_msg *msgp, const char * client_id);
+void nng_mqtt_msg_set_connect_will_topic(nng_msg *msgp, const char * will_topic);
+void nng_mqtt_msg_set_connect_will_msg(nng_msg *msgp, const char * will_msg);
+void nng_mqtt_msg_set_connect_will_retain(nng_msg *msgp, bool will_retain) ;
+void nng_mqtt_msg_set_connect_user_name(nng_msg *msgp, const char *user_name);
+void nng_mqtt_msg_set_connect_password(nng_msg *msgp, const char *password);
+void nng_mqtt_msg_set_connect_clean_session(nng_msg *msgp, bool clean_session);
+
+----
+
+== DESCRIPTION
+
+The `nng_mqtt_msg_set_connect_xxx()` function is used to set mqtt connect message options before finishing __nng_mqtt_msg_encode()__:
+
+	proto_version,
+	keep_alive,
+	client_id,
+	will_topic,
+	will_msg,
+	will_retain,
+	user_name,
+	password,
+	clean_session;
+
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_mqtt_msg_alloc.3.adoc[nng_mqtt_msg_alloc(3)],
+xref:nng_mqtt_msg_decode.3.adoc[nng_mqtt_msg_decode(3)],
+xref:nng_mqtt_msg_encode.3.adoc[nng_mqtt_msg_encode(3)],
+xref:nng_mqtt_msg_get_connect.3.adoc[nng_mqtt_msg_get_connect(3)],
+xref:nng_msg_free.3.adoc[nng_msg_free(3)],
+xref:nng_msg_body.3.adoc[nng_msg_body(3)],
+xref:nng_msg_dup.3.adoc[nng_msg_dup(3)],
+xref:nng_msg_header.3.adoc[nng_msg_header(3)],
+xref:nng_msg_header_len.3.adoc[nng_msg_header_len(3)],
+xref:nng_msg_len.3.adoc[nng_msg_len(3)],
+xref:nng_msg_capacity.3.adoc[nng_msg_capacity(3)],
+xref:nng_msg_reserve.3.adoc[nng_msg_reserve(3)],
+xref:nng_msg_realloc.3.adoc[nng_msg_realloc(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

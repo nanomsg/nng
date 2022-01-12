@@ -36,6 +36,8 @@ int nng_dialer_set_string(nng_dialer d, const char *opt, const char *str);
 
 int nng_dialer_set_uint64(nng_dialer d, const char *opt, uint64_t u64);
 
+int nng_dialer_set_cb(nng_dialer d, void * cb);
+
 ----
 
 == DESCRIPTION
@@ -103,6 +105,9 @@ for details.)
 This function is used to configure a 64-bit unsigned value, _u64_.
 This is typically used for options related to identifiers, network numbers,
 and such.
+
+`nng_dialer_set_cb()`::
+This function is used to configure callback function for current dialer.
 
 == RETURN VALUES
 
