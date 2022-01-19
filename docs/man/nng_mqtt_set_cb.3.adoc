@@ -1,0 +1,49 @@
+= nng_mqtt_callback_functions(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_mqtt_set_connect_cb - mqtt client connect callback function.
+
+nng_mqtt_set_disconnect_cb - mqtt client disconnect callback function.
+
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/mqtt/mqtt_client.h>
+
+int nng_mqtt_set_connect_cb(nng_socket s, nng_pipe_cb cb, void *arg);
+int nng_mqtt_set_disconnect_cb(nng_socket s, nng_pipe_cb cb, void *arg);
+----
+
+== DESCRIPTION
+`nng_mqtt_set_xxx_cb()` functions register the callback function _cb_ to be called after the connection was established or disconnected. The callback _cb_ will be passed arg as its final argument.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECLOSED`:: The socket s does not refer to an open socket.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_mqtt_msg_alloc.3.adoc[nng_mqtt_msg_alloc()],
+xref:nng_mqtt_msg_set_connect.3.adoc[nng_mqtt_msg_set_connect()],
+xref:xref:nng_pipe_notify.3.adoc[nng_pipe_notify()],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_url_parse.3.adoc[nng_url_parse(3)],
+xref:nng.7.adoc[nng(7)]
