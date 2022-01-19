@@ -137,11 +137,12 @@ alloc_work(nng_socket sock)
 	return (w);
 }
 
-// Connack message callback function
-static void
-connect_cb(void *connect_arg, nng_msg *msg)
+void
+connect_cb(nng_pipe p, nng_pipe_ev ev, void *arg)
 {
-	// Mqtt subscribe array of topic with qos
+	printf("%s: connected!\n", __FUNCTION__);
+	nng_socket sock = *(nng_socket *) arg;
+
 	nng_mqtt_topic_qos topic_qos[] = {
 		{ .qos     = 0,
 		    .topic = { .buf = (uint8_t *) SUB_TOPIC1,
@@ -157,33 +158,20 @@ connect_cb(void *connect_arg, nng_msg *msg)
 	size_t topic_qos_count =
 	    sizeof(topic_qos) / sizeof(nng_mqtt_topic_qos);
 
-	nng_socket sock     = *(nng_socket *) connect_arg;
-	uint8_t    ret_code = nng_mqtt_msg_get_connack_return_code(msg);
-	printf("%s: %s(%d)\n", __FUNCTION__,
-	    ret_code == 0 ? "connection established" : "connect failed",
-	    ret_code);
+	// Connected succeed
+	nng_msg *msg;
+	nng_mqtt_msg_alloc(&msg, 0);
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
+	nng_mqtt_msg_set_subscribe_topics(msg, topic_qos, topic_qos_count);
 
-	nng_msg_free(msg);
-	msg = NULL;
-
-	if (ret_code == 0) {
-		// Connected succeed
-		nng_mqtt_msg_alloc(&msg, 0);
-		nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
-		nng_mqtt_msg_set_subscribe_topics(
-		    msg, topic_qos, topic_qos_count);
-
-		// Send subscribe message
-		nng_sendmsg(sock, msg, NNG_FLAG_NONBLOCK);
-	}
+	// Send subscribe message
+	nng_sendmsg(sock, msg, NNG_FLAG_NONBLOCK);
 }
 
-// Disconnect message callback function
-static void
-disconnect_cb(void *disconn_arg, nng_msg *msg)
+void
+disconnect_cb(nng_pipe p, nng_pipe_ev ev, void *arg)
 {
-	(void) disconn_arg;
-	printf("%s\n", __FUNCTION__);
+	printf("%s: disconnected!\n", __FUNCTION__);
 }
 
 int
@@ -210,20 +198,14 @@ client(const char *url)
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
 
-	nng_mqtt_cb user_cb = {
-		.name            = "user_cb",
-		.on_connected    = connect_cb,
-		.on_disconnected = disconnect_cb,
-		.connect_arg     = &sock,
-		.disconn_arg     = "Args",
-	};
+	nng_mqtt_set_connect_cb(sock, connect_cb, &sock);
+	nng_mqtt_set_disconnect_cb(sock, disconnect_cb, NULL);
 
 	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
 		fatal("nng_dialer_create", rv);
 	}
 
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
-	nng_dialer_set_cb(dialer, &user_cb);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	for (i = 0; i < nwork; i++) {
@@ -356,13 +338,8 @@ tls_client(const char *url, const char *ca, const char *cert, const char *key,
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
 
-	nng_mqtt_cb user_cb = {
-		.name            = "user_cb",
-		.on_connected    = connect_cb,
-		.on_disconnected = disconnect_cb,
-		.connect_arg     = &sock,
-		.disconn_arg     = "Args",
-	};
+	nng_mqtt_set_connect_cb(sock, connect_cb, &sock);
+	nng_mqtt_set_disconnect_cb(sock, disconnect_cb, NULL);
 
 	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
 		fatal("nng_dialer_create", rv);
@@ -373,7 +350,6 @@ tls_client(const char *url, const char *ca, const char *cert, const char *key,
 	}
 
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
-	nng_dialer_set_cb(dialer, &user_cb);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	for (i = 0; i < nwork; i++) {

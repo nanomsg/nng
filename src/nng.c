@@ -663,21 +663,6 @@ nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 }
 
 int
-nng_dialer_set_cb(nng_dialer did, void *cb)
-{
-	nni_dialer *d;
-	int         rv;
-
-	if ((rv = nni_dialer_find(&d, did.id)) != 0) {
-		return (rv);
-	}
-
-	nni_dialer_setcb(d, cb);
-	nni_dialer_rele(d);
-	return (0);
-}
-
-int
 nng_dialer_start(nng_dialer did, int flags)
 {
 	nni_dialer *d;

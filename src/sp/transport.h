@@ -49,9 +49,6 @@ struct nni_sp_dialer_ops {
 	// d_setopt is used to set or change an option.
 	int (*d_setopt)(void *, const char *, const void *, size_t, nni_type);
 
-	//d_setconncb is used to set callback for connection.
-	int (*d_connsetcb)(void *, void *);
-
 	// d_options is an array of dialer options.  The final
 	// element must have a NULL name. If this member is NULL, then
 	// no dialer specific options are available.

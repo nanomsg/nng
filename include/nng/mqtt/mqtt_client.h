@@ -211,14 +211,6 @@ extern void nng_mqtt_user_props_free(nng_mqtt_user_props_t *);
 
 #define NNG_OPT_MQTT_CONNMSG "mqtt-connect-msg"
 
-typedef struct {
-	char *name;
-	void (*on_connected)(void *, nng_msg *);
-	void (*on_disconnected)(void *, nng_msg *);
-	void *connect_arg;
-	void *disconn_arg;
-} nng_mqtt_cb;
-
 typedef enum {
 	NNG_MQTT_CONNECT     = 0x01,
 	NNG_MQTT_CONNACK     = 0x02,
@@ -314,7 +306,8 @@ NNG_DECL nng_mqtt_topic_qos *nng_mqtt_topic_qos_array_create(size_t);
 NNG_DECL void                nng_mqtt_topic_qos_array_set(
                    nng_mqtt_topic_qos *, size_t, const char *, uint8_t);
 NNG_DECL void nng_mqtt_topic_qos_array_free(nng_mqtt_topic_qos *, size_t);
-
+NNG_DECL void nng_mqtt_set_connect_cb(nng_socket, nng_pipe_cb, void *);
+NNG_DECL void nng_mqtt_set_disconnect_cb(nng_socket, nng_pipe_cb, void *);
 NNG_DECL void nng_mqtt_msg_dump(nng_msg *, uint8_t *, uint32_t, bool);
 
 #ifdef __cplusplus

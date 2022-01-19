@@ -46,7 +46,6 @@ void
 fatal(const char *msg, int rv)
 {
 	fprintf(stderr, "%s: %s\n", msg, nng_strerror(rv));
-	exit(1);
 }
 
 // Print the given string limited to 80 columns.
@@ -70,33 +69,16 @@ print80(const char *prefix, const char *str, size_t len, bool quote)
 }
 
 static void
-disconnect_cb(void *disconn_arg, nng_msg *msg)
+disconnect_cb(nng_pipe p, nng_pipe_ev ev, void *arg)
 {
-	(void) disconn_arg;
-	printf("%s\n", __FUNCTION__);
+	printf("%s: disconnected!\n", __FUNCTION__);
 }
 
 static void
-connect_cb(void *arg, nng_msg *ackmsg)
+connect_cb(nng_pipe p, nng_pipe_ev ev, void *arg)
 {
-	char *  userarg = (char *) arg;
-	uint8_t status  = nng_mqtt_msg_get_connack_return_code(ackmsg);
-	printf("Connected cb. \n"
-	       "  -> Status  [%d]\n"
-	       "  -> Userarg [%s].\n",
-	    status, userarg);
-
-	// Free ConnAck msg
-	nng_msg_free(ackmsg);
+	printf("%s: connected!\n", __FUNCTION__);
 }
-
-nng_mqtt_cb user_cb = {
-	.name            = "user_cb",
-	.on_connected    = connect_cb,
-	.on_disconnected = disconnect_cb,
-	.connect_arg     = "Args",
-	.disconn_arg     = "Args",
-};
 
 // Connect to the given address.
 int
@@ -127,6 +109,9 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 	nng_mqtt_msg_set_connect_will_topic(connmsg, "will_topic");
 	nng_mqtt_msg_set_connect_clean_session(connmsg, true);
 
+	nng_mqtt_set_connect_cb(*sock, connect_cb, &sock);
+	nng_mqtt_set_disconnect_cb(*sock, disconnect_cb, NULL);
+
 	uint8_t buff[1024] = { 0 };
 
 	if (verbose) {
@@ -134,12 +119,10 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 		printf("%s\n", buff);
 	}
 
-	printf("Connecting to server ...");
+	printf("Connecting to server ...\n");
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, connmsg);
-	nng_dialer_set_cb(dialer, &user_cb);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
-	printf("connected\n");
 
 	// TODO Connmsg would be free when client disconnected
 	return (0);
@@ -182,6 +165,7 @@ client_subscribe(nng_socket sock, nng_mqtt_topic_qos *subscriptions, int count,
 
 		if ((rv = nng_recvmsg(sock, &msg, 0)) != 0) {
 			fatal("nng_recvmsg", rv);
+			continue;
 		}
 
 		// we should only receive publish messages

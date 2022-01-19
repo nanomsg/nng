@@ -435,6 +435,18 @@ nng_mqtt_topic_qos_array_free(nng_mqtt_topic_qos *topic_qos, size_t n)
 }
 
 void
+nng_mqtt_set_connect_cb(nng_socket sock, nng_pipe_cb cb, void *arg)
+{
+	nng_pipe_notify(sock, NNG_PIPE_EV_ADD_POST, cb, arg);
+}
+
+void
+nng_mqtt_set_disconnect_cb(nng_socket sock, nng_pipe_cb cb, void *arg)
+{
+	nng_pipe_notify(sock, NNG_PIPE_EV_REM_POST, cb, arg);
+}
+
+void
 nng_mqtt_msg_dump(
     nng_msg *msg, uint8_t *buffer, uint32_t len, bool print_bytes)
 {
