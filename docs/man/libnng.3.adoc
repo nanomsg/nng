@@ -482,7 +482,8 @@ These functions are intended for use with MQTT client applications.
 
 |===
 |xref:nng_mqtt_client_open.3.adoc[nng_mqtt_client_open]|open mqtt client socket
-|xref:nng_mqtt_callback_function.3.adoc[nng_mqtt_cb]|mqtt callback function
+|xref:nng_mqtt_set_cb.3.adoc[nng_mqtt_set_connect_cb]| set mqtt connect callback function
+|xref:nng_mqtt_set_cb.3.adoc[nng_mqtt_set_disconnect_cb]| set mqtt disconnect callback function
 |===
 
 == SEE ALSO
