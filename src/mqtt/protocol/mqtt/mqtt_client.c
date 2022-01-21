@@ -16,7 +16,6 @@
 // 2. Send sends PUBLISH messages.
 // 3. Receive is used to receive published data from the server.
 
-// FIXME: assign valid id, or do we need these ?
 #define NNG_MQTT_SELF 0
 #define NNG_MQTT_SELF_NAME "mqtt-client"
 #define NNG_MQTT_PEER 0
@@ -115,7 +114,7 @@ struct mqtt_sock_s {
 	nni_atomic_bool closed;
 	nni_atomic_int  ttl;
 	nni_duration    retry;
-	nni_mtx         mtx;    // TODO: more fine grained mutual exclusion
+	nni_mtx         mtx;    // more fine grained mutual exclusion
 	mqtt_ctx_t      master; // to which we delegate send/recv calls
 	mqtt_pipe_t *   mqtt_pipe;
 	nni_list        send_queue; // work pending to send
@@ -269,7 +268,7 @@ mqtt_sock_get_work(mqtt_sock_t *s)
 	} else {
 		work = nni_zalloc(sizeof(work_t));
 		if (NULL == work) {
-			return NULL; // oom
+			return NULL;
 		}
 		work_init(work, s, s->retry, mqtt_timer_cb);
 	}
@@ -319,7 +318,7 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	nni_atomic_set(&p->next_packet_id, 0);
 	p->pipe      = pipe;
 	p->mqtt_sock = s;
-	// FIXME: passing keep alive timeout
+	// passing keep alive timeout
 	work_init(&p->ping_work, s, sock->retry, mqtt_keep_alive_cb);
 	nni_mqtt_msg_alloc(&p->ping_work.msg, 0);
 	nni_mqtt_msg_set_packet_type(p->ping_work.msg, NNG_MQTT_PINGREQ);
@@ -332,7 +331,7 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	// accidental collision across restarts.
 	nni_id_map_init(&p->send_unack, 0x0000u, 0xffffu, true);
 	nni_id_map_init(&p->recv_unack, 0x0000u, 0xffffu, true);
-	nni_lmq_init(&p->recv_messages, 128); // FIXME: remove hard code value
+	nni_lmq_init(&p->recv_messages, 128); // remove hard code value
 
 	return (0);
 }
@@ -355,16 +354,11 @@ mqtt_pipe_start(void *arg)
 	mqtt_pipe_t *p = arg;
 	mqtt_sock_t *s = p->mqtt_sock;
 
-	// TODO: do we need this ?
-	// if (nni_pipe_peer(p->pipe) != NNG_MQTT_SELF) {
-	// 	return (NNG_EPROTO);
-	// }
-
 	nni_mtx_lock(&s->mtx);
 	s->mqtt_pipe = p;
 	mqtt_send_start(s);
-	work_timer_schedule(&p->ping_work);
 	nni_mtx_unlock(&s->mtx);
+	work_timer_schedule(&p->ping_work);
 
 	nni_pipe_recv(p->pipe, &p->recv_aio);
 
@@ -421,7 +415,7 @@ mqtt_pipe_recv_msgq_putq(mqtt_pipe_t *p, nni_msg *msg)
 {
 	if (0 != nni_lmq_put(&p->recv_messages, msg)) {
 		// resize to ensure we do not lost messages
-		// TODO: add option to drop messages
+		// add option to drop messages
 		if (0 !=
 		    nni_lmq_resize(&p->recv_messages,
 		        nni_lmq_len(&p->recv_messages) * 2)) {
@@ -456,9 +450,8 @@ mqtt_keep_alive_cb(void *arg)
 		mqtt_send_start(s);
 	}
 
-	work_timer_schedule(&p->ping_work);
-
 	nni_mtx_unlock(&s->mtx);
+	work_timer_schedule(&p->ping_work);
 }
 
 // Timer callback, we use it for retransmitting.
@@ -498,6 +491,7 @@ mqtt_send_cb(void *arg)
 	mqtt_pipe_t *p = arg;
 	mqtt_sock_t *s = p->mqtt_sock;
 	work_t *     work;
+	bool         scheduler = false;
 
 	nni_mtx_lock(&s->mtx);
 
@@ -526,14 +520,14 @@ mqtt_send_cb(void *arg)
 	case NNG_MQTT_CONNECT:
 		// we have sent a CONNECT, expect receiving a CONNACK
 		work_set_recv(work, NNG_MQTT_CONNACK);
-		// FIXME
+		// Connack event
 		work_set_final(work);
 		break;
 
 	case NNG_MQTT_DISCONNECT:
 		// we have sent a DISCONNECT, just close the socket.
 		work_set_final(work);
-		// FIXME: close the socket
+		// close the socket
 		break;
 
 	case NNG_MQTT_PUBACK:
@@ -543,7 +537,7 @@ mqtt_send_cb(void *arg)
 		// fall through
 
 	case NNG_MQTT_PUBCOMP:
-		// FIXME: check packet id
+		// check packet id
 		// we have sent a PUBCOMP,
 		// indicating a successful receipt of a QoS 2 message
 		work_set_final(work);
@@ -573,7 +567,7 @@ mqtt_send_cb(void *arg)
 				// for QoS 1, expect receiving a PUBACK
 				if (!work_is_acked(work)) {
 					work_set_recv(work, NNG_MQTT_PUBACK);
-					work_timer_schedule(work);
+					scheduler = true;
 				} else {
 					// scheduling disorder, PUBACK received
 					work_set_final(work);
@@ -582,7 +576,7 @@ mqtt_send_cb(void *arg)
 				// for QoS 2, expect receiving a PUBREC
 				if (!work_is_acked(work)) {
 					work_set_recv(work, NNG_MQTT_PUBREC);
-					work_timer_schedule(work);
+					scheduler = true;
 				} else {
 					// scheduling disorder, PUBREC received
 					work_set_recv(work, NNG_MQTT_PUBCOMP);
@@ -605,7 +599,7 @@ mqtt_send_cb(void *arg)
 		// we have sent a SUBSCRIBE, expect receiving a SUBACK
 		if (!work_is_acked(work)) {
 			work_set_recv(work, NNG_MQTT_SUBACK);
-			work_timer_schedule(work);
+			scheduler = true;
 		} else {
 			// scheduling disorder, SUBACK received
 			work_set_final(work);
@@ -616,7 +610,7 @@ mqtt_send_cb(void *arg)
 		// we have sent a UNSUBSCRIBE, expect receiving a UNSUBACK
 		if (!work_is_acked(work)) {
 			work_set_recv(work, NNG_MQTT_UNSUBACK);
-			work_timer_schedule(work);
+			scheduler = true;
 		} else {
 			// scheduling disorder, UNSUBACK received
 			work_set_final(work);
@@ -648,6 +642,9 @@ mqtt_send_cb(void *arg)
 
 	mqtt_send_start(s);
 	nni_mtx_unlock(&s->mtx);
+	if (scheduler) {
+		work_timer_schedule(work);
+	}
 	return;
 }
 
@@ -690,7 +687,6 @@ mqtt_recv_cb(void *arg)
 	// state transitions
 	switch (packet_type) {
 	case NNG_MQTT_CONNACK:
-		// FIXME
 		// we have received the CONNACK
 		nni_mtx_unlock(&s->mtx);
 		return;
