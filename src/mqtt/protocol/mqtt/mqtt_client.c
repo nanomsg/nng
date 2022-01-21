@@ -375,12 +375,8 @@ static void
 mqtt_pipe_stop(void *arg)
 {
 	mqtt_pipe_t *p = arg;
-	mqtt_sock_t *s = p->mqtt_sock;
-
-	nni_mtx_lock(&s->mtx);
 	nni_aio_stop(&p->send_aio);
 	nni_aio_stop(&p->recv_aio);
-	nni_mtx_unlock(&s->mtx);
 }
 
 void
