@@ -661,3 +661,17 @@ nni_mqtt_topic_qos_array_free(nni_mqtt_topic_qos *topic_qos, size_t n)
 	}
 	NNI_FREE_STRUCTS(topic_qos, n);
 }
+
+nni_aio *
+nni_mqtt_msg_get_aio(nni_msg *msg)
+{
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	return proto_data->aio;
+}
+
+void
+nni_mqtt_msg_set_aio(nni_msg *msg, nni_aio *aio)
+{
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	proto_data->aio = aio;
+}

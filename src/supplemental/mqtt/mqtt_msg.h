@@ -212,6 +212,7 @@ typedef struct mqtt_fixed_hdr_t {
 
 typedef struct mqtt_msg_t {
 	/* Fixed header part */
+	nni_aio * aio;  //QoS AIO
 	mqtt_fixed_hdr             fixed_header;
 	union mqtt_variable_header var_header;
 	union mqtt_payload         payload;
@@ -243,6 +244,8 @@ extern int read_packet_length(struct pos_buf *, uint32_t *);
 extern int  mqtt_buf_create(mqtt_buf *, const uint8_t *, uint32_t);
 extern int  mqtt_buf_dup(mqtt_buf *, const mqtt_buf *);
 extern void mqtt_buf_free(mqtt_buf *);
+extern nni_aio *nni_mqtt_msg_get_aio(nni_msg *);
+extern void     nni_mqtt_msg_set_aio(nni_msg *, nni_aio *);
 
 extern mqtt_msg *mqtt_msg_create(nni_mqtt_packet_type);
 
