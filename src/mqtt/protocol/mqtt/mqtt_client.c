@@ -102,11 +102,14 @@ struct mqtt_pipe_s {
 	nni_pipe *      pipe;
 	mqtt_sock_t *   mqtt_sock;
 	work_t          ping_work;     // work to send a ping request
-	nni_id_map      send_unack;    // send messages unacknowledged
+	nni_id_map      sent_unack;    // send messages unacknowledged
 	nni_id_map      recv_unack;    // recv messages unacknowledged
 	nni_aio         send_aio;      // send aio to the underlying transport
 	nni_aio         recv_aio;      // recv aio to the underlying transport
 	nni_lmq         recv_messages; // recv messages queue
+	nni_lmq         send_messages; // send messages queue
+	nni_lmq         ctx_aios;      // awaiting aio of QoS
+	bool            busy;
 };
 
 // A mqtt_sock_s is our per-socket protocol private structure.
@@ -319,19 +322,20 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	p->pipe      = pipe;
 	p->mqtt_sock = s;
 	// passing keep alive timeout
-	work_init(&p->ping_work, s, sock->retry, mqtt_keep_alive_cb);
-	nni_mqtt_msg_alloc(&p->ping_work.msg, 0);
-	nni_mqtt_msg_set_packet_type(p->ping_work.msg, NNG_MQTT_PINGREQ);
-	work_set_send(&p->ping_work, NNG_MQTT_PINGREQ);
-	nni_mqtt_msg_encode(p->ping_work.msg);
+	// work_init(&p->ping_work, s, sock->retry, mqtt_keep_alive_cb);
+	// nni_mqtt_msg_alloc(&p->ping_work.msg, 0);
+	// nni_mqtt_msg_set_packet_type(p->ping_work.msg, NNG_MQTT_PINGREQ);
+	// work_set_send(&p->ping_work, NNG_MQTT_PINGREQ);
+	// nni_mqtt_msg_encode(p->ping_work.msg);
 	nni_aio_init(&p->send_aio, mqtt_send_cb, p);
 	nni_aio_init(&p->recv_aio, mqtt_recv_cb, p);
 	// Packet IDs are 16 bits
 	// We start at a random point, to minimize likelihood of
 	// accidental collision across restarts.
-	nni_id_map_init(&p->send_unack, 0x0000u, 0xffffu, true);
+	nni_id_map_init(&p->sent_unack, 0x0000u, 0xffffu, true);
 	nni_id_map_init(&p->recv_unack, 0x0000u, 0xffffu, true);
-	nni_lmq_init(&p->recv_messages, 128); // remove hard code value
+	nni_lmq_init(&p->recv_messages, 1024); // remove hard code value
+	nni_lmq_init(&p->send_messages, 1024); // remove hard code value
 
 	return (0);
 }
@@ -340,12 +344,13 @@ static void
 mqtt_pipe_fini(void *arg)
 {
 	mqtt_pipe_t *p = arg;
-	work_fini(&p->ping_work);
+	// work_fini(&p->ping_work);
 	nni_aio_fini(&p->send_aio);
 	nni_aio_fini(&p->recv_aio);
-	nni_id_map_fini(&p->send_unack);
+	nni_id_map_fini(&p->sent_unack);
 	nni_id_map_fini(&p->recv_unack);
 	nni_lmq_fini(&p->recv_messages);
+	nni_lmq_fini(&p->send_messages);
 }
 
 static int
@@ -356,9 +361,9 @@ mqtt_pipe_start(void *arg)
 
 	nni_mtx_lock(&s->mtx);
 	s->mqtt_pipe = p;
-	mqtt_send_start(s);
+	// mqtt_send_start(s);
 	nni_mtx_unlock(&s->mtx);
-	work_timer_schedule(&p->ping_work);
+	// work_timer_schedule(&p->ping_work);
 
 	nni_pipe_recv(p->pipe, &p->recv_aio);
 
@@ -392,7 +397,7 @@ mqtt_pipe_close(void *arg)
 	nni_aio_close(&p->recv_aio);
 	mqtt_sock_close_work_queue(s, &s->send_queue);
 	mqtt_sock_close_work_queue(s, &s->recv_queue);
-	nni_id_map_foreach(&p->send_unack, mqtt_close_unack_work_cb);
+	nni_id_map_foreach(&p->sent_unack, mqtt_close_unack_work_cb);
 	nni_id_map_foreach(&p->recv_unack, mqtt_close_unack_work_cb);
 	nni_mtx_unlock(&s->mtx);
 
@@ -446,12 +451,12 @@ mqtt_keep_alive_cb(void *arg)
 	// if there is work in the send queue, no need to send PINGREQ
 	if (nni_list_empty(&s->send_queue)) {
 		// no work in send queue, then send a PINGREQ
-		nni_list_append(&s->send_queue, &p->ping_work);
+		// nni_list_append(&s->send_queue, &p->ping_work);
 		mqtt_send_start(s);
 	}
 
 	nni_mtx_unlock(&s->mtx);
-	work_timer_schedule(&p->ping_work);
+	// work_timer_schedule(&p->ping_work);
 }
 
 // Timer callback, we use it for retransmitting.
@@ -478,7 +483,7 @@ mqtt_timer_cb(void *arg)
 	} else {
 		// reach max retransmitting, quit
 		nni_aio_finish_error(work->user_aio, NNG_EAGAIN);
-		nni_id_remove(&p->send_unack, work->packet_id);
+		nni_id_remove(&p->sent_unack, work->packet_id);
 		mqtt_sock_free_work(s, work);
 	}
 
@@ -490,13 +495,7 @@ mqtt_send_cb(void *arg)
 {
 	mqtt_pipe_t *p = arg;
 	mqtt_sock_t *s = p->mqtt_sock;
-	work_t *     work;
-	bool         scheduler = false;
-
-	nni_mtx_lock(&s->mtx);
-
-	work = nni_list_first(&s->send_queue); // will not be NULL
-	nni_list_remove(&s->send_queue, work);
+	nni_msg     *msg;
 
 	if (nni_aio_result(&p->send_aio) != 0) {
 		// We failed to send... clean up and deal with it.
@@ -506,6 +505,7 @@ mqtt_send_cb(void *arg)
 		nni_pipe_close(p->pipe);
 		return;
 	}
+	nni_mtx_lock(&s->mtx);
 
 	if (nni_atomic_get_bool(&s->closed) ||
 	    nni_atomic_get_bool(&p->closed)) {
@@ -514,137 +514,16 @@ mqtt_send_cb(void *arg)
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-
-	// state transitions
-	switch (work_packet_type(work)) {
-	case NNG_MQTT_CONNECT:
-		// we have sent a CONNECT, expect receiving a CONNACK
-		work_set_recv(work, NNG_MQTT_CONNACK);
-		// Connack event
-		work_set_final(work);
-		break;
-
-	case NNG_MQTT_DISCONNECT:
-		// we have sent a DISCONNECT, just close the socket.
-		work_set_final(work);
-		// close the socket
-		break;
-
-	case NNG_MQTT_PUBACK:
-		// we have sent a PUBACK,
-		// indicating a successful receipt of a QoS 1 message
-
-		// fall through
-
-	case NNG_MQTT_PUBCOMP:
-		// check packet id
-		// we have sent a PUBCOMP,
-		// indicating a successful receipt of a QoS 2 message
-		work_set_final(work);
-		nni_id_remove(&p->recv_unack, work->packet_id);
-		// ownership of work->msg to the lmq
-		mqtt_pipe_recv_msgq_putq(p, work->msg);
-		work->msg = NULL;
-		mqtt_sock_free_work(s, work);
-		mqtt_run_recv_queue(s);
-		mqtt_send_start(s);
+	if (nni_lmq_get(&p->send_messages, &msg) == 0) {
+		nni_mqtt_msg_encode(msg);
+		nni_aio_set_msg(&p->send_aio, msg);
+		nni_pipe_send(p->pipe, &p->send_aio);
 		nni_mtx_unlock(&s->mtx);
-		return;
-
-	case NNG_MQTT_PINGREQ:
-		// we have sent a PINGREQ
-		mqtt_send_start(s);
-		nni_mtx_unlock(&s->mtx);
-		return;
-
-	case NNG_MQTT_PUBLISH:
-		// we have sent a PUBLISH
-		if (0 == work->qos) {
-			// QoS 0, no further actions
-			work_set_final(work);
-		} else {
-			if (1 == work->qos) {
-				// for QoS 1, expect receiving a PUBACK
-				if (!work_is_acked(work)) {
-					work_set_recv(work, NNG_MQTT_PUBACK);
-					scheduler = true;
-				} else {
-					// scheduling disorder, PUBACK received
-					work_set_final(work);
-				}
-			} else {
-				// for QoS 2, expect receiving a PUBREC
-				if (!work_is_acked(work)) {
-					work_set_recv(work, NNG_MQTT_PUBREC);
-					scheduler = true;
-				} else {
-					// scheduling disorder, PUBREC received
-					work_set_recv(work, NNG_MQTT_PUBCOMP);
-				}
-			}
-		}
-		break;
-
-	case NNG_MQTT_PUBREC:
-		// we have sent a PUBREC, expect receiving a PUBREL
-		work_set_recv(work, NNG_MQTT_PUBREL);
-		break;
-
-	case NNG_MQTT_PUBREL:
-		// we have sent a PUBREL, expect receiving a PUBCOMP
-		work_set_recv(work, NNG_MQTT_PUBCOMP);
-		break;
-
-	case NNG_MQTT_SUBSCRIBE:
-		// we have sent a SUBSCRIBE, expect receiving a SUBACK
-		if (!work_is_acked(work)) {
-			work_set_recv(work, NNG_MQTT_SUBACK);
-			scheduler = true;
-		} else {
-			// scheduling disorder, SUBACK received
-			work_set_final(work);
-		}
-		break;
-
-	case NNG_MQTT_UNSUBSCRIBE:
-		// we have sent a UNSUBSCRIBE, expect receiving a UNSUBACK
-		if (!work_is_acked(work)) {
-			work_set_recv(work, NNG_MQTT_UNSUBACK);
-			scheduler = true;
-		} else {
-			// scheduling disorder, UNSUBACK received
-			work_set_final(work);
-		}
-		break;
-
-	default:
-		work_set_error(work);
-		break;
-	}
-
-	if (work_is_error(work)) {
-		// MQTT protocol error, terminate the connection
-		nni_aio_finish_error(work->user_aio, NNG_EPROTO);
-		nni_mtx_unlock(&s->mtx);
-		nni_pipe_close(p->pipe);
-		return;
-	} else if (work_is_final(work)) {
-		// good news, protocol state machine run to the end
-		nni_aio *aio = work->user_aio;
-		mqtt_sock_free_work(s, work);
-		mqtt_send_start(s);
-		nni_mtx_unlock(&s->mtx);
-		if (NULL != aio) {
-			nni_aio_finish(aio, 0, 0);
-		}
 		return;
 	}
 
-	mqtt_send_start(s);
+	p->busy = false;
 	nni_mtx_unlock(&s->mtx);
-	if (scheduler) {
-		work_timer_schedule(work);
-	}
 	return;
 }
 
@@ -653,15 +532,12 @@ mqtt_recv_cb(void *arg)
 {
 	mqtt_pipe_t *p = arg;
 	mqtt_sock_t *s = p->mqtt_sock;
+	nni_aio * user_aio = NULL;
+	nni_msg * cached_msg = NULL;
 	work_t *     work;
 
-	nni_mtx_lock(&s->mtx);
-
-	nni_msg *msg = nni_aio_get_msg(&p->recv_aio);
 
 	if (nni_aio_result(&p->recv_aio) != 0) {
-		nni_msg_free(msg);
-		nni_mtx_unlock(&s->mtx);
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -671,6 +547,8 @@ mqtt_recv_cb(void *arg)
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
+	nni_msg *msg = nni_aio_get_msg(&p->recv_aio);
+	nni_mtx_lock(&s->mtx);
 
 	nni_aio_set_msg(&p->recv_aio, NULL);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
@@ -690,55 +568,25 @@ mqtt_recv_cb(void *arg)
 		// we have received the CONNACK
 		nni_mtx_unlock(&s->mtx);
 		return;
-
 	case NNG_MQTT_PUBACK:
 		// we have received a PUBACK, successful delivery of a QoS 1
-
 		// fall through
-
 	case NNG_MQTT_PUBCOMP:
 		// we have received a PUBCOMP, successful delivery of a QoS 2
-
 		// fall through
-
 	case NNG_MQTT_SUBACK:
 		// we have received a SUBACK, successful subscription
-
 		// fall through
-
 	case NNG_MQTT_UNSUBACK:
 		// we have received a UNSUBACK, successful unsubscription
-		packet_id = nni_mqtt_msg_get_packet_id(msg);
+		packet_id  = nni_mqtt_msg_get_packet_id(msg);
+		cached_msg = nni_id_get(&p->sent_unack, packet_id);
+		if (cached_msg != NULL) {
+			nni_id_remove(&p->sent_unack, packet_id);
+			user_aio   = nni_mqtt_msg_get_aio(cached_msg);
+			nni_msg_free(cached_msg);
+		}
 		nni_msg_free(msg);
-		work = nni_id_get(&p->send_unack, packet_id);
-		if (NULL == work) {
-			// ignore this message
-			nni_mtx_unlock(&s->mtx);
-			return;
-		}
-		nni_id_remove(&p->send_unack, packet_id);
-		packet_type_t expect_packet_type = work_packet_type(work);
-		if (expect_packet_type == packet_type) {
-			work_set_final(work);
-			work_timer_cancel(work);
-		} else if (
-		    // 1. we are sending QoS 1 and received PUBACK
-		    (NNG_MQTT_PUBLISH == expect_packet_type &&
-		        1 == work->qos && NNG_MQTT_PUBACK == packet_type) ||
-		    // 2. we are sending QoS 2 and received PUBCOMP
-		    (NNG_MQTT_PUBLISH == expect_packet_type &&
-		        2 == work->qos && NNG_MQTT_PUBCOMP == packet_type) ||
-		    // 3. we are sending SUBSCRIBE and received SUBACK
-		    (NNG_MQTT_SUBSCRIBE == expect_packet_type &&
-		        NNG_MQTT_SUBACK == packet_type) ||
-		    // 4. we are sending UNSUBSCRIBE and received UNSUBACK
-		    (NNG_MQTT_UNSUBSCRIBE == expect_packet_type &&
-		        NNG_MQTT_UNSUBACK == packet_type)) {
-			// scheduling disorder
-			work_set_acked(work);
-		} else {
-			work_set_error(work);
-		}
 		break;
 
 	case NNG_MQTT_PINGRESP:
@@ -747,49 +595,50 @@ mqtt_recv_cb(void *arg)
 		return;
 
 	case NNG_MQTT_PUBREC:
-		// we have received a PUBREC in the QoS 2 delivery,
-		// then send a PUBREL
-		packet_id = nni_mqtt_msg_get_pubrec_packet_id(msg);
+		// // we have received a PUBREC in the QoS 2 delivery,
+		// // then send a PUBREL
+		// packet_id = nni_mqtt_msg_get_pubrec_packet_id(msg);
+		// nni_msg_free(msg);
+		// work = nni_id_get(&p->sent_unack, packet_id);
+		// if (NULL == work) {
+		// 	// ignore this message
+		// 	nni_mtx_unlock(&s->mtx);
+		// 	return;
+		// }
+		// // the transport handled sending the PUBREL for us,
+		// // expect to receive a PUBCOMP
+		// if (work_packet_type(work) == packet_type) {
+		// 	work_set_recv(work, NNG_MQTT_PUBCOMP);
+		// 	work_timer_cancel(work);
+		// } else if (work_packet_type(work) == NNG_MQTT_PUBLISH &&
+		//     2 == work->qos) {
+		// 	// scheduling disorder
+		// 	work_set_acked(work);
+		// } else {
+		// 	work_set_error(work);
+		// 	work_timer_cancel(work);
+		// }
 		nni_msg_free(msg);
-		work = nni_id_get(&p->send_unack, packet_id);
-		if (NULL == work) {
-			// ignore this message
-			nni_mtx_unlock(&s->mtx);
-			return;
-		}
-		// the transport handled sending the PUBREL for us,
-		// expect to receive a PUBCOMP
-		if (work_packet_type(work) == packet_type) {
-			work_set_recv(work, NNG_MQTT_PUBCOMP);
-			work_timer_cancel(work);
-		} else if (work_packet_type(work) == NNG_MQTT_PUBLISH &&
-		    2 == work->qos) {
-			// scheduling disorder
-			work_set_acked(work);
-		} else {
-			work_set_error(work);
-			work_timer_cancel(work);
-		}
 		break;
 
 	case NNG_MQTT_PUBREL:
 		// we have received a PUBREL, then send a PUBCOMP
 		packet_id = nni_mqtt_msg_get_pubrel_packet_id(msg);
-		work      = nni_id_get(&p->recv_unack, packet_id);
-		if (NULL == work) {
-			// ignore this message
-			nni_msg_free(msg);
-			nni_mtx_unlock(&s->mtx);
-			return;
-		}
-		// the transport handled sending the PUBCOMP for us
-		work_set_final(work);
-		nni_id_remove(&p->recv_unack, work->packet_id);
+		cached_msg      = nni_id_get(&p->recv_unack, packet_id);
+		// if (NULL == work) {
+		// 	// ignore this message
+		// 	nni_msg_free(msg);
+		// 	nni_mtx_unlock(&s->mtx);
+		// 	return;
+		// }
+		// // the transport handled sending the PUBCOMP for us
+		// work_set_final(work);
+		// nni_id_remove(&p->recv_unack, work->packet_id);
 		// ownership of work->msg to the lmq
 		mqtt_pipe_recv_msgq_putq(p, work->msg);
 		mqtt_run_recv_queue(s);
 		work->msg = msg;
-		mqtt_sock_free_work(s, work); // will release msg
+		// mqtt_sock_free_work(s, work); // will release msg
 		nni_mtx_unlock(&s->mtx);
 		return;
 
@@ -828,22 +677,25 @@ mqtt_recv_cb(void *arg)
 		return;
 	}
 
-	if (work_is_error(work)) {
-		// protocol error, just close the connection
-		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_error(work->user_aio, NNG_EPROTO);
-		nni_pipe_close(p->pipe);
-		return;
-	} else if (work_is_final(work)) {
-		// good news, protocol state machine run to the end
-		nni_aio *aio = work->user_aio;
-		mqtt_sock_free_work(s, work);
-		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish(aio, 0, 0);
-		return;
-	}
+	// if (work_is_error(work)) {
+	// 	// protocol error, just close the connection
+	// 	nni_mtx_unlock(&s->mtx);
+	// 	nni_aio_finish_error(work->user_aio, NNG_EPROTO);
+	// 	nni_pipe_close(p->pipe);
+	// 	return;
+	// } else if (work_is_final(work)) {
+	// 	// good news, protocol state machine run to the end
+	// 	nni_aio *aio = work->user_aio;
+	// 	mqtt_sock_free_work(s, work);
+	// 	nni_mtx_unlock(&s->mtx);
+	// 	nni_aio_finish(aio, 0, 0);
+	// 	return;
+	// }
 
 	nni_mtx_unlock(&s->mtx);
+	if (user_aio) {
+		nni_aio_finish(user_aio, 0, 0);
+	}
 
 	return;
 }
@@ -939,10 +791,10 @@ mqtt_send_start(mqtt_sock_t *s)
 				    mqtt_pipe_get_next_packet_id(p);
 				nni_mqtt_msg_set_packet_id(
 				    work->msg, work->packet_id);
-				NNI_ASSERT(nni_id_get(&p->send_unack,
+				NNI_ASSERT(nni_id_get(&p->sent_unack,
 				               work->packet_id) == NULL);
 				if (0 !=
-				    nni_id_set(&p->send_unack, work->packet_id,
+				    nni_id_set(&p->sent_unack, work->packet_id,
 				        work)) {
 					// FIXME
 				}
@@ -991,6 +843,11 @@ mqtt_ctx_send(void *arg, nni_aio *aio)
 {
 	mqtt_ctx_t * ctx = arg;
 	mqtt_sock_t *s   = ctx->mqtt_sock;
+	mqtt_pipe_t *p   = s->mqtt_pipe;
+	uint16_t     ptype, packet_id;
+	uint8_t      qos;
+	nni_msg *    msg;
+	nni_msg *    tmsg;
 	work_t *     work;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -1000,29 +857,69 @@ mqtt_ctx_send(void *arg, nni_aio *aio)
 	nni_mtx_lock(&s->mtx);
 
 	if (nni_atomic_get_bool(&s->closed)) {
+		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
+	msg   = nni_aio_get_msg(aio);
+	ptype = nni_mqtt_msg_get_packet_type(msg);
+	switch (ptype) {
+	case NNG_MQTT_CONNECT:
+	case NNG_MQTT_PINGREQ:
+		break;
 
-	work = mqtt_sock_get_work(s);
+	case NNG_MQTT_PUBLISH:
+		qos = nni_mqtt_msg_get_publish_qos(msg);
+		nni_mqtt_msg_set_aio(msg, aio);
+		if (0 == qos) {
+			break; // QoS 0 need no packet id
+		}
+	case NNG_MQTT_SUBSCRIBE:
+	case NNG_MQTT_UNSUBSCRIBE:
+		packet_id     = mqtt_pipe_get_next_packet_id(p);
+		nni_mqtt_msg_set_packet_id(msg, packet_id);
+		tmsg = nni_id_get(&p->sent_unack, packet_id);
+		if (tmsg != NULL) {
+			nni_plat_printf("Warning : msg %d lost due to "
+			                "insufficient computing power!",
+			    packet_id);
+			nni_aio_finish_error(
+			    nni_mqtt_msg_get_aio(tmsg), NNG_EPROTO);
+			nni_msg_free(tmsg);
+			nni_id_remove(&p->sent_unack, packet_id);
+		}
+		nni_msg_clone(msg);
+		if (nni_id_set(&p->sent_unack, packet_id, msg) != 0) {
+			nni_println("Warning! QoS msg caching failed");
+			nni_msg_free(msg);
+		}
+		break;
 
-	if (NULL == work) {
+	default:
 		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_error(aio, NNG_ENOMEM);
+		nni_aio_finish_error(aio, NNG_EPROTO);
 		return;
 	}
-
-	work->user_aio = aio;
-	work->msg      = nni_aio_get_msg(aio);
-	nni_aio_bump_count(
-	    aio, nni_msg_header_len(work->msg) + nni_msg_len(work->msg));
-	nni_list_append(&s->send_queue, work); // enqueue to send
-
-	if (nni_list_first(&s->send_queue) == work) {
-		mqtt_send_start(s);
+	if (!p->busy) {
+		p->busy = true;
+		nni_mqtt_msg_encode(msg);
+		nni_aio_set_msg(&p->send_aio, msg);
+		nni_aio_bump_count(aio,
+		    nni_msg_header_len(msg) + nni_msg_len(msg));
+		nni_pipe_send(p->pipe, &p->send_aio);
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_set_msg(aio, NULL);
+		return;
+	}
+	if (nni_lmq_full(&p->send_messages)) {
+		(void) nni_lmq_get(&p->send_messages, &tmsg);
+		nni_msg_free(tmsg);
 	}
 
-	nni_mtx_unlock(&s->mtx);
+	if (0 != nni_lmq_put(&p->send_messages, msg)) {
+		nni_println("Warning! msg lost due to busy socket");
+	}
+	return;
 }
 
 static void
