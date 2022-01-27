@@ -20,7 +20,7 @@ There is a single "server" (rest-server) program, that does these:
 % ./rest-server &
 % curl -d ABC http://127.0.0.1:8888/api/rest/rot13; echo
 NOP
-% curl -d ABC http://127.0.0.1:8888/api/rest/rot13; echo
+% curl -d NOP http://127.0.0.1:8888/api/rest/rot13; echo
 ABC
 ----
 
