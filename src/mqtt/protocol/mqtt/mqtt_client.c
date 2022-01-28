@@ -84,6 +84,7 @@ struct mqtt_sock_s {
 	mqtt_ctx_t      master; // to which we delegate send/recv calls
 	mqtt_pipe_t *   mqtt_pipe;
 	nni_list        recv_queue; // ctx pending to receive
+	nni_list        send_queue; // ctx pending to send
 	// nni_list        free_list;  // free list of work
 };
 
@@ -112,6 +113,7 @@ mqtt_sock_init(void *arg, nni_sock *sock)
 
 	s->mqtt_pipe = NULL;
 	NNI_LIST_INIT(&s->recv_queue, mqtt_ctx_t, rqnode);
+	NNI_LIST_INIT(&s->send_queue, mqtt_ctx_t, sqnode);
 	// NNI_LIST_INIT(&s->free_list, work_t, node);
 }
 
@@ -235,6 +237,7 @@ mqtt_pipe_start(void *arg)
 {
 	mqtt_pipe_t *p = arg;
 	mqtt_sock_t *s = p->mqtt_sock;
+	mqtt_ctx_t  *c = NULL;
 
 	nni_mtx_lock(&s->mtx);
 	s->mqtt_pipe = p;
@@ -242,7 +245,9 @@ mqtt_pipe_start(void *arg)
 	nni_mtx_unlock(&s->mtx);
 	// work_timer_schedule(&p->ping_work);
 	nni_pipe_recv(p->pipe, &p->recv_aio);
-
+	if ((c = nni_list_first(&s->send_queue)) != NULL) {
+		mqtt_ctx_send(c, c->saio);
+	}
 	return (0);
 }
 
@@ -299,14 +304,15 @@ mqtt_pipe_recv_msgq_putq(mqtt_pipe_t *p, nni_msg *msg)
 	if (0 != nni_lmq_put(&p->recv_messages, msg)) {
 		// resize to ensure we do not lost messages
 		// add option to drop messages
-		if (0 !=
-		    nni_lmq_resize(&p->recv_messages,
-		        nni_lmq_len(&p->recv_messages) * 2)) {
-			// drop the message when no memory available
-			nni_msg_free(msg);
-			return;
-		}
-		nni_lmq_put(&p->recv_messages, msg);
+		// if (0 !=
+		//     nni_lmq_resize(&p->recv_messages,
+		//         nni_lmq_len(&p->recv_messages) * 2)) {
+		// 	// drop the message when no memory available
+		// 	nni_msg_free(msg);
+		// 	return;
+		// }
+		// nni_lmq_put(&p->recv_messages, msg);
+		nni_msg_free(msg);
 	}
 }
 
@@ -488,7 +494,7 @@ mqtt_recv_cb(void *arg)
 			// into lmq
 			mqtt_pipe_recv_msgq_putq(p, cached_msg);
 			nni_mtx_unlock(&s->mtx);
-			nni_println("ERROR: no ctx found!! create more ctxs!");
+			// nni_println("ERROR: no ctx found!! create more ctxs!");
 			return;
 		}
 		nni_list_remove(&s->recv_queue, ctx);
@@ -512,7 +518,7 @@ mqtt_recv_cb(void *arg)
 				// into lmq
 				mqtt_pipe_recv_msgq_putq(p, msg);
 				nni_mtx_unlock(&s->mtx);
-				nni_println("ERROR: no ctx found!! create more ctxs!");
+				// nni_println("ERROR: no ctx found!! create more ctxs!");
 				return;
 			}
 			nni_list_remove(&s->recv_queue, ctx);
@@ -620,11 +626,12 @@ mqtt_ctx_fini(void *arg)
 	nni_mtx_lock(&s->mtx);
 	if ((aio = ctx->saio) != NULL) {
 		ctx->saio     = NULL;
+		nni_list_remove(&s->send_queue, ctx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 	if ((aio = ctx->raio) != NULL) {
-		nni_list_remove(&s->recv_queue, ctx);
 		ctx->raio = NULL;
+		nni_list_remove(&s->recv_queue, ctx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 	nni_mtx_unlock(&s->mtx);
@@ -650,6 +657,16 @@ mqtt_ctx_send(void *arg, nni_aio *aio)
 	if (nni_atomic_get_bool(&s->closed)) {
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+
+	if (p == NULL) {
+		// connection is not established yet
+		// cache ctx for next
+		ctx->saio = aio;
+		ctx->raio = NULL;
+		nni_list_append(&s->send_queue, ctx);
+		nni_mtx_unlock(&s->mtx);
 		return;
 	}
 	msg   = nni_aio_get_msg(aio);
@@ -682,7 +699,7 @@ mqtt_ctx_send(void *arg, nni_aio *aio)
 		}
 		nni_msg_clone(msg);
 		if (nni_id_set(&p->sent_unack, packet_id, msg) != 0) {
-			nni_println("Warning! QoS msg caching failed");
+			// nni_println("Warning! QoS msg caching failed");
 			nni_msg_free(msg);
 		}
 		break;
@@ -709,7 +726,7 @@ mqtt_ctx_send(void *arg, nni_aio *aio)
 	}
 
 	if (0 != nni_lmq_put(&p->send_messages, msg)) {
-		nni_println("Warning! msg lost due to busy socket");
+		// nni_println("Warning! msg lost due to busy socket");
 	}
 	nni_mtx_unlock(&s->mtx);
 	nni_aio_set_msg(aio, NULL);
@@ -729,6 +746,9 @@ mqtt_ctx_recv(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&s->mtx);
+	if ( p == NULL ) {
+		goto wait;
+	} 
 	if (nni_atomic_get_bool(&s->closed) || nni_atomic_get_bool(&p->closed)) {
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -744,9 +764,10 @@ mqtt_ctx_recv(void *arg, nni_aio *aio)
 	}
 
 	// no open pipe or msg wating
+wait:
 	if (ctx->raio != NULL) {
 		nni_mtx_unlock(&s->mtx);
-		nni_println("ERROR! former aio not finished!");
+		// nni_println("ERROR! former aio not finished!");
 		nni_aio_finish_error(aio, NNG_ESTATE);
 		return;
 	}
