@@ -287,7 +287,7 @@ mqtt_tcptran_ep_match(mqtt_tcptran_ep *ep)
 	ep->useraio = NULL;
 	p->rcvmax   = ep->rcvmax;
 	nni_aio_set_output(aio, 0, p);
-	nni_aio_finish(aio, 0, 0);
+	nni_aio_finish_sync(aio, 0, 0);
 }
 
 static void
@@ -298,8 +298,8 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	nni_aio *          aio = p->negoaio;
 	nni_aio *          uaio;
 	int                rv;
+	int		   var_int;
 	uint8_t            pos = 0;
-	int                var_int;
 
 	nni_mtx_lock(&ep->mtx);
 
@@ -379,7 +379,8 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		return;
 	}
 	if (p->gotrxhead >= p->wantrxhead) {
-		nni_mqtt_msg_decode(p->rxmsg);
+		rv = nni_mqtt_msg_decode(p->rxmsg);
+		nni_msg_free(p->rxmsg);
 		p->rxmsg = NULL;
 	}
 
@@ -388,7 +389,9 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	nni_list_remove(&ep->negopipes, p);
 	nni_list_append(&ep->waitpipes, p);
 
-	mqtt_tcptran_ep_match(ep);
+	if (rv == MQTT_SUCCESS) {
+		mqtt_tcptran_ep_match(ep);
+	}
 	nni_mtx_unlock(&ep->mtx);
 
 	return;
