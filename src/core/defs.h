@@ -63,6 +63,7 @@ typedef uint64_t nni_time;     // Abs. time (ms).
 typedef int32_t  nni_duration; // Rel. time (ms).
 
 typedef void (*nni_cb)(void *);
+typedef void (*nni_idhash_cb)(void *, void *);
 
 // Some default timing things.
 #define NNI_TIME_NEVER ((nni_time) -1)

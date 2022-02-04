@@ -47,7 +47,7 @@ struct nni_id_map {
 
 extern void  nni_id_map_init(nni_id_map *, uint32_t, uint32_t, bool);
 extern void  nni_id_map_fini(nni_id_map *);
-extern void  nni_id_map_foreach(nni_id_map *, nni_cb);
+extern void  nni_id_map_foreach(nni_id_map *, nni_idhash_cb);
 extern void *nni_id_get_any(nni_id_map *m, uint16_t *pid);
 extern void *nni_id_get(nni_id_map *, uint32_t);
 extern int   nni_id_set(nni_id_map *, uint32_t, void *);

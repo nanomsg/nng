@@ -121,6 +121,12 @@ extern "C" {
 #define NNG_OPT_MQTT_TOPIC_ALIAS "topic-alias"
 #define NNG_OPT_MQTT_MAX_QOS "max-qos"
 
+// NNG_MAX_RECV_LMQ and NNG_MAX_SEND_LMQ define the length of waiting queue
+// they are the length of nni_lmq, please be ware it affects the memory usage
+// significantly while having heavy throughput
+#define NNG_MAX_RECV_LMQ 16
+#define NNG_MAX_SEND_LMQ 16
+
 // NNG_TLS_xxx options can be set on the client as well.
 // E.g. NNG_OPT_TLS_CA_CERT, etc.
 

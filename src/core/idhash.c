@@ -62,12 +62,12 @@ nni_id_map_fini(nni_id_map *m)
 }
 
 void
-nni_id_map_foreach(nni_id_map *m, nni_cb cb)
+nni_id_map_foreach(nni_id_map *m, nni_idhash_cb cb)
 {
 	if (m->id_entries != NULL) {
 		for (size_t i = 0; i < m->id_cap; ++i) {
 			if (m->id_entries[i].val != NULL) {
-				cb(m->id_entries[i].val);
+				cb(m->id_entries[i].key, m->id_entries[i].val);
 			}
 		}
 	}
