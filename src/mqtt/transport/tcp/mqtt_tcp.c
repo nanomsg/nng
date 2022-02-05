@@ -1,5 +1,5 @@
 //
-// Copyright 2020 NanoMQ Team, Inc. <jaylin@emqx.io>
+// Copyright 2021 NanoMQ Team, Inc. <jaylin@emqx.io>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -22,7 +22,6 @@ typedef struct mqtt_tcptran_pipe mqtt_tcptran_pipe;
 typedef struct mqtt_tcptran_ep   mqtt_tcptran_ep;
 
 #define NNI_NANO_MAX_HEADER_SIZE 5
-#define NNI_NANO_MAX_LMQ_SIZE 128
 
 // tcp_pipe is one end of a TCP connection.
 struct mqtt_tcptran_pipe {
@@ -49,7 +48,7 @@ struct mqtt_tcptran_pipe {
 	nni_aio          tmaio;
 	nni_aio *        txaio;
 	nni_aio *        rxaio;
-	nni_aio *        qsaio; // aio for pubrel/pingreq
+	nni_aio *        qsaio; // aio for qos/pingreq
 	nni_lmq          rslmq;
 	nni_aio *        negoaio;
 	nni_msg *        rxmsg;
@@ -472,6 +471,7 @@ mqtt_tcptran_pipe_send_cb(void *arg)
 		nni_aio_list_remove(aio);
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
+		nni_pipe_bump_error(p->npipe, rv);
 		return;
 	}
 
@@ -631,7 +631,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 				// Make space for the new message. TODO add max
 				// limit of msgq len in conf
 				if (nni_lmq_cap(&p->rslmq) <=
-				    NNI_NANO_MAX_LMQ_SIZE) {
+				    NNG_TRAN_MAX_LMQ_SIZE) {
 					if ((rv = nni_lmq_resize(&p->rslmq,
 					         nni_lmq_cap(&p->rslmq) *
 					             2)) == 0) {

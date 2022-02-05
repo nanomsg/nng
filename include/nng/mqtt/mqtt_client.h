@@ -126,6 +126,7 @@ extern "C" {
 // significantly while having heavy throughput
 #define NNG_MAX_RECV_LMQ 16
 #define NNG_MAX_SEND_LMQ 16
+#define NNG_TRAN_MAX_LMQ_SIZE 128
 
 // NNG_TLS_xxx options can be set on the client as well.
 // E.g. NNG_OPT_TLS_CA_CERT, etc.
