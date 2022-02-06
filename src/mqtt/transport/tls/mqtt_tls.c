@@ -48,7 +48,6 @@ struct mqtts_tcptran_pipe {
 	nni_aio           tmaio;
 	nni_aio *         txaio;
 	nni_aio *         rxaio;
-	nni_aio *         rsaio;
 	nni_aio *         qsaio;
 	nni_lmq           rslmq;
 	nni_aio *         negoaio;

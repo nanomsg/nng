@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <time.h>
 
 #include <nng/mqtt/mqtt_client.h>
@@ -46,6 +47,16 @@ void
 fatal(const char *msg, int rv)
 {
 	fprintf(stderr, "%s: %s\n", msg, nng_strerror(rv));
+}
+
+int keepRunning = 1;
+void
+intHandler(int dummy)
+{
+	keepRunning = 0;
+	fprintf(stderr, "\nclient exit(0).\n");
+	nng_closeall();
+	exit(0);
 }
 
 // Print the given string limited to 80 columns.
@@ -71,6 +82,8 @@ print80(const char *prefix, const char *str, size_t len, bool quote)
 static void
 disconnect_cb(nng_pipe p, nng_pipe_ev ev, void *arg)
 {
+	nng_msg * msg = arg;
+	nng_msg_free(msg);
 	printf("%s: disconnected!\n", __FUNCTION__);
 }
 
@@ -110,7 +123,7 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 	nng_mqtt_msg_set_connect_clean_session(connmsg, true);
 
 	nng_mqtt_set_connect_cb(*sock, connect_cb, &sock);
-	nng_mqtt_set_disconnect_cb(*sock, disconnect_cb, NULL);
+	nng_mqtt_set_disconnect_cb(*sock, disconnect_cb, connmsg);
 
 	uint8_t buff[1024] = { 0 };
 
@@ -123,8 +136,6 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, connmsg);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
-
-	// TODO Connmsg would be free when client disconnected
 	return (0);
 }
 
@@ -151,18 +162,16 @@ client_subscribe(nng_socket sock, nng_mqtt_topic_qos *subscriptions, int count,
 
 	printf("Subscribing ...");
 	if ((rv = nng_sendmsg(sock, submsg, 0)) != 0) {
+		nng_msg_free(submsg);
 		fatal("nng_sendmsg", rv);
 	}
 	printf("done.\n");
-
-	nng_msg_free(submsg);
 
 	printf("Start receiving loop:\n");
 	while (true) {
 		nng_msg *msg;
 		uint8_t *payload;
 		uint32_t payload_len;
-
 		if ((rv = nng_recvmsg(sock, &msg, 0)) != 0) {
 			fatal("nng_recvmsg", rv);
 			continue;
@@ -269,7 +278,8 @@ main(const int argc, const char **argv)
 	bool        verbose     = verbose_env && strlen(verbose_env) > 0;
 
 	client_connect(&sock, url, verbose);
-	nng_msleep(1000);
+
+	signal(SIGINT, intHandler);
 
 	if (strcmp(PUBLISH, cmd) == 0) {
 		const char *data     = argv[5];
