@@ -4,6 +4,8 @@ ifdef::env-github[]
 endif::[]
 = nng - nanomsg-next-gen
 
+Please see <<UKRAINE#,here>> for an important message for the people of Russia.
+
 // Note: This README is optimized for display with Asciidoctor, or
 // on the github status page.  An HTML version is in the same directory
 // and may be more pleasantly formatted for human readers (when opened
