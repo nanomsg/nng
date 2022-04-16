@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Garrett D'Amore <garrett@damore.org>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,7 +17,7 @@
 #include <string.h>
 #include <time.h>
 
-#ifndef NNG_USE_GETTIMEOFDAY
+#if defined(NNG_HAVE_CLOCK_GETTIME) && !defined(NNG_USE_GETTIMEOFDAY)
 
 // Use POSIX realtime stuff
 nni_time
