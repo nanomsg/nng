@@ -282,7 +282,7 @@ return value of `NNG_ETIMEDOUT`.
 (((name, socket)))
 (string)
 This the socket name.
-By default this is a string corresponding to the value of the socket.
+By default, this is a string corresponding to the value of the socket.
 The string must fit within 64-bytes, including the terminating
 `NUL` byte.
 The value is intended for application use, and is not used for anything

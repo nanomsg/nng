@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -237,8 +237,13 @@ sock_get_sockname(void *s, void *buf, size_t *szp, nni_type t)
 static int
 sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
 {
-	return (nni_copyin_str(
+	int rv;
+	rv = (nni_copyin_str(
 	    SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), sz, t));
+	if (rv == 0) {
+		nni_stat_set_string(&SOCK(s)->st_name, SOCK(s)->s_name);
+	}
+	return (rv);
 }
 
 static int
@@ -646,8 +651,11 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	(void) snprintf(s->s_name, sizeof(s->s_name), "%u", s->s_id);
 
 #ifdef NNG_ENABLE_STATS
-	// Set up basic stat values.
+	// Set up basic stat values.  The socket id wasn't
+	// known at stat creation time, so we set it now.
 	nni_stat_set_id(&s->st_id, (int) s->s_id);
+	nni_stat_set_id(&s->st_root, (int) s->s_id);
+	nni_stat_set_string(&s->st_name, s->s_name);
 
 	// Add our stats chain.
 	nni_stat_register(&s->st_root);
@@ -1488,6 +1496,8 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 		return;
 	}
 #ifdef NNG_ENABLE_STATS
+	nni_stat_set_id(&p->st_root, (int) p->p_id);
+	nni_stat_set_id(&p->st_id, (int) p->p_id);
 	nni_stat_register(&p->st_root);
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
@@ -1599,6 +1609,8 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 		return;
 	}
 #ifdef NNG_ENABLE_STATS
+	nni_stat_set_id(&p->st_root, (int) p->p_id);
+	nni_stat_set_id(&p->st_id, (int) p->p_id);
 	nni_stat_register(&p->st_root);
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
