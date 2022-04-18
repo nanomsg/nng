@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -92,6 +92,10 @@ extern int nni_aio_result(nni_aio *);
 // As with nni_aio_result, it is only defined if the I/O operation has
 // completed.
 extern size_t nni_aio_count(nni_aio *);
+
+// nni_aio_busy returns true if the aio is still busy processing work.
+// This is a non-blocking form of the check used by nni_aio_wait().
+extern bool nni_aio_busy(nni_aio *);
 
 // nni_aio_wait blocks the caller until the operation is complete.
 // The operation must have already been started.  This routine will

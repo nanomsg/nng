@@ -544,6 +544,12 @@ NNG_DECL void nng_aio_abort(nng_aio *, int);
 // callback or deadlock may occur.
 NNG_DECL void nng_aio_wait(nng_aio *);
 
+// nng_aio_busy returns true if the aio is still busy processing the
+// operation, or executing associated completion functions.  Note that
+// if the completion function schedules a new operation using the aio,
+// then this function will continue to return true.
+NNG_DECL bool nng_aio_busy(nng_aio *);
+
 // nng_aio_set_msg sets the message structure to use for asynchronous
 // message send operations.
 NNG_DECL void nng_aio_set_msg(nng_aio *, nng_msg *);

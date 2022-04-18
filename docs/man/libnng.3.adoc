@@ -164,6 +164,7 @@ The following functions are used in the asynchronous model:
 |xref:nng_aio_abort.3.adoc[nng_aio_abort()]|abort asynchronous I/O operation
 |xref:nng_aio_alloc.3.adoc[nng_aio_alloc()]|allocate asynchronous I/O handle
 |xref:nng_aio_begin.3.adoc[nng_aio_begin()]|begin asynchronous I/O operation
+|xref:nng_aio_busy.3.adoc[nng_aio_busy()]|test if asynchronous I/O is busy
 |xref:nng_aio_cancel.3.adoc[nng_aio_cancel()]|cancel asynchronous I/O operation
 |xref:nng_aio_count.3.adoc[nng_aio_count()]|return number of bytes transferred
 |xref:nng_aio_defer.3.adoc[nng_aio_defer()]|defer asynchronous I/O operation

@@ -1,6 +1,6 @@
 = nng_aio_wait(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -29,7 +29,7 @@ to complete.
 If the operation has not been started, or has already
 completed, then it returns immediately.
 
-If the a callback was set with _aio_ when it was allocated, then this
+If a callback was set with _aio_ when it was allocated, then this
 function will not be called until the callback has completed.
 
 == RETURN VALUES
@@ -45,5 +45,6 @@ None.
 [.text-left]
 xref:nng_aio_abort.3.adoc[nng_aio_abort(3)],
 xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_busy.3.adoc[nng_aio_busy(3)],
 xref:nng_aio.5.adoc[nng_aio(5)],
 xref:nng.7.adoc[nng(7)]

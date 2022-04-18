@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -43,6 +43,13 @@ extern void nni_task_prep(nni_task *);
 // returns an error.
 extern void nni_task_abort(nni_task *);
 
+// nni_task_busy checks to see if a task is still busy.
+// This is uses the same check that nni_task_wait uses.
+extern bool nni_task_busy(nni_task *);
+
+// nni_task_wait waits for the task to complete.  If additional
+// work is scheduled on the task then it will not return until that
+// work (or any other work subsequently scheduled) is complete.
 extern void nni_task_wait(nni_task *);
 extern void  nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 

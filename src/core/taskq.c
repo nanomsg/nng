@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -31,12 +31,12 @@ static void
 nni_taskq_thread(void *self)
 {
 	nni_taskq_thr *thr = self;
-	nni_taskq *    tq  = thr->tqt_tq;
-	nni_task *     task;
+	nni_taskq     *tq  = thr->tqt_tq;
+	nni_task      *task;
 
-        nni_thr_set_name(NULL, "nng:task");
+	nni_thr_set_name(NULL, "nng:task");
 
-        nni_mtx_lock(&tq->tq_mtx);
+	nni_mtx_lock(&tq->tq_mtx);
 	for (;;) {
 		if ((task = nni_list_first(&tq->tq_tasks)) != NULL) {
 
@@ -205,6 +205,16 @@ nni_task_wait(nni_task *task)
 		nni_cv_wait(&task->task_cv);
 	}
 	nni_mtx_unlock(&task->task_mtx);
+}
+
+bool
+nni_task_busy(nni_task *task)
+{
+	bool busy;
+	nni_mtx_lock(&task->task_mtx);
+	busy = task->task_busy;
+	nni_mtx_unlock(&task->task_mtx);
+	return (busy);
 }
 
 void

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -312,6 +312,12 @@ void
 nni_aio_wait(nni_aio *aio)
 {
 	nni_task_wait(&aio->a_task);
+}
+
+bool
+nni_aio_busy(nni_aio *aio)
+{
+	return (nni_task_busy(&aio->a_task));
 }
 
 int

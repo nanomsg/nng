@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -364,6 +364,18 @@ test_sleep_cancel(void)
 	nng_mtx_free(sl.mx);
 }
 
+void
+    test_aio_busy(void)
+{
+	nng_aio *aio;
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_sleep_aio(100, aio);
+	NUTS_ASSERT(nng_aio_busy(aio));
+	nng_aio_wait(aio);
+	NUTS_ASSERT(!nng_aio_busy(aio));
+	nng_aio_free(aio);
+}
+
 NUTS_TESTS = {
 	{ "sleep", test_sleep },
 	{ "sleep timeout", test_sleep_timeout },
@@ -377,5 +389,6 @@ NUTS_TESTS = {
 	{ "aio reap", test_aio_reap },
 	{ "sleep loop", test_sleep_loop },
 	{ "sleep cancel", test_sleep_cancel },
+	{ "aio busy", test_aio_busy },
 	{ NULL, NULL },
 };

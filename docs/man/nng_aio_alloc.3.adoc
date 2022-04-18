@@ -1,6 +1,6 @@
 = nng_aio_alloc(3)
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -37,7 +37,7 @@ This also means you should avoid operations such as allocating new objects,
 which also means opening or closing sockets, dialers, and so forth.
 
 TIP: If more complex or blocking work needs to be performed by _callb_, a separate
-thread can be used, along with a xref:nng_cv_alloc.3.adoc[condition variable]
+thread can be used, along with a xref:nng_cv_alloc.3supp.adoc[condition variable]
 which can be signaled by the callback.
 
 Asynchronous I/O operations all take an xref:nng_aio.5.adoc[`nng_aio`]
