@@ -284,6 +284,12 @@ nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
 	    &v->v, &comp, new, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
 }
 
+int
+nni_atomic_swap(nni_atomic_int *v, int u)
+{
+	return (__atomic_exchange_n(&v->v, u, __ATOMIC_SEQ_CST));
+}
+
 void
 nni_atomic_init(nni_atomic_int *v)
 {
@@ -329,6 +335,13 @@ int
 nni_atomic_dec_nv(nni_atomic_int *v)
 {
 	return (__atomic_sub_fetch(&v->v, 1, __ATOMIC_SEQ_CST));
+}
+
+bool
+nni_atomic_cas(nni_atomic_int *v, int comp, int new)
+{
+	return (__atomic_compare_exchange_n(
+	    &v->v, &comp, new, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
 }
 
 void *
