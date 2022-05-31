@@ -455,10 +455,11 @@ http_uri_canonify(char *path)
 			c += http_hexval(tmp[2]);
 			*dst++ = c;
 			tmp += 3;
+		} else {
+			// garbage in, garbage out
+			*dst++ = c;
+			tmp++;
 		}
-		// garbage in, garbage out
-		*dst++ = c;
-		tmp++;
 	}
 	*dst = '\0';
 
