@@ -240,9 +240,11 @@ sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
 	int rv;
 	rv = (nni_copyin_str(
 	    SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), sz, t));
+#ifdef NNG_ENABLE_STATS
 	if (rv == 0) {
 		nni_stat_set_string(&SOCK(s)->st_name, SOCK(s)->s_name);
 	}
+#endif
 	return (rv);
 }
 
