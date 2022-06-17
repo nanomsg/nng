@@ -29,7 +29,7 @@ static pfnSetThreadDescription set_thread_desc;
 #define InterlockedDecrementAcquire64(a) \
 	__atomic_sub_fetch(a, 1, __ATOMIC_ACQUIRE)
 #define InterlockedDecrementRelease64(a) \
-	__atomic_fetch_sub(a, 1, __ATOMIC_RELEASE)
+	__atomic_sub_fetch(a, 1, __ATOMIC_RELEASE)
 #endif
 
 #include <stdlib.h>
