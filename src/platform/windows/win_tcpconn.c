@@ -17,6 +17,17 @@
 #include <stdio.h>
 
 static void
+tcp_recv_clear_aios(nni_tcp_conn *c)
+{
+	nni_aio *aio;
+	while ((aio = nni_list_first(&c->recv_aios)) != NULL) {
+		nni_list_remove(&c->recv_aios, aio);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
+	nni_cv_wake(&c->cv);
+}
+
+static void
 tcp_recv_start(nni_tcp_conn *c)
 {
 	nni_aio *aio;
@@ -29,11 +40,7 @@ tcp_recv_start(nni_tcp_conn *c)
 	WSABUF * iov;
 
 	if (c->closed) {
-		while ((aio = nni_list_first(&c->recv_aios)) != NULL) {
-			nni_list_remove(&c->recv_aios, aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
-		nni_cv_wake(&c->cv);
+		tcp_recv_clear_aios(c);
 	}
 again:
 	if ((aio = nni_list_first(&c->recv_aios)) == NULL) {
@@ -101,7 +108,12 @@ tcp_recv_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_lock(&c->mtx);
 	if (aio == nni_list_first(&c->recv_aios)) {
 		c->recv_rv = rv;
-		CancelIoEx((HANDLE) c->s, &c->recv_io.olpd);
+		if (CancelIoEx((HANDLE) c->s, &c->recv_io.olpd)==0) {
+			// Some error happened. We will not have a callback. Finish AIO
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
+			nni_cv_wake(&c->cv);
+		}
 	} else if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
@@ -136,6 +148,16 @@ tcp_recv(nni_tcp_conn *c, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
+static void tcp_send_clear_aios(nni_tcp_conn *c)
+{
+	nni_aio *aio;
+	while ((aio = nni_list_first(&c->send_aios)) != NULL) {
+		nni_list_remove(&c->send_aios, aio);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
+	nni_cv_wake(&c->cv);
+}
+
 static void
 tcp_send_start(nni_tcp_conn *c)
 {
@@ -148,11 +170,7 @@ tcp_send_start(nni_tcp_conn *c)
 	WSABUF * iov;
 
 	if (c->closed) {
-		while ((aio = nni_list_first(&c->send_aios)) != NULL) {
-			nni_list_remove(&c->send_aios, aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
-		nni_cv_wake(&c->cv);
+		tcp_send_clear_aios(c);
 	}
 
 again:
@@ -191,7 +209,12 @@ tcp_send_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_lock(&c->mtx);
 	if (aio == nni_list_first(&c->send_aios)) {
 		c->send_rv = rv;
-		CancelIoEx((HANDLE) c->s, &c->send_io.olpd);
+		if (CancelIoEx((HANDLE) c->s, &c->send_io.olpd) == 0) {
+			// Some error happened. We will not have a callback. Finish AIO
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
+			nni_cv_wake(&c->cv);
+		}
 	} else if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
@@ -260,10 +283,16 @@ tcp_close(void *arg)
 	if (!c->closed) {
 		c->closed = true;
 		if (!nni_list_empty(&c->recv_aios)) {
-			CancelIoEx((HANDLE) c->s, &c->recv_io.olpd);
+			if (CancelIoEx((HANDLE) c->s, &c->recv_io.olpd) == 0) {
+				// Some error happened. We will not have a callback. Finish all AIOs
+				tcp_recv_clear_aios(c);
+			}
 		}
 		if (!nni_list_empty(&c->send_aios)) {
-			CancelIoEx((HANDLE) c->s, &c->send_io.olpd);
+			if (CancelIoEx((HANDLE) c->s, &c->send_io.olpd) == 0) {
+				// Some error happened. We will not have a callback. Finish all AIOs
+				tcp_send_clear_aios(c);
+			}
 		}
 		if (c->s != INVALID_SOCKET) {
 			shutdown(c->s, SD_BOTH);
