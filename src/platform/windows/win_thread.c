@@ -26,8 +26,10 @@ static pfnSetThreadDescription set_thread_desc;
 	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #define InterlockedIncrementAcquire64(a) \
 	__atomic_add_fetch(a, 1, __ATOMIC_ACQUIRE)
+#define InterlockedDecrementAcquire64(a) \
+	__atomic_sub_fetch(a, 1, __ATOMIC_ACQUIRE)
 #define InterlockedDecrementRelease64(a) \
-	__atomic_fetch_sub(a, 1, __ATOMIC_RELEASE)
+	__atomic_sub_fetch(a, 1, __ATOMIC_RELEASE)
 #endif
 
 #include <stdlib.h>
