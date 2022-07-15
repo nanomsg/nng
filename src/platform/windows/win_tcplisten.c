@@ -88,7 +88,6 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	int               len2;
 	SOCKADDR *        sa1;
 	SOCKADDR *        sa2;
-	DWORD             yes;
 	BOOL              nd;
 	BOOL              ka;
 
@@ -123,9 +122,8 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	memcpy(&c->sockname, sa1, len1);
 	memcpy(&c->peername, sa2, len2);
 
-	yes = 1;
 	(void) setsockopt(c->s, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
-	    (char *) &yes, sizeof(yes));
+	    (char *) &l->s, sizeof(l->s));
 
 	(void) setsockopt(
 	    c->s, SOL_SOCKET, SO_KEEPALIVE, (char *) &ka, sizeof(ka));
