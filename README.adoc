@@ -14,6 +14,7 @@ Please see <<UKRAINE#,here>> for an important message for the people of Russia.
 // Note: If you're updating this file, don't forget to re-run asciidoctor
 // to update the aforementioned HTML file!
 
+image:https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg[Stand With Ukraine,link="https://stand-with-ukraine.pp.ua"]
 image:https://img.shields.io/github/workflow/status/nanomsg/nng/linux/master?logoColor=grey&logo=ubuntu&label=[Linux Status,link="https://github.com/nanomsg/nng/actions"]
 image:https://img.shields.io/github/workflow/status/nanomsg/nng/windows/master?logoColor=grey&logo=windows&label=[Windows Status,link="https://github.com/nanomsg/nng/actions"]
 image:https://img.shields.io/github/workflow/status/nanomsg/nng/darwin/master?logoColor=grey&logo=apple&label=[macOS Status,link="https://github.com/nanomsg/nng/actions"]
@@ -23,6 +24,8 @@ image:https://img.shields.io/discord/639573728212156478?label=&logo=discord[Disc
 image:https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue[Manual,link="https://nng.nanomsg.org/man"]
 image:https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue[MIT License,link="https://github.com/nanomsg/nng/blob/master/LICENSE.txt"]
 image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Latest version,link="https://github.com/nanomsg/nng/releases"]
+
+Please see [here](UKRAINE.md) for an important message for the people of Russia.
 
 NOTE: If you are looking for the legacy version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg[nanomsg] repository.
