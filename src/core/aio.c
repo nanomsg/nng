@@ -216,6 +216,9 @@ nni_aio_stop(nni_aio *aio)
 		if (fn != NULL) {
 			fn(aio, arg, NNG_ECANCELED);
 		}
+		
+		// catch any tasks that have been prepped but not yet started.
+		nni_task_abort(&aio->a_task);
 
 		nni_aio_wait(aio);
 	}
