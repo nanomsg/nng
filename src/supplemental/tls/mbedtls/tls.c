@@ -276,6 +276,26 @@ conn_verified(nng_tls_engine_conn *ec)
 	return (mbedtls_ssl_get_verify_result(&ec->ctx) == 0);
 }
 
+static char *
+conn_peer_cn(nng_tls_engine_conn *ec)
+{
+	const mbedtls_x509_crt *crt = mbedtls_ssl_get_peer_cert(&ec->ctx);
+	if (!crt) return NULL;
+
+	char buf[0x400];
+	int len = mbedtls_x509_dn_gets(buf, sizeof(buf), &crt->subject);
+	if (len <= 0) return NULL;
+
+	const char * pos = strstr(buf, "CN=");
+	if (!pos) return NULL;
+	pos += 3;
+	len -= pos - buf - 1;
+	if (len <= 1) return NULL;
+	char *rv = malloc(len);
+	memcpy(rv, pos, len);
+	return rv;
+}
+
 static void
 config_fini(nng_tls_engine_config *cfg)
 {
@@ -534,6 +554,7 @@ static nng_tls_engine_conn_ops conn_ops = {
 	.send      = conn_send,
 	.handshake = conn_handshake,
 	.verified  = conn_verified,
+	.peer_cn   = conn_peer_cn,
 };
 
 static nng_tls_engine tls_engine_mbed = {
