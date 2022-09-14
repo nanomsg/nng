@@ -26,6 +26,7 @@ nng_tls_options - TLS-specific options
 #define NNG_OPT_TLS_CONFIG        "tls-config"
 #define NNG_OPT_TLS_SERVER_NAME   "tls-server-name"
 #define NNG_OPT_TLS_VERIFIED      "tls-verified"
+#define NNG_OPT_TLS_PEER_CN       "tls-peer-cn"
 ----
 
 == DESCRIPTION
@@ -89,6 +90,11 @@ name presented in the server's x509 certificate.
 (`bool`)
 This read-only option indicates whether the remote peer has been properly verified using TLS
 authentication.
+May return incorrect results if peer authentication is disabled.
+
+[[NNG_OPT_TLS_PEER_CN]]((`NNG_OPT_TLS_PEER_CN`))::
+(string)
+This read-only option returns the common name of the peer certificate.
 May return incorrect results if peer authentication is disabled.
 
 === Inherited Options
