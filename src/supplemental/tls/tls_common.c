@@ -761,13 +761,15 @@ tls_get_peer_cn(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(szp);
 
-	if (t != NNI_TYPE_STRING) return NNG_EBADTYPE;
+	if (t != NNI_TYPE_STRING) {
+		return (NNG_EBADTYPE);
+	}
 
 	tls_conn *conn = arg;
 	nni_mtx_lock(&conn->lock);
-	*(char **)buf = conn->ops.peer_cn((void *) (conn + 1));
+	*(char **) buf = conn->ops.peer_cn((void *) (conn + 1));
 	nni_mtx_unlock(&conn->lock);
-	return 0;
+	return (0);
 }
 
 static const nni_option tls_options[] = {

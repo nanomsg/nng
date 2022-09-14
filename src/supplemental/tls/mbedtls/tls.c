@@ -280,20 +280,30 @@ static char *
 conn_peer_cn(nng_tls_engine_conn *ec)
 {
 	const mbedtls_x509_crt *crt = mbedtls_ssl_get_peer_cert(&ec->ctx);
-	if (!crt) return NULL;
+	if (!crt) {
+		return (NULL);
+	}
 
 	char buf[0x400];
-	int len = mbedtls_x509_dn_gets(buf, sizeof(buf), &crt->subject);
-	if (len <= 0) return NULL;
+	int  len = mbedtls_x509_dn_gets(buf, sizeof(buf), &crt->subject);
+	if (len <= 0) {
+		return (NULL);
+	}
 
-	const char * pos = strstr(buf, "CN=");
-	if (!pos) return NULL;
+	const char *pos = strstr(buf, "CN=");
+	if (!pos) {
+		return (NULL);
+	}
+
 	pos += 3;
 	len -= pos - buf - 1;
-	if (len <= 1) return NULL;
+	if (len <= 1) {
+		return (NULL);
+	}
+
 	char *rv = malloc(len);
 	memcpy(rv, pos, len);
-	return rv;
+	return (rv);
 }
 
 static void
