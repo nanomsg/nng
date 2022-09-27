@@ -23,7 +23,7 @@
 	if (!(x))     \
 	nni_panic("%s: %d: assert err: %s", __FILE__, __LINE__, #x)
 #else
-#define NNI_ASSERT(x) (0)
+#define NNI_ASSERT(x) ((void)(0))
 #endif
 
 // Returns the size of an array in elements. (Convenience.)
