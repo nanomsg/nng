@@ -41,6 +41,14 @@ function(nng_defines)
     target_compile_definitions(nng_private INTERFACE ${ARGN})
 endfunction()
 
+# nng_find_package looks up required package and adds dependency to the cmake config.
+macro(nng_find_package PACKAGE_NAME)
+    find_package(${PACKAGE_NAME} REQUIRED)
+    list(APPEND NNG_PKGS ${PACKAGE_NAME})
+    list(REMOVE_DUPLICATES NNG_PKGS)
+    set(NNG_PKGS ${NNG_PKGS} CACHE INTERNAL "nng package dependencies" FORCE)
+endmacro()
+
 # nng_link_libraries adds link dependencies to the libraries.
 function(nng_link_libraries)
     target_link_libraries(nng PRIVATE ${ARGN})
