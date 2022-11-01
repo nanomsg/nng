@@ -17,7 +17,7 @@
 #include "core/nng_impl.h"
 #include "win_impl.h"
 
-#define IPC_PIPE_PREFIX "\\\\.\\pipe\\"
+#define IPC_PIPE_PREFIX "\\\\.\\pipe\\LOCAL\\"
 
 extern int nni_win_ipc_init(nng_stream **, HANDLE, const nng_sockaddr *, bool);
 
