@@ -82,6 +82,7 @@ if (NNG_ENABLE_DOC)
             nng_aio_wait
             nng_alloc
             nng_bus_open
+            nng_hub_open
             nng_close
             nng_ctx_close
             nng_ctx_get
@@ -379,6 +380,7 @@ if (NNG_ENABLE_DOC)
     set(NNG_MAN7
             nng
             nng_bus
+            nng_hub
             nng_inproc
             nng_ipc
             nng_pair

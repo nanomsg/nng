@@ -4,6 +4,7 @@
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
+// Copyright 2022 Cogent Embedded, Inc.
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -193,6 +194,7 @@ The following functions are used to construct a socket with a specific protocol:
 
 |===
 |xref:nng_bus_open.3.adoc[nng_bus_open()]|open a bus socket
+|xref:nng_hub_open.3.adoc[nng_hub_open()]|open a hub socket
 |xref:nng_pair_open.3.adoc[nng_pair_open()]|open a pair socket
 |xref:nng_pub_open.3.adoc[nng_pub_open()]|open a pub socket
 |xref:nng_pull_open.3.adoc[nng_pull_open()]|open a pull socket
