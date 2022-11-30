@@ -1,0 +1,58 @@
+= nng_hub(7)
+//
+// Copyright 2022 Cogent Embedded, Inc.
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_hub - hub protocol
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/protocol/hub0/hub.h>
+----
+
+== DESCRIPTION
+
+(((protocol, _hub_)))
+The ((_hub_ protocol)) provides for building star networks where
+all peers are connected to one peer.
+In this protocol, each message sent by a node is sent to every one of
+its directly connected peers.
+
+All message delivery in this pattern is guaranteed.
+
+This protocol is compatible with pair0
+
+=== Socket Operations
+
+The xref:nng_hub_open.3.adoc[`nng_hub0_open()`] functions create a hub socket.
+This socket may be used to send and receive messages.
+Sending messages will attempt to deliver to each connected peer.
+
+=== Protocol Versions
+
+Only version 0 of this protocol is supported.
+(At the time of writing, no other versions of this protocol have been defined.)
+
+=== Protocol Options
+
+The _hub_ protocol has no protocol-specific options.
+
+=== Protocol Headers
+
+No message headers are present.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_hub_open.3.adoc[nng_hub_open(3)],
+xref:nng_pair.7.adoc[nng_pair],
+xref:nng.7.adoc[nng(7)]
