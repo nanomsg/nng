@@ -1,8 +1,8 @@
 /*
     Copyright (c) 2013 Insollo Entertainment, LLC. All rights reserved.
     Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
-    Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
     Copyright 2018 Capitar IT Group BV <info@capitar.com>
+	Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the "Software"),
@@ -201,7 +201,7 @@ get_test_port(int argc, const char *argv[])
 void
 test_addr_from(char *out, const char *proto, const char *ip, int port)
 {
-	sprintf(out, "%s://%s:%d", proto, ip, port);
+	(void) snprintf(out, 128, "%s://%s:%d", proto, ip, port);
 }
 
 extern int nng_thread_create(void **, void (*)(void *), void *);

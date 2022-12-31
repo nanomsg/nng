@@ -182,7 +182,7 @@ push0_pipe_ready(push0_pipe *p)
 	push0_sock *s = p->push;
 	nni_msg    *m;
 	nni_aio    *a = NULL;
-	size_t      l;
+	size_t      l = 0;
 	bool        blocked;
 
 	nni_mtx_lock(&s->m);

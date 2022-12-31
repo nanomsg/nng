@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -191,7 +191,7 @@ TestMain("HTTP Server", {
 		char     urlstr[48];
 		nng_url *url;
 
-		trantest_next_address(portbuf, "%u");
+		trantest_next_address(portbuf, "");
 
 		snprintf(
 		    urlstr, sizeof(urlstr), "http://127.0.0.1:%s", portbuf);
@@ -295,7 +295,7 @@ TestMain("HTTP Server", {
 		char *   subdir1;
 		char *   subdir2;
 
-		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
 		So(nng_http_server_hold(&s, url) == 0);
 		So((tmpdir = nni_plat_temp_dir()) != NULL);
@@ -497,7 +497,7 @@ TestMain("HTTP Server", {
 		char *   subdir1;
 		char *   subdir2;
 
-		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
 		So(nng_http_server_hold(&s, url) == 0);
 		So((tmpdir = nni_plat_temp_dir()) != NULL);
@@ -698,7 +698,7 @@ TestMain("HTTP Server", {
 		char *   file1;
 		char *   file2;
 
-		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
 		So(nng_http_server_hold(&s, url) == 0);
 		So((tmpdir = nni_plat_temp_dir()) != NULL);
@@ -788,7 +788,7 @@ TestMain("HTTP Server", {
 		char     urlstr[32];
 		nng_url *url;
 
-		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
 		So(nng_http_server_hold(&s, url) == 0);
 
@@ -859,7 +859,7 @@ TestMain("HTTP Server", {
 		char     urlstr[32];
 		nng_url *url;
 
-		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
 		So(nng_http_server_hold(&s, url) == 0);
 
@@ -978,7 +978,7 @@ TestMain("HTTP Server", {
 		char     urlstr[32];
 		nng_url *url;
 
-		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
 		So(nng_http_server_hold(&s, url) == 0);
 

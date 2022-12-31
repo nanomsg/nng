@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -82,5 +82,5 @@ check_props_v4(nng_msg *msg)
 }
 
 TestMain("WebSocket Transport", {
-	trantest_test_extended("ws://127.0.0.1:%u/test", check_props_v4);
+	trantest_test_extended("ws://127.0.0.1:", check_props_v4);
 })

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -22,9 +22,9 @@ struct notifyarg {
 };
 
 void
-notifyafter(void *arg)
+notifyafter(void *a)
 {
-	struct notifyarg *na = arg;
+	struct notifyarg *na = a;
 
 	nng_msleep(na->when);
 	nng_mtx_lock(na->mx);

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staystail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -78,7 +78,7 @@ TestMain("TCP (IPv6) Transport", {
 	nni_init();
 
 	if (has_v6()) {
-		trantest_test_extended("tcp://[::1]:%u", check_props_v6);
+		trantest_test_extended("tcp://[::1]:", check_props_v6);
 	} else {
 		SkipSo("IPv6 not available");
 	}

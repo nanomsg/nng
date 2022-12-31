@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 QXSoftware <lh563566994@126.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
@@ -1155,7 +1155,7 @@ nni_http_server_res_error(nni_http_server *s, nni_http_res *res)
 	http_error *epage;
 	char *      body = NULL;
 	char *      html = NULL;
-	size_t      len;
+	size_t      len = 0;
 	uint16_t    code = nni_http_res_get_status(res);
 	int         rv;
 

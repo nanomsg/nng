@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Lager Data, Inc. <support@lagerdata.com>
 //
@@ -549,7 +549,7 @@ resploop(nng_socket sock)
 		printmsg(nng_msg_body(msg), nng_msg_len(msg));
 		nng_msg_clear(msg);
 		if ((rv = nng_msg_append(msg, data, datalen)) != 0) {
-			fatal(nng_strerror(rv));
+			fatal("%s", nng_strerror(rv));
 		}
 		if ((rv = nng_sendmsg(sock, msg, 0)) != 0) {
 			fatal("Send error: %s", nng_strerror(rv));
@@ -586,7 +586,7 @@ sendloop(nng_socket sock)
 		start = nng_clock();
 		if (((rv = nng_msg_alloc(&msg, 0)) != 0) ||
 		    ((rv = nng_msg_append(msg, data, datalen)) != 0)) {
-			fatal(nng_strerror(rv));
+			fatal("%s", nng_strerror(rv));
 		}
 		if ((rv = nng_sendmsg(sock, msg, 0)) != 0) {
 			fatal("Send error: %s", nng_strerror(rv));
@@ -638,7 +638,7 @@ sendrecv(nng_socket sock)
 		start = nng_clock();
 		if (((rv = nng_msg_alloc(&msg, 0)) != 0) ||
 		    ((rv = nng_msg_append(msg, data, datalen)) != 0)) {
-			fatal(nng_strerror(rv));
+			fatal("%s", nng_strerror(rv));
 		}
 		if ((rv = nng_sendmsg(sock, msg, 0)) != 0) {
 			fatal("Send error: %s", nng_strerror(rv));

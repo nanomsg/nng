@@ -1,6 +1,6 @@
 //
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -281,7 +281,7 @@ TestMain("TLS Transport", {
 
 	tt.dialer_init   = init_dialer_tls;
 	tt.listener_init = init_listener_tls;
-	tt.tmpl          = "tls+tcp://127.0.0.1:%u";
+	tt.tmpl          = "tls+tcp://127.0.0.1:";
 	tt.proptest      = check_props_v4;
 
 	trantest_test(&tt);
@@ -296,7 +296,7 @@ TestMain("TLS Transport", {
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
-		trantest_next_address(addr, "tls+tcp://*:%u");
+		trantest_next_address(addr, "tls+tcp://*:");
 		So(nng_dial(s, addr, NULL, 0) == NNG_EADDRINVAL);
 	});
 
@@ -314,11 +314,11 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp://*:%u");
+		trantest_next_address(addr, "tls+tcp://*:");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls(l) == 0);
 		// reset port back one
-		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
+		trantest_prev_address(addr, "tls+tcp://127.0.0.1:");
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls(d) == 0);
 		So(nng_dialer_set_int(
@@ -390,13 +390,12 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp://127.0.0.1:%u");
+		trantest_next_address(addr, "tls+tcp://127.0.0.1:");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		// reset port back one
-		trantest_prev_address(
-		    addr, "tls+tcp://127.0.0.1;127.0.0.1:%u");
+		trantest_prev_address(addr, "tls+tcp://127.0.0.1;127.0.0.1:");
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls(d) == 0);
 		So(nng_dialer_start(d, 0) == 0);
@@ -436,14 +435,14 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp://:%u");
+		trantest_next_address(addr, "tls+tcp://:");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls_file(NULL, l) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		nng_msleep(100);
 
 		// reset port back one
-		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
+		trantest_prev_address(addr, "tls+tcp://127.0.0.1:");
 		So(nng_socket_set_int(s2, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_REQUIRED) == 0);
 
@@ -466,7 +465,7 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp://*:%u");
+		trantest_next_address(addr, "tls+tcp://*:");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls_file(l) == 0);
 		So(nng_listener_set_int(l, NNG_OPT_TLS_AUTH_MODE,
@@ -475,7 +474,7 @@ TestMain("TLS Transport", {
 		nng_msleep(100);
 
 		// reset port back one
-		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
+		trantest_prev_address(addr, "tls+tcp://127.0.0.1:");
 		So(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls_file(d) == 0);
@@ -511,7 +510,7 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp4://*:%u");
+		trantest_next_address(addr, "tls+tcp4://*:");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls_ex(l, NNG_TLS_AUTH_MODE_REQUIRED) == 0);
 		So(nng_listener_start(l, 0) == 0);
@@ -519,7 +518,7 @@ TestMain("TLS Transport", {
 		nng_msleep(100);
 
 		// reset port back one
-		trantest_prev_address(addr, "tls+tcp4://localhost:%u");
+		trantest_prev_address(addr, "tls+tcp4://localhost:");
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls_ex(d, true) == 0);
 

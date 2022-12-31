@@ -67,7 +67,7 @@ int
 transact(nng_socket *clients, int num)
 {
 	nng_msg *msg;
-	int      rv;
+	int      rv = 0;
 	int      i;
 
 	for (i = 0; i < num; i++) {
