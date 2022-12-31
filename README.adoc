@@ -13,9 +13,9 @@ endif::[]
 // to update the aforementioned HTML file!
 
 image:https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg[Stand With Ukraine,link="https://stand-with-ukraine.pp.ua"]
-image:https://img.shields.io/github/workflow/status/nanomsg/nng/linux/master?logoColor=grey&logo=ubuntu&label=[Linux Status,link="https://github.com/nanomsg/nng/actions"]
-image:https://img.shields.io/github/workflow/status/nanomsg/nng/windows/master?logoColor=grey&logo=windows&label=[Windows Status,link="https://github.com/nanomsg/nng/actions"]
-image:https://img.shields.io/github/workflow/status/nanomsg/nng/darwin/master?logoColor=grey&logo=apple&label=[macOS Status,link="https://github.com/nanomsg/nng/actions"]
+image:https://img.shields.io/github/actions/workflow/status/nanomsg/nng/linux.yml?branch=master&logoColor=grey&logo=ubuntu&label=[Linux Status,link="https://github.com/nanomsg/nng/actions"]
+image:https://img.shields.io/github/actions/workflow/status/nanomsg/nng/windows.yml?branch=master?&logoColor=grey&logo=windows&label=[Windows Status,link="https://github.com/nanomsg/nng/actions"]
+image:https://img.shields.io/github/actions/workflow/status/nanomsg/nng/darwin.yml?branch=master&logoColor=grey&logo=apple&label=[macOS Status,link="https://github.com/nanomsg/nng/actions"]
 image:https://img.shields.io/codecov/c/github/nanomsg/nng?logo=codecov&logoColor=grey&label=[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
 image:https://img.shields.io/lgtm/grade/cpp/github/nanomsg/nng?logo=lgtm&logoColor=grey&label=[LGTM,link="https://lgtm.com/projects/g/nanomsg/nng/?mode=list"]
 image:https://img.shields.io/discord/639573728212156478?label=&logo=discord[Discord,link="https://discord.gg/Xnac6b9"]
@@ -154,7 +154,7 @@ The API documentation is provided in Asciidoc format in the
 https://nanomsg.github.io/nng[online].
 The <<docs/man/libnng.3.adoc#,libnng(3)>> page is a good starting point.
 
-You can also purchase a copy of the 
+You can also purchase a copy of the
 http://staysail.tech/books/nng_reference/index.html[__NNG Reference Manual__].
 (It is published in both electronic and printed formats.)
 Purchases of the book help fund continued development of NNG.
