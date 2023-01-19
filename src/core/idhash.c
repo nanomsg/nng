@@ -129,7 +129,8 @@ id_map_register(nni_id_map *m)
 			return (NNG_ENOMEM);
 		}
 		id_reg_len = len;
-		memcpy(mr, id_reg_map, id_reg_num * sizeof(nni_id_map *));
+		if (id_reg_map != NULL)
+			memcpy(mr, id_reg_map, id_reg_num * sizeof(nni_id_map *));
 		id_reg_map = mr;
 	}
 	id_reg_map[id_reg_num++] = m;
