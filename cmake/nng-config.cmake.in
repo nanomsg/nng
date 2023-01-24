@@ -18,7 +18,16 @@ include("${CMAKE_CURRENT_LIST_DIR}/nng-targets.cmake")
 
 # Make sure we find packages for our dependencies
 foreach(_PKG IN ITEMS @NNG_PKGS@)
-	find_package(${_PKG} REQUIRED)
+    if (${_PKG} STREQUAL "mbedTLS")
+        # Workaround to use FindmbedTLS.cmake from installed location
+        set(BACKUP_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
+        get_filename_component(NNG_CONFIG_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+        set(CMAKE_MODULE_PATH ${NNG_CONFIG_DIR})
+        find_package(${_PKG} REQUIRED)
+        set(CMAKE_MODULE_PATH ${BACKUP_CMAKE_MODULE_PATH})
+    else()
+        find_package(${_PKG} REQUIRED)
+    endif()
 endforeach ()
 
 set(NNG_LIBRARY nng::nng)
