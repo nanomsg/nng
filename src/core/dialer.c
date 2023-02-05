@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -197,6 +197,9 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 		break;
 	case NNG_ENOMEM:
 		nni_stat_inc(&d->st_oom, 1);
+		break;
+	case NNG_ECLOSED:
+		// do nothing.
 		break;
 	default:
 		nni_stat_inc(&d->st_other, 1);
