@@ -361,6 +361,11 @@ tcptran_pipe_recv_cb(void *arg)
 		goto recv_error;
 	}
 
+	if (p->closed) {
+	  rv = NNG_ECLOSED;
+	  goto recv_error;
+	}
+
 	n = nni_aio_count(rxaio);
 	nni_aio_iov_advance(rxaio, n);
 	if (nni_aio_iov_count(rxaio) > 0) {
