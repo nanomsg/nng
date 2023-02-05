@@ -28,7 +28,7 @@ if (NNG_TRANSPORT_ZEROTIER)
         Consult a lawyer and the license files for details.
         ************************************************************")
 
-    find_package(zerotiercore REQUIRED)
+    nng_find_package(zerotiercore)
 
     nng_link_libraries(zerotiercore::zerotiercore)
     nng_defines(NNG_TRANSPORT_ZEROTIER)
