@@ -80,6 +80,8 @@ pair0_sock_fini(void *arg)
 
 	nni_lmq_fini(&s->rmq);
 	nni_lmq_fini(&s->wmq);
+	nni_pollable_fini(&s->writable);
+	nni_pollable_fini(&s->readable);
 	nni_mtx_fini(&s->mtx);
 }
 
