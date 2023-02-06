@@ -681,7 +681,6 @@ tcptran_ep_close(void *arg)
 
 	ep->closed = true;
 	nni_aio_close(ep->timeaio);
-	nni_aio_close(ep->connaio);
 	if (ep->dialer != NULL) {
 		nng_stream_dialer_close(ep->dialer);
 	}
