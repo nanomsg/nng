@@ -20,7 +20,7 @@ struct nni_ctx {
 	nni_list_node     c_node;
 	nni_sock         *c_sock;
 	nni_proto_ctx_ops c_ops;
-	void	     *c_data;
+	void             *c_data;
 	size_t            c_size;
 	bool              c_closed;
 	unsigned          c_ref; // protected by global lock
@@ -704,6 +704,10 @@ nni_sock_shutdown(nni_sock *sock)
 	}
 	nni_mtx_unlock(&sock->s_mx);
 
+	// Close the upper queues immediately.
+	nni_msgq_close(sock->s_urq);
+	nni_msgq_close(sock->s_uwq);
+
 	// We now mark any owned contexts as closing.
 	// XXX: Add context draining support here!
 	nni_mtx_lock(&sock_lk);
@@ -720,14 +724,12 @@ nni_sock_shutdown(nni_sock *sock)
 		// If still has a reference count, then wait for last
 		// reference to close before nuking it.
 	}
-	nni_mtx_unlock(&sock_lk);
 
 	// Generally, unless the protocol is blocked trying to perform
 	// writes (e.g. a slow reader on the other side), it should be
 	// trying to shut things down.  We wait to give it
 	// a chance to do so gracefully.
 
-	nni_mtx_lock(&sock_lk);
 	while (!nni_list_empty(&sock->s_ctxs)) {
 		sock->s_ctxwait = true;
 		nni_cv_wait(&sock->s_close_cv);
@@ -739,11 +741,6 @@ nni_sock_shutdown(nni_sock *sock)
 	// At this point, we've done everything we politely can to
 	// give the protocol a chance to flush its write side.  Now
 	// it is time to be a little more insistent.
-
-	// Close the upper queues immediately.  This can happen
-	// safely while we hold the lock.
-	nni_msgq_close(sock->s_urq);
-	nni_msgq_close(sock->s_uwq);
 
 	// For each pipe, arrange for it to teardown hard.  We would
 	// expect there not to be any here.
