@@ -1,4 +1,4 @@
-# Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,9 +8,9 @@
 
 @PACKAGE_INIT@
 
-set(NNG_VERSION_MAJOR "@NNG_MAJOR_VERSION@")
-set(NNG_VERSION_MINOR "@NNG_MINOR_VERSION@")
-set(NNG_VERSION_PATCH "@NNG_PATCH_VERSION@")
+set(NNG_MAJOR_VERSION "@NNG_MAJOR_VERSION@")
+set(NNG_MINOR_VERSION "@NNG_MINOR_VERSION@")
+set(NNG_PATCH_VERSION "@NNG_PATCH_VERSION@")
 
 set_and_check(NNG_INCLUDE_DIRS "@PACKAGE_INCLUDE_INSTALL_DIRS@")
 
