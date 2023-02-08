@@ -20,12 +20,14 @@ nng_tls_options - TLS-specific options
 ----
 #include <nng/nng.h>
 
-#define NNG_OPT_TLS_AUTH_MODE     "tls-authmode"
-#define NNG_OPT_TLS_CA_FILE       "tls-ca-file"
-#define NNG_OPT_TLS_CERT_KEY_FILE "tls-cert-key-file"
-#define NNG_OPT_TLS_CONFIG        "tls-config"
-#define NNG_OPT_TLS_SERVER_NAME   "tls-server-name"
-#define NNG_OPT_TLS_VERIFIED      "tls-verified"
+#define NNG_OPT_TLS_AUTH_MODE      "tls-authmode"
+#define NNG_OPT_TLS_CA_FILE        "tls-ca-file"
+#define NNG_OPT_TLS_CERT_KEY_FILE  "tls-cert-key-file"
+#define NNG_OPT_TLS_CONFIG         "tls-config"
+#define NNG_OPT_TLS_SERVER_NAME    "tls-server-name"
+#define NNG_OPT_TLS_VERIFIED       "tls-verified"
+#define NNG_OPT_TLS_PEER_CN        "tls-peer-cn"
+#define NNG_OPT_TLS_PEER_ALT_NAMES "tls-peer-alt-names"
 ----
 
 == DESCRIPTION
@@ -90,6 +92,16 @@ name presented in the server's x509 certificate.
 This read-only option indicates whether the remote peer has been properly verified using TLS
 authentication.
 May return incorrect results if peer authentication is disabled.
+
+[[NNG_OPT_TLS_PEER_CN]]((`NNG_OPT_TLS_PEER_CN`))::
+(string)
+This read-only option returns the common name of the peer certificate.
+May return incorrect results if peer authentication is disabled.
+
+[[NNG_OPT_TLS_PEER_ALT_NAMES]]((`NNG_OPT_TLS_PEER_ALT_NAMES`))::
+(string)
+This read-only option returns string list with the subject alternative names of the
+peer certificate. May return incorrect results if peer authentication is disabled.
 
 === Inherited Options
 

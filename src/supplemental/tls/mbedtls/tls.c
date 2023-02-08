@@ -276,6 +276,74 @@ conn_verified(nng_tls_engine_conn *ec)
 	return (mbedtls_ssl_get_verify_result(&ec->ctx) == 0);
 }
 
+static char *
+conn_peer_cn(nng_tls_engine_conn *ec)
+{
+	const mbedtls_x509_crt *crt = mbedtls_ssl_get_peer_cert(&ec->ctx);
+	if (!crt) {
+		return (NULL);
+	}
+
+	char buf[0x400];
+	int  len = mbedtls_x509_dn_gets(buf, sizeof(buf), &crt->subject);
+	if (len <= 0) {
+		return (NULL);
+	}
+
+	const char *pos = strstr(buf, "CN=");
+	if (!pos) {
+		return (NULL);
+	}
+
+	pos += 3;
+	len -= pos - buf - 1;
+	if (len <= 1) {
+		return (NULL);
+	}
+
+	char *rv = malloc(len);
+	memcpy(rv, pos, len);
+	return (rv);
+}
+
+static char **
+conn_peer_alt_names(nng_tls_engine_conn *ec)
+{
+	const mbedtls_x509_crt *crt = mbedtls_ssl_get_peer_cert(&ec->ctx);
+	if (!crt) {
+		return (NULL);
+	}
+
+	const mbedtls_asn1_sequence * seq = &crt->subject_alt_names;
+
+	// get count
+	int count = 0;
+	do {
+		if (seq->buf.len > 0) ++count;
+		seq = seq->next;
+	} while (seq);
+	if (count == 0) return NULL;
+
+	seq = &crt->subject_alt_names;
+
+	// copy strings
+	char ** rv = malloc((count + 1) * sizeof(char *));
+	int i = 0;
+	do {
+		if (seq->buf.len == 0) continue;
+
+		rv[i] = malloc(seq->buf.len + 1);
+		memcpy(rv[i], seq->buf.p, seq->buf.len);
+		rv[i][seq->buf.len] = 0;
+		++i;
+
+		seq = seq->next;
+	} while (seq);
+	rv[i] = NULL;
+
+	return rv;
+}
+
 static void
 config_fini(nng_tls_engine_config *cfg)
 {
@@ -526,14 +594,16 @@ static nng_tls_engine_config_ops config_ops = {
 };
 
 static nng_tls_engine_conn_ops conn_ops = {
-	.size      = sizeof(nng_tls_engine_conn),
-	.init      = conn_init,
-	.fini      = conn_fini,
-	.close     = conn_close,
-	.recv      = conn_recv,
-	.send      = conn_send,
-	.handshake = conn_handshake,
-	.verified  = conn_verified,
+	.size           = sizeof(nng_tls_engine_conn),
+	.init           = conn_init,
+	.fini           = conn_fini,
+	.close          = conn_close,
+	.recv           = conn_recv,
+	.send           = conn_send,
+	.handshake      = conn_handshake,
+	.verified       = conn_verified,
+	.peer_cn        = conn_peer_cn,
+	.peer_alt_names = conn_peer_alt_names,
 };
 
 static nng_tls_engine tls_engine_mbed = {

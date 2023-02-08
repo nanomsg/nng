@@ -127,6 +127,8 @@ Note that setting these must be done before the transport is started.
 * xref:nng_tls_options.5.adoc#NNG_OPT_TLS_CERT_KEY_FILE[`NNG_OPT_TLS_CERT_KEY_FILE`]
 * xref:nng_tls_options.5.adoc#NNG_OPT_TLS_CONFIG[`NNG_OPT_TLS_CONFIG`]
 * xref:nng_tls_options.5.adoc#NNG_OPT_TLS_VERIFIED[`NNG_OPT_TLS_VERIFIED_`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_PEER_CN[`NNG_OPT_TLS_PEER_CN`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_PEER_ALT_NAMES[`NNG_OPT_TLS_PEER_ALT_NAMES`]
 * xref:nng_options.5.adoc#NNG_OPT_URL[`NNG_OPT_URL`]
 
 == SEE ALSO

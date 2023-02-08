@@ -755,6 +755,19 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 #define NNG_OPT_TLS_VERIFIED "tls-verified"
 
+// NNG_OPT_TLS_PEER_CN returns the string with the common name
+// of the peer certificate. Typically this is read-only and
+// only available for pipes. This option may return incorrect results if
+// peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
+#define NNG_OPT_TLS_PEER_CN "tls-peer-cn"
+
+// NNG_OPT_TLS_PEER_ALT_NAMES returns string list with the
+// subject alternative names of the peer certificate. Typically this is
+// read-only and only available for pipes. This option may return
+// incorrect results if peer authentication is disabled with
+// `NNG_TLS_AUTH_MODE_NONE`.
+#define NNG_OPT_TLS_PEER_ALT_NAMES "tls-peer-alt-names"
+
 // TCP options.  These may be supported on various transports that use
 // TCP underneath such as TLS, or not.
 

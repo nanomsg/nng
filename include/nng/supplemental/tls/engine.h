@@ -80,6 +80,14 @@ typedef struct nng_tls_engine_conn_ops_s {
 	// verified returns true if the connection is fully
 	// TLS verified, false otherwise.
 	bool (*verified)(nng_tls_engine_conn *);
+
+	// peer_cn returns the common name of the peer
+	// The return string needs to be freed.
+	char *(*peer_cn)(nng_tls_engine_conn *);
+
+	// peer_alt_names returns the subject alternative names.
+	// The return string list and its strings need to be freed.
+	char **(*peer_alt_names)(nng_tls_engine_conn *);
 } nng_tls_engine_conn_ops;
 
 typedef struct nng_tls_engine_config_ops_s {

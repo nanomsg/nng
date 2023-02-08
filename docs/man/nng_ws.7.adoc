@@ -199,6 +199,15 @@ more details.
 authentication.
 May return incorrect results if peer authentication is disabled.
 
+`NNG_OPT_TLS_PEER_CN`::
+(string) This read-only option returns the common name of the peer certificate.
+May return incorrect results if peer authentication is disabled.
+
+`NNG_OPT_TLS_PEER_ALT_NAMES`::
+(string list) returns string list with the subject alternative names of the
+peer certificate. May return incorrect results if peer authentication
+is disabled.
+
 // We should also look at a hook mechanism for listeners. Probably this could
 // look like NNG_OPT_WS_LISTEN_HOOK_FUNC which would take a function pointer
 // along the lines of int hook(void *, char *req_headers, char **res_headers),
