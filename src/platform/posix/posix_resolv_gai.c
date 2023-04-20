@@ -33,6 +33,10 @@
 #define NNG_RESOLV_CONCURRENCY 4
 #endif
 
+#ifndef AI_NUMERICSERV
+#define AI_NUMERICSERV 0
+#endif
+
 static nni_mtx  resolv_mtx  = NNI_MTX_INITIALIZER;
 static nni_cv   resolv_cv   = NNI_CV_INITIALIZER(&resolv_mtx);
 static bool     resolv_fini = false;
