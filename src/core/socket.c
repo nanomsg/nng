@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -640,8 +640,10 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	}
 
 	nni_mtx_lock(&sock_lk);
-	if (nni_id_alloc(&sock_ids, &s->s_id, s) != 0) {
+	if ((rv = nni_id_alloc(&sock_ids, &s->s_id, s)) != 0) {
+		nni_mtx_unlock(&sock_lk);
 		sock_destroy(s);
+		return (rv);
 	} else {
 		nni_list_append(&sock_list, s);
 		s->s_sock_ops.sock_open(s->s_data);
