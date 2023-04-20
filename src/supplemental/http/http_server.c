@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 QXSoftware <lh563566994@126.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
@@ -486,6 +486,7 @@ http_sconn_error(http_sconn *sc, uint16_t err)
 		if (nni_http_res_set_header(res, "Connection", "close") != 0) {
 			nni_http_res_free(res);
 			http_sconn_close(sc);
+			return;
 		}
 	}
 	sc->res = res;
