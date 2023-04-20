@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -796,13 +796,22 @@ nni_aio_sys_init(void)
 	int num_thr;
 
 	// We create a thread per CPU core for expiration by default.
-#ifndef NNG_EXPIRE_THREADS
 	num_thr = nni_plat_ncpu();
+#ifndef NNG_EXPIRE_THREADS
+#ifndef NNG_MAX_EXPIRE_THREADS
+#define NNG_MAX_EXPIRE_THREADS 8
+#endif
+	if ((num_thr > NNG_MAX_EXPIRE_THREADS) && (NNG_MAX_EXPIRE_THREADS > 0)) {
+		num_thr = NNG_MAX_EXPIRE_THREADS;
+	}
 #else
 	num_thr = NNG_EXPIRE_THREADS;
 #endif
-	if (num_thr > 256) {
+	if (num_thr > 256) { // upper limits
 		num_thr = 256;
+	}
+	if (num_thr < 1) {
+		num_thr = 1;
 	}
 
 	nni_aio_expire_q_list =

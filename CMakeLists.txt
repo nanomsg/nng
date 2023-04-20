@@ -1,5 +1,5 @@
 #
-#   Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
@@ -129,6 +129,16 @@ mark_as_advanced(NNG_MAX_TASKQ_THREADS)
 if (NNG_MAX_TASKQ_THREADS)
     add_definitions(-DNNG_MAX_TASKQ_THREADS=${NNG_MAX_TASKQ_THREADS})
 endif ()
+
+# Expire threads. This runs the timeout handling, and having more of them
+# reduces contention on the common locks used for aio expiration.
+# The default is to allocate up to max(8, ncpu).  The upper limit can be
+# overridden here.
+set(NNG_MAX_EXPIRE_THREADS 8 CACHE STRING "Upper bound on expire threads, 0 for no limit")
+mark_as_advanced(NNG_MAX_EXPIRE_THREADS)
+if (NNG_MAX_EXPIRE_THREADS)
+    add_definitions(-DNNG_MAX_EXPIRE_THREADS=${NNG_MAX_EXPIRE_THREADS})
+endif()
 
 #  Platform checks.
 
