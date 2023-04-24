@@ -322,6 +322,7 @@ nni_dialer_rele(nni_dialer *d)
 	bool reap;
 
 	nni_mtx_lock(&dialers_lk);
+	NNI_ASSERT(d->d_ref > 0);
 	d->d_ref--;
 	reap = ((d->d_ref == 0) && (d->d_closed));
 	nni_mtx_unlock(&dialers_lk);
@@ -346,6 +347,7 @@ nni_dialer_close(nni_dialer *d)
 
 	nni_dialer_shutdown(d);
 
+	nni_sock_remove_dialer(d);
 	nni_dialer_rele(d);
 }
 

@@ -699,7 +699,6 @@ nni_sock_shutdown(nni_sock *sock)
 
 	while ((d = nni_list_first(&sock->s_dialers)) != NULL) {
 		nni_dialer_hold(d);
-		nni_list_node_remove(&d->d_node);
 		nni_mtx_unlock(&sock->s_mx);
 		nni_dialer_close(d);
 		nni_mtx_lock(&sock->s_mx);
@@ -941,10 +940,17 @@ int
 nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 {
 	nni_sockopt *sopt;
+	int rv;
+
+	// grab a hold on the dialer for the socket
+	if ((rv = nni_dialer_hold(d)) != 0) {
+		return (rv);
+	}
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
+		nni_dialer_rele(d);
 		return (NNG_ECLOSED);
 	}
 
@@ -966,6 +972,19 @@ nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 
 	nni_mtx_unlock(&s->s_mx);
 	return (0);
+}
+
+void
+nni_sock_remove_dialer(nni_dialer *d)
+{
+	nni_sock *s = d->d_sock;
+	nni_mtx_lock(&s->s_mx);
+	NNI_ASSERT(nni_list_node_active(&d->d_node));
+	nni_list_node_remove(&d->d_node);
+	nni_mtx_unlock(&s->s_mx);
+
+	// also drop the hold from the socket
+	nni_dialer_rele(d);
 }
 
 int
@@ -1541,7 +1560,6 @@ nni_dialer_shutdown(nni_dialer *d)
 	NNI_LIST_FOREACH (&d->d_pipes, p) {
 		nni_pipe_close(p);
 	}
-	nni_list_node_remove(&d->d_node);
 	nni_mtx_unlock(&s->s_mx);
 }
 
@@ -1574,8 +1592,6 @@ dialer_reap(void *arg)
 		nni_dialer_reap(d);
 		return;
 	}
-
-	nni_list_node_remove(&d->d_node);
 
 	nni_mtx_unlock(&s->s_mx);
 

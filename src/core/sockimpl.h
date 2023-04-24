@@ -126,6 +126,7 @@ struct nni_pipe {
 extern int  nni_sock_add_dialer(nni_sock *, nni_dialer *);
 extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
 extern void nni_sock_remove_listener(nni_listener *);
+extern void nni_sock_remove_dialer(nni_dialer *);
 
 extern void nni_dialer_add_pipe(nni_dialer *, void *);
 extern void nni_dialer_shutdown(nni_dialer *);
