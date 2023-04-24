@@ -306,6 +306,7 @@ nni_listener_rele(nni_listener *l)
 	bool reap;
 
 	nni_mtx_lock(&listeners_lk);
+	NNI_ASSERT(l->l_ref > 0);
 	l->l_ref--;
 	reap = ((l->l_ref == 0) && (l->l_closed));
 	nni_mtx_unlock(&listeners_lk);
@@ -329,6 +330,7 @@ nni_listener_close(nni_listener *l)
 
 	nni_listener_shutdown(l);
 
+	nni_sock_remove_listener(l);
 	nni_listener_rele(l); // This will reap if reference count is zero.
 }
 

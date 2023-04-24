@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "list.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -691,7 +692,6 @@ nni_sock_shutdown(nni_sock *sock)
 
 	while ((l = nni_list_first(&sock->s_listeners)) != NULL) {
 		nni_listener_hold(l);
-		nni_list_node_remove(&l->l_node);
 		nni_mtx_unlock(&sock->s_mx);
 		nni_listener_close(l);
 		nni_mtx_lock(&sock->s_mx);
@@ -890,10 +890,17 @@ int
 nni_sock_add_listener(nni_sock *s, nni_listener *l)
 {
 	nni_sockopt *sopt;
+	int          rv;
+
+	// grab a hold on the listener for the socket
+	if ((rv = nni_listener_hold(l)) != 0) {
+		return (rv);
+	}
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
+		nni_listener_rele(l);
 		return (NNG_ECLOSED);
 	}
 
@@ -915,6 +922,19 @@ nni_sock_add_listener(nni_sock *s, nni_listener *l)
 
 	nni_mtx_unlock(&s->s_mx);
 	return (0);
+}
+
+void
+nni_sock_remove_listener(nni_listener *l)
+{
+	nni_sock *s = l->l_sock;
+	nni_mtx_lock(&s->s_mx);
+	NNI_ASSERT(nni_list_node_active(&l->l_node));
+	nni_list_node_remove(&l->l_node);
+	nni_mtx_unlock(&s->s_mx);
+
+	// also drop the hold from the socket
+	nni_listener_rele(l);
 }
 
 int

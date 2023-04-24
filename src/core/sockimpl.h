@@ -18,7 +18,7 @@
 struct nni_dialer {
 	nni_sp_dialer_ops d_ops;  // transport ops
 	nni_sp_tran      *d_tran; // transport pointer
-	void	     *d_data; // transport private
+	void             *d_data; // transport private
 	uint32_t          d_id;   // endpoint id
 	nni_list_node     d_node; // per socket list
 	nni_sock         *d_sock;
@@ -123,8 +123,9 @@ struct nni_pipe {
 #endif
 };
 
-extern int nni_sock_add_dialer(nni_sock *, nni_dialer *);
-extern int nni_sock_add_listener(nni_sock *, nni_listener *);
+extern int  nni_sock_add_dialer(nni_sock *, nni_dialer *);
+extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
+extern void nni_sock_remove_listener(nni_listener *);
 
 extern void nni_dialer_add_pipe(nni_dialer *, void *);
 extern void nni_dialer_shutdown(nni_dialer *);
