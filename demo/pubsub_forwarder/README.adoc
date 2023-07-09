@@ -1,0 +1,62 @@
+= PubSub Forwarder
+
+This is a trivial example of a forwarder/proxy for the pub/sub pattern.
+
+The concept is as follows: the forwarder will listen for connections on
+both a front-end port and a back-end port. The front-end will act as a 
+subscriber so that publishers can publish to it. The back-end will act
+as a publisher so that subscribers can subscribe to it. The front-end 
+then forwards to the back end.
+
+== Compiling
+
+CMake with ninja-build is simplest:
+
+[source, bash]
+----
+cmake -GNinja -B build
+cd build
+ninja
+----
+
+Or if you prefer a traditional approach, 
+the following is an example typical of UNIX and similar systems like
+Linux and macOS may appeal:
+
+[source, bash]
+----
+export CPPFLAGS="-I /usr/local/include"
+export LDFLAGS="-L /usr/local/lib -lnng"
+export CC="cc"
+${CC} ${CPPFLAGS} pubsub_forwarder.c -o pubsub_forwarder ${LDFLAGS}
+----
+
+== Running
+
+An example setup for running this example would involve the following:
+
+. Step 1: Run this example binary (in the background or a terminal, etc)
+. Step 2: In a new terminal, run the following
+
+[source, bash]
+----
+nngcat --sub --dial "tcp://localhost:3328" --quoted
+----
+
+. Step 3: In a second terminal, run the same command again to give us two subscribers
+
+[source, bash]
+----
+nngcat --sub --dial "tcp://localhost:3328" --quoted
+----
+
+
+. In a third terminal, run the following to publish a counter
+
+[source, bash]
+----
+for n in $(seq 0 99); do nngcat --pub --dial "tcp://localhost:3327" --data "$n"; done
+----
+
+
+
