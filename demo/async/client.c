@@ -67,7 +67,7 @@ client(const char *url, const char *msecstr)
 	}
 
 	if ((rv = nng_sendmsg(sock, msg, 0)) != 0) {
-		fatal("nng_send", rv);
+		fatal("nng_sendmsg", rv);
 	}
 
 	if ((rv = nng_recvmsg(sock, &msg, 0)) != 0) {
