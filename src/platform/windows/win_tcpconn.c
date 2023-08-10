@@ -111,8 +111,9 @@ tcp_recv_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-tcp_recv(nni_tcp_conn *c, nni_aio *aio)
+tcp_recv(void *arg, nni_aio *aio)
 {
+	nni_tcp_conn *c = arg;
 	int rv;
 
 	if (nni_aio_begin(aio) != 0) {
