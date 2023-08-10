@@ -387,6 +387,24 @@ TestMain("HTTP Server", {
 			nng_free(data, size);
 		});
 
+		Convey("Named file with URI parameters works", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(
+			    fullurl, sizeof(fullurl), "%s/file.txt?param=123456", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_OK);
+			So(size == strlen(doc2));
+			So(memcmp(data, doc2, size) == 0);
+			So(strcmp(ctype, "text/plain") == 0);
+			nni_strfree(ctype);
+			nng_free(data, size);
+		});
+
 		Convey("Missing index gives 404", {
 			char     fullurl[256];
 			void *   data;
@@ -440,6 +458,7 @@ TestMain("HTTP Server", {
 			nng_url_free(curl);
 			nng_free(data, size);
 		});
+
 		Convey("Version 0.9 gives 505", {
 			char          fullurl[256];
 			void *        data;
@@ -462,6 +481,7 @@ TestMain("HTTP Server", {
 			nng_url_free(curl);
 			nng_free(data, size);
 		});
+
 		Convey("Missing Host gives 400", {
 			char          fullurl[256];
 			void *        data;
@@ -643,6 +663,7 @@ TestMain("HTTP Server", {
 			nng_url_free(curl);
 			nng_free(data, size);
 		});
+
 		Convey("Version 0.9 gives 505", {
 			char          fullurl[256];
 			void *        data;
@@ -665,6 +686,7 @@ TestMain("HTTP Server", {
 			nng_url_free(curl);
 			nng_free(data, size);
 		});
+
 		Convey("Missing Host gives 400", {
 			char          fullurl[256];
 			void *        data;

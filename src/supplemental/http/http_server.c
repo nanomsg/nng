@@ -272,7 +272,7 @@ nni_http_handler_set_method(nni_http_handler *h, const char *method)
 
 static nni_list http_servers =
     NNI_LIST_INITIALIZER(http_servers, nni_http_server, node);
-static nni_mtx  http_servers_lk = NNI_MTX_INITIALIZER;
+static nni_mtx http_servers_lk = NNI_MTX_INITIALIZER;
 
 static void
 http_sc_reap(void *arg)
@@ -1156,7 +1156,7 @@ nni_http_server_res_error(nni_http_server *s, nni_http_res *res)
 	http_error *epage;
 	char *      body = NULL;
 	char *      html = NULL;
-	size_t      len = 0;
+	size_t      len  = 0;
 	uint16_t    code = nni_http_res_get_status(res);
 	int         rv;
 
@@ -1550,7 +1550,10 @@ http_handle_dir(nni_aio *aio)
 	}
 
 	for (uri = uri + len; *uri != '\0'; uri++) {
-		if (*uri == '/') {
+		if (*uri == '?') {
+			// Skip URI parameters
+			break;
+		} else if (*uri == '/') {
 			strcpy(dst, NNG_PLATFORM_DIR_SEP);
 			dst += sizeof(NNG_PLATFORM_DIR_SEP) - 1;
 		} else {
