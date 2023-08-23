@@ -19,7 +19,7 @@ nng_thread_set_name - set thread name
 #include <nng/nng.h>
 #include <nng/supplemental/util/platform.h>
 
-void nng_set_thread_name(nng_thread *thread, const char *name);
+void nng_thread_set_name(nng_thread *thread, const char *name);
 ----
 
 == DESCRIPTION
