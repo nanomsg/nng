@@ -1,0 +1,118 @@
+---
+version: v1.5.2
+layout: manpage_v2
+title: nng_sockaddr_in6(5)
+---
+<h1>nng_sockaddr_in6(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_sockaddr_in6 - IPv6 socket address</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
+    <span class="tok-n">NNG_AF_INET6</span> <span class="tok-o">=</span> <span class="tok-mi">4</span><span class="tok-p">,</span>
+<span class="tok-p">};</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint8_t</span>  <span class="tok-n">sa_addr</span><span class="tok-p">[</span><span class="tok-mi">16</span><span class="tok-p">];</span>
+    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_scope</span><span class="tok-p">;</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in6</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <code>nng_sockaddr_in6</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
+used to represent TCP (and sometimes UDP) addresses,
+including the Internet Protocol (IP) address and port number.</p>
+</div>
+<div class="paragraph">
+<p>This structure is used with IPv6 addresses.
+A different structure, <a href="nng_sockaddr_in.5.html"><code>nng_sockaddr_in</code></a>, is used
+for IPv4 addresses.</p>
+</div>
+<div class="paragraph">
+<p>The following structure members are present:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>sa_family</code></dt>
+<dd>
+<p>This field will always have the value <code>NNG_AF_INET6</code>.</p>
+</dd>
+<dt class="hdlist1"><code>sa_port</code></dt>
+<dd>
+<p>This field holds the TCP or UDP port number, in network byte-order.
+A zero value here is used when no specific port number is indicated.</p>
+</dd>
+<dt class="hdlist1"><code>sa_addr</code></dt>
+<dd>
+<p>This field holds the IP address in
+network-byte order.</p>
+</dd>
+<dt class="hdlist1"><code>sa_scope</code></dt>
+<dd>
+<p>This is the scope, and is typically used with link local
+addresses to identify a specific interface.  The details of
+this are specific to the operating system.  This value is
+presented identically to the underlying system&#8217;s, including
+any byte order considerations.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <code>sa_port</code> and <code>sa_addr</code> fields are in network-byte order to
+facilitate their use with system APIs such as <code>inet_ntop()</code>.
+Most platforms use some form of BSD-derived network API, which uses
+network-byte order in the various structures (such as <code>sockaddr_in6</code>).
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This field appears similar to BSD <code>sockaddr_in6</code>, but it is
+<em>not</em> the same, and they may not be used interchangeably.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
+<a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
+<a href="nng_tcp.7.html">nng_tcp(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

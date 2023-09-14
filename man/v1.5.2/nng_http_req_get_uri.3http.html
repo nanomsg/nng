@@ -1,0 +1,65 @@
+---
+version: v1.5.2
+layout: manpage_v2
+title: nng_http_req_get_uri(3http)
+---
+<h1>nng_http_req_get_uri(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_req_get_uri - return HTTP request URI</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-nf">nng_http_req_get_uri</span><span class="tok-p">(</span><span class="tok-n">nng_http_req</span> <span class="tok-o">*</span><span class="tok-n">req</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_req_get_uri()</code> returns the URI (path) associated with the HTTP
+request <em>req</em>.
+The value returned includes the path, as well as any query information or
+fragment.  The value will look like a file system path
+with those optional components appended, such as <code>/api/get_info.cgi?name=garrett</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Request URI as a string.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_req_alloc.3http.html">nng_http_req_alloc(3http)</a>,
+<a href="nng_http_req_set_uri.3http.html">nng_http_req_set_uri(3http)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

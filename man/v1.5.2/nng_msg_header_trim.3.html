@@ -1,0 +1,85 @@
+---
+version: v1.5.2
+layout: manpage_v2
+title: nng_msg_header_trim(3)
+---
+<h1>nng_msg_header_trim(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_msg_header_trim - remove data from start of message header</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_header_trim</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_header_trim_u16</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint16_t</span> <span class="tok-o">*</span><span class="tok-n">val16</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_header_trim_u32</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint32_t</span> <span class="tok-o">*</span><span class="tok-n">val32</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_header_trim_u64</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-o">*</span><span class="tok-n">val64</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_msg_header_trim()</code> family of functions remove
+data from the start of the header of message <em>msg</em>.
+The first function removes <em>size</em> bytes.
+The remaining functions removes 2, 4, or 8 bytes, and stores them in the
+value (such as <em>val32</em>),
+after converting them from network-byte order (big-endian) to native
+byte order.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The message header is too short to remove the requested data.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_msg_alloc.3.html">nng_msg_alloc(3)</a>,
+<a href="nng_msg_header.3.html">nng_msg_header(3)</a>,
+<a href="nng_msg_header_append.3.html">nng_msg_header_append(3)</a>,
+<a href="nng_msg_header_chop.3.html">nng_msg_header_chop(3)</a>,
+<a href="nng_msg_header_insert.3.html">nng_msg_header_insert(3)</a>,
+<a href="nng_msg_header_len.3.html">nng_msg_header_len(3)</a>,
+<a href="nng_msg_free.3.html">nng_msg_free(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_msg.5.html">nng_msg(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

@@ -1,0 +1,122 @@
+---
+version: v1.5.2
+layout: manpage_v2
+title: nng_tls_config_auth_mode(3tls)
+---
+<h1>nng_tls_config_auth_mode(3tls)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_tls_config_auth_mode - configure authentication mode</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/tls/tls.h&gt;</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">enum</span> <span class="tok-n">nng_tls_auth_mode</span> <span class="tok-p">{</span>
+        <span class="tok-n">NNG_TLS_AUTH_MODE_NONE</span><span class="tok-p">,</span>
+        <span class="tok-n">NNG_TLS_AUTH_MODE_OPTIONAL</span><span class="tok-p">,</span>
+        <span class="tok-n">NNG_TLS_AUTH_MODE_REQUIRED</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_tls_auth_mode</span><span class="tok-p">;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_tls_config_auth_mode</span><span class="tok-p">(</span><span class="tok-n">nng_tls_config</span> <span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">,</span> <span class="tok-n">nng_tls_auth_mode</span> <span class="tok-n">mode</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_tls_config_auth_mode()</code> function configures the authentication mode
+to be used for TLS sessions using this configuration object.</p>
+</div>
+<div class="paragraph">
+<p>The possible modes are:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_TLS_AUTH_MODE_NONE</code></dt>
+<dd>
+<p>No authentication of the TLS peer is performed.
+This is the default for
+TLS servers, which most typically do not authenticate their clients.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_TLS_AUTH_MODE_OPTIONAL</code></dt>
+<dd>
+<p>If a certificate is presented by the peer, then it is validated.
+However, if the peer does not present a valid certificate,
+then the session is allowed to proceed without authentication.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_TLS_AUTH_MODE_REQUIRED</code></dt>
+<dd>
+<p>A check is made to ensure that the peer has presented a valid certificate
+used for the session.
+If the peer&#8217;s certificate is invalid or missing, then the session is refused.
+This is the default for clients.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>An invalid <em>mode</em> was specified.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EBUSY</code>
+</td>
+<td class="hdlist2">
+<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
+<a href="nng_tls_config_ca_chain.3tls.html">nng_tls_config_ca_chain(3tls)</a>,
+<a href="nng_tls_config_ca_file.3tls.html">nng_tls_config_ca_file(3tls)</a>,
+<a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name(3tls)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
