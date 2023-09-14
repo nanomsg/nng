@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -188,6 +188,8 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	// This arranges for the fd to be in non-blocking mode, and adds the
 	// poll fd to the list.
 	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+		// the error label unlocks this
+		nni_mtx_lock(&d->mtx);
 		goto error;
 	}
 
