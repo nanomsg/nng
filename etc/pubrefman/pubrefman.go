@@ -89,7 +89,7 @@ type Global struct {
 	SrcFs    billy.Filesystem
 	DstFs    billy.Filesystem
 	DstDir   string
-	LaConfig configuration.Configuration
+	LaConfig *configuration.Configuration
 	Sections map[string]*Section
 	Pages    map[string]*Page
 	Repo     *git.Repository
@@ -111,14 +111,13 @@ func (g *Global) Init() {
 	g.SrcFs = memfs.New()
 	g.DstFs = memfs.New()
 	g.DstDir = path.Join("man", g.Config.Version)
-	g.LaConfig = configuration.Configuration{
-		AttributeOverrides: map[string]string{
+	g.LaConfig = configuration.NewConfiguration(
+		configuration.WithAttributes(map[string]interface{}{
 			"nofooter":           "yes",
 			"icons":              "font",
 			"linkcss":            "yes",
 			"source-highlighter": "pygments",
-		},
-	}
+		}))
 	thresh := jww.LevelInfo
 	if g.Config.Quiet {
 		thresh = jww.LevelError
@@ -232,6 +231,7 @@ func (g *Global) ProcessManPage(page os.FileInfo) {
 	_, _ = fmt.Fprintf(result, "---\n")
 	_, _ = fmt.Fprintf(result, "version: %s\n", g.Config.Version)
 	_, _ = fmt.Fprintf(result, "layout: %s\n", "manpage_v2")
+	_, _ = fmt.Fprintf(result, "title: %s\n", fmt.Sprintf("%s(%s)", name, sect))
 	_, _ = fmt.Fprintf(result, "---\n")
 	_, _ = fmt.Fprintf(result, "<h1>%s(%s)</h1>\n", name, sect)
 	result.WriteString(html.String())
@@ -427,7 +427,7 @@ func (g *Global) Push() {
 	})
 	g.CheckError(err, "getting commit log")
 	commit, err := ci.Next()
-	g.CheckError(err,"getting single commit")
+	g.CheckError(err, "getting single commit")
 	if commit != nil {
 		g.Print(commit.String())
 		if fs, _ := commit.Stats(); fs != nil {
