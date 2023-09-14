@@ -1,6 +1,6 @@
 = nng_aio_stop(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -26,18 +26,15 @@ void nng_aio_stop(nng_aio *aio);
 
 The `nng_aio_stop()` function stops the asynchronous I/O operation
 associated with _aio_ by aborting with `NNG_ECANCELED`, and then waits
-for it to complete or to be completely aborted.
+for it to complete or to be completely aborted, and for the any
+callback associated with the _aio_ to have completed executing.
 
-If an operation is in progress when this function is called, that operation
-is canceled and the callback function is _not_ allowed to run.
+Further calls to
+xref:nng_aio_schedule.3.adoc[`nng_aio_schedule()`] using this _aio_ will fail with
+`NNG_ECLOSED`.
 
-If the callback function is already running when this function is called,
-then it is allowed to complete before returning to the caller.
-
-No new operations will be started on this _aio_.
-
-NOTE: Calling this function means that the operation may be aborted without
-completing its callback function.
+It is safe to call this for an _aio_, even when no operation is currently
+pending for it.
 
 TIP: When multiple asynchronous I/O handles are in use and need to be
 shut down, it is safest to stop all of them, before deallocating any of
@@ -55,9 +52,10 @@ None.
 == SEE ALSO
 
 [.text-left]
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
 xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
 xref:nng_aio_free.3.adoc[nng_aio_free(3)],
+xref:nng_aio_schedule.3.adoc[nng_aio_schedule(3)],
 xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
-xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
 xref:nng_aio.5.adoc[nng_aio(5)],
 xref:nng.7.adoc[nng(7)]
