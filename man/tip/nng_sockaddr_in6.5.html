@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_sockaddr_in6(5)
 ---
 <h1>nng_sockaddr_in6(5)</h1>
 <div class="sect1">
@@ -16,17 +17,17 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
     <span class="tok-n">NNG_AF_INET6</span> <span class="tok-o">=</span> <span class="tok-mi">4</span><span class="tok-p">,</span>
 <span class="tok-p">};</span>
 
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
-    <span class="tok-n">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
-    <span class="tok-n">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
-    <span class="tok-n">uint8_t</span>  <span class="tok-n">sa_addr</span><span class="tok-p">[</span><span class="tok-mi">16</span><span class="tok-p">];</span>
-    <span class="tok-n">uint32_t</span> <span class="tok-n">sa_scope</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint8_t</span>  <span class="tok-n">sa_addr</span><span class="tok-p">[</span><span class="tok-mi">16</span><span class="tok-p">];</span>
+    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_scope</span><span class="tok-p">;</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in6</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
@@ -57,20 +58,20 @@ for IPv4 addresses.</p>
 <dt class="hdlist1"><code>sa_port</code></dt>
 <dd>
 <p>This field holds the TCP or UDP port number, in network byte-order.
-    A zero value here is used when no specific port number is indicated.</p>
+A zero value here is used when no specific port number is indicated.</p>
 </dd>
 <dt class="hdlist1"><code>sa_addr</code></dt>
 <dd>
 <p>This field holds the IP address in
-    network-byte order.</p>
+network-byte order.</p>
 </dd>
 <dt class="hdlist1"><code>sa_scope</code></dt>
 <dd>
 <p>This is the scope, and is typically used with link local
-    addresses to identify a specific interface.  The details of
-    this are specific to the operating system.  This value is
-    presented identically to the underlying system&#8217;s, including
-    any byte order considerations.</p>
+addresses to identify a specific interface.  The details of
+this are specific to the operating system.  This value is
+presented identically to the underlying system&#8217;s, including
+any byte order considerations.</p>
 </dd>
 </dl>
 </div>

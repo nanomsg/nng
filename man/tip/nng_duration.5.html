@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_duration(5)
 ---
 <h1>nng_duration(5)</h1>
 <div class="sect1">
@@ -16,13 +17,13 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-k">typedef</span> <span class="tok-n">int32_t</span> <span class="tok-n">nng_duration</span><span class="tok-p">;</span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
 
-<span class="tok-cp">#define NNG_DURATION_INFINITE (-1)
-</span><span class="tok-cp">#define NNG_DURATION_DEFAULT  (-2)
-</span><span class="tok-cp">#define NNG_DURATION_ZERO     (0)</span></code></pre>
+<span class="tok-k">typedef</span> <span class="tok-kt">int32_t</span> <span class="tok-n">nng_duration</span><span class="tok-p">;</span>
+
+<span class="tok-cp">#define NNG_DURATION_INFINITE (-1)</span>
+<span class="tok-cp">#define NNG_DURATION_DEFAULT  (-2)</span>
+<span class="tok-cp">#define NNG_DURATION_ZERO     (0)</span></code></pre>
 </div>
 </div>
 </div>
@@ -43,8 +44,7 @@ This type is most often used in conjunction with timers and timeouts.</p>
 <dt class="hdlist1"><code>NNG_DURATION_DEFAULT</code></dt>
 <dd>
 <p>Indicates a context-specific default value should be used.</p>
-<div class="dlist">
-<dl>
+</dd>
 <dt class="hdlist1"><code>NNG_DURATION_INFINITE</code></dt>
 <dd>
 <p>Effectively an infinite duration; used most often to disable timeouts.</p>
@@ -52,9 +52,6 @@ This type is most often used in conjunction with timers and timeouts.</p>
 <dt class="hdlist1"><code>NNG_DURATION_ZERO</code></dt>
 <dd>
 <p>Zero length duration; used to perform a single polling operation.</p>
-</dd>
-</dl>
-</div>
 </dd>
 </dl>
 </div>

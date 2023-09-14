@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_tls_options(5)
 ---
 <h1>nng_tls_options(5)</h1>
 <div class="sect1">
@@ -16,14 +17,16 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-cp">#define NNG_OPT_TLS_AUTH_MODE     &#34;tls-authmode&#34;
-</span><span class="tok-cp">#define NNG_OPT_TLS_CA_FILE       &#34;tls-ca-file&#34;
-</span><span class="tok-cp">#define NNG_OPT_TLS_CERT_KEY_FILE &#34;tls-cert-key-file&#34;
-</span><span class="tok-cp">#define NNG_OPT_TLS_CONFIG        &#34;tls-config&#34;
-</span><span class="tok-cp">#define NNG_OPT_TLS_SERVER_NAME   &#34;tls-server-name&#34;
-</span><span class="tok-cp">#define NNG_OPT_TLS_VERIFIED      &#34;tls-verified&#34;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-cp">#define NNG_OPT_TLS_AUTH_MODE      &#34;tls-authmode&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_CA_FILE        &#34;tls-ca-file&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_CERT_KEY_FILE  &#34;tls-cert-key-file&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_CONFIG         &#34;tls-config&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_SERVER_NAME    &#34;tls-server-name&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_VERIFIED       &#34;tls-verified&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_PEER_CN        &#34;tls-peer-cn&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TLS_PEER_ALT_NAMES &#34;tls-peer-alt-names&#34;</span></code></pre>
 </div>
 </div>
 </div>
@@ -52,21 +55,21 @@ description of the option.</p>
 <h3 id="_tls_options">TLS Options</h3>
 <div class="dlist">
 <dl>
-<dt class="hdlist1">[[NNG_OPT_TLS_AUTH_MODE]]<code>NNG_OPT_TLS_AUTH_MODE</code></dt>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_AUTH_MODE"></a><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
 <dd>
 <p>(<code>int</code>)
 Write-only option used to configure the authentication mode used.
 See <a href="nng_tls_config_auth_mode.3tls.html"><code>nng_tls_config_auth_mode()</code></a> for
 more details.</p>
 </dd>
-<dt class="hdlist1">[[NNG_OPT_TLS_CA_FILE]]<code>NNG_OPT_TLS_CA_FILE</code></dt>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_CA_FILE"></a><code>NNG_OPT_TLS_CA_FILE</code></dt>
 <dd>
 <p>(string) Write-only option naming a file containing certificates to
 use for peer validation.
 See <a href="nng_tls_config_ca_file.3tls.html"><code>nng_tls_config_ca_file()</code></a> for more
 information.</p>
 </dd>
-<dt class="hdlist1">[[NNG_OPT_TLS_CERT_KEY_FILE]]<code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_CERT_KEY_FILE"></a><code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
 <dd>
 <p>(string) Write-only option naming a file containing the local certificate and
 associated private key.
@@ -74,7 +77,7 @@ The private key used must be unencrypted.
 See <a href="nng_tls_config_own_cert.3tls.html"><code>nng_tls_config_own_cert()</code></a> for more
 information.</p>
 </dd>
-<dt class="hdlist1">[[NNG_OPT_TLS_CONFIG]]<code>NNG_OPT_TLS_CONFIG</code></dt>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_CONFIG"></a><code>NNG_OPT_TLS_CONFIG</code></dt>
 <dd>
 <p>(<code>nng_tls_config *</code>)
 This option references the underlying
@@ -108,7 +111,7 @@ Use this option when more advanced TLS configuration is required.
 </table>
 </div>
 </dd>
-<dt class="hdlist1">[[NNG_OPT_TLS_SERVER_NAME]]<code>NNG_OPT_TLS_SERVER_NAME</code></dt>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_SERVER_NAME"></a><code>NNG_OPT_TLS_SERVER_NAME</code></dt>
 <dd>
 <p>(string)
 This write-only option is used to specify the name of the server.
@@ -117,12 +120,24 @@ indication, which is used as a hint by a multihosting server to choose the
 appropriate certificate to provide) and also is used to validate the
 name presented in the server&#8217;s x509 certificate.</p>
 </dd>
-<dt class="hdlist1">[[NNG_OPT_TLS_VERIFIED]]<code>NNG_OPT_TLS_VERIFIED</code></dt>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_VERIFIED"></a><code>NNG_OPT_TLS_VERIFIED</code></dt>
 <dd>
 <p>(<code>bool</code>)
 This read-only option indicates whether the remote peer has been properly verified using TLS
 authentication.
 May return incorrect results if peer authentication is disabled.</p>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_PEER_CN"></a><code>NNG_OPT_TLS_PEER_CN</code></dt>
+<dd>
+<p>(string)
+This read-only option returns the common name of the peer certificate.
+May return incorrect results if peer authentication is disabled.</p>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_TLS_PEER_ALT_NAMES"></a><code>NNG_OPT_TLS_PEER_ALT_NAMES</code></dt>
+<dd>
+<p>(string)
+This read-only option returns string list with the subject alternative names of the
+peer certificate. May return incorrect results if peer authentication is disabled.</p>
 </dd>
 </dl>
 </div>

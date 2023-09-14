@@ -59,6 +59,10 @@ primary API for building such applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">begin asynchronous I/O operation</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_busy.3.html">nng_aio_busy(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test if asynchronous I/O is busy</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">cancel asynchronous I/O operation</p></td>
 </tr>
@@ -159,8 +163,16 @@ primary API for building such applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">receive message using context asynchronously</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_recvmsg.3.html">nng_ctx_recvmsg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive message using socket</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_send.3.html">nng_ctx_send(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">send message using context asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_sendmsg.3.html">nng_ctx_sendmsg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send message using context</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_set.3.html">nng_ctx_set(3)</a></p></td>
@@ -275,6 +287,10 @@ primary API for building such applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return message body</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_capacity.3.html">nng_msg_capacity(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return message body length</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_chop.3.html">nng_msg_chop(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">remove data from end of message body</p></td>
 </tr>
@@ -333,6 +349,10 @@ primary API for building such applications.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_realloc.3.html">nng_msg_realloc(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">reallocate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_reserve.3.html">nng_msg_reserve(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reserve storage for a message</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe(3)</a></p></td>
@@ -400,7 +420,7 @@ primary API for building such applications.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recvmsg.3.html">nng_recvmsg(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">recv message</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive a message</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_rep_open.3.html">nng_rep_open(3)</a></p></td>
@@ -445,6 +465,10 @@ primary API for building such applications.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket_set.3.html">nng_socket_set(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_bool.3.html">nng_stat_bool(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic Boolean value</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_child.3.html">nng_stat_child(3)</a></p></td>
@@ -496,7 +520,7 @@ primary API for building such applications.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_value.3.html">nng_stat_value(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic numeric value</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_free.3.html">nng_stats_free(3)</a></p></td>
@@ -1230,7 +1254,7 @@ additional support was present and enabled with <em>libnng</em> was built.</p>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-Contact <a href="https://staysail.tech">Staysail Systems, Inc.</a> for
+Contact <a href="https://staysail.tech">Staysail Systems</a> for
 details about commercially available options, including support for
 FIPS 140-2 validated cryptography and TLS v1.3.
 </td>

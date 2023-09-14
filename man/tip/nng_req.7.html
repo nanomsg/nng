@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_req(7)
 ---
 <h1>nng_req(7)</h1>
 <div class="sect1">
@@ -40,7 +41,7 @@ until a reply is received or the request times out.</p>
 </td>
 <td class="content">
 This protocol is useful in setting up RPC-like services.
-It is also &#34;reliable&#34;, in that a the requester will keep retrying until
+It is also "reliable", in that a the requester will keep retrying until
 a reply is received.
 </td>
 </tr>
@@ -149,12 +150,12 @@ a separate socket.</p>
 <dt class="hdlist1"><code>NNG_OPT_REQ_RESENDTIME</code></dt>
 <dd>
 <p>(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
-   When a new request is started, a timer of this duration is also started.
-   If no reply is received before this timer expires, then the request will
-   be resent.
-   (Requests are also automatically resent if the peer to whom
-   the original request was sent disconnects, or if a peer becomes available
-   while the requester is waiting for an available peer.)</p>
+When a new request is started, a timer of this duration is also started.
+If no reply is received before this timer expires, then the request will
+be resent.
+(Requests are also automatically resent if the peer to whom
+the original request was sent disconnects, or if a peer becomes available
+while the requester is waiting for an available peer.)</p>
 </dd>
 </dl>
 </div>

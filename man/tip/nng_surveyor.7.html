@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_surveyor(7)
 ---
 <h1>nng_surveyor(7)</h1>
 <div class="sect1">
@@ -16,8 +17,8 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/survey0/survey.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/survey0/survey.h&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -134,12 +135,12 @@ version.)</p>
 <dt class="hdlist1"><code>NNG_OPT_SURVEYOR_SURVEYTIME</code></dt>
 <dd>
 <p>(<a href="nng_duration.5.html"><code>nng_duration</code></a>) Duration of surveys.
-   When a new survey is started, a timer of this duration is also started.
-   Any responses arriving this time will be discarded.
-   Attempts to receive
-   after the timer expires with no other surveys started will result in
-   <code>NNG_ESTATE</code>.
-   Attempts to receive when this timer expires will result in <code>NNG_ETIMEDOUT</code>.</p>
+When a new survey is started, a timer of this duration is also started.
+Any responses arriving this time will be discarded.
+Attempts to receive
+after the timer expires with no other surveys started will result in
+<code>NNG_ESTATE</code>.
+Attempts to receive when this timer expires will result in <code>NNG_ETIMEDOUT</code>.</p>
 </dd>
 </dl>
 </div>

@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_tcp_options(5)
 ---
 <h1>nng_tcp_options(5)</h1>
 <div class="sect1">
@@ -16,11 +17,11 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-cp">#define NNG_OPT_TCP_NODELAY    &#34;tcp-nodelay&#34;
-</span><span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE  &#34;tcp-keepalive&#34;
-</span><span class="tok-cp">#define NNG_OPT_TCP_BOUND_PORT &#34;tcp-bound-port&#34;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-cp">#define NNG_OPT_TCP_NODELAY    &#34;tcp-nodelay&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE  &#34;tcp-keepalive&#34;</span>
+<span class="tok-cp">#define NNG_OPT_TCP_BOUND_PORT &#34;tcp-bound-port&#34;</span></code></pre>
 </div>
 </div>
 </div>
@@ -56,7 +57,7 @@ TCP/IP communications.</p>
 <dt class="hdlist1"><code>NNG_OPT_TCP_NODELAY</code></dt>
 <dd>
 <p>(<code>bool</code>)
-This option is used to disable (or enable) the use of Nagle&#39;s algorithm
+This option is used to disable (or enable) the use of Nagle's algorithm
 for TCP connections.</p>
 <div class="admonitionblock note">
 <table>

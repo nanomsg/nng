@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng(7)
 ---
 <h1>nng(7)</h1>
 <div class="sect1">
@@ -15,7 +16,7 @@ layout: manpage_v2
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>cc</strong> [&#39;flags&#39;] &#39;files&#39; <strong>-lnng</strong> [&#39;libraries&#39;]</p>
+<p><strong>cc</strong> ['flags'] 'files' <strong>-lnng</strong> ['libraries']</p>
 </div>
 </div>
 </div>
@@ -299,6 +300,7 @@ following the format specified in
 <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>,
 including some schemes that are unique
 to SP.
+
 The URLs used in <em>NNG</em> are canonicalized as follows, mostly in
 accordance with
 <a href="https://tools.ietf.org/html/rfc3986#section-6.2.2">RFC 3986 6.2.2</a>:</p>
@@ -307,32 +309,32 @@ accordance with
 <ol class="arabic">
 <li>
 <p>The URL is parsed into scheme, userinfo, host, port, path, query and
-    fragment components.  (Not all of these members are necessarily present.)</p>
+fragment components.  (Not all of these members are necessarily present.)</p>
 </li>
 <li>
 <p>The scheme, hostname, and port if present, are converted to lower case.</p>
 </li>
 <li>
 <p>Percent-encoded values for
-    <a href="https://tools.ietf.org/html/rfc3986#section-2.3">unreserved characters</a>
-    converted to their unencoded forms.</p>
+<a href="https://tools.ietf.org/html/rfc3986#section-2.3">unreserved characters</a>
+converted to their unencoded forms.</p>
 </li>
 <li>
 <p>Additionally URL percent-encoded values for characters in the path
-    and with numeric values larger than 127 (i.e. not ASCII) are decoded.</p>
+and with numeric values larger than 127 (i.e. not ASCII) are decoded.</p>
 </li>
 <li>
 <p>The resulting path is checked for invalid UTF-8 sequences, consisting
-    of surrogate pairs, illegal byte sequences, or overlong encodings.
-    If this check fails, then the entire URL is considered invalid.</p>
+of surrogate pairs, illegal byte sequences, or overlong encodings.
+If this check fails, then the entire URL is considered invalid.</p>
 </li>
 <li>
 <p>Path segments consisting of <code>.</code> and <code>..</code> are resolved as per
-    <a href="https://tools.ietf.org/html/rfc3986#section-6.2.2.3">RFC 3986 6.2.2.3</a>.</p>
+<a href="https://tools.ietf.org/html/rfc3986#section-6.2.2.3">RFC 3986 6.2.2.3</a>.</p>
 </li>
 <li>
 <p>Further, empty path segments are removed, meaning that duplicate
-    slash (<code>/</code>) separators are removed from the path.</p>
+slash (<code>/</code>) separators are removed from the path.</p>
 </li>
 </ol>
 </div>

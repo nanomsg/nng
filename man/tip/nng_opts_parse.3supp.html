@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_opts_parse(3supp)
 ---
 <h1>nng_opts_parse(3supp)</h1>
 <div class="sect1">
@@ -16,15 +17,19 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/util/options.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/util/options.h&gt;</span>
+
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_optspec</span> <span class="tok-p">{</span>
     <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">o_name</span><span class="tok-p">;</span>  <span class="tok-c1">// Long style name (may be NULL for short only)
-</span><span class="tok-c1"></span>    <span class="tok-kt">int</span>         <span class="tok-n">o_short</span><span class="tok-p">;</span> <span class="tok-c1">// Short option (no clustering!)
-</span><span class="tok-c1"></span>    <span class="tok-kt">int</span>         <span class="tok-n">o_val</span><span class="tok-p">;</span>   <span class="tok-c1">// Value stored on a good parse (&gt;0)
-</span><span class="tok-c1"></span>    <span class="tok-kt">bool</span>        <span class="tok-n">o_arg</span><span class="tok-p">;</span>   <span class="tok-c1">// Option takes an argument if true
-</span><span class="tok-c1"></span><span class="tok-p">}</span> <span class="tok-n">nng_optspec</span><span class="tok-p">;</span>
+</span>
+    <span class="tok-kt">int</span>         <span class="tok-n">o_short</span><span class="tok-p">;</span> <span class="tok-c1">// Short option (no clustering!)
+</span>
+    <span class="tok-kt">int</span>         <span class="tok-n">o_val</span><span class="tok-p">;</span>   <span class="tok-c1">// Value stored on a good parse (&gt;0)
+</span>
+    <span class="tok-kt">bool</span>        <span class="tok-n">o_arg</span><span class="tok-p">;</span>   <span class="tok-c1">// Option takes an argument if true
+</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_optspec</span><span class="tok-p">;</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">argc</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-k">const</span> <span class="tok-o">*</span><span class="tok-n">argv</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-n">nng_optspec</span> <span class="tok-o">*</span><span class="tok-n">spec</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">**</span><span class="tok-n">arg</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">idx</span><span class="tok-p">);</span></code></pre>
 </div>
@@ -47,7 +52,7 @@ starting at the index referenced by <em>idx</em>.
 (New invocations typically set the value pointed to by <em>idx</em> to 1.)</p>
 </div>
 <div class="paragraph">
-<p>Options are parsed as specified by <em>spec</em> (see <a href="#Option Specification">[Option Specification]</a>.)
+<p>Options are parsed as specified by <em>spec</em> (see <a href="#_option_specification">Option Specification</a>.)
 The value of the parsed option will be stored at the address indicated by
 <em>val</em>, and the value of <em>idx</em> will be incremented to reflect the next
 option to parse.</p>
@@ -86,26 +91,26 @@ This structure has the following members:</p>
 <dl>
 <dt class="hdlist1"><code>o_name</code></dt>
 <dd>
-<p>The long style name for the option, such as &#34;verbose&#34;.
-  This will be parsed on the command line when it is prefixed with two dashes.
-  It may be <code>NULL</code> if only a short option is to be supported.</p>
+<p>The long style name for the option, such as "verbose".
+This will be parsed on the command line when it is prefixed with two dashes.
+It may be <code>NULL</code> if only a short option is to be supported.</p>
 </dd>
 <dt class="hdlist1"><code>o_short</code></dt>
 <dd>
 <p>This is a single letter (at present only ASCII letters are supported).
-  These options appear as just a single letter, and are prefixed with a single dash on the command line.
-  The use of a slash in lieu of the dash is <em>not</em> supported, in order to avoid confusion with path name arguments.
-  This value may be set to 0 if no short option is needed.</p>
+These options appear as just a single letter, and are prefixed with a single dash on the command line.
+The use of a slash in lieu of the dash is <em>not</em> supported, in order to avoid confusion with path name arguments.
+This value may be set to 0 if no short option is needed.</p>
 </dd>
 <dt class="hdlist1"><code>o_val</code></dt>
 <dd>
 <p>This is a numeric value that is unique to this option.
-  This value is assigned by the application program, and must be non-zero
-  for a valid option.
-  If this is zero, then it indicates the end of the specifications, and the
-  rest of this structure is ignored.
-  The value will be returned to the caller in <em>val</em> by <code>nng_opts_parse()</code> when
-  this option is parsed from the command line.</p>
+This value is assigned by the application program, and must be non-zero
+for a valid option.
+If this is zero, then it indicates the end of the specifications, and the
+rest of this structure is ignored.
+The value will be returned to the caller in <em>val</em> by <code>nng_opts_parse()</code> when
+this option is parsed from the command line.</p>
 </dd>
 <dt class="hdlist1"><code>o_arg</code></dt>
 <dd>
@@ -119,7 +124,7 @@ This structure has the following members:</p>
 <div class="paragraph">
 <p>Long options are parsed from the <em>argv</em> array, and are indicated when
 the element being scanned starts with two dashes.
-For example, the &#34;verbose&#34; option would be specified as <code>--verbose</code> on
+For example, the "verbose" option would be specified as <code>--verbose</code> on
 the command line.
 If a long option takes an argument, it can either immediately follow
 the option as the next element in <em>argv</em>, or it can be appended to
@@ -169,7 +174,8 @@ unambiguously (meaning it must not match any other option specification.)</p>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c">    <span class="tok-k">enum</span> <span class="tok-p">{</span> <span class="tok-n">OPT_LOGFILE</span><span class="tok-p">,</span> <span class="tok-n">OPT_VERBOSE</span> <span class="tok-p">};</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">logfile</span><span class="tok-p">;</span> <span class="tok-c1">// options to be set
-</span><span class="tok-c1"></span>    <span class="tok-kt">bool</span> <span class="tok-n">verbose</span><span class="tok-p">;</span>
+</span>
+    <span class="tok-kt">bool</span> <span class="tok-n">verbose</span><span class="tok-p">;</span>
 
     <span class="tok-k">static</span> <span class="tok-n">nng_optspec</span> <span class="tok-n">specs</span><span class="tok-p">[]</span> <span class="tok-o">=</span> <span class="tok-p">{</span>
         <span class="tok-p">{</span>
@@ -184,13 +190,14 @@ unambiguously (meaning it must not match any other option specification.)</p>
             <span class="tok-p">.</span><span class="tok-n">o_arg</span> <span class="tok-o">=</span> <span class="tok-nb">false</span><span class="tok-p">,</span>
         <span class="tok-p">},</span> <span class="tok-p">{</span>
             <span class="tok-p">.</span><span class="tok-n">o_val</span> <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">;</span> <span class="tok-c1">// Terminate array
-</span><span class="tok-c1"></span>        <span class="tok-p">}</span>
+</span>
+        <span class="tok-p">}</span>
     <span class="tok-p">};</span>
 
     <span class="tok-k">for</span> <span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">idx</span> <span class="tok-o">=</span> <span class="tok-mi">1</span><span class="tok-p">;;)</span> <span class="tok-p">{</span>
         <span class="tok-kt">int</span> <span class="tok-n">rv</span><span class="tok-p">,</span> <span class="tok-n">opt</span><span class="tok-p">;</span>
         <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">;</span>
-        <span class="tok-n">rv</span> <span class="tok-o">=</span> <span class="tok-n">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-n">argc</span><span class="tok-p">,</span> <span class="tok-n">argv</span><span class="tok-p">,</span> <span class="tok-n">specs</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">arg</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">idx</span><span class="tok-p">);</span>
+        <span class="tok-n">rv</span> <span class="tok-o">=</span> <span class="tok-nf">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-n">argc</span><span class="tok-p">,</span> <span class="tok-n">argv</span><span class="tok-p">,</span> <span class="tok-n">specs</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">arg</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">idx</span><span class="tok-p">);</span>
         <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">rv</span> <span class="tok-o">!=</span> <span class="tok-mi">0</span><span class="tok-p">)</span> <span class="tok-p">{</span>
             <span class="tok-k">break</span><span class="tok-p">;</span>
         <span class="tok-p">}</span>
@@ -204,8 +211,8 @@ unambiguously (meaning it must not match any other option specification.)</p>
         <span class="tok-p">}</span>
     <span class="tok-p">}</span>
     <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">rv</span> <span class="tok-o">!=</span> <span class="tok-o">-</span><span class="tok-mi">1</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-        <span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&#34;Options error: %s</span><span class="tok-se">\n</span><span class="tok-s">&#34;</span><span class="tok-p">,</span> <span class="tok-n">nng_strerror</span><span class="tok-p">(</span><span class="tok-n">rv</span><span class="tok-p">));</span>
-        <span class="tok-n">exit</span><span class="tok-p">(</span><span class="tok-mi">1</span><span class="tok-p">);</span>
+        <span class="tok-nf">printf</span><span class="tok-p">(</span><span class="tok-s">&#34;Options error: %s</span><span class="tok-se">\n</span><span class="tok-s">&#34;</span><span class="tok-p">,</span> <span class="tok-nf">nng_strerror</span><span class="tok-p">(</span><span class="tok-n">rv</span><span class="tok-p">));</span>
+        <span class="tok-nf">exit</span><span class="tok-p">(</span><span class="tok-mi">1</span><span class="tok-p">);</span>
     <span class="tok-p">}</span></code></pre>
 </div>
 </div>

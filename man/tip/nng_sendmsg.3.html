@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_sendmsg(3)
 ---
 <h1>nng_sendmsg(3)</h1>
 <div class="sect1">
@@ -16,8 +17,8 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_sendmsg</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
@@ -81,12 +82,12 @@ are responses to requests, until they have first received a request.)
 <dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
 <dd>
 <p>The function returns immediately, regardless of whether
-    the socket is able to accept the data or not.
-    If the socket is unable to accept the data (such as if backpressure exists
-    because the peers are consuming messages too slowly, or no peer is present),
-    then the function will return with <code>NNG_EAGAIN</code>.
-    If this flag is not specified, then the function will block if such a
-    condition exists.</p>
+the socket is able to accept the data or not.
+If the socket is unable to accept the data (such as if backpressure exists
+because the peers are consuming messages too slowly, or no peer is present),
+then the function will return with <code>NNG_EAGAIN</code>.
+If this flag is not specified, then the function will block if such a
+condition exists.</p>
 </dd>
 </dl>
 </div>

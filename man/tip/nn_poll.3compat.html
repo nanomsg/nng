@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nn_poll(3compat)
 ---
 <h1>nn_poll(3compat)</h1>
 <div class="sect1">
@@ -16,15 +17,15 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-cp">#define NN_POLLIN  1
-</span><span class="tok-cp">#define NN_POLLOUT 2
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-cp">#define NN_POLLIN  1</span>
+<span class="tok-cp">#define NN_POLLOUT 2</span>
+
 <span class="tok-k">struct</span> <span class="tok-n">nn_pollfd</span> <span class="tok-p">{</span>
     <span class="tok-kt">int</span>      <span class="tok-n">fd</span><span class="tok-p">;</span>
-    <span class="tok-n">uint16_t</span> <span class="tok-n">events</span><span class="tok-p">;</span>
-    <span class="tok-n">uint16_t</span> <span class="tok-n">revents</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">events</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">revents</span><span class="tok-p">;</span>
 <span class="tok-p">};</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nn_poll</span><span class="tok-p">(</span><span class="tok-k">struct</span> <span class="tok-n">nn_pollfd</span> <span class="tok-o">*</span><span class="tok-n">pfds</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">npfd</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">timeout</span><span class="tok-p">);</span></code></pre>

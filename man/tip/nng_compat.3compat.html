@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_compat(3compat)
 ---
 <h1>nng_compat(3compat)</h1>
 <div class="sect1">
@@ -16,19 +17,19 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/bus.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pair.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pipeline.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pubsub.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/reqrep.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/survey.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/inproc.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/ipc.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/tcp.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/ws.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/bus.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pair.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pipeline.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pubsub.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/reqrep.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/survey.h&gt;</span>
+
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/inproc.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/ipc.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/tcp.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/ws.h&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -98,7 +99,7 @@ While reasonable efforts have been made to provide for compatibility,
 some things may behave differently, and some less common parts of the
 <em>libnanomsg</em> 1.0 API are not supported at this time, including certain
 options and the statistics API.
-See the <a href="#Caveats">[Caveats]</a> section below.
+See the <a href="#_caveats">Caveats</a> section below.
 </td>
 </tr>
 </table>
@@ -121,8 +122,8 @@ For example, instead of:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/reqrep.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/reqrep.h&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -130,8 +131,8 @@ For example, instead of:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/compat/nanomsg/nn.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/compat/nanomsg/reqrep.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/compat/nanomsg/nn.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/compat/nanomsg/reqrep.h&gt;</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -144,14 +145,11 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 <div class="paragraph">
 <p>The following functions are provided:</p>
 </div>
-<div class="paragraph">
-<p>ifndef::backend-pdf[]</p>
-</div>
 <div class="hdlist">
 <table>
 <tr>
 <td class="hdlist1">
-<a href="nn_socket.3compat.html"><code>nn_socket()</code></a>
+<a href="nn_socket.3compat.html">`nn_socket()`</a>
 </td>
 <td class="hdlist2">
 <p>create socket</p>
@@ -159,7 +157,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_getsockopt.3compat.html"><code>nn_getsockopt()</code></a>
+<a href="nn_getsockopt.3compat.html">`nn_getsockopt()`</a>
 </td>
 <td class="hdlist2">
 <p>get socket option</p>
@@ -167,7 +165,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_setsockopt.3compat.html"><code>nn_setsockopt()</code></a>
+<a href="nn_setsockopt.3compat.html">`nn_setsockopt()`</a>
 </td>
 <td class="hdlist2">
 <p>set socket option</p>
@@ -175,7 +173,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_bind.3compat.html"><code>nn_bind()</code></a>
+<a href="nn_bind.3compat.html">`nn_bind()`</a>
 </td>
 <td class="hdlist2">
 <p>accept connections from remote peers</p>
@@ -183,7 +181,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_connect.3compat.html"><code>nn_connect()</code></a>
+<a href="nn_connect.3compat.html">`nn_connect()`</a>
 </td>
 <td class="hdlist2">
 <p>connect to remote peer</p>
@@ -191,7 +189,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_send.3compat.html"><code>nn_send()</code></a>
+<a href="nn_send.3compat.html">`nn_send()`</a>
 </td>
 <td class="hdlist2">
 <p>send data</p>
@@ -199,7 +197,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_recv.3compat.html"><code>nn_recv()</code></a>
+<a href="nn_recv.3compat.html">`nn_recv()`</a>
 </td>
 <td class="hdlist2">
 <p>receive data</p>
@@ -207,7 +205,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_shutdown.3compat.html"><code>nn_shutdown()</code></a>
+<a href="nn_shutdown.3compat.html">`nn_shutdown()`</a>
 </td>
 <td class="hdlist2">
 <p>shut down endpoint</p>
@@ -215,7 +213,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_close.3compat.html"><code>nn_close()</code></a>
+<a href="nn_close.3compat.html">`nn_close()`</a>
 </td>
 <td class="hdlist2">
 <p>close socket</p>
@@ -223,7 +221,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_poll.3compat.html"><code>nn_poll()</code></a>
+<a href="nn_poll.3compat.html">`nn_poll()`</a>
 </td>
 <td class="hdlist2">
 <p>poll sockets</p>
@@ -231,7 +229,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_device.3compat.html"><code>nn_device()</code></a>
+<a href="nn_device.3compat.html">`nn_device()`</a>
 </td>
 <td class="hdlist2">
 <p>create forwarding device</p>
@@ -239,7 +237,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_recvmsg.3compat.html"><code>nn_recvmsg()</code></a>
+<a href="nn_recvmsg.3compat.html">`nn_recvmsg()`</a>
 </td>
 <td class="hdlist2">
 <p>receive message</p>
@@ -247,7 +245,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_sendmsg.3compat.html"><code>nn_sendmsg()</code></a>
+<a href="nn_sendmsg.3compat.html">`nn_sendmsg()`</a>
 </td>
 <td class="hdlist2">
 <p>send message</p>
@@ -255,7 +253,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_cmsg.3compat.html"><code>nn_cmsg()</code></a>
+<a href="nn_cmsg.3compat.html">`nn_cmsg()`</a>
 </td>
 <td class="hdlist2">
 <p>message control data</p>
@@ -263,7 +261,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_get_statistic.3compat.html"><code>nn_get_statistic()</code></a>
+<a href="nn_get_statistic.3compat.html">`nn_get_statistic()`</a>
 </td>
 <td class="hdlist2">
 <p>get statistic (stub)</p>
@@ -271,7 +269,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_allocmsg.3compat.html"><code>nn_allocmsg()</code></a>
+<a href="nn_allocmsg.3compat.html">`nn_allocmsg()`</a>
 </td>
 <td class="hdlist2">
 <p>allocate message</p>
@@ -279,7 +277,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_reallocmsg.3compat.html"><code>nn_reallocmsg()</code></a>
+<a href="nn_reallocmsg.3compat.html">`nn_reallocmsg()`</a>
 </td>
 <td class="hdlist2">
 <p>reallocate message</p>
@@ -287,7 +285,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_freemsg.3compat.html"><code>nn_freemsg()</code></a>
+<a href="nn_freemsg.3compat.html">`nn_freemsg()`</a>
 </td>
 <td class="hdlist2">
 <p>free message</p>
@@ -295,7 +293,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_errno.3compat.html"><code>nn_errno()</code></a>
+<a href="nn_errno.3compat.html">`nn_errno()`</a>
 </td>
 <td class="hdlist2">
 <p>return most recent error</p>
@@ -303,7 +301,7 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_strerror.3compat.html"><code>nn_strerror()</code></a>
+<a href="nn_strerror.3compat.html">`nn_strerror()`</a>
 </td>
 <td class="hdlist2">
 <p>return message for error</p>
@@ -311,110 +309,13 @@ instead of <em>libnn</em>, just like any other <em>NNG</em> application.</p>
 </tr>
 <tr>
 <td class="hdlist1">
-<a href="nn_term.3compat.html"><code>nn_term()</code></a>
+<a href="nn_term.3compat.html">`nn_term()`</a>
 </td>
 <td class="hdlist2">
-<p>terminate library
-endif::[]
-ifdef::backend-pdf[]</p>
+<p>terminate library</p>
 </td>
 </tr>
 </table>
-</div>
-<table class="tableblock frame-all grid-rows hdlist" style="width: 90%;">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 66.6667%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_socket.3compat.html"><code>nn_socket()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">create socket</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_getsockopt.3compat.html"><code>nn_getsockopt()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get socket option</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_setsockopt.3compat.html"><code>nn_setsockopt()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_bind.3compat.html"><code>nn_bind()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">accept connections from remote peers</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_connect.3compat.html"><code>nn_connect()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">connect to remote peer</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_send.3compat.html"><code>nn_send()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">send data</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_recv.3compat.html"><code>nn_recv()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">receive data</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_shutdown.3compat.html"><code>nn_shutdown()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">shut down endpoint</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_close.3compat.html"><code>nn_close()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">close socket</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_poll.3compat.html"><code>nn_poll()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">poll sockets</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_device.3compat.html"><code>nn_device()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">create forwarding device</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_recvmsg.3compat.html"><code>nn_recvmsg()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">receive message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_sendmsg.3compat.html"><code>nn_sendmsg()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">send message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_cmsg.3compat.html"><code>nn_cmsg()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">message control data</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_get_statistic.3compat.html"><code>nn_get_statistic()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic (stub)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_allocmsg.3compat.html"><code>nn_allocmsg()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">allocate message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_reallocmsg.3compat.html"><code>nn_reallocmsg()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">reallocate message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_freemsg.3compat.html"><code>nn_freemsg()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">free message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_errno.3compat.html"><code>nn_errno()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">return most recent error</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_strerror.3compat.html"><code>nn_strerror()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">return message for error</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_term.3compat.html"><code>nn_term()</code></a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">terminate library</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>endif::[]</p>
 </div>
 </div>
 <div class="sect2">
@@ -426,69 +327,69 @@ ifdef::backend-pdf[]</p>
 <ul>
 <li>
 <p>Socket numbers can be quite large.
-  The legacy <em>libnanomsg</em> attempted to reuse socket numbers, like
-  file descriptors in UNIX systems.
-  <em>NNG</em> avoids this to prevent accidental reuse or
-  collision after a descriptor is closed.
-  Consequently, socket numbers can become quite large, and should
-  probably not be used for array indices.</p>
+The legacy <em>libnanomsg</em> attempted to reuse socket numbers, like
+file descriptors in UNIX systems.
+<em>NNG</em> avoids this to prevent accidental reuse or
+collision after a descriptor is closed.
+Consequently, socket numbers can become quite large, and should
+probably not be used for array indices.</p>
 </li>
 <li>
 <p>The following options (<code>nn_getsockopt</code>) are unsupported:
-  <code>NN_SNDPRIO</code>, <code>NN_RCVPRIO</code>, <code>NN_IPV4ONLY</code>.
-  The priority options may be supported in the future, when
-  the underlying capability is present in <em>NNG</em>.</p>
+<code>NN_SNDPRIO</code>, <code>NN_RCVPRIO</code>, <code>NN_IPV4ONLY</code>.
+The priority options may be supported in the future, when
+the underlying capability is present in <em>NNG</em>.</p>
 </li>
 <li>
 <p>Access to statistics using this legacy API
-  (<a href="nn_get_statistic.3compat.html"><code>nn_get_statistic()</code></a>) is unsupported.</p>
+(<a href="nn_get_statistic.3compat.html"><code>nn_get_statistic()</code></a>) is unsupported.</p>
 </li>
 <li>
 <p>Some transports can support longer URLs than legacy <em>libnanomsg</em> can.
-  It is a good idea to use short pathnames in URLs if interoperability
-  is a concern.</p>
+It is a good idea to use short pathnames in URLs if interoperability
+is a concern.</p>
 </li>
 <li>
 <p>Only absolute paths are supported in <code>ipc://</code> URLs.
-  For example, <code>ipc:///tmp/mysocket</code> is acceptable, but <code>ipc://mysocket</code> is not.</p>
+For example, <code>ipc:///tmp/mysocket</code> is acceptable, but <code>ipc://mysocket</code> is not.</p>
 </li>
 <li>
 <p>The WebSocket transport in this implementation (<code>ws://</code> URLs)
-  only supports BINARY frames.</p>
+only supports BINARY frames.</p>
 </li>
 <li>
 <p>Some newer transports are unusable from this mode.
-  In particular, this legacy API offers no way to configure
-  TLS or ZeroTier parameters that may be required for use.</p>
+In particular, this legacy API offers no way to configure
+TLS or ZeroTier parameters that may be required for use.</p>
 </li>
 <li>
 <p>ABI versioning of the compatibility layer is not supported,
-  and the <code>NN_VERSION_</code> macros are not present.</p>
+and the <code>NN_VERSION_</code> macros are not present.</p>
 </li>
 <li>
 <p>Runtime symbol information is not implemented.
-  Specifically, there is no <code>nn_symbol()</code> function yet.
-  (This may be addressed later if there is a need.)</p>
+Specifically, there is no <code>nn_symbol()</code> function yet.
+(This may be addressed later if there is a need.)</p>
 </li>
 <li>
 <p>The TCP transport (<code>tcp://</code> URLs) does not support specifying the local
-  address or interface when binding.  (This could be fixed in the future,
-  but most likely this will be available only using the new API.)</p>
+address or interface when binding.  (This could be fixed in the future,
+but most likely this will be available only using the new API.)</p>
 </li>
 <li>
 <p>The values of <code>NN_RCVMAXSIZE</code> are constrained.
-  Specifically, values set larger than 2GB using the new API will be reported
-  as unlimited (<code>-1</code>) in the new API, and the value <code>0</code> will disable any
-  enforcement, just like <code>-1</code>.
-  (There is no practical reason to ever want to limit the receive size to
-  zero.)</p>
+Specifically, values set larger than 2GB using the new API will be reported
+as unlimited (<code>-1</code>) in the new API, and the value <code>0</code> will disable any
+enforcement, just like <code>-1</code>.
+(There is no practical reason to ever want to limit the receive size to
+zero.)</p>
 </li>
 <li>
 <p>This implementation counts buffers in terms of messages rather than bytes.
-  As a result, the buffer sizes accessed with <code>NN_SNDBUF</code> and <code>NN_RCVBUF</code> are
-  rounded up to a whole number of kilobytes, then divided by 1024, in order
-  to approximate buffering assuming 1 KB messages.
-  Few applications should need to adjust the default values.</p>
+As a result, the buffer sizes accessed with <code>NN_SNDBUF</code> and <code>NN_RCVBUF</code> are
+rounded up to a whole number of kilobytes, then divided by 1024, in order
+to approximate buffering assuming 1 KB messages.
+Few applications should need to adjust the default values.</p>
 </li>
 </ul>
 </div>

@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_stream_listener_get(3str)
 ---
 <h1>nng_stream_listener_get(3str)</h1>
 <div class="sect1">
@@ -16,9 +17,9 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-n">size_t</span> <span class="tok-o">*</span><span class="tok-n">sizep</span><span class="tok-p">);</span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">sizep</span><span class="tok-p">);</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_bool</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">bool</span> <span class="tok-o">*</span><span class="tok-n">valp</span><span class="tok-p">);</span>
 
@@ -28,13 +29,13 @@ layout: manpage_v2
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_ptr</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">**</span><span class="tok-n">valp</span><span class="tok-p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_size</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">size_t</span> <span class="tok-o">*</span><span class="tok-n">valp</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_size</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">valp</span><span class="tok-p">);</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_addr</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_sockaddr</span> <span class="tok-o">*</span><span class="tok-n">valp</span><span class="tok-p">);</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_string</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">**</span><span class="tok-n">valp</span><span class="tok-p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">uint64_t</span> <span class="tok-o">*</span><span class="tok-n">valp</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_get_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-o">*</span><span class="tok-n">valp</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -191,7 +192,7 @@ numbers, and similar options.</p>
 </td>
 <td class="hdlist2">
 <p>There was insufficient space to receive the object.
-	The amount of data actually needed is returned in <em>sizep</em>.</p>
+The amount of data actually needed is returned in <em>sizep</em>.</p>
 </td>
 </tr>
 <tr>

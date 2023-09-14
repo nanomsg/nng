@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_sockaddr_zt(5)
 ---
 <h1>nng_sockaddr_zt(5)</h1>
 <div class="sect1">
@@ -16,17 +17,17 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
     <span class="tok-n">NNG_AF_ZT</span> <span class="tok-o">=</span> <span class="tok-mi">5</span><span class="tok-p">,</span>
 <span class="tok-p">};</span>
 
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
-    <span class="tok-n">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
-    <span class="tok-n">uint64_t</span> <span class="tok-n">sa_nwid</span><span class="tok-p">;</span>
-    <span class="tok-n">uint64_t</span> <span class="tok-n">sa_nodeid</span><span class="tok-p">;</span>
-    <span class="tok-n">uint32_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint64_t</span> <span class="tok-n">sa_nwid</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint64_t</span> <span class="tok-n">sa_nodeid</span><span class="tok-p">;</span>
+    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_zt</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
@@ -65,27 +66,28 @@ are still considered experimental, and subject to change.
 </dd>
 <dt class="hdlist1"><code>sa_nwid</code></dt>
 <dd>
-<p>    This field holds the ZeroTier network number (or ID).
-    This value is in native byte order.</p>
+<p>
+This field holds the ZeroTier network number (or ID).
+This value is in native byte order.</p>
 </dd>
 <dt class="hdlist1"><code>sa_nodeid</code></dt>
 <dd>
 <p>This field holds the ZeroTier node ID.
-    This value is in native byte order, and only the lower 40 bits
-    are significant.
-    (ZeroTier node numbers are 40 bits long.)
-    A zero value here is used for a wild-card to indicate that the
-    caller&#8217;s own node number be used.</p>
+This value is in native byte order, and only the lower 40 bits
+are significant.
+(ZeroTier node numbers are 40 bits long.)
+A zero value here is used for a wild-card to indicate that the
+caller&#8217;s own node number be used.</p>
 </dd>
 <dt class="hdlist1"><code>sa_port</code></dt>
 <dd>
 <p>This field holds the port number used by the
-    <a href="nng_zerotier.7.html"><em>zt</em></a> transport to distinguish different
-    sockets.
-    This value in native byte order.
-    A zero value here indicates that a port number should be chosen
-    randomly from the ephemeral ports.
-    Only the lower 24 bits of the port number are used.</p>
+<a href="nng_zerotier.7.html"><em>zt</em></a> transport to distinguish different
+sockets.
+This value in native byte order.
+A zero value here indicates that a port number should be chosen
+randomly from the ephemeral ports.
+Only the lower 24 bits of the port number are used.</p>
 </dd>
 </dl>
 </div>

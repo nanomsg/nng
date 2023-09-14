@@ -1,13 +1,14 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_recvmsg(3)
 ---
 <h1>nng_recvmsg(3)</h1>
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>nng_recvmsg - recv message</p>
+<p>nng_recvmsg - receive a message</p>
 </div>
 </div>
 </div>
@@ -16,8 +17,8 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_recvmsg</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-n">nng_msg</span> <span class="tok-o">**</span><span class="tok-n">msgp</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
@@ -51,8 +52,8 @@ offer more functionality than the simpler <a href="nng_recv.3.html"><code>nng_re
 <dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
 <dd>
 <p>The function returns immediately, even if no message is available.
-  Without this flag, the function will wait until a message is received
-  by the socket <em>s</em>, or any configured timer expires.</p>
+Without this flag, the function will wait until a message is received
+by the socket <em>s</em>, or any configured timer expires.</p>
 </dd>
 </dl>
 </div>
@@ -157,6 +158,7 @@ Furthermore, some protocols may not support receiving data at all, such as
 <a href="nng_recv.3.html">nng_recv(3)</a>,
 <a href="nng_sendmsg.3.html">nng_sendmsg(3)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_socket.5.html">nng_socket(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

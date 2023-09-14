@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_pair(7)
 ---
 <h1>nng_pair(7)</h1>
 <div class="sect1">
@@ -174,15 +175,15 @@ to the sender.</p>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a href="nng_options.5.html"><code>NNG_OPT_MAXTTL</code></a></dt>
+<dt class="hdlist1"><a href="nng_options.5.html">`NNG_OPT_MAXTTL`</a></dt>
 <dd>
 <p>(<code>int</code>, version 1 only).  Maximum time-to-live.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_PAIR1_POLY</code></dt>
 <dd>
 <p>(<code>bool</code>, version 1 only)  This option is no longer supported.
-   Formerly it was used to configure <em>polyamorous</em> mode, but that mode
-   is now established by using the <code>nng_pair1_open_poly()</code> function.</p>
+Formerly it was used to configure <em>polyamorous</em> mode, but that mode
+is now established by using the <code>nng_pair1_open_poly()</code> function.</p>
 </dd>
 </dl>
 </div>
@@ -194,7 +195,7 @@ to the sender.</p>
 </div>
 <div class="paragraph">
 <p>Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
-low-order (big-endian) byte of this value contains a &#34;hop&#34; count, and is
+low-order (big-endian) byte of this value contains a "hop" count, and is
 used in conjunction with the
 <a href="nng_options.5.html"><code>NNG_OPT_MAXTTL</code></a> option to guard against
 device forwarding loops.

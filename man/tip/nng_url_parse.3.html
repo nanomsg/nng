@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_url_parse(3)
 ---
 <h1>nng_url_parse(3)</h1>
 <div class="sect1">
@@ -16,8 +17,8 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_url_parse</span><span class="tok-p">(</span><span class="tok-n">nng_url</span> <span class="tok-o">**</span><span class="tok-n">urlp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">str</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
@@ -50,34 +51,34 @@ follows:</p>
 </li>
 <li>
 <p>The <code>u_scheme</code>, <code>u_hostname</code>, <code>u_host</code>, and <code>u_port</code> members are
-     converted to lower case.</p>
+converted to lower case.</p>
 </li>
 <li>
 <p>Percent-encoded values for
-     <a href="https://tools.ietf.org/html/rfc3986#section-2.3">unreserved characters</a>
-     converted to their unencoded forms.</p>
+<a href="https://tools.ietf.org/html/rfc3986#section-2.3">unreserved characters</a>
+converted to their unencoded forms.</p>
 </li>
 <li>
 <p>Additionally URL percent-encoded values for characters in the path
-     and with numeric values larger than 127 (i.e. not ASCII) are decoded.</p>
+and with numeric values larger than 127 (i.e. not ASCII) are decoded.</p>
 </li>
 <li>
 <p>The resulting <code>u_path</code> is checked for invalid UTF-8 sequences, consisting
-     of surrogate pairs, illegal byte sequences, or overlong encodings.
-     If this check fails, then the entire URL is considered invalid, and
-     the function returns <code>NNG_EINVAL</code>.</p>
+of surrogate pairs, illegal byte sequences, or overlong encodings.
+If this check fails, then the entire URL is considered invalid, and
+the function returns <code>NNG_EINVAL</code>.</p>
 </li>
 <li>
 <p>Path segments consisting of <code>.</code> and <code>..</code> are resolved as per
-     <a href="https://tools.ietf.org/html/rfc3986#section-6.2.2.3">RFC 3986 6.2.2.3</a>.</p>
+<a href="https://tools.ietf.org/html/rfc3986#section-6.2.2.3">RFC 3986 6.2.2.3</a>.</p>
 </li>
 <li>
 <p>Further, empty path segments are removed, meaning that duplicate
-     slash (<code>/</code>) separators are removed from the path.</p>
+slash (<code>/</code>) separators are removed from the path.</p>
 </li>
 <li>
 <p>If a port was not specified, but the scheme defines a default
-     port, then <code>u_port</code> will be filled in with the value of the default port.</p>
+port, then <code>u_port</code> will be filled in with the value of the default port.</p>
 </li>
 </ol>
 </div>

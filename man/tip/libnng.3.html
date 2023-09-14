@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: libnng(3)
 ---
 <h1>libnng(3)</h1>
 <div class="sect1">
@@ -271,6 +272,10 @@ Most applications will only interact with the body.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return message body</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_capacity.3.html">nng_msg_capacity()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return capacity allocated for message body</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_chop.3.html">nng_msg_chop()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">remove data from end of message body</p></td>
 </tr>
@@ -301,6 +306,10 @@ Most applications will only interact with the body.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_realloc.3.html">nng_msg_realloc()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">reallocate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_reserve.3.html">nng_msg_reserve()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reserve storage for message body</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe()</a></p></td>
@@ -431,6 +440,10 @@ Only a single asynchronous operation may be associated with an
 <td class="tableblock halign-left valign-top"><p class="tableblock">begin asynchronous I/O operation</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_busy.3.html">nng_aio_busy()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">test if asynchronous I/O is busy</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_cancel.3.html">nng_aio_cancel()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">cancel asynchronous I/O operation</p></td>
 </tr>
@@ -461,6 +474,10 @@ Only a single asynchronous operation may be associated with an
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_get_output.3.html">nng_aio_get_output()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return output result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_free.3.html">nng_aio_reap()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reap asynchronous I/O handle</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_result.3.html">nng_aio_result()</a></p></td>
@@ -644,8 +661,16 @@ concurrent applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">receive message using context asynchronously</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_recvmsg.3.html">nng_ctx_recvmsg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive a message using context</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_send.3.html">nng_ctx_send()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">send message using context asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_sendmsg.3.html">nng_ctx_sendmsg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send a message using context</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_set.3.html">nng_ctx_set()</a></p></td>
@@ -670,6 +695,10 @@ to observe program behaviors and as an aid in troubleshooting.</p>
 <col style="width: 50%;">
 </colgroup>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_bool.3.html">nng_stat_bool()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic Boolean value</p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_child.3.html">nng_stat_child()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">get child statistic</p></td>
@@ -720,7 +749,7 @@ to observe program behaviors and as an aid in troubleshooting.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_value.3.html">nng_stat_value()</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic numeric value</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_free.3.html">nng_stats_free()</a></p></td>

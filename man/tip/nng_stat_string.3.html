@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_stat_string(3)
 ---
 <h1>nng_stat_string(3)</h1>
 <div class="sect1">
@@ -16,8 +17,8 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stat</span> <span class="tok-n">nng_stat</span><span class="tok-p">;</span>
 
 <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-nf">nng_stat_string</span><span class="tok-p">(</span><span class="tok-n">nng_stat</span> <span class="tok-o">*</span><span class="tok-n">stat</span><span class="tok-p">);</span></code></pre>
@@ -34,6 +35,19 @@ which must be of type <code>NNG_STAT_STRING</code> (see <a href="nng_stat_type.3
 </div>
 <div class="paragraph">
 <p>If the statistic is not of type <code>NNG_STAT_STRING</code>, then <code>NULL</code> will be returned.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The returned string is valid until <a href="nng_stats_free.3.html"><code>nng_stats_free()</code></a> is called to
+free the memory for the snapshot.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>

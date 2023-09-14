@@ -1,6 +1,7 @@
 ---
 version: tip
 layout: manpage_v2
+title: nng_url(5)
 ---
 <h1>nng_url(5)</h1>
 <div class="sect1">
@@ -16,8 +17,8 @@ layout: manpage_v2
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
-</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_url</span> <span class="tok-p">{</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_rawurl</span><span class="tok-p">;</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_scheme</span><span class="tok-p">;</span>
@@ -65,7 +66,7 @@ alter them, as the underlying memory is managed by the library.</p>
 <code>u_scheme</code>
 </td>
 <td class="hdlist2">
-<p>The URL scheme, such as &#34;http&#34; or &#34;inproc&#34;. Always lower case. This will never be <code>NULL</code>.</p>
+<p>The URL scheme, such as "http" or "inproc". Always lower case. This will never be <code>NULL</code>.</p>
 </td>
 </tr>
 <tr>
