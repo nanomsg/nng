@@ -491,7 +491,7 @@ nni_listener_getopt(
 void
 nni_listener_add_stat(nni_listener *l, nni_stat_item *item)
 {
-#if NNG_ENABLE_STATS
+#ifdef NNG_ENABLE_STATS
 	nni_stat_add(&l->st_root, item);
 #else
 	NNI_ARG_UNUSED(l);
