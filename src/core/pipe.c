@@ -312,7 +312,7 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
 		return (rv);
 	}
 	p->p_listener = l;
-#if NNG_ENABLE_STATS
+#ifdef NNG_ENABLE_STATS
 	static const nni_stat_info listener_info = {
 		.si_name = "listener",
 		.si_desc = "listener for pipe",
