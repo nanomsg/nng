@@ -388,7 +388,6 @@ sub0_recv_cb(void *arg)
 			nni_pollable_raise(&sock->readable);
 		}
 	}
-	nni_mtx_unlock(&sock->lk);
 
 	// NB: This is slightly less efficient in that we may have
 	// created an extra copy in the face of e.g. two subscriptions,
@@ -405,6 +404,7 @@ sub0_recv_cb(void *arg)
 		nni_list_remove(&finish, aio);
 		nni_aio_finish_sync(aio, 0, len);
 	}
+	nni_mtx_unlock(&sock->lk);
 
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
