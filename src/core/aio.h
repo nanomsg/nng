@@ -209,6 +209,7 @@ struct nng_aio {
 	nni_aio_expire_q *a_expire_q;
 	nni_list_node     a_expire_node; // Expiration node
 	nni_reap_node     a_reap_node;
+	nni_list_node     a_finish_node; // Finished node
 };
 
 #endif // CORE_AIO_H
