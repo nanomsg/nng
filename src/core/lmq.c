@@ -14,6 +14,8 @@
 // performance sensitive contexts.  Locking must be done by the caller.
 
 
+#define LMQ_DYNAMIC_ALLOC_SIZE 16
+
 // Note that initialization of a queue is guaranteed to succeed.
 // However, if the requested capacity is larger than 2, and memory
 // cannot be allocated, then the capacity will only be 2.
@@ -29,7 +31,11 @@ nni_lmq_init(nni_lmq *lmq, size_t cap)
 	lmq->lmq_msgs = lmq->lmq_buf;
 	lmq->lmq_cap = 2;
 	lmq->lmq_mask = 0x1; // only index 0 and 1
-	if (cap > 2) {
+	lmq->lmq_dyna = (cap == 0);
+	if (cap == 0) {
+		(void) nni_lmq_resize(lmq, LMQ_DYNAMIC_ALLOC_SIZE);
+	}
+	else if (cap > 2) {
 		(void) nni_lmq_resize(lmq, cap);
 	} else {
 		lmq->lmq_cap = cap;
@@ -81,7 +87,7 @@ nni_lmq_cap(nni_lmq *lmq)
 bool
 nni_lmq_full(nni_lmq *lmq)
 {
-	return (lmq->lmq_len >= lmq->lmq_cap);
+	return (lmq->lmq_dyna ? false : lmq->lmq_len >= lmq->lmq_cap);
 }
 
 bool
@@ -94,7 +100,12 @@ int
 nni_lmq_put(nni_lmq *lmq, nng_msg *msg)
 {
 	if (lmq->lmq_len >= lmq->lmq_cap) {
-		return (NNG_EAGAIN);
+		if (lmq->lmq_dyna) {
+			nni_lmq_resize(lmq, lmq->lmq_cap*2);
+		}
+		else {
+			return (NNG_EAGAIN);
+		}
 	}
 	lmq->lmq_msgs[lmq->lmq_put++] = msg;
 	lmq->lmq_len++;
@@ -103,7 +114,7 @@ nni_lmq_put(nni_lmq *lmq, nng_msg *msg)
 }
 
 int
-nni_lmq_get(nni_lmq *lmq, nng_msg **mp)
+nni_lmq_get_impl(nni_lmq *lmq, nng_msg **mp)
 {
 	nng_msg *msg;
 	if (lmq->lmq_len == 0) {
@@ -114,6 +125,18 @@ nni_lmq_get(nni_lmq *lmq, nng_msg **mp)
 	lmq->lmq_len--;
 	*mp = msg;
 	return (0);
+}
+
+int
+nni_lmq_get(nni_lmq *lmq, nng_msg **mp)
+{
+	if (lmq->lmq_dyna
+	    && (lmq->lmq_cap > LMQ_DYNAMIC_ALLOC_SIZE)
+	    && (lmq->lmq_len < (lmq->lmq_cap/3))) {
+		nni_lmq_resize(lmq, (lmq->lmq_cap/2) < LMQ_DYNAMIC_ALLOC_SIZE ?
+		 LMQ_DYNAMIC_ALLOC_SIZE : lmq->lmq_cap/2);
+	}
+	return nni_lmq_get_impl(lmq, mp);
 }
 
 int
@@ -134,7 +157,7 @@ nni_lmq_resize(nni_lmq *lmq, size_t cap)
 	}
 
 	len = 0;
-	while ((len < cap) && (nni_lmq_get(lmq, &msg) == 0)) {
+	while ((len < cap) && (nni_lmq_get_impl(lmq, &msg) == 0)) {
 		new_q[len++] = msg;
 	}
 

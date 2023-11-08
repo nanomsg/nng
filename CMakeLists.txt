@@ -138,6 +138,11 @@ if (NNG_MAX_EXPIRE_THREADS)
     add_definitions(-DNNG_MAX_EXPIRE_THREADS=${NNG_MAX_EXPIRE_THREADS})
 endif()
 
+if (DEFINED NNG_SENDBUF_SIZE)
+    add_definitions(-DNNG_SENDBUF_SIZE=${NNG_SENDBUF_SIZE})
+endif ()
+mark_as_advanced(NNG_SENDBUF_SIZE)
+
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")

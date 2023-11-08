@@ -22,6 +22,7 @@ typedef struct nni_lmq {
 	size_t    lmq_len;
 	size_t    lmq_get;
 	size_t    lmq_put;
+	bool      lmq_dyna;
 	nng_msg **lmq_msgs;
 	nng_msg  *lmq_buf[2]; // default minimal buffer
 } nni_lmq;

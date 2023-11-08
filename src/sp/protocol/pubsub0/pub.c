@@ -73,7 +73,11 @@ pub0_sock_init(void *arg, nni_sock *ns)
 	nni_pollable_init(&sock->sendable);
 	nni_mtx_init(&sock->mtx);
 	NNI_LIST_INIT(&sock->pipes, pub0_pipe, node);
-	sock->sendbuf = 16; // fairly arbitrary
+	#ifdef NNG_SENDBUF_SIZE
+		sock->sendbuf = NNG_SENDBUF_SIZE;
+	#else
+		sock->sendbuf = 16;
+	#endif
 }
 
 static void
