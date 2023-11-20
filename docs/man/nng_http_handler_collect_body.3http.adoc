@@ -25,7 +25,7 @@ int nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t m
 
 == DESCRIPTION
 
-The `nng_http_handler_collect_data()` function causes the _handler_ to
+The `nng_http_handler_collect_body()` function causes the _handler_ to
 collect any request body that was submitted with the request, and attach
 it to the `nng_http_req` before the handler is called.
 
