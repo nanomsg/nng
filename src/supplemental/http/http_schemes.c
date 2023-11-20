@@ -76,10 +76,12 @@ static struct {
 const char *
 nni_http_stream_scheme(const char *upper)
 {
-	for (int i = 0; http_schemes[i].upper != NULL; i++) {
-		if (strcmp(http_schemes[i].upper, upper) == 0) {
-			return (http_schemes[i].lower);
-		}
+	if (upper != NULL) {
+	  for (int i = 0; http_schemes[i].upper != NULL; i++) {
+	    if (strncmp(http_schemes[i].upper, upper, 7) == 0) {
+	      return (http_schemes[i].lower);
+	    }
+	  }
 	}
 	return (NULL);
 }
