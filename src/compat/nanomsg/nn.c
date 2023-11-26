@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -237,7 +237,7 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 
-	// Legacy sockets have nodelay disabled.
+	// Legacy sockets have Nagle disabled.
 	(void) nng_socket_set_bool(sock, NNG_OPT_TCP_NODELAY, false);
 	return ((int) sock.id);
 }
@@ -298,7 +298,7 @@ nn_shutdown(int s, int ep)
 	// Socket is wired into the endpoint... so passing a bad endpoint
 	// ID can result in affecting the wrong socket.  But this requires
 	// a buggy application, and because we don't recycle endpoints
-	// until wrap, its unlikely to actually come up in practice.
+	// until wrap, it's unlikely to actually come up in practice.
 	// Note that listeners and dialers share the same namespace
 	// in the core, so we can close either one this way.
 
@@ -326,13 +326,12 @@ nn_allocmsg(size_t size, int type)
 	// So our "messages" from nn are really going to be nng messages
 	// but to make this work, we use a bit of headroom in the message
 	// to stash the message header.
-	if ((rv = nng_msg_alloc(&msg, size + (sizeof(msg)))) != 0) {
+	if ((rv = nng_msg_alloc(&msg, size)) != 0) {
 		nn_seterror(rv);
 		return (NULL);
 	}
 
-	// This counts on message bodies being aligned sensibly.
-	*(nng_msg **) (nng_msg_body(msg)) = msg;
+	nng_msg_insert(msg, &msg, sizeof(msg));
 
 	// We are counting on the implementation of nn_msg_trim to not
 	// reallocate the message but just to leave the prefix inplace.
@@ -367,14 +366,14 @@ nn_reallocmsg(void *ptr, size_t len)
 	msg = *(nng_msg **) (((char *) ptr) - sizeof(msg));
 
 	// We need to realloc the requested len, plus size for our header.
-	if ((rv = nng_msg_realloc(msg, len + sizeof(msg))) != 0) {
+	if ((rv = nng_msg_realloc(msg, len)) != 0) {
 		// We don't free the old message.  Code is free to cope
 		// as it sees fit.
 		nn_seterror(rv);
 		return (NULL);
 	}
 	// Stash the msg header pointer
-	*(nng_msg **) (nng_msg_body(msg)) = msg;
+	nng_msg_insert(msg, &msg, sizeof(msg));
 	nng_msg_trim(msg, sizeof(msg));
 	return (nng_msg_body(msg));
 }
@@ -433,7 +432,7 @@ int
 nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 {
 	int        rv;
-	nng_msg *  msg;
+	nng_msg   *msg;
 	size_t     len;
 	int        keep = 0;
 	nng_socket sid;
@@ -498,7 +497,7 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	// If the caller has requested control information (header details),
 	// we grab it.
 	if (mh->msg_control != NULL) {
-		char *             cdata;
+		char              *cdata;
 		size_t             clen;
 		size_t             tlen;
 		size_t             spsz;
@@ -552,10 +551,10 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 int
 nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 {
-	nng_msg *  msg  = NULL;
-	nng_msg *  cmsg = NULL;
+	nng_msg   *msg  = NULL;
+	nng_msg   *cmsg = NULL;
 	nng_socket sid;
-	char *     cdata;
+	char      *cdata;
 	int        keep = 0;
 	size_t     sz;
 	int        rv;
@@ -1152,7 +1151,7 @@ struct nn_cmsghdr *
 nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 {
 	size_t clen;
-	char * data;
+	char  *data;
 
 	// We only support SP headers, so there can be at most one header.
 	if (first != NULL) {
@@ -1201,8 +1200,8 @@ nn_device(int s1, int s2)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>
 #include <mswsock.h>
+#include <windows.h>
 #elif defined NNG_PLATFORM_POSIX
 #include <poll.h>
 #endif
@@ -1234,8 +1233,8 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 		if (fds[i].events & NN_POLLIN) {
 			nng_socket s;
 			s.id = fds[i].fd;
-			if ((rv = nng_socket_get_int(s, NNG_OPT_RECVFD, &fd)) !=
-			    0) {
+			if ((rv = nng_socket_get_int(
+			         s, NNG_OPT_RECVFD, &fd)) != 0) {
 				nn_seterror(rv);
 				NNI_FREE_STRUCTS(pfd, nfds * 2);
 				return (-1);
@@ -1251,8 +1250,8 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 		if (fds[i].events & NN_POLLOUT) {
 			nng_socket s;
 			s.id = fds[i].fd;
-			if ((rv = nng_socket_get_int(s, NNG_OPT_SENDFD, &fd)) !=
-			    0) {
+			if ((rv = nng_socket_get_int(
+			         s, NNG_OPT_SENDFD, &fd)) != 0) {
 				nn_seterror(rv);
 				NNI_FREE_STRUCTS(pfd, nfds * 2);
 				return (-1);
