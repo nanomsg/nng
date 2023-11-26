@@ -1,0 +1,360 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_ws(7)
+---
+<h1>nng_ws(7)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_ws - WebSocket transport</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/websocket/ws.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_ws_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_wss_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(transport, <em>ws</em> and _wss_)
+The <em>ws</em> transport provides communication support between
+peers across a TCP/IP network using
+<a href="https://tools.ietf.org/html/rfc6455">WebSockets</a>.
+Both IPv4 and IPv6 are supported when the underlying platform also supports it.</p>
+</div>
+<div class="paragraph">
+<p>The protocol details are documented in
+<a href="http://nanomsg.org/rfcs/sp-websocket-v1.html">WebSocket Mapping for Scalability Protocols</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_registration">Registration</h3>
+<div class="paragraph">
+<p>Depending upon how the library was built, it may be necessary to
+register the transport by calling <a href="nng_ws_register.3.html"><code>nng_ws_register()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>If TLS support is enabled in the library, secure WebSockets (over TLS v1.2)
+can be used as well, but the secure transport may have to be registered using
+the <a href="nng_wss_register.3.html"><code>nng_wss_register()</code></a> function.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_uri_format">URI Format</h3>
+<div class="paragraph">
+<p>(URI, <code>ws://</code>)
+This transport uses URIs using the scheme <code>ws://</code>, followed by
+an IP address or hostname, optionally followed by a colon and an
+TCP port number, optionally followed by a path.
+(If no port number is specified then port 80 is assumed.
+If no path is specified then a path of <code>/</code> is assumed.)
+For example, the URI <code>ws://localhost/app/pubsub</code> would use
+port 80 on localhost, with the path <code>/app/pubsub</code>.</p>
+</div>
+<div class="paragraph">
+<p>Secure WebSockets (URI, <code>wss://</code>)
+(if enabled) use the scheme <code>wss://</code>, and the default TCP port number of 443.
+Otherwise the format is the same as for regular WebSockets.</p>
+</div>
+<div class="paragraph">
+<p>A URI may be restricted to IPv6 using the scheme <code>ws6://</code> or <code>wss6://</code>, and may
+be restricted to IPv4 using the scheme <code>ws4://</code> or <code>wss4://</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Specifying <code>ws6://</code>  or <code>wss6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
+listeners.
+The details of this varies across operating systems.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>ws4://</code> , <code>ws6://</code>, <code>wss4://</code> and <code>wss6://</code> schemes are specific to <em>NNG</em>,
+and might not be understood by other implementations.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+We recommend using either numeric IP addresses, or names that are
+specific to either IPv4 or IPv6 to prevent confusion and surprises.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When specifying IPv6 addresses, the address must be enclosed in
+square brackets (<code>[]</code>) to avoid confusion with the final colon
+separating the port.</p>
+</div>
+<div class="paragraph">
+<p>For example, the same path and port on the IPv6 loopback address (<code>::1</code>)
+would be specified as <code>ws://[::1]/app/pubsub</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The value specified as the host, if any, will also be used
+in the <code>Host:</code> HTTP header during HTTP negotiation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To listen to all ports on the system, the host name may be elided from
+the URL on the listener.  This will wind up listening to all interfaces
+on the system, with possible caveats for IPv4 and IPv6 depending on what
+the underlying system supports.  (On most modern systems it will map to the
+special IPv6 address <code>::</code>, and both IPv4 and IPv6 connections will be
+permitted, with IPv4 addresses mapped to IPv6 addresses.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_socket_address">Socket Address</h3>
+<div class="paragraph">
+<p>When using an <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a> structure,
+the actual structure is either of type
+<a href="nng_sockaddr_in.5.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
+<a href="nng_sockaddr_in6.5.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_server_instances">Server Instances</h3>
+<div class="paragraph">
+<p>This transport makes use of shared HTTP server 
+instances, permitting multiple
+sockets or listeners to be configured with the same hostname and port.
+When creating a new listener, it is registered with an existing HTTP server
+instance if one can be found.
+Note that the matching algorithm is somewhat simple,
+using only a string based hostname or IP address and port to match.
+Therefore it is recommended to use only IP addresses or the empty string as
+the hostname in listener URLs.</p>
+</div>
+<div class="paragraph">
+<p>Likewise, when sharing a server instance, it may not be possible to alter
+TLS configuration if the server is already running, as there is only a single
+TLS configuration context for the entire server instance.</p>
+</div>
+<div class="paragraph">
+<p>All sharing of server instances is only typically possible within the same
+process.</p>
+</div>
+<div class="paragraph">
+<p>The server may also be used by other things (for example to serve static
+content), in the same process.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_transport_options">Transport Options</h3>
+<div class="paragraph">
+<p>The following transport options are available. Note that
+setting these must be done before the transport is started.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The TLS specific options (beginning with <code>NNG_OPT_TLS_</code>) are
+only available for <code>wss://</code> endpoints.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_WS_REQUEST_HEADERS</code></dt>
+<dd>
+<p>(string) Concatenation of multiple lines terminated
+by CRLF sequences, that can be used to add further headers to the
+HTTP request sent when connecting.
+This option can be set on dialers, and retrieved from pipes.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_WS_RESPONSE_HEADERS</code></dt>
+<dd>
+<p>(string) Concatenation of multiple lines terminated
+by CRLF sequences, that can be used to add further headers to the
+HTTP response sent when connecting.
+This option can be set on listeners, and retrieved from pipes.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_WS_RECV_TEXT</code></dt>
+<dd>
+<p>(bool) Enable receiving of TEXT frames at the WebSocket layer.
+This option should only be used with the low level
+<a href="nng_stream.5.html"><code>nng_stream</code></a> API.
+When set, the stream will accept in-bound TEXT frames as well as BINARY frames.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The SP protocols (such as <a href="nng_req.7.html">REQ</a>) require BINARY frames as they pass binary protocol data.
+Hence this option should not be used with such protocols.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+RFC 6455 requires that TEXT frames be discarded and the connection closed if the frame does not contain valid UTF-8 data.
+NNG does not perform any such validation.
+Applications that need to be strictly conformant should check for this themselves.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_WS_SEND_TEXT</code></dt>
+<dd>
+<p>(bool) Enable sending of TEXT frames at the WebSocket layer.
+This option should only be used with the low level
+<a href="nng_stream.5.html"><code>nng_stream</code></a> API.
+When set, the stream will send TEXT frames instead of BINARY frames.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+NNG does not check the frame data, and will attempt to send whatever the client requests.
+Peers that are compliant with RFC 6455 will discard TEXT frames (and break the connection) if they do not contain valid UTF-8.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CONFIG</code></dt>
+<dd>
+<p>(<code>nng_tls_config *</code>) The underlying TLS
+configuration object for <code>wss://</code> endpoints.
+A hold is placed on the underlying
+configuration object before returning it.
+The caller should release the object with
+<a href="nng_tls_config_free.3tls.html"><code>nng_tls_config_free()</code></a> when it no
+longer needs the TLS configuration.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use this option when advanced TLS configuration is required.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CA_FILE</code></dt>
+<dd>
+<p>(string) Write-only option naming a file containing certificates to
+use for peer validation.
+See <a href="nng_tls_config_ca_file.3tls.html"><code>nng_tls_config_ca_file()</code></a> for more
+information.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
+<dd>
+<p>(string) Write-only option naming a file containing the local certificate and
+associated private key.
+The private key used must be unencrypted.
+See <a href="nng_tls_config_own_cert.3tls.html"><code>nng_tls_config_own_cert()</code></a> for more
+information.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
+<dd>
+<p>(<code>int</code>) Write-only option used to configure the authentication mode used.
+See <a href="nng_tls_config_auth_mode.3tls.html"><code>nng_tls_config_auth_mode()</code></a> for
+more details.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_VERIFIED</code></dt>
+<dd>
+<p>(<code>bool</code>) Whether the remote peer has been properly verified using TLS
+authentication.
+May return incorrect results if peer authentication is disabled.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_PEER_CN</code></dt>
+<dd>
+<p>(string) This read-only option returns the common name of the peer certificate.
+May return incorrect results if peer authentication is disabled.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_PEER_ALT_NAMES</code></dt>
+<dd>
+<p>(string list) returns string list with the subject alternative names of the
+peer certificate. May return incorrect results if peer authentication
+is disabled.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
+<a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
+<a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
+<a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

@@ -1,0 +1,87 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_aio_busy(3)
+---
+<h1>nng_aio_busy(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_aio_busy - test if asynchronous I/O is busy</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">bool</span> <span class="tok-nf">nng_aio_busy</span><span class="tok-p">(</span><span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_aio_busy()</code> function returns true if the
+<em>aio</em> is currently busy performing an asynchronous I/O
+operation or is executing a completion callback.</p>
+</div>
+<div class="paragraph">
+<p>If no operation has been started, or the operation has
+been completed or canceled, and any callback has been
+executed, then it returns false.</p>
+</div>
+<div class="paragraph">
+<p>This is the same test used internally by
+<a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a></p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Care should be taken to ensure that the <em>aio</em> object is not
+freed when using this function.  The caller is responsible for
+coordinating any use of this with any reuse of the <em>aio</em>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>True if the <em>aio</em> is busy, false otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_abort.3.html">nng_aio_abort(3)</a>,
+<a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_wait.3.html">nng_aio_wait(3)</a>,
+<a href="nng_aio.5.html">nng_aio(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

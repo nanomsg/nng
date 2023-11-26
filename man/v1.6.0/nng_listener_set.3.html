@@ -1,0 +1,241 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_listener_set(3)
+---
+<h1>nng_listener_set(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_listener_set - set listener option</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span>
+    <span class="tok-kt">size_t</span> <span class="tok-n">valsz</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_bool</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">bool</span> <span class="tok-n">bval</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_int</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">ival</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_ms</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_duration</span> <span class="tok-n">dur</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_ptr</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">ptr</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_size</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">z</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_string</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">str</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_set_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-n">u64</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_listener_set()</code> functions are used to configure options for
+the <a href="nng_listener.5.html">listener</a> <em>l</em>.
+The actual options that may be configured in this way
+vary, and many are documented in <a href="nng_options.5.html">nng_options(5)</a>.</p>
+</div>
+<div class="paragraph">
+<p>Additionally some transport-specific options are documented with the transports themselves.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Once a listener has started, it is generally not possible to change
+its configuration.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_forms">Forms</h3>
+<div class="paragraph">
+<p>In all of these forms, the option <em>opt</em> is configured on the listener <em>l</em>.</p>
+</div>
+<div class="paragraph">
+<p>The details of the type, size, and semantics of the option will depend
+on the actual option, and will be documented with the option itself.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It may be easier to use one of the typed forms of this function.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>nng_listener_set()</code></dt>
+<dd>
+<p>This function is untyped, and can be used to configure any arbitrary data.
+The <em>val</em> pointer addresses the data to copy, and <em>valsz</em> is the
+size of the objected located at <em>val</em>.</p>
+</dd>
+<dt class="hdlist1"><code>nng_listener_set_bool()</code></dt>
+<dd>
+<p>This function is for options which take a Boolean (<code>bool</code>).
+The <em>bval</em> is passed to the option.</p>
+</dd>
+<dt class="hdlist1"><code>nng_listener_set_int()</code></dt>
+<dd>
+<p>This function is for options which take an integer (<code>int</code>).
+The <em>ival</em> is passed to the option.</p>
+</dd>
+<dt class="hdlist1"><code>nng_listener_set_ms()</code></dt>
+<dd>
+<p>This function is used to configure time durations (such as timeouts) using
+type <a href="nng_duration.5.html"><code>nng_duration</code></a>.
+The duration <em>dur</em> is an integer number of milliseconds.</p>
+</dd>
+<dt class="hdlist1"><code>nng_listener_set_ptr()</code></dt>
+<dd>
+<p>This function is used to pass a pointer, <em>ptr</em>, to structured data.
+The data referenced by <em>ptr</em> is generally managed by other functions.
+For example, TLS configuration objects created with
+(<a href="nng_tls_config_alloc.3tls.html"><code>nng_tls_config_alloc()</code></a>)
+can be passed this way.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This form is somewhat special in that the object is generally
+not copied, but instead the <strong>pointer</strong> to the object is copied.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>nng_listener_set_size()</code></dt>
+<dd>
+<p>This function is used to configure a size, <em>z</em>, typically for buffer sizes,
+message maximum sizes, and similar options.</p>
+</dd>
+<dt class="hdlist1"><code>nng_listener_set_string()</code></dt>
+<dd>
+<p>This function is used to pass configure a string, <em>str</em>.
+Strings passed this way must be legal UTF-8 or ASCII strings, terminated
+with a <code>NUL</code> (<code>\0</code>) byte.
+(Other constraints may apply as well, see the documentation for each option
+for details.)</p>
+</dd>
+<dt class="hdlist1"><code>nng_listener_set_uint64()</code></dt>
+<dd>
+<p>This function is used to configure a 64-bit unsigned value, <em>u64</em>.
+This is typically used for options related to identifiers, network numbers,
+and similar.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions return 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EBADTYPE</code>
+</td>
+<td class="hdlist2">
+<p>Incorrect type for option.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>Parameter <em>l</em> does not refer to an open listener.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The value being passed is invalid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The option <em>opt</em> is not supported.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EREADONLY</code>
+</td>
+<td class="hdlist2">
+<p>The option <em>opt</em> is read-only.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ESTATE</code>
+</td>
+<td class="hdlist2">
+<p>The listener <em>l</em> is already started.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_listen.3.html">nng_listen(3)</a>,
+<a href="nng_listener_create.3.html">nng_listener_create(3)</a>
+<a href="nng_listener_get.3.html">nng_listener_get(3)</a>
+<a href="nng_socket_set.3.html">nng_socket_set(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_duration.5.html">nng_duration(5)</a>,
+<a href="nng_listener.5.html">nng_listener(5)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

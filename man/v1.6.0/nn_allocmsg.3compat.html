@@ -1,0 +1,120 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nn_allocmsg(3compat)
+---
+<h1>nn_allocmsg(3compat)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nn_allocmsg - allocate message (compatible API)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-nf">nn_allocmsg</span><span class="tok-p">(</span><span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">type</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_allocmsg()</code> allocates a message structure of size <em>size</em>, and is
+primarily used to support zero-copy send operations, making use of the
+<code>NNG_MSG</code> special size indicator.
+The value returned is a pointer to the start of the message payload buffer.</p>
+</div>
+<div class="paragraph">
+<p>The value of <em>size</em> must be positive, and small enough to hold reasonable
+message data plus book-keeping information.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The value of <em>type</em> <strong>must</strong> be zero.
+(This argument was reserved to support different kinds of memory spaces
+for RDMA devices, but this was never developed in the legacy API.)</p>
+</div>
+<div class="paragraph">
+<p>The returned message must be disposed of by either
+<a href="nn_freemsg.3compat.html"><code>nn_freemsg()</code></a> or
+<a href="nn_send.3compat.html"><code>nn_send()</code></a> when the caller is finished with it.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns a pointer to message buffer space, or <code>NULL</code>
+on failure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>An invalid <em>size</em> or <em>type</em> was specified.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETERM</code>
+</td>
+<td class="hdlist2">
+<p>The library is shutting down.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nn_freemsg.3compat.html">nn_freemsg(3compat)</a>,
+<a href="nn_reallocmsg.3compat.html">nn_reallocmsg(3compat)</a>,
+<a href="nn_send.3compat.html">nn_send(3compat)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
