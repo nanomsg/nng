@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -19,7 +19,7 @@ typedef struct req0_pipe req0_pipe;
 typedef struct req0_sock req0_sock;
 typedef struct req0_ctx  req0_ctx;
 
-static void req0_run_send_queue(req0_sock *, nni_list *);
+static void req0_run_send_queue(req0_sock *, nni_aio_completions *);
 static void req0_ctx_reset(req0_ctx *);
 static void req0_ctx_timeout(void *);
 static void req0_pipe_fini(void *);
@@ -255,12 +255,11 @@ req0_pipe_close(void *arg)
 static void
 req0_send_cb(void *arg)
 {
-	req0_pipe *p = arg;
-	req0_sock *s = p->req;
-	nni_aio   *aio;
-	nni_list   sent_list;
+	req0_pipe          *p = arg;
+	req0_sock          *s = p->req;
+	nni_aio_completions sent_list;
 
-	nni_aio_list_init(&sent_list);
+	nni_aio_completions_init(&sent_list);
 	if (nni_aio_result(&p->aio_send) != 0) {
 		// We failed to send... clean up and deal with it.
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
@@ -287,10 +286,7 @@ req0_send_cb(void *arg)
 	req0_run_send_queue(s, &sent_list);
 	nni_mtx_unlock(&s->mtx);
 
-	while ((aio = nni_list_first(&sent_list)) != NULL) {
-		nni_list_remove(&sent_list, aio);
-		nni_aio_finish_sync(aio, 0, 0);
-	}
+	nni_aio_completions_run(&sent_list);
 }
 
 static void
@@ -439,7 +435,7 @@ req0_ctx_get_resend_time(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static void
-req0_run_send_queue(req0_sock *s, nni_list *sent_list)
+req0_run_send_queue(req0_sock *s, nni_aio_completions *sent_list)
 {
 	req0_ctx *ctx;
 	nni_aio  *aio;
@@ -486,7 +482,7 @@ req0_run_send_queue(req0_sock *s, nni_list *sent_list)
 			// If the list was passed in, we want to do a
 			// synchronous completion later.
 			if (sent_list != NULL) {
-				nni_list_append(sent_list, aio);
+				nni_aio_completions_add(sent_list, aio, 0, 0);
 			} else {
 				nni_aio_finish(aio, 0, 0);
 			}
