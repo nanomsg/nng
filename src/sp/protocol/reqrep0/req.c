@@ -537,6 +537,23 @@ req0_ctx_cancel_recv(nni_aio *aio, void *arg, int rv)
 	req0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
+
+	// So it turns out that some users start receiving before waiting
+	// for the send notification.  In this case if receiving is
+	// canceled before sending completes, we need to restore the
+	// message for the user.  It's probably a mis-design if the user
+	// is trying to receive without waiting for sending to complete, but
+	// it was reported in the field.  Users who want to avoid this mess
+	// should just start receiving from the send completion callback.
+	if (ctx->send_aio != NULL) {
+		nni_aio_set_msg(ctx->send_aio, ctx->req_msg);
+		nni_msg_header_clear(ctx->req_msg);
+		ctx->req_msg = NULL;
+		nni_aio_finish_error(ctx->send_aio, NNG_ECANCELED);
+		ctx->send_aio = NULL;
+		nni_list_remove(&s->send_queue, ctx);
+	}
+
 	if (ctx->recv_aio == aio) {
 		ctx->recv_aio = NULL;
 
@@ -551,6 +568,7 @@ req0_ctx_cancel_recv(nni_aio *aio, void *arg, int rv)
 
 		nni_aio_finish_error(aio, rv);
 	}
+
 	nni_mtx_unlock(&s->mtx);
 }
 
