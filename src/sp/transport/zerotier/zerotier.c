@@ -1,6 +1,6 @@
 //
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2021 Capitar IT Group BV <info@capitar.com>
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -1821,6 +1821,10 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	nni_msg *m;
 
 	if (nni_aio_begin(aio) != 0) {
+		// No way to give the message back to the protocol, so
+		// we just discard it silently to prevent it from leaking.
+		nni_msg_free(nni_aio_get_msg(aio));
+		nni_aio_set_msg(aio, NULL);
 		return;
 	}
 	if ((m = nni_aio_get_msg(aio)) == NULL) {
