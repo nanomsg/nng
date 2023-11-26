@@ -1,6 +1,6 @@
 = libnng(3)
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
@@ -235,9 +235,17 @@ concurrent applications.
 |xref:nng_ctx_recvmsg.3.adoc[nng_ctx_recvmsg()]|receive a message using context
 |xref:nng_ctx_send.3.adoc[nng_ctx_send()]|send message using context asynchronously
 |xref:nng_ctx_sendmsg.3.adoc[nng_ctx_sendmsg()]|send a message using context
-
 |xref:nng_ctx_set.3.adoc[nng_ctx_set()]|set context option
 |xref:nng_ctx_setopt.3.adoc[nng_ctx_setopt()]|set context option
+|===
+
+=== Devices, Relays
+
+The following function family is used to create forwarders or relayers
+that route messages from one socket to another.
+
+|===
+|xref:nng_device.3.adoc[nng_device()]|message forwarding device
 |===
 
 === Statistics
