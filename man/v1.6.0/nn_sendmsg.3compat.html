@@ -1,0 +1,193 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nn_sendmsg(3compat)
+---
+<h1>nn_sendmsg(3compat)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nn_sendmsg - send message (compatible API)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nn_sendmsg</span><span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">sock</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-k">struct</span> <span class="tok-n">nn_msghdr</span> <span class="tok-o">*</span><span class="tok-n">hdr</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_sendmsg()</code> function sends the message described by <em>hdr</em> using the
+socket <em>sock</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <em>flags</em> field may contain the special flag <code>NN_DONTWAIT</code>.
+In this case, if the socket is unable to accept more data for sending,
+the operation shall not block, but instead will fail with the error <code>EAGAIN</code>.</p>
+</div>
+<div class="paragraph">
+<p>The <em>hdr</em> points to a structure of type <code>struct nn_msghdr</code>, which has the
+following definition:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-k">struct</span> <span class="tok-n">nn_iovec</span> <span class="tok-p">{</span>
+    <span class="tok-kt">void</span> <span class="tok-o">*</span> <span class="tok-n">iov_base</span><span class="tok-p">;</span>
+    <span class="tok-kt">size_t</span> <span class="tok-n">iov_len</span><span class="tok-p">;</span>
+<span class="tok-p">};</span>
+
+<span class="tok-k">struct</span> <span class="tok-n">nn_msghdr</span> <span class="tok-p">{</span>
+    <span class="tok-k">struct</span> <span class="tok-n">nn_iovec</span> <span class="tok-o">*</span><span class="tok-n">msg_iov</span><span class="tok-p">;</span>
+    <span class="tok-kt">int</span>              <span class="tok-n">msg_iovlen</span><span class="tok-p">;</span>
+    <span class="tok-kt">void</span> <span class="tok-o">*</span>           <span class="tok-n">msg_control</span><span class="tok-p">;</span>
+    <span class="tok-kt">size_t</span>           <span class="tok-n">msg_controllen</span><span class="tok-p">;</span>
+<span class="tok-p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>msg_iov</code> is an array of gather items, permitting the message
+to be spread into different memory blocks.
+There are <code>msg_iovlen</code> elements in this array, each of which
+has the base address (<code>iov_base</code>) and length (<code>iov_len</code>) indicated.</p>
+</div>
+<div class="paragraph">
+<p>For buffers allocated for zero copy
+(such as by <a href="nn_allocmsg.3compat.html"><code>nn_allocmsg()</code></a>), the value
+of <code>iov_base</code> should be the address of the pointer to the buffer,
+rather than the address of the buffer itself.
+In this case, the value of <code>iov_len</code> should be <code>NN_MSG</code>,
+as the length is inferred from the allocated message.
+If the <code>msg_iovlen</code> field is <code>NN_MSG</code>, then this function will free
+the associated buffer after it is done with it, if it returns successfully.
+(If the function returns with an error, then the caller retains ownership
+of the associated buffer and may retry the operation or free the buffer
+at its choice.)</p>
+</div>
+<div class="paragraph">
+<p>The values of <code>msg_control</code> and <code>msg_controllen</code> describe a buffer
+of ancillary data to send the message.
+This is currently only useful to provide the message headers
+used with <a href="nng.7.html">raw mode</a> sockets.
+In all other circumstances these fields should be zero.
+Details about this structure are covered in
+<a href="nn_cmsg.3compat.html"><code>nn_cmsg(3compat)</code></a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The send operation is performed asynchronously, and may not have
+completed before this function returns control to the caller.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns the number of bytes sent on success, and -1 on error.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>EAGAIN</code>
+</td>
+<td class="hdlist2">
+<p>The operation would block.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
+<p>The socket <em>sock</em> is not open.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EFSM</code>
+</td>
+<td class="hdlist2">
+<p>The socket cannot send in this state.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The <em>hdr</em> is invalid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>This protocol cannot send.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>Operation timed out.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_cmsg.3compat.html">nn_cmsg(3compat)</a>,
+<a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nn_recv.3compat.html">nn_recv(3compat)</a>,
+<a href="nn_send.3compat.html">nn_send(3compat)</a>,
+<a href="nn_socket.3compat.html">nn_socket(3compat)</a>,
+<a href="nng_compat.3compat.html">nn_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

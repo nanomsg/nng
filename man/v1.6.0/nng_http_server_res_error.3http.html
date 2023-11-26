@@ -1,0 +1,98 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_http_server_res_error(3http)
+---
+<h1>nng_http_server_res_error(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_server_res_error - use HTTP server error page</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_server_res_error</span><span class="tok-p">(</span><span class="tok-n">nng_http_server</span> <span class="tok-o">*</span><span class="tok-n">server</span><span class="tok-p">,</span>
+        <span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">response</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_server_res_error()</code> sets the body of <em>response</em>
+to <em>server</em>'s error page, which may have been customized using the
+<a href="nng_http_server_set_error_file.3http.html"><code>nng_http_server_error_file()</code></a>
+or
+<a href="nng_http_server_set_error_page.3http.html"><code>nng_http_server_error_page()</code></a>
+functions.</p>
+</div>
+<div class="paragraph">
+<p>The status code of the <em>response</em> should have already been set, either
+implicitly by allocating it with
+<a href="nng_http_res_alloc_error.3http.html"><code>nng_http_res_alloc_error()</code></a>,
+or by calling
+<a href="nng_http_res_set_status.3http.html"><code>nng_http_res_set_status()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>Any content body previously set for <em>response</em> will be overridden by
+this function.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>HTTP not supported.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error(3http)</a>,
+<a href="nng_http_server_hold.3http.html">nng_http_server_hold(3http)</a>,
+<a href="nng_http_server_set_error_file.3http.html">nng_http_server_set_error_file(3http)</a>,
+<a href="nng_http_server_set_error_page.3http.html">nng_http_server_set_error_page(3http)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

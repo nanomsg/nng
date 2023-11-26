@@ -1,0 +1,228 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_ipc_options(5)
+---
+<h1>nng_ipc_options(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_ipc_options - IPC-specific options</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-cp">#define NNG_OPT_IPC_PEER_GID            &#34;ipc:peer-gid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_IPC_PEER_PID            &#34;ipc:peer-pid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_IPC_PEER_UID            &#34;ipc:peer-uid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_IPC_PEER_ZONEID         &#34;ipc:peer-zoneid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_IPC_PERMISSIONS         &#34;ipc:permissions&#34;</span>
+<span class="tok-cp">#define NNG_OPT_IPC_SECURITY_DESCRIPTOR &#34;ipc:security-descriptor&#34;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This page documents the various standard options that can be set or
+retrieved on objects using IPC.</p>
+</div>
+<div class="paragraph">
+<p>The option names should always be used by their symbolic definitions.</p>
+</div>
+<div class="paragraph">
+<p>In the following list of options, the name of the option is supplied,
+along with the data type of the underlying value.</p>
+</div>
+<div class="paragraph">
+<p>Some options are only meaningful or supported in certain contexts, or may
+have other access restrictions.
+An attempt has been made to include details about such restrictions in the
+description of the option.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The availability of any of the following options is platform-specific,
+as the implementations of IPC are quite different on Windows and POSIX systems.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_ipc_options">IPC Options</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_GID"></a><code>NNG_OPT_IPC_PEER_GID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s primary
+group id.
+This is the effective group id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.</p>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_PID"></a><code>NNG_OPT_IPC_PEER_PID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides the the process id
+of the connected peer.
+This option is only available on Windows, Linux, and certain other systems.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applications should not assume that the process ID does not change,
+as it is possible (although unsupported!) for a nefarious process to pass a
+file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_UID"></a><code>NNG_OPT_IPC_PEER_UID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s user id.
+This is the effective user id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.</p>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_ZONEID"></a><code>NNG_OPT_IPC_PEER_ZONEID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s the zone id.
+Zones (and this option) are only supported on Solaris and illumos systems.</p>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_IPC_PERMISSIONS"></a><code>NNG_OPT_IPC_PERMISSIONS</code></dt>
+<dd>
+<p>(<code>int</code>)
+This write-only option may be applied to a listener to configure the
+permissions that are used on the UNIX domain socket created by that listener.
+This property is only supported on POSIX systems.
+The value is of type <code>int</code>, representing the normal permission bits
+on a file, such as <code>0600</code> (typically meaning read-write to the owner, and
+no permissions for anyone else.)
+The default is system-specific, most often <code>0644</code>.</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Not all systems validate these permissions.
+In particular, illumos and Solaris are known to ignore these permission
+settings when connecting.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Normally both read and write permission will be necessary for a
+peer dialer to connect.
+See your system documentation for UNIX domain sockets for more information.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <em>umask</em> of the process is <strong>not</strong> applied to these bits.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The best practice for limiting access is to place the socket in a
+directory writable only by the server, and only readable and searchable
+by clients.
+All mainstream POSIX systems will fail to permit a client to connect
+to a socket located in a directory for which the client lacks search (execute)
+permission.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><a id="NNG_OPT_IPC_SECURITY_DESCRIPTOR"></a><code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code></dt>
+<dd>
+<p>(<code>PSECURITY_DESCRIPTOR</code>)
+This write-only option may be used on listeners on Windows platforms to
+configure the <code>SECURITY_DESCRIPTOR</code> that is used when creating the underlying
+named pipe.
+The value is a pointer, <code>PSECURITY_DESCRIPTOR</code>, and may only be
+applied to listeners that have not been started yet.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_inherited_options">Inherited Options</h3>
+<div class="paragraph">
+<p>Generally, the following option values are also available for TLS objects,
+when appropriate for the context:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_LOCADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_REMADDR</code></a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_ipc_dialer_getopt.3ipc.html">nng_ipc_dialer_getopt(3ipc)</a>,
+<a href="nng_ipc_dialer_setopt.3ipc.html">nng_ipc_dialer_setopt(3ipc)</a>,
+<a href="nng_ipc_getopt.3ipc.html">nng_ipc_getopt(3ipc)</a>,
+<a href="nng_ipc_listener_getopt.3ipc.html">nng_ipc_listener_getopt(3ipc)</a>,
+<a href="nng_ipc_listener_setopt.3ipc.html">nng_ipc_listener_setopt(3ipc)</a>,
+<a href="nng_ipc_setopt.3ipc.html">nng_ipc_setopt(3ipc)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

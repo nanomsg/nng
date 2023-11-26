@@ -1,0 +1,129 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_http_res_set_data(3http)
+---
+<h1>nng_http_res_set_data(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_res_set_data - set HTTP response body</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_res_set_data</span><span class="tok-p">(</span><span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">body</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_res_set_data()</code> sets the HTTP body associated with
+the response <em>res</em> to <em>body</em>, and the size of the body to <em>size</em>.
+This body data will be automatically sent with the response when it
+is sent using <a href="nng_http_conn_write_res.3http.html"><code>nng_http_conn_write_res()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>This also updates the relevant <code>Content-Length</code> header of <em>res</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The current framework does not support sending data via chunked
+transfer-encoding.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <em>body</em> is <strong>not</strong> copied, and the caller must ensure that it is available
+until the <em>res</em> is deallocated.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+To have a local copy allocated with <em>res</em> that will be automatically
+deallocated when <em>res</em> is freed,
+see <a href="nng_http_res_copy_data.3http.html"><code>nng_http_res_copy_data()</code></a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It is a good idea to also set the <code>Content-Type</code> header.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory to perform the operation.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>No support for HTTP in the library.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_conn_write_res.3http.html">nng_http_conn_write_res(3http)</a>,
+<a href="nng_http_res_alloc.3http.html">nng_http_res_alloc(3http)</a>,
+<a href="nng_http_res_copy_data.3http.html">nng_http_res_copy_data(3http)</a>,
+<a href="nng_http_res_set_header.3http.html">nng_http_res_set_header(3http)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

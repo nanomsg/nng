@@ -1,0 +1,87 @@
+---
+version: v1.6.0
+layout: manpage_v2
+title: nng_mtx_alloc(3supp)
+---
+<h1>nng_mtx_alloc(3supp)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_mtx_alloc - allocate mutex</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/util/platform.h&gt;</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_mtx</span> <span class="tok-n">nng_mtx</span><span class="tok-p">;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_mtx_alloc</span><span class="tok-p">(</span><span class="tok-n">nng_mtx</span> <span class="tok-o">**</span><span class="tok-n">mtxp</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_mtx_alloc()</code> function allocates mutex and returns it in <em>mtxp</em>.</p>
+</div>
+<div class="paragraph">
+<p>The mutex objects created by this function are suitable only for
+simple lock and unlock operations, and are not recursive.
+Every effort has been made to use light-weight underlying primitives when available.</p>
+</div>
+<div class="paragraph">
+<p>Mutex (mutual exclusion) objects can be thought of as binary semaphores,
+where only a single thread of execution is permitted to acquire the semaphore.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, a mutex can only be unlocked by the thread that locked it.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory exists.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_cv_alloc.3supp.html">nng_cv_alloc(3supp)</a>,
+<a href="nng_mtx_free.3supp.html">nng_mtx_free(3supp)</a>,
+<a href="nng_mtx_lock.3supp.html">nng_mtx_lock(3supp)</a>,
+<a href="nng_mtx_unlock.3supp.html">nng_mtx_unlock(3supp)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
