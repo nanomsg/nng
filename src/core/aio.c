@@ -508,6 +508,39 @@ nni_aio_list_active(nni_aio *aio)
 	return (nni_list_node_active(&aio->a_prov_node));
 }
 
+// completions list.
+// Implementation note: in order to avoid wasting space, we
+// reuse the reap node -- which will be inactive here.
+void
+nni_aio_completions_init(nni_aio_completions *clp)
+{
+	*clp = NULL;
+}
+
+void
+nni_aio_completions_add(nni_aio_completions *clp, nni_aio *aio, int result, size_t count)
+{
+	NNI_ASSERT(!nni_aio_list_active(aio));
+	aio->a_reap_node.rn_next = *clp;
+	aio->a_result = result;
+	aio->a_count = count;
+	*clp = aio;
+}
+
+void
+nni_aio_completions_run(nni_aio_completions *clp)
+{
+	nni_aio *aio;
+	nni_aio *cl = *clp;
+	*clp = NULL;
+
+	while ((aio = cl) != NULL) {
+		cl = (void *)aio->a_reap_node.rn_next;
+		aio->a_reap_node.rn_next = NULL;
+		nni_aio_finish_sync(aio, aio->a_result, aio->a_count);
+	}
+}
+
 static void
 nni_aio_expire_add(nni_aio *aio)
 {
