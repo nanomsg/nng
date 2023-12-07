@@ -823,6 +823,44 @@ test_req_ctx_send_twice(void)
 	}
 }
 
+// this tests for the case where sending and receiving are started in parallel,
+// and then the receiving aio is canceled.  The sending should be errored,
+// and we should get back the original message.  This test covers bug #1702.
+static void
+test_req_ctx_send_recv_abort(void)
+{
+	nng_socket req;
+	nng_ctx    ctx;
+	nng_aio *  aio[2];
+	nng_msg *  msg;
+
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_RECVTIMEO, 100));
+
+	NUTS_PASS(nng_ctx_open(&ctx, req));
+	NUTS_PASS(nng_aio_alloc(&aio[0], NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio[1], NULL, NULL));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+
+	nng_aio_set_msg(aio[0], msg);
+	nng_ctx_send(ctx, aio[0]);
+	nng_msleep(1); // just to make sure the socket has it.
+	nng_ctx_recv(ctx, aio[1]);
+	msg = NULL;
+	nng_aio_wait(aio[0]);
+	nng_aio_wait(aio[1]);
+	msg = nng_aio_get_msg(aio[0]); // sent message
+	NUTS_TRUE(msg != NULL);
+	NUTS_TRUE(nng_msg_len(msg) == 0);
+	NUTS_FAIL(nng_aio_result(aio[0]), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio[1]), NNG_ETIMEDOUT);
+	NUTS_TRUE(nng_aio_get_msg(aio[0]) != NULL);
+	nng_msg_free(msg);
+	nng_aio_free(aio[0]);
+	nng_aio_free(aio[1]);
+	NUTS_CLOSE(req);
+}
+
 static void
 test_req_ctx_recv_nonblock(void)
 {
@@ -959,6 +997,7 @@ NUTS_TESTS = {
 	{ "req context send close", test_req_ctx_send_close },
 	{ "req context send abort", test_req_ctx_send_abort },
 	{ "req context send twice", test_req_ctx_send_twice },
+	{ "req context send recv abort", test_req_ctx_send_recv_abort },
 	{ "req context does not poll", test_req_ctx_no_poll },
 	{ "req context recv close socket", test_req_ctx_recv_close_socket },
 	{ "req context recv nonblock", test_req_ctx_recv_nonblock },

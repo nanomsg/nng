@@ -46,7 +46,7 @@ nni_dialer_destroy(nni_dialer *d)
 	NNI_FREE_STRUCT(d);
 }
 
-#if NNG_ENABLE_STATS
+#ifdef NNG_ENABLE_STATS
 static void
 dialer_stat_init(nni_dialer *d, nni_stat_item *item, const nni_stat_info *info)
 {

@@ -60,6 +60,10 @@ from the socket.
 The underlying transport may be closed at this point, and it is not
 possible communicate using this pipe.
 
+WARNING: The callback _cb_ function must *not* attempt to perform any
+accesses to the socket, as it is called with a lock on the socket held!
+Doing so would thus result in a deadlock.
+
 TIP: The callback _cb_ may close a pipe for any reason by simply closing
 it using xref:nng_pipe_close.3.adoc[`nng_pipe_close()`].
 This might be done before the pipe is added to the socket (during

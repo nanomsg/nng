@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -165,6 +165,30 @@ extern void nni_aio_bump_count(nni_aio *, size_t);
 extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);
+
+// nni_aio_completion_list is used after removing the aio from an
+// active work queue, and keeping them so that the completions can
+// be run in a deferred manner.  These lists are simple, and intended
+// to be used as local variables.  It's important to initialize the
+// list before using it.  Also, any AIO added to a completion list must
+// not be in active use anywhere.
+typedef void *nni_aio_completions;
+
+// nni_aio_completions_init just initializes a completions list.
+// This just sets the pointed value to NULL.
+extern void nni_aio_completions_init(nni_aio_completions *);
+
+// nni_aio_completions_run runs nni_aio_finish_sync for all the aio objects
+// that have been added to the completions.  The result code and count used
+// are those supplied in nni_aio_completions_add.  Callers should not hold
+// locks when calling this.
+extern void nni_aio_completions_run(nni_aio_completions *);
+
+// nni_aio_completions_add adds an aio (with the result code and length as
+// appropriate) to the completion list.  This should be done while the
+// appropriate lock is held.  The aio must not be scheduled.
+extern void nni_aio_completions_add(nni_aio_completions *, nni_aio *,
+    int, size_t);
 
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);

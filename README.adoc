@@ -5,12 +5,7 @@ endif::[]
 = nng - nanomsg-next-gen
 
 // Note: This README is optimized for display with Asciidoctor, or
-// on the github status page.  An HTML version is in the same directory
-// and may be more pleasantly formatted for human readers (when opened
-// in a browser).
-
-// Note: If you're updating this file, don't forget to re-run asciidoctor
-// to update the aforementioned HTML file!
+// on the GitHub project page at https://github.com/nanomsg/nng.
 
 image:https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg[Stand With Ukraine,link="https://stand-with-ukraine.pp.ua"]
 image:https://img.shields.io/github/actions/workflow/status/nanomsg/nng/linux.yml?branch=master&logoColor=grey&logo=ubuntu&label=[Linux Status,link="https://github.com/nanomsg/nng/actions"]
@@ -151,7 +146,9 @@ With a Linux or UNIX environment:
 The API documentation is provided in Asciidoc format in the
 `docs/man` subdirectory, and also
 https://nanomsg.github.io/nng[online].
-The <<docs/man/libnng.3.adoc#,libnng(3)>> page is a good starting point.
+The <<docs/man/nng.7.adoc#,nng(7)>> page provides a conceptual overview and links to
+manuals for various patterns.
+The <<docs/man/libnng.3.adoc#,libnng(3)>> page is a good starting point for the API reference.
 
 You can also purchase a copy of the
 http://staysail.tech/books/nng_reference/index.html[__NNG Reference Manual__].
@@ -165,7 +162,7 @@ These are located in the `demo` directory.
 
 == Legacy Compatibility
 
-A legacy libnanomsg compatible API is available, and while it offers
+A legacy `libnanomsg` compatible API is available, and while it offers
 less capability than the modern NNG API, it may serve as a transition aid.
 Please see <<docs/man/nng_compat.3compat.adoc#,nng_compat(3)>> for details.
 
