@@ -990,8 +990,8 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 		ws_frame_fini(frame);
 		break;
 	case WS_CLOSE:
-		ws->closed = true; // no need to send close reply
-		ws_close(ws, 0);
+		ws_close(ws, WS_CLOSE_NORMAL_CLOSE);
+		ws->closed = true;
 		return;
 	default:
 		ws_close(ws, WS_CLOSE_PROTOCOL_ERR);
