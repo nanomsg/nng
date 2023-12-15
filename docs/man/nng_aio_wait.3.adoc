@@ -32,6 +32,10 @@ completed, then it returns immediately.
 If a callback was set with _aio_ when it was allocated, then this
 function will not be called until the callback has completed.
 
+IMPORTANT: This function should never be called from a function that itself
+is a callback of an xref:nng_aio.5.adoc[`aio`], either this one or any other.
+Doing so may result in a deadlock.
+
 == RETURN VALUES
 
 None.
