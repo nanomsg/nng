@@ -867,6 +867,7 @@ tls_alloc(tls_conn **conn_p, nng_tls_config *cfg, nng_aio *user_aio)
 	nni_aio_list_init(&conn->send_queue);
 	nni_aio_list_init(&conn->recv_queue);
 	nni_mtx_init(&conn->lock);
+	nni_aio_set_timeout(&conn->conn_aio, NNG_DURATION_INFINITE);
 	nni_aio_set_timeout(&conn->tcp_send, NNG_DURATION_INFINITE);
 	nni_aio_set_timeout(&conn->tcp_recv, NNG_DURATION_INFINITE);
 
