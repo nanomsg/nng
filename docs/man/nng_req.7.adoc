@@ -1,6 +1,6 @@
 = nng_req(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -101,9 +101,26 @@ The following protocol-specific option is available.
    When a new request is started, a timer of this duration is also started.
    If no reply is received before this timer expires, then the request will
    be resent.
-   (Requests are also automatically resent if the peer to whom
-   the original request was sent disconnects, or if a peer becomes available
-   while the requester is waiting for an available peer.)
++
+(Requests are also automatically resent if the peer to whom
+the original request was sent disconnects, or if a peer becomes available
+while the requester is waiting for an available peer.)
++
+Resending may be deferred up to the value of the `NNG_OPT_RESENDTICK` parameter.
+
+((`NNG_OPT_REQ_RESENDTICK`))::
+
+   (xref:nng_duration.5.adoc[`nng_duration`])
+   This is the granularity of the clock that is used to check for resending.
+   The default is a second.  Setting this to a higher rate will allow for
+   more timely resending to occur, but may incur significant additional
+   overhead when the socket has many outstanding requests (contexts).
++
+When there are no requests outstanding that have a resend set, then
+the clock does not tick at all.
++
+This option is shared for all contexts on a socket, and is only available for the socket itself.
+
 
 === Protocol Headers
 

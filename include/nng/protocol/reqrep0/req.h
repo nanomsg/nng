@@ -31,6 +31,7 @@ NNG_DECL int nng_req0_open_raw(nng_socket *);
 #define NNG_REQ0_PEER_NAME "rep"
 
 #define NNG_OPT_REQ_RESENDTIME "req:resend-time"
+#define NNG_OPT_REQ_RESENDTICK "req:resend-tick"
 
 #ifdef __cplusplus
 }

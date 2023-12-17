@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,7 +15,7 @@ test_req_identity(void)
 {
 	nng_socket s;
 	int        p;
-	char *     n;
+	char      *n;
 
 	NUTS_PASS(nng_req0_open(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
@@ -74,7 +74,29 @@ test_req_resend_option(void)
 	nng_duration d;
 	bool         b;
 	size_t       sz  = sizeof(b);
-	const char * opt = NNG_OPT_REQ_RESENDTIME;
+	const char  *opt = NNG_OPT_REQ_RESENDTIME;
+
+	NUTS_PASS(nng_req0_open(&req));
+
+	NUTS_TRUE(nng_socket_set_ms(req, opt, 10) == 0);
+	NUTS_FAIL(nng_socket_set(req, opt, "", 1), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_get(req, opt, &b, &sz), NNG_EINVAL);
+	NUTS_FAIL(nng_socket_set_bool(req, opt, true), NNG_EBADTYPE);
+	NUTS_FAIL(nng_socket_get_bool(req, opt, &b), NNG_EBADTYPE);
+
+	NUTS_PASS(nng_socket_get_ms(req, opt, &d));
+	NUTS_TRUE(d == 10);
+	NUTS_CLOSE(req);
+}
+
+static void
+test_req_resend_tick_option(void)
+{
+	nng_socket   req;
+	nng_duration d;
+	bool         b;
+	size_t       sz  = sizeof(b);
+	const char  *opt = NNG_OPT_REQ_RESENDTICK;
 
 	NUTS_PASS(nng_req0_open(&req));
 
@@ -93,7 +115,7 @@ void
 test_req_recv_bad_state(void)
 {
 	nng_socket req;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 
 	NUTS_TRUE(nng_req0_open(&req) == 0);
 	NUTS_TRUE(nng_recvmsg(req, &msg, 0) == NNG_ESTATE);
@@ -106,7 +128,7 @@ test_req_recv_garbage(void)
 {
 	nng_socket rep;
 	nng_socket req;
-	nng_msg *  m;
+	nng_msg   *m;
 	uint32_t   req_id;
 
 	NUTS_PASS(nng_rep0_open_raw(&rep));
@@ -176,7 +198,8 @@ test_req_resend(void)
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, SECOND));
-	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 10));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, 10));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 100));
 
 	NUTS_MARRY(rep, req);
 
@@ -209,6 +232,8 @@ test_req_resend_reconnect(void)
 	// We intentionally set the retry time long; that way we only see
 	// the retry from loss of our original peer.
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 60 * SECOND));
+	// And make sure the tick runs faster than our timeout!
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND/10));
 
 	NUTS_MARRY(rep1, req);
 
@@ -246,6 +271,8 @@ test_req_resend_disconnect(void)
 	// We intentionally set the retry time long; that way we only see
 	// the retry from loss of our original peer.
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 60 * SECOND));
+	// And make sure the tick runs faster than our timeout!
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND/10));
 
 	NUTS_MARRY(rep1, req);
 	NUTS_SEND(req, "ping");
@@ -278,7 +305,7 @@ test_req_disconnect_no_retry(void)
 	NUTS_PASS(nng_socket_set_ms(rep2, NNG_OPT_RECVTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(rep1, NNG_OPT_SENDTIMEO, SECOND / 10));
-	// Setting the resend time to zero so we will force an error
+	// Setting the resend time to zero will force an error
 	// if the peer disconnects without sending us an answer.
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 0));
 
@@ -303,7 +330,7 @@ test_req_disconnect_abort(void)
 	nng_socket req;
 	nng_socket rep1;
 	nng_socket rep2;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep1));
@@ -315,7 +342,7 @@ test_req_disconnect_abort(void)
 	NUTS_PASS(nng_socket_set_ms(rep2, NNG_OPT_RECVTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(rep1, NNG_OPT_SENDTIMEO, SECOND / 10));
-	// Setting the resend time to zero so we will force an error
+	// Setting the resend time to zero will force an error
 	// if the peer disconnects without sending us an answer.
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 0));
 
@@ -352,6 +379,7 @@ test_req_cancel(void)
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 5 * SECOND));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 5 * SECOND));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, retry));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND / 10));
 	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_SENDBUF, 16));
 
 	NUTS_MARRY(rep, req);
@@ -392,7 +420,7 @@ test_req_cancel(void)
 void
 test_req_cancel_abort_recv(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_duration retry = SECOND * 10; // 10s (kind of never)
 	nng_socket   req;
 	nng_socket   rep;
@@ -422,8 +450,8 @@ test_req_cancel_abort_recv(void)
 	// Give time for this recv to post properly.
 	NUTS_SLEEP(100);
 
-	// Send the next next request ("def").  Note that
-	// the REP side server will have already buffered the receive
+	// Send the next request ("def").  Note that
+	// the REP side server will have already buffered the received
 	// request, and should simply be waiting for us to reply to
 	// abc.
 	NUTS_SEND(req, "def");
@@ -521,11 +549,11 @@ test_req_poll_contention(void)
 	int        fd;
 	nng_socket req;
 	nng_socket rep;
-	nng_aio *  aio;
+	nng_aio   *aio;
 	nng_ctx    ctx[5];
-	nng_aio *  ctx_aio[5];
-	nng_msg *  ctx_msg[5];
-	nng_msg *  msg;
+	nng_aio   *ctx_aio[5];
+	nng_msg   *ctx_msg[5];
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
@@ -574,7 +602,7 @@ test_req_poll_contention(void)
 	// to reflect across the network.
 	NUTS_SLEEP(100);
 
-	// Should be come writeable now...
+	// Should become writeable now...
 	NUTS_TRUE(nuts_poll_fd(fd) == true);
 
 	for (int i = 0; i < 5; i++) {
@@ -623,7 +651,7 @@ test_req_poll_readable(void)
 	int        fd;
 	nng_socket req;
 	nng_socket rep;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
@@ -681,8 +709,8 @@ test_req_ctx_send_queued(void)
 	nng_socket req;
 	nng_socket rep;
 	nng_ctx    ctx[3];
-	nng_aio *  aio[3];
-	nng_msg *  msg[3];
+	nng_aio   *aio[3];
+	nng_msg   *msg[3];
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
@@ -723,8 +751,8 @@ test_req_ctx_send_close(void)
 {
 	nng_socket req;
 	nng_ctx    ctx[3];
-	nng_aio *  aio[3];
-	nng_msg *  msg[3];
+	nng_aio   *aio[3];
+	nng_msg   *msg[3];
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
@@ -758,8 +786,8 @@ test_req_ctx_send_abort(void)
 {
 	nng_socket req;
 	nng_ctx    ctx[3];
-	nng_aio *  aio[3];
-	nng_msg *  msg[3];
+	nng_aio   *aio[3];
+	nng_msg   *msg[3];
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
@@ -793,8 +821,8 @@ test_req_ctx_send_twice(void)
 {
 	nng_socket req;
 	nng_ctx    ctx;
-	nng_aio *  aio[2];
-	nng_msg *  msg[2];
+	nng_aio   *aio[2];
+	nng_msg   *msg[2];
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
@@ -831,8 +859,8 @@ test_req_ctx_send_recv_abort(void)
 {
 	nng_socket req;
 	nng_ctx    ctx;
-	nng_aio *  aio[2];
-	nng_msg *  msg;
+	nng_aio   *aio[2];
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_RECVTIMEO, 100));
@@ -867,8 +895,8 @@ test_req_ctx_recv_nonblock(void)
 	nng_socket req;
 	nng_socket rep;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  msg;
+	nng_aio   *aio;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
@@ -897,8 +925,8 @@ test_req_ctx_send_nonblock(void)
 {
 	nng_socket req;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  msg;
+	nng_aio   *aio;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_ctx_open(&ctx, req));
@@ -921,8 +949,8 @@ test_req_ctx_recv_close_socket(void)
 	nng_socket req;
 	nng_socket rep;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
@@ -947,9 +975,9 @@ static void
 test_req_validate_peer(void)
 {
 	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char      * addr;
+	nng_stat  *stats;
+	nng_stat  *reject;
+	char      *addr;
 
 	NUTS_ADDR(addr, "inproc");
 
@@ -978,6 +1006,7 @@ NUTS_TESTS = {
 	{ "req identity", test_req_identity },
 	{ "req ttl option", test_req_ttl_option },
 	{ "req resend option", test_req_resend_option },
+	{ "req resend tick option", test_req_resend_tick_option },
 	{ "req recv bad state", test_req_recv_bad_state },
 	{ "req recv garbage", test_req_recv_garbage },
 	{ "req rep exchange", test_req_rep_exchange },

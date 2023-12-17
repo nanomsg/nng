@@ -1144,6 +1144,13 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		nn_seterror(rv);
 		return (-1);
 	}
+	if ((nnlevel == NN_REQ) && (nnopt == NN_REQ_RESEND_IVL)) {
+		// Only one context here, so it won't be too bad to tick
+		// as quickly as this, and it avoids some possible friction
+		// (e.g. with legacy tests).
+		(void) nng_socket_set_ms(sid, NNG_OPT_REQ_RESENDTICK, 10);
+	}
+
 	return (0);
 }
 
