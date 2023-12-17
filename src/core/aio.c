@@ -115,7 +115,7 @@ void
 nni_aio_fini(nni_aio *aio)
 {
 	nni_aio_cancel_fn fn;
-	void	     *arg;
+	void             *arg;
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
 	// This is like aio_close, but we don't want to dispatch
@@ -247,7 +247,21 @@ nni_aio_close(nni_aio *aio)
 void
 nni_aio_set_timeout(nni_aio *aio, nni_duration when)
 {
-	aio->a_timeout = when;
+	aio->a_timeout    = when;
+	aio->a_use_expire = false;
+}
+
+void
+nni_aio_set_expire(nni_aio *aio, nni_time expire)
+{
+	aio->a_expire     = expire;
+	aio->a_use_expire = true;
+}
+
+nng_duration
+nni_aio_get_timeout(nni_aio *aio)
+{
+	return (aio->a_timeout);
 }
 
 void
@@ -369,7 +383,7 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 {
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
-	if (!aio->a_sleep) {
+	if ((!aio->a_sleep) && (!aio->a_use_expire)) {
 		// Convert the relative timeout to an absolute timeout.
 		switch (aio->a_timeout) {
 		case NNG_DURATION_ZERO:
@@ -411,7 +425,7 @@ void
 nni_aio_abort(nni_aio *aio, int rv)
 {
 	nni_aio_cancel_fn fn;
-	void	     *arg;
+	void             *arg;
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
 	nni_mtx_lock(&eq->eq_mtx);
@@ -447,8 +461,9 @@ nni_aio_finish_impl(
 		aio->a_msg = msg;
 	}
 
-	aio->a_expire = NNI_TIME_NEVER;
-	aio->a_sleep  = false;
+	aio->a_expire     = NNI_TIME_NEVER;
+	aio->a_sleep      = false;
+	aio->a_use_expire = false;
 	nni_mtx_unlock(&eq->eq_mtx);
 
 	if (sync) {
@@ -518,13 +533,14 @@ nni_aio_completions_init(nni_aio_completions *clp)
 }
 
 void
-nni_aio_completions_add(nni_aio_completions *clp, nni_aio *aio, int result, size_t count)
+nni_aio_completions_add(
+    nni_aio_completions *clp, nni_aio *aio, int result, size_t count)
 {
 	NNI_ASSERT(!nni_aio_list_active(aio));
 	aio->a_reap_node.rn_next = *clp;
-	aio->a_result = result;
-	aio->a_count = count;
-	*clp = aio;
+	aio->a_result            = result;
+	aio->a_count             = count;
+	*clp                     = aio;
 }
 
 void
@@ -532,10 +548,10 @@ nni_aio_completions_run(nni_aio_completions *clp)
 {
 	nni_aio *aio;
 	nni_aio *cl = *clp;
-	*clp = NULL;
+	*clp        = NULL;
 
 	while ((aio = cl) != NULL) {
-		cl = (void *)aio->a_reap_node.rn_next;
+		cl                       = (void *) aio->a_reap_node.rn_next;
 		aio->a_reap_node.rn_next = NULL;
 		nni_aio_finish_sync(aio, aio->a_result, aio->a_count);
 	}
