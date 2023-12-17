@@ -119,6 +119,11 @@ typedef struct nng_aio  nng_aio;
 // sockaddr, but we have our own to cope with our unique families, etc.
 // The details of this structure are directly exposed to applications.
 // These structures can be obtained via property lookups, etc.
+struct nng_sockaddr_file_descriptor {
+	uint16_t sa_family;
+	int      sa_fd;
+};
+
 struct nng_sockaddr_inproc {
 	uint16_t sa_family;
 	char     sa_name[NNG_MAXADDRLEN];
@@ -162,24 +167,26 @@ struct nng_sockaddr_storage {
 	uint64_t sa_pad[16];
 };
 
-typedef struct nng_sockaddr_inproc   nng_sockaddr_inproc;
-typedef struct nng_sockaddr_path     nng_sockaddr_path;
-typedef struct nng_sockaddr_path     nng_sockaddr_ipc;
-typedef struct nng_sockaddr_in       nng_sockaddr_in;
-typedef struct nng_sockaddr_in6      nng_sockaddr_in6;
-typedef struct nng_sockaddr_zt       nng_sockaddr_zt;
-typedef struct nng_sockaddr_abstract nng_sockaddr_abstract;
-typedef struct nng_sockaddr_storage  nng_sockaddr_storage;
+typedef struct nng_sockaddr_file_descriptor nng_sockaddr_file_descriptor;
+typedef struct nng_sockaddr_inproc          nng_sockaddr_inproc;
+typedef struct nng_sockaddr_path            nng_sockaddr_path;
+typedef struct nng_sockaddr_path            nng_sockaddr_ipc;
+typedef struct nng_sockaddr_in              nng_sockaddr_in;
+typedef struct nng_sockaddr_in6             nng_sockaddr_in6;
+typedef struct nng_sockaddr_zt              nng_sockaddr_zt;
+typedef struct nng_sockaddr_abstract        nng_sockaddr_abstract;
+typedef struct nng_sockaddr_storage         nng_sockaddr_storage;
 
 typedef union nng_sockaddr {
-	uint16_t              s_family;
-	nng_sockaddr_ipc      s_ipc;
-	nng_sockaddr_inproc   s_inproc;
-	nng_sockaddr_in6      s_in6;
-	nng_sockaddr_in       s_in;
-	nng_sockaddr_zt       s_zt;
-	nng_sockaddr_abstract s_abstract;
-	nng_sockaddr_storage  s_storage;
+	uint16_t                     s_family;
+	nng_sockaddr_file_descriptor s_file_descriptor;
+	nng_sockaddr_ipc             s_ipc;
+	nng_sockaddr_inproc          s_inproc;
+	nng_sockaddr_in6             s_in6;
+	nng_sockaddr_in              s_in;
+	nng_sockaddr_zt              s_zt;
+	nng_sockaddr_abstract        s_abstract;
+	nng_sockaddr_storage         s_storage;
 } nng_sockaddr;
 
 enum nng_sockaddr_family {

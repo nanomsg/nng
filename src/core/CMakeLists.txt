@@ -26,6 +26,8 @@ nng_sources(
         dialer.h
         file.c
         file.h
+        file_descriptor.c
+        file_descriptor.h
         idhash.c
         idhash.h
         init.c

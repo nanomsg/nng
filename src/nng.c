@@ -552,23 +552,30 @@ nng_dial(nng_socket sid, const char *addr, nng_dialer *dp, int flags)
 	int         rv;
 	nni_sock   *s;
 
+	printf("1.1\n");
 	if ((rv = nni_sock_find(&s, sid.id)) != 0) {
 		return (rv);
 	}
+	printf("1.2\n");
 	if ((rv = nni_dialer_create(&d, s, addr)) != 0) {
 		nni_sock_rele(s);
 		return (rv);
 	}
+	printf("1.3\n");
 	if ((rv = nni_dialer_start(d, flags)) != 0) {
+	  printf("uh oh got in here");
 		nni_dialer_close(d);
 		return (rv);
 	}
+	printf("1.4\n");
 	if (dp != NULL) {
 		nng_dialer did;
 		did.id = nni_dialer_id(d);
 		*dp    = did;
 	}
+	printf("1.5\n");
 	nni_dialer_rele(d);
+	printf("1.6\n");
 	return (0);
 }
 

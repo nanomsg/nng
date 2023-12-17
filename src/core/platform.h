@@ -362,6 +362,68 @@ extern int nni_parse_ip(const char *, nng_sockaddr *);
 extern int nni_parse_ip_port(const char *, nng_sockaddr *);
 
 //
+// FILE_DESCRIPTOR Support.
+//
+typedef struct nni_file_descriptor_conn     nni_file_descriptor_conn;
+typedef struct nni_file_descriptor_dialer   nni_file_descriptor_dialer;
+typedef struct nni_file_descriptor_listener nni_file_descriptor_listener;
+
+// nni_file_descriptor_dialer_init creates a new dialer object.
+extern int nni_file_descriptor_dialer_init(nni_file_descriptor_dialer **);
+
+// nni_file_descriptor_dialer_fini finalizes the dialer, closing it and freeing
+// all resources.
+extern void nni_file_descriptor_dialer_fini(nni_file_descriptor_dialer *);
+
+// nni_file_descriptor_dialer_close closes the dialer.
+// Further operations on it should return NNG_ECLOSED.
+// Any in-progress connection will be aborted.
+extern void nni_file_descriptor_dialer_close(nni_file_descriptor_dialer *);
+
+// nni_file_descriptor_dial attempts to create an outgoing connection,
+// asynchronously, to the address in the aio. On success, the first (and only)
+// output will be an nni_file_descriptor_conn * associated with the remote server.
+extern void nni_file_descriptor_dial(nni_file_descriptor_dialer *, const nng_sockaddr *, nni_aio *);
+
+// nni_file_descriptor_dialer_set sets an option on the dialer.
+extern int nni_file_descriptor_dialer_set(
+    nni_file_descriptor_dialer *, const char *, const void *, size_t, nni_type);
+
+// nni_file_descriptor_dialer_get gets an option on the dialer.
+extern int nni_file_descriptor_dialer_get(
+    nni_file_descriptor_dialer *, const char *, void *, size_t *, nni_type);
+
+// nni_file_descriptor_listener_init creates a new listener object, unbound.
+extern int nni_file_descriptor_listener_init(nni_file_descriptor_listener **);
+
+// nni_file_descriptor_listener_fini frees the listener and all associated resources.
+// It implicitly closes the listener as well.
+extern void nni_file_descriptor_listener_fini(nni_file_descriptor_listener *);
+
+// nni_file_descriptor_listener_close closes the listener.  This will unbind
+// any bound socket, and further operations will result in NNG_ECLOSED.
+extern void nni_file_descriptor_listener_close(nni_file_descriptor_listener *);
+
+// nni_file_descriptor_listener_listen creates the socket in listening mode, bound
+// to the specified address.
+extern int nni_file_descriptor_listener_listen(nni_file_descriptor_listener *, const nni_sockaddr *);
+
+// nni_file_descriptor_listener_accept accepts in incoming connect, asynchronously.
+// On success, the first (and only) output will be an nni_file_descriptor_conn *
+// associated with the remote peer.
+extern void nni_file_descriptor_listener_accept(nni_file_descriptor_listener *, nni_aio *);
+
+// nni_file_descriptor_listener_set sets an option on the listener.
+extern int nni_file_descriptor_listener_set(
+    nni_file_descriptor_listener *, const char *, const void *, size_t, nni_type);
+
+// nni_file_descriptor_listener_get gets an option from the listener.  The most common
+// use for this is to retrieve the setting of the NNG_OPT_FILE_DESCRIPTOR_LOCADDR
+// address after binding to wild card port (0).
+extern int nni_file_descriptor_listener_get(
+    nni_file_descriptor_listener *, const char *, void *, size_t *, nni_type);
+
+//
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
 //
 

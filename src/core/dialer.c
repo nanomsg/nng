@@ -410,13 +410,16 @@ dialer_connect_start(nni_dialer *d)
 int
 nni_dialer_start(nni_dialer *d, unsigned flags)
 {
+	printf("2.0");
 	int      rv = 0;
 	nni_aio *aio;
 
+	printf("2.1");
 	if (nni_atomic_flag_test_and_set(&d->d_started)) {
 		return (NNG_ESTATE);
 	}
 
+	printf("2.2");
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
 		aio = NULL;
 	} else {
@@ -427,11 +430,13 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 		nni_aio_begin(aio);
 	}
 
+	printf("2.3");
 	nni_mtx_lock(&d->d_mtx);
 	d->d_user_aio = aio;
 	dialer_connect_start(d);
 	nni_mtx_unlock(&d->d_mtx);
 
+	printf("2.4");
 	if (aio != NULL) {
 		nni_aio_wait(aio);
 		rv = nni_aio_result(aio);

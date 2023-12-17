@@ -69,12 +69,16 @@ if (NNG_PLATFORM_POSIX)
             posix_config.h
             posix_pollq.h
             posix_tcp.h
+	    posix_file_descriptor.h
 
             posix_alloc.c
             posix_atomic.c
             posix_clock.c
             posix_debug.c
             posix_file.c
+            posix_file_descriptorconn.c
+            posix_file_descriptordial.c
+            posix_file_descriptorlisten.c
             posix_ipcconn.c
             posix_ipcdial.c
             posix_ipclisten.c

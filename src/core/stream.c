@@ -19,6 +19,8 @@
 #include "supplemental/tls/tls_api.h"
 #include "supplemental/websocket/websocket.h"
 
+#include "core/file_descriptor.h"
+
 static struct {
 	const char *scheme;
 	int (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
@@ -29,6 +31,11 @@ static struct {
 	    .scheme         = "ipc",
 	    .dialer_alloc   = nni_ipc_dialer_alloc,
 	    .listener_alloc = nni_ipc_listener_alloc,
+	},
+	{
+	    .scheme         = "file_descriptor",
+	    .dialer_alloc   = nni_file_descriptor_dialer_alloc,
+	    .listener_alloc = nni_file_descriptor_listener_alloc,
 	},
 #ifdef NNG_PLATFORM_POSIX
 	{

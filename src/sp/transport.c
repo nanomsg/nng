@@ -49,6 +49,9 @@ nni_sp_tran_find(nni_url *url)
 // nni_sp_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
 
+#ifdef NNG_TRANSPORT_FILE_DESCRIPTOR
+extern void nni_sp_file_descriptor_register(void);
+#endif
 #ifdef NNG_TRANSPORT_INPROC
 extern void nni_sp_inproc_register(void);
 #endif
@@ -74,6 +77,9 @@ extern void nni_sp_zt_register(void);
 void
 nni_sp_tran_sys_init(void)
 {
+#ifdef NNG_TRANSPORT_FILE_DESCRIPTOR
+	nni_sp_file_descriptor_register();
+#endif
 #ifdef NNG_TRANSPORT_INPROC
 	nni_sp_inproc_register();
 #endif
