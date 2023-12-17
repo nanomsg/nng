@@ -68,8 +68,6 @@ nng_sources(
         tcp.h
         thread.c
         thread.h
-        timer.c
-        timer.h
         url.c
         url.h
 )

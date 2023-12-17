@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Garrett D'Amore <garrett@damore.org>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -45,7 +45,6 @@
 #include "core/strs.h"
 #include "core/taskq.h"
 #include "core/thread.h"
-#include "core/timer.h"
 #include "core/url.h"
 
 // transport needs to come after url
