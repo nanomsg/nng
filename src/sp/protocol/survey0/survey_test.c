@@ -188,7 +188,7 @@ test_surv_cancel(void)
 	// will be canceled before it gets to the peer.)
 	NUTS_SLEEP(100);
 
-	// Send the next next request ("def").  Note that
+	// Send the next request ("def").  Note that
 	// the RESP side server will have already buffered the receive
 	// request, and should simply be waiting for us to reply to abc.
 	NUTS_SEND(surv, "def");
@@ -246,7 +246,7 @@ test_surv_cancel_abort_recv(void)
 	// Give time for this recv to post properly.
 	NUTS_SLEEP(100);
 
-	// Send the next next request ("def").  Note that
+	// Send the next request ("def").  Note that
 	// the respondent side server will have already buffered the receive
 	// request, and should simply be waiting for us to reply to
 	// abc.
