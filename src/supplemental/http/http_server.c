@@ -73,8 +73,8 @@ struct nng_http_server {
 	nni_list             handlers;
 	nni_list             conns;
 	nni_mtx              mtx;
-	nni_cv               cv;
 	bool                 closed;
+	bool                 fini; // if nni_http_server_fini was called
 	nni_aio *            accaio;
 	nng_stream_listener *listener;
 	int                  port; // native order
@@ -301,8 +301,8 @@ http_sc_reap(void *arg)
 	if (nni_list_node_active(&sc->node)) {
 		nni_list_remove(&s->conns, sc);
 	}
-	if (nni_list_empty(&s->conns)) {
-		nni_cv_wake(&s->cv);
+	if (nni_list_empty(&s->conns) && (s->fini)) {
+		nni_reap(&http_server_reap_list, s);
 	}
 	nni_mtx_unlock(&s->mtx);
 
@@ -909,13 +909,7 @@ http_server_fini(nni_http_server *s)
 	nni_aio_stop(s->accaio);
 
 	nni_mtx_lock(&s->mtx);
-	if (!nni_list_empty(&s->conns)) {
-		// Try to reap later, after the connections are done reaping.
-		// (Note, connections will all have been closed already.)
-		nni_reap(&http_server_reap_list, s);
-		nni_mtx_unlock(&s->mtx);
-		return;
-	}
+	NNI_ASSERT(nni_list_empty(&s->conns));
 	nng_stream_listener_free(s->listener);
 	while ((h = nni_list_first(&s->handlers)) != NULL) {
 		nni_list_remove(&s->handlers, h);
@@ -932,7 +926,6 @@ http_server_fini(nni_http_server *s)
 	nni_mtx_fini(&s->errors_mtx);
 
 	nni_aio_free(s->accaio);
-	nni_cv_fini(&s->cv);
 	nni_mtx_fini(&s->mtx);
 	nni_strfree(s->hostname);
 	NNI_FREE_STRUCT(s);
@@ -958,7 +951,6 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 	}
 	nni_mtx_init(&s->mtx);
 	nni_mtx_init(&s->errors_mtx);
-	nni_cv_init(&s->cv, &s->mtx);
 	NNI_LIST_INIT(&s->handlers, nni_http_handler, node);
 	NNI_LIST_INIT(&s->conns, http_sconn, node);
 
@@ -1048,10 +1040,8 @@ nni_http_server_start(nni_http_server *s)
 }
 
 static void
-http_server_stop(nni_http_server *s)
+http_server_close(nni_http_server *s)
 {
-	http_sconn *sc;
-
 	if (s->closed) {
 		return;
 	}
@@ -1063,15 +1053,19 @@ http_server_stop(nni_http_server *s)
 	if (s->listener) {
 		nng_stream_listener_close(s->listener);
 	}
+}
+
+static void
+http_server_stop(nni_http_server *s)
+{
+	http_sconn *sc;
+
+	http_server_close(s);
 
 	// Stopping the server is a hard stop -- it aborts any work
 	// being done by clients.  (No graceful shutdown).
 	NNI_LIST_FOREACH (&s->conns, sc) {
 		http_sc_close_locked(sc);
-	}
-
-	while (!nni_list_empty(&s->conns)) {
-		nni_cv_wait(&s->cv);
 	}
 }
 
@@ -1079,9 +1073,24 @@ void
 nni_http_server_stop(nni_http_server *s)
 {
 	nni_mtx_lock(&s->mtx);
-	s->starts--;
+	if (s->starts != 0) {
+		s->starts--;
+	}
 	if (s->starts == 0) {
 		http_server_stop(s);
+	}
+	nni_mtx_unlock(&s->mtx);
+}
+
+void
+nni_http_server_close(nni_http_server *s)
+{
+	nni_mtx_lock(&s->mtx);
+	if (s->starts != 0) {
+		s->starts--;
+	}
+	if (s->starts == 0) {
+		http_server_close(s);
 	}
 	nni_mtx_unlock(&s->mtx);
 }
@@ -1910,12 +1919,18 @@ nni_http_server_fini(nni_http_server *s)
 {
 	nni_mtx_lock(&http_servers_lk);
 	s->refcnt--;
-	if (s->refcnt == 0) {
-		nni_mtx_lock(&s->mtx);
-		http_server_stop(s);
-		nni_mtx_unlock(&s->mtx);
-		nni_list_remove(&http_servers, s);
+	if (s->refcnt != 0) {
+		nni_mtx_unlock(&http_servers_lk);
+		return;
+	}
+	nni_list_remove(&http_servers, s);
+	nni_mtx_unlock(&http_servers_lk);
+
+	nni_mtx_lock(&s->mtx);
+	http_server_stop(s);
+	s->fini = true;
+	if (nni_list_empty(&s->conns)) {
 		nni_reap(&http_server_reap_list, s);
 	}
-	nni_mtx_unlock(&http_servers_lk);
+	nni_mtx_unlock(&s->mtx);
 }

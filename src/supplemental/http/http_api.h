@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -216,7 +216,14 @@ extern int nni_http_server_start(nni_http_server *);
 // nni_http_server_stop stops the server, closing the listening socket.
 // Connections that have been "upgraded" are unaffected.  Connections
 // associated with a callback will complete their callback, and then close.
+// Connections will be aborted but may not have terminated all the way.
 extern void nni_http_server_stop(nni_http_server *);
+
+// nni_http_server_close closes down the socket, but does not shut down
+// any connections that are already open.  This is useful for example
+// when shutting down an SP listener, and we don't want to break established
+// sessions.
+extern void nni_http_server_close(nni_http_server *);
 
 // nni_http_server_set_error_page sets an error page for the named status.
 extern int nni_http_server_set_error_page(
