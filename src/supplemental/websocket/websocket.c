@@ -1325,9 +1325,15 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 		goto err;
 	}
 
+	// There is a race between the dialer closing and any connections
+	// that were in progress completing.
+	if (d->closed){
+		rv = NNG_ECLOSED;
+		goto err;
+	}
+
 	// If we have no response structure, then this was completion
-	// of the send of the request.  Prepare an empty response, and
-	// read it.
+	// of sending the request.  Prepare an empty response, and read it.
 	if (ws->res == NULL) {
 		if ((rv = nni_http_res_alloc(&ws->res)) != 0) {
 			goto err;
