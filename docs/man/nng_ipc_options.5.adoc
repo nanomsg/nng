@@ -1,6 +1,6 @@
 = nng_ipc_options(5)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -43,42 +43,8 @@ have other access restrictions.
 An attempt has been made to include details about such restrictions in the
 description of the option.
 
-NOTE: The availability of any of the following options is platform-specific,
+NOTE: The availability of the following options is platform-specific,
 as the implementations of IPC are quite different on Windows and POSIX systems.
-
-=== IPC Options
-
-[[NNG_OPT_IPC_PEER_GID]]((`NNG_OPT_IPC_PEER_GID`))::
-(`uint64_t`)
-This read-only option provides a connected peer's primary
-group id.
-This is the effective group id of the peer when either the underlying
-`listen()` or `connect()` calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.
-
-[[NNG_OPT_IPC_PEER_PID]]((`NNG_OPT_IPC_PEER_PID`))::
-(`uint64_t`)
-This read-only option provides the the process id
-of the connected peer.
-This option is only available on Windows, Linux, and certain other systems.
-+
-NOTE: Applications should not assume that the process ID does not change,
-as it is possible (although unsupported!) for a nefarious process to pass a
-file descriptor between processes.
-However, it is not possible for a nefarious application to forge the identity
-of a well-behaved one using this method.
-
-[[NNG_OPT_IPC_PEER_UID]]((`NNG_OPT_IPC_PEER_UID`))::
-(`uint64_t`)
-This read-only option provides a connected peer's user id.
-This is the effective user id of the peer when either the underlying
-`listen()` or `connect()` calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.
-
-[[NNG_OPT_IPC_PEER_ZONEID]]((`NNG_OPT_IPC_PEER_ZONEID`))::
-(`uint64_t`)
-This read-only option provides a connected peer's the zone id.
-Zones (and this option) are only supported on Solaris and illumos systems.
 
 [[NNG_OPT_IPC_PERMISSIONS]]((`NNG_OPT_IPC_PERMISSIONS`))::
 (`int`)
@@ -115,10 +81,18 @@ named pipe.
 The value is a pointer, `PSECURITY_DESCRIPTOR`, and may only be
 applied to listeners that have not been started yet.
 
+=== Common Platform Specific Options
+
+The following options are supported by this transport when the underlying platform supports them:
+
+* xref:nng_options.5.adoc#NNG_OPT_PEER_GID[`NNG_OPT_PEER_GID`] (also available as `NNG_OPT_IPC_PEER_GID`)
+* xref:nng_options.5.adoc#NNG_OPT_PEER_PID[`NNG_OPT_PEER_PID`] (also available as `NNG_OPT_IPC_PEER_PID`)
+* xref:nng_options.5.adoc#NNG_OPT_PEER_UID[`NNG_OPT_PEER_UID`] (also available as `NNG_OPT_IPC_PEER_UID`)
+* xref:nng_options.5.adoc#NNG_OPT_PEER_ZONEID[`NNG_OPT_PEER_ZONEID`] (also available as `NNG_OPT_IPC_PEER_ZONEID`)
+
 === Inherited Options
 
-Generally, the following option values are also available for TLS objects,
-when appropriate for the context:
+Generally, the following option values are also available when appropriate for the context:
 
 * xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
 * xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
@@ -126,11 +100,11 @@ when appropriate for the context:
 == SEE ALSO
 
 [.text-left]
-xref:nng_ipc_dialer_getopt.3ipc.adoc[nng_ipc_dialer_getopt(3ipc)],
-xref:nng_ipc_dialer_setopt.3ipc.adoc[nng_ipc_dialer_setopt(3ipc)],
-xref:nng_ipc_getopt.3ipc.adoc[nng_ipc_getopt(3ipc)],
-xref:nng_ipc_listener_getopt.3ipc.adoc[nng_ipc_listener_getopt(3ipc)],
-xref:nng_ipc_listener_setopt.3ipc.adoc[nng_ipc_listener_setopt(3ipc)],
-xref:nng_ipc_setopt.3ipc.adoc[nng_ipc_setopt(3ipc)],
+xref:nng_dialer_get.3.adoc[nng_dialer_get(3)],
+xref:nng_dialer_set.3.adoc[nng_dialer_set(3)],
+xref:nng_listener_get.3.adoc[nng_listener_get(3)],
+xref:nng_listener_set.3.adoc[nng_listener_set(3)],
+xref:nng_pipe_get.3.adoc[nng_pipe_get(3)],
 xref:nng_options.5.adoc[nng_options(5)]
-xref:nng.7.adoc[nng(7)]
+xref:nng.7.adoc[nng(7)],
+xref:nng_ipc.7.adoc[nng_ipc(7)]

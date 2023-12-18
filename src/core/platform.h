@@ -386,9 +386,9 @@ extern int nni_ipc_listener_alloc(nng_stream_listener **, const nng_url *);
 typedef struct nni_plat_udp nni_plat_udp;
 
 // nni_plat_udp_open initializes a UDP socket, binding to the local
-// address specified specified in the AIO.  The remote address is
+// address specified in the AIO.  The remote address is
 // not used.  The resulting nni_plat_udp structure is returned in the
-// the aio's a_pipe.
+// aio's a_pipe.
 extern int nni_plat_udp_open(nni_plat_udp **, nni_sockaddr *);
 
 // nni_plat_udp_close closes the underlying UDP socket.
@@ -433,6 +433,19 @@ extern void nni_plat_pipe_clear(int);
 extern void nni_plat_pipe_close(int, int);
 
 extern int nni_plat_udp_sockname(nni_plat_udp *, nni_sockaddr *);
+
+// nni_socket_pair is used to create a socket pair using socketpair()
+// on POSIX systems.  (Windows might provide a similar solution, using
+// AF_UNIX at some point, in which case the arguments will actually be
+// an array of HANDLEs.)  If not supported, this returns NNG_ENOTSUP.
+//
+// This API can only create a pair of open file descriptors, suitable for use
+// with the socket transport, each bound to the other.  The transport must be
+// a bidirectional reliable byte stream.  This should be suitable for use
+// in APIs to transport file descriptors, or across a fork/exec boundary (so
+// that child processes may use these with socket to inherit a socket that is
+// connected to the parent.)
+extern int nni_socket_pair(int *);
 
 //
 // File/Store Support

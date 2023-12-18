@@ -1,6 +1,6 @@
 = nng_options(5)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -39,6 +39,10 @@ nng_options - socket, dialer, listener, and pipe options
 #define NNG_OPT_RECVMAXSZ     "recv-size-max"
 #define NNG_OPT_RECONNMINT    "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT    "reconnect-time-max"
+#define NNG_OPT_PEER_GID      "ipc:peer-gid"
+#define NNG_OPT_PEER_PID      "ipc:peer-pid"
+#define NNG_OPT_PEER_UID      "ipc:peer-uid"
+#define NNG_OPT_PEER_ZONEID   "ipc:peer-zoneid"
 ----
 
 == DESCRIPTION
@@ -328,27 +332,59 @@ This read-only option is used to obtain the 16-bit number for the socket's proto
 This read-only option is used to obtain the 16-bit number of the
 peer protocol for the socket.
 
+[[NNG_OPT_PEER_GID]]
+((`NNG_OPT_PEER_GID`))::
+(`uint64_t`)
+This read-only option provides a connected peer's primary group id, when known.
+This is the effective group id of the peer when either the underlying
+`listen()` or `connect()` calls were made, and is not forgeable.
+This option is generally only available on POSIX systems, only on certain transports.
+
+[[NNG_OPT_PEER_PID]]
+((`NNG_OPT_PEER_PID`))::
+(`uint64_t`)
+This read-only option provides the process id of the connected peer, when known.
+This option is only available on certain platforms and transports.
++
+NOTE: Applications should not assume that the process ID does not change,
+as it may be possible for a process to pass a file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+
+[[NNG_OPT_PEER_UID]]
+((`NNG_OPT_PEER_UID`))::
+(`uint64_t`)
+This read-only option provides a connected peer's user id.
+This is the effective user id of the peer when either the underlying
+`listen()` or `connect()` calls were made, and cannot be forged.
+This option is generally only available on POSIX systems, on certain transports.
+
+[[NNG_OPT_PEER_ZONEID]]
+((`NNG_OPT_PEER_ZONEID`))::
+(`uint64_t`)
+This read-only option provides a connected peer's the zone id.
+Zones (and this option) are only supported on Solaris and illumos systems, on select transports.
+
+[[NNG_OPT_PEERNAME]]
+((`NNG_OPT_PEERNAME`))::
+(string)
+This read-only option is used to obtain the name of the peer protocol for the socket.
+
 [[NNG_OPT_PROTONAME]]
 ((`NNG_OPT_PROTONAME`))::
 (string)
 This read-only option is used to obtain the name of the socket's protocol.
 
-[[NNG_OPT_PEERNAME]]
-((`NNG_OPT_PEERNAME`))::
-(string)
-This read-only option is used to obtain the name of the peer protocol for
-the socket.
-
 == SEE ALSO
 
 [.text-left]
-xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt(3)],
-xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt(3)],
-xref:nng_getopt.3.adoc[nng_getopt(3)],
-xref:nng_listener_getopt.3.adoc[nng_listener_getopt(3)],
-xref:nng_listener_setopt.3.adoc[nng_listener_setopt(3)],
-xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt(3)],
-xref:nng_setopt.3.adoc[nng_setopt(3)],
+xref:nng_dialer_get.3.adoc[nng_dialer_get(3)],
+xref:nng_dialer_set.3.adoc[nng_dialer_set(3)],
+xref:nng_listener_get.3.adoc[nng_listener_get(3)],
+xref:nng_listener_set.3.adoc[nng_listener_set(3)],
+xref:nng_pipe_get.3.adoc[nng_pipe_get(3)],
+xref:nng_socket_get.3.adoc[nng_socket_get(3)],
+xref:nng_socket_set.3.adoc[nng_socket_set(3)],
 xref:nng_ipc_options.5.adoc[nng_ipc_options(5)],
 xref:nng_tcp_options.5.adoc[nng_tcp_options(5)],
 xref:nng_tls_options.5.adoc[nng_tls_options(5)],

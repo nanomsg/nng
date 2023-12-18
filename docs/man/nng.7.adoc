@@ -69,6 +69,7 @@ xref:nng_surveyor.7.adoc[nng_surveyor(7)]:: Surveyor side of survey protocol
 [horizontal]
 xref:nng_inproc.7.adoc[nng_inproc(7)]:: Intra-process transport
 xref:nng_ipc.7.adoc[nng_ipc(7)]:: Inter-process transport
+xref:nng_socket.7.adoc[nng_socket(7)]:: BSD socket transport
 xref:nng_tls.7.adoc[nng_tls(7)]:: TLSv1.2 over TCP transport
 xref:nng_tcp.7.adoc[nng_tcp(7)]:: TCP (and TCPv6) transport
 xref:nng_ws.7.adoc[nng_ws(7)]:: WebSocket transport
