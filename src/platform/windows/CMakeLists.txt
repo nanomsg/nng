@@ -39,6 +39,7 @@ if (NNG_PLATFORM_WINDOWS)
             win_rand.c
             win_resolv.c
             win_sockaddr.c
+            win_socketpair.c
             win_tcp.c
             win_tcpconn.c
             win_tcpdial.c

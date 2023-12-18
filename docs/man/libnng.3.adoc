@@ -305,6 +305,7 @@ as a convenience to aid in creating portable applications.
 |xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock()]|unlock mutex
 |xref:nng_opts_parse.3supp.adoc[nng_opts_parse()]|parse command line options
 |xref:nng_random.3supp.adoc[nng_random()]|get random number
+|xref:nng_socket_pair.3supp.adoc[nng_socket_pair()]|create connected pair of BSD sockets
 |xref:nng_thread_create.3supp.adoc[nng_thread_create()]|create thread
 |xref:nng_thread_destroy.3supp.adoc[nng_thread_destroy()]|reap thread
 |xref:nng_thread_set_name.3supp.adoc[nng_thread_set_name()]|set thread name

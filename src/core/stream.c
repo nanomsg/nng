@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,6 +15,7 @@
 #include "core/nng_impl.h"
 #include <nng/supplemental/tls/tls.h>
 
+#include "core/sockfd.h"
 #include "core/tcp.h"
 #include "supplemental/tls/tls_api.h"
 #include "supplemental/websocket/websocket.h"
@@ -94,6 +95,13 @@ static struct {
 	    .dialer_alloc   = nni_ws_dialer_alloc,
 	    .listener_alloc = nni_ws_listener_alloc,
 	},
+#ifdef NNG_TRANSPORT_FDC
+	{
+	    .scheme         = "socket",
+	    .dialer_alloc   = nni_sfd_dialer_alloc,
+	    .listener_alloc = nni_sfd_listener_alloc,
+	},
+#endif
 	{
 	    .scheme = NULL,
 	},

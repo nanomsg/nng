@@ -104,6 +104,13 @@ NNG_DECL void nng_cv_wake1(nng_cv *);
 // nng_random returns a "strong" (cryptographic sense) random number.
 NNG_DECL uint32_t nng_random(void);
 
+// nng_socket_pair is used to create a bound pair of file descriptors
+// typically using the socketpair() call.  The descriptors are backed
+// by reliable, bidirectional, byte streams.  This will return NNG_ENOTSUP
+// if the platform lacks support for this.  The argument is a pointer
+// to an array of file descriptors (or HANDLES or similar).
+NNG_DECL int nng_socket_pair(int [2]);
+
 #ifdef __cplusplus
 }
 #endif

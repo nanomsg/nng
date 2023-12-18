@@ -411,7 +411,7 @@ int
 nni_dialer_start(nni_dialer *d, unsigned flags)
 {
 	int      rv = 0;
-	nni_aio *aio;
+	nni_aio *aio = NULL;
 
 	if (nni_atomic_flag_test_and_set(&d->d_started)) {
 		return (NNG_ESTATE);

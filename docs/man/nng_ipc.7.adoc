@@ -1,6 +1,6 @@
 = nng_ipc(7)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -107,14 +107,14 @@ except for abstract sockets, which use xref:nng_sockaddr_abstract.5.adoc[`nng_so
 The following transport options are supported by this transport,
 where supported by the underlying platform.
 
-* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_GID[`NNG_OPT_IPC_PEER_GID`]
-* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_PID[`NNG_OPT_IPC_PEER_PID`]
-* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_UID[`NNG_OPT_IPC_PEER_UID`]
-* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_ZONEID[`NNG_OPT_IPC_PEER_ZONEID`]
 * xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PERMISSIONS[`NNG_OPT_IPC_PERMISSIONS`]
 * xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_SECURITY_DESCRIPTOR[`NNG_OPT_IPC_SECURITY_DESCRIPTOR`]
 * xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
 * xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_PEER_GID[`NNG_OPT_PEER_GID`]
+* xref:nng_options.5.adoc#NNG_OPT_PEER_PID[`NNG_OPT_PEER_PID`]
+* xref:nng_options.5.adoc#NNG_OPT_PEER_UID[`NNG_OPT_PEER_UID`]
+* xref:nng_options.5.adoc#NNG_OPT_PEER_ZONEID[`NNG_OPT_PEER_ZONEID`]
 * xref:nng_options.5.adoc#NNG_OPT_URL[`NNG_OPT_URL`]
 
 == SEE ALSO

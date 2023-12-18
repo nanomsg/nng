@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -126,6 +126,9 @@ mark_as_advanced(NNG_TRANSPORT_WS)
 CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport." ON
         "NNG_ENABLE_TLS" OFF)
 mark_as_advanced(NNG_TRANSPORT_WSS)
+
+option (NNG_TRANSPORT_FDC "Enable File Descriptor transport (EXPERIMENTAL)" ON)
+mark_as_advanced(NNG_TRANSPORT_FDC)
 
 # ZeroTier
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)

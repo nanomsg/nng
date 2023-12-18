@@ -302,6 +302,7 @@ if (NNG_ENABLE_DOC)
             nng_mtx_unlock
             nng_opts_parse
             nng_random
+            nng_socket_pair
             nng_thread_create
             nng_thread_destroy
             nng_thread_set_name
@@ -388,6 +389,7 @@ if (NNG_ENABLE_DOC)
             nng_rep
             nng_req
             nng_respondent
+            nng_socket
             nng_sub
             nng_surveyor
             nng_tcp
