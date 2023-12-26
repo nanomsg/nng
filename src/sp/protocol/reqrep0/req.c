@@ -76,6 +76,7 @@ struct req0_pipe {
 	bool          closed;
 	nni_aio       aio_send;
 	nni_aio       aio_recv;
+	int           sndprio; 
 };
 
 static void req0_sock_fini(void *);
@@ -190,18 +191,42 @@ req0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	return (0);
 }
 
+static void req0_pipe_insert_by_prio(nni_list *ready_pipes, req0_pipe *p){
+	req0_pipe *p2 = NULL;
+	int sndprio = p->sndprio;
+
+	if(sndprio < 1){
+		return nni_list_append(ready_pipes, p);
+	}
+
+    NNI_LIST_FOREACH(ready_pipes, p2) {
+        if (sndprio > p2->sndprio) {
+            nni_list_insert_before(ready_pipes, p, p2);
+            return ;
+        }
+    }
+    if (p2 == NULL) {
+        nni_list_append(ready_pipes, p);
+    }
+}
+
 static int
 req0_pipe_start(void *arg)
 {
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
-
+	int prio = 0;
+	
 	if (nni_pipe_peer(p->pipe) != NNG_REQ0_PEER) {
 		return (NNG_EPROTO);
 	}
-
+	if(p->pipe->p_dialer && nni_dialer_getopt(p->pipe->p_dialer, NNG_OPT_SNDPRIO, &prio, NULL, NNI_TYPE_INT32) == 0 && prio > 0){
+		// the first time copy sndprio from dialer
+		p -> sndprio = prio;
+	}
 	nni_mtx_lock(&s->mtx);
-	nni_list_append(&s->ready_pipes, p);
+	req0_pipe_insert_by_prio(&s->ready_pipes, p);
+	//nni_list_append(&s->ready_pipes, p);
 	nni_pollable_raise(&s->writable);
 	req0_run_send_queue(s, NULL);
 	nni_mtx_unlock(&s->mtx);
@@ -294,7 +319,8 @@ req0_send_cb(void *arg)
 		return;
 	}
 	nni_list_remove(&s->busy_pipes, p);
-	nni_list_append(&s->ready_pipes, p);
+	req0_pipe_insert_by_prio(&s->ready_pipes, p);
+	// nni_list_append(&s->ready_pipes, p);
 	if (nni_list_empty(&s->send_queue)) {
 		nni_pollable_raise(&s->writable);
 	}
