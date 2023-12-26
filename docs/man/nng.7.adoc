@@ -1,5 +1,6 @@
 = nng(7)
 //
+// Copyright 2022 Cogent Embedded, Inc.
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
@@ -54,6 +55,7 @@ other languages please check the http://nanomsg.org/[website].
 
 [horizontal]
 xref:nng_bus.7.adoc[nng_bus(7)]:: Bus protocol
+xref:nng_hub.7.adoc[nng_hub(7)]:: Hub protocol
 xref:nng_pair.7.adoc[nng_pair(7)]:: Pair protocol
 xref:nng_pub.7.adoc[nng_pub(7)]:: Publisher side of publish/subscribe protocol
 xref:nng_pull.7.adoc[nng_pull(7)]:: Pull side of pipeline protocol

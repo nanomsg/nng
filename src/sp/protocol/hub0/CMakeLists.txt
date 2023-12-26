@@ -1,5 +1,4 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staystail.tech>
 # Copyright 2022 Cogent Embedded, Inc.
 #
 # This software is supplied under the terms of the MIT License, a
@@ -8,15 +7,10 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-#  Protocols.
-nng_directory(protocol)
+nng_directory(hub0)
 
-add_subdirectory(bus0)
-add_subdirectory(hub0)
-add_subdirectory(pair0)
-add_subdirectory(pair1)
-add_subdirectory(pipeline0)
-add_subdirectory(pubsub0)
-add_subdirectory(reqrep0)
-add_subdirectory(survey0)
+nng_sources_if(NNG_PROTO_HUB0 hub.c)
+nng_headers_if(NNG_PROTO_HUB0 nng/protocol/hub0/hub.h)
+nng_defines_if(NNG_PROTO_HUB0 NNG_HAVE_HUB0)
 
+nng_test(hub_test)

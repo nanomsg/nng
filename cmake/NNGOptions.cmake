@@ -1,5 +1,6 @@
 #
 # Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2022 Cogent Embedded, Inc.
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -45,6 +46,9 @@ mark_as_advanced(NNG_ENABLE_STATS)
 # Protocols.
 option (NNG_PROTO_BUS0 "Enable BUSv0 protocol." ON)
 mark_as_advanced(NNG_PROTO_BUS0)
+
+option (NNG_PROTO_HUB0 "Enable HUBv0 protocol." ON)
+mark_as_advanced(NNG_PROTO_HUB0)
 
 option (NNG_PROTO_PAIR0 "Enable PAIRv0 protocol." ON)
 mark_as_advanced(NNG_PROTO_PAIR0)
