@@ -11,6 +11,7 @@
 
 #include "core/nng_impl.h"
 #include "nng/protocol/reqrep0/req.h"
+#include "core/sockimpl.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
 // request-reply pair.  This is useful for building RPC clients, for example.
