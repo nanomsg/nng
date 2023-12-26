@@ -481,7 +481,15 @@ nni_dialer_setopt(
 		nni_mtx_unlock(&d->d_mtx);
 		return (rv);
 	}
+	if (strcmp(name, NNG_OPT_SNDPRIO) == 0) {
+		int rv;
 
+		nni_mtx_lock(&d->d_mtx);
+		rv = nni_copyin_int(&d->sndprio, val, sz, 1, 16, t);
+		nni_mtx_unlock(&d->d_mtx);
+		return (rv);
+	}
+	
 	if (d->d_ops.d_setopt != NULL) {
 		int rv = d->d_ops.d_setopt(d->d_data, name, val, sz, t);
 		if (rv != NNG_ENOTSUP) {
@@ -523,7 +531,14 @@ nni_dialer_getopt(
 		nni_mtx_unlock(&d->d_mtx);
 		return (rv);
 	}
-
+	if (strcmp(name, NNG_OPT_SNDPRIO) == 0) {
+		int rv;
+		nni_mtx_lock(&d->d_mtx);
+		rv = nni_copyout_int(d->sndprio, valp, szp, t);
+		nni_mtx_unlock(&d->d_mtx);
+		return (rv);
+	}
+	
 	if (d->d_ops.d_getopt != NULL) {
 		int rv = d->d_ops.d_getopt(d->d_data, name, valp, szp, t);
 		if (rv != NNG_ENOTSUP) {
