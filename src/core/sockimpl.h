@@ -37,7 +37,7 @@ struct nni_dialer {
 	nni_duration      d_currtime; // current time for reconnect
 	nni_duration      d_inirtime; // initial time for reconnect
 	nni_reap_node     d_reap;
-
+        int               sndprio;
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;
 	nni_stat_item st_id;
