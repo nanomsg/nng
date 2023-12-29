@@ -1,0 +1,76 @@
+= nng_mqtt_msg_get_packet_type(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_mqtt_msg_get_packet_type - get mqtt packet type 
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef enum {
+	NNG_MQTT_CONNECT     = 0x01,
+	NNG_MQTT_CONNACK     = 0x02,
+	NNG_MQTT_PUBLISH     = 0x03,
+	NNG_MQTT_PUBACK      = 0x04,
+	NNG_MQTT_PUBREC      = 0x05,
+	NNG_MQTT_PUBREL      = 0x06,
+	NNG_MQTT_PUBCOMP     = 0x07,
+	NNG_MQTT_SUBSCRIBE   = 0x08,
+	NNG_MQTT_SUBACK      = 0x09,
+	NNG_MQTT_UNSUBSCRIBE = 0x0A,
+	NNG_MQTT_UNSUBACK    = 0x0B,
+	NNG_MQTT_PINGREQ     = 0x0C,
+	NNG_MQTT_PINGRESP    = 0x0D,
+	NNG_MQTT_DISCONNECT  = 0x0E,
+	NNG_MQTT_AUTH        = 0x0F
+} nng_mqtt_packet_type;
+
+nng_mqtt_packet_type nng_mqtt_msg_get_packet_type(nng_msg *);
+
+----
+
+== DESCRIPTION
+
+The `nng_mqtt_msg_get_packet_type()` function is normally used to get mqtt packet type after finishing __nng_mqtt_msg_decode()__
+
+== RETURN VALUES
+
+This function returns value of __nng_mqtt_packet_type__  on success;
+
+== ERRORS
+
+[horizontal]
+// TODO 
+// `NNG_ENOMEM`:: Insufficient free memory exists to allocate a message.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_mqtt_msg_alloc.3.adoc[nng_mqtt_msg_alloc(3)],
+xref:nng_mqtt_msg_decode.3.adoc[nng_mqtt_msg_decode(3)],
+xref:nng_mqtt_msg_encode.3.adoc[nng_mqtt_msg_encode(3)],
+xref:nng_mqtt_msg_set_packet_type.3.adoc[nng_mqtt_msg_set_packet_type(3)],
+xref:nng_msg_free.3.adoc[nng_msg_free(3)],
+xref:nng_msg_body.3.adoc[nng_msg_body(3)],
+xref:nng_msg_dup.3.adoc[nng_msg_dup(3)],
+xref:nng_msg_header.3.adoc[nng_msg_header(3)],
+xref:nng_msg_header_len.3.adoc[nng_msg_header_len(3)],
+xref:nng_msg_len.3.adoc[nng_msg_len(3)],
+xref:nng_msg_capacity.3.adoc[nng_msg_capacity(3)],
+xref:nng_msg_reserve.3.adoc[nng_msg_reserve(3)],
+xref:nng_msg_realloc.3.adoc[nng_msg_realloc(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

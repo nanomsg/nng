@@ -7,12 +7,12 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_directory(supplemental)
+nng_directory(mqtt)
 
-add_subdirectory(base64)
-add_subdirectory(http)
-add_subdirectory(sha1)
-add_subdirectory(tls)
-add_subdirectory(util)
-add_subdirectory(websocket)
-add_subdirectory(mqtt)
+add_subdirectory(protocol)
+add_subdirectory(transport)
+
+nng_sources(
+        transport.c
+        transport.h
+)

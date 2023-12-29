@@ -61,11 +61,52 @@ nni_id_map_fini(nni_id_map *m)
 	}
 }
 
+void
+nni_id_map_foreach(nni_id_map *m, nni_idhash_cb cb)
+{
+	if (m->id_entries != NULL) {
+		for (size_t i = 0; i < m->id_cap; ++i) {
+			if (m->id_entries[i].val != NULL) {
+				cb(m->id_entries[i].key, m->id_entries[i].val);
+			}
+		}
+	}
+}
+
 // Inspired by Python dict implementation.  This probe will visit every
 // cell.  We always hash consecutively assigned IDs.  This requires that
 // the capacity is always a power of two.
 #define ID_NEXT(m, j) ((((j) *5) + 1) & (m->id_cap - 1))
 #define ID_INDEX(m, j) ((j) & (m->id_cap - 1))
+
+
+// return any solid object in table with key.
+void *
+nni_id_get_any(nni_id_map *m, uint16_t *pid)
+{
+	size_t index;
+	size_t start;
+	if (m->id_count == 0 || m->id_entries == NULL) {
+		return NULL;
+	}
+
+	index = 1;
+	start = index;
+	for (;;) {
+		// The value of ihe_key is only valid if ihe_val is not NULL.
+		if (m->id_entries[index].val != NULL) {
+			*pid = m->id_entries[index].key;
+			return m->id_entries[index].val;
+		}
+		index = ID_NEXT(m, index);
+
+		if (index == start) {
+			break;
+		}
+	}
+
+	return NULL;
+}
 
 static size_t
 id_find(nni_id_map *m, uint32_t id)

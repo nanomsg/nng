@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -7,12 +7,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_directory(supplemental)
+#  Transports.
+nng_directory(transport)
 
-add_subdirectory(base64)
-add_subdirectory(http)
-add_subdirectory(sha1)
+add_subdirectory(tcp)
 add_subdirectory(tls)
-add_subdirectory(util)
-add_subdirectory(websocket)
-add_subdirectory(mqtt)
+

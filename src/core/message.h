@@ -62,4 +62,35 @@ extern bool     nni_msg_shared(nni_msg *);
 // original message in that case (same semantics as realloc).
 extern nni_msg *nni_msg_pull_up(nni_msg *);
 
+// Message protocol private data.  This is specific for protocol use,
+// and not exposed to library users.
+
+// nni_proto_msg_ops is used to handle the protocol private data
+// associated with a message.
+typedef struct nni_proto_msg_ops {
+	// This is used to free protocol specific data previously
+	// attached to the message, and is called when the message
+	// itself is freed, or when protocol private is replaced.
+	int (*msg_free)(void *);
+
+	// Duplicate protocol private data when duplicating a message,
+	// such as by nni_msg_dup() or calling nni_msg_unique() on a
+	// shared message.
+	int (*msg_dup)(void **, const void *);
+} nni_proto_msg_ops;
+
+// nni_msg_set_proto_data is used to set protocol private data, and
+// callbacks for freeing and duplicating said data, on the message.
+// If other protocol private data exists on the message, it will be freed.
+// NULL can be used for the ops and the pointer to clear any previously
+// set data. The message must not be shared when this is called.
+extern void nni_msg_set_proto_data(nng_msg *, nni_proto_msg_ops *, void *);
+
+// nni_msg_get_proto_data returns the data previously set on the message.
+// Note that the protocol is responsible for ensuring that the data on
+// the message is set by it alone.
+extern void *nni_msg_get_proto_data(nng_msg *);
+
+extern uint8_t nni_msg_get_pub_qos(nng_msg *m);
+
 #endif // CORE_SOCKET_H
