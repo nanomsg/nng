@@ -825,7 +825,6 @@ Main({
 	for (i = 0; i < ncases; i++) {
 		nng_aio_stop(cases[i].woke);
 	}
-	nng_closeall();
 
 	Test("MultiProtocol/Transport Stress", {
 		Convey("All tests worked", {
@@ -853,4 +852,5 @@ Main({
 	});
 
 	free(cases);
+	nng_fini();
 })

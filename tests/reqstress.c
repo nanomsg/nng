@@ -310,7 +310,6 @@ Main({
 		nng_aio_stop(cases[i].time_aio);
 	}
 	nng_msleep(100);
-	nng_closeall();
 
 	Test("Req/Rep Stress", {
 		Convey("All tests worked", {
@@ -337,4 +336,5 @@ Main({
 	});
 
 	free(cases);
+	nng_fini();
 })
