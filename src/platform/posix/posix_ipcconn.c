@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -10,7 +10,7 @@
 //
 
 #include "core/nng_impl.h"
-
+#include "platform/posix/posix_peerid.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -19,22 +19,9 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#if defined(NNG_HAVE_GETPEERUCRED)
-#include <ucred.h>
-#elif defined(NNG_HAVE_LOCALPEERCRED) || defined(NNG_HAVE_SOCKPEERCRED)
-#include <sys/ucred.h>
-#endif
-#if defined(NNG_HAVE_GETPEEREID)
-#include <sys/types.h>
-#include <unistd.h>
-#endif
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
-#endif
-
-#ifndef SOL_LOCAL
-#define SOL_LOCAL 0
 #endif
 
 #include "posix_ipc.h"
@@ -56,7 +43,7 @@ ipc_dowrite(ipc_conn *c)
 		int           n;
 		int           niov;
 		unsigned      naiov;
-		nni_iov *     aiov;
+		nni_iov      *aiov;
 		struct msghdr hdr;
 		struct iovec  iovec[16];
 
@@ -125,7 +112,7 @@ ipc_doread(ipc_conn *c)
 		int          n;
 		int          niov;
 		unsigned     naiov;
-		nni_iov *    aiov;
+		nni_iov     *aiov;
 		struct iovec iovec[16];
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
@@ -157,7 +144,7 @@ ipc_doread(ipc_conn *c)
 		}
 
 		if (n == 0) {
-			// No bytes indicates a closed descriptor.
+			// Zero indicates a closed descriptor.
 			// This implicitly completes this (all!) aio.
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECONNSHUT);
@@ -179,7 +166,7 @@ static void
 ipc_error(void *arg, int err)
 {
 	ipc_conn *c = arg;
-	nni_aio * aio;
+	nni_aio  *aio;
 
 	nni_mtx_lock(&c->mtx);
 	while (((aio = nni_list_first(&c->readq)) != NULL) ||
@@ -318,88 +305,6 @@ ipc_recv(void *arg, nni_aio *aio)
 }
 
 static int
-ipc_peerid(ipc_conn *c, uint64_t *euid, uint64_t *egid, uint64_t *prid,
-    uint64_t *znid)
-{
-	int fd = nni_posix_pfd_fd(c->pfd);
-#if defined(NNG_HAVE_GETPEEREID) && !defined(NNG_HAVE_LOCALPEERCRED)
-	uid_t uid;
-	gid_t gid;
-
-	if (getpeereid(fd, &uid, &gid) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	*euid = uid;
-	*egid = gid;
-	*prid = (uint64_t) -1;
-	*znid = (uint64_t) -1;
-	return (0);
-#elif defined(NNG_HAVE_GETPEERUCRED)
-	ucred_t *ucp = NULL;
-	if (getpeerucred(fd, &ucp) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	*euid = ucred_geteuid(ucp);
-	*egid = ucred_getegid(ucp);
-	*prid = ucred_getpid(ucp);
-	*znid = ucred_getzoneid(ucp);
-	ucred_free(ucp);
-	return (0);
-#elif defined(NNG_HAVE_SOCKPEERCRED)
-	struct sockpeercred uc;
-	socklen_t           len = sizeof(uc);
-	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	*euid = uc.uid;
-	*egid = uc.gid;
-	*prid = uc.pid;
-	*znid = (uint64_t) -1;
-	return (0);
-#elif defined(NNG_HAVE_SOPEERCRED)
-	struct ucred uc;
-	socklen_t    len = sizeof(uc);
-	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	*euid = uc.uid;
-	*egid = uc.gid;
-	*prid = uc.pid;
-	*znid = (uint64_t) -1;
-	return (0);
-#elif defined(NNG_HAVE_LOCALPEERCRED)
-	struct xucred xu;
-	socklen_t     len = sizeof(xu);
-	if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERCRED, &xu, &len) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	*euid = xu.cr_uid;
-	*egid = xu.cr_gid;
-	*prid = (uint64_t) -1;
-	*znid = (uint64_t) -1;
-#if defined(NNG_HAVE_LOCALPEERPID) // documented on macOS since 10.8
-	{
-		pid_t pid;
-		if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &len) ==
-		    0) {
-			*prid = (uint64_t) pid;
-		}
-	}
-#endif // NNG_HAVE_LOCALPEERPID
-	return (0);
-#else
-	if (fd < 0) {
-		return (NNG_ECLOSED);
-	}
-	NNI_ARG_UNUSED(euid);
-	NNI_ARG_UNUSED(egid);
-	NNI_ARG_UNUSED(prid);
-	NNI_ARG_UNUSED(znid);
-	return (NNG_ENOTSUP);
-#endif
-}
-
-static int
 ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
@@ -407,7 +312,8 @@ ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 	uint64_t  ignore;
 	uint64_t  id = 0;
 
-	if ((rv = ipc_peerid(c, &id, &ignore, &ignore, &ignore)) != 0) {
+	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(c->pfd), &id, &ignore,
+	         &ignore, &ignore)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_u64(id, buf, szp, t));
@@ -421,7 +327,8 @@ ipc_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 	uint64_t  ignore;
 	uint64_t  id = 0;
 
-	if ((rv = ipc_peerid(c, &ignore, &id, &ignore, &ignore)) != 0) {
+	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(c->pfd), &ignore, &id,
+	         &ignore, &ignore)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_u64(id, buf, szp, t));
@@ -435,7 +342,8 @@ ipc_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 	uint64_t  ignore;
 	uint64_t  id = 0;
 
-	if ((rv = ipc_peerid(c, &ignore, &ignore, &ignore, &id)) != 0) {
+	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(c->pfd), &ignore, &ignore,
+	         &ignore, &id)) != 0) {
 		return (rv);
 	}
 	if (id == (uint64_t) -1) {
@@ -453,7 +361,8 @@ ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 	uint64_t  ignore;
 	uint64_t  id = 0;
 
-	if ((rv = ipc_peerid(c, &ignore, &ignore, &id, &ignore)) != 0) {
+	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(c->pfd), &ignore, &ignore,
+	         &id, &ignore)) != 0) {
 		return (rv);
 	}
 	if (id == (uint64_t) -1) {
