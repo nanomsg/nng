@@ -1086,18 +1086,8 @@ tlstran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_type t)
 	size_t      val;
 	int         rv;
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
-		tlstran_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
-		NNI_LIST_FOREACH (&ep->waitpipes, p) {
-			p->rcvmax = val;
-		}
-		NNI_LIST_FOREACH (&ep->negopipes, p) {
-			p->rcvmax = val;
-		}
-		NNI_LIST_FOREACH (&ep->busypipes, p) {
-			p->rcvmax = val;
-		}
 		nni_mtx_unlock(&ep->mtx);
 #ifdef NNG_ENABLE_STATS
 		nni_stat_set_value(&ep->st_rcv_max, val);
