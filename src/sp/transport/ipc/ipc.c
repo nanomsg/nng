@@ -953,18 +953,8 @@ ipc_ep_set_recv_max_sz(void *arg, const void *v, size_t sz, nni_type t)
 	int     rv;
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
 
-		ipc_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcv_max = val;
-		NNI_LIST_FOREACH (&ep->wait_pipes, p) {
-			p->rcv_max = val;
-		}
-		NNI_LIST_FOREACH (&ep->neg_pipes, p) {
-			p->rcv_max = val;
-		}
-		NNI_LIST_FOREACH (&ep->busy_pipes, p) {
-			p->rcv_max = val;
-		}
 		nni_mtx_unlock(&ep->mtx);
 #ifdef NNG_ENABLE_STATS
 		nni_stat_set_value(&ep->st_rcv_max, val);
