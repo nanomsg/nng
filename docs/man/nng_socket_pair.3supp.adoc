@@ -1,4 +1,4 @@
-= nng_socket_pair(3)
+= nng_socket_pair(3supp)
 //
 // Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 //
