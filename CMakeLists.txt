@@ -138,6 +138,14 @@ if (NNG_MAX_EXPIRE_THREADS)
     add_definitions(-DNNG_MAX_EXPIRE_THREADS=${NNG_MAX_EXPIRE_THREADS})
 endif()
 
+# Poller threads.  These threads run the pollers.  This is mostly used
+# on Windows right now, as the POSIX platforms use a single threaded poller.
+set(NNG_MAX_POLLER_THREADS 8 CACHE STRING "Upper bound on I/O poller threads, 0 for no limit")
+mark_as_advanced(NNG_MAX_POLLER_THREADS)
+if (NNG_MAX_POLLER_THREADS)
+    add_definitions(-DNNG_MAX_POLLER_THREADS=${NNG_MAX_POLLER_THREADS})
+endif()
+
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -92,12 +92,17 @@ nni_win_io_sysinit(void)
 	int    nthr = nni_plat_ncpu() * 2;
 
 	// Limits on the thread count.  This is fairly arbitrary.
-	if (nthr < 4) {
-		nthr = 4;
+	if (nthr < 2) {
+		nthr = 2;
 	}
-	if (nthr > 64) {
-		nthr = 64;
+#ifndef NNG_MAX_POLLER_THREADS
+#define NNG_MAX_POLLER_THREADS 8
+#endif
+#if NNG_MAX_POLLER_THREADS > 0
+	if (nthr > NNG_MAX_POLLER_THREADS) {
+		nthr = NNG_MAX_POLLER_THREADS;
 	}
+#endif
 	if ((win_io_thrs = NNI_ALLOC_STRUCTS(win_io_thrs, nthr)) == NULL) {
 		return (NNG_ENOMEM);
 	}
