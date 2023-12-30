@@ -58,7 +58,7 @@ This protocol supports the creation of xref:nng_ctx.5.adoc[contexts] for concurr
 use cases using xref:nng_ctx_open.3.adoc[`nng_ctx_open()`].
 
 Each context may have at most one outstanding request, and operates
-independently from the others.
+independently of the others.
 The restrictions for order of operations with sockets apply equally
 well for contexts, except that each context will be treated as if it were
 a separate socket.
