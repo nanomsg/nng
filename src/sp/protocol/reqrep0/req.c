@@ -717,7 +717,7 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	req0_ctx_reset(ctx);
 
 	// Insert us on the per ID hash list, so that receives can find us.
-	if ((rv = nni_id_alloc(&s->requests, &ctx->request_id, ctx)) != 0) {
+	if ((rv = nni_id_alloc32(&s->requests, &ctx->request_id, ctx)) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;

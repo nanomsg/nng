@@ -298,6 +298,7 @@ as a convenience to aid in creating portable applications.
 |xref:nng_cv_wait.3supp.adoc[nng_cv_wait()]|wait for condition
 |xref:nng_cv_wake.3supp.adoc[nng_cv_wake()]|wake all waiters
 |xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1()]|wake one waiter
+|xref:nng_id_map.3supp.adoc[nng_id_map]|identifier based mapping table
 |xref:nng_msleep.3supp.adoc[nng_msleep()]|sleep for milliseconds
 |xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc()]|allocate mutex
 |xref:nng_mtx_free.3supp.adoc[nng_mtx_free()]|free mutex

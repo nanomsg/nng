@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -13,7 +13,7 @@
 #include <string.h>
 
 struct nni_id_entry {
-	uint32_t key;
+	uint64_t key;
 	uint32_t skips;
 	void    *val;
 };
@@ -24,7 +24,7 @@ static nni_id_map **id_reg_map = NULL;
 static nni_mtx      id_reg_mtx = NNI_MTX_INITIALIZER;
 
 void
-nni_id_map_init(nni_id_map *m, uint32_t lo, uint32_t hi, bool randomize)
+nni_id_map_init(nni_id_map *m, uint64_t lo, uint64_t hi, bool randomize)
 {
 	if (lo == 0) {
 		lo = 1;
@@ -68,7 +68,7 @@ nni_id_map_fini(nni_id_map *m)
 #define ID_INDEX(m, j) ((j) & (m->id_cap - 1))
 
 static size_t
-id_find(nni_id_map *m, uint32_t id)
+id_find(nni_id_map *m, uint64_t id)
 {
 	size_t index;
 	size_t start;
@@ -98,7 +98,7 @@ id_find(nni_id_map *m, uint32_t id)
 }
 
 void *
-nni_id_get(nni_id_map *m, uint32_t id)
+nni_id_get(nni_id_map *m, uint64_t id)
 {
 	size_t index;
 	if ((index = id_find(m, id)) == (size_t) -1) {
@@ -130,7 +130,8 @@ id_map_register(nni_id_map *m)
 		}
 		id_reg_len = len;
 		if (id_reg_map != NULL)
-			memcpy(mr, id_reg_map, id_reg_num * sizeof(nni_id_map *));
+			memcpy(
+			    mr, id_reg_map, id_reg_num * sizeof(nni_id_map *));
 		id_reg_map = mr;
 	}
 	id_reg_map[id_reg_num++] = m;
@@ -233,7 +234,7 @@ id_resize(nni_id_map *m)
 }
 
 int
-nni_id_remove(nni_id_map *m, uint32_t id)
+nni_id_remove(nni_id_map *m, uint64_t id)
 {
 	size_t index;
 	size_t probe;
@@ -251,7 +252,7 @@ nni_id_remove(nni_id_map *m, uint32_t id)
 		nni_id_entry *entry;
 
 		// The load was increased once each hashing operation we used
-		// to place the the item.  Decrement it accordingly.
+		// to place the item.  Decrement it accordingly.
 		m->id_load--;
 		entry = &m->id_entries[probe];
 		if (probe == index) {
@@ -273,7 +274,7 @@ nni_id_remove(nni_id_map *m, uint32_t id)
 }
 
 int
-nni_id_set(nni_id_map *m, uint32_t id, void *val)
+nni_id_set(nni_id_map *m, uint64_t id, void *val)
 {
 	size_t        index;
 	nni_id_entry *ent;
@@ -314,9 +315,9 @@ nni_id_set(nni_id_map *m, uint32_t id, void *val)
 }
 
 int
-nni_id_alloc(nni_id_map *m, uint32_t *idp, void *val)
+nni_id_alloc(nni_id_map *m, uint64_t *idp, void *val)
 {
-	uint32_t id;
+	uint64_t id;
 	int      rv;
 
 	NNI_ASSERT(val != NULL);
@@ -353,5 +354,16 @@ nni_id_alloc(nni_id_map *m, uint32_t *idp, void *val)
 	if (rv == 0) {
 		*idp = id;
 	}
+	return (rv);
+}
+
+int
+nni_id_alloc32(nni_id_map *m, uint32_t *idp, void *val)
+{
+	uint64_t id;
+	int      rv;
+	rv = nni_id_alloc(m, &id, val);
+	NNI_ASSERT(id < (1ULL << 32));
+	*idp = (uint32_t) id;
 	return (rv);
 }

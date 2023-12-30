@@ -259,7 +259,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 	nni_cv_init(&p->p_cv, &pipes_lk);
 
 	nni_mtx_lock(&pipes_lk);
-	rv = nni_id_alloc(&pipes, &p->p_id, p);
+	rv = nni_id_alloc32(&pipes, &p->p_id, p);
 	nni_mtx_unlock(&pipes_lk);
 
 #ifdef NNG_ENABLE_STATS

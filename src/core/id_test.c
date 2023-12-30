@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -39,7 +39,7 @@ void
 test_random(void)
 {
 	int      i;
-	uint32_t id;
+	uint64_t id;
 	for (i = 0; i < 2; i++) {
 		nni_id_map m;
 		nni_id_map_init(&m, 0, 0, true);
@@ -94,7 +94,7 @@ void
 test_not_found(void)
 {
 	nni_id_map m;
-	uint32_t   id;
+	uint64_t   id;
 	nni_id_map_init(&m, 0, 0, false);
 
 	NUTS_PASS(nni_id_alloc(&m, &id, &id));
@@ -137,7 +137,7 @@ test_dynamic(void)
 {
 	nni_id_map m;
 	int        expect[5];
-	uint32_t   id;
+	uint64_t   id;
 
 	nni_id_map_init(&m, 10, 13, false);
 
@@ -175,7 +175,7 @@ test_set_out_of_range(void)
 	// We can insert outside the range forcibly.
 	NUTS_PASS(nni_id_set(&m, 1, &x));
 	NUTS_PASS(nni_id_set(&m, 100, &x));
-	NUTS_PASS(nni_id_alloc(&m, &id, &x));
+	NUTS_PASS(nni_id_alloc32(&m, &id, &x));
 	NUTS_TRUE(id == 10);
 	nni_id_map_fini(&m);
 }

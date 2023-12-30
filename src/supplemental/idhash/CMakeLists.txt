@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -7,12 +7,5 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_directory(supplemental)
-
-add_subdirectory(base64)
-add_subdirectory(http)
-add_subdirectory(idhash)
-add_subdirectory(sha1)
-add_subdirectory(tls)
-add_subdirectory(util)
-add_subdirectory(websocket)
+nng_sources_if(NNG_SUPP_IDHASH idhash.c idhash.h)
+nng_test_if(NNG_SUPP_IDHASH idhash_test)

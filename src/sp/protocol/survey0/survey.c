@@ -220,7 +220,7 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 	surv0_ctx_abort(ctx, NNG_ECANCELED);
 
 	// Allocate the new ID.
-	if ((rv = nni_id_alloc(&sock->surveys, &ctx->survey_id, ctx)) != 0) {
+	if ((rv = nni_id_alloc32(&sock->surveys, &ctx->survey_id, ctx)) != 0) {
 		nni_mtx_unlock(&sock->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;

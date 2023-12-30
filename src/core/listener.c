@@ -243,7 +243,7 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l);
 
 	nni_mtx_lock(&listeners_lk);
-	rv = nni_id_alloc(&listeners, &l->l_id, l);
+	rv = nni_id_alloc32(&listeners, &l->l_id, l);
 	nni_mtx_unlock(&listeners_lk);
 
 #ifdef NNG_ENABLE_STATS

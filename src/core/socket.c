@@ -641,7 +641,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	}
 
 	nni_mtx_lock(&sock_lk);
-	if ((rv = nni_id_alloc(&sock_ids, &s->s_id, s)) != 0) {
+	if ((rv = nni_id_alloc32(&sock_ids, &s->s_id, s)) != 0) {
 		nni_mtx_unlock(&sock_lk);
 		sock_destroy(s);
 		return (rv);
@@ -1343,7 +1343,7 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 		nni_free(ctx, ctx->c_size);
 		return (NNG_ECLOSED);
 	}
-	if ((rv = nni_id_alloc(&ctx_ids, &ctx->c_id, ctx)) != 0) {
+	if ((rv = nni_id_alloc32(&ctx_ids, &ctx->c_id, ctx)) != 0) {
 		nni_mtx_unlock(&sock_lk);
 		nni_free(ctx, ctx->c_size);
 		return (rv);

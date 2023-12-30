@@ -141,3 +141,8 @@ if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     set(NNG_SUPP_BASE64 ON)
     set(NNG_SUPP_SHA1 ON)
 endif()
+
+# ID hash API is small wrapper around core, probably should always be enabled unless memory
+# is extraordinarily constrained.
+option(NNG_SUPP_IDHASH "Enable application IDHASH API" ON)
+mark_as_advanced(NNG_SUPP_IDHASH)
