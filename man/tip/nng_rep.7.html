@@ -41,7 +41,7 @@ until a reply is received or the request times out.</p>
 </td>
 <td class="content">
 This protocol is useful in setting up RPC-like services.
-It is also reliable, in that a the requester will keep retrying until
+It is also reliable, in that a requester will keep retrying until
 a reply is received.
 </td>
 </tr>
@@ -81,7 +81,7 @@ use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.</
 </div>
 <div class="paragraph">
 <p>Each context may have at most one outstanding request, and operates
-independently from the others.
+independently of the others.
 The restrictions for order of operations with sockets apply equally
 well for contexts, except that each context will be treated as if it were
 a separate socket.</p>
