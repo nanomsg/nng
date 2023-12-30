@@ -56,62 +56,14 @@ description of the option.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The availability of any of the following options is platform-specific,
+The availability of the following options is platform-specific,
 as the implementations of IPC are quite different on Windows and POSIX systems.
 </td>
 </tr>
 </table>
 </div>
-<div class="sect2">
-<h3 id="_ipc_options">IPC Options</h3>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_GID"></a><code>NNG_OPT_IPC_PEER_GID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option provides a connected peer&#8217;s primary
-group id.
-This is the effective group id of the peer when either the underlying
-<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.</p>
-</dd>
-<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_PID"></a><code>NNG_OPT_IPC_PEER_PID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option provides the the process id
-of the connected peer.
-This option is only available on Windows, Linux, and certain other systems.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Applications should not assume that the process ID does not change,
-as it is possible (although unsupported!) for a nefarious process to pass a
-file descriptor between processes.
-However, it is not possible for a nefarious application to forge the identity
-of a well-behaved one using this method.
-</td>
-</tr>
-</table>
-</div>
-</dd>
-<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_UID"></a><code>NNG_OPT_IPC_PEER_UID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option provides a connected peer&#8217;s user id.
-This is the effective user id of the peer when either the underlying
-<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.</p>
-</dd>
-<dt class="hdlist1"><a id="NNG_OPT_IPC_PEER_ZONEID"></a><code>NNG_OPT_IPC_PEER_ZONEID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option provides a connected peer&#8217;s the zone id.
-Zones (and this option) are only supported on Solaris and illumos systems.</p>
-</dd>
 <dt class="hdlist1"><a id="NNG_OPT_IPC_PERMISSIONS"></a><code>NNG_OPT_IPC_PERMISSIONS</code></dt>
 <dd>
 <p>(<code>int</code>)
@@ -191,12 +143,32 @@ applied to listeners that have not been started yet.</p>
 </dd>
 </dl>
 </div>
+<div class="sect2">
+<h3 id="_common_platform_specific_options">Common Platform Specific Options</h3>
+<div class="paragraph">
+<p>The following options are supported by this transport when the underlying platform supports them:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_GID</code></a> (also available as <code>NNG_OPT_IPC_PEER_GID</code>)</p>
+</li>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_PID</code></a> (also available as <code>NNG_OPT_IPC_PEER_PID</code>)</p>
+</li>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_UID</code></a> (also available as <code>NNG_OPT_IPC_PEER_UID</code>)</p>
+</li>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_ZONEID</code></a> (also available as <code>NNG_OPT_IPC_PEER_ZONEID</code>)</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_inherited_options">Inherited Options</h3>
 <div class="paragraph">
-<p>Generally, the following option values are also available for TLS objects,
-when appropriate for the context:</p>
+<p>Generally, the following option values are also available when appropriate for the context:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -215,14 +187,14 @@ when appropriate for the context:</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_ipc_dialer_getopt.3ipc.html">nng_ipc_dialer_getopt(3ipc)</a>,
-<a href="nng_ipc_dialer_setopt.3ipc.html">nng_ipc_dialer_setopt(3ipc)</a>,
-<a href="nng_ipc_getopt.3ipc.html">nng_ipc_getopt(3ipc)</a>,
-<a href="nng_ipc_listener_getopt.3ipc.html">nng_ipc_listener_getopt(3ipc)</a>,
-<a href="nng_ipc_listener_setopt.3ipc.html">nng_ipc_listener_setopt(3ipc)</a>,
-<a href="nng_ipc_setopt.3ipc.html">nng_ipc_setopt(3ipc)</a>,
+<p><a href="nng_dialer_get.3.html">nng_dialer_get(3)</a>,
+<a href="nng_dialer_set.3.html">nng_dialer_set(3)</a>,
+<a href="nng_listener_get.3.html">nng_listener_get(3)</a>,
+<a href="nng_listener_set.3.html">nng_listener_set(3)</a>,
+<a href="nng_pipe_get.3.html">nng_pipe_get(3)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>
-<a href="nng.7.html">nng(7)</a></p>
+<a href="nng.7.html">nng(7)</a>,
+<a href="nng_ipc.7.html">nng_ipc(7)</a></p>
 </div>
 </div>
 </div>

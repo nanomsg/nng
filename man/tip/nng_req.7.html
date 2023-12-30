@@ -152,10 +152,30 @@ a separate socket.</p>
 <p>(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
 When a new request is started, a timer of this duration is also started.
 If no reply is received before this timer expires, then the request will
-be resent.
-(Requests are also automatically resent if the peer to whom
+be resent.</p>
+<div class="paragraph">
+<p>(Requests are also automatically resent if the peer to whom
 the original request was sent disconnects, or if a peer becomes available
 while the requester is waiting for an available peer.)</p>
+</div>
+<div class="paragraph">
+<p>Resending may be deferred up to the value of the <code>NNG_OPT_RESENDTICK</code> parameter.</p>
+</div>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_REQ_RESENDTICK</code></dt>
+<dd>
+<p>(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
+This is the granularity of the clock that is used to check for resending.
+The default is a second.  Setting this to a higher rate will allow for
+more timely resending to occur, but may incur significant additional
+overhead when the socket has many outstanding requests (contexts).</p>
+<div class="paragraph">
+<p>When there are no requests outstanding that have a resend set, then
+the clock does not tick at all.</p>
+</div>
+<div class="paragraph">
+<p>This option is shared for all contexts on a socket, and is only available for the socket itself.</p>
+</div>
 </dd>
 </dl>
 </div>

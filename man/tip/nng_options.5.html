@@ -37,7 +37,11 @@ title: nng_options(5)
 <span class="tok-cp">#define NNG_OPT_MAXTTL        &#34;ttl-max&#34;</span>
 <span class="tok-cp">#define NNG_OPT_RECVMAXSZ     &#34;recv-size-max&#34;</span>
 <span class="tok-cp">#define NNG_OPT_RECONNMINT    &#34;reconnect-time-min&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECONNMAXT    &#34;reconnect-time-max&#34;</span></code></pre>
+<span class="tok-cp">#define NNG_OPT_RECONNMAXT    &#34;reconnect-time-max&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_GID      &#34;ipc:peer-gid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_PID      &#34;ipc:peer-pid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_UID      &#34;ipc:peer-uid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_ZONEID   &#34;ipc:peer-zoneid&#34;</span></code></pre>
 </div>
 </div>
 </div>
@@ -540,12 +544,62 @@ peer protocol for the socket.</p>
 </dd>
 </dl>
 </div>
-<div id="NNG_OPT_PROTONAME" class="dlist">
+<div id="NNG_OPT_PEER_GID" class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_OPT_PROTONAME</code></dt>
+<dt class="hdlist1"><code>NNG_OPT_PEER_GID</code></dt>
 <dd>
-<p>(string)
-This read-only option is used to obtain the name of the socket&#8217;s protocol.</p>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s primary group id, when known.
+This is the effective group id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
+This option is generally only available on POSIX systems, only on certain transports.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_PID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_PID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides the process id of the connected peer, when known.
+This option is only available on certain platforms and transports.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applications should not assume that the process ID does not change,
+as it may be possible for a process to pass a file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_UID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_UID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s user id.
+This is the effective user id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and cannot be forged.
+This option is generally only available on POSIX systems, on certain transports.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_ZONEID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_ZONEID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s the zone id.
+Zones (and this option) are only supported on Solaris and illumos systems, on select transports.</p>
 </dd>
 </dl>
 </div>
@@ -554,8 +608,16 @@ This read-only option is used to obtain the name of the socket&#8217;s protocol.
 <dt class="hdlist1"><code>NNG_OPT_PEERNAME</code></dt>
 <dd>
 <p>(string)
-This read-only option is used to obtain the name of the peer protocol for
-the socket.</p>
+This read-only option is used to obtain the name of the peer protocol for the socket.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PROTONAME" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PROTONAME</code></dt>
+<dd>
+<p>(string)
+This read-only option is used to obtain the name of the socket&#8217;s protocol.</p>
 </dd>
 </dl>
 </div>
@@ -566,13 +628,13 @@ the socket.</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_dialer_getopt.3.html">nng_dialer_getopt(3)</a>,
-<a href="nng_dialer_setopt.3.html">nng_dialer_setopt(3)</a>,
-<a href="nng_getopt.3.html">nng_getopt(3)</a>,
-<a href="nng_listener_getopt.3.html">nng_listener_getopt(3)</a>,
-<a href="nng_listener_setopt.3.html">nng_listener_setopt(3)</a>,
-<a href="nng_pipe_getopt.3.html">nng_pipe_getopt(3)</a>,
-<a href="nng_setopt.3.html">nng_setopt(3)</a>,
+<p><a href="nng_dialer_get.3.html">nng_dialer_get(3)</a>,
+<a href="nng_dialer_set.3.html">nng_dialer_set(3)</a>,
+<a href="nng_listener_get.3.html">nng_listener_get(3)</a>,
+<a href="nng_listener_set.3.html">nng_listener_set(3)</a>,
+<a href="nng_pipe_get.3.html">nng_pipe_get(3)</a>,
+<a href="nng_socket_get.3.html">nng_socket_get(3)</a>,
+<a href="nng_socket_set.3.html">nng_socket_set(3)</a>,
 <a href="nng_ipc_options.5.html">nng_ipc_options(5)</a>,
 <a href="nng_tcp_options.5.html">nng_tcp_options(5)</a>,
 <a href="nng_tls_options.5.html">nng_tls_options(5)</a>,

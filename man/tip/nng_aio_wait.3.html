@@ -37,6 +37,20 @@ completed, then it returns immediately.</p>
 <p>If a callback was set with <em>aio</em> when it was allocated, then this
 function will not be called until the callback has completed.</p>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This function should never be called from a function that itself
+is a callback of an <a href="nng_aio.5.html"><code>aio</code></a>, either this one or any other.
+Doing so may result in a deadlock.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
