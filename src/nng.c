@@ -1919,6 +1919,12 @@ nng_aio_set_timeout(nng_aio *aio, nni_duration when)
 	nni_aio_set_timeout(aio, when);
 }
 
+void
+nng_aio_set_expire(nng_aio *aio, nng_time when)
+{
+	nni_aio_set_expire(aio, when);
+}
+
 int
 nng_aio_set_iov(nng_aio *aio, unsigned niov, const nng_iov *iov)
 {

@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -182,6 +182,27 @@ test_explicit_timeout(void)
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, 40);
+	nng_recv_aio(s, a);
+	nng_aio_wait(a);
+	NUTS_TRUE(done == 1);
+	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
+	nng_aio_free(a);
+	NUTS_PASS(nng_close(s));
+}
+
+void
+test_explicit_expiration(void)
+{
+	nng_socket s;
+	nng_aio *  a;
+	int        done = 0;
+	nng_time now;
+
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
+	now = nng_clock();
+	now += 40;
+	nng_aio_set_expire(a, now);
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
 	NUTS_TRUE(done == 1);
@@ -384,6 +405,7 @@ NUTS_TESTS = {
 	{ "consumer cancel", test_consumer_cancel },
 	{ "traffic", test_traffic },
 	{ "explicit timeout", test_explicit_timeout },
+	{ "explicit expire", test_explicit_expiration },
 	{ "inherited timeout", test_inherited_timeout },
 	{ "zero timeout", test_zero_timeout },
 	{ "aio reap", test_aio_reap },

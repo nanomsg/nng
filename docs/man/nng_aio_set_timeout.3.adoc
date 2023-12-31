@@ -1,6 +1,6 @@
 = nng_aio_set_timeout(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -21,6 +21,9 @@ nng_aio_set_timeout - set asynchronous I/O timeout
 
 typedef int nng_duration;
 void nng_aio_set_timeout(nng_aio *aio, nng_duration timeout);
+
+typedef uint64_t nng_time;
+void nng_aio_set_expire(nng_aio *aio, nng_time expiration);
 ----
 
 == DESCRIPTION
@@ -36,6 +39,12 @@ If the timeout is `NNG_DURATION_INFINITE`, then no timeout is used.
 If the timeout is `NNG_DURATION_DEFAULT`, then a "default" or socket-specific
 timeout is used.
 (This is frequently the same as `NNG_DURATION_INFINITE`.)
+
+The `nng_aio_set_expire()` function is similar to `nng_aio_set_timeout()`, but sets
+an absolute expiration time based on the system clock. The _expiration_
+is expressed as a number of milliseconds since some point in the past.
+The xref:nng_clock.3supp.adoc[`nng_clock()`] function can be used to determine
+the current value of the clock.
 
 TIP: As most operations involve some context switching, it is usually a good
 idea to allow at least a few tens of milliseconds before timing them out --

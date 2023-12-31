@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -27,13 +27,9 @@
 extern "C" {
 #endif
 
-// nng_time represents an absolute time since some arbitrary point in the
-// past, measured in milliseconds.  The values are always positive.
-typedef uint64_t nng_time;
-
 // Return an absolute time from some arbitrary point.  The value is
 // provided in milliseconds, and is of limited resolution based on the
-// system clock.  (Do not use it for fine grained performance measurements.)
+// system clock.  (Do not use it for fine-grained performance measurements.)
 NNG_DECL nng_time nng_clock(void);
 
 // Sleep for specified msecs.

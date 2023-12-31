@@ -102,6 +102,11 @@ typedef struct nng_socket_s {
 } nng_socket;
 
 typedef int32_t         nng_duration; // in milliseconds
+
+// nng_time represents an absolute time since some arbitrary point in the
+// past, measured in milliseconds.  The values are always positive.
+typedef uint64_t nng_time;
+
 typedef struct nng_msg  nng_msg;
 typedef struct nng_stat nng_stat;
 typedef struct nng_aio  nng_aio;
@@ -154,7 +159,7 @@ struct nng_sockaddr_abstract {
 	uint8_t  sa_name[107]; // 108 linux/windows, without leading NUL
 };
 
-// nng_sockaddr_storage is the the size required to store any nng_sockaddr.
+// nng_sockaddr_storage is the size required to store any nng_sockaddr.
 // This size must not change, and no individual nng_sockaddr type may grow
 // larger than this without breaking binary compatibility.
 struct nng_sockaddr_storage {
@@ -354,7 +359,7 @@ NNG_DECL int nng_listener_get_ptr(nng_listener, const char *, void **);
 NNG_DECL int nng_listener_get_ms(nng_listener, const char *, nng_duration *);
 NNG_DECL int nng_listener_get_addr(nng_listener, const char *, nng_sockaddr *);
 
-// nng_strerror returns a human readable string associated with the error
+// nng_strerror returns a human-readable string associated with the error
 // code supplied.
 NNG_DECL const char *nng_strerror(int);
 
@@ -380,7 +385,7 @@ NNG_DECL int nng_recv(nng_socket, void *, size_t *, int);
 // nng_sendmsg is like nng_send, but offers up a message structure, which
 // gives the ability to provide more control over the message, including
 // providing backtrace information.  It also can take a message that was
-// obtain via nn_recvmsg, allowing for zero copy forwarding.
+// obtained via nn_recvmsg, allowing for zero copy forwarding.
 NNG_DECL int nng_sendmsg(nng_socket, nng_msg *, int);
 
 // nng_recvmsg is like nng_recv, but is used to obtain a message structure
@@ -393,7 +398,7 @@ NNG_DECL int nng_recvmsg(nng_socket, nng_msg **, int);
 // the completion may be executed before the data has actually been delivered,
 // but only when it is accepted for delivery.  The supplied AIO must have
 // been initialized, and have an associated message.  The message will be
-// "owned" by the socket if the operation completes successfully.  Otherwise
+// "owned" by the socket if the operation completes successfully.  Otherwise,
 // the caller is responsible for freeing it.
 NNG_DECL void nng_send_aio(nng_socket, nng_aio *);
 
@@ -429,7 +434,7 @@ NNG_DECL int nng_ctx_id(nng_ctx);
 // uses a local context instead of the socket global context.
 NNG_DECL void nng_ctx_recv(nng_ctx, nng_aio *);
 
-// nng_ctx_recvmsg is allows for receiving a message synchronously using
+// nng_ctx_recvmsg allows for receiving a message synchronously using
 // a context.  It has the same semantics as nng_recvmsg, but operates
 // on a context instead of a socket.
 NNG_DECL int nng_ctx_recvmsg(nng_ctx, nng_msg **, int);
@@ -515,7 +520,7 @@ NNG_DECL void nng_aio_reap(nng_aio *);
 
 // nng_aio_stop stops any outstanding operation, and waits for the
 // AIO to be free, including for the callback to have completed
-// execution.  Therefore the caller must NOT hold any locks that
+// execution.  Therefore, the caller must NOT hold any locks that
 // are acquired in the callback, or deadlock will occur.
 NNG_DECL void nng_aio_stop(nng_aio *);
 
@@ -577,6 +582,11 @@ NNG_DECL void *nng_aio_get_output(nng_aio *, unsigned);
 // specifying NNG_DURATION_ZERO.  The value NNG_DURATION_DEFAULT indicates
 // that any socket specific timeout should be used.
 NNG_DECL void nng_aio_set_timeout(nng_aio *, nng_duration);
+
+// nng_aio_set_expire is like nng_aio_set_timeout, except it sets an absolute
+// expiration time.  This is useful when chaining actions on a single aio
+// as part of a state machine.
+NNG_DECL void nng_aio_set_expire(nng_aio *, nng_time);
 
 // nng_aio_set_iov sets a scatter/gather vector on the aio.  The iov array
 // itself is copied. Data members (the memory regions referenced) *may* be
@@ -943,7 +953,7 @@ NNG_DECL nng_stat *nng_stat_next(nng_stat *);
 NNG_DECL nng_stat *nng_stat_child(nng_stat *);
 
 // nng_stat_name is used to determine the name of the statistic.
-// This is a human readable name.  Statistic names, as well as the presence
+// This is a human-readable name.  Statistic names, as well as the presence
 // or absence or semantic of any particular statistic are not part of any
 // stable API, and may be changed without notice in future updates.
 NNG_DECL const char *nng_stat_name(nng_stat *);
@@ -990,14 +1000,12 @@ enum nng_unit_enum {
 	NNG_UNIT_EVENTS   = 4  // Some other type of event
 };
 
-// nng_stat_value returns returns the actual value of the statistic.
+// nng_stat_value returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
 // snapshot was updated, and are undefined until an update is performed.
 NNG_DECL uint64_t nng_stat_value(nng_stat *);
 
-// nng_stat_value returns returns the actual value of the statistic.
-// Statistic values reflect their value at the time that the corresponding
-// snapshot was updated, and are undefined until an update is performed.
+// nng_stat_bool returns the boolean value of the statistic.
 NNG_DECL bool nng_stat_bool(nng_stat *);
 
 // nng_stat_string returns the string associated with a string statistic,
@@ -1005,7 +1013,7 @@ NNG_DECL bool nng_stat_bool(nng_stat *);
 // is valid until the associated statistic is freed.
 NNG_DECL const char *nng_stat_string(nng_stat *);
 
-// nng_stat_desc returns a human readable description of the statistic.
+// nng_stat_desc returns a human-readable description of the statistic.
 // This may be useful for display in diagnostic interfaces, etc.
 NNG_DECL const char *nng_stat_desc(nng_stat *);
 
