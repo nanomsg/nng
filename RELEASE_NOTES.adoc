@@ -3,9 +3,7 @@ ifdef::env-github[]
 :important-caption: :heavy_exclamation_mark:
 endif::[]
 
-= RELEASE NOTES FOR NNG v1.6.0
-
-After a very long time indeed (over 2 years!), we are happy to announce v1.6.0 of NNG!
+= RELEASE NOTES FOR NNG v1.7.0 (DRAFT/IN PROGRESS)
 
 This document has the following sections:
 
@@ -14,29 +12,57 @@ This document has the following sections:
 
 == Notable Changes (since 1.5.2)
 
-Numerous critical bugs were fixed; some of these led to seg faults, crashes, and
-memory leaks.  See bugs #1523, #1713, #1702, #1657, #1347, #1518, #1526, #1541, #1638, #1543, #1657, #1658
+A new compile time setting, `NNG_MAX_POLLER_THREADS` is introduced,
+with a default value of 8.  Will limit the number number of threads
+used for pollers that are multi-threaded (currently only Windows).
+Additionally for single core systems only two threads will be started
+instead of four.
 
-Significant performance optimizations have been made, especially to the BUS protocol, the
-`nng_sendmsg()` and `nng_recvmsg()` functions, when connecting and disconnecting lots of pipes,
-and when using very different expiration times with vast numbers of requests.
+A new supplemental API, nng_id_map(3), is made available.
+This exposes the
+internal ID hash API NNG uses mapping integer IDs (like socket IDs)
+to data structures.  It also brings back support for 64-bit IDs.
+See bug #1740.
 
-New APIs were added for `nng_aio_busy()`, `nng_ctx_sendmsg()`, `nng_ctx_recvmsg()`, `nng_device_aio()`.
+Setting the `NNG_OPT_RECVMAXSZ` setting no longer affects pipes
+that are already established.  The old behavior was undocumented
+and racy.  Please set this setting before starting any listeners
+or dialers.
 
-A CMake tunable for limiting the number of threads use for request expiration is provided
-via the `NNG_MAX_EXPIRE_THREADS` option.
+A new transport (experimental), for `socket://` is available.
+This allows one to create a connection using sockets created
+with `socketpair()` (or the new `nng_socket_pair()` supplemental API),
+which can help use cases where file descriptors are passed between
+processes or inherited via `fork()`.  This API is only available on
+Linux.  It does have somewhat different semantics for establishing
+the connection, so please see the manual page for `nng_socket(5)` for more information.
 
-Additionally various fixes for compilation problems, documentation errata, test case, and so forth
-have been applied.
+WebSocket close is fixed to conform to RFC 6455, sending the
+close frame, and waiting to receive the close frame from the
+peer.  This allows websocket based connections to ensure that
+data messages are fully delivered before shutting down.
+See bugs #1733, #1734 and #1735.
+Thanks @alawn-wang for the inspiration and a first
+draft of the change.
+
+The REQ and SURVEYOR protocols were fixed to improve scalability
+when many clients or many contexts are used.  As part of this change,
+a new option, `NNG_OPT_REQ_RESENDTICK` is available to adjust how
+often we check for expired requests.
+
+Various minor documentation fixes were made, some contributed by
+Patrik Wenger <patrik.wenger@mindclue.ch>.
+
 
 == End of Feature Announcements
 
 === Windows Legacy Support
 
+As announced in 1.6.0,
 NNG no longer officially claims support for Windows Vista, Windows 7, Windows 8, or Windows 8.1.
 We have no ability to build or test these versions, and Microsoft no longer supports them.
 Continued use of these systems may be possible, but future changes may break
-compatibity with these systems wihout further notice.
+compatibility with these systems without further notice.
 
 === Windows Named Pipe Support Changes
 
@@ -47,6 +73,7 @@ Should this occur, it will be breaking for Windows versions older than Windows 1
 
 === macOS Legacy Support
 
+As announced in 1.6.0,
 NNG no longer officially supports macOS versions older than 10.12.
 Future versions of NNG may depend on features not available on versions of macOS older than 10.12.
 
