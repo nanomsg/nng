@@ -1,6 +1,6 @@
 = nng_aio_stop(3)
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -30,8 +30,7 @@ for it to complete or to be completely aborted, and for the
 callback associated with the _aio_ to have completed executing.
 
 Further calls to
-xref:nng_aio_schedule.3.adoc[`nng_aio_schedule()`] using this _aio_ will fail with
-`NNG_ECLOSED`.
+xref:nng_aio_begin.3.adoc[`nng_aio_begin()`] using this _aio_ will return false.
 
 It is safe to call this for an _aio_, even when no operation is currently
 pending for it.
@@ -55,7 +54,7 @@ None.
 xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
 xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
 xref:nng_aio_free.3.adoc[nng_aio_free(3)],
-xref:nng_aio_schedule.3.adoc[nng_aio_schedule(3)],
+xref:nng_aio_begin.3.adoc[nng_aio_begin(3)],
 xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
 xref:nng_aio.5.adoc[nng_aio(5)],
 xref:nng.7.adoc[nng(7)]
