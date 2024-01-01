@@ -15,7 +15,7 @@
 #include "core/nng_impl.h"
 
 // nni_init is called each time the user enters the library.  It ensures that
-// the library is initlialized properly, and also deals with checks such as
+// the library is initialized properly, and also deals with checks such as
 // whether the process has forked since last initialization.
 int nni_init(void);
 
