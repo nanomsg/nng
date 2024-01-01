@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -78,6 +78,7 @@ nng_test(aio_test)
 nng_test(buf_size_test)
 nng_test(errors_test)
 nng_test(id_test)
+nng_test(init_test)
 nng_test(list_test)
 nng_test(message_test)
 nng_test(reconnect_test)

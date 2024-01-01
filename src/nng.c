@@ -2011,3 +2011,9 @@ nng_version(void)
 	return (xstr(NNG_MAJOR_VERSION) "." xstr(NNG_MINOR_VERSION) "." xstr(
 	    NNG_PATCH_VERSION) NNG_RELEASE_SUFFIX);
 }
+
+void
+nng_init_set_parameter(nng_init_parameter p, uint64_t value)
+{
+	nni_init_set_param(p, value);
+}

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -89,26 +89,34 @@ nni_win_io_sysinit(void)
 	HANDLE h;
 	int    i;
 	int    rv;
-	int    nthr = nni_plat_ncpu() * 2;
+	int    num_thr;
+	int    max_thr;
 
-	// Limits on the thread count.  This is fairly arbitrary.
-	if (nthr < 2) {
-		nthr = 2;
-	}
 #ifndef NNG_MAX_POLLER_THREADS
 #define NNG_MAX_POLLER_THREADS 8
 #endif
-#if NNG_MAX_POLLER_THREADS > 0
-	if (nthr > NNG_MAX_POLLER_THREADS) {
-		nthr = NNG_MAX_POLLER_THREADS;
-	}
+#ifndef NNG_NUM_POLLER_THREADS
+#define NNG_NUM_POLLER_THREADS (nni_plat_ncpu())
 #endif
-	if ((win_io_thrs = NNI_ALLOC_STRUCTS(win_io_thrs, nthr)) == NULL) {
+	max_thr = (int) nni_init_get_param(
+	    NNG_INIT_MAX_POLLER_THREADS, NNG_MAX_POLLER_THREADS);
+
+	num_thr = (int) nni_init_get_param(
+	    NNG_INIT_NUM_POLLER_THREADS, NNG_NUM_POLLER_THREADS);
+
+	if ((max_thr > 0) && (num_thr > max_thr)) {
+		num_thr = max_thr;
+	}
+	if (num_thr < 1) {
+		num_thr = 1;
+	}
+	nni_init_set_effective(NNG_INIT_NUM_POLLER_THREADS, num_thr);
+	if ((win_io_thrs = NNI_ALLOC_STRUCTS(win_io_thrs, num_thr)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	win_io_nthr = nthr;
+	win_io_nthr = num_thr;
 
-	h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, nthr);
+	h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, num_thr);
 	if (h == NULL) {
 		return (nni_win_error(GetLastError()));
 	}
@@ -145,7 +153,7 @@ nni_win_io_sysfini(void)
 		nni_thr_fini(&win_io_thrs[i]);
 	}
 
-        NNI_FREE_STRUCTS(win_io_thrs, win_io_nthr);
+	NNI_FREE_STRUCTS(win_io_thrs, win_io_nthr);
 }
 
 #endif // NNG_PLATFORM_WINDOWS

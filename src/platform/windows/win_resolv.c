@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -22,23 +22,20 @@
 // host file, WINS, or other naming services.  As a result, we just build
 // our own limited asynchronous resolver with threads.
 
-#ifndef NNG_RESOLV_CONCURRENCY
-#define NNG_RESOLV_CONCURRENCY 4
-#endif
-
-static nni_mtx  resolv_mtx = NNI_MTX_INITIALIZER;
-static nni_cv   resolv_cv = NNI_CV_INITIALIZER(&resolv_mtx);
+static nni_mtx  resolv_mtx  = NNI_MTX_INITIALIZER;
+static nni_cv   resolv_cv   = NNI_CV_INITIALIZER(&resolv_mtx);
 static bool     resolv_fini = false;
 static nni_list resolv_aios;
-static nni_thr  resolv_thrs[NNG_RESOLV_CONCURRENCY];
+static nni_thr *resolv_thrs;
+static int      resolv_num_thr;
 
 typedef struct resolv_item resolv_item;
 struct resolv_item {
 	int           family;
 	bool          passive;
-	char *        host;
-	char *        serv;
-	nni_aio *     aio;
+	char         *host;
+	char         *serv;
+	nni_aio      *aio;
 	nng_sockaddr *sa;
 };
 
@@ -159,9 +156,9 @@ resolv_task(resolv_item *item)
 
 	nni_mtx_lock(&resolv_mtx);
 	if ((probe != NULL) && (item->aio != NULL)) {
-		struct sockaddr_in * sin;
+		struct sockaddr_in  *sin;
 		struct sockaddr_in6 *sin6;
-		nni_sockaddr *       sa;
+		nni_sockaddr        *sa;
 
 		sa = item->sa;
 
@@ -270,7 +267,7 @@ resolv_worker(void *notused)
 
 	nni_mtx_lock(&resolv_mtx);
 	for (;;) {
-		nni_aio *    aio;
+		nni_aio     *aio;
 		resolv_item *item;
 		int          rv;
 
@@ -311,9 +308,9 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 	int              rv;
 	bool             v6      = false;
 	bool             wrapped = false;
-	char *           port;
-	char *           host;
-	char *           buf;
+	char            *port;
+	char            *host;
+	char            *buf;
 	size_t           buf_len;
 
 	if (addr == NULL) {
@@ -411,7 +408,23 @@ nni_win_resolv_sysinit(void)
 	nni_aio_list_init(&resolv_aios);
 	resolv_fini = false;
 
-	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
+#ifndef NNG_RESOLV_CONCURRENCY
+#define NNG_RESOLV_CONCURRENCY 4
+#endif
+
+	resolv_num_thr = (int) nni_init_get_param(
+	    NNG_INIT_NUM_RESOLVER_THREADS, NNG_RESOLV_CONCURRENCY);
+	if (resolv_num_thr < 1) {
+		resolv_num_thr = 1;
+	}
+	// no limit on the maximum for now
+	nni_init_set_effective(NNG_INIT_NUM_RESOLVER_THREADS, resolv_num_thr);
+	resolv_thrs = NNI_ALLOC_STRUCTS(resolv_thrs, resolv_num_thr);
+	if (resolv_thrs == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	for (int i = 0; i < resolv_num_thr; i++) {
 		int rv = nni_thr_init(&resolv_thrs[i], resolv_worker, NULL);
 		if (rv != 0) {
 			nni_win_resolv_sysfini();
@@ -419,7 +432,7 @@ nni_win_resolv_sysinit(void)
 		}
 		nni_thr_set_name(&resolv_thrs[i], "nng:resolver");
 	}
-	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
+	for (int i = 0; i < resolv_num_thr; i++) {
 		nni_thr_run(&resolv_thrs[i]);
 	}
 	return (0);
@@ -432,9 +445,10 @@ nni_win_resolv_sysfini(void)
 	resolv_fini = true;
 	nni_cv_wake(&resolv_cv);
 	nni_mtx_unlock(&resolv_mtx);
-	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
+	for (int i = 0; i < resolv_num_thr; i++) {
 		nni_thr_fini(&resolv_thrs[i]);
 	}
+	NNI_FREE_STRUCTS(resolv_thrs, resolv_num_thr);
 }
 
 #endif // NNG_PLATFORM_WINDOWS
