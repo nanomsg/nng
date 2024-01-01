@@ -1,6 +1,6 @@
 = nng_options(5)
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -51,21 +51,21 @@ This page documents the various standard options that can be set or
 retrieved on objects.
 
 Sockets (xref:nng_socket.5.adoc[`nng_socket`] objects) use the functions
-xref:nng_getopt.3.adoc[`nng_getopt()`]
-and xref:nng_setopt.3.adoc[`nng_setopt()`] to set and retrieve option values.
+xref:nng_socket_get.3.adoc[`nng_socket_get()`]
+and xref:nng_socket_set.3.adoc[`nng_socket_set()`] to set and retrieve option values.
 
 Dialers (xref:nng_dialer.5.adoc[`nng_dialer`] objects) use the functions
-xref:nng_dialer_getopt.3.adoc[`nng_dialer_getopt()`] and
-xref:nng_dialer_setopt.3.adoc[`nng_dialer_setopt()`] to set and retrieve option
+xref:nng_dialer_get.3.adoc[`nng_dialer_get()`] and
+xref:nng_dialer_set.3.adoc[`nng_dialer_set()`] to set and retrieve option
 values.
 
 Listeners (xref:nng_listener.5.adoc[`nng_listener`] objects) use the functions
-xref:nng_listener_getopt.3.adoc[`nng_listener_getopt()`]
-and xref:nng_listener_setopt.3.adoc[`nng_listener_setopt()`] to set and
+xref:nng_listener_get.3.adoc[`nng_listener_get()`]
+and xref:nng_listener_set.3.adoc[`nng_listener_set()`] to set and
 retrieve option values.
 
 Pipes (xref:nng_pipe.5.adoc[`nng_pipe`] objects) can only retrieve option values using
-the xref:nng_pipe_getopt.3.adoc[`nng_pipe_getopt()`] function.
+the xref:nng_pipe_get.3.adoc[`nng_pipe_get()`] function.
 
 Other object types may have additional methods to access these options.
 
