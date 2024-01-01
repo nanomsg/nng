@@ -88,8 +88,8 @@ This function is for options which take an integer (`int`).
 This function is used to retrieve time
 xref:nng_duration.5.adoc[durations]
 (such as timeouts), stored as a number of milliseconds.
-(The special value ((`NNG_DUR_INFINITE`)) means an infinite amount of time, and
-the special value ((`NNG_DUR_DEFAULT`)) means a context-specific default.)
+(The special value ((`NNG_DURATION_INFINITE`)) means an infinite amount of time, and
+the special value ((`NNG_DURATION_DEFAULT`)) means a context-specific default.)
 
 `nng_stream_dialer_get_ptr()`::
 This function is used to retrieve a pointer to structured data.

@@ -93,8 +93,8 @@ The value will be stored at _ivalp_.
 `nng_socket_get_ms()`::
 This function is used to retrieve time xref:nng_duration.5.adoc[durations]
 (such as timeouts), stored in _durp_ as a number of milliseconds.
-(The special value ((`NNG_DUR_INFINITE`)) means an infinite amount of time, and
-the special value ((`NNG_DUR_DEFAULT`)) means a context-specific default.)
+(The special value ((`NNG_DURATION_INFINITE`)) means an infinite amount of time, and
+the special value ((`NNG_DURATION_DEFAULT`)) means a context-specific default.)
 
 `nng_socket_get_ptr()`::
 This function is used to retrieve a pointer, _ptr_, to structured data.
