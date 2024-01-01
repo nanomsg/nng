@@ -26,7 +26,7 @@ void nng_aio_stop(nng_aio *aio);
 
 The `nng_aio_stop()` function stops the asynchronous I/O operation
 associated with _aio_ by aborting with `NNG_ECANCELED`, and then waits
-for it to complete or to be completely aborted, and for the any
+for it to complete or to be completely aborted, and for the
 callback associated with the _aio_ to have completed executing.
 
 Further calls to
@@ -38,7 +38,7 @@ pending for it.
 
 TIP: When multiple asynchronous I/O handles are in use and need to be
 shut down, it is safest to stop all of them, before deallocating any of
-this with xref:nng_aio_free.3.adoc[`nng_aio_free()`], particularly if the callbacks
+them with xref:nng_aio_free.3.adoc[`nng_aio_free()`], particularly if the callbacks
 might attempt to reschedule additional operations.
 
 == RETURN VALUES
