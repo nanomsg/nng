@@ -13,8 +13,9 @@
 #define CORE_OPTIONS_H
 
 // Integer limits.
-#define NNI_MAXINT ((int) 2147483647)
-#define NNI_MININT ((int) -2147483648)
+#define NNI_MAXINT (2147483647)
+// the -1 trick works around a compiler warning on some compilers (MSVC)
+#define NNI_MININT (-2147483647 - 1)
 
 // We limit the maximum size to 4GB.  That's intentional because some of the
 // underlying protocols cannot cope with anything bigger than 32-bits.
