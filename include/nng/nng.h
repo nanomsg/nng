@@ -60,7 +60,7 @@ extern "C" {
 #define NNG_MINOR_VERSION 7
 #define NNG_PATCH_VERSION 0
 #define NNG_RELEASE_SUFFIX \
-	"pre" // if non-empty (i.e. "pre"), this is a pre-release
+	"" // if non-empty (i.e. "pre"), this is a pre-release
 
 // Maximum length of a socket address. This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
@@ -1414,7 +1414,7 @@ NNG_DECL void nng_closeall(void) NNG_DEPRECATED;
 // This API is intentionally undocumented.
 //
 // Parameter settings are lost after nng_fini() is called.
-typedef int nng_init_parameter;
+typedef int   nng_init_parameter;
 NNG_DECL void nng_init_set_parameter(nng_init_parameter, uint64_t);
 
 // The following list of parameters is not part of our API stability promise.
@@ -1425,7 +1425,8 @@ NNG_DECL void nng_init_set_parameter(nng_init_parameter, uint64_t);
 // on a best effort basis only.
 //
 // NOTE: When removing a value, please leave the enumeration in place and add
-// a suffix _RETIRED ... this will preserve the binary values for binary compatibility.
+// a suffix _RETIRED ... this will preserve the binary values for binary
+// compatibility.
 enum {
 	NNG_INIT_PARAMETER_NONE = 0, // ensure values start at 1.
 
@@ -1434,29 +1435,34 @@ enum {
 	// At least 2 threads will be created in any case.
 	NNG_INIT_NUM_TASK_THREADS,
 
-	// Fix the number of threads used for expiration.  Default is one thread per
-	// core, capped to NNG_INIT_MAX_EXPIRE_THREADS.  At least one thread will be created.
+	// Fix the number of threads used for expiration.  Default is one
+	// thread per core, capped to NNG_INIT_MAX_EXPIRE_THREADS.  At least
+	// one thread will be created.
 	NNG_INIT_NUM_EXPIRE_THREADS,
 
 	// Fix the number of poller threads (used for I/O).  Support varies
 	// by platform (many platforms only support a single poller thread.)
 	NNG_INIT_NUM_POLLER_THREADS,
 
-	// Fix the number of threads used for DNS resolution.  At least one will be used.
-	// Default is controlled by NNG_RESOLV_CONCURRENCY compile time variable.
+	// Fix the number of threads used for DNS resolution.  At least one
+	// will be used. Default is controlled by NNG_RESOLV_CONCURRENCY
+	// compile time variable.
 	NNG_INIT_NUM_RESOLVER_THREADS,
 
 	// Limit the number of threads of created for tasks.
-	// NNG will always create at least 2 of these in order to prevent deadlocks.
-	// Zero means no limit.  Default is determined by NNG_MAX_TASKQ_THREADS compile time variable.
+	// NNG will always create at least 2 of these in order to prevent
+	// deadlocks. Zero means no limit.  Default is determined by
+	// NNG_MAX_TASKQ_THREADS compile time variable.
 	NNG_INIT_MAX_TASK_THREADS,
 
-	// Limit the number of threads created for expiration.  Zero means no limit.
-	// Default is determined by the NNG_MAX_EXPIRE_THREADS compile time variable.
+	// Limit the number of threads created for expiration.  Zero means no
+	// limit. Default is determined by the NNG_MAX_EXPIRE_THREADS compile
+	// time variable.
 	NNG_INIT_MAX_EXPIRE_THREADS,
 
 	// Limit the number of poller/IO threads created.  Zero means no limit.
-	// Default is determined by NNG_MAX_POLLER_THREADS compile time variable.
+	// Default is determined by NNG_MAX_POLLER_THREADS compile time
+	// variable.
 	NNG_INIT_MAX_POLLER_THREADS,
 };
 
