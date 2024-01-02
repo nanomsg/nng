@@ -1,0 +1,66 @@
+---
+version: v1.7.0
+layout: manpage_v2
+title: nng_stream_listener(5)
+---
+<h1>nng_stream_listener(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_stream_listener - byte stream listener</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stream_listener</span> <span class="tok-n">nng_stream_listener</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <code>nng_stream_listener</code> is a handle to a byte stream listener,
+which is responsible for accepting incoming connections and creating
+corresponding
+<a href="nng_stream.5.html"><code>nng_stream</code></a> from them.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>nng_stream_listener</code> object is a low-level object for
+raw byte stream connections,
+and should not be confused with a high-level
+<a href="nng_listener.5.html"><code>nng_listener</code></a> object.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_stream_listener_accept.3str.html">nng_stream_listener_accept(3str)</a>,
+<a href="nng_stream_listener_alloc.3str.html">nng_stream_listener_alloc(3str)</a>,
+<a href="nng_stream_listener_close.3str.html">nng_stream_listener_close(3str)</a>,
+<a href="nng_stream_listener_free.3str.html">nng_stream_listener_free(3str)</a>,
+<a href="nng_stream_listener_listen.3str.html">nng_stream_listener_listen(3str)</a>,
+<a href="nng_stream.5.html">nng_stream(5)</a>,
+<a href="nng_stream_dialer.5.html">nng_stream_dialer(5)</a></p>
+</div>
+</div>
+</div>
