@@ -30,13 +30,12 @@ title: nng_aio_stop(3)
 <div class="paragraph">
 <p>The <code>nng_aio_stop()</code> function stops the asynchronous I/O operation
 associated with <em>aio</em> by aborting with <code>NNG_ECANCELED</code>, and then waits
-for it to complete or to be completely aborted, and for the any
+for it to complete or to be completely aborted, and for the
 callback associated with the <em>aio</em> to have completed executing.</p>
 </div>
 <div class="paragraph">
 <p>Further calls to
-<a href="nng_aio_schedule.3.html"><code>nng_aio_schedule()</code></a> using this <em>aio</em> will fail with
-<code>NNG_ECLOSED</code>.</p>
+<a href="nng_aio_begin.3.html"><code>nng_aio_begin()</code></a> using this <em>aio</em> will return false.</p>
 </div>
 <div class="paragraph">
 <p>It is safe to call this for an <em>aio</em>, even when no operation is currently
@@ -51,7 +50,7 @@ pending for it.</p>
 <td class="content">
 When multiple asynchronous I/O handles are in use and need to be
 shut down, it is safest to stop all of them, before deallocating any of
-this with <a href="nng_aio_free.3.html"><code>nng_aio_free()</code></a>, particularly if the callbacks
+them with <a href="nng_aio_free.3.html"><code>nng_aio_free()</code></a>, particularly if the callbacks
 might attempt to reschedule additional operations.
 </td>
 </tr>
@@ -82,7 +81,7 @@ might attempt to reschedule additional operations.
 <p><a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
 <a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a>,
 <a href="nng_aio_free.3.html">nng_aio_free(3)</a>,
-<a href="nng_aio_schedule.3.html">nng_aio_schedule(3)</a>,
+<a href="nng_aio_begin.3.html">nng_aio_begin(3)</a>,
 <a href="nng_aio_wait.3.html">nng_aio_wait(3)</a>,
 <a href="nng_aio.5.html">nng_aio(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
