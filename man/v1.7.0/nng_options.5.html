@@ -1,0 +1,644 @@
+---
+version: v1.7.0
+layout: manpage_v2
+title: nng_options(5)
+---
+<h1>nng_options(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_options - socket, dialer, listener, and pipe options</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-cp">#define NNG_OPT_SOCKNAME      &#34;socket-name&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RAW           &#34;raw&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PROTO         &#34;protocol&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PROTONAME     &#34;protocol-name&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER          &#34;peer&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEERNAME      &#34;peer-name&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RECVBUF       &#34;recv-buffer&#34;</span>
+<span class="tok-cp">#define NNG_OPT_SENDBUF       &#34;send-buffer&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RECVFD        &#34;recv-fd&#34;</span>
+<span class="tok-cp">#define NNG_OPT_SENDFD        &#34;send-fd&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RECVTIMEO     &#34;recv-timeout&#34;</span>
+<span class="tok-cp">#define NNG_OPT_SENDTIMEO     &#34;send-timeout&#34;</span>
+<span class="tok-cp">#define NNG_OPT_LOCADDR       &#34;local-address&#34;</span>
+<span class="tok-cp">#define NNG_OPT_REMADDR       &#34;remote-address&#34;</span>
+<span class="tok-cp">#define NNG_OPT_URL           &#34;url&#34;</span>
+<span class="tok-cp">#define NNG_OPT_MAXTTL        &#34;ttl-max&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RECVMAXSZ     &#34;recv-size-max&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RECONNMINT    &#34;reconnect-time-min&#34;</span>
+<span class="tok-cp">#define NNG_OPT_RECONNMAXT    &#34;reconnect-time-max&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_GID      &#34;ipc:peer-gid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_PID      &#34;ipc:peer-pid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_UID      &#34;ipc:peer-uid&#34;</span>
+<span class="tok-cp">#define NNG_OPT_PEER_ZONEID   &#34;ipc:peer-zoneid&#34;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This page documents the various standard options that can be set or
+retrieved on objects.</p>
+</div>
+<div class="paragraph">
+<p>Sockets (<a href="nng_socket.5.html"><code>nng_socket</code></a> objects) use the functions
+<a href="nng_socket_get.3.html"><code>nng_socket_get()</code></a>
+and <a href="nng_socket_set.3.html"><code>nng_socket_set()</code></a> to set and retrieve option values.</p>
+</div>
+<div class="paragraph">
+<p>Dialers (<a href="nng_dialer.5.html"><code>nng_dialer</code></a> objects) use the functions
+<a href="nng_dialer_get.3.html"><code>nng_dialer_get()</code></a> and
+<a href="nng_dialer_set.3.html"><code>nng_dialer_set()</code></a> to set and retrieve option
+values.</p>
+</div>
+<div class="paragraph">
+<p>Listeners (<a href="nng_listener.5.html"><code>nng_listener</code></a> objects) use the functions
+<a href="nng_listener_get.3.html"><code>nng_listener_get()</code></a>
+and <a href="nng_listener_set.3.html"><code>nng_listener_set()</code></a> to set and
+retrieve option values.</p>
+</div>
+<div class="paragraph">
+<p>Pipes (<a href="nng_pipe.5.html"><code>nng_pipe</code></a> objects) can only retrieve option values using
+the <a href="nng_pipe_get.3.html"><code>nng_pipe_get()</code></a> function.</p>
+</div>
+<div class="paragraph">
+<p>Other object types may have additional methods to access these options.</p>
+</div>
+<div class="paragraph">
+<p>In addition to the options listed here, transports and protocols will generally
+have some of their own options, which will be documented with the transport
+or protocol.</p>
+</div>
+<div class="sect2">
+<h3 id="_generic_options">Generic Options</h3>
+<div class="paragraph">
+<p>In the following list of options, the name of the option is supplied,
+along with the data type of the underlying value.</p>
+</div>
+<div class="paragraph">
+<p>Some options are only meaningful or supported in certain contexts; for
+example there is no single meaningful address for a socket, since sockets
+can have multiple dialers and endpoints associated with them.
+An attempt has been made to include details about such restrictions in the
+description of the option.</p>
+</div>
+<div id="NNG_OPT_LOCADDR" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_LOCADDR</code></dt>
+<dd>
+<p>(<a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>)
+This read-only option may be used on listeners, dialers and connected pipes, and
+represents the local address used for communication.
+NOTE: Not all transports support this option, and some transports may support it on
+listeners but not dialers.</p>
+<div class="paragraph">
+<p>When used on a TCP dialer, this option is used to configure the source IP
+address that will be used when initiating outgoing connections.
+The specific port number will be ignored, however, and the system will
+choose a random ephemeral port instead.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RAW" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RAW</code></dt>
+<dd>
+<p>
+
+(<code>bool</code>)
+This read-only option indicates whether the socket is in raw mode.
+If <code>true</code>, the socket is in raw mode, and if <code>false</code> the socket is
+in normal mode.</p>
+<div class="paragraph">
+<p>Raw mode sockets generally do not have any protocol-specific semantics applied
+to them; instead the application is expected to perform such semantics itself.
+(For example, in normal mode a <a href="nng_rep.7.html"><em>rep</em></a> socket would
+automatically copy message headers from a received message to the corresponding
+reply, whereas in raw mode this is not done.)
+See <a href="nng.7.html">Raw Mode</a> for more details.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RECONNMINT" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RECONNMINT</code></dt>
+<dd>
+<p>
+(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
+This is the minimum amount of time (milliseconds) to wait before attempting
+to establish a connection after a previous attempt has failed.
+This can be set on a socket, but it can also be overridden on an individual
+dialer.
+The option is irrelevant for listeners.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RECONNMAXT" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RECONNMAXT</code></dt>
+<dd>
+<p>(<code>NNG_OPT_RECONNMAXT</code>)
+
+(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
+This is the maximum amount of time
+(milliseconds) to wait before attempting to establish a connection after
+a previous attempt has failed.
+If this is non-zero, then the time between successive connection attempts
+will start at the value of <code>NNG_OPT_RECONNMINT</code>,
+and grow exponentially, until it reaches this value.
+If this value is zero, then no exponential
+back-off between connection attempts is done, and each attempt will wait
+the time specified by <code>NNG_OPT_RECONNMINT</code>.
+This can be set on a socket, but it can also be overridden on an individual
+dialer.
+The option is irrelevant for listeners.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RECVBUF" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RECVBUF</code></dt>
+<dd>
+<p>
+
+(<code>int</code>)
+This is the depth of the socket&#8217;s receive buffer as a number of messages.
+Messages received by a transport may be buffered until the application
+has accepted them for delivery.
+This value must be an integer between 0 and 8192, inclusive.
+NOTE: Not all protocols support buffering received messages.
+For example <a href="nng_req.7.html"><em>req</em></a> can only deal with a single reply at a time.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RECVFD" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RECVFD</code></dt>
+<dd>
+<p>
+
+
+(<code>int</code>)
+This read-only option is used to obtain an integer file descriptor suitable
+for use with
+<a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/poll.html"><code>poll()</code></a>,
+<a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/select.html"><code>select()</code></a>,
+(or on Windows systems
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms741669(v=vs.85).aspx"><code>WSAPoll()</code></a>)
+and similar functions.
+This descriptor will be <strong>readable</strong> when a message is available for receiving
+on the socket.
+When no message is ready for receiving, then this file descriptor will <strong>not</strong>
+be readable.</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Applications should never attempt to read or write to the
+returned file descriptor.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This option is incompatible with
+<a href="nng_ctx.5.html"><code>nng_ctx</code></a> contexts and should not be used on a socket
+where they are in use.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+While this option may help applications integrate into existing polling
+loops, it is more efficient, and often easier, to use the asynchronous I/O
+objects instead.
+See <a href="nng_aio_alloc.3.html"><code>nng_aio_alloc()</code></a>.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RECVMAXSZ" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RECVMAXSZ</code></dt>
+<dd>
+<p>
+(<code>size_t</code>)
+This is the maximum message size that the will be accepted from a remote peer.
+If a peer attempts to send a message larger than this, then the message
+will be discarded.
+If the value of this is zero, then no limit on message sizes is enforced.
+This option exists to prevent certain kinds of denial-of-service attacks,
+where a malicious agent can claim to want to send an extraordinarily
+large message, without sending any data.
+This option can be set for the socket, but may be overridden for on a
+per-dialer or per-listener basis.</p>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Applications on hostile networks should set this to a non-zero
+value to prevent denial-of-service attacks.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This option should be set before any listeners or dialers are added.
+Ideally this option should be set on specific dialers or listeners; setting it
+on the socket globally is deprecated behavior, and might not work in a future release,
+or might only work for endpoints that have not yet been created.
+(Maximum receive sizes might be negotiated during connection establishment for
+future transports, which means that the option needs to be set before any connections
+are established.)
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Some transports may have further message size restrictions.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_RECVTIMEO" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_RECVTIMEO</code></dt>
+<dd>
+<p>
+
+(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
+This is the socket receive timeout in milliseconds.
+When no message is available for receiving at the socket for this period of
+time, receive operations will fail with a return value of <code>NNG_ETIMEDOUT</code>.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_REMADDR" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_REMADDR</code></dt>
+<dd>
+<p>(<a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>)
+This read-only option may be used on dialers and connected pipes, and
+represents the address of a remote peer.
+Not all transports support this option.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_SENDBUF" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_SENDBUF</code></dt>
+<dd>
+<p>
+
+(<code>int</code>)
+This is the depth of the socket send buffer as a number of messages.
+Messages sent by an application may be buffered by the socket until a
+transport is ready to accept them for delivery.
+This value must be an integer between 0 and 8192, inclusive.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Not all protocols support buffering sent messages.
+For example, <a href="nng_req.7.html"><em>req</em></a> can only have a single request
+outstanding at a time (per context).
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_SENDFD" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_SENDFD</code></dt>
+<dd>
+<p>
+
+
+(<code>int</code>)
+This read-only option is used to obtain an integer file descriptor suitable
+for use with
+<a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/poll.html"><code>poll()</code></a>,
+<a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/select.html"><code>select()</code></a>,
+(or on Windows systems
+<a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms741669(v=vs.85).aspx"><code>WSAPoll()</code></a>)
+and similar functions.</p>
+<div class="paragraph">
+<p>This descriptor will be <strong>readable</strong> when the socket is able to accept a
+message for sending without blocking.
+When the socket is no longer able to accept such messages without blocking,
+the descriptor will <strong>not</strong> be readable.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Applications should never attempt to read or write to the
+returned file descriptor; use should be limited to polling system calls only.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This option is incompatible with
+<a href="nng_ctx.5.html"><code>nng_ctx</code></a> contexts and should not be used on a socket
+where they are in use.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+While this option may help applications integrate into existing polling
+loops, it is more efficient, and often easier, to use the asynchronous I/O
+objects instead.
+See <a href="nng_aio_alloc.3.html"><code>nng_aio_alloc()</code></a>.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_SENDTIMEO" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_SENDTIMEO</code></dt>
+<dd>
+<p>
+
+(<a href="nng_duration.5.html"><code>nng_duration</code></a>)
+This is the socket send timeout in milliseconds.
+When a message cannot be queued for delivery by the socket for this period of
+time (such as if send buffers are full), the operation will fail with a
+return value of <code>NNG_ETIMEDOUT</code>.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_SOCKNAME" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_SOCKNAME</code></dt>
+<dd>
+<p>
+(string)
+This the socket name.
+By default, this is a string corresponding to the value of the socket.
+The string must fit within 64-bytes, including the terminating
+<code>NUL</code> byte.
+The value is intended for application use, and is not used for anything
+in the library itself.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_MAXTTL" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_MAXTTL</code></dt>
+<dd>
+<p>(<code>int</code>)
+(time-to-live)
+This is the maximum number of times a message may traverse across
+a <a href="nng_device.3.html"><code>nng_device()</code></a> forwarders.
+The intention here is to prevent forwarding loops in device chains.
+When this is supported, it can have a value between 1 and 255, inclusive.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Not all protocols support this option.
+Those that do generally have a default value of 8.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Each node along a forwarding path may have its own value for the
+maximum time-to-live, and performs its own checks before forwarding a message.
+Therefore it is helpful if all nodes in the topology use the same value for
+this option.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_URL" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_URL</code></dt>
+<dd>
+<p>
+
+(string)
+This read-only option is used to obtain the URL with which a listener
+or dialer was configured.
+Accordingly it can only be used with dialers, listeners, and pipes.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Some transports will canonify URLs before returning them to the
+application.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PROTO" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PROTO</code></dt>
+<dd>
+<p>(<code>int</code>)
+This read-only option is used to obtain the 16-bit number for the socket&#8217;s protocol.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER</code></dt>
+<dd>
+<p>(<code>int</code>)
+This read-only option is used to obtain the 16-bit number of the
+peer protocol for the socket.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_GID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_GID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s primary group id, when known.
+This is the effective group id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
+This option is generally only available on POSIX systems, only on certain transports.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_PID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_PID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides the process id of the connected peer, when known.
+This option is only available on certain platforms and transports.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applications should not assume that the process ID does not change,
+as it may be possible for a process to pass a file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_UID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_UID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s user id.
+This is the effective user id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and cannot be forged.
+This option is generally only available on POSIX systems, on certain transports.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER_ZONEID" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER_ZONEID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option provides a connected peer&#8217;s the zone id.
+Zones (and this option) are only supported on Solaris and illumos systems, on select transports.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEERNAME" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEERNAME</code></dt>
+<dd>
+<p>(string)
+This read-only option is used to obtain the name of the peer protocol for the socket.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PROTONAME" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PROTONAME</code></dt>
+<dd>
+<p>(string)
+This read-only option is used to obtain the name of the socket&#8217;s protocol.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_dialer_get.3.html">nng_dialer_get(3)</a>,
+<a href="nng_dialer_set.3.html">nng_dialer_set(3)</a>,
+<a href="nng_listener_get.3.html">nng_listener_get(3)</a>,
+<a href="nng_listener_set.3.html">nng_listener_set(3)</a>,
+<a href="nng_pipe_get.3.html">nng_pipe_get(3)</a>,
+<a href="nng_socket_get.3.html">nng_socket_get(3)</a>,
+<a href="nng_socket_set.3.html">nng_socket_set(3)</a>,
+<a href="nng_ipc_options.5.html">nng_ipc_options(5)</a>,
+<a href="nng_tcp_options.5.html">nng_tcp_options(5)</a>,
+<a href="nng_tls_options.5.html">nng_tls_options(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
