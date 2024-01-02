@@ -10,7 +10,7 @@ This document has the following sections:
 * Notable Changes
 * End of Feature Announcements
 
-== Notable Changes
+== Notable Changes (since 1.6.0)
 
 A new compile time setting, `NNG_MAX_POLLER_THREADS` is introduced,
 with a default value of 8, and will limit the number of threads
@@ -50,15 +50,26 @@ when many clients or many contexts are used.  As part of this change,
 a new option, `NNG_OPT_REQ_RESENDTICK` is available to adjust how
 often we check for expired requests.
 
-Various minor documentation fixes were made, some contributed by
-Patrik Wenger <patrik.wenger@mindclue.ch>.
-
 A new ability to override compile-time settings for thread counts
 is available.  This facility is considered experimental, and is not
 documented in manual pages -- and is subject to change without notice.
 Please see nng_init_set_parameter() in the nng.h header file.  The
 values that can be tuned are listed there along with comments
 describing their use.  See bug #1572.
+
+As part of the fixes for #1572, tunable values for setting fixed
+values (rather upper limits) for thread counts are now exposed properly
+via CMake variables. These are `NNG_NUM_EXPIRE_THREADS` and `NNG_NUM_TASKQ_THREADS`.
+
+A new API, `nng_aio_set_expire()` is introduced as a complement to
+`nng_aio_set_timeout()`.  This provides absolute expiration times,
+which may be easier in circumstances involving multiple actions such
+as common state-machine based idioms.
+
+A bug which caused TLS connections to spin on accept, causing high
+CPU usage, is fixed.  (See bug #1673)
+Various minor documentation fixes were made, some contributed by
+Patrik Wenger <patrik.wenger@mindclue.ch>.
 
 == End of Feature Announcements
 
