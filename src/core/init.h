@@ -25,7 +25,7 @@ void nni_fini(void);
 // nni_init_param is used by applications (via nng_init_param) to configure
 // some tunable settings at runtime.  It must be called before any other NNG
 // functions are called, in order to have any effect at all.
-void nni_init_set_param(nng_init_parameter, uint64_t value);
+void nni_init_set_param(nng_init_parameter parameter, uint64_t value);
 
 // subsystems can call this to obtain a parameter value.
 uint64_t nni_init_get_param(nng_init_parameter parameter, uint64_t default_value);
