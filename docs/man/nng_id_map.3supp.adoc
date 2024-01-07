@@ -1,6 +1,6 @@
 = nng_id_map(3supp)
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,7 +17,7 @@ nng_id_map - identifier based mapping table
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/idhash/idhash.h>
+#include <nng/supplemental/util/idhash.h>
 
 typedef struct nng_id_map_s nng_id_map;
 

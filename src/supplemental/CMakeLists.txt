@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -11,7 +11,6 @@ nng_directory(supplemental)
 
 add_subdirectory(base64)
 add_subdirectory(http)
-add_subdirectory(idhash)
 add_subdirectory(sha1)
 add_subdirectory(tls)
 add_subdirectory(util)

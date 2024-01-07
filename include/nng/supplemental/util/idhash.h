@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef NNG_SUPPLEMENTAL_IDHASH_IDHASH_H
-#define NNG_SUPPLEMENTAL_IDHASH_IDHASH_H
+#ifndef NNG_SUPPLEMENTAL_UTIL_IDHASH_H
+#define NNG_SUPPLEMENTAL_UTIL_IDHASH_H
 
 #include <nng/nng.h>
 
