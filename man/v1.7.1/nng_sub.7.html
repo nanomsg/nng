@@ -1,0 +1,153 @@
+---
+version: v1.7.1
+layout: manpage_v2
+title: nng_sub(7)
+---
+<h1>nng_sub(7)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_sub - subscriber protocol</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pubsub0/sub.h&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(protocol, <em>sub</em>)
+The <em>sub</em> protocol is one half of a publisher/subscriber pattern.
+In this pattern, a publisher sends data, which is broadcast to all subscribers.
+The subscribing applications only see the data to which they have subscribed.</p>
+</div>
+<div class="paragraph">
+<p>The <em>sub</em> protocol is the subscriber side, and the
+<a href="nng_pub.7.html"><em>pub</em></a> protocol is the publisher side.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In this implementation, the publisher delivers all messages to all
+subscribers.
+The subscribers maintain their own subscriptions, and filter them locally.
+Thus, this pattern should not be used in an attempt to
+reduce bandwidth consumption.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The topics that subscribers subscribe to is just the first part of
+the message body.
+Applications should construct their messages accordingly.</p>
+</div>
+<div class="sect2">
+<h3 id="_socket_operations">Socket Operations</h3>
+<div class="paragraph">
+<p>The <a href="nng_sub_open.3.html"><code>nng_sub0_open()</code></a> functions create a subscriber socket.
+This socket may be used to receive messages, but is unable to send them.
+Attempts to send messages will result in <code>NNG_ENOTSUP</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_versions">Protocol Versions</h3>
+<div class="paragraph">
+<p>Only version 0 of this protocol is supported.
+(At the time of writing, no other versions of this protocol have been defined.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_options">Protocol Options</h3>
+<div class="paragraph">
+<p>The following protocol-specific options are available.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_SUB_SUBSCRIBE</code></dt>
+<dd>
+<p>This option registers a topic that the subscriber is interested in.
+The option is write-only, and takes an array of bytes, of arbitrary size.
+Each incoming message is checked against the list of subscribed topics.
+If the body begins with the entire set of bytes in the topic, then the
+message is accepted.  If no topic matches, then the message is
+discarded.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This option is a byte array.  Thus if you use
+<a href="nng_setopt.3.html"><code>nng_setopt_string()</code></a> the <code>NUL</code> terminator byte will
+be included in the topic.
+If that isn&#8217;t desired, consider using
+<a href="nng_setopt.3.html"><code>nng_setopt()</code></a> and using <code>strlen()</code> of the topic
+as the topic size.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+To receive all messages, an empty topic (zero length) can be used.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_SUB_UNSUBSCRIBE</code></dt>
+<dd>
+<p>This option, also read-only, removes a topic from the subscription list.
+Note that if the topic was not previously subscribed to with
+<code>NNG_OPT_SUB_SUBSCRIBE</code> then an <code>NNG_ENOENT</code> error will result.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_SUB_PREFNEW</code></dt>
+<dd>
+<p>(<code>bool</code>)
+This read/write option specifies the behavior of the subscriber when the queue is full.
+When <code>true</code> (the default), the subscriber will make room in the queue by removing the oldest message.
+When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_headers">Protocol Headers</h3>
+<div class="paragraph">
+<p>The <em>sub</em> protocol has no protocol-specific headers.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_sub_open.3.html">nng_sub_open(3)</a>,
+<a href="nng_pub.7.html">nng_pub(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
