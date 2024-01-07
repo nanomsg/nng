@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -166,7 +166,7 @@ nng_random(void)
 }
 
 int
-nng_socket_pair(int *fds)
+nng_socket_pair(int fds[2])
 {
 	return (nni_socket_pair(fds));
 }

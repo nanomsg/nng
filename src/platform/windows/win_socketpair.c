@@ -18,7 +18,7 @@
 #include <sys/socket.h>
 
 int
-nni_socket_pair(int *fds)
+nni_socket_pair(int fds[2])
 {
 	int rv;
 	rv = socketpair(PF_UNIX, SOCK_STREAM, 0, fds);
