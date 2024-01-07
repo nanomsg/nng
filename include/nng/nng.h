@@ -60,7 +60,7 @@ extern "C" {
 #define NNG_MINOR_VERSION 7
 #define NNG_PATCH_VERSION 1
 #define NNG_RELEASE_SUFFIX \
-	"pre" // if non-empty (i.e. "pre"), this is a pre-release
+	"" // if non-empty (i.e. "pre"), this is a pre-release
 
 // Maximum length of a socket address. This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
