@@ -1,0 +1,136 @@
+---
+version: v1.7.1
+layout: manpage_v2
+title: nng_aio_alloc(3)
+---
+<h1>nng_aio_alloc(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_aio_alloc - allocate asynchronous I/O handle</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_aio_alloc</span><span class="tok-p">(</span><span class="tok-n">nng_aio</span> <span class="tok-o">**</span><span class="tok-n">aiop</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-p">(</span><span class="tok-o">*</span><span class="tok-n">callb</span><span class="tok-p">)(</span><span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-p">),</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_aio_alloc()</code> function allocates a handle for asynchronous I/O
+operations, and stores a pointer to it in <em>aiop</em>.
+The handle is initialized with a completion callback of <em>callb</em>,
+which will be executed when an associated asynchronous operation finishes.
+It will be called with the argument <em>arg</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The callback <em>callb</em> must not perform any blocking operations, and
+must complete its execution quickly.  If <em>callb</em> does block, this can
+lead ultimately to an apparent "hang" or deadlock in the application.
+This also means you should avoid operations such as allocating new objects,
+which also means opening or closing sockets, dialers, and so forth.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+If more complex or blocking work needs to be performed by <em>callb</em>, a separate
+thread can be used, along with a <a href="nng_cv_alloc.3supp.html">condition variable</a>
+which can be signaled by the callback.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Asynchronous I/O operations all take an <a href="nng_aio.5.html"><code>nng_aio</code></a>
+handle such as allocated by this function.
+Such operations are usually started by a function that returns immediately.
+The operation is then run asynchronously, and completes sometime later.
+When that operation is complete, the callback supplied here is called,
+and that callback is able to determine the result of the operation using
+<a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>,
+<a href="nng_aio_count.3.html"><code>nng_aio_count()</code></a>,
+and <a href="nng_aio_get_output.3.html"><code>nng_aio_get_output()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>It is possible to wait synchronously for an otherwise asynchronous operation
+by using the function <a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>.
+In that case, it is permissible for <em>callb</em> and <em>arg</em> to both be <code>NULL</code>.
+Note that if these are <code>NULL</code>, then it will not be possible to determine when the
+operation is complete except by calling the aforementioned
+<a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory to perform the operation.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_abort.3.html">nng_aio_abort(3)</a>,
+<a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a>,
+<a href="nng_aio_count.3.html">nng_aio_count(3)</a>,
+<a href="nng_aio_free.3.html">nng_aio_free(3)</a>,
+<a href="nng_aio_get_input.3.html">nng_aio_get_input(3)</a>,
+<a href="nng_aio_get_msg.3.html">nng_aio_get_msg(3)</a>,
+<a href="nng_aio_get_output.3.html">nng_aio_get_output(3)</a>,
+<a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
+<a href="nng_aio_set_input.3.html">nng_aio_set_input(3)</a>,
+<a href="nng_aio_set_iov.3.html">nng_aio_set_iov(3)</a>,
+<a href="nng_aio_set_msg.3.html">nng_aio_set_msg(3)</a>,
+<a href="nng_aio_set_timeout.3.html">nng_aio_set_timeout(3)</a>,
+<a href="nng_aio_stop.3.html">nng_aio_stop(3)</a>,
+<a href="nng_aio_wait.3.html">nng_aio_wait(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_aio.5.html">nng_aio(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

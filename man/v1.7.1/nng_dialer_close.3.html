@@ -1,0 +1,84 @@
+---
+version: v1.7.1
+layout: manpage_v2
+title: nng_dialer_close(3)
+---
+<h1>nng_dialer_close(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_dialer_close - close dialer</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_close</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_dialer_close()</code> function closes the dialer <em>d</em>.
+This also closes any <a href="nng_pipe.5.html"><code>nng_pipe</code></a> objects that have
+been created by the dialer.</p>
+</div>
+<div class="paragraph">
+<p>Once this function returns, the dialer <em>d</em> and any of its resources
+are deallocated.
+Therefore it is an error to attempt to access <em>d</em> after
+this function has returned.
+(Attempts to do so will result in <code>NNG_ECLOSED</code> errors.)</p>
+</div>
+<div class="paragraph">
+<p>Dialers are implicitly closed when the socket they are associated with is closed.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>Parameter <em>d</em> does not refer to an open dialer.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_close.3.html">nng_close(3)</a>,
+<a href="nng_dial.3.html">nng_dial(3)</a>,
+<a href="nng_dialer_create.3.html">nng_dialer_create(3)</a>
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_dialer.5.html">nng_dialer(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

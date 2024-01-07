@@ -1,0 +1,266 @@
+---
+version: v1.7.1
+layout: manpage_v2
+title: nng_tls(7)
+---
+<h1>nng_tls(7)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_tls - TLS transport</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/tls/tls.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_tls_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(transport, <em>tls</em>)
+The <em>tls</em> transport provides communication support between
+peers across a TCP/IP network using
+<a href="https://tools.ietf.org/html/rfc5246">TLS v1.2</a> on top of
+<a href="https://tools.ietf.org/html/rfc793">TCP</a>.
+Both IPv4 and IPv6 are supported when the underlying platform also supports it.</p>
+</div>
+<div class="paragraph">
+<p>The protocol details are documented in
+<a href="http://nanomsg.org/rfcs/sp-tls-v1.html">TLS Mapping for Scalability Protocols</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_registration">Registration</h3>
+<div class="paragraph">
+<p>Depending upon how the library was built, it may be necessary to
+register the transport by calling
+<a href="nng_tls_register.3.html"><code>nng_tls_register()</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_availability">Availability</h3>
+<div class="paragraph">
+<p>The <em>tls</em> transport depends on the use of an external library.
+As of this writing, <a href="https://tls.mbed.org/">mbedTLS</a> version 2.0
+or later is required.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Applications may need to add this library (or libraries) to
+their link line, particularly when using a statically built
+library.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The mbedTLS library uses different licensing terms than
+<em>NNG</em> itself; as of this writing it is offered under either
+<a href="https://opensource.org/licenses/Apache-2.0">Apache License 2.0</a> or
+<a href="https://opensource.org/licenses/gpl-license">GNU GPL</a> terms.
+You are responsible for understanding and adhering to the
+license terms of any libraries you use.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_uri_format">URI Format</h3>
+<div class="paragraph">
+<p>(URI, <code>tls+tcp://</code>)
+This transport uses URIs using the scheme <code>tls+tcp://</code>, followed by
+an IP address or hostname, followed by a colon and finally a
+TCP port number.
+For example, to contact port 4433 on the localhost
+either of the following URIs could be used: <code>tls+tcp://127.0.0.1:4433</code> or
+<code>tls+tcp://localhost:4433</code>.</p>
+</div>
+<div class="paragraph">
+<p>A URI may be restricted to IPv6 using the scheme <code>tls+tcp6://</code>, and may
+be restricted to IPv4 using the scheme <code>tls+tcp4://</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Specifying <code>tls+tcp6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
+listeners.
+The details of this varies across operating systems.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Both <code>tls+tcp6://</code> and <code>tls+tcp4://</code> are specific to <em>NNG</em>, and may not
+be understood by other implementations.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+We recommend using either numeric IP addresses, or names that are
+specific to either IPv4 or IPv6 to prevent confusion and surprises.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When specifying IPv6 addresses, the address must be enclosed in
+square brackets (<code>[]</code>) to avoid confusion with the final colon
+separating the port.</p>
+</div>
+<div class="paragraph">
+<p>For example, the same port 4433 on the IPv6 loopback address ('::1') would
+be specified as <code>tls+tcp://[::1]:4433</code>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Certificate validation generally works when using names
+rather than IP addresses.
+This transport automatically uses the name supplied in the URL when validating
+the certificate supplied by the server.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The special value of 0 (<code>INADDR_ANY</code>) can be used for a listener
+to indicate that it should listen on all interfaces on the host.
+A short-hand for this form is to either omit the address, or specify
+the asterisk (<code>*</code>) character.
+For example, the following three URIs are all equivalent,
+and could be used to listen to port 9999 on the host:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>tls+tcp://0.0.0.0:9999</code></p>
+</li>
+<li>
+<p><code>tls+tcp://*:9999</code></p>
+</li>
+<li>
+<p><code>tls+tcp://:9999</code></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_socket_address">Socket Address</h3>
+<div class="paragraph">
+<p>When using an <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a> structure,
+the actual structure is either of type
+<a href="nng_sockaddr_in.5.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
+<a href="nng_sockaddr_in6.5.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_transport_options">Transport Options</h3>
+<div class="paragraph">
+<p>The following transport options are available.
+Note that setting these must be done before the transport is started.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_LOCADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_REMADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_tcp_options.5.html"><code>NNG_OPT_TCP_KEEPALIVE</code></a></p>
+</li>
+<li>
+<p><a href="nng_tcp_options.5.html"><code>NNG_OPT_TCP_NODELAY</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_AUTH_MODE</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_CA_FILE</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_CERT_KEY_FILE</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_CONFIG</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_VERIFIED_</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_PEER_CN</code></a></p>
+</li>
+<li>
+<p><a href="nng_tls_options.5.html"><code>NNG_OPT_TLS_PEER_ALT_NAMES</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5.html"><code>NNG_OPT_URL</code></a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
+<a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6(5)</a>,
+<a href="nng_tcp_options.5.html">nng_tcp_options(5)</a>,
+<a href="nng_tls_config.5.html">nng_tls_config(5)</a>,
+<a href="nng_tls_options.5.html">nng_tls_options(5)</a>,
+<a href="nng.7.html">nng(7)</a>,</p>
+</div>
+</div>
+</div>

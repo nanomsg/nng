@@ -1,0 +1,141 @@
+---
+version: v1.7.1
+layout: manpage_v2
+title: nng_http_server_set_error_file(3http)
+---
+<h1>nng_http_server_set_error_file(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_server_set_error_file - set custom HTTP error file</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_server_set_error_file</span><span class="tok-p">(</span><span class="tok-n">nng_http_server</span> <span class="tok-o">*</span><span class="tok-n">server</span><span class="tok-p">,</span>
+        <span class="tok-kt">uint16_t</span> <span class="tok-n">code</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_server_set_error_file()</code> sets an error page to be used
+for HTTP status <em>code</em> on the server instance <em>server</em>.
+The body content of the HTTP responses will contain the file contents of
+the file located at <em>path</em>, which should be an HTML file.</p>
+</div>
+<div class="paragraph">
+<p>The custom HTML content will be used when the server is returning an
+internally generated error response, or is returning an error response
+that was allocated with the
+<a href="nng_http_res_alloc_error.3http.html"><code>nng_http_res_alloc_error()</code></a>
+function.
+This HTML content will also be used if the application calls the
+<a href="nng_http_server_res_error.3http.html"><code>nng_http_server_res_error()</code></a>.
+The last custom error page set for <em>code</em> by either this function or
+<a href="`nng_http_server_set_error_page.3http.html"><code>nng_http_server_error_page()</code></a>
+will be used.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Error responses that have their body content changed after allocation,
+or that are written directly by the application, will not use the body
+content supplied here.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The file contents of <em>path</em> are read when this function is called.
+Therefore, if the file contents are changed, then this function should
+be called again to update the error page.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOENT</code>
+</td>
+<td class="hdlist2">
+<p>The file named by <em>path</em> does not exist.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EPERM</code>
+</td>
+<td class="hdlist2">
+<p>No permission to read the file named by <em>path</em>.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>HTTP not supported.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error(3http)</a>,
+<a href="nng_http_server_hold.3http.html">nng_http_server_hold(3http)</a>,
+<a href="nng_http_server_res_error.3http.html">nng_http_server_res_error(3http)</a>,
+<a href="nng_http_server_set_error_page.3http.html">nng_http_server_set_error_page(3http)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
