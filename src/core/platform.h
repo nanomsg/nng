@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -445,7 +445,7 @@ extern int nni_plat_udp_sockname(nni_plat_udp *, nni_sockaddr *);
 // in APIs to transport file descriptors, or across a fork/exec boundary (so
 // that child processes may use these with socket to inherit a socket that is
 // connected to the parent.)
-extern int nni_socket_pair(int *);
+extern int nni_socket_pair(int [2]);
 
 //
 // File/Store Support

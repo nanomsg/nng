@@ -36,7 +36,7 @@ nni_socket_pair(int fds[2])
 }
 #else
 int
-nni_socket_pair(int *fds)
+nni_socket_pair(int fds[2])
 {
 	return (NNG_ENOTSUP);
 }
