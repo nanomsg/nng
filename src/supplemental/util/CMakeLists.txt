@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -7,5 +7,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_sources(options.c platform.c)
-nng_headers(nng/supplemental/util/options.h nng/supplemental/util/platform.h)
+nng_sources(idhash.c options.c platform.c)
+nng_headers(
+	nng/supplemental/util/idhash.h
+	nng/supplemental/util/options.h
+	nng/supplemental/util/platform.h)
+nng_test(idhash_test)

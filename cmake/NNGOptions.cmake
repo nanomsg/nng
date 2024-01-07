@@ -1,5 +1,5 @@
 #
-# Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -141,8 +141,3 @@ if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     set(NNG_SUPP_BASE64 ON)
     set(NNG_SUPP_SHA1 ON)
 endif()
-
-# ID hash API is small wrapper around core, probably should always be enabled unless memory
-# is extraordinarily constrained.
-option(NNG_SUPP_IDHASH "Enable application IDHASH API" ON)
-mark_as_advanced(NNG_SUPP_IDHASH)
