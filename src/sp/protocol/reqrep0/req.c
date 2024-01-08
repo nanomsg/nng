@@ -224,6 +224,9 @@ req0_pipe_start(void *arg)
 	if(p->pipe->p_dialer && nni_dialer_getopt(p->pipe->p_dialer, NNG_OPT_SNDPRIO, &prio, NULL, NNI_TYPE_INT32) == 0 && prio > 0){
 		// the first time copy sndprio from dialer
 		p -> sndprio = prio;
+	}else if(p->pipe->p_listener && nni_listener_getopt(p->pipe->p_listener, NNG_OPT_SNDPRIO, &prio, NULL, NNI_TYPE_INT32) == 0 && prio > 0){
+		// the first time copy sndprio from listener
+		p -> sndprio = prio;	
 	}
 	nni_mtx_lock(&s->mtx);
 	req0_pipe_insert_by_prio(&s->ready_pipes, p);

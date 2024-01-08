@@ -485,7 +485,7 @@ nni_dialer_setopt(
 		int rv;
 
 		nni_mtx_lock(&d->d_mtx);
-		rv = nni_copyin_int(&d->sndprio, val, sz, 1, 16, t);
+		rv = nni_copyin_int(&d->d_sndprio, val, sz, 1, 16, t);
 		nni_mtx_unlock(&d->d_mtx);
 		return (rv);
 	}
@@ -534,7 +534,7 @@ nni_dialer_getopt(
 	if (strcmp(name, NNG_OPT_SNDPRIO) == 0) {
 		int rv;
 		nni_mtx_lock(&d->d_mtx);
-		rv = nni_copyout_int(d->sndprio, valp, szp, t);
+		rv = nni_copyout_int(d->d_sndprio, valp, szp, t);
 		nni_mtx_unlock(&d->d_mtx);
 		return (rv);
 	}
