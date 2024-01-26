@@ -2,7 +2,7 @@
     Copyright (c) 2013 Insollo Entertainment, LLC. All rights reserved.
     Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
     Copyright 2018 Capitar IT Group BV <info@capitar.com>
-	Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+    Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 
     Permission is hereby granted, free of charge, to any person obtaining a
     copy of this software and associated documentation files (the "Software"),
@@ -27,13 +27,13 @@
 // it for validating the compatibility features of nanomsg.   As much as
 // possible we want to run tests from the nanomsg test suite unmodified.
 
-#include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include <nng/compat/nanomsg/nn.h>
 #include "compat_testutil.h"
+#include <nng/compat/nanomsg/nn.h>
 
 int  test_socket_impl(char *file, int line, int family, int protocol);
 int  test_connect_impl(char *file, int line, int sock, char *address);
@@ -143,7 +143,7 @@ test_recv_impl(char *file, int line, int sock, char *data)
 {
 	size_t data_len;
 	int    rc;
-	char * buf;
+	char  *buf;
 
 	data_len = strlen(data);
 	/*  We allocate plus one byte so that we are sure that message received
@@ -226,4 +226,15 @@ void
 nn_sleep(int ms)
 {
 	nng_msleep(ms);
+}
+
+void
+nn_assert_impl(bool b, const char *expression, const char *file, int line)
+{
+	if (b) {
+		return;
+	}
+	fprintf(
+	    stderr, "%s:%d: Assertion failed: %s\n", file, line, expression);
+	abort();
 }
