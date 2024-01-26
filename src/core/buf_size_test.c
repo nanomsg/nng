@@ -10,15 +10,17 @@
 
 #include <nuts.h>
 
+#if NNG_ENABLE_COMPAT
 #include <nng/compat/nanomsg/nn.h>
+#endif
 
-	void
+void
 test_buffer_options(void)
 {
 	nng_socket s1;
 	int        val;
 	size_t     sz;
-	char *     opt;
+	char      *opt;
 
 	char *cases[] = {
 		NNG_OPT_RECVBUF,
@@ -62,8 +64,9 @@ test_buffer_options(void)
 void
 test_buffer_legacy(void)
 {
+#if NNG_ENABLE_COMPAT
 	nng_socket s1;
-	char *     opt;
+	char      *opt;
 
 	char *cases[] = {
 		NNG_OPT_RECVBUF,
@@ -104,10 +107,13 @@ test_buffer_legacy(void)
 		NUTS_TRUE(nn_errno() == EINVAL);
 	}
 	NUTS_PASS(nng_close(s1));
+#endif
 }
 
 NUTS_TESTS = {
 	{ "buffer options", test_buffer_options },
+#if NNG_ENABLE_COMPAT
 	{ "buffer legacy", test_buffer_legacy },
+#endif
 	{ NULL, NULL },
 };
