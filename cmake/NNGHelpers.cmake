@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -54,6 +54,12 @@ function(nng_link_libraries)
     target_link_libraries(nng PRIVATE ${ARGN})
     target_link_libraries(nng_testing PRIVATE ${ARGN})
 endfunction()
+
+function(nng_link_libraries_public)
+    target_link_libraries(nng PRIVATE ${ARGN})
+    target_link_libraries(nng_testing PRIVATE ${ARGN})
+endfunction()
+
 
 # nng_include_directories adds include directories.
 function(nng_include_directories)

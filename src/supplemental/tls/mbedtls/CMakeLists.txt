@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -10,7 +10,7 @@
 if (NNG_TLS_ENGINE STREQUAL "mbed")
     message(WARNING "
         ************************************************************
-        Linking against Mbed TLS changes license terms (Apache 2.0).
+        Linking against Mbed TLS may change license terms.
         Consult a lawyer and the license files for details.
         ************************************************************")
     nng_sources(tls.c)
@@ -23,8 +23,17 @@ if (NNG_TLS_ENGINE STREQUAL "mbed")
     if (TARGET mbedtls)
         nng_link_libraries(mbedtls)
     else()
-        nng_find_package(mbedTLS)
-        nng_link_libraries(${MBEDTLS_LIBRARIES})
-        nng_include_directories(${MBEDTLS_INCLUDE_DIR})
+        # We want to prefer config mode over our local find package.
+        # mbedTLS v3 has a config file, which should work better than
+        # what we do here.  We do restore the setting though because
+        # user applications might not expect this.
+        if (NOT CMAKE_FIND_PAKCAGE_PREFER_CONFIG)
+            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+            find_package(MbedTLS REQUIRED)
+            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
+        else()
+            find_package(MbedTLS REQUIRED)
+        endif()
+        nng_link_libraries_public(MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509)
     endif()
 endif()
