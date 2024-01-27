@@ -125,7 +125,7 @@ system (pass "-G Ninja" to CMake) when you can.
 blindingly fast and has made our lives as developers measurably better.)
 
 If you want to build with TLS support you will also need
-https://tls.mbed.org[mbedTLS].  See <<docs/BUILD_TLS.adoc#>> for details.
+https://tls.mbed.org[Mbed TLS].  See <<docs/BUILD_TLS.adoc#>> for details.
 
 == Quick Start
 
