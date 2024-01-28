@@ -13,11 +13,17 @@
 #include <nuts.h>
 
 #ifdef NNG_PLATFORM_POSIX
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
 #ifdef NNG_PLATFORM_SUNOS
 #include <zone.h>
 #endif
+#endif
+
+// Windows complains if we use the POSIX API.
+#ifdef NNG_PLATFORM_WINDOWS
+#include <io.h>
+#define close(fd) _close(fd)
 #endif
 
 // FDC tests.
@@ -134,7 +140,7 @@ test_sfd_recv_max(void)
 	nng_listener l0;
 	nng_listener l1;
 	size_t       sz;
-	size_t	     scratch;
+	size_t       scratch;
 	int          fds[2];
 
 	NUTS_PASS(nng_socket_pair(fds));
@@ -385,8 +391,8 @@ test_sfd_listen_full(void)
 	for (i = 0; i < NNG_SFD_LISTEN_QUEUE * 2; i += 2) {
 		int pair[2];
 		NUTS_PASS(nng_socket_pair(pair));
-		fds[i] = pair[0];
-		fds[i+1] = pair[1];
+		fds[i]     = pair[0];
+		fds[i + 1] = pair[1];
 	}
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listener_create(&l, s, "socket://"));
@@ -409,12 +415,13 @@ test_sfd_listen_full(void)
 void
 test_sfd_fd_option_type(void)
 {
-	nng_socket s;
+	nng_socket   s;
 	nng_listener l;
 
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listener_create(&l, s, "socket://"));
-	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_SOCKET_FD, false), NNG_EBADTYPE);
+	NUTS_FAIL(
+	    nng_listener_set_bool(l, NNG_OPT_SOCKET_FD, false), NNG_EBADTYPE);
 	NUTS_CLOSE(s);
 }
 
@@ -422,9 +429,9 @@ void
 test_sfd_fd_dev_zero(void)
 {
 #ifdef NNG_PLATFORM_POSIX
-	nng_socket s;
+	nng_socket   s;
 	nng_listener l;
-	int fd;
+	int          fd;
 
 	// dev/zero produces a stream of zero bytes leading to protocol error
 	NUTS_ASSERT((fd = open("/dev/zero", O_RDONLY, 0777)) >= 0);
