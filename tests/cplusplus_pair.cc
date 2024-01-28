@@ -1,5 +1,5 @@
 //
-//  Copyright 2017 Garrett D'Amore <garrett@damore.org>
+//  Copyright 2024 Staysail Systems, Inc.
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,8 +10,8 @@
 #include "nng/nng.h"
 #include "nng/protocol/pair1/pair.h"
 
+#include <cstdio>
 #include <cstring>
-#include <iostream>
 
 #define SOCKET_ADDRESS "inproc://c++"
 
@@ -68,11 +68,11 @@ main(int argc, char **argv)
 		throw nng_strerror(rv);
 	}
 
-	std::cout << "Pass." << std::endl;
+	printf("Pass.\n");
 #else
 	(void) argc;
 	(void) argv;
-	std::cout << "Skipped (protocol unconfigured)." << std::endl;
+	printf("Skipped (protocol unconfigured).\n");
 #endif
 
 	return (0);
