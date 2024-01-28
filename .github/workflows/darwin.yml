@@ -1,25 +1,24 @@
 name: darwin
 on: [push, pull_request]
 jobs:
-
   build:
     name: build
-    runs-on: [ macos-latest ]
+    runs-on: [macos-latest]
     steps:
-    - name: Check out code
-      uses: actions/checkout@v1
+      - name: Check out code
+        uses: actions/checkout@v1
 
-    - name: Install Mbed TLS
-      run: brew install mbedtls
+      - name: Install Mbed TLS
+        run: brew install mbedtls
 
-    - name: Install ninja
-      run: brew install ninja
+      - name: Install ninja
+        run: brew install ninja
 
-    - name: Configure
-      run: mkdir build && cd build && cmake -G Ninja ..
+      - name: Configure
+        run: mkdir build && cd build && cmake -G Ninja -DNNG_ENABLE_TLS=ON ..
 
-    - name: build
-      run: cd build && ninja
+      - name: build
+        run: cd build && ninja
 
-    - name: Test
-      run: cd build && ctest --output-on-failure
+      - name: Test
+        run: cd build && ctest --output-on-failure
