@@ -15,10 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
 
-      - uses: mstksg/get-package@v1
-        with:
-            apt-get: ninja-build libmbedtls-dev
-            brew: ninja mbedtls
+      - name: Install mbedTLS
+        run: sudo apt-get install libmbedtls-dev
+
+      - name: Install ninja
+        run: sudo apt-get install ninja-build
 
       - name: Configure
         run: |
