@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -45,7 +45,7 @@ test_encode(void)
 
 		(void) snprintf(name, sizeof(name), "%d", i);
 		TEST_CASE(name);
-		rv = nni_base64_encode(dec, strlen(dec), buf, 1024);
+		rv = (int) nni_base64_encode(dec, strlen(dec), buf, 1024);
 		TEST_CHECK(rv >= 0);
 		TEST_CHECK(rv == (int) strlen(cases[i].encoded));
 		buf[rv] = 0;
