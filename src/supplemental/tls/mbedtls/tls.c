@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -296,7 +296,7 @@ conn_peer_cn(nng_tls_engine_conn *ec)
 	}
 
 	pos += 3;
-	len -= pos - buf - 1;
+	len -= (int) (pos - buf - 1);
 	if (len <= 1) {
 		return (NULL);
 	}
@@ -314,23 +314,26 @@ conn_peer_alt_names(nng_tls_engine_conn *ec)
 		return (NULL);
 	}
 
-	const mbedtls_asn1_sequence * seq = &crt->subject_alt_names;
+	const mbedtls_asn1_sequence *seq = &crt->subject_alt_names;
 
 	// get count
 	int count = 0;
 	do {
-		if (seq->buf.len > 0) ++count;
+		if (seq->buf.len > 0)
+			++count;
 		seq = seq->next;
 	} while (seq);
-	if (count == 0) return NULL;
+	if (count == 0)
+		return NULL;
 
 	seq = &crt->subject_alt_names;
 
 	// copy strings
-	char ** rv = malloc((count + 1) * sizeof(char *));
-	int i = 0;
+	char **rv = malloc((count + 1) * sizeof(char *));
+	int    i  = 0;
 	do {
-		if (seq->buf.len == 0) continue;
+		if (seq->buf.len == 0)
+			continue;
 
 		rv[i] = malloc(seq->buf.len + 1);
 		memcpy(rv[i], seq->buf.p, seq->buf.len);
