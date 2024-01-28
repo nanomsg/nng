@@ -13,7 +13,7 @@ jobs:
         uses: johnwason/vcpkg-action@v6
         with:
           pkgs: mbedtls
-          triplet: x64-windows-release
+          triplet: x64-windows
           token: ${{ github.token }}
           github-binarycache: true
 
