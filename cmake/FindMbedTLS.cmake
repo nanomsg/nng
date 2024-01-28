@@ -103,15 +103,9 @@ set_target_properties(MbedTLS::mbedtls PROPERTIES INTERFACE_INCLUDE_DIRECTORIES 
 set_target_properties(MbedTLS::mbedx509 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_MBEDTLS_INCLUDE_DIR}")
 set_target_properties(MbedTLS::mbedcrypto PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_MBEDTLS_INCLUDE_DIR}")
 
-if (WIN32)
-    set_target_properties(MbedTLS::mbedtls PROPERTIES IMPORTED_IMPLIB "${_MBEDTLS_LIBRARY}")
-    set_target_properties(MbedTLS::mbedx509 PROPERTIES IMPORTED_IMPLIB "${_MBEDX509_LIBRARY}")
-    set_target_properties(MbedTLS::mbedcrypto PROPERTIES IMPORTED_IMPLIB "${_MBEDCRYPTO_LIBRARY}")
-else()
-    set_target_properties(MbedTLS::mbedtls PROPERTIES IMPORTED_LOCATION "${_MBEDTLS_LIBRARY}")
-    set_target_properties(MbedTLS::mbedx509 PROPERTIES IMPORTED_LOCATION "${_MBEDX509_LIBRARY}")
-    set_target_properties(MbedTLS::mbedcrypto PROPERTIES IMPORTED_LOCATION "${_MBEDCRYPTO_LIBRARY}")
-endif()
+set_target_properties(MbedTLS::mbedtls PROPERTIES IMPORTED_LOCATION "${_MBEDTLS_LIBRARY}")
+set_target_properties(MbedTLS::mbedx509 PROPERTIES IMPORTED_LOCATION "${_MBEDX509_LIBRARY}")
+set_target_properties(MbedTLS::mbedcrypto PROPERTIES IMPORTED_LOCATION "${_MBEDCRYPTO_LIBRARY}")
 
 set(MbedTLS_TARGET MbedTLS::mbedtls)
 set(MbedX509_TARGET MbedTLS::mbedx509)
