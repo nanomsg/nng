@@ -1,22 +1,29 @@
 name: windows
 on: [push, pull_request]
 jobs:
-
   build:
     name: build
-    runs-on: [ windows-latest ]
+    runs-on: [windows-latest]
     steps:
-    - name: Check out code
-      uses: actions/checkout@v1
+      - name: Check out code
+        uses: actions/checkout@v1
 
-    - name: Configure
-      run: cmake -B build
+      - name: vcpkg build
+        id: vcpkg
+        uses: johnwason/vcpkg-action@v6
+        with:
+          pkgs: mbedtls
+          triplet: x64-windows-release
+          token: ${{ github.token }}
+          github-binarycache: true
 
-    - name: Build
-      run: cmake --build build
+      - name: Configure
+        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -B build
 
-    - name: Test
-      run: |
-        cd build
-        ctest -C Debug --output-on-failure
+      - name: Build
+        run: cmake --build build
 
+      - name: Test
+        run: |
+          cd build
+          ctest -C Debug --output-on-failure
