@@ -9,6 +9,9 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v1
 
+    - name: Install Mbed TLS
+      run: brew install mbedtls
+
     - name: Install ninja
       run: brew install ninja
 
