@@ -18,7 +18,7 @@ jobs:
           github-binarycache: true
 
       - name: Configure
-        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -B build
+        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -G Ninja -D NNG_ENABLE_TLS=ON -B build
 
       - name: Build
         run: cmake --build build
