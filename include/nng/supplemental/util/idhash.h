@@ -10,6 +10,10 @@
 #ifndef NNG_SUPPLEMENTAL_UTIL_IDHASH_H
 #define NNG_SUPPLEMENTAL_UTIL_IDHASH_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <nng/nng.h>
 
 typedef struct nng_id_map_s nng_id_map;
@@ -23,5 +27,9 @@ NNG_DECL void *nng_id_get(nng_id_map *, uint64_t);
 NNG_DECL int   nng_id_set(nng_id_map *, uint64_t, void *);
 NNG_DECL int   nng_id_alloc(nng_id_map *, uint64_t *, void *);
 NNG_DECL int   nng_id_remove(nng_id_map *, uint64_t);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NNG_SUPPLEMENTAL_IDHASH_IDHASH_H
