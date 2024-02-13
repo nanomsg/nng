@@ -16,7 +16,7 @@ nng_socket - BSD Socket transport (experimental)
 
 (((BSD Socket)))(((transport, _socket_)))
 The ((_socket_ transport)) provides communication support between
-peers across a arbitrary BSD sockets, such as those that are
+peers across arbitrary BSD sockets, such as those that are
 created with xref:nng_socket_pair.3supp.adoc[`nng_socket_pair()`].
 
 This transport only supports xref:nng_listener.5.adoc[listeners], using xref:nng_listener_create.3.adoc[`nng_listener_create()`].
@@ -24,8 +24,8 @@ This transport only supports xref:nng_listener.5.adoc[listeners], using xref:nng
 NOTE: Attempts to create a xref:nng_dialer.5.adoc[dialer] using this transport will result in `NNG_ENOTSUP`.
 
 The socket file descriptor is passed to the listener using the `NNG_OPT_SOCKET_FD` option (as an integer).
-Setting this option (which is read-only and can be set multiple times) will cause the listener
-to create a xref:nng_pipe.5.adoc[pipe] associated backed by the file descriptor.
+Setting this option (which is write-only and can be set multiple times) will cause the listener
+to create a xref:nng_pipe.5.adoc[pipe] backed by the file descriptor.
 
 The protocol between peers using this pipe is at present compatible with the protocol used for the
 xref:nng_tcp.7.adoc[TCP] transport, but this is an implementation detail and subject to change without notice.
