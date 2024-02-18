@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -203,6 +204,63 @@ test_rep_huge_send(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	NUTS_PASS(nng_msg_alloc(&m, 10 << 20)); // 10 MB
 	NUTS_MARRY(req, rep);
+	char *body = nng_msg_body(m);
+
+	NUTS_ASSERT(nng_msg_len(m) == 10 << 20);
+	for (size_t i = 0; i < nng_msg_len(m); i++) {
+		body[i] = i % 16 + 'A';
+	}
+	NUTS_PASS(nng_msg_dup(&d, m));
+	NUTS_SEND(req, "R");
+	NUTS_RECV(rep, "R");
+	nng_aio_set_msg(aio, m);
+	nng_send_aio(rep, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_aio_set_msg(aio, NULL);
+	m = NULL;
+	nng_recv_aio(req, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	m = nng_aio_get_msg(aio);
+	NUTS_ASSERT(m != NULL);
+	NUTS_ASSERT(nng_msg_len(m) == nng_msg_len(d));
+	NUTS_ASSERT(
+	    memcmp(nng_msg_body(m), nng_msg_body(d), nng_msg_len(m)) == 0);
+
+	// make sure other messages still flow afterwards
+	NUTS_SEND(req, "E");
+	NUTS_RECV(rep, "E");
+	NUTS_SEND(rep, "E");
+	NUTS_RECV(req, "E");
+
+	nng_aio_free(aio);
+	nng_msg_free(m);
+	nng_msg_free(d);
+	NUTS_CLOSE(rep);
+	NUTS_CLOSE(req);
+}
+
+void
+test_rep_huge_send_socket(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_msg   *m;
+	nng_msg   *d;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_rep_open(&rep));
+	NUTS_PASS(nng_req_open(&req));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_msg_alloc(&m, 10 << 20)); // 10 MB
+	NUTS_PASS(nng_socket_set_size(req, NNG_OPT_RECVMAXSZ, 1 << 30));
+	NUTS_PASS(nng_socket_set_size(rep, NNG_OPT_RECVMAXSZ, 1 << 30));
+	NUTS_MARRY_EX(req, rep, "socket://", NULL, NULL);
 	char *body = nng_msg_body(m);
 
 	NUTS_ASSERT(nng_msg_len(m) == 10 << 20);
@@ -708,6 +766,7 @@ NUTS_TESTS = {
 	{ "rep context does not poll", test_rep_context_no_poll },
 	{ "rep validate peer", test_rep_validate_peer },
 	{ "rep huge send", test_rep_huge_send },
+	{ "rep huge send socket", test_rep_huge_send_socket },
 	{ "rep double recv", test_rep_double_recv },
 	{ "rep send nonblock", test_rep_send_nonblock },
 	{ "rep close pipe before send", test_rep_close_pipe_before_send },
