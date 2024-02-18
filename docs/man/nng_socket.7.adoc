@@ -1,6 +1,6 @@
 = nng_socket(7)
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,19 +15,18 @@ nng_socket - BSD Socket transport (experimental)
 == DESCRIPTION
 
 (((BSD Socket)))(((transport, _socket_)))
-The ((_socket_ transport)) provides communication support between
-peers across a arbitrary BSD sockets, such as those that are
+The ((_socket_ transport)) supports communication between
+peers across arbitrary BSD sockets, such as those that are
 created with xref:nng_socket_pair.3supp.adoc[`nng_socket_pair()`].
 
 This transport only supports xref:nng_listener.5.adoc[listeners], using xref:nng_listener_create.3.adoc[`nng_listener_create()`].
 
-NOTE: Attempts to create a xref:nng_dialer.5.adoc[dialer] using this transport will result in `NNG_ENOTSUP`.
+NOTE: Attempts to create xref:nng_dialer.5.adoc[dialers] using this transport will result in `NNG_ENOTSUP`.
 
 The socket file descriptor is passed to the listener using the `NNG_OPT_SOCKET_FD` option (as an integer).
-Setting this option (which is read-only and can be set multiple times) will cause the listener
-to create a xref:nng_pipe.5.adoc[pipe] associated backed by the file descriptor.
+Setting this option will cause the listener to create a xref:nng_pipe.5.adoc[pipe] associated backed by the file descriptor.
 
-The protocol between peers using this pipe is at present compatible with the protocol used for the
+The protocol between peers using this transport is compatible with the protocol used for the
 xref:nng_tcp.7.adoc[TCP] transport, but this is an implementation detail and subject to change without notice.
 
 NOTE: This transport is *experimental*, and at present is only supported on POSIX platforms.
@@ -53,7 +52,8 @@ The following transport option is available:
 ((`NNG_OPT_SOCKET_FD`))::
 
 (int) This is a write-only option, that may be set multiple times on a listener.
-The listener will create a pipe backed by the given file descriptor passed as an argument.
+Each time this is set, the listener will create a xref:nng_pipe.5.adoc[pipe] backed by the given file
+descriptor passed as an argument.
 
 Additionally, the following options may be supported on pipes when the platform supports them:
 
