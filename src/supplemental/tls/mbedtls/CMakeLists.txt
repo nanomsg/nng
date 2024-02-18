@@ -27,7 +27,7 @@ if (NNG_TLS_ENGINE STREQUAL "mbed")
         # mbedTLS v3 has a config file, which should work better than
         # what we do here.  We do restore the setting though because
         # user applications might not expect this.
-        if (NOT CMAKE_FIND_PAKCAGE_PREFER_CONFIG)
+        if (NOT CMAKE_FIND_PACKAGE_PREFER_CONFIG)
             set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
             find_package(MbedTLS REQUIRED)
             set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
