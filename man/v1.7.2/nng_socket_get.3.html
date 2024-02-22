@@ -1,0 +1,246 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_socket_get(3)
+---
+<h1>nng_socket_get(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_socket_get - get socket option</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">valszp</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_bool</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">bool</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">bvalp</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_int</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">ivalp</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_size</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">zp</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">u64p</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_string</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">**</span><span class="tok-n">strp</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_ptr</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">**</span><span class="tok-n">ptr</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_ms</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_duration</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">durp</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_get_addr</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_sockaddr</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">addrp</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+The <code>nng_socket_get()</code> functions are used to retrieve option values for
+the <a href="nng_socket.5.html">socket</a> <em>s</em>.
+The actual options that may be retrieved in this way vary.
+A number of them are documented in <a href="nng_options.5.html">nng_options(5)</a>.</p>
+</div>
+<div class="paragraph">
+<p>Additionally protocol-specific options are documented with the protocols themselves.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Access to transport options via this function is deprecated, and may be
+removed from a future release.  Applications should instead make use of
+<a href="nng_dialer_get.3.html">nng_dialer_get</a> or
+<a href="nng_listener_get.3.html">nng_listener_get</a> for specific dialers or listeners.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_forms">Forms</h3>
+<div class="paragraph">
+<p>In all of these forms, the option <em>opt</em> is retrieved from the socket <em>s</em>.
+The forms vary based on the type of the option they take.</p>
+</div>
+<div class="paragraph">
+<p>The details of the type, size, and semantics of the option will depend
+on the actual option, and will be documented with the option itself.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>nng_socket_get()</code></dt>
+<dd>
+<p>This function is untyped and can be used to retrieve the value of any option.
+The caller must store a pointer to a buffer to receive the value in <em>val</em>,
+and the size of the buffer shall be stored at the location referenced by
+<em>valszp</em>.</p>
+<div class="paragraph">
+<p>When the function returns, the actual size of the data copied (or that
+would have been copied if sufficient space were present) is stored at
+the location referenced by <em>valszp</em>.
+If the caller&#8217;s buffer is not large enough to hold the entire object,
+then the copy is truncated.
+Therefore the caller should check for truncation by verifying that the
+returned size in <em>valszp</em> does not exceed the original buffer size.</p>
+</div>
+<div class="paragraph">
+<p>It is acceptable to pass <code>NULL</code> for <em>val</em> if the value in <em>valszp</em> is zero.
+This can be used to determine the size of the buffer needed to receive
+the object.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It may be easier to use one of the typed forms of this function.
+</td>
+</tr>
+</table>
+</div>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_bool()</code></dt>
+<dd>
+<p>This function is for options which take a Boolean (<code>bool</code>).
+The value will be stored at <em>bvalp</em>.</p>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_int()</code></dt>
+<dd>
+<p>This function is for options which take an integer (<code>int</code>).
+The value will be stored at <em>ivalp</em>.</p>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_ms()</code></dt>
+<dd>
+<p>This function is used to retrieve time <a href="nng_duration.5.html">durations</a>
+(such as timeouts), stored in <em>durp</em> as a number of milliseconds.
+(The special value <code>NNG_DURATION_INFINITE</code> means an infinite amount of time, and
+the special value <code>NNG_DURATION_DEFAULT</code> means a context-specific default.)</p>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_ptr()</code></dt>
+<dd>
+<p>This function is used to retrieve a pointer, <em>ptr</em>, to structured data.
+The data referenced by <em>ptr</em> is generally managed using other functions.
+Note that this form is somewhat special in that the object is generally
+not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_size()</code></dt>
+<dd>
+<p>This function is used to retrieve a size into the pointer <em>zp</em>,
+typically for buffer sizes, message maximum sizes, and similar options.</p>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_string()</code></dt>
+<dd>
+<p>This function is used to retrieve a string into <em>strp</em>.
+This string is created from the source using <a href="nng_strdup.3.html"><code>nng_strdup()</code></a>
+and consequently must be freed by the caller using
+<a href="nng_strfree.3.html"><code>nng_strfree()</code></a> when it is no longer needed.</p>
+</dd>
+<dt class="hdlist1"><code>nng_socket_get_uint64()</code></dt>
+<dd>
+<p>This function is used to retrieve a 64-bit unsigned value into the value
+referenced by <em>u64p</em>.
+This is typically used for options related to identifiers, network
+numbers, and similar.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions return 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EBADTYPE</code>
+</td>
+<td class="hdlist2">
+<p>Incorrect type for option.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>Parameter <em>s</em> does not refer to an open socket.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>Size of destination <em>val</em> too small for object.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The option <em>opt</em> is not supported.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EWRITEONLY</code>
+</td>
+<td class="hdlist2">
+<p>The option <em>opt</em> is write-only.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_dialer_get.3.html">nng_dialer_get(3)</a>,
+<a href="nng_listener_get.3.html">nng_listener_get(3)</a>,
+<a href="nng_pipe_get.3.html">nng_pipe_get(3)</a>,
+<a href="nng_socket_set.3.html">nng_socket_set(3)</a>,
+<a href="nng_strdup.3.html">nng_strdup(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_strfree.3.html">nng_strfree(3)</a>,
+<a href="nng_duration.5.html">nng_duration(5)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng_socket.5.html">nng_socket(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

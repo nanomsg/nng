@@ -1,0 +1,207 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_surveyor(7)
+---
+<h1>nng_surveyor(7)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_surveyor - surveyor protocol</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/survey0/survey.h&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+The <em>surveyor</em> protocol is one half of a survey pattern.
+In this pattern, a surveyor sends a survey, which is broadcast to all
+peer respondents.
+The respondents then have a chance to reply (but are not obliged to reply).
+The survey itself is a timed event, so that responses
+received after the survey has finished are discarded.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+This protocol is useful in solving voting problems, such as
+leader election in cluster configurations, as well as certain kinds of
+service discovery problems.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <em>surveyor</em> protocol is the surveyor side, and the
+<a href="nng_respondent.7.html"><em>respondent</em></a> protocol is the respondent side.</p>
+</div>
+<div class="sect2">
+<h3 id="_socket_operations">Socket Operations</h3>
+<div class="paragraph">
+<p>The <a href="nng_surveyor_open.3.html"><code>nng_surveyor0_open()</code></a>
+functions create a surveyor socket.
+This socket may be used to send messages (surveys), and then to receive replies.
+A reply can only be received after sending a survey.
+A surveyor can normally expect to receive at most one reply from each responder.
+(Messages can be duplicated in some topologies,
+so there is no guarantee of this.)</p>
+</div>
+<div class="paragraph">
+<p>Attempts to receive on a socket with no outstanding survey will result
+in <code>NNG_ESTATE</code>.
+If the survey times out while the surveyor is waiting
+for replies, then the result will be <code>NNG_ETIMEDOUT</code>.</p>
+</div>
+<div class="paragraph">
+<p>Only one survey can be outstanding at a time; sending another survey will
+cancel the prior one, and any responses from respondents from the prior
+survey that arrive after this will be discarded.</p>
+</div>
+<div class="paragraph">
+<p><a href="nng.7.html#raw_mode">Raw</a> mode sockets ignore all these restrictions.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_context_operations">Context Operations</h3>
+<div class="paragraph">
+<p>This protocol supports the creation of <a href="nng_ctx.5.html">contexts</a> for concurrent
+use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>Each context can initiate its own surveys, and it will receive only
+responses to its own outstanding surveys.
+Other contexts on the same socket may have overlapping surveys
+operating at the same time.</p>
+</div>
+<div class="paragraph">
+<p>Each of these may have their own timeouts established with
+<code>NNG_OPT_SURVEYOR_SURVEYTIME</code>.</p>
+</div>
+<div class="paragraph">
+<p>Additionally, sending a survey on a context will only cancel an outstanding
+survey on the same context.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Due to the best-effort nature of this protocol, if too may contexts
+are attempting to perform surveys simultaneously, it is possible for either
+individual outgoing surveys or incoming responses to be lost.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_versions">Protocol Versions</h3>
+<div class="paragraph">
+<p>Only version 0 of this protocol is supported.
+(At the time of writing, no other versions of this protocol have been defined.
+An earlier and incompatible version of the protocol was used in older
+pre-releases of
+<a href="http://nanomsg.org">nanomsg</a>, but was not released in any production
+version.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_options">Protocol Options</h3>
+<div class="paragraph">
+<p>The following protocol-specific options is available.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_SURVEYOR_SURVEYTIME</code></dt>
+<dd>
+<p>(<a href="nng_duration.5.html"><code>nng_duration</code></a>) Duration of surveys.
+When a new survey is started, a timer of this duration is also started.
+Any responses arriving this time will be discarded.
+Attempts to receive
+after the timer expires with no other surveys started will result in
+<code>NNG_ESTATE</code>.
+Attempts to receive when this timer expires will result in <code>NNG_ETIMEDOUT</code>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_headers">Protocol Headers</h3>
+<div class="paragraph">
+<p>
+This form uses a stack of 32-bit big-endian identifiers.
+There <strong>must</strong> be at least one identifier, the <em>survey ID</em>, which will be the
+last element in the array, and <strong>must</strong> have the most significant bit set.</p>
+</div>
+<div class="paragraph">
+<p>There may be additional <em>peer ID</em>s preceding the survey ID.
+These will be distinguishable from the survey ID by having their most
+significant bit clear.</p>
+</div>
+<div class="paragraph">
+<p>When a survey message is received by a forwarding node (see
+<a href="nng_device.3.html"><code>nng_device()</code></a>), the forwarding node prepends a
+32-bit peer ID (which <strong>must</strong> have the most significant bit clear),
+which is the forwarder&#8217;s way of identifying the directly connected
+peer from which it received the message.
+(This peer ID, except for the
+most significant bit, has meaning only to the forwarding node itself.)</p>
+</div>
+<div class="paragraph">
+<p>It may help to think of prepending a peer ID as pushing a peer ID onto the
+front of the stack of headers for the message.
+(It will use the peer ID
+it popped from the front to determine the next intermediate destination
+for the response.)</p>
+</div>
+<div class="paragraph">
+<p>When a response message is created, it is created using the same headers
+that the survey contained.</p>
+</div>
+<div class="paragraph">
+<p>A forwarding node can pop the peer ID it originally pushed on the
+message, stripping it from the front of the message as it does so.</p>
+</div>
+<div class="paragraph">
+<p>When the response finally arrives back at the initiating surveyor, it
+should have only a single element in the message, which will be the
+survey ID it originally used for the request.</p>
+</div>
+<div class="paragraph">
+<p>More detail can be found in the
+<a href="https://github.com/nanomsg/nanomsg/blob/master/rfc/sp-surveyor-01.txt">RFC sp-surveyor-01</a>
+document.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_surveyor_open.3.html">nng_surveyor_open(3)</a>,
+<a href="nng_respondent.7.html">nng_respondent(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

@@ -1,0 +1,121 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_sockaddr_zt(5)
+---
+<h1>nng_sockaddr_zt(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_sockaddr_zt - ZeroTier socket address</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">enum</span><span class="tok-w"> </span><span class="tok-n">sockaddr_family</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_AF_ZT</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">5</span><span class="tok-p">,</span>
+<span class="tok-p">};</span>
+
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">sa_family</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">sa_nwid</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">sa_nodeid</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint32_t</span><span class="tok-w"> </span><span class="tok-n">sa_port</span><span class="tok-p">;</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">nng_sockaddr_zt</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+An <code>nng_sockaddr_zt</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
+used to represent ZeroTier addresses, including the
+port number used by the
+<a href="nng_zerotier.7.html"><em>zt</em></a> transport.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The ZeroTier transport, and the details of this structure,
+are still considered experimental, and subject to change.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following structure members are present:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>sa_family</code></dt>
+<dd>
+<p>This field will always have the value <code>NNG_AF_ZT</code>.</p>
+</dd>
+<dt class="hdlist1"><code>sa_nwid</code></dt>
+<dd>
+<p>
+This field holds the ZeroTier network number (or ID).
+This value is in native byte order.</p>
+</dd>
+<dt class="hdlist1"><code>sa_nodeid</code></dt>
+<dd>
+<p>This field holds the ZeroTier node ID.
+This value is in native byte order, and only the lower 40 bits
+are significant.
+(ZeroTier node numbers are 40 bits long.)
+A zero value here is used for a wild-card to indicate that the
+caller&#8217;s own node number be used.</p>
+</dd>
+<dt class="hdlist1"><code>sa_port</code></dt>
+<dd>
+<p>This field holds the port number used by the
+<a href="nng_zerotier.7.html"><em>zt</em></a> transport to distinguish different
+sockets.
+This value in native byte order.
+A zero value here indicates that a port number should be chosen
+randomly from the ephemeral ports.
+Only the lower 24 bits of the port number are used.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ZeroTier port numbers are in <strong>native</strong> byte order, and are larger
+than TCP/IP port numbers.
+They are also not part of the ZeroTier protocol itself, but defined by
+the Scalability Protocols binding for them.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
+<a href="nng_zerotier.7.html">nng_zerotier(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
