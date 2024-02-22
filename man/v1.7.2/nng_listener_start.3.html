@@ -1,0 +1,93 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_listener_start(3)
+---
+<h1>nng_listener_start(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_listener_start - start listener</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_listener_start</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span><span class="tok-w"> </span><span class="tok-n">l</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_listener_start()</code> function starts the listener <em>l</em>.</p>
+</div>
+<div class="paragraph">
+<p>This causes the listener to bind to the address it was created with,
+and to start accepting connections from remote
+dialers.
+Each new connection results in an <a href="nng_pipe.5.html"><code>nng_pipe</code></a> object,
+which will be attached to the listener&#8217;s socket.</p>
+</div>
+<div class="paragraph">
+<p>The <em>flags</em> argument is ignored, but reserved for future use.</p>
+</div>
+<div class="paragraph">
+<p>Once a listener has started, it is generally not possible to change
+its configuration.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>Parameter <em>l</em> does not refer to an open listener.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ESTATE</code>
+</td>
+<td class="hdlist2">
+<p>The listener <em>l</em> is already started.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_listen.3.html">nng_listen(3)</a>,
+<a href="nng_listener_create.3.html">nng_listener_create(3)</a>
+<a href="nng_listener.5.html">nng_listener(5)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

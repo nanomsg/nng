@@ -1,0 +1,123 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_push(7)
+---
+<h1>nng_push(7)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_push - push protocol</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/pipeline0/push.h&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+The <em>push</em> protocol is one half of a pipeline pattern.
+The other side is the <a href="nng_pull.7.html"><em>pull</em></a> protocol.</p>
+</div>
+<div class="paragraph">
+<p>In the pipeline pattern, pushers distribute messages to pullers.
+Each message sent by a pusher will be sent to one of its peer pullers,
+chosen in a round-robin fashion
+from the set of connected peers available for receiving.
+This property makes this pattern useful in load-balancing scenarios.</p>
+</div>
+<div class="sect2">
+<h3 id="_socket_operations">Socket Operations</h3>
+<div class="paragraph">
+<p>The <a href="nng_push_open.3.html"><code>nng_push0_open()</code></a> call creates a pusher socket.
+This socket may be used to send messages, but is unable to receive them.
+Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
+</div>
+<div class="paragraph">
+<p>Send operations will observe flow control (back-pressure), so that
+only peers capable of accepting a message will be considered.
+If no peer is available to receive a message, then the send operation will
+wait until one is available, or the operation times out.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Although the pipeline protocol honors flow control, and attempts
+to avoid dropping messages, no guarantee of delivery is made.
+Furthermore, as there is no capability for message acknowledgment,
+applications that need reliable delivery are encouraged to consider the
+<a href="nng_req.7.html"><em>req</em></a> protocol instead.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_versions">Protocol Versions</h3>
+<div class="paragraph">
+<p>Only version 0 of this protocol is supported.
+(At the time of writing, no other versions of this protocol have been defined.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_options">Protocol Options</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="nng_options.5.html#NNG_OPT_SENDBUF"><code>NNG_OPT_SENDBUF</code></a></dt>
+<dd>
+<p>(<code>int</code>, 0 - 8192)
+Normally this is set to zero, indicating that send operations are unbuffered.
+In unbuffered operation, send operations will wait until a suitable peer is available to receive the message.
+If this is set to a positive value (up to 8192), then an intermediate buffer is
+provided for the socket with the specified depth (in messages).</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Transport layer buffering may occur in addition to any socket
+    buffer determined by this option.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_headers">Protocol Headers</h3>
+<div class="paragraph">
+<p>The <em>push</em> protocol has no protocol-specific headers.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_push_open.3.html">nng_push(3)</a>,
+<a href="nng_pull.7.html">nng_pull(7)</a>,
+<a href="nng_req.7.html">nng_req(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

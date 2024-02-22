@@ -1,0 +1,110 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nn_device(3compat)
+---
+<h1>nn_device(3compat)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nn_device - create forwarding device (compatible API)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nn_device</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">sock1</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">sock2</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_device()</code> function is used to create a forwarder, where messages
+received on one of the two sockets <em>sock1</em> and <em>sock2</em> are forwarded to
+the other.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The two sockets must be compatible, and must be
+<a href="nng.7.html#raw_mode">raw mode</a>
+sockets.
+More detail about devices and how they can be used is available in the
+new style <a href="nng_device.3.html">nng_device()</a> documentation.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function blocks forever, and will return -1 only when
+one of the sockets is closed or an error occurs.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
+<p>One of the two sockets is invalid or not open, or has</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The sockets are not compatible with each other, or not both raw.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nn_socket.3compat.html">nn_socket(3compat)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

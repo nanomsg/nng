@@ -1,0 +1,106 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_aio_set_iov(3)
+---
+<h1>nng_aio_set_iov(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_aio_set_iov - set scatter/gather vector</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_aio_set_iov</span><span class="tok-p">(</span><span class="tok-n">nng_aio</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">unsigned</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">niov</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_iov</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">iov</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_aio_set_iov()</code> function sets a scatter/gather vector <em>iov</em> on the handle <em>aio</em>.</p>
+</div>
+<div class="paragraph">
+<p>The <em>iov</em> is a pointer to an array of <em>niov</em> <a href="nng_iov.5.html"><code>nng_iov</code></a>
+structures, which have the following definition:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-w">    </span><span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nng_iov</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-w"> </span><span class="tok-n">iov_buf</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">iov_len</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-p">};</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <em>iov</em> is copied into storage in the <em>aio</em> itself, so that callers may use stack allocated <code>nng_iov</code> structures.
+The values pointed to by the <code>iov_buf</code> members are <strong>not</strong> copied by this function though.</p>
+</div>
+<div class="paragraph">
+<p>A maximum of four (4) <code>nng_iov</code> members may be supplied.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Earlier versions of the library could accept longer scatter-gather lists.
+However, no known consumers have ever needed a scatter-gather list longer than 4 vectors.
+As a result, the implementation limit was reduced, and heap allocations which could fail were removed.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>Value of specified <em>niov</em> is too large.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a>,
+<a href="nng_aio_count.3.html">nng_aio_count(3)</a>,
+<a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
+<a href="nng_aio.5.html">nng_aio(5)</a>,
+<a href="nng_iov.5.html">nng_iov(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

@@ -1,0 +1,79 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nng_socket_id(3)
+---
+<h1>nng_socket_id(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_socket_id - return numeric socket identifier</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_id</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_socket_id()</code> function returns a positive identifier for the socket <em>s</em>,
+if it is valid.
+Otherwise it returns <code>-1</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A socket is considered valid if it was ever opened with a protocol
+constructor, such as the <a href="nng_req_open.3.html"><code>nng_req0_open()</code></a> function.
+Sockets that are allocated on the stack or statically should be
+initialized with the macro
+<a href="nng_socket.5.html#NNG_SOCKET_INITIALIZER"><code>NNG_SOCKET_INITIALIZER</code></a>
+to ensure that they cannot be confused with a valid socket before they are opened.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns the positive value for the socket identifier, or
+<code>-1</code> if the socket is invalid.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_socket.5.html">nng_socket(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

@@ -1,0 +1,265 @@
+---
+version: v1.7.2
+layout: manpage_v2
+title: nn_errno(3compat)
+---
+<h1>nn_errno(3compat)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nn_errno - return most recent error (compatible API)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nn_errno</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_errno()</code> function returns the error number corresponding to the
+most recent failed operation by the calling thread.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The error numbers returned from this function may include
+errors caused by system functions, which overlap the usual <code>errno</code> variable,
+and this function simply returns the value of <code>errno</code>.
+However, the values returned may include numeric values that are not
+defined by the system, but are unique to <em>libnanomsg</em>, such as <code>EFSM</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This library implements the following error numbers, in addition to any others
+that might be set for <code>errno</code> by the underlying system:</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns the value of <code>errno</code>.
+If no operation has failed, then this will be zero.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>EINTR</code>
+</td>
+<td class="hdlist2">
+<p>Operation interrupted.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>Invalid argument.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EBUSY</code>
+</td>
+<td class="hdlist2">
+<p>Resource is busy.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>Operation timed out.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ECONNREFUSED</code>
+</td>
+<td class="hdlist2">
+<p>Connection refused by peer.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
+<p>Invalid or closed socket.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EAGAIN</code>
+</td>
+<td class="hdlist2">
+<p>Operation would block.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>Protocol or option not supported.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EADDRINUSE</code>
+</td>
+<td class="hdlist2">
+<p>Requested address is already in use.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EFSM</code>
+</td>
+<td class="hdlist2">
+<p>Protocol state incorrect.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EPROTO</code>
+</td>
+<td class="hdlist2">
+<p>Protocol error.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EHOSTUNREACH</code>
+</td>
+<td class="hdlist2">
+<p>Remote peer is unreachable.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EADDRNOTAVAIL</code>
+</td>
+<td class="hdlist2">
+<p>Requested address is not available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EACCES</code>
+</td>
+<td class="hdlist2">
+<p>Permission denied.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EMSGSIZE</code>
+</td>
+<td class="hdlist2">
+<p>Message is too large.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ECONNABORTED</code>
+</td>
+<td class="hdlist2">
+<p>Connection attempt aborted.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ECONNRESET</code>
+</td>
+<td class="hdlist2">
+<p>Connection reset by peer.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EEXIST</code>
+</td>
+<td class="hdlist2">
+<p>Resource already exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EMFILE</code>
+</td>
+<td class="hdlist2">
+<p>Too many open files.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOSPC</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient persistent storage.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_strerror.3compat.html">nn_strerror(3compat)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
