@@ -17,9 +17,9 @@ title: nng_ctx_id(3)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_id</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">c</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_ctx_id</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span><span class="tok-w"> </span><span class="tok-n">c</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -43,7 +43,7 @@ A context is considered valid if it was ever opened with
 <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a> function.
 Contexts that are allocated on the stack or statically should be
 initialized with the macro
-<a href="nng_ctx.5.html"><code>NNG_CTX_INITIALIZER</code></a> to ensure that
+<a href="nng_ctx.5.html#NNG_CTX_INITIALIZER"><code>NNG_CTX_INITIALIZER</code></a> to ensure that
 they cannot be confused with a valid context before they are opened.
 </td>
 </tr>

@@ -17,10 +17,10 @@ title: nng_http_res_set_status(3http)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
-<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_http_res_set_status</span><span class="tok-p">(</span><span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span> <span class="tok-kt">uint16_t</span> <span class="tok-n">status</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_http_res_set_status</span><span class="tok-p">(</span><span class="tok-n">nng_http_res</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">status</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -42,66 +42,66 @@ that only a valid code is supplied.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-k">enum</span> <span class="tok-p">{</span>
-    <span class="tok-n">NNG_HTTP_STATUS_CONTINUE</span>                 <span class="tok-o">=</span> <span class="tok-mi">100</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_SWITCHING</span>                <span class="tok-o">=</span> <span class="tok-mi">101</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PROCESSING</span>               <span class="tok-o">=</span> <span class="tok-mi">102</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_OK</span>                       <span class="tok-o">=</span> <span class="tok-mi">200</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_CREATED</span>                  <span class="tok-o">=</span> <span class="tok-mi">201</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_ACCEPTED</span>                 <span class="tok-o">=</span> <span class="tok-mi">202</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NOT_AUTHORITATIVE</span>        <span class="tok-o">=</span> <span class="tok-mi">203</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NO_CONTENT</span>               <span class="tok-o">=</span> <span class="tok-mi">204</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_RESET_CONTENT</span>            <span class="tok-o">=</span> <span class="tok-mi">205</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PARTIAL_CONTENT</span>          <span class="tok-o">=</span> <span class="tok-mi">206</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_MULTI_STATUS</span>             <span class="tok-o">=</span> <span class="tok-mi">207</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_ALREADY_REPORTED</span>         <span class="tok-o">=</span> <span class="tok-mi">208</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_IM_USED</span>                  <span class="tok-o">=</span> <span class="tok-mi">226</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_MULTIPLE_CHOICES</span>         <span class="tok-o">=</span> <span class="tok-mi">300</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY</span> <span class="tok-o">=</span> <span class="tok-mi">301</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_FOUND</span>                    <span class="tok-o">=</span> <span class="tok-mi">302</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_SEE_OTHER</span>                <span class="tok-o">=</span> <span class="tok-mi">303</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NOT_MODIFIED</span>             <span class="tok-o">=</span> <span class="tok-mi">304</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_USE_PROXY</span>                <span class="tok-o">=</span> <span class="tok-mi">305</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_TEMPORARY_REDIRECT</span>       <span class="tok-o">=</span> <span class="tok-mi">307</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PERMANENT_REDIRECT</span>       <span class="tok-o">=</span> <span class="tok-mi">308</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_BAD_REQUEST</span>              <span class="tok-o">=</span> <span class="tok-mi">400</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_UNAUTHORIZED</span>             <span class="tok-o">=</span> <span class="tok-mi">401</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PAYMENT_REQUIRED</span>         <span class="tok-o">=</span> <span class="tok-mi">402</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_FORBIDDEN</span>                <span class="tok-o">=</span> <span class="tok-mi">403</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NOT_FOUND</span>                <span class="tok-o">=</span> <span class="tok-mi">404</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_METHOD_NOT_ALLOWED</span>       <span class="tok-o">=</span> <span class="tok-mi">405</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NOT_ACCEPTABLE</span>           <span class="tok-o">=</span> <span class="tok-mi">406</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED</span>      <span class="tok-o">=</span> <span class="tok-mi">407</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_REQUEST_TIMEOUT</span>          <span class="tok-o">=</span> <span class="tok-mi">408</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_CONFLICT</span>                 <span class="tok-o">=</span> <span class="tok-mi">409</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_GONE</span>                     <span class="tok-o">=</span> <span class="tok-mi">410</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_LENGTH_REQUIRED</span>          <span class="tok-o">=</span> <span class="tok-mi">411</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PRECONDITION_FAILED</span>      <span class="tok-o">=</span> <span class="tok-mi">412</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE</span>        <span class="tok-o">=</span> <span class="tok-mi">413</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_ENTITY_TOO_LONG</span>          <span class="tok-o">=</span> <span class="tok-mi">414</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE</span>   <span class="tok-o">=</span> <span class="tok-mi">415</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE</span>    <span class="tok-o">=</span> <span class="tok-mi">416</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_EXPECTATION_FAILED</span>       <span class="tok-o">=</span> <span class="tok-mi">417</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_TEAPOT</span>                   <span class="tok-o">=</span> <span class="tok-mi">418</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY</span>     <span class="tok-o">=</span> <span class="tok-mi">422</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_LOCKED</span>                   <span class="tok-o">=</span> <span class="tok-mi">423</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_FAILED_DEPENDENCY</span>        <span class="tok-o">=</span> <span class="tok-mi">424</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_UPGRADE_REQUIRED</span>         <span class="tok-o">=</span> <span class="tok-mi">426</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_PRECONDITION_REQUIRED</span>    <span class="tok-o">=</span> <span class="tok-mi">428</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_TOO_MANY_REQUESTS</span>        <span class="tok-o">=</span> <span class="tok-mi">429</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_HEADERS_TOO_LARGE</span>        <span class="tok-o">=</span> <span class="tok-mi">431</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</span>    <span class="tok-o">=</span> <span class="tok-mi">451</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</span>    <span class="tok-o">=</span> <span class="tok-mi">500</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NOT_IMPLEMENTED</span>          <span class="tok-o">=</span> <span class="tok-mi">501</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_BAD_GATEWAY</span>              <span class="tok-o">=</span> <span class="tok-mi">502</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_SERVICE_UNAVAILABLE</span>      <span class="tok-o">=</span> <span class="tok-mi">503</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_GATEWAY_TIMEOUT</span>          <span class="tok-o">=</span> <span class="tok-mi">504</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP</span>    <span class="tok-o">=</span> <span class="tok-mi">505</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES</span>  <span class="tok-o">=</span> <span class="tok-mi">506</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_INSUFFICIENT_STORAGE</span>     <span class="tok-o">=</span> <span class="tok-mi">507</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_LOOP_DETECTED</span>            <span class="tok-o">=</span> <span class="tok-mi">508</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NOT_EXTENDED</span>             <span class="tok-o">=</span> <span class="tok-mi">510</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED</span>    <span class="tok-o">=</span> <span class="tok-mi">511</span><span class="tok-p">,</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-k">enum</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_CONTINUE</span><span class="tok-w">                 </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">100</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_SWITCHING</span><span class="tok-w">                </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">101</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PROCESSING</span><span class="tok-w">               </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">102</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_OK</span><span class="tok-w">                       </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">200</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_CREATED</span><span class="tok-w">                  </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">201</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_ACCEPTED</span><span class="tok-w">                 </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">202</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NOT_AUTHORITATIVE</span><span class="tok-w">        </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">203</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NO_CONTENT</span><span class="tok-w">               </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">204</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_RESET_CONTENT</span><span class="tok-w">            </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">205</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PARTIAL_CONTENT</span><span class="tok-w">          </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">206</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_MULTI_STATUS</span><span class="tok-w">             </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">207</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_ALREADY_REPORTED</span><span class="tok-w">         </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">208</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_IM_USED</span><span class="tok-w">                  </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">226</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_MULTIPLE_CHOICES</span><span class="tok-w">         </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">300</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">301</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_FOUND</span><span class="tok-w">                    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">302</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_SEE_OTHER</span><span class="tok-w">                </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">303</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NOT_MODIFIED</span><span class="tok-w">             </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">304</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_USE_PROXY</span><span class="tok-w">                </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">305</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_TEMPORARY_REDIRECT</span><span class="tok-w">       </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">307</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PERMANENT_REDIRECT</span><span class="tok-w">       </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">308</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_BAD_REQUEST</span><span class="tok-w">              </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">400</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_UNAUTHORIZED</span><span class="tok-w">             </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">401</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PAYMENT_REQUIRED</span><span class="tok-w">         </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">402</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_FORBIDDEN</span><span class="tok-w">                </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">403</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NOT_FOUND</span><span class="tok-w">                </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">404</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_METHOD_NOT_ALLOWED</span><span class="tok-w">       </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">405</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NOT_ACCEPTABLE</span><span class="tok-w">           </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">406</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED</span><span class="tok-w">      </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">407</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_REQUEST_TIMEOUT</span><span class="tok-w">          </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">408</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_CONFLICT</span><span class="tok-w">                 </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">409</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_GONE</span><span class="tok-w">                     </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">410</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_LENGTH_REQUIRED</span><span class="tok-w">          </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">411</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PRECONDITION_FAILED</span><span class="tok-w">      </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">412</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE</span><span class="tok-w">        </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">413</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_ENTITY_TOO_LONG</span><span class="tok-w">          </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">414</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE</span><span class="tok-w">   </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">415</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE</span><span class="tok-w">    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">416</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_EXPECTATION_FAILED</span><span class="tok-w">       </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">417</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_TEAPOT</span><span class="tok-w">                   </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">418</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY</span><span class="tok-w">     </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">422</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_LOCKED</span><span class="tok-w">                   </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">423</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_FAILED_DEPENDENCY</span><span class="tok-w">        </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">424</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_UPGRADE_REQUIRED</span><span class="tok-w">         </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">426</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_PRECONDITION_REQUIRED</span><span class="tok-w">    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">428</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_TOO_MANY_REQUESTS</span><span class="tok-w">        </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">429</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_HEADERS_TOO_LARGE</span><span class="tok-w">        </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">431</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</span><span class="tok-w">    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">451</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</span><span class="tok-w">    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">500</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NOT_IMPLEMENTED</span><span class="tok-w">          </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">501</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_BAD_GATEWAY</span><span class="tok-w">              </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">502</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_SERVICE_UNAVAILABLE</span><span class="tok-w">      </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">503</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_GATEWAY_TIMEOUT</span><span class="tok-w">          </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">504</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP</span><span class="tok-w">    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">505</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES</span><span class="tok-w">  </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">506</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_INSUFFICIENT_STORAGE</span><span class="tok-w">     </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">507</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_LOOP_DETECTED</span><span class="tok-w">            </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">508</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NOT_EXTENDED</span><span class="tok-w">             </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">510</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED</span><span class="tok-w">    </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">511</span><span class="tok-p">,</span>
 <span class="tok-p">};</span></code></pre>
 </div>
 </div>

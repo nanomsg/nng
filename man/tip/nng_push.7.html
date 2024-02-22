@@ -17,7 +17,7 @@ title: nng_push(7)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pipeline0/push.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/pipeline0/push.h&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -26,7 +26,7 @@ title: nng_push(7)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(protocol, <em>push</em>)
+<p>
 The <em>push</em> protocol is one half of a pipeline pattern.
 The other side is the <a href="nng_pull.7.html"><em>pull</em></a> protocol.</p>
 </div>
@@ -78,7 +78,7 @@ applications that need reliable delivery are encouraged to consider the
 <h3 id="_protocol_options">Protocol Options</h3>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a href="nng_options.5.html">`NNG_OPT_SENDBUF`</a></dt>
+<dt class="hdlist1"><a href="nng_options.5.html#NNG_OPT_SENDBUF"><code>NNG_OPT_SENDBUF</code></a></dt>
 <dd>
 <p>(<code>int</code>, 0 - 8192)
 Normally this is set to zero, indicating that send operations are unbuffered.
