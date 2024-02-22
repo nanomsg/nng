@@ -18,13 +18,13 @@ title: nng_pair(7)
 <div class="listingblock">
 <div class="title">Version 0</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pair0/pair.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/pair0/pair.h&gt;</span></code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">Version 1</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pair1/pair.h&gt;</span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/pair1/pair.h&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -33,7 +33,7 @@ title: nng_pair(7)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(protocol, <em>pair</em>)
+<p>
 The <em>pair</em> protocol implements a peer-to-peer pattern, where
 relationships between peers are one-to-one.</p>
 </div>
@@ -56,7 +56,7 @@ no peer is able to receive the message.</p>
 Even though this mode may appear to be reliable, because back-pressure
 prevents discarding messages most of the time, there are topologies involving
 <em>devices</em> (see <a href="nng_device.3.html"><code>nng_device()</code></a>) or raw mode sockets
-(see <a href="nng_options.5.html"><code>NNG_OPT_RAW</code></a>) where
+(see <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>) where
 messages may be discarded.
 Applications that require reliable delivery semantics should consider using
 <a href="nng_req.7.html"><em>req</em></a> sockets, or
@@ -175,7 +175,7 @@ to the sender.</p>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a href="nng_options.5.html">`NNG_OPT_MAXTTL`</a></dt>
+<dt class="hdlist1"><a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></dt>
 <dd>
 <p>(<code>int</code>, version 1 only).  Maximum time-to-live.</p>
 </dd>
@@ -197,7 +197,7 @@ is now established by using the <code>nng_pair1_open_poly()</code> function.</p>
 <p>Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
 low-order (big-endian) byte of this value contains a "hop" count, and is
 used in conjunction with the
-<a href="nng_options.5.html"><code>NNG_OPT_MAXTTL</code></a> option to guard against
+<a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a> option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.</p>

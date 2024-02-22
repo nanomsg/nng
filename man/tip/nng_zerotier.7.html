@@ -17,9 +17,9 @@ title: nng_zerotier(7)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/zerotier/zerotier.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/transport/zerotier/zerotier.h&gt;</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_zt_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_zt_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -28,7 +28,7 @@ title: nng_zerotier(7)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(transport, <em>zt</em>)
+<p>
 The <em>zt</em> transport provides communication support for
 <em>NNG</em> applications over a <a href="http://www.zerotier.com">ZeroTier</a> network,
 using a Virtual Layer 2 packet facility.</p>
@@ -116,7 +116,7 @@ cannot be initialized for any reason.</p>
 <div class="sect2">
 <h3 id="_uri_format">URI Format</h3>
 <div class="paragraph">
-<p>(URI, <code>zt://</code>)
+<p>
 This transport uses URIs using the scheme <code>zt://</code>, followed by a node
 number (ten hexadecimal digits) followed by a <code>.</code> delimited, and then
 a network address (sixteen hexadecimal digits), followed by a colon (<code>:</code>)
@@ -161,7 +161,8 @@ using the same node, or using separate nodes.</p>
 <div class="sect2">
 <h3 id="_network_status">Network Status</h3>
 <div class="paragraph">
-<p>A ZeroTier node can be in one of the following states, which can be obtained
+<p>
+A ZeroTier node can be in one of the following states, which can be obtained
 with the <code>NNG_OPT_ZT_NETWORK_STATUS</code> option:</p>
 </div>
 <div id="NNG_ZT_STATUS_UP" class="dlist">

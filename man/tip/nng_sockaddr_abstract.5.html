@@ -17,17 +17,17 @@ title: nng_sockaddr_abstract(5)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
 
-<span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
-    <span class="tok-n">NNG_AF_ABSTRACT</span> <span class="tok-o">=</span> <span class="tok-mi">6</span><span class="tok-p">,</span>
+<span class="tok-k">enum</span><span class="tok-w"> </span><span class="tok-n">sockaddr_family</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_AF_ABSTRACT</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">6</span><span class="tok-p">,</span>
 <span class="tok-p">};</span>
 
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_len</span><span class="tok-p">;</span>
-    <span class="tok-kt">char</span>     <span class="tok-n">sa_name</span><span class="tok-p">[</span><span class="tok-mi">107</span><span class="tok-p">];</span>
-<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_abstract</span><span class="tok-p">;</span></code></pre>
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">sa_family</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">sa_len</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">char</span><span class="tok-w">     </span><span class="tok-n">sa_name</span><span class="tok-p">[</span><span class="tok-mi">107</span><span class="tok-p">];</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">nng_sockaddr_abstract</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
 </div>

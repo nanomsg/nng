@@ -17,21 +17,17 @@ title: nng_opts_parse(3supp)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
-<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/util/options.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/util/options.h&gt;</span>
 
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_optspec</span> <span class="tok-p">{</span>
-    <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">o_name</span><span class="tok-p">;</span>  <span class="tok-c1">// Long style name (may be NULL for short only)
-</span>
-    <span class="tok-kt">int</span>         <span class="tok-n">o_short</span><span class="tok-p">;</span> <span class="tok-c1">// Short option (no clustering!)
-</span>
-    <span class="tok-kt">int</span>         <span class="tok-n">o_val</span><span class="tok-p">;</span>   <span class="tok-c1">// Value stored on a good parse (&gt;0)
-</span>
-    <span class="tok-kt">bool</span>        <span class="tok-n">o_arg</span><span class="tok-p">;</span>   <span class="tok-c1">// Option takes an argument if true
-</span>
-<span class="tok-p">}</span> <span class="tok-n">nng_optspec</span><span class="tok-p">;</span>
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nng_optspec</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">o_name</span><span class="tok-p">;</span><span class="tok-w">  </span><span class="tok-c1">// Long style name (may be NULL for short only)</span>
+<span class="tok-w">    </span><span class="tok-kt">int</span><span class="tok-w">         </span><span class="tok-n">o_short</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-c1">// Short option (no clustering!)</span>
+<span class="tok-w">    </span><span class="tok-kt">int</span><span class="tok-w">         </span><span class="tok-n">o_val</span><span class="tok-p">;</span><span class="tok-w">   </span><span class="tok-c1">// Value stored on a good parse (&gt;0)</span>
+<span class="tok-w">    </span><span class="tok-kt">bool</span><span class="tok-w">        </span><span class="tok-n">o_arg</span><span class="tok-p">;</span><span class="tok-w">   </span><span class="tok-c1">// Option takes an argument if true</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">nng_optspec</span><span class="tok-p">;</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">argc</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-k">const</span> <span class="tok-o">*</span><span class="tok-n">argv</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-n">nng_optspec</span> <span class="tok-o">*</span><span class="tok-n">spec</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">**</span><span class="tok-n">arg</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">idx</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">argc</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">argv</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-n">nng_optspec</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">spec</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">**</span><span class="tok-n">arg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">idx</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -172,48 +168,46 @@ unambiguously (meaning it must not match any other option specification.)</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c">    <span class="tok-k">enum</span> <span class="tok-p">{</span> <span class="tok-n">OPT_LOGFILE</span><span class="tok-p">,</span> <span class="tok-n">OPT_VERBOSE</span> <span class="tok-p">};</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">logfile</span><span class="tok-p">;</span> <span class="tok-c1">// options to be set
-</span>
-    <span class="tok-kt">bool</span> <span class="tok-n">verbose</span><span class="tok-p">;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-w">    </span><span class="tok-k">enum</span><span class="tok-w"> </span><span class="tok-p">{</span><span class="tok-w"> </span><span class="tok-n">OPT_LOGFILE</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">OPT_VERBOSE</span><span class="tok-w"> </span><span class="tok-p">};</span>
+<span class="tok-w">    </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">logfile</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-c1">// options to be set</span>
+<span class="tok-w">    </span><span class="tok-kt">bool</span><span class="tok-w"> </span><span class="tok-n">verbose</span><span class="tok-p">;</span>
 
-    <span class="tok-k">static</span> <span class="tok-n">nng_optspec</span> <span class="tok-n">specs</span><span class="tok-p">[]</span> <span class="tok-o">=</span> <span class="tok-p">{</span>
-        <span class="tok-p">{</span>
-            <span class="tok-p">.</span><span class="tok-n">o_name</span> <span class="tok-o">=</span> <span class="tok-s">&#34;logfile&#34;</span><span class="tok-p">,</span>
-            <span class="tok-p">.</span><span class="tok-n">o_short</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;D&#39;</span><span class="tok-p">,</span>
-            <span class="tok-p">.</span><span class="tok-n">o_val</span> <span class="tok-o">=</span> <span class="tok-n">OPT_LOGFILE</span><span class="tok-p">,</span>
-            <span class="tok-p">.</span><span class="tok-n">o_arg</span> <span class="tok-o">=</span> <span class="tok-nb">true</span><span class="tok-p">,</span>
-        <span class="tok-p">},</span> <span class="tok-p">{</span>
-            <span class="tok-p">.</span><span class="tok-n">o_name</span> <span class="tok-o">=</span> <span class="tok-s">&#34;verbose&#34;</span><span class="tok-p">,</span>
-            <span class="tok-p">.</span><span class="tok-n">o_short</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;V&#39;</span><span class="tok-p">,</span>
-            <span class="tok-p">.</span><span class="tok-n">o_val</span> <span class="tok-o">=</span> <span class="tok-n">OPT_VERBOSE</span><span class="tok-p">,</span>
-            <span class="tok-p">.</span><span class="tok-n">o_arg</span> <span class="tok-o">=</span> <span class="tok-nb">false</span><span class="tok-p">,</span>
-        <span class="tok-p">},</span> <span class="tok-p">{</span>
-            <span class="tok-p">.</span><span class="tok-n">o_val</span> <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">;</span> <span class="tok-c1">// Terminate array
-</span>
-        <span class="tok-p">}</span>
-    <span class="tok-p">};</span>
+<span class="tok-w">    </span><span class="tok-k">static</span><span class="tok-w"> </span><span class="tok-n">nng_optspec</span><span class="tok-w"> </span><span class="tok-n">specs</span><span class="tok-p">[]</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-p">{</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_name</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-s">&quot;logfile&quot;</span><span class="tok-p">,</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_short</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-sc">&#39;D&#39;</span><span class="tok-p">,</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_val</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">OPT_LOGFILE</span><span class="tok-p">,</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_arg</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-nb">true</span><span class="tok-p">,</span>
+<span class="tok-w">        </span><span class="tok-p">},</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_name</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-s">&quot;verbose&quot;</span><span class="tok-p">,</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_short</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-sc">&#39;V&#39;</span><span class="tok-p">,</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_val</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">OPT_VERBOSE</span><span class="tok-p">,</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_arg</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-nb">false</span><span class="tok-p">,</span>
+<span class="tok-w">        </span><span class="tok-p">},</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">            </span><span class="tok-p">.</span><span class="tok-n">o_val</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">;</span><span class="tok-w"> </span><span class="tok-c1">// Terminate array</span>
+<span class="tok-w">        </span><span class="tok-p">}</span>
+<span class="tok-w">    </span><span class="tok-p">};</span>
 
-    <span class="tok-k">for</span> <span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">idx</span> <span class="tok-o">=</span> <span class="tok-mi">1</span><span class="tok-p">;;)</span> <span class="tok-p">{</span>
-        <span class="tok-kt">int</span> <span class="tok-n">rv</span><span class="tok-p">,</span> <span class="tok-n">opt</span><span class="tok-p">;</span>
-        <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">;</span>
-        <span class="tok-n">rv</span> <span class="tok-o">=</span> <span class="tok-nf">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-n">argc</span><span class="tok-p">,</span> <span class="tok-n">argv</span><span class="tok-p">,</span> <span class="tok-n">specs</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">arg</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">idx</span><span class="tok-p">);</span>
-        <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">rv</span> <span class="tok-o">!=</span> <span class="tok-mi">0</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-            <span class="tok-k">break</span><span class="tok-p">;</span>
-        <span class="tok-p">}</span>
-        <span class="tok-k">switch</span> <span class="tok-p">(</span><span class="tok-n">opt</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-        <span class="tok-k">case</span> <span class="tok-nl">OPT_LOGFILE</span><span class="tok-p">:</span>
-            <span class="tok-n">logfile</span> <span class="tok-o">=</span> <span class="tok-n">arg</span><span class="tok-p">;</span>
-            <span class="tok-k">break</span><span class="tok-p">;</span>
-        <span class="tok-k">case</span> <span class="tok-nl">OPT_VERBOSE</span><span class="tok-p">:</span>
-            <span class="tok-n">verbose</span> <span class="tok-o">=</span> <span class="tok-nb">true</span><span class="tok-p">;</span>
-            <span class="tok-k">break</span><span class="tok-p">;</span>
-        <span class="tok-p">}</span>
-    <span class="tok-p">}</span>
-    <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">rv</span> <span class="tok-o">!=</span> <span class="tok-o">-</span><span class="tok-mi">1</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-        <span class="tok-nf">printf</span><span class="tok-p">(</span><span class="tok-s">&#34;Options error: %s</span><span class="tok-se">\n</span><span class="tok-s">&#34;</span><span class="tok-p">,</span> <span class="tok-nf">nng_strerror</span><span class="tok-p">(</span><span class="tok-n">rv</span><span class="tok-p">));</span>
-        <span class="tok-nf">exit</span><span class="tok-p">(</span><span class="tok-mi">1</span><span class="tok-p">);</span>
-    <span class="tok-p">}</span></code></pre>
+<span class="tok-w">    </span><span class="tok-k">for</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">idx</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">;;)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">rv</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">opt</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-n">rv</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">nng_opts_parse</span><span class="tok-p">(</span><span class="tok-n">argc</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">argv</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">specs</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-n">opt</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-n">arg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-o">&amp;</span><span class="tok-n">idx</span><span class="tok-p">);</span>
+<span class="tok-w">        </span><span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">rv</span><span class="tok-w"> </span><span class="tok-o">!=</span><span class="tok-w"> </span><span class="tok-mi">0</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">            </span><span class="tok-k">break</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-p">}</span>
+<span class="tok-w">        </span><span class="tok-k">switch</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">opt</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-k">case</span><span class="tok-w"> </span><span class="tok-no">OPT_LOGFILE</span><span class="tok-p">:</span>
+<span class="tok-w">            </span><span class="tok-n">logfile</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-n">arg</span><span class="tok-p">;</span>
+<span class="tok-w">            </span><span class="tok-k">break</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-k">case</span><span class="tok-w"> </span><span class="tok-no">OPT_VERBOSE</span><span class="tok-p">:</span>
+<span class="tok-w">            </span><span class="tok-n">verbose</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-nb">true</span><span class="tok-p">;</span>
+<span class="tok-w">            </span><span class="tok-k">break</span><span class="tok-p">;</span>
+<span class="tok-w">        </span><span class="tok-p">}</span>
+<span class="tok-w">    </span><span class="tok-p">}</span>
+<span class="tok-w">    </span><span class="tok-k">if</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-n">rv</span><span class="tok-w"> </span><span class="tok-o">!=</span><span class="tok-w"> </span><span class="tok-mi">-1</span><span class="tok-p">)</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">        </span><span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&quot;Options error: %s</span><span class="tok-se">\n</span><span class="tok-s">&quot;</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_strerror</span><span class="tok-p">(</span><span class="tok-n">rv</span><span class="tok-p">));</span>
+<span class="tok-w">        </span><span class="tok-n">exit</span><span class="tok-p">(</span><span class="tok-mi">1</span><span class="tok-p">);</span>
+<span class="tok-w">    </span><span class="tok-p">}</span></code></pre>
 </div>
 </div>
 </div>

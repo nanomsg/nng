@@ -17,18 +17,18 @@ title: nng_sockaddr_zt(5)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
 
-<span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
-    <span class="tok-n">NNG_AF_ZT</span> <span class="tok-o">=</span> <span class="tok-mi">5</span><span class="tok-p">,</span>
+<span class="tok-k">enum</span><span class="tok-w"> </span><span class="tok-n">sockaddr_family</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-n">NNG_AF_ZT</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">5</span><span class="tok-p">,</span>
 <span class="tok-p">};</span>
 
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
-    <span class="tok-kt">uint64_t</span> <span class="tok-n">sa_nwid</span><span class="tok-p">;</span>
-    <span class="tok-kt">uint64_t</span> <span class="tok-n">sa_nodeid</span><span class="tok-p">;</span>
-    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
-<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_zt</span><span class="tok-p">;</span></code></pre>
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">sa_family</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">sa_nwid</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">sa_nodeid</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint32_t</span><span class="tok-w"> </span><span class="tok-n">sa_port</span><span class="tok-p">;</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">nng_sockaddr_zt</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
 </div>
@@ -37,7 +37,8 @@ title: nng_sockaddr_zt(5)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>An <code>nng_sockaddr_zt</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
+<p>
+An <code>nng_sockaddr_zt</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
 used to represent ZeroTier addresses, including the
 port number used by the
 <a href="nng_zerotier.7.html"><em>zt</em></a> transport.</p>

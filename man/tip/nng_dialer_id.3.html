@@ -17,9 +17,9 @@ title: nng_dialer_id(3)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_id</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_dialer_id</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span><span class="tok-w"> </span><span class="tok-n">d</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -44,7 +44,7 @@ A dialer is considered valid if it was ever created with the
 <a href="nng_dial.3.html"><code>nng_dial()</code></a> functions.
 Dialers that are allocated on the stack or statically should be
 initialized with the macro
-<a href="nng_ctx.5.html"><code>NNG_DIALER_INITIALIZER</code></a> to ensure that
+<a href="nng_ctx.5.html#NNG_DIALER_INITIALIZER"><code>NNG_DIALER_INITIALIZER</code></a> to ensure that
 they cannot be confused with a valid dialer before they are created properly.
 </td>
 </tr>

@@ -16,9 +16,9 @@ title: nng_socket(7)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(transport, <em>socket</em>)
-The <em>socket</em> transport provides communication support between
-peers across a arbitrary BSD sockets, such as those that are
+<p>
+The <em>socket</em> transport supports communication between
+peers across arbitrary BSD sockets, such as those that are
 created with <a href="nng_socket_pair.3supp.html"><code>nng_socket_pair()</code></a>.</p>
 </div>
 <div class="paragraph">
@@ -31,18 +31,17 @@ created with <a href="nng_socket_pair.3supp.html"><code>nng_socket_pair()</code>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Attempts to create a <a href="nng_dialer.5.html">dialer</a> using this transport will result in <code>NNG_ENOTSUP</code>.
+Attempts to create <a href="nng_dialer.5.html">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
 <p>The socket file descriptor is passed to the listener using the <code>NNG_OPT_SOCKET_FD</code> option (as an integer).
-Setting this option (which is read-only and can be set multiple times) will cause the listener
-to create a <a href="nng_pipe.5.html">pipe</a> associated backed by the file descriptor.</p>
+Setting this option will cause the listener to create a <a href="nng_pipe.5.html">pipe</a> associated backed by the file descriptor.</p>
 </div>
 <div class="paragraph">
-<p>The protocol between peers using this pipe is at present compatible with the protocol used for the
+<p>The protocol between peers using this transport is compatible with the protocol used for the
 <a href="nng_tcp.7.html">TCP</a> transport, but this is an implementation detail and subject to change without notice.</p>
 </div>
 <div class="admonitionblock note">
@@ -66,7 +65,7 @@ This transport is <strong>experimental</strong>, and at present is only supporte
 <div class="sect2">
 <h3 id="_uri_format">URI Format</h3>
 <div class="paragraph">
-<p>(URI, <code>socket://</code>)
+<p>
 This transport uses the URL <code>socket://</code>, without further qualification.</p>
 </div>
 </div>
@@ -87,7 +86,8 @@ There are no further socket details available.</p>
 <dt class="hdlist1"><code>NNG_OPT_SOCKET_FD</code></dt>
 <dd>
 <p>(int) This is a write-only option, that may be set multiple times on a listener.
-The listener will create a pipe backed by the given file descriptor passed as an argument.</p>
+Each time this is set, the listener will create a <a href="nng_pipe.5.html">pipe</a> backed by the given file
+descriptor passed as an argument.</p>
 </dd>
 </dl>
 </div>
@@ -97,16 +97,16 @@ The listener will create a pipe backed by the given file descriptor passed as an
 <div class="ulist">
 <ul>
 <li>
-<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_GID</code></a></p>
+<p><a href="nng_options.5.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a></p>
 </li>
 <li>
-<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_PID</code></a></p>
+<p><a href="nng_options.5.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a></p>
 </li>
 <li>
-<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_UID</code></a></p>
+<p><a href="nng_options.5.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a></p>
 </li>
 <li>
-<p><a href="nng_options.5.html"><code>NNG_OPT_PEER_ZONEID</code></a></p>
+<p><a href="nng_options.5.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a></p>
 </li>
 </ul>
 </div>

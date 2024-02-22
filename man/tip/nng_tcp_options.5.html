@@ -17,11 +17,11 @@ title: nng_tcp_options(5)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
 
-<span class="tok-cp">#define NNG_OPT_TCP_NODELAY    &#34;tcp-nodelay&#34;</span>
-<span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE  &#34;tcp-keepalive&#34;</span>
-<span class="tok-cp">#define NNG_OPT_TCP_BOUND_PORT &#34;tcp-bound-port&#34;</span></code></pre>
+<span class="tok-cp">#define NNG_OPT_TCP_NODELAY    &quot;tcp-nodelay&quot;</span>
+<span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE  &quot;tcp-keepalive&quot;</span>
+<span class="tok-cp">#define NNG_OPT_TCP_BOUND_PORT &quot;tcp-bound-port&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -57,7 +57,7 @@ TCP/IP communications.</p>
 <dt class="hdlist1"><code>NNG_OPT_TCP_NODELAY</code></dt>
 <dd>
 <p>(<code>bool</code>)
-This option is used to disable (or enable) the use of Nagle's algorithm
+This option is used to disable (or enable) the use of Nagle&#8217;s algorithm
 for TCP connections.</p>
 <div class="admonitionblock note">
 <table>
@@ -165,10 +165,10 @@ when appropriate for the context:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><a href="nng_options.5.html"><code>NNG_OPT_LOCADDR</code></a></p>
+<p><a href="nng_options.5.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></p>
 </li>
 <li>
-<p><a href="nng_options.5.html"><code>NNG_OPT_REMADDR</code></a></p>
+<p><a href="nng_options.5.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></p>
 </li>
 </ul>
 </div>
