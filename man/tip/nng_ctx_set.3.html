@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nng_ctx_set(3)
 ---
 <h1>nng_ctx_set(3)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nng_ctx_set(3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nng_ctx_set(3)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -17,21 +35,21 @@ title: nng_ctx_set(3)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="rouge highlight"><code data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;nng/nng.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">nng_ctx_set</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">val</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">valsz</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">valsz</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_ctx_set_bool</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">bval</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set_bool</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">bval</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_ctx_set_int</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">ival</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set_int</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">ival</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_ctx_set_ms</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="n">nng_duration</span> <span class="n">dur</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set_ms</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_duration</span> <span class="tok-n">dur</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_ctx_set_size</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">z</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set_size</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">z</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_ctx_set_string</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set_string</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">str</span><span class="tok-p">);</span>
-
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ctx_set_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-n">u64</span><span class="tok-p">);</span></code></pre>
+<span class="kt">int</span> <span class="nf">nng_ctx_set_uint64</span><span class="p">(</span><span class="n">nng_ctx</span> <span class="n">ctx</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">uint64_t</span> <span class="n">u64</span><span class="p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -52,7 +70,8 @@ These functions are deprecated.  Please see <a href="nng_ctx_set.3.html">nng_ctx
 </table>
 </div>
 <div class="paragraph">
-<p>The <code>nng_ctx_set()</code> functions are used to configure options for
+<p>
+The <code>nng_ctx_set()</code> functions are used to configure options for
 the context <em>ctx</em>.
 The actual options that may be configured in this way vary, and are
 specified by <em>opt</em>.</p>
@@ -211,3 +230,6 @@ and similar.</p>
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>

@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nn_poll(3compat)
 ---
 <h1>nn_poll(3compat)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nn_poll(3compat)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nn_poll(3compat)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -17,18 +35,18 @@ title: nn_poll(3compat)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+<pre class="rouge highlight"><code data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;nanomsg/nn.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define NN_POLLIN  1
+#define NN_POLLOUT 2
+</span>
+<span class="k">struct</span> <span class="n">nn_pollfd</span> <span class="p">{</span>
+    <span class="kt">int</span>      <span class="n">fd</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">events</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="n">revents</span><span class="p">;</span>
+<span class="p">};</span>
 
-<span class="tok-cp">#define NN_POLLIN  1</span>
-<span class="tok-cp">#define NN_POLLOUT 2</span>
-
-<span class="tok-k">struct</span> <span class="tok-n">nn_pollfd</span> <span class="tok-p">{</span>
-    <span class="tok-kt">int</span>      <span class="tok-n">fd</span><span class="tok-p">;</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">events</span><span class="tok-p">;</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">revents</span><span class="tok-p">;</span>
-<span class="tok-p">};</span>
-
-<span class="tok-kt">int</span> <span class="tok-nf">nn_poll</span><span class="tok-p">(</span><span class="tok-k">struct</span> <span class="tok-n">nn_pollfd</span> <span class="tok-o">*</span><span class="tok-n">pfds</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">npfd</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">timeout</span><span class="tok-p">);</span></code></pre>
+<span class="kt">int</span> <span class="nf">nn_poll</span><span class="p">(</span><span class="k">struct</span> <span class="n">nn_pollfd</span> <span class="o">*</span><span class="n">pfds</span><span class="p">,</span> <span class="kt">int</span> <span class="n">npfd</span><span class="p">,</span> <span class="kt">int</span> <span class="n">timeout</span><span class="p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -203,3 +221,6 @@ platforms and Windows.
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>

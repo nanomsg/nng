@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nngcat(1)
 ---
 <h1>nngcat(1)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nngcat(1)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nngcat(1)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -98,7 +116,7 @@ each option must be presented as a separate argument to the program.</p>
 </dd>
 <dt class="hdlist1"><strong>--compat</strong></dt>
 <dd>
-<p>Compatible mode.
+<p>Compatible mode. 
 This cause <em>nngcat</em> to behave more like the legacy
 <em>nanocat</em> application.
 In this mode connections are made asynchronously,
@@ -347,7 +365,7 @@ conventions.</p>
 </dd>
 <dt class="hdlist1"><code>hex</code></dt>
 <dd>
-<p>Messages are printed as quoted strings, with every byte appearing as an escaped hexadecimal value, such as <code>\x2E</code>.</p>
+<p> Messages are printed as quoted strings, with every byte appearing as an escaped hexadecimal value, such as <code>\x2E</code>.</p>
 </dd>
 <dt class="hdlist1"><code>msgpack</code></dt>
 <dd>
@@ -453,20 +471,20 @@ file locking is used to prevent this.</p>
 <div class="listingblock">
 <div class="title">Echo service using request/reply.</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span><span class="tok-s2">&#34;tcp://127.0.0.1:4567&#34;</span>
-$ nngcat --rep --listen<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data<span class="tok-o">=</span><span class="tok-s2">&#34;42&#34;</span> --quoted <span class="tok-p">&amp;</span>
-$ nngcat --req --dial<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data<span class="tok-o">=</span><span class="tok-s2">&#34;what is the answer?&#34;</span> --quoted
-<span class="tok-s2">&#34;what is the answer?&#34;</span>
-<span class="tok-s2">&#34;42&#34;</span></code></pre>
+<pre class="rouge highlight"><code data-lang="sh"><span class="nv">$ addr</span><span class="o">=</span><span class="s2">"tcp://127.0.0.1:4567"</span>
+<span class="nv">$ </span>nngcat <span class="nt">--rep</span> <span class="nt">--listen</span><span class="o">=</span><span class="k">${</span><span class="nv">addr</span><span class="k">}</span> <span class="nt">--data</span><span class="o">=</span><span class="s2">"42"</span> <span class="nt">--quoted</span> &amp;
+<span class="nv">$ </span>nngcat <span class="nt">--req</span> <span class="nt">--dial</span><span class="o">=</span><span class="k">${</span><span class="nv">addr</span><span class="k">}</span> <span class="nt">--data</span><span class="o">=</span><span class="s2">"what is the answer?"</span> <span class="nt">--quoted</span>
+<span class="s2">"what is the answer?"</span>
+<span class="s2">"42"</span></code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">Send a chime every hour (3600 seconds).</div>
 <div class="content">
-<pre class="pygments highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span>ipc:///grandpa_clock
-$ nngcat --pub --listen<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data <span class="tok-s2">&#34;cuckoo&#34;</span> --interval <span class="tok-m">3600</span> <span class="tok-p">&amp;</span>
-$ nngcat --sub --dial<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --quoted <span class="tok-p">&amp;</span>
-<span class="tok-s2">&#34;cuckoo&#34;</span></code></pre>
+<pre class="rouge highlight"><code data-lang="sh"><span class="nv">$ addr</span><span class="o">=</span>ipc:///grandpa_clock
+<span class="nv">$ </span>nngcat <span class="nt">--pub</span> <span class="nt">--listen</span><span class="o">=</span><span class="k">${</span><span class="nv">addr</span><span class="k">}</span> <span class="nt">--data</span> <span class="s2">"cuckoo"</span> <span class="nt">--interval</span> 3600 &amp;
+<span class="nv">$ </span>nngcat <span class="nt">--sub</span> <span class="nt">--dial</span><span class="o">=</span><span class="k">${</span><span class="nv">addr</span><span class="k">}</span> <span class="nt">--quoted</span> &amp;
+<span class="s2">"cuckoo"</span></code></pre>
 </div>
 </div>
 </div>
@@ -490,3 +508,6 @@ $ nngcat --sub --dial<span class="tok-o">=</span><span class="tok-si">${</span><
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>

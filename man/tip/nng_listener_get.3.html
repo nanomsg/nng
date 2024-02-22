@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nng_listener_get(3)
 ---
 <h1>nng_listener_get(3)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nng_listener_get(3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nng_listener_get(3)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -17,25 +35,25 @@ title: nng_listener_get(3)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="rouge highlight"><code data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;nng/nng.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">val</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">valszp</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">valszp</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_bool</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="n">bool</span> <span class="o">*</span><span class="n">bvalp</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_bool</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">bool</span> <span class="tok-o">*</span><span class="tok-n">bvalp</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_int</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">int</span> <span class="o">*</span><span class="n">ivalp</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_int</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">ivalp</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_ms</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="n">nng_duration</span> <span class="o">*</span><span class="n">durp</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_ms</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_duration</span> <span class="tok-o">*</span><span class="tok-n">durp</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_ptr</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">void</span> <span class="o">**</span><span class="n">ptr</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_ptr</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">**</span><span class="tok-n">ptr</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_size</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">size_t</span> <span class="o">*</span><span class="n">zp</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_size</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">zp</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_addr</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="n">nng_sockaddr</span> <span class="o">*</span><span class="n">sap</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_addr</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_sockaddr</span> <span class="tok-o">*</span><span class="tok-n">sap</span><span class="tok-p">);</span>
+<span class="kt">int</span> <span class="nf">nng_listener_get_string</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">strp</span><span class="p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_string</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">**</span><span class="tok-n">strp</span><span class="tok-p">);</span>
-
-<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_get_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-o">*</span><span class="tok-n">u64p</span><span class="tok-p">);</span></code></pre>
+<span class="kt">int</span> <span class="nf">nng_listener_get_uint64</span><span class="p">(</span><span class="n">nng_listener</span> <span class="n">l</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">opt</span><span class="p">,</span> <span class="kt">uint64_t</span> <span class="o">*</span><span class="n">u64p</span><span class="p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -44,7 +62,8 @@ title: nng_listener_get(3)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_listener_get()</code> functions are used to retrieve option values for
+<p>
+The <code>nng_listener_get()</code> functions are used to retrieve option values for
 the <a href="nng_listener.5.html">listener</a> <em>l</em>.
 The actual options that may be retrieved in this way
 vary, and many are documented in <a href="nng_options.5.html">nng_options(5)</a>.</p>
@@ -234,3 +253,6 @@ numbers, and similar.</p>
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>

@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nng_req(7)
 ---
 <h1>nng_req(7)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nng_req(7)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nng_req(7)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -17,7 +35,7 @@ title: nng_req(7)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/reqrep0/req.h&gt;</span></code></pre>
+<pre class="rouge highlight"><code data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;nng/protocol/reqrep0/req.h&gt;</span></code></pre>
 </div>
 </div>
 </div>
@@ -26,7 +44,7 @@ title: nng_req(7)
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>(protocol, <em>req</em>)
+<p>
 The <em>req</em> protocol is one half of a request/reply pattern.
 In this pattern, a requester sends a message to one replier, who
 is expected to reply.
@@ -63,10 +81,10 @@ some reason.)
 </table>
 </div>
 <div class="paragraph">
-<p>(load-balancing)
+<p>
 The requester generally only has one outstanding request at a time unless
 in raw mode (via
-<a href="nng_options.5.html"><code>NNG_OPT_RAW</code></a>),
+<a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>),
 and it will generally attempt to spread work requests to different peer repliers.</p>
 </div>
 <div class="admonitionblock tip">
@@ -110,7 +128,7 @@ from processing a request it has already received or terminate a request
 that has already been placed on the wire.</p>
 </div>
 <div class="paragraph">
-<p><a href="nng.7.html">Raw</a> mode sockets ignore all these restrictions.</p>
+<p><a href="nng.7.html#raw_mode">Raw</a> mode sockets ignore all these restrictions.</p>
 </div>
 </div>
 <div class="sect2">
@@ -183,7 +201,8 @@ the clock does not tick at all.</p>
 <div class="sect2">
 <h3 id="_protocol_headers">Protocol Headers</h3>
 <div class="paragraph">
-<p>This protocol uses a <em>backtrace</em> in the header.
+<p>
+This protocol uses a <em>backtrace</em> in the header.
 This form uses a stack of 32-bit big-endian identifiers.
 There <strong>must</strong> be at least one identifier, the <em>request ID</em>, which will be the
 last element in the array, and <strong>must</strong> have the most significant bit set.</p>
@@ -238,3 +257,6 @@ request ID it originally used for the request.</p>
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>

@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nng_options(5)
 ---
 <h1>nng_options(5)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nng_options(5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nng_options(5)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -17,31 +35,31 @@ title: nng_options(5)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
-
-<span class="tok-cp">#define NNG_OPT_SOCKNAME      &#34;socket-name&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RAW           &#34;raw&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PROTO         &#34;protocol&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PROTONAME     &#34;protocol-name&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PEER          &#34;peer&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PEERNAME      &#34;peer-name&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECVBUF       &#34;recv-buffer&#34;</span>
-<span class="tok-cp">#define NNG_OPT_SENDBUF       &#34;send-buffer&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECVFD        &#34;recv-fd&#34;</span>
-<span class="tok-cp">#define NNG_OPT_SENDFD        &#34;send-fd&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECVTIMEO     &#34;recv-timeout&#34;</span>
-<span class="tok-cp">#define NNG_OPT_SENDTIMEO     &#34;send-timeout&#34;</span>
-<span class="tok-cp">#define NNG_OPT_LOCADDR       &#34;local-address&#34;</span>
-<span class="tok-cp">#define NNG_OPT_REMADDR       &#34;remote-address&#34;</span>
-<span class="tok-cp">#define NNG_OPT_URL           &#34;url&#34;</span>
-<span class="tok-cp">#define NNG_OPT_MAXTTL        &#34;ttl-max&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECVMAXSZ     &#34;recv-size-max&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECONNMINT    &#34;reconnect-time-min&#34;</span>
-<span class="tok-cp">#define NNG_OPT_RECONNMAXT    &#34;reconnect-time-max&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PEER_GID      &#34;ipc:peer-gid&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PEER_PID      &#34;ipc:peer-pid&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PEER_UID      &#34;ipc:peer-uid&#34;</span>
-<span class="tok-cp">#define NNG_OPT_PEER_ZONEID   &#34;ipc:peer-zoneid&#34;</span></code></pre>
+<pre class="rouge highlight"><code data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;nng/nng.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define NNG_OPT_SOCKNAME      "socket-name"
+#define NNG_OPT_RAW           "raw"
+#define NNG_OPT_PROTO         "protocol"
+#define NNG_OPT_PROTONAME     "protocol-name"
+#define NNG_OPT_PEER          "peer"
+#define NNG_OPT_PEERNAME      "peer-name"
+#define NNG_OPT_RECVBUF       "recv-buffer"
+#define NNG_OPT_SENDBUF       "send-buffer"
+#define NNG_OPT_RECVFD        "recv-fd"
+#define NNG_OPT_SENDFD        "send-fd"
+#define NNG_OPT_RECVTIMEO     "recv-timeout"
+#define NNG_OPT_SENDTIMEO     "send-timeout"
+#define NNG_OPT_LOCADDR       "local-address"
+#define NNG_OPT_REMADDR       "remote-address"
+#define NNG_OPT_URL           "url"
+#define NNG_OPT_MAXTTL        "ttl-max"
+#define NNG_OPT_RECVMAXSZ     "recv-size-max"
+#define NNG_OPT_RECONNMINT    "reconnect-time-min"
+#define NNG_OPT_RECONNMAXT    "reconnect-time-max"
+#define NNG_OPT_PEER_GID      "ipc:peer-gid"
+#define NNG_OPT_PEER_PID      "ipc:peer-pid"
+#define NNG_OPT_PEER_UID      "ipc:peer-uid"
+#define NNG_OPT_PEER_ZONEID   "ipc:peer-zoneid"</span></code></pre>
 </div>
 </div>
 </div>
@@ -129,7 +147,7 @@ to them; instead the application is expected to perform such semantics itself.
 (For example, in normal mode a <a href="nng_rep.7.html"><em>rep</em></a> socket would
 automatically copy message headers from a received message to the corresponding
 reply, whereas in raw mode this is not done.)
-See <a href="nng.7.html">Raw Mode</a> for more details.</p>
+See <a href="nng.7.html#raw_mode">Raw Mode</a> for more details.</p>
 </div>
 </dd>
 </dl>
@@ -152,7 +170,7 @@ The option is irrelevant for listeners.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_RECONNMAXT</code></dt>
 <dd>
-<p>(<code>NNG_OPT_RECONNMAXT</code>)
+<p>
 
 (<a href="nng_duration.5.html"><code>nng_duration</code></a>)
 This is the maximum amount of time
@@ -463,7 +481,7 @@ in the library itself.</p>
 <dt class="hdlist1"><code>NNG_OPT_MAXTTL</code></dt>
 <dd>
 <p>(<code>int</code>)
-(time-to-live)
+
 This is the maximum number of times a message may traverse across
 a <a href="nng_device.3.html"><code>nng_device()</code></a> forwarders.
 The intention here is to prevent forwarding loops in device chains.
@@ -642,3 +660,6 @@ This read-only option is used to obtain the name of the socket&#8217;s protocol.
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>

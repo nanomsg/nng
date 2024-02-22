@@ -4,6 +4,24 @@ layout: manpage_v2
 title: nng_stat_type(3)
 ---
 <h1>nng_stat_type(3)</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.21">
+<title>nng_stat_type(3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="./rouge-github.css">
+</head>
+<body class="article">
+<div id="header">
+<h1>nng_stat_type(3)</h1>
+</div>
+<div id="content">
 <div class="sect1">
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
@@ -17,20 +35,20 @@ title: nng_stat_type(3)
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<pre class="rouge highlight"><code data-lang="c"><span class="cp">#include</span> <span class="cpf">&lt;nng/nng.h&gt;</span><span class="cp">
+</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">nng_stat</span> <span class="n">nng_stat</span><span class="p">;</span>
 
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stat</span> <span class="tok-n">nng_stat</span><span class="tok-p">;</span>
+<span class="k">enum</span> <span class="p">{</span>
+        <span class="n">NNG_STAT_SCOPE</span><span class="p">,</span>
+        <span class="n">NNG_STAT_LEVEL</span><span class="p">,</span>
+        <span class="n">NNG_STAT_COUNTER</span><span class="p">,</span>
+        <span class="n">NNG_STAT_STRING</span><span class="p">,</span>
+        <span class="n">NNG_STAT_BOOLEAN</span><span class="p">,</span>
+        <span class="n">NNG_STAT_ID</span>
+<span class="p">};</span>
 
-<span class="tok-k">enum</span> <span class="tok-p">{</span>
-        <span class="tok-n">NNG_STAT_SCOPE</span><span class="tok-p">,</span>
-        <span class="tok-n">NNG_STAT_LEVEL</span><span class="tok-p">,</span>
-        <span class="tok-n">NNG_STAT_COUNTER</span><span class="tok-p">,</span>
-        <span class="tok-n">NNG_STAT_STRING</span><span class="tok-p">,</span>
-        <span class="tok-n">NNG_STAT_BOOLEAN</span><span class="tok-p">,</span>
-        <span class="tok-n">NNG_STAT_ID</span>
-<span class="tok-p">};</span>
-
-<span class="tok-kt">int</span> <span class="tok-nf">nng_stat_type</span><span class="tok-p">(</span><span class="tok-n">nng_stat</span> <span class="tok-o">*</span><span class="tok-n">stat</span><span class="tok-p">);</span></code></pre>
+<span class="kt">int</span> <span class="nf">nng_stat_type</span><span class="p">(</span><span class="n">nng_stat</span> <span class="o">*</span><span class="n">stat</span><span class="p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -132,3 +150,6 @@ detail about the units measured by the static.
 </div>
 </div>
 </div>
+</div>
+</body>
+</html>
