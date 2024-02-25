@@ -28,10 +28,13 @@
 #
 # Hints:
 #
-# Set ``MBEDTLS_ROOT_DIR`` to the root directory of Mbed TLS installation.
+# Set ``MBEDTLS_ROOT`` to the root directory of Mbed TLS installation.
 #
 
-set(_MBEDTLS_ROOT_HINTS ${MBEDTLS_ROOT_DIR} ENV MBEDTLS_ROOT_DIR)
+set(_MBEDTLS_ROOT_HINTS ${MBEDTLS_ROOT} ENV MBEDTLS_ROOT)
+if (NOT _MBEDTLS_ROOT_HINTS)
+    set(_MBEDTLS_ROOT_HINTS ${MBEDTLS_ROOT_DIR} ENV MBEDTLS_ROOT_DIR)
+endif()
 
 set(_MBED_REQUIRED_VARS MbedTLS_TARGET MbedX509_TARGET MbedCrypto_TARGET MbedTLS_VERSION)
 
