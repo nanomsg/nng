@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -14,13 +14,14 @@
 #include "win_ipc.h"
 
 #include <stdio.h>
+#include <string.h>
 
 typedef struct ipc_dialer {
 	nng_stream_dialer sd;
 	bool              closed; // dialers are locked by the worker lock
 	nni_list          aios;
 	nni_list_node     node; // node on worker list
-	char *            path;
+	char             *path;
 	nni_sockaddr      sa;
 } ipc_dialer;
 
@@ -59,7 +60,7 @@ ipc_dial_thr(void *arg)
 
 		while ((d = nni_list_first(&w->workers)) != NULL) {
 			nng_stream *c;
-			nni_aio *   aio;
+			nni_aio    *aio;
 			HANDLE      f;
 			int         rv;
 
@@ -124,7 +125,7 @@ ipc_dial_thr(void *arg)
 static void
 ipc_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ipc_dialer *   d = arg;
+	ipc_dialer    *d = arg;
 	ipc_dial_work *w = &ipc_connector;
 
 	nni_mtx_lock(&w->mtx);
@@ -142,7 +143,7 @@ ipc_dial_cancel(nni_aio *aio, void *arg, int rv)
 static void
 ipc_dialer_dial(void *arg, nni_aio *aio)
 {
-	ipc_dialer *   d = arg;
+	ipc_dialer    *d = arg;
 	ipc_dial_work *w = &ipc_connector;
 	int            rv;
 
@@ -174,9 +175,9 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 static void
 ipc_dialer_close(void *arg)
 {
-	ipc_dialer *   d = arg;
+	ipc_dialer    *d = arg;
 	ipc_dial_work *w = &ipc_connector;
-	nni_aio *      aio;
+	nni_aio       *aio;
 
 	nni_mtx_lock(&w->mtx);
 	d->closed = true;
