@@ -287,8 +287,8 @@ nuts_marry_ex(
 			    ((rv = nng_listener_set_int(
 			          l2, NNG_OPT_SOCKET_FD, fd[1])) != 0)) {
 #ifdef _WIN32
-				CloseHandle((HANDLE) fd[0]);
-				CloseHandle((HANDLE) fd[1]);
+				_close(fd[0]);
+				_close(fd[1]);
 #else
 				close(fd[0]);
 				close(fd[1]);
