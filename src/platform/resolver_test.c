@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,12 +12,33 @@
 
 #include <nuts.h>
 
+#ifdef NNG_ENABLE_IPV6
 uint8_t v6loop[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+
+static bool
+has_v6(void)
+{
+	nng_sockaddr  sa;
+	nni_plat_udp *u;
+	int           rv;
+
+	nni_init(); // ensure that platform poller is up
+	sa.s_in6.sa_family = NNG_AF_INET6;
+	sa.s_in6.sa_port   = 0;
+	memcpy(sa.s_in6.sa_addr, v6loop, 16);
+
+	rv = nni_plat_udp_open(&u, &sa);
+	if (rv == 0) {
+		nni_plat_udp_close(u);
+	}
+	return (rv == 0);
+}
+#endif
 
 void
 test_google_dns(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -34,7 +55,7 @@ test_google_dns(void)
 void
 test_numeric_addr(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -47,19 +68,17 @@ test_numeric_addr(void)
 	nng_aio_free(aio);
 }
 
+#ifdef NNG_ENABLE_IPV6
 void
 test_numeric_v6(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
-	// Travis CI has moved some of their services to host that
-	// apparently don't support IPv6 at all.  This is very sad.
-	// CircleCI 2.0 is in the same boat.  (Amazon to blame.)
-	if ((getenv("TRAVIS") != NULL) || (getenv("CIRCLECI") != NULL)) {
-		return; // skip this one.
+	if (!has_v6()) {
+		return;
 	}
-
+	NUTS_MSG("IPV6 support present");
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("::1", "80", NNG_AF_INET6, true, &sa, aio);
 	nng_aio_wait(aio);
@@ -69,11 +88,12 @@ test_numeric_v6(void)
 	NUTS_TRUE(memcmp(sa.s_in6.sa_addr, v6loop, 16) == 0);
 	nng_aio_free(aio);
 }
+#endif
 
 void
 test_service_names(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -88,7 +108,7 @@ test_service_names(void)
 void
 test_localhost_v4(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -104,7 +124,7 @@ test_localhost_v4(void)
 void
 test_localhost_unspecified(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -118,10 +138,12 @@ test_localhost_unspecified(void)
 		NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
 		NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
 		break;
+#ifdef NNG_ENABLE_IPV6
 	case NNG_AF_INET6:
 		NUTS_TRUE(sa.s_in6.sa_port == nuts_be16(80));
 		NUTS_TRUE(memcmp(sa.s_in6.sa_addr, v6loop, 16) == 0);
 		break;
+#endif
 	}
 	nng_aio_free(aio);
 }
@@ -129,7 +151,7 @@ test_localhost_unspecified(void)
 void
 test_null_passive(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -145,7 +167,7 @@ test_null_passive(void)
 void
 test_null_not_passive(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -166,7 +188,7 @@ test_null_not_passive(void)
 void
 test_bad_port_number(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_sockaddr sa;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -179,7 +201,9 @@ test_bad_port_number(void)
 NUTS_TESTS = {
 	{ "resolve google dns", test_google_dns },
 	{ "resolve numeric addr", test_numeric_addr },
+#ifdef NNG_ENABLE_IPV6
 	{ "resolve numeric v6", test_numeric_v6 },
+#endif
 	{ "resolve service names", test_service_names },
 	{ "resolve localhost v4", test_localhost_v4 },
 	{ "resolve localhost unspecified", test_localhost_unspecified },

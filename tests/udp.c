@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -57,8 +57,8 @@ TestMain("UDP support", {
 			char         rbuf[1024];
 			nng_sockaddr to;
 			nng_sockaddr from;
-			nng_aio *    aio1;
-			nng_aio *    aio2;
+			nng_aio     *aio1;
+			nng_aio     *aio2;
 			nng_iov      iov1;
 			nng_iov      iov2;
 
@@ -102,7 +102,7 @@ TestMain("UDP support", {
 
 		Convey("Sending without an address fails", {
 			nng_aio *aio1;
-			char *   msg = "nope";
+			char    *msg = "nope";
 			nng_iov  iov;
 
 			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
@@ -126,10 +126,10 @@ TestMain("UDP support", {
 			nng_sockaddr to2;
 			nng_sockaddr from1;
 			nng_sockaddr from2;
-			nng_aio *    aio1;
-			nng_aio *    aio2;
-			nng_aio *    aio3;
-			nng_aio *    aio4;
+			nng_aio     *aio1;
+			nng_aio     *aio2;
+			nng_aio     *aio3;
+			nng_aio     *aio4;
 			nng_iov      iov1;
 			nng_iov      iov2;
 			nng_iov      iov3;
@@ -192,7 +192,7 @@ TestMain("UDP support", {
 
 		Convey("Sending without an address fails", {
 			nng_aio *aio1;
-			char *   msg = "nope";
+			char    *msg = "nope";
 			nng_iov  iov;
 
 			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
@@ -206,9 +206,10 @@ TestMain("UDP support", {
 			nng_aio_free(aio1);
 		});
 
+#ifdef NNG_ENABLE_IPV6
 		Convey("Sending to an IPv6 address on IPv4 fails", {
-			nng_aio *    aio1;
-			char *       msg = "nope";
+			nng_aio     *aio1;
+			char        *msg = "nope";
 			nng_sockaddr sa;
 			int          rv;
 			nng_iov      iov;
@@ -231,19 +232,17 @@ TestMain("UDP support", {
 			    rv == NNG_EUNREACHABLE || rv == NNG_EINVAL);
 			nng_aio_free(aio1);
 		});
+#endif
 
 		Convey("Sending to an IPC address fails", {
-			nng_aio *    aio1;
-			char *       msg = "nope";
+			nng_aio     *aio1;
+			char        *msg = "nope";
 			nng_sockaddr sa;
 			int          rv;
 			nng_iov      iov;
 
-			sa.s_in6.sa_family = NNG_AF_INET6;
-			// address is for google.com
-			inet_ntop(AF_INET6, "2607:f8b0:4007:804::200e",
-			    (void *) sa.s_in6.sa_addr, 16);
-			sa.s_in6.sa_port = 80;
+			sa.s_ipc.sa_family = NNG_AF_IPC;
+			strcat(sa.s_ipc.sa_path, "/tmp/junk");
 			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
 			iov.iov_buf = msg;
 			iov.iov_len = strlen(msg) + 1;

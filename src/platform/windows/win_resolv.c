@@ -148,17 +148,23 @@ resolv_task(resolv_item *item)
 
 	rv = NNG_EADDRINVAL;
 	for (probe = results; probe != NULL; probe = probe->ai_next) {
-		if ((probe->ai_addr->sa_family == AF_INET) ||
-		    (probe->ai_addr->sa_family == AF_INET6)) {
+		if (probe->ai_addr->sa_family == AF_INET) {
 			break;
 		}
+#if NNG_ENABLE_IPV6
+		if (probe->ai_addr->sa_family == AF_INET6) {
+			break;
+		}
+#endif
 	}
 
 	nni_mtx_lock(&resolv_mtx);
 	if ((probe != NULL) && (item->aio != NULL)) {
-		struct sockaddr_in  *sin;
+		struct sockaddr_in *sin;
+#ifdef NNG_ENABLE_IPV6
 		struct sockaddr_in6 *sin6;
-		nni_sockaddr        *sa;
+#endif
+		nni_sockaddr *sa;
 
 		sa = item->sa;
 
@@ -170,6 +176,7 @@ resolv_task(resolv_item *item)
 			sa->s_in.sa_port   = sin->sin_port;
 			sa->s_in.sa_addr   = sin->sin_addr.s_addr;
 			break;
+#ifdef NNG_ENABLE_IPV6
 		case AF_INET6:
 			rv                  = 0;
 			sin6                = (void *) probe->ai_addr;
@@ -178,6 +185,7 @@ resolv_task(resolv_item *item)
 			sa->s_in6.sa_scope  = sin6->sin6_scope_id;
 			memcpy(sa->s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 			break;
+#endif
 		}
 	}
 	nni_mtx_unlock(&resolv_mtx);
@@ -205,12 +213,18 @@ nni_resolv_ip(const char *host, const char *serv, int family, bool passive,
 	case NNG_AF_INET:
 		fam = AF_INET;
 		break;
+#ifdef NNG_ENABLE_IPV6
 	case NNG_AF_INET6:
 		fam = AF_INET6;
 		break;
 	case NNG_AF_UNSPEC:
 		fam = AF_UNSPEC;
 		break;
+#else
+	case NNG_AF_UNSPEC:
+		fam = AF_INET;
+		break;
+#endif
 	default:
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 		return;
@@ -306,12 +320,15 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 	struct addrinfo  hints;
 	struct addrinfo *results;
 	int              rv;
-	bool             v6      = false;
-	bool             wrapped = false;
 	char            *port;
 	char            *host;
 	char            *buf;
 	size_t           buf_len;
+#ifdef NNG_ENABLE_IPV6
+	bool  v6      = false;
+	bool  wrapped = false;
+	char *s;
+#endif
 
 	if (addr == NULL) {
 		addr = "";
@@ -323,12 +340,13 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 	}
 	memcpy(buf, addr, buf_len);
 	host = buf;
+
+#ifdef NNG_ENABLE_IPV6
 	if (*host == '[') {
 		v6      = true;
 		wrapped = true;
 		host++;
 	} else {
-		char *s;
 		for (s = host; *s != '\0'; s++) {
 			if (*s == '.') {
 				break;
@@ -358,6 +376,13 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 		rv = NNG_EADDRINVAL;
 		goto done;
 	}
+#else // NNG_ENABLE_IPV6
+	for (port = host; *port != '\0'; port++) {
+		if (*port == ':') {
+			break;
+		}
+	}
+#endif
 
 	if ((!want_port) && (*port != '\0')) {
 		rv = NNG_EADDRINVAL;
@@ -373,9 +398,13 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_flags =
 	    AI_ADDRCONFIG | AI_NUMERICSERV | AI_NUMERICHOST | AI_PASSIVE;
+#ifdef NNG_ENABLE_IPV6
 	if (v6) {
 		hints.ai_family = AF_INET6;
 	}
+#else
+	hints.ai_family = AF_INET;
+#endif
 
 	rv = getaddrinfo(host, port, &hints, &results);
 	if ((rv != 0) || (results == NULL)) {

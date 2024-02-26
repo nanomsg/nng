@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -27,7 +27,7 @@ struct ws_dialer {
 	uint16_t           peer; // remote protocol
 	nni_list           aios;
 	nni_mtx            mtx;
-	nni_aio *          connaio;
+	nni_aio           *connaio;
 	nng_stream_dialer *dialer;
 	bool               started;
 };
@@ -36,7 +36,7 @@ struct ws_listener {
 	uint16_t             peer; // remote protocol
 	nni_list             aios;
 	nni_mtx              mtx;
-	nni_aio *            accaio;
+	nni_aio             *accaio;
 	nng_stream_listener *listener;
 	bool                 started;
 };
@@ -45,10 +45,10 @@ struct ws_pipe {
 	nni_mtx     mtx;
 	bool        closed;
 	uint16_t    peer;
-	nni_aio *   user_txaio;
-	nni_aio *   user_rxaio;
-	nni_aio *   txaio;
-	nni_aio *   rxaio;
+	nni_aio    *user_txaio;
+	nni_aio    *user_rxaio;
+	nni_aio    *txaio;
+	nni_aio    *rxaio;
 	nng_stream *ws;
 };
 
@@ -396,10 +396,10 @@ wstran_listener_fini(void *arg)
 static void
 wstran_connect_cb(void *arg)
 {
-	ws_dialer * d = arg;
-	ws_pipe *   p;
-	nni_aio *   caio = d->connaio;
-	nni_aio *   uaio;
+	ws_dialer  *d = arg;
+	ws_pipe    *p;
+	nni_aio    *caio = d->connaio;
+	nni_aio    *uaio;
 	int         rv;
 	nng_stream *ws = NULL;
 
@@ -451,8 +451,8 @@ static void
 wstran_accept_cb(void *arg)
 {
 	ws_listener *l    = arg;
-	nni_aio *    aaio = l->accaio;
-	nni_aio *    uaio;
+	nni_aio     *aaio = l->accaio;
+	nni_aio     *uaio;
 	int          rv;
 
 	nni_mtx_lock(&l->mtx);
@@ -489,7 +489,7 @@ static int
 wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 {
 	ws_dialer *d;
-	nni_sock * s = nni_dialer_sock(ndialer);
+	nni_sock  *s = nni_dialer_sock(ndialer);
 	int        rv;
 	char       name[64];
 
@@ -524,7 +524,7 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 {
 	ws_listener *l;
 	int          rv;
-	nni_sock *   s = nni_listener_sock(listener);
+	nni_sock    *s = nni_listener_sock(listener);
 	char         name[64];
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
@@ -713,6 +713,7 @@ static nni_sp_tran wss4_tran = {
 	.tran_fini     = wstran_fini,
 };
 
+#ifdef NNG_ENABLE_IPV6
 static nni_sp_tran wss6_tran = {
 	.tran_scheme   = "wss6",
 	.tran_dialer   = &ws_dialer_ops,
@@ -721,13 +722,16 @@ static nni_sp_tran wss6_tran = {
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
 };
+#endif
 
 void
 nni_sp_wss_register(void)
 {
 	nni_sp_tran_register(&wss_tran);
 	nni_sp_tran_register(&wss4_tran);
+#ifdef NNG_ENABLE_IPV6
 	nni_sp_tran_register(&wss6_tran);
+#endif
 }
 
 #endif // NNG_TRANSPORT_WSS
