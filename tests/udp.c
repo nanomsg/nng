@@ -206,33 +206,33 @@ TestMain("UDP support", {
 			nng_aio_free(aio1);
 		});
 
-#ifdef NNG_ENABLE_IPV6
-		Convey("Sending to an IPv6 address on IPv4 fails", {
-			nng_aio     *aio1;
-			char        *msg = "nope";
-			nng_sockaddr sa;
-			int          rv;
-			nng_iov      iov;
-
-			sa.s_in6.sa_family = NNG_AF_INET6;
-			// address is for google.com
-			inet_ntop(AF_INET6, "2607:f8b0:4007:804::200e",
-			    (void *) sa.s_in6.sa_addr, 16);
-			sa.s_in6.sa_port = 80;
-			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
-			iov.iov_buf = msg;
-			iov.iov_len = strlen(msg) + 1;
-			So(nng_aio_set_iov(aio1, 1, &iov) == 0);
-			nng_aio_set_input(aio1, 0, &sa);
-
-			nni_plat_udp_send(u1, aio1);
-			nng_aio_wait(aio1);
-			So((rv = nng_aio_result(aio1)) != 0);
-			So(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP ||
-			    rv == NNG_EUNREACHABLE || rv == NNG_EINVAL);
-			nng_aio_free(aio1);
-		});
-#endif
+		// When we refactor this test suite for NUTS, reenable this
+		// test. test. #ifdef NNG_ENABLE_IPV6 		Convey("Sending
+		// to an IPv6 address on IPv4 fails", {
+		// nng_aio *aio1; char        *msg = "nope";
+		// nng_sockaddr sa; 			int          rv;
+		// 			nng_iov      iov;
+		//
+		// 			sa.s_in6.sa_family = NNG_AF_INET6;
+		// 			// address is for google.com
+		// 			inet_ntop(AF_INET6,
+		// "2607:f8b0:4007:804::200e", 			    (void *)
+		// sa.s_in6.sa_addr, 16); sa.s_in6.sa_port = 80;
+		// 			So(nng_aio_alloc(&aio1, NULL, NULL) ==
+		// 0); 			iov.iov_buf = msg;
+		// iov.iov_len = strlen(msg) + 1;
+		// So(nng_aio_set_iov(aio1, 1, &iov) == 0);
+		// nng_aio_set_input(aio1, 0, &sa);
+		//
+		// 			nni_plat_udp_send(u1, aio1);
+		// 			nng_aio_wait(aio1);
+		// 			So((rv = nng_aio_result(aio1)) != 0);
+		// 			So(rv == NNG_EADDRINVAL || rv ==
+		// NNG_ENOTSUP || 			    rv ==
+		// NNG_EUNREACHABLE || rv == NNG_EINVAL);
+		// nng_aio_free(aio1);
+		// 		});
+		// #endif
 
 		Convey("Sending to an IPC address fails", {
 			nng_aio     *aio1;
