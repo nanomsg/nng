@@ -1,0 +1,205 @@
+---
+version: v1.7.3
+layout: manpage_v2
+title: nn_poll(3compat)
+---
+<h1>nn_poll(3compat)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nn_poll - poll sockets (compatible API)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-cp">#define NN_POLLIN  1</span>
+<span class="tok-cp">#define NN_POLLOUT 2</span>
+
+<span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nn_pollfd</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">    </span><span class="tok-kt">int</span><span class="tok-w">      </span><span class="tok-n">fd</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">events</span><span class="tok-p">;</span>
+<span class="tok-w">    </span><span class="tok-kt">uint16_t</span><span class="tok-w"> </span><span class="tok-n">revents</span><span class="tok-p">;</span>
+<span class="tok-p">};</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nn_poll</span><span class="tok-p">(</span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nn_pollfd</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">pfds</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">npfd</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">timeout</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_poll()</code> function polls a group of sockets for readiness to send or receive.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The array of <em>nfds</em> sockets to poll for are passed into <em>pfds</em>.
+Each member of this array is initialized with the <code>fd</code> field set to
+the socket, and the <code>events</code> field set to a mask that can contain either or both
+of the flags <code>NN_POLLIN</code> and <code>NN_POLLOUT</code>.</p>
+</div>
+<div class="paragraph">
+<p>The flag <code>NN_POLLIN</code> indicates that a socket is ready for receiving without
+blocking (a message is available on the socket), and the flag <code>NN_POLLOUT</code>
+indicates that a socket is ready for sending without blocking.</p>
+</div>
+<div class="paragraph">
+<p>Upon success, the function returns the number of updates the <code>revents</code>
+field of each member of the <em>pfds</em> array, setting it to indicate
+whether the requested status is true or not.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>revents</code> field will only have a flag set if the corresponding
+flag was also set in the <code>events</code> field.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If the <em>timeout</em> field is positive, then this function will wait for
+up the that many milliseconds.
+If none of the requested events occurs before that timeout occurs, then
+the function will return -1 and set the error to <code>ETIMEDOUT</code>.</p>
+</div>
+<div class="paragraph">
+<p>If the <em>timeout</em> is zero, then this function will return immediately,
+after updating the current status of the sockets.</p>
+</div>
+<div class="paragraph">
+<p>If the <em>timeout</em> is -1, then the function waits forever, or until one of the
+requested events occurs.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This function is only suitable for use with sockets obtained with the
+<a href="nn_socket.3compat.html"><code>nn_socket()</code></a> function, and is not compatible
+with file descriptors obtained via any other means.
+This includes file descriptors obtained using the <code>NN_SNDFD</code> or <code>NN_RCVFD</code>
+options with <a href="nn_getsockopt.3compat.html"><code>nn_getsockopt()</code></a>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is significantly less efficient than other polling
+or asynchronous I/O mechanisms, and is provided for API compatibility only.
+It&#8217;s use is discouraged.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is <strong>not</strong> supported on systems other than POSIX derived
+platforms and Windows.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns the number of sockets with events on success, or -1 on error.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
+<p>One of the sockets is not open.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>Operation timed out.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>This function is not supported on this platform.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nn_recv.3compat.html">nn_recv(3compat)</a>,
+<a href="nn_send.3compat.html">nn_send(3compat)</a>,
+<a href="nn_socket.3compat.html">nn_socket(3compat)</a>,
+<a href="nng_compat.3compat.html">nn_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

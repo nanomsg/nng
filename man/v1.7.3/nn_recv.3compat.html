@@ -1,0 +1,141 @@
+---
+version: v1.7.3
+layout: manpage_v2
+title: nn_recv(3compat)
+---
+<h1>nn_recv(3compat)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nn_recv - receive data (compatible API)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">nn_recv</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">sock</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">data</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">size</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">flags</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_recv()</code> function receives a message from the socket <em>sock</em>.
+The message body must fit within <em>size</em> bytes, and will be stored
+at the location specified by <em>data</em>, unless <em>size</em> is the
+special value <code>NN_MSG</code>, indicating a zero-copy operation.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If <em>size</em> has the special value <code>NN_MSG</code>, then a zero-copy operation
+is performed.
+In this case, instead of copying the message data into the address
+specified by <em>data</em>, a new message large enough to hold the message data
+will be allocated (as if by the
+function <a href="nn_allocmsg.3compat.html"><code>nn_allocmsg()</code></a>), and the message
+payload will be stored accordingly.
+In this case, the value stored at <em>data</em> will not be message data,
+but a pointer to the message itself.
+In this case, on success, the caller shall take responsibility for
+the final disposition of the message (such as by sending it to
+another peer using <a href="nn_send.3compat.html"><code>nn_send()</code></a>) or
+<a href="nn_freemsg.3compat.html"><code>nn_freemsg()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>The <em>flags</em> field may contain the special flag <code>NN_DONTWAIT</code>.
+In this case, if the no message is available for immediate receipt,
+the operation shall not block, but instead will fail with the error <code>EAGAIN</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns the number of bytes sent on success, and -1 on error.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>EAGAIN</code>
+</td>
+<td class="hdlist2">
+<p>The operation would block.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
+<p>The socket <em>sock</em> is not open.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EFSM</code>
+</td>
+<td class="hdlist2">
+<p>The socket cannot receive in this state.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>This protocol cannot receive.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>Operation timed out.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nn_recvmsg.3compat.html">nn_recvmsg(3compat)</a>,
+<a href="nn_send.3compat.html">nn_send(3compat)</a>,
+<a href="nn_socket.3compat.html">nn_socket(3compat)</a>,
+<a href="nng_compat.3compat.html">nn_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

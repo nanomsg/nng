@@ -1,0 +1,111 @@
+---
+version: v1.7.3
+layout: manpage_v2
+title: nng_http_req_set_version(3http)
+---
+<h1>nng_http_req_set_version(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_req_set_version - set HTTP request protocol version</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_http_req_set_version</span><span class="tok-p">(</span><span class="tok-n">nng_http_req</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">req</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">version</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_req_set_version()</code> sets the HTTP protocol version associated with
+the request <em>req</em> to <em>version</em>.
+The <em>version</em> must be a string containing
+a valid HTTP protocol version, such as "HTTP/1.0".
+The default value is "HTTP/1.1".</p>
+</div>
+<div class="paragraph">
+<p>A local copy of the <em>version</em> is made in the request <em>req</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+No validation of the version supplied is performed.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The library does not contain support for versions of HTTP other than
+"HTTP/1.0" and "HTTP/1.1".
+Specifying any other version may result in unspecified behavior.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory to perform the operation.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>No support for HTTP in the library.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_req_alloc.3http.html">nng_http_req_alloc(3http)</a>,
+<a href="nng_http_req_get_version.3http.html">nng_http_req_get_version(3http)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
