@@ -1,0 +1,217 @@
+---
+version: v1.7.3
+layout: manpage_v2
+title: nng_pair(7)
+---
+<h1>nng_pair(7)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_pair - pair protocol</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="title">Version 0</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/pair0/pair.h&gt;</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Version 1</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/pair1/pair.h&gt;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+The <em>pair</em> protocol implements a peer-to-peer pattern, where
+relationships between peers are one-to-one.</p>
+</div>
+<div class="sect2">
+<h3 id="_socket_operations">Socket Operations</h3>
+<div class="paragraph">
+<p>The <a href="nng_pair_open.3.html"><code>nng_pair_open()</code></a> functions create a <em>pair</em> socket.</p>
+</div>
+<div class="paragraph">
+<p>Normally, this pattern will block when attempting to send a message if
+no peer is able to receive the message.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Even though this mode may appear to be reliable, because back-pressure
+prevents discarding messages most of the time, there are topologies involving
+<em>devices</em> (see <a href="nng_device.3.html"><code>nng_device()</code></a>) or raw mode sockets
+(see <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>) where
+messages may be discarded.
+Applications that require reliable delivery semantics should consider using
+<a href="nng_req.7.html"><em>req</em></a> sockets, or
+implement their own acknowledgment layer on top of <em>pair</em> sockets.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_versions">Protocol Versions</h3>
+<div class="paragraph">
+<p>Version 0 is the legacy version of this protocol.
+It lacks any header
+information, and is suitable when building simple one-to-one topologies.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use version 0 if you need to communicate with other implementations,
+including the legacy <a href="https://github.com/nanomsg/nanomsg">nanomsg</a> library or
+<a href="https://github.com/go-mangos/mangos">mangos</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Version 1 of the protocol offers improved protection against loops when
+used with <a href="nng_device.3.html"><code>nng_device()</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_polyamorous_mode">Polyamorous Mode</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Polyamorous mode is deprecated, and support for it will likely
+be removed in a future release.
+Applications are strongly discouraged from making further use of it.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Normally pair sockets are for one-to-one communication, and a given peer
+will reject new connections if it already has an active connection to another
+peer.</p>
+</div>
+<div class="paragraph">
+<p><em>Polyamorous</em> mode changes this, to allow a socket to communicate with
+multiple directly-connected peers.
+This mode is enabled by opening a socket with the
+<a href="nng_pair_open.3.html"><code>nng_pair1_open_poly()</code></a>
+function</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Polyamorous mode is only available when using pair version 1.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In polyamorous mode a socket can support many one-to-one connections.
+In this mode, the application must
+choose the remote peer to receive an outgoing message by setting the
+<a href="nng_pipe.5.html"><code>nng_pipe</code></a> to use for the outgoing message with
+the <a href="nng_msg_set_pipe.3.html"><code>nng_msg_set_pipe()</code></a> function.</p>
+</div>
+<div class="paragraph">
+<p>If no remote peer is specified by the sender, then the protocol will select
+any available connected peer.</p>
+</div>
+<div class="paragraph">
+<p>Most often the value of the outgoing pipe will be obtained from an incoming
+message using the <a href="nng_msg_get_pipe.3.html"><code>nng_msg_get_pipe()</code></a> function,
+such as when replying to an incoming message.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Directed send <em>only</em> works with directly connected peers.
+It will not function across <a href="nng_device.3.html">device</a> proxies.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In order to prevent head-of-line blocking, if the peer on the given pipe
+is not able to receive (or the pipe is no longer available, such as if the
+peer has disconnected), then the message will be discarded with no notification
+to the sender.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_options">Protocol Options</h3>
+<div class="paragraph">
+<p>The following protocol-specific options are available.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></dt>
+<dd>
+<p>(<code>int</code>, version 1 only).  Maximum time-to-live.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_PAIR1_POLY</code></dt>
+<dd>
+<p>(<code>bool</code>, version 1 only)  This option is no longer supported.
+Formerly it was used to configure <em>polyamorous</em> mode, but that mode
+is now established by using the <code>nng_pair1_open_poly()</code> function.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_headers">Protocol Headers</h3>
+<div class="paragraph">
+<p>Version 0 of the pair protocol has no protocol-specific headers.</p>
+</div>
+<div class="paragraph">
+<p>Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
+low-order (big-endian) byte of this value contains a "hop" count, and is
+used in conjunction with the
+<a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a> option to guard against
+device forwarding loops.
+This value is initialized to 1, and incremented each time the message is
+received by a new node.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_pair_open.3.html">nng_pair_open(3)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

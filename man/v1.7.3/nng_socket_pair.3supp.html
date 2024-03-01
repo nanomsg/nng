@@ -1,0 +1,108 @@
+---
+version: v1.7.3
+layout: manpage_v2
+title: nng_socket_pair(3supp)
+---
+<h1>nng_socket_pair(3supp)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_socket_pair - create a connected pair of BSD sockets</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/util/platform.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_socket_pair</span><span class="tok-p">(</span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">fds</span><span class="tok-p">[</span><span class="tok-mi">2</span><span class="tok-p">]);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_socket_pair()</code> function creates a pair of connected BSD sockets.
+These sockets, which are returned in the <em>fds</em> array, are suitable for
+use with the <a href="nng_socket.7.html"><em>socket</em></a> transport.</p>
+</div>
+<div class="paragraph">
+<p>On POSIX platforms, this is a thin wrapper around the standard <code>socketpair()</code> function,
+using the <code>AF_UNIX</code> family and the <code>SOCK_STREAM</code> socket type.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+At present only POSIX platforms implementing <code>socketpair()</code> are supported with this function.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+This function may be useful for creating a shared connection between a parent process and
+a child process on UNIX platforms, without requiring the processes use a shared filesystem or TCP connection.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>This platform does not support socket pairs.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_socket.7.html">nng_socket(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

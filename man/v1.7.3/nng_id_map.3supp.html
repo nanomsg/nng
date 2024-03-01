@@ -1,0 +1,165 @@
+---
+version: v1.7.3
+layout: manpage_v2
+title: nng_id_map(3supp)
+---
+<h1>nng_id_map(3supp)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_id_map - identifier based mapping table</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/util/idhash.h&gt;</span>
+
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nng_id_map_s</span><span class="tok-w"> </span><span class="tok-n">nng_id_map</span><span class="tok-p">;</span>
+
+<span class="tok-cp">#define NNG_MAP_RANDOM 1</span>
+
+<span class="tok-kt">int</span><span class="tok-w">   </span><span class="tok-nf">nng_id_map_alloc</span><span class="tok-p">(</span><span class="tok-n">nng_id_map</span><span class="tok-w"> </span><span class="tok-o">**</span><span class="tok-n">map_p</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">lo</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">hi</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">flags</span><span class="tok-p">);</span>
+<span class="tok-kt">void</span><span class="tok-w">  </span><span class="tok-nf">nng_id_map_free</span><span class="tok-p">(</span><span class="tok-n">nng_id_map</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">map</span><span class="tok-p">);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-nf">nng_id_get</span><span class="tok-p">(</span><span class="tok-n">nng_id_map</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">map</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">id</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span><span class="tok-w">   </span><span class="tok-nf">nng_id_set</span><span class="tok-p">(</span><span class="tok-n">nng_id_map</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">map</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">value</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span><span class="tok-w">   </span><span class="tok-nf">nng_id_alloc</span><span class="tok-p">(</span><span class="tok-n">nng_id_map</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">map</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">id_p</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">value</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span><span class="tok-w">   </span><span class="tok-nf">nng_id_remove</span><span class="tok-p">(</span><span class="tok-n">nng_id_map</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">map</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">uint64_t</span><span class="tok-w"> </span><span class="tok-n">id</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions provide support for managing tables of data based on
+identifiers, ensuring that identifiers are allocated uniquely and within
+specified range limits.</p>
+</div>
+<div class="paragraph">
+<p>The table stores data pointers (which must not be <code>NULL</code>) at a logical numeric index.
+It does so efficiently, even if large gaps exist, and it provides a means to efficiently
+allocate a numeric identifier from a pool of unused identifiers.</p>
+</div>
+<div class="paragraph">
+<p>Identifiers are allocated in increasing order, without reusing old identifiers until the
+largest possible identifier is allocated.  After wrapping, only identifiers that are no longer
+in use will be considered.
+No effort to order the availability of identifiers based on when they were freed is made.</p>
+</div>
+<div class="paragraph">
+<p>An initial table is allocated with <code>nng_id_map_alloc()</code>, which takes the lowest legal identifier in <em>lo</em>,
+and the largest legal identifier in <em>hi</em>.
+The new table is returned in <em>map_p</em>, and should be used as the <em>map</em> argument to the rest of these functions.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>As a special convenience, if these are specified as zero, then a full range of 32-bit identifiers is assumed.
+If identifiers larger than or equal to 2<sup>32</sup> are required, then both <em>lo</em> and <em>hi</em> must be specified with the
+exact values desired.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The <em>flags</em> argument is a bit mask of flags for the table.
+If <code>NNG_MAP_RANDOM</code> is specified, then the starting point for allocations is randomized, but subsequent allocations will then be monotonically increasing.
+This is useful to reduce the odds of different instances of an application using the same identifiers at the same time.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_id_get()</code> function returns the value previously stored with the given identifier.
+If no value is currently associated with the identifer, it returns <code>NULL</code>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_id_set()</code> function sets the value with the associated identifier.
+This can be used to replace a previously allocated identifier.
+If the identifier was not previously allocated, then it is allocated as part of the call.
+This function does not necessarily honor the identifier range limits set for the map when it was allocated.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_id_alloc()</code> function allocates a new identifier from the range for the map, and associates it with
+the supplied <em>value</em>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_id_remove()</code> function removes the identifier and its associated value from the table.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+These functions are limited to storing at most 2<sup>32</sup> identifiers, even though the identifers may
+themselves be larger than 2<sup>32</sup>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+These functions are <strong>not</strong> thread-safe.
+Callers should use a <a href="nng_mtx_lock.3supp">mutex</a> or similar approach when thread-safety is needed.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_id_map_alloc()</code>, <code>nng_id_set()</code>, <code>nng_id_alloc()</code>, and <code>nng_id_remove()</code> functions
+return 0 on success, or -1 on failure.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_id_map_get()</code> function returns the requested data pointer, or <code>NULL</code> if the identifier was not found.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOENT</code>
+</td>
+<td class="hdlist2">
+<p>The <em>id</em> does not exist in the table.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available, or the table is full.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_mtx_lock.3supp.html">nng(7)</a>
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
