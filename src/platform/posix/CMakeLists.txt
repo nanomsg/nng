@@ -62,6 +62,7 @@ if (NNG_PLATFORM_POSIX)
     nng_check_sym(getpeerucred ucred.h NNG_HAVE_GETPEERUCRED)
     nng_check_sym(atomic_flag_test_and_set stdatomic.h NNG_HAVE_STDATOMIC)
     nng_check_sym(socketpair sys/socket.h NNG_HAVE_SOCKETPAIR)
+    nng_check_sym(AF_INET6 netinet/in.h NNG_HAVE_INET6)
 
     nng_sources(
             posix_impl.h

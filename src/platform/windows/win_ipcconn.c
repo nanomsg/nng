@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -25,7 +25,7 @@ typedef struct ipc_conn {
 	nni_win_io    conn_io;
 	nni_list      recv_aios;
 	nni_list      send_aios;
-	nni_aio *     conn_aio;
+	nni_aio      *conn_aio;
 	nng_sockaddr  sa;
 	bool          dialer;
 	int           recv_rv;
@@ -44,7 +44,7 @@ ipc_recv_start(ipc_conn *c)
 	unsigned idx;
 	unsigned naiov;
 	nni_iov *aiov;
-	void *   buf;
+	void    *buf;
 	DWORD    len;
 	int      rv;
 
@@ -95,7 +95,7 @@ again:
 static void
 ipc_recv_cb(nni_win_io *io, int rv, size_t num)
 {
-	nni_aio * aio;
+	nni_aio  *aio;
 	ipc_conn *c = io->ptr;
 	nni_mtx_lock(&c->mtx);
 	if ((aio = nni_list_first(&c->recv_aios)) == NULL) {
@@ -107,19 +107,21 @@ ipc_recv_cb(nni_win_io *io, int rv, size_t num)
 		rv         = c->recv_rv;
 		c->recv_rv = 0;
 	}
-	nni_aio_list_remove(aio);
-	ipc_recv_start(c);
-	if (c->closed) {
-		nni_cv_wake(&c->cv);
-	}
-	nni_mtx_unlock(&c->mtx);
-
 	if ((rv == 0) && (num == 0)) {
 		// A zero byte receive is a remote close from the peer.
 		rv = NNG_ECONNSHUT;
 	}
+	nni_aio_list_remove(aio);
+	if (c->closed) {
+		nni_cv_wake(&c->cv);
+	} else {
+		ipc_recv_start(c);
+	}
+	nni_mtx_unlock(&c->mtx);
+
 	nni_aio_finish_sync(aio, rv, num);
 }
+
 static void
 ipc_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
@@ -170,7 +172,7 @@ ipc_send_start(ipc_conn *c)
 	unsigned idx;
 	unsigned naiov;
 	nni_iov *aiov;
-	void *   buf;
+	void    *buf;
 	DWORD    len;
 	int      rv;
 
@@ -221,7 +223,7 @@ again:
 static void
 ipc_send_cb(nni_win_io *io, int rv, size_t num)
 {
-	nni_aio * aio;
+	nni_aio  *aio;
 	ipc_conn *c = io->ptr;
 	nni_mtx_lock(&c->mtx);
 	if ((aio = nni_list_first(&c->send_aios)) == NULL) {
@@ -293,12 +295,7 @@ ipc_close(void *arg)
 	nni_mtx_lock(&c->mtx);
 	if (!c->closed) {
 		c->closed = true;
-		if (!nni_list_empty(&c->recv_aios)) {
-			CancelIoEx(c->f, &c->recv_io.olpd);
-		}
-		if (!nni_list_empty(&c->send_aios)) {
-			CancelIoEx(c->f, &c->send_io.olpd);
-		}
+		CancelIoEx(c->f, NULL); // cancel all requests
 
 		if (c->f != INVALID_HANDLE_VALUE) {
 			// NB: closing the pipe is dangerous at this point.

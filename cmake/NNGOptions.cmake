@@ -106,6 +106,11 @@ if (NNG_ENABLE_HTTP)
 endif()
 mark_as_advanced(NNG_ENABLE_HTTP)
 
+# Some sites or kernels lack IPv6 support.  This override allows us
+# to prevent the use of IPv6 in environments where it isn't supported.
+option (NNG_ENABLE_IPV6 "Enable IPv6." ON)
+mark_as_advanced(NNG_ENABLE_IPV6)
+
 #
 # Transport Options.
 #

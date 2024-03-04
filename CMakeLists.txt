@@ -117,6 +117,9 @@ endif ()
 
 nng_defines_if(NNG_ENABLE_STATS NNG_ENABLE_STATS)
 
+# IPv6 enable
+nng_defines_if(NNG_ENABLE_IPV6 NNG_ENABLE_IPV6)
+
 set(NNG_RESOLV_CONCURRENCY 4 CACHE STRING "Resolver (DNS) concurrency.")
 mark_as_advanced(NNG_RESOLV_CONCURRENCY)
 if (NNG_RESOLV_CONCURRENCY)

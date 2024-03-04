@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #ifdef _WIN32
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -99,12 +100,12 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 uint16_t
 nuts_next_port(void)
 {
-	char *   name;
-	FILE *   f;
+	char    *name;
+	FILE    *f;
 	uint16_t port;
 	uint16_t base;
 	uint16_t end;
-	char *   str;
+	char    *str;
 #ifdef _WIN32
 	OVERLAPPED olp;
 	HANDLE     h;
@@ -180,7 +181,7 @@ nuts_next_port(void)
 
 struct marriage_notice {
 	nng_mtx *mx;
-	nng_cv * cv;
+	nng_cv  *cv;
 	int      s1;
 	int      s2;
 	int      cnt1;
@@ -249,6 +250,7 @@ nuts_marry_ex(
 	char                   addr[64];
 	nng_listener           l;
 	int                    port;
+	int                    fd[2];
 
 	if (url == NULL) {
 		(void) snprintf(addr, sizeof(addr),
@@ -268,14 +270,47 @@ nuts_marry_ex(
 	    ((rv = nng_pipe_notify(
 	          s1, NNG_PIPE_EV_ADD_POST, married, &note)) != 0) ||
 	    ((rv = nng_pipe_notify(
-	          s2, NNG_PIPE_EV_ADD_POST, married, &note)) != 0) ||
-	    ((rv = nng_listen(s1, url, &l, 0)) != 0)) {
+	          s2, NNG_PIPE_EV_ADD_POST, married, &note)) != 0)) {
 		goto done;
 	}
 
-	// If a TCP port of zero was selected, let's ask for the actual
-	// port bound.
+	// If socket:// is requested we will try to use that, otherwise we
+	// fake it with a TCP loopback socket.
+	if (strcmp(url, "socket://") == 0) {
+		rv = nng_socket_pair(fd);
+		if (rv == 0) {
+			nng_listener l2;
+			if (((rv = nng_listen(s1, url, &l, 0)) != 0) ||
+			    ((rv = nng_listen(s2, url, &l2, 0)) != 0) ||
+			    ((rv = nng_listener_set_int(
+			          l, NNG_OPT_SOCKET_FD, fd[0])) != 0) ||
+			    ((rv = nng_listener_set_int(
+			          l2, NNG_OPT_SOCKET_FD, fd[1])) != 0)) {
+#ifdef _WIN32
+				_close(fd[0]);
+				_close(fd[1]);
+#else
+				close(fd[0]);
+				close(fd[1]);
+#endif
+				return (rv);
+			}
+		} else if (rv == NNG_ENOTSUP) {
+			url = "tcp://127.0.0.1:0";
+			rv  = 0;
+		} else {
+			return (rv);
+		}
+	}
+
+	if (strcmp(url, "socket://") != 0) {
+		if ((rv = nng_listen(s1, url, &l, 0)) != 0) {
+			return (rv);
+		}
+	}
 	if ((strstr(url, ":0") != NULL) &&
+	    // If a TCP port of zero was selected, let's ask for the actual
+	    // port bound.
 	    (nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port) == 0) &&
 	    (port > 0)) {
 		replace_port_zero(url, addr, port);
@@ -285,7 +320,8 @@ nuts_marry_ex(
 	    ((rv = nng_socket_set_ms(s2, NNG_OPT_RECONNMAXT, 10)) != 0)) {
 		goto done;
 	}
-	if ((rv = nng_dial(s2, url, NULL, 0)) != 0) {
+	if ((strcmp(url, "socket://") != 0) &&
+	    ((rv = nng_dial(s2, url, NULL, 0)) != 0)) {
 		goto done;
 	}
 

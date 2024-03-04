@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,8 +15,10 @@
 int
 nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 {
-	SOCKADDR_IN * sin;
+	SOCKADDR_IN *sin;
+#ifdef NNG_ENABLE_IPV6
 	SOCKADDR_IN6 *sin6;
+#endif
 
 	if ((ss == NULL) || (sa == NULL)) {
 		return (-1);
@@ -30,6 +32,7 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 		sin->sin_addr.s_addr = sa->s_in.sa_addr;
 		return (sizeof(*sin));
 
+#ifdef NNG_ENABLE_IPV6
 	case NNG_AF_INET6:
 		sin6 = (void *) ss;
 		memset(sin6, 0, sizeof(*sin6));
@@ -38,6 +41,7 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 		sin6->sin6_scope_id = sa->s_in6.sa_scope;
 		memcpy(sin6->sin6_addr.s6_addr, sa->s_in6.sa_addr, 16);
 		return (sizeof(*sin6));
+#endif
 	}
 	return (-1);
 }
@@ -45,8 +49,10 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 int
 nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 {
-	SOCKADDR_IN * sin;
+	SOCKADDR_IN *sin;
+#ifdef NNG_ENABLE_IPV6
 	SOCKADDR_IN6 *sin6;
+#endif
 
 	if ((ss == NULL) || (sa == NULL)) {
 		return (-1);
@@ -59,6 +65,7 @@ nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 		sa->s_in.sa_addr   = sin->sin_addr.s_addr;
 		return (0);
 
+#ifdef NNG_ENABLE_IPV6
 	case PF_INET6:
 		sin6                = (void *) ss;
 		sa->s_in6.sa_family = NNG_AF_INET6;
@@ -66,6 +73,7 @@ nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 		sa->s_in6.sa_scope  = sin6->sin6_scope_id;
 		memcpy(sa->s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 		return (0);
+#endif
 	}
 	return (-1);
 }
