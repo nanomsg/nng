@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 ########################################################################
-### Start asynchronous clients that can
-### wait for asynchronous server to start
+### Start asynchronous clients that can wait for
+### the asynchronous server to start, and that
+### also send and receive data asynchronously
 ########################################################################
 
-### Usage:  ./arun.sh [client#]
+### Usage:  ./runaioclients.sh [client#]
 ### - client# => do not start server until just before this client
 
 ### Socket file; client count
 ADDR=ipc:///tmp/async_demo
-COUNT=10
+COUNT=3
 
 ### Client # to match when server should be started; clear server PID
 SERVER_ORDINAL=$1
@@ -32,9 +33,10 @@ do
 
 	### Start start client with NONBLOCK envvar set
 	### so client will wait for socket to be open on nng_dial
-	rnd=$(( RANDOM % 1000 + 500 ))
-	echo "Starting client $i: server will reply after $rnd msec"
-	NONBLOCK= ./client $ADDR $rnd &
+	###rnd=$(( RANDOM % 1000 + 500 ))
+	rnd=$(( RANDOM % 50 + 75 ))
+	echo "Starting aioclient $i: server will reply after $rnd msec"
+	NONBLOCK= ./aioclient $ADDR $rnd &
 	### Add this client's PID to client PID array
 	eval CLIENT_PID[$i]=$!
 done
