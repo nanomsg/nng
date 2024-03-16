@@ -141,17 +141,17 @@ or xref:nng_listen.3.adoc[`nng_listen()`].
 ----
 #define CONCURRENCY 1024
 
-echo_context ecs[CONCURRENCY];
+static struct echo_context ecs[CONCURRENCY];
 
 void
 start_echo_service(nng_socket rep_socket)
 {
     for (int i = 0; i < CONCURRENCY; i++) {
         // error checks elided for clarity
-        nng_ctx_open(ec[i].ctx, rep_socket)
-        nng_aio_alloc(ec[i].aio, echo, &e[i]);
-        ec[i].state = INIT;
-        echo(&ec[i]); // start it running
+        nng_ctx_open(&ecs[i].ctx, rep_socket);
+        nng_aio_alloc(&ecs[i].aio, echo, ecs+i);
+        ecs[i].state = INIT;
+        echo(ecs+i); // start it running
     }
 }
 ----
