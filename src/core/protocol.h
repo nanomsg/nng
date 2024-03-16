@@ -79,7 +79,7 @@ struct nni_proto_ctx_ops {
 };
 
 struct nni_proto_sock_ops {
-	// ctx_size is the size of a protocol socket object.  The common
+	// sock_size is the size of a protocol socket object.  The common
 	// code allocates this memory for the protocol private state.
 	size_t sock_size;
 
