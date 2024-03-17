@@ -44,6 +44,7 @@ nng_duration sendtimeo = NNG_DURATION_INFINITE;
 nng_duration recvtimeo = NNG_DURATION_INFINITE;
 void *       data      = NULL;
 size_t       datalen   = 0;
+FILE *       pipefile  = 0;
 int          compat    = 0;
 int          async     = 0;
 int          insecure  = 0;
@@ -78,6 +79,7 @@ enum options {
 	OPT_LISTEN,
 	OPT_DATA,
 	OPT_FILE,
+	OPT_PIPE,
 	OPT_SUBSCRIBE,
 	OPT_INTERVAL,
 	OPT_DELAY,
@@ -128,6 +130,7 @@ static nng_optspec opts[] = {
 	{ .o_name = "listen", .o_val = OPT_LISTEN, .o_arg = true },
 	{ .o_name = "data", .o_short = 'D', .o_val = OPT_DATA, .o_arg = true },
 	{ .o_name = "file", .o_short = 'F', .o_val = OPT_FILE, .o_arg = true },
+	{ .o_name = "pipe", .o_short = 'P', .o_val = OPT_PIPE, .o_arg = true },
 	{ .o_name = "subscribe", .o_val = OPT_SUBSCRIBE, .o_arg = true },
 	{ .o_name = "format", .o_val = OPT_FORMAT, .o_arg = true },
 	{ .o_name = "ascii", .o_short = 'A', .o_val = OPT_ASCII },
@@ -276,6 +279,7 @@ help(void)
 	printf("  --file <file>          (or alias -F <file>). "
 	       "Use - for standard input.\n");
 	printf("  --data <data>          (or alias -D <data>)\n");
+	printf("  --pipe <pipe>          (or alias -P <pipe>)\n");
 	exit(1);
 }
 
@@ -705,6 +709,36 @@ sendrecv(nng_socket sock)
 	}
 }
 
+void
+pipeloop(nng_socket sock)
+{
+	if (pipefile == NULL) {
+		fatal("No pipe to send (specify with --pipe)");
+	}
+	if (delay > 0) {
+		nng_msleep(delay);
+	}
+
+	int          rv;
+	nng_msg *    msg;
+  char * line = NULL;
+  size_t len = 0;
+  ssize_t read;
+
+	while ((read = getline(&line, &len, pipefile)) != -1) {
+		if (((rv = nng_msg_alloc(&msg, 0)) != 0) ||
+		    ((rv = nng_msg_append(msg, line, read)) != 0)) {
+			fatal(nng_strerror(rv));
+		}
+		if ((rv = nng_sendmsg(sock, msg, 0)) != 0) {
+			fatal("Send error: %s", nng_strerror(rv));
+		}
+  }
+
+	// Wait a bit to give queues a chance to drain.
+	nng_msleep(200);
+}
+
 int
 main(int ac, char **av)
 {
@@ -829,16 +863,16 @@ main(int ac, char **av)
 			}
 			break;
 		case OPT_FILE:
-			if (data != NULL) {
-				fatal("Data (--file, --data) may be "
+			if (data != NULL || pipefile != NULL) {
+				fatal("Data (--file, --data, --pipe) may be "
 				      "specified "
 				      "only once.");
 			}
 			loadfile(arg, &data, &datalen);
 			break;
 		case OPT_DATA:
-			if (data != NULL) {
-				fatal("Data (--file, --data) may be "
+			if (data != NULL || pipefile != NULL) {
+				fatal("Data (--file, --data, --pipe) may be "
 				      "specified "
 				      "only once.");
 			}
@@ -847,6 +881,21 @@ main(int ac, char **av)
 			}
 			memcpy(data, arg, strlen(arg) + 1);
 			datalen = strlen(arg);
+			break;
+		case OPT_PIPE:
+			if (data != NULL || pipefile != NULL) {
+				fatal("Data (--file, --data, --pipe) may be "
+				      "specified "
+				      "only once.");
+			}
+			if (strcmp(arg, "-") == 0) {
+				pipefile = stdin;
+			} else {
+				if ((pipefile = fopen(arg, "r")) == NULL) {
+					fatal(
+					    "Cannot open file %s: %s", arg, strerror(errno));
+				}
+			}
 			break;
 		case OPT_CACERT:
 			if (cacert != NULL) {
@@ -933,9 +982,8 @@ main(int ac, char **av)
 	switch (proto) {
 	case OPT_PULL0:
 	case OPT_SUB0:
-		if (data != NULL) {
-			fatal("Protocol does not support --file or "
-			      "--data.");
+		if (data != NULL || pipefile != NULL) {
+			fatal("Protocol does not support --file, --data, or --pipe.");
 		}
 		if (interval >= 0) {
 			fatal("Protocol does not support --interval.");
@@ -947,16 +995,14 @@ main(int ac, char **av)
 			fatal("Protocol does not support --format "
 			      "options.");
 		}
-		if (data == NULL) {
-			fatal("Protocol requires either --file or "
-			      "--data.");
+		if (data == NULL && pipefile == NULL) {
+			fatal("Protocol requires either --file, --data, or --pipe.");
 		}
 		break;
 	case OPT_SURVEY0:
 	case OPT_REQ0:
-		if (data == NULL) {
-			fatal("Protocol requires either --file or "
-			      "--data.");
+		if (data == NULL && pipefile == NULL) {
+			fatal("Protocol requires either --file, --data, or --pipe.");
 		}
 		break;
 	case OPT_REP0:
@@ -968,9 +1014,9 @@ main(int ac, char **av)
 	case OPT_PAIR0:
 	case OPT_PAIR1:
 	case OPT_BUS0:
-		if ((interval >= 0) && (data == NULL)) {
+		if (interval >= 0 && data == NULL && pipefile == NULL) {
 			fatal("Option --interval requires either "
-			      "--file or --data.");
+			      "--file, --data, or --pipe.");
 		}
 		break;
 	default:
@@ -1194,7 +1240,11 @@ main(int ac, char **av)
 		break;
 	case OPT_PUSH0:
 	case OPT_PUB0:
-		sendloop(sock);
+		if (data != NULL) {
+			sendloop(sock);
+		} else if (pipefile != NULL) {
+			pipeloop(sock);
+		}
 		break;
 	case OPT_BUS0:
 	case OPT_PAIR0:
