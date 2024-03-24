@@ -74,6 +74,6 @@
     - [nng_bus_open](api/nng_bus_open.md)
     - [nng_close](api/nng_close.md)
 
-  - [Legacy Compatibility](api/compat.md)
+  - [Legacy Compatibility](api/compat/index.md)
 
 - [Index](./indexing.md)
