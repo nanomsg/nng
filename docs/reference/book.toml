@@ -1,0 +1,13 @@
+[book]
+authors = ["Garrett D'Amore"]
+language = "en"
+multilingual = false
+src = "src"
+title = "NNG Reference Manual"
+
+[output.html]
+curly-quotes = true
+
+[preprocessor.indexing]
+
+[preprocessor.alerts]
