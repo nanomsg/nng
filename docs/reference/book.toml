@@ -7,6 +7,8 @@ title = "NNG Reference Manual"
 
 [output.html]
 curly-quotes = true
+fold.enable = true
+fold.level = 1
 
 [preprocessor.indexing]
 
