@@ -13,6 +13,7 @@
 
 - [Transports](./transports/index.md)
 
+  - [INPROC](transports/inproc.md)
   - [TCP](transports/tcp.md)
 
 - [API Reference](./api/index.md)
