@@ -9,6 +9,7 @@
 - [Protocols](./protocols/index.md)
 
   - [BUS](protocols/bus.md)
+  - [REP](protocols/rep.md)
 
 - [Transports](./transports/index.md)
 
@@ -53,6 +54,7 @@
     - [nng_cv_wait](api/nng_cv_wait.md)
     - [nng_cv_wake](api/nng_cv_wake.md)
     - [nng_cv_wake1](api/nng_cv_wake1.md)
+    - [nng_free](api/nng_free.md)
 
   - [Context Functions](api/context.md)
 
