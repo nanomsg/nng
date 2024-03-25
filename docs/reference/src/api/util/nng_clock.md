@@ -29,7 +29,7 @@ very fine-grained values.
 > but different programs may have different references.
 
 This function is intended to help with setting appropriate
-timeouts using [`nng_cv_until()`](nng_cv_until.md).
+timeouts using [`nng_cv_until()`](../threads/nng_cv_until.md).
 
 ## RETURN VALUES
 
@@ -38,6 +38,6 @@ Milliseconds since reference time.
 ## SEE ALSO
 
 [nng_sleep_aio()](nng_sleep_aio.md),
-[nng_cv_until()](nng_cv_until.md),
+[nng_cv_until()](../threads/nng_cv_until.md),
 [nng_msleep()](nng_msleep.md),
 [nng_duration](nng_duration.md)

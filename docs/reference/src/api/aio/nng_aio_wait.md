@@ -24,7 +24,7 @@ function will not be called until the callback has completed.
 
 > [!IMPORTANT]
 > This function should never be called from a function that itself
-> is a callback of an [`nng_aio`](nng_aio.md), either this one or any other.
+> is a callback of an [`nng_aio`](index.md), either this one or any other.
 > Doing so may result in a deadlock.
 
 ## SEE ALSO

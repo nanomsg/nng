@@ -19,11 +19,12 @@ with the handle _aio_.
 If the operation was successful, then 0 is returned.
 Otherwise a non-zero error code is returned.
 
-NOTE: The return value from this function is undefined if the operation
-has not completed yet.
-Either call this from the handle's completion
-callback, or after waiting for the operation to complete with
-[`nng_aio_wait()`](nng_aio_wait.md).
+> [!NOTE]
+> The return value from this function is undefined if the operation
+> has not completed yet.
+> Either call this from the handle's completion
+> callback, or after waiting for the operation to complete with
+> [`nng_aio_wait()`](nng_aio_wait.md).
 
 ## RETURN VALUES
 
@@ -42,5 +43,4 @@ Various other return values are possible depending on the operation.
 [nng_aio_abort()](nng_aio_abort.md),
 [nng_aio_alloc()](nng_aio_alloc.md),
 [nng_aio_wait()](nng_aio_wait.md),
-[nng_strerror()](nng_strerror.md),
-[nng_aio](nng_aio.md),
+[nng_strerror()](../util/nng_strerror.md)

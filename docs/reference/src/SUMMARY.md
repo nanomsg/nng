@@ -9,6 +9,7 @@
 - [Protocols](./protocols/index.md)
 
   - [BUS](protocols/bus.md)
+  - [PUB](protocols/pub.md)
   - [REP](protocols/rep.md)
 
 - [Transports](./transports/index.md)
@@ -44,17 +45,18 @@
     - [nng_aio_get_input](api/aio_provider/nng_aio_get_input.md)
     - [nng_aio_set_output](api/aio_provider/nng_aio_set_output.md)
 
-  - [General Purpose Functions](api/general.md)
+  - [Utility Functions](api/util/index.md)
 
-    - [nng_alloc](api/nng_alloc.md)
-    - [nng_clock](api/nng_clock.md)
+    - [nng_alloc](api/util/nng_alloc.md)
+    - [nng_clock](api/util/nng_clock.md)
+    - [nng_free](api/util/nng_free.md)
+    - [nng_version](api/util/nng_version.md)
     - [nng_cv_alloc](api/nng_cv_alloc.md)
     - [nng_cv_free](api/nng_cv_free.md)
     - [nng_cv_until](api/nng_cv_until.md)
     - [nng_cv_wait](api/nng_cv_wait.md)
     - [nng_cv_wake](api/nng_cv_wake.md)
     - [nng_cv_wake1](api/nng_cv_wake1.md)
-    - [nng_free](api/nng_free.md)
 
   - [Context Functions](api/context.md)
 
