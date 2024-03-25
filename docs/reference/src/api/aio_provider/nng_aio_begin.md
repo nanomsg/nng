@@ -39,9 +39,6 @@ exactly once, when the operation is complete or canceled.
 
 ## SEE ALSO
 
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_cancel()](nng_aio_cancel.md),
+[nng_aio_cancel()](../aio/nng_aio_cancel.md),
 [nng_aio_defer()](nng_aio_defer.md),
-[nng_aio_finish()](nng_aio_finish.md),
-[nng_aio_result()](nng_aio_result.md),
-[nng_aio](nng_aio.md)
+[nng_aio_finish()](nng_aio_finish.md)

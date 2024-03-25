@@ -25,5 +25,4 @@ for an asynchronous send operation (see
 
 [nng_aio_get_msg()](nng_aio_get_msg.md),
 [nng_send_aio()](nng_send_aio.md),
-[nng_aio](nng_aio.md),
 [nng_msg](nng_msg.md)

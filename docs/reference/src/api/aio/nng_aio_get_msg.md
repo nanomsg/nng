@@ -27,5 +27,4 @@ or that was previously stored with
 
 [nng_aio_set_msg()](nng_aio_set_msg.md),
 [nng_recv_aio()](nng_recv_aio.md),
-[nng_aio](nng_aio.md),
 [nng_msg](nng_msg.md)

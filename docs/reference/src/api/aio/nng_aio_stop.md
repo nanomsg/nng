@@ -36,5 +36,4 @@ pending for it.
 [nng_aio_cancel()](nng_aio_cancel.md),
 [nng_aio_free()](nng_aio_free.md),
 [nng_aio_begin()](nng_aio_begin.md),
-[nng_aio_wait()](nng_aio-wait.md),
-[nng_aio](nng_aio.md),
+[nng_aio_wait()](nng_aio-wait.md)

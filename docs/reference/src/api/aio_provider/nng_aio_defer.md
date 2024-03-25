@@ -53,7 +53,6 @@ error code specified by _err_.
 
 ## SEE ALSO
 
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_cancel()](nng_aio_cancel.md),
-[nng_aio_finish()](nng_aio_finish.md),
-[nng_aio](nng_aio.md)
+[nng_aio_alloc()](../aio/nng_aio_alloc.md),
+[nng_aio_cancel()](../aio/nng_aio_cancel.md),
+[nng_aio_finish()](nng_aio_finish.md)

@@ -50,5 +50,4 @@ or absolute timeout.
 
 [nng_aio_cancel()](nng_aio_cancel.md),
 [nng_aio_result()](nng_aio_result.md),
-[nng_aio](nng_aio),
 [nng_duration](nng_duration)

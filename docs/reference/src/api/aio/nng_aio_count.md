@@ -38,9 +38,7 @@ The number of bytes transferred by the operation.
 
 ## SEE ALSO
 
-[.text-left]
 [nng_aio_alloc()](nng_aio_alloc.md),
 [nng_aio_result()](nng_aio_result.md),
 [nng_aio_set_iov()](nng_aio_set_iov.md),
-[nng_aio_wait()](nng_aio_wait.md),
-[nng_aio](nng_aio)
+[nng_aio_wait()](nng_aio_wait.md)

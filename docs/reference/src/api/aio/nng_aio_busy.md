@@ -38,5 +38,4 @@ True if the _aio_ is busy, false otherwise.
 
 [nng_aio_abort()](nng_aio_abort.md),
 [nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_wait(3)](nng_aio_wait.md),
-[nng_aio](nng_aio.md)
+[nng_aio_wait(3)](nng_aio_wait.md)

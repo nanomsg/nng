@@ -33,5 +33,4 @@ the [`nng_aio_get_output()`](nng_aio_get_output.md) function.
 
 ## SEE ALSO
 
-[nng_aio_get_output(3)](nng_aio_get_output.md),
-[nng_aio](nng_aio.md)
+[nng_aio_get_output(3)](../aio/nng_aio_get_output.md)

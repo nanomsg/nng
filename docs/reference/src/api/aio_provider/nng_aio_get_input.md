@@ -29,7 +29,6 @@ Value previously set, or `NULL`.
 
 ## SEE ALSO
 
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_get_output()](nng_aio_get_output.md),
-[nng_aio_set_input()](nng_aio_set_input.md),
-[nng_aio](nng_aio.md)
+[nng_aio_alloc()](../aio/nng_aio_alloc.md),
+[nng_aio_get_output()](../aio/nng_aio_get_output.md),
+[nng_aio_set_input()](../aio/nng_aio_set_input.md)

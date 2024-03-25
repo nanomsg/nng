@@ -32,7 +32,7 @@ It will be called with the argument _arg_.
 > thread can be used, along with a [condition variable](nng_cv_alloc.md)
 > which can be signaled by the callback.
 
-Asynchronous I/O operations all take an [`nng_aio`](nng_aio.md)
+Asynchronous I/O operations all take an [`nng_aio`](index.md)
 handle such as allocated by this function.
 Such operations are usually started by a function that returns immediately.
 The operation is then run asynchronously, and completes sometime later.
@@ -71,6 +71,4 @@ This function returns 0 on success, and non-zero otherwise.
 [nng_aio_set_msg()](nng_aio_set_msg.md),
 [nng_aio_set_timeout()](nng_aio_set_timeout.md),
 [nng_aio_stop()](nng_aio_stop.md),
-[nng_aio_wait()](nng_aio_wait.md),
-[nng_strerror()](nng_strerror.md),
-[nng_aio](nng_aio.md)
+[nng_aio_wait()](nng_aio_wait.md)

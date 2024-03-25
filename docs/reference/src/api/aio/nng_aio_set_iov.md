@@ -38,8 +38,3 @@ This function returns 0 on success, and non-zero otherwise.
 ## ERRORS
 
 - `NNG_EINVAL`: Value of specified _niov_ is too large.
-
-## SEE ALSO
-
-[nng_aio](nng_aio),
-[nng_iov](nng_iov)

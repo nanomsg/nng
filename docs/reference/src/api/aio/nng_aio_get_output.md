@@ -36,6 +36,5 @@ The _index_&zwj;th output from the operation, or `NULL`.
 ## SEE ALSO
 
 [nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_set_output()](nng_aio_set_output.md),
-[nng_aio_result()](nng_aio_result.md),
-[nng_aio](nng_aio.md),
+[nng_aio_set_output()](../aio_provider/nng_aio_set_output.md),
+[nng_aio_result()](nng_aio_result.md)
