@@ -1,4 +1,4 @@
-# nng_aio_free(3)
+# nng_aio_free()
 
 ## NAME
 
