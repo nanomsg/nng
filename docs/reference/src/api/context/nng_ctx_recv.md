@@ -1,4 +1,4 @@
-# nng_ctx_recv()
+# nng_ctx_recv
 
 ## NAME
 
@@ -14,14 +14,14 @@ void nng_ctx_recv(nng_ctx ctx, nng_aio *aio);
 
 ## DESCRIPTION
 
-The `nng_ctx_recv()` receives a [message](nng_msg.md) using the
-[context](nng_ctx.md) _s_ asynchronously.
+The `nng_ctx_recv()` receives a [message](../msg/index.md) using the
+[context](index.md) _s_ asynchronously.
 
 When a message is successfully received by the context, it is
 stored in the _aio_ by an internal call equivalent to
-[`nng_aio_set_msg()`](nng_aio_set_msg.md), then the completion
+[`nng_aio_set_msg()`](../aio/nng_aio_set_msg.md), then the completion
 callback on the _aio_ is executed.
-In this case, [`nng_aio_result()`](nng_aio_result.md) will
+In this case, [`nng_aio_result()`](../aio/nng_aio_result.md) will
 return zero.
 The callback function is responsible for retrieving the message
 and disposing of it appropriately.
@@ -33,7 +33,7 @@ and disposing of it appropriately.
 If for some reason the asynchronous receive cannot be completed
 successfully (including by being canceled or timing out), then
 the callback will still be executed,
-but [`nng_aio_result()`](nng_aio_result.md) will be non-zero.
+but [`nng_aio_result()`](../aio/nng_aio_result.md) will be non-zero.
 
 > [!TIP]
 > The semantics of what receiving a message means varies from protocol to
@@ -52,10 +52,5 @@ The following errors may be set on the _aio_, if the operation fails.
 
 ## SEE ALSO
 
-[nng_aio_get_msg()](nng_aio_get_msg.md),
-[nng_aio_set_msg()](nng_aio_set_msg.md),
-[nng_msg_alloc()](nng_msg_alloc.md),
-[nng_msg_free()](nng_msg_free.md),
-[nng_aio](nng_aio.md),
-[nng_ctx](nng_ctx.md),
-[nng_msg](nng_msg.md)
+[Asynchronous I/O](../aio/index.md),
+[Messages](../msg/index.md)

@@ -1,4 +1,4 @@
-# nng_ctx_set()
+# nng_ctx_set
 
 ## NAME
 
@@ -89,7 +89,6 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_get()](nng_ctx_get),
-[nng_socket_set()](nng_socket_get),
-[nng_ctx](nng_ctx),
+[nng_ctx_get](nng_ctx_get),
+[nng_socket_set](../socket/nng_socket_get),
 [nng_options](nng_options)

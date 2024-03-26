@@ -1,4 +1,4 @@
-# nng_strerror()
+# nng_strerror
 
 ## NAME
 

@@ -1,4 +1,4 @@
-# nng_cv_wait()
+# nng_cv_wait
 
 ## NAME
 
@@ -59,10 +59,10 @@ The following example demonstrates use of this function:
 
 ## SEE ALSO
 
-[nng_cv_alloc()](nng_cv_alloc.md),
-[nng_cv_until()](nng_cv_until.md),
-[nng_cv_wake()](nng_cv_wake.md),
-[nng_cv_wake1()](nng_cv_wake1.md),
-[nng_mtx_alloc()](nng_mtx_alloc.md),
-[nng_mtx_lock()](nng_mtx_lock.md),
-[nng_mtx_unlock()](nng_mtx_unlock.md)
+[nng_cv_alloc](nng_cv_alloc.md),
+[nng_cv_until](nng_cv_until.md),
+[nng_cv_wake](nng_cv_wake.md),
+[nng_cv_wake1](nng_cv_wake1.md),
+[nng_mtx_alloc](nng_mtx_alloc.md),
+[nng_mtx_lock](nng_mtx_lock.md),
+[nng_mtx_unlock](nng_mtx_unlock.md)

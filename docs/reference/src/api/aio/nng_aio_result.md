@@ -1,4 +1,4 @@
-# nng_aio_result()
+# nng_aio_result
 
 ## NAME
 
@@ -40,7 +40,7 @@ Various other return values are possible depending on the operation.
 
 ## SEE ALSO
 
-[nng_aio_abort()](nng_aio_abort.md),
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_wait()](nng_aio_wait.md),
-[nng_strerror()](../util/nng_strerror.md)
+[nng_aio_abort](nng_aio_abort.md),
+[nng_aio_alloc](nng_aio_alloc.md),
+[nng_aio_wait](nng_aio_wait.md),
+[nng_strerror](../util/nng_strerror.md)

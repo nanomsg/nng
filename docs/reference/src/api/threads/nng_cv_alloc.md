@@ -1,4 +1,4 @@
-# nng_cv_alloc()
+# nng_cv_alloc
 
 ## NAME
 
@@ -38,9 +38,9 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_cv_free()](nng_cv_free.md),
-[nng_cv_until()](nng_cv_until.md),
-[nng_cv_wait()](nng_cv_wait.md),
-[nng_cv_wake()](nng_cv_wake.md),
-[nng_cv_wake1()](nng_cv_wake1.md),
-[nng_mtx_alloc()](nng_mtx_alloc.md)
+[nng_cv_free](nng_cv_free.md),
+[nng_cv_until](nng_cv_until.md),
+[nng_cv_wait](nng_cv_wait.md),
+[nng_cv_wake](nng_cv_wake.md),
+[nng_cv_wake1](nng_cv_wake1.md),
+[nng_mtx_alloc](nng_mtx_alloc.md)

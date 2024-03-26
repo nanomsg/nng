@@ -1,4 +1,4 @@
-# nng_aio_get_msg()
+# nng_aio_get_msg
 
 ## NAME
 
@@ -25,6 +25,6 @@ or that was previously stored with
 
 ## SEE ALSO
 
-[nng_aio_set_msg()](nng_aio_set_msg.md),
-[nng_recv_aio()](nng_recv_aio.md),
-[nng_msg](nng_msg.md)
+[nng_aio_set_msg](nng_aio_set_msg.md),
+[nng_recv_aio](nng_recv_aio.md),
+[Messages](../msg/index.md)

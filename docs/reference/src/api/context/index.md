@@ -17,7 +17,7 @@ typedef struct nng_ctx_s nng_ctx
 An `nng_ctx`{{hi:context}} is a handle to an underlying context object,
 which keeps the protocol state for some stateful protocols.
 The purpose of a separate context object is to permit applications to
-share a single [socket](nng_socket.md), with its various underlying
+share a single [socket](../socket/index.md), with its various underlying
 [dialers](nng_dialer.md),
 [listeners](nng_listener.md),
 [pipes](nng_pipe.md),
@@ -145,16 +145,16 @@ start_echo_service(nng_socket rep_socket)
 
 ## SEE ALSO
 
-[nng_ctx_close()](nng_ctx_close.md),
-[nng_ctx_open()](nng_ctx_open.md),
-[nng_ctx_get()](nng_ctx_get.md),
-[nng_ctx_id()](nng_ctx_id.md)
-[nng_ctx_recv()](nng_ctx_recv.md),
-[nng_ctx_recvmsg()](nng_ctx_recvmsg.md),
-[nng_ctx_send()](nng_ctx_send.md),
-[nng_ctx_sendmsg()](nng_ctx_sendmsg.md),
-[nng_ctx_set()](nng_ctx_set.md),
+[nng_ctx_close](nng_ctx_close.md),
+[nng_ctx_open](nng_ctx_open.md),
+[nng_ctx_get](nng_ctx_get.md),
+[nng_ctx_id](nng_ctx_id.md)
+[nng_ctx_recv](nng_ctx_recv.md),
+[nng_ctx_recvmsg](nng_ctx_recvmsg.md),
+[nng_ctx_send](nng_ctx_send.md),
+[nng_ctx_sendmsg](nng_ctx_sendmsg.md),
+[nng_ctx_set](nng_ctx_set.md),
 [nng_dialer](nng_dialer.md),
 [nng_listener](nng_listener.md),
-[nng_socket](nng_socket.md),
+[nng_socket](../socket/index.md),
 [nng_options](nng_options.md)

@@ -1,4 +1,4 @@
-# Interfaces for Aysnchronous I/O
+# Aysnchronous I/O
 
 _NNG_ provides rich support for {{i:asynchronous I/O}}.
 This allows applications to achieve high levels of concurrency with a
@@ -57,18 +57,18 @@ complete [`nng_aio_wait()`](nng_aio_wait.md).
 
 ## See Also
 
-[nng_aio_abort()](nng_aio_abort.md),
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_cancel()](nng_aio_cancel.md),
-[nng_aio_count()](nng_aio_count.md),
-[nng_aio_free()](nng_aio_free.md),
-[nng_aio_get_input()](nng_aio_get_input.md),
-[nng_aio_get_msg()](nng_aio_get_msg.md),
-[nng_aio_get_output()](nng_aio_get_output.md),
-[nng_aio_result()](nng_aio_result.md),
-[nng_aio_set_input()](nng_aio_set_input.md),
-[nng_aio_set_iov()](nng_aio_set_iov.md),
-[nng_aio_set_msg()](nng_aio_set_msg.md),
-[nng_aio_set_timeout()](nng_aio_set_timeout.md),
-[nng_aio_stop()](nng_aio_stop.md),
-[nng_aio_wait()](nng_aio_wait.md)
+[nng_aio_abort](nng_aio_abort.md),
+[nng_aio_alloc](nng_aio_alloc.md),
+[nng_aio_cancel](nng_aio_cancel.md),
+[nng_aio_count](nng_aio_count.md),
+[nng_aio_free](nng_aio_free.md),
+[nng_aio_get_input](nng_aio_get_input.md),
+[nng_aio_get_msg](nng_aio_get_msg.md),
+[nng_aio_get_output](nng_aio_get_output.md),
+[nng_aio_result](nng_aio_result.md),
+[nng_aio_set_input](nng_aio_set_input.md),
+[nng_aio_set_iov](nng_aio_set_iov.md),
+[nng_aio_set_msg](nng_aio_set_msg.md),
+[nng_aio_set_timeout](nng_aio_set_timeout.md),
+[nng_aio_stop](nng_aio_stop.md),
+[nng_aio_wait](nng_aio_wait.md)

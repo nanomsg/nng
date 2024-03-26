@@ -1,4 +1,4 @@
-# nng_aio_set_timeout()
+# nng_aio_set_timeout
 
 ## NAME
 
@@ -48,6 +48,6 @@ or absolute timeout.
 
 ## SEE ALSO
 
-[nng_aio_cancel()](nng_aio_cancel.md),
-[nng_aio_result()](nng_aio_result.md),
-[nng_clock()](../util/nng_clock.md)
+[nng_aio_cancel](nng_aio_cancel.md),
+[nng_aio_result](nng_aio_result.md),
+[nng_clock](../util/nng_clock.md)

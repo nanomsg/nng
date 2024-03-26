@@ -1,4 +1,4 @@
-# nng_ctx_setopt()
+# nng_ctx_setopt
 
 ## NAME
 
@@ -94,6 +94,5 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_set()](nng_ctx_set.md),
-[nng_ctx](nng_ctx.md),
+[nng_ctx_set](nng_ctx_set.md),
 [nng_options](nng_options.md)

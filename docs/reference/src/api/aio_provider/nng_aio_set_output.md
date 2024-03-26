@@ -1,4 +1,4 @@
-# nng_aio_set_output()
+# nng_aio_set_output
 
 ## NAME
 
@@ -33,4 +33,4 @@ the [`nng_aio_get_output()`](../aio/nng_aio_get_output.md) function.
 
 ## SEE ALSO
 
-[nng_aio_get_output(3)](../aio/nng_aio_get_output.md)
+[nng_aio_get_output](../aio/nng_aio_get_output.md)

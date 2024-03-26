@@ -1,4 +1,4 @@
-# nng_aio_set_input()
+# nng_aio_set_input
 
 ## NAME
 
@@ -38,5 +38,5 @@ the [`nng_aio_get_input()`](nng_aio_get_input.md) function.
 
 ## SEE ALSO
 
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_get_input()](../aio_provider/nng_aio_get_input.md)
+[nng_aio_alloc](nng_aio_alloc.md),
+[nng_aio_get_input](../aio_provider/nng_aio_get_input.md)

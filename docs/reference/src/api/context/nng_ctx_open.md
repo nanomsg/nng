@@ -1,4 +1,4 @@
-# nng_ctx_open()
+# nng_ctx_open
 
 ## NAME
 
@@ -49,9 +49,8 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_close()](nng_ctx_close.md),
-[nng_ctx_get()](nng_ctx_get.md),
-[nng_ctx_recv()](nng_ctx_recv.md),
-[nng_ctx_send()](nng_ctx_send.md),
-[nng_ctx_set()](nng_ctx_set.md),
-[nng_ctx](nng_ctx.md)
+[nng_ctx_close](nng_ctx_close.md),
+[nng_ctx_get](nng_ctx_get.md),
+[nng_ctx_recv](nng_ctx_recv.md),
+[nng_ctx_send](nng_ctx_send.md),
+[nng_ctx_set](nng_ctx_set.md)

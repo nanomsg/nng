@@ -1,4 +1,4 @@
-# nng_aio_defer()
+# nng_aio_defer
 
 ## NAME
 
@@ -53,6 +53,6 @@ error code specified by _err_.
 
 ## SEE ALSO
 
-[nng_aio_alloc()](../aio/nng_aio_alloc.md),
-[nng_aio_cancel()](../aio/nng_aio_cancel.md),
-[nng_aio_finish()](nng_aio_finish.md)
+[nng_aio_alloc](../aio/nng_aio_alloc.md),
+[nng_aio_cancel](../aio/nng_aio_cancel.md),
+[nng_aio_finish](nng_aio_finish.md)

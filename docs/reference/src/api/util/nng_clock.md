@@ -1,4 +1,4 @@
-# nng_clock()
+# nng_clock
 
 ## NAME
 
@@ -38,7 +38,7 @@ Milliseconds since reference time.
 
 ## SEE ALSO
 
-[nng_sleep_aio()](nng_sleep_aio.md),
-[nng_cv_until()](../threads/nng_cv_until.md),
-[nng_msleep()](nng_msleep.md),
+[nng_sleep_aio](nng_sleep_aio.md),
+[nng_cv_until](../threads/nng_cv_until.md),
+[nng_msleep](nng_msleep.md),
 [nng_duration](nng_duration.md)

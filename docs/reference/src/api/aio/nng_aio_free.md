@@ -1,4 +1,4 @@
-# nng_aio_free()
+# nng_aio_free
 
 ## NAME
 
@@ -30,5 +30,5 @@ This can be useful to discard the _aio_ object from within the callback for the 
 
 ## SEE ALSO
 
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_stop()](nng_aio_stop.md)
+[nng_aio_alloc](nng_aio_alloc.md),
+[nng_aio_stop](nng_aio_stop.md)

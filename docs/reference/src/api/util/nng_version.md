@@ -1,4 +1,4 @@
-# nng_version(3)
+# nng_version
 
 ## NAME
 

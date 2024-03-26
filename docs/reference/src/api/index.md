@@ -10,9 +10,11 @@ the _NNG_ programming interface.
 We have organized the reference material along general functional areas.
 They are:
 
+- Messages
 - Sockets
-- Dialers, Listeners, and Pipes
 - Contexts
+- Options
+- Dialers, Listeners, and Pipes
 - [Asynchronous I/O](aio/index.md)
 - [Asynchronous I/O for Providers](aio_provider/index.md)
 - [Utility Functions](util/index.md)

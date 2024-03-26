@@ -1,4 +1,4 @@
-# nng_aio_stop()
+# nng_aio_stop
 
 ## NAME
 
@@ -33,7 +33,7 @@ pending for it.
 
 ## SEE ALSO
 
-[nng_aio_cancel()](nng_aio_cancel.md),
-[nng_aio_free()](nng_aio_free.md),
-[nng_aio_begin()](nng_aio_begin.md),
-[nng_aio_wait()](nng_aio-wait.md)
+[nng_aio_cancel](nng_aio_cancel.md),
+[nng_aio_free](nng_aio_free.md),
+[nng_aio_begin](nng_aio_begin.md),
+[nng_aio_wait](nng_aio-wait.md)

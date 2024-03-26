@@ -1,4 +1,4 @@
-# nng_ctx_getopt()
+# nng_ctx_getopt
 
 ## NAME
 
@@ -32,7 +32,7 @@ int nng_ctx_getopt_uint64(nng_ctx ctx, const char *opt, uint64_t *u64p);
 > They may also be removed entirely in a future version of _NNG_.
 
 The `nng_ctx_getopt()` functions are used to retrieve option values for
-the [context](nng_ctx.md) _ctx_.
+the [context](index.md) _ctx_.
 The actual options that may be retrieved in this way vary.
 
 > [!NOTE]
@@ -85,9 +85,9 @@ on the actual option, and will be documented with the option itself.
 
 - `nng_ctx_getopt_string()`:\
   This function is used to retrieve a string into _strp_.
-  This string is created from the source using `nng_strdup()`](nng_strdup.md)
+  This string is created from the source using [`nng_strdup()`](../util/nng_strdup.md)
   and consequently must be freed by the caller using
-  [`nng_strfree()`](nng_strfree.md) when it is no longer needed.
+  [`nng_strfree()`](../util/nng_strfree.md) when it is no longer needed.
 
 - `nng_ctx_getopt_uint64()`:\
   This function is used to retrieve a 64-bit unsigned value into the value
@@ -110,8 +110,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_strdup()](nng_strdup.md),
-[nng_strfree()](nng_strfree.md),
+[nng_strdup](../util/nng_strdup.md),
+[nng_strfree](../util/nng_strfree.md),
 [nng_duration](nng_duration.md),
-[nng_ctx](nng_ctx.md),
-[nng_options](nng_options.md)
+[nng_options](../socket/nng_options.md)

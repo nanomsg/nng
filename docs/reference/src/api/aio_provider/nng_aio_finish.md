@@ -1,4 +1,4 @@
-# nng_aio_finish()
+# nng_aio_finish
 
 ## NAME
 
@@ -33,7 +33,7 @@ This function causes the callback associated with the _aio_ to called.
 
 ## SEE ALSO
 
-[nng_aio_begin()](nng_aio_begin.md),
-[nng_aio_cancel()](nng_aio_cancel.md),
-[nng_aio_defer()](nng_aio_defer.md),
-[nng_aio_result()](../aio/nng_aio_result.md)
+[nng_aio_begin](nng_aio_begin.md),
+[nng_aio_cancel](../aio/nng_aio_cancel.md),
+[nng_aio_defer](nng_aio_defer.md),
+[nng_aio_result](../aio/nng_aio_result.md)

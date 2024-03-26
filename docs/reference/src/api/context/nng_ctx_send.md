@@ -1,4 +1,4 @@
-# nng_ctx_send()
+# nng_ctx_send
 
 ## NAME
 
@@ -14,15 +14,15 @@ void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
 
 ## DESCRIPTION
 
-The `nng_ctx_send()` sends a [message](nng_msg.md) using the
+The `nng_ctx_send()` sends a [message](../msg/index.md) using the
 [context](nng_ctx.md) _ctx_ asynchronously.
 
 The message to send must have previously been set on the _aio_
-using the [`nng_aio_set_msg()`](nng_aio_set_msg.md) function.
+using the [`nng_aio_set_msg()`](../aio/nng_aio_set_msg.md) function.
 The function assumes ownership of the message.
 
 If the message was successfully queued for delivery to the socket,
-then the _aio_ will be completed, and [`nng_aio_result()`](nng_aio_result.md)
+then the _aio_ will be completed, and [`nng_aio_result()`](../aio/nng_aio_result.md)
 will return zero.
 In this case the socket will dispose of the message when it is finished with it.
 
@@ -36,12 +36,12 @@ In this case the socket will dispose of the message when it is finished with it.
 
 If the operation fails for any reason (including cancellation or timeout),
 then the _aio_ callback will be executed and
-[`nng_aio_result()`](nng_aio_result.md) will return a non-zero error status.
+[`nng_aio_result()`](../aio/nng_aio_result.md) will return a non-zero error status.
 In this case, the callback has a responsibility to retrieve the message from
-the _aio_ with [`nng_aio_get_msg()`](nng_aio_get_msg.md) and dispose of
+the _aio_ with [`nng_aio_get_msg()`](../aio/nng_aio_get_msg.md) and dispose of
 it appropriately.
 (This may include retrying the send operation on the same or a different
-socket, or deallocating the message with [`nng_msg_free()`](nng_msg_free.md).
+socket, or deallocating the message with [`nng_msg_free()`](../msg/nng_msg_free.md).
 
 > [!TIP]
 > The semantics of what sending a message means varies from protocol to
@@ -59,11 +59,10 @@ socket, or deallocating the message with [`nng_msg_free()`](nng_msg_free.md).
 
 ## SEE ALSO
 
-[nng_aio_get_msg()](nng_aio_get_msg.md),
-[nng_aio_set_msg()](nng_aio_set_msg.md),
-[nng_ctx_sendmsg()](nng_ctx_sendmsg.md),
-[nng_msg_alloc()](nng_msg_alloc.md),
-[nng_msg_alloc()](nng_msg_free.md),
-[nng_aio](nng_aio.md),
-[nng_ctx](nng_ctx),
-[nng_msg](nng_msg)
+[nng_aio_get_msg](../aio/nng_aio_get_msg.md),
+[nng_aio_set_msg](../aio/nng_aio_set_msg.md),
+[nng_ctx_sendmsg](nng_ctx_sendmsg.md),
+[nng_msg_alloc](../msg/nng_msg_alloc.md),
+[nng_msg_free](../msg/nng_msg_free.md),
+[Asynchronous I/O](../aio/index.md),
+[Messages](../msg/index.md)

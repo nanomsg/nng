@@ -1,4 +1,4 @@
-# nng_ctx_get()
+# nng_ctx_get
 
 ## NAME
 
@@ -28,9 +28,9 @@ int nng_ctx_get_uint64(nng_ctx ctx, const char *opt, uint64_t *u64p);
 
 {{hi:options, context}}
 The `nng_ctx_get()` functions are used to retrieve option values for
-the [context](nng_ctx.md) _ctx_.
+the [context](index.md) _ctx_.
 The actual options that may be retrieved in this way vary.
-A number of them are documented in [nng_options](nng_options.md).
+A number of them are documented in [nng_options](../socket/nng_options.md).
 
 > [!NOTE]
 > Context options are protocol specific.
@@ -105,9 +105,8 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_set()](nng_ctx_set.md),
-[nng_strdup()](nng_strdup.md),
-[nng_strfree()](nng_strfree.md),
+[nng_ctx_set](nng_ctx_set.md),
+[nng_strdup](nng_strdup.md),
+[nng_strfree](nng_strfree.md),
 [nng_duration](nng_duration.md),
-[nng_ctx](nng_ctx.md),
-[nng_options](nng_options.md)
+[nng_options](../socket/nng_options.md)

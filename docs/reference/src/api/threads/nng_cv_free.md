@@ -1,4 +1,4 @@
-# nng_cv_free()
+# nng_cv_free
 
 ## NAME
 
@@ -19,4 +19,4 @@ The `nng_cv_free()` function frees the condition variable _cv_.
 
 ## SEE ALSO
 
-[nng_cv_alloc()](nng_cv_alloc.md)
+[nng_cv_alloc](nng_cv_alloc.md)

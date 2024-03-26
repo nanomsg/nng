@@ -19,11 +19,37 @@
 
 - [API Reference](./api/index.md)
 
+  - [Messages](api/msg/index.md)
+
+    - [nng_msg_alloc](api/msg/nng_msg_alloc.md)
+    - [nng_msg_append](api/msg/nng_msg_append.md)
+    - [nng_msg_body](api/msg/nng_msg_body.md)
+    - [nng_msg_capacity](api/msg/nng_msg_capacity.md)
+    - [nng_msg_chop](api/msg/nng_msg_chop.md)
+    - [nng_msg_clear](api/msg/nng_msg_clear.md)
+    - [nng_msg_dup](api/msg/nng_msg_dup.md)
+    - [nng_msg_free](api/msg/nng_msg_free.md)
+    - [nng_msg_trim](api/msg/nng_msg_trim.md)
+
   - [Sockets](api/socket/index.md)
 
     - [nng_bus_open](api/socket/nng_bus_open.md)
     - [nng_close](api/socket/nng_close.md)
     - [nng_pub_open](api/socket/nng_pub_open.md)
+
+  - [Contexts](api/context/index.md)
+
+    - [nng_ctx_close](api/context/nng_ctx_close.md)
+    - [nng_ctx_get](api/context/nng_ctx_get.md)
+    - [nng_ctx_getopt](api/context/nng_ctx_getopt.md)
+    - [nng_ctx_id](api/context/nng_ctx_id.md)
+    - [nng_ctx_open](api/context/nng_ctx_open.md)
+    - [nng_ctx_recv](api/context/nng_ctx_recv.md)
+    - [nng_ctx_recvmsg](api/context/nng_ctx_recvmsg.md)
+    - [nng_ctx_send](api/context/nng_ctx_send.md)
+    - [nng_ctx_sendmsg](api/context/nng_ctx_sendmsg.md)
+    - [nng_ctx_set](api/context/nng_ctx_set.md)
+    - [nng_ctx_setopt](api/context/nng_ctx_setopt.md)
 
   - [Asynchronous I/O](./api/aio/index.md)
 
@@ -68,21 +94,6 @@
     - [nng_cv_wait](api/threads/nng_cv_wait.md)
     - [nng_cv_wake](api/threads/nng_cv_wake.md)
     - [nng_cv_wake1](api/threads/nng_cv_wake1.md)
-
-  - [Context Functions](api/context.md)
-
-    - [nng_ctx](api/nng_ctx.md)
-    - [nng_ctx_close](api/nng_ctx_close.md)
-    - [nng_ctx_get](api/nng_ctx_get.md)
-    - [nng_ctx_getopt](api/nng_ctx_getopt.md)
-    - [nng_ctx_id](api/nng_ctx_id.md)
-    - [nng_ctx_open](api/nng_ctx_open.md)
-    - [nng_ctx_recv](api/nng_ctx_recv.md)
-    - [nng_ctx_recvmsg](api/nng_ctx_recvmsg.md)
-    - [nng_ctx_send](api/nng_ctx_send.md)
-    - [nng_ctx_sendmsg](api/nng_ctx_sendmsg.md)
-    - [nng_ctx_set](api/nng_ctx_set.md)
-    - [nng_ctx_setopt](api/nng_ctx_setopt.md)
 
   - [Legacy Compatibility](api/compat/index.md)
 

@@ -1,8 +1,8 @@
-# nng_pub_open()
+# nng_pub_open
 
 ## NAME
 
-nng_pub_open --- create _PUB_ socket
+nng*pub_open --- create \_PUB* socket
 
 ## SYNOPSIS
 
@@ -18,10 +18,10 @@ int nng_pub0_open_raw(nng_socket *s);
 == DESCRIPTION
 
 The `nng_pub0_open()` function creates a [_PUB_](../../protocols/pub.md) version 0
-[socket](nng_socket.md) and returns it at the location pointed to by _s_.
+[socket](index.md) and returns it at the location pointed to by _s_.
 
 The `nng_pub0_open_raw()` function creates a [_PUB_](../../protocols/pub.md) version 0
-[socket](nng_socket.md) in
+[socket](index.md) in
 [raw](../../overview/raw.md) mode and returns it at the location pointed to by _s_.
 
 ## RETURN VALUES

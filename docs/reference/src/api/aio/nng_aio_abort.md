@@ -1,4 +1,4 @@
-# nng_aio_abort()
+# nng_aio_abort
 
 ## NAME
 
@@ -30,6 +30,6 @@ has no effect.
 
 ## SEE ALSO
 
-[nng_aio_alloc()](nng_aio_alloc.md),
-[nng_aio_cancel()](nng_aio_cancel.md),
-[nng_aio_result()](nng_aio_result.md)
+[nng_aio_alloc](nng_aio_alloc.md),
+[nng_aio_cancel](nng_aio_cancel.md),
+[nng_aio_result](nng_aio_result.md)

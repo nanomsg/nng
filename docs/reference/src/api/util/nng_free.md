@@ -1,4 +1,4 @@
-# nng_free()
+# nng_free
 
 ## NAME
 
@@ -31,5 +31,5 @@ that was previously allocated by [`nng_alloc()`](nng_alloc.md) or
 
 ## SEE ALSO
 
-[nng_alloc()](nng_alloc.md),
-[nng_recv()](nng_free.md)
+[nng_alloc](nng_alloc.md),
+[nng_recv](../socket/nng_recv.md)

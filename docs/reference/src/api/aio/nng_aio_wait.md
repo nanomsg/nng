@@ -1,4 +1,4 @@
-# nng_aio_wait()
+# nng_aio_wait
 
 ## NAME
 
@@ -29,5 +29,5 @@ function will not be called until the callback has completed.
 
 ## SEE ALSO
 
-[nng_aio_abort()](nng_aio_abort.md),
-[nng_aio_busy()](nng_aio_busy.md)
+[nng_aio_abort](nng_aio_abort.md),
+[nng_aio_busy](nng_aio_busy.md)

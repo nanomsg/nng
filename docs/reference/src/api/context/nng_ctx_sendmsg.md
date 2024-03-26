@@ -64,7 +64,4 @@ This function returns 0 on success, and non-zero otherwise.
 ## SEE ALSO
 
 [nng_ctx_send()](nng_ctx_send.md),
-[nng_msg_alloc()](nng_msg_alloc.md),
-[nng_msg_alloc()](nng_msg_free.md),
-[nng_ctx](nng_ctx),
-[nng_msg](nng_msg)
+[Messages](../msg/index.md)

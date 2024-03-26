@@ -1,4 +1,4 @@
-# nng_alloc()
+# nng_alloc
 
 ## NAME
 
@@ -40,5 +40,5 @@ is returned.
 
 ## SEE ALSO
 
-[nng_free()](nng_free.md),
-[nng_send()](../socket/nng_send.md)
+[nng_free](nng_free.md),
+[nng_send](../socket/nng_send.md)

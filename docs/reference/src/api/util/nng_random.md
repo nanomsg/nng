@@ -1,4 +1,4 @@
-# nng_random()
+# nng_random
 
 ## NAME
 

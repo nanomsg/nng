@@ -1,4 +1,4 @@
-# nng_close(3)
+# nng_close
 
 ## NAME
 
@@ -39,7 +39,3 @@ This function returns 0 on success, and non-zero otherwise.
 ## ERRORS
 
 - `NNG_ECLOSED`: The socket _s_ is already closed or was never opened.
-
-## SEE ALSO
-
-[nng_socket](nng_socket.md)

@@ -1,4 +1,4 @@
-# nng_ctx_close()
+# nng_ctx_close
 
 ## NAME
 
@@ -25,7 +25,7 @@ call is executed may also return with an `NNG_ECLOSED` result.
 
 > [!NOTE]
 > Closing the socket associated with _ctx_
-> (using [`nng_close()`](nng_close.md)) also closes this context.
+> (using [`nng_close()`](../socket/nng_close.md)) also closes this context.
 
 ## RETURN VALUES
 
@@ -37,6 +37,5 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_close()](nng_close.md),
-[nng_ctx_open()](nng_ctx_open.md),
-[nng_ctx](nng_ctx.md),
+[nng_close](nng_close.md),
+[nng_ctx_open](nng_ctx_open.md)

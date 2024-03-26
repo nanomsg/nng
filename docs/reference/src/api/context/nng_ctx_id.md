@@ -1,4 +1,4 @@
-# nng_ctx_id()
+# nng_ctx_id
 
 ## NAME
 
@@ -29,7 +29,3 @@ Otherwise it returns `-1`.
 
 This function returns the positive value for the context identifier, or
 `-1` if the context is invalid.
-
-## SEE ALSO
-
-[nng_ctx](nng_ctx)

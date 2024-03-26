@@ -1,4 +1,4 @@
-# nng_ctx_recvmsg()
+# nng_ctx_recvmsg
 
 ## NAME
 
@@ -44,8 +44,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_msg_free()](nng_msg_free.md),
+[nng_msg_free()](../msg/nng_msg_free.md),
 [nng_ctx_open()](nng_ctx_open.md),
 [nng_ctx_recv()](nng_ctx_recv.md),
-[nng_ctx_sendmsg()](nng_ctx_sendmsg.md),
-[nng_ctx](nng_ctx)
+[nng_ctx_sendmsg()](nng_ctx_sendmsg.md)
