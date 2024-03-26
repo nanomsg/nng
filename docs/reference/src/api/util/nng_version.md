@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng_version - report library version
+nng_version --- report library version
 
 ## SYNOPSIS
 
@@ -33,4 +33,4 @@ manner depending upon the link options and how the library is built.)
 
 ## RETURN VALUES
 
-Null-terminated string containing the library version number.
+`NUL`-terminated string containing the library version number.

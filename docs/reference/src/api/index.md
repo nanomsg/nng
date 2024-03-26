@@ -15,7 +15,7 @@ They are:
 - Contexts
 - [Asynchronous I/O](aio/index.md)
 - [Asynchronous I/O for Providers](aio_provider/index.md)
-- Utility Functions
+- [Utility Functions](util/index.md)
 - Threads and Synchronization
 - HTTP Client
 - HTTP Server

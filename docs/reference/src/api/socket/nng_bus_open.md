@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng_bus_open --- create bus socket
+nng_bus_open --- create _BUS_ socket
 
 ## SYNOPSIS
 
@@ -17,10 +17,10 @@ int nng_bus0_open_raw(nng_socket *s);
 
 ## DESCRIPTION
 
-The `nng_bus0_open()` function creates a [_BUS_](../protocols/bus.md) version 0
+The `nng_bus0_open()` function creates a [_BUS_](../../protocols/bus.md) version 0
 [socket](nng_socket.md) and returns it at the location pointed to by _s_.
 
-The `nng_bus0_open_raw()` function creates a [_BUS_](../protocols/bus.md) version 0
+The `nng_bus0_open_raw()` function creates a [_BUS_](../../protocols/bus.md) version 0
 [socket](nng_socket.md) in
 [raw](../overview/raw.md) mode, and returns it at the location pointed to by _s_.
 
@@ -35,6 +35,5 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_socket()](nng_socket.md),
-[BUS protocol](../protocols/bus.md),
-[RAW mode](../overview/raw.md)
+[BUS protocol](../../protocols/bus.md),
+[RAW mode](../../overview/raw.md)

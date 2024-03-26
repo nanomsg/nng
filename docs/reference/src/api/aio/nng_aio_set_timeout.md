@@ -33,7 +33,7 @@ timeout is used.
 The `nng_aio_set_expire()` function is similar to `nng_aio_set_timeout()`, but sets
 an absolute expiration time based on the system clock. The _expiration_
 is expressed as a number of milliseconds since some point in the past.
-The [`nng_clock()`](nng_clock.md) function can be used to determine
+The [`nng_clock()`](../util/nng_clock.md) function can be used to determine
 the current value of the clock.
 
 > [!TIP]
@@ -50,4 +50,4 @@ or absolute timeout.
 
 [nng_aio_cancel()](nng_aio_cancel.md),
 [nng_aio_result()](nng_aio_result.md),
-[nng_duration](nng_duration)
+[nng_clock()](../util/nng_clock.md)

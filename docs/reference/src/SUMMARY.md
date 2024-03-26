@@ -19,6 +19,12 @@
 
 - [API Reference](./api/index.md)
 
+  - [Sockets](api/socket/index.md)
+
+    - [nng_bus_open](api/socket/nng_bus_open.md)
+    - [nng_close](api/socket/nng_close.md)
+    - [nng_pub_open](api/socket/nng_pub_open.md)
+
   - [Asynchronous I/O](./api/aio/index.md)
 
     - [nng_aio_abort](api/aio/nng_aio_abort.md)
@@ -50,13 +56,18 @@
     - [nng_alloc](api/util/nng_alloc.md)
     - [nng_clock](api/util/nng_clock.md)
     - [nng_free](api/util/nng_free.md)
+    - [nng_random](api/util/nng_random.md)
+    - [nng_strerror](api/util/nng_strerror.md)
     - [nng_version](api/util/nng_version.md)
-    - [nng_cv_alloc](api/nng_cv_alloc.md)
-    - [nng_cv_free](api/nng_cv_free.md)
-    - [nng_cv_until](api/nng_cv_until.md)
-    - [nng_cv_wait](api/nng_cv_wait.md)
-    - [nng_cv_wake](api/nng_cv_wake.md)
-    - [nng_cv_wake1](api/nng_cv_wake1.md)
+
+  - [Threads and Synchronization](api/threads/index.md)
+
+    - [nng_cv_alloc](api/threads/nng_cv_alloc.md)
+    - [nng_cv_free](api/threads/nng_cv_free.md)
+    - [nng_cv_until](api/threads/nng_cv_until.md)
+    - [nng_cv_wait](api/threads/nng_cv_wait.md)
+    - [nng_cv_wake](api/threads/nng_cv_wake.md)
+    - [nng_cv_wake1](api/threads/nng_cv_wake1.md)
 
   - [Context Functions](api/context.md)
 
@@ -72,11 +83,6 @@
     - [nng_ctx_sendmsg](api/nng_ctx_sendmsg.md)
     - [nng_ctx_set](api/nng_ctx_set.md)
     - [nng_ctx_setopt](api/nng_ctx_setopt.md)
-
-  - [Protocol Sockets](api/protocol.md)
-
-    - [nng_bus_open](api/nng_bus_open.md)
-    - [nng_close](api/nng_close.md)
 
   - [Legacy Compatibility](api/compat/index.md)
 

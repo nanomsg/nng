@@ -19,7 +19,7 @@ The `nng_cv_until()` waits until either the condition variable _cv_ is signaled
 by another thread calling either
 [`nng_cv_wake()`](nng_cv_wake.md) or
 [`nng_cv_wake1()`](nng_cv_wake1.md), or the system clock (as tracked
-by [`nng_clock()`](nng_clock.md)) reaches _when_.
+by [`nng_clock()`](../util/nng_clock.md)) reaches _when_.
 
 The caller must have have ownership of the mutex that was used when
 _cv_ was allocated.
@@ -65,7 +65,7 @@ The following example demonstrates use of this function:
 
 ## SEE ALSO
 
-[nng_clock()](nng_clock.md),
+[nng_clock()](../util/nng_clock.md),
 [nng_cv_alloc()](nng_cv_alloc.md),
 [nng_cv_wait()](nng_cv_wait.md),
 [nng_cv_wake()](nng_cv_wake.md),

@@ -29,7 +29,8 @@ very fine-grained values.
 > but different programs may have different references.
 
 This function is intended to help with setting appropriate
-timeouts using [`nng_cv_until()`](../threads/nng_cv_until.md).
+timeouts using [`nng_cv_until()`](../threads/nng_cv_until.md)
+or [`nng_aio_set_expire()`](../aio/nng_aio_set_timeout.md).
 
 ## RETURN VALUES
 
