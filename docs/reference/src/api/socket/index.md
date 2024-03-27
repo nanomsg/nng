@@ -1,4 +1,4 @@
-# Protocol Sockets
+# Sockets
 
 ## See Also
 

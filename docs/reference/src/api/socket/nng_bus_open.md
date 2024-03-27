@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng*bus_open --- create \_BUS* socket
+nng_bus_open --- create _BUS_ socket
 
 ## SYNOPSIS
 

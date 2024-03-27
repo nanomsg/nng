@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng*pub_open --- create \_PUB* socket
+nng_pub_open --- create _PUB_ socket
 
 ## SYNOPSIS
 
