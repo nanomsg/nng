@@ -97,6 +97,7 @@
     - [nng_free](api/util/nng_free.md)
     - [nng_msleep](api/util/nng_msleep.md)
     - [nng_random](api/util/nng_random.md)
+    - [nng_sleep_aio](api/util/nng_sleep_aio.md)
     - [nng_strdup](api/util/nng_strdup.md)
     - [nng_strerror](api/util/nng_strerror.md)
     - [nng_strfree](api/util/nng_strfree.md)
