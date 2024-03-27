@@ -111,6 +111,10 @@
     - [nng_cv_wait](api/threads/nng_cv_wait.md)
     - [nng_cv_wake](api/threads/nng_cv_wake.md)
     - [nng_cv_wake1](api/threads/nng_cv_wake1.md)
+    - [nng_mtx_alloc](api/threads/nng_mtx_alloc.md)
+    - [nng_mtx_free](api/threads/nng_mtx_free.md)
+    - [nng_mtx_lock](api/threads/nng_mtx_lock.md)
+    - [nng_mtx_unlock](api/threads/nng_mtx_unlock.md)
 
   - [Legacy Compatibility](api/compat/index.md)
 

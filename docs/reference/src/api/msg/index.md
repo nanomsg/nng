@@ -48,25 +48,26 @@ that would affect the binary representation of the `nng_msg` itself.
 ### Example 1: Preparing a message for use
 
 ```c
-#include <nng/nng.h>
-nng_msg *m;
-if (nng_msg_alloc(&m, strlen("content") + 1) != 0) {
-   // handle error
-}
-strcpy(nng_msg_body(m), "content");
+    #include <nng/nng.h>
+
+    nng_msg *m;
+    if (nng_msg_alloc(&m, strlen("content") + 1) != 0) {
+       // handle error
+    }
+    strcpy(nng_msg_body(m), "content");
 ```
 
 ### Example 2: Preallocating message content
 
 ```c
-if (nng_msg_alloc(&m, 1024) != 0) {
-    // handle error
-}
-while ((val64 = next_datum()) != 0) P
-    if (nng_msg_append_u64(m, val64) != 0) {
+    if (nng_msg_alloc(&m, 1024) != 0) {
         // handle error
     }
-}
+    while ((val64 = next_datum()) != 0) P
+        if (nng_msg_append_u64(m, val64) != 0) {
+            // handle error
+        }
+    }
 ```
 
 ## See Also
