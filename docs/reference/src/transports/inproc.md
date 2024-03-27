@@ -10,9 +10,6 @@ to slower transports when data must be moved within the same process.
 This transport tries hard to avoid copying data, and thus is very
 light-weight.
 
-This transport is built-in, so
-no extra steps to use it should be necessary.
-
 ## URI Format
 
 {{hi:URI, `inproc://`}}

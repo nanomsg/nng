@@ -6,8 +6,6 @@ sockets across a {{i:TCP/IP}} network.
 
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 
-This transport is built-in, so no extra steps to use it should be necessary.
-
 ## URI Format
 
 {{hi:URI, `tcp://`}}
