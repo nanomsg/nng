@@ -4,7 +4,7 @@ Messages in Scalability Protocols are the fundamental unit of transmission
 and reception,
 as these protocols are fundamentally message-oriented.
 
-## {{i: Message object}}
+## Message object
 
 An `nng_msg` represents a single {{i:message}} sent between Scalability Protocols peers.
 

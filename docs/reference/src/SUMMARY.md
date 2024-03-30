@@ -57,7 +57,7 @@
     - [nng_close](api/socket/nng_close.md)
     - [nng_pub_open](api/socket/nng_pub_open.md)
 
-  - [Contexts](api/context/index.md)
+  - [Contexts](ctx/index.md)
 
     - [nng_ctx_close](ctx/nng_ctx_close.md)
     - [nng_ctx_get](ctx/nng_ctx_get.md)
@@ -97,7 +97,7 @@
     - [nng_aio_get_input](api/aio_provider/nng_aio_get_input.md)
     - [nng_aio_set_output](api/aio_provider/nng_aio_set_output.md)
 
-  - [Utility Functions](api/util/index.md)
+  - [Utility Functions](util/index.md)
 
     - [nng_alloc](util/nng_alloc.md)
     - [nng_clock](util/nng_clock.md)
