@@ -3,8 +3,11 @@
 [context]: ../overview/context.md
 [device]: ../overview/device.md
 [duration]: ../overview/duration.md
-[msg]: ../overview/msg.md
+[msg]: ../msg/index.md
 [pipe]: ../overview/pipe.md
+[sockadddr]: ../overview/sockaddr.md
+[sockaddr_in]: ../overview/sockaddr_in.md
+[sockaddr_in6]: ../overview/sockaddr_in6.md
 [raw]: ../overview/raw.md
 [url]: ../overview/url.md
 
@@ -25,8 +28,6 @@
 
 [nng_bus_open]: ../api/nng_bus_open.md
 [nng_ctx_open]: ../api/nng_ctx_open.md
-[nng_msg_get_pipe]: ../api/nng_msg_get_pipe.md
-[nng_msg_set_pipe]: ../api/nng_msg_set_pipe.md
 [nng_pair_open]: ../api/nng_pair_open.md
 [nng_pub_open]: ../api/nng_pub_open.md
 [nng_pull_open]: ../api/nng_pull_open.md
@@ -38,10 +39,40 @@
 [nng_surveyor_open]: ../api/nng_surveyor_open.md
 [nng_sub_open]: ../api/nng_sub_open.md
 
+<!-- Messages -->
+
+[nng_msg_alloc]: ../nng_msg_alloc.md
+[nng_msg_append]: ../msg/nng_msg_append.md
+[nng_msg_body]: ../msg/nng_msg_body.md
+[nng_msg_capacity]: ../msg/nng_msg_capacity.md
+[nng_msg_chop]: ../msg/nng_msg_chop.md
+[nng_msg_clear]: ../msg/nng_msg_clear.md
+[nng_msg_dup]: ../msg/nng_msg_dup.md
+[nng_msg_free]: ../msg/nng_msg_free.md
+[nng_msg_get_pipe]: ../msg/nng_msg_get_pipe.md
+[nng_msg_header]: ../msg/nng_msg_header.md
+[nng_msg_header_append]: ../msg/nng_msg_header_append.md
+[nng_msg_header_chop]: ../msg/nng_msg_header_chop.md
+[nng_msg_header_clear]: ../msg/nng_msg_header_clear.md
+[nng_msg_header_insert]: ../msg/nng_msg_header_insert.md
+[nng_msg_header_len]: ../msg/nng_msg_header_len.md
+[nng_msg_header_trim]: ../msg/nng_msg_header_trim.md
+[nng_msg_insert]: ../msg/nng_msg_insert.md
+[nng_msg_len]: ../msg/nng_msg_len.md
+[nng_msg_realloc]: ../msg/nng_msg_realloc.md
+[nng_msg_reserve]: ../msg/nng_msg_reserve.md
+[nng_msg_set_pipe]: ../msg/nng_msg_set_pipe.md
+[nng_msg_trim]: ../msg/nng_msg_trim.md
+
 <!-- Options -->
 
 [NNG_OPT_MAXTTL]: ../opts/nng_opt_max_ttl.md
 [NNG_OPT_SENDBUF]: ../opts/nng_opt_sendbuf.md
+[NNG_OPT_LOCADDR]: ../opts/nng_opt_locaddr.md
+[NNG_OPT_REMADDR]: ../api/nng_options.md#NNG_OPT_REMADDR
+[NNG_OPT_TCP_KEEPALIVE]: ../api/nng_tcp_options.md#NNG_OPT_TCP_KEEPALIVE
+[NNG_OPT_TCP_NODELAY]: ../api/nng_tcp_options.md#NNG_OPT_TCP_NODELAY
+[NNG_OPT_URL]: ../api/nng_options.md#NNG_OPT_URL
 
 <!-- External -->
 

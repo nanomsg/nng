@@ -21,6 +21,9 @@ fold.level = 1
 
 [preprocessor.indexing.nest_under]
 # hacks to allow us to also place some entries underneath
+"body" = "message"
+"header" = "message"
+
 "*BUS*" = "protocol"
 "*PAIR*" = "protocol"
 "*PULL*" = "protocol"
@@ -32,8 +35,18 @@ fold.level = 1
 "*SURVEYOR*" = "protocol"
 "*RESPONDENT*" = "protocol"
 
+"*inproc*" = "transport"
+"*ipc*" = "transport"
+"*tls*" = "transport"
 "*tcp*" = "transport"
+"*ws*" = "transport"
+"*wss*" = "transport"
 
+"`inproc://`" = "URI"
+"`ipc://`" = "URI"
+"`tls+tcp://`" = "URI"
 "`tcp://`" = "URI"
+"`ws://`" = "URI"
+"`wss://`" = "URI"
 
 [preprocessor.alerts]
