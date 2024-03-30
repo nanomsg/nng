@@ -24,3 +24,5 @@ number facilities when available.
 ## RETURN VALUES
 
 Returns a random 32-bit value.
+
+{{#include ../refs.md}}

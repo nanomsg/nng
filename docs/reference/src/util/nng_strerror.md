@@ -31,3 +31,5 @@ future locale-specific strings may be presented instead.
 
 This function returns the human-readable error message, terminated
 by a `NUL` byte.
+
+{{#include ../refs.md}}

@@ -24,5 +24,7 @@ The `nng_msleep()` blocks the caller for at least _msec_ milliseconds.
 
 ## SEE ALSO
 
-[nng_sleep_aio](nng_sleep_aio.md),
-[nng_clock](nng_clock.md)
+[nng_sleep_aio][nng_sleep_aio],
+[nng_clock][nng_clock]
+
+{{#include ../refs.md}}

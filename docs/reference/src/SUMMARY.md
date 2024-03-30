@@ -99,16 +99,16 @@
 
   - [Utility Functions](api/util/index.md)
 
-    - [nng_alloc](api/util/nng_alloc.md)
-    - [nng_clock](api/util/nng_clock.md)
-    - [nng_free](api/util/nng_free.md)
-    - [nng_msleep](api/util/nng_msleep.md)
-    - [nng_random](api/util/nng_random.md)
-    - [nng_sleep_aio](api/util/nng_sleep_aio.md)
-    - [nng_strdup](api/util/nng_strdup.md)
-    - [nng_strerror](api/util/nng_strerror.md)
-    - [nng_strfree](api/util/nng_strfree.md)
-    - [nng_version](api/util/nng_version.md)
+    - [nng_alloc](util/nng_alloc.md)
+    - [nng_clock](util/nng_clock.md)
+    - [nng_free](util/nng_free.md)
+    - [nng_msleep](util/nng_msleep.md)
+    - [nng_random](util/nng_random.md)
+    - [nng_sleep_aio](util/nng_sleep_aio.md)
+    - [nng_strdup](util/nng_strdup.md)
+    - [nng_strerror](util/nng_strerror.md)
+    - [nng_strfree](util/nng_strfree.md)
+    - [nng_version](util/nng_version.md)
 
   - [Threads and Synchronization](thr/index.md)
 

@@ -26,6 +26,8 @@ If the sleep finishes completely, the result will always be zero.
 
 ## SEE ALSO
 
-[nng_clock](nng_clock.md),
-[nng_msleep](nng_msleep.md),
+[nng_clock][nng_clock],
+[nng_msleep][nng_msleep],
 [Asynchronous I/O](../aio/index.md)
+
+{{#include ../refs.md}}

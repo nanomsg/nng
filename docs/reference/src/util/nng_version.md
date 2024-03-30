@@ -34,3 +34,5 @@ manner depending upon the link options and how the library is built.)
 ## RETURN VALUES
 
 `NUL`-terminated string containing the library version number.
+
+{{#include ../refs.md}}

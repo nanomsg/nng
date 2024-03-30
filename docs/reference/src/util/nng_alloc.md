@@ -19,9 +19,9 @@ at least _size_ bytes.
 The memory will be 64-bit aligned.
 
 The returned memory can be used to hold message buffers, in which
-case it can be directly passed to [`nng_send()`](../socket/nng_send.md) using
+case it can be directly passed to [`nng_send()`][nng_send] using
 the flag `NNG_FLAG_ALLOC`. Alternatively, it can be freed when no
-longer needed using [`nng_free()`](nng_free.md).
+longer needed using [`nng_free()`][nng_free].
 
 > [!IMPORTANT]
 > Do not use the system `free()` function (or the C++ `delete` operator) to release this memory.
@@ -40,5 +40,7 @@ is returned.
 
 ## SEE ALSO
 
-[nng_free](nng_free.md),
-[nng_send](../socket/nng_send.md)
+[nng_free][nng_free],
+[nng_send][nng_send]
+
+{{#include ../refs.md}}
