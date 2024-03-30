@@ -1,7 +1,6 @@
 # REP Protocol
 
-{{hi:protocol, _REP_}}
-The {{i:_REP_ protocol}} is one half of a {{i:request/reply pattern}}.
+The {{i:*REP* protocol}}{{hi:*REP*}} is one half of a {{i:request/reply pattern}}.
 In this pattern, a requester sends a message to one replier, who
 is expected to reply.
 The request is resent if no reply arrives,
@@ -13,11 +12,11 @@ until a reply is received or the request times out.
 > a reply is received.
 
 The _REP_ protocol is the replier side, and the
-[_REP_](req.md) protocol is the requester side.
+[_REP_][req] protocol is the requester side.
 
 ## Socket Operations
 
-The [`nng_rep0_open()`](nng_rep_open.md) functions create a replier socket.
+The [`nng_rep0_open()`][nng_rep_open] functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.
 
@@ -29,11 +28,11 @@ was previously received.
 Likewise, only one receive operation may be pending at a time.
 Any additional concurrent receive operations will result in `NNG_ESTATE`.
 
-[Raw](../overview/raw.md) mode sockets ignore all these restrictions.
+[Raw mode][raw] sockets ignore all these restrictions.
 
 ## Context Operations
 
-This protocol supports the creation of [contexts](../api/nng_ctx.md) for concurrent use cases using [`nng_ctx_open()`](../api/nng_ctx_open.md).
+This protocol supports the creation of [contexts][context] for concurrent use cases using [`nng_ctx_open()`][nng_ctx_open].
 
 Each context may have at most one outstanding request, and operates
 independently of the others.
@@ -53,4 +52,6 @@ The _REP_ protocol has no protocol-specific options.
 ## Protocol Headers
 
 The _REP_ protocol uses a {{ii:backtrace}} in the header.
-This is more fully documented in the [_REQ_](req.md) chapter.
+This is more fully documented in the [_REQ_][req] chapter.
+
+{{#include ../refs.md}}

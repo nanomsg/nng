@@ -1,7 +1,6 @@
 # BUS Protocol
 
-{{hi:protocol, _BUS_}}
-The {{i:_BUS_ protocol}} provides for building mesh networks where
+The {{i:*BUS* protocol}}{{hi:*BUS*}} provides for building mesh networks where
 every peer is connected to every other peer.
 In this protocol, each message sent by a node is sent to every one of
 its directly connected peers.
@@ -29,7 +28,7 @@ message cannot be delivered for any reason it is discarded.
 
 ## Socket Operations
 
-The [`nng_bus0_open()`](../api/nng_bus_open.md) functions create a bus socket.
+The [`nng_bus0_open()`][nng_bus_open] functions create a bus socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.
 
@@ -44,15 +43,17 @@ The _BUS_ protocol has no protocol-specific options.
 
 ## Protocol Headers
 
-When using a _BUS_ socket in [raw mode](../overview/raw.md), received messages will
-contain the incoming [pipe](../api/nng_pipe.md) ID as the sole element in the header.
+When using a _BUS_ socket in [raw mode][raw], received messages will
+contain the incoming [pipe][pipe] ID as the sole element in the header.
 If a message containing such a header is sent using a raw _BUS_ socket, then,
 the message will be delivered to all connected pipes _except_ the one
 identified in the header.
-This behavior is intended for use with [device](../api/nng_device.md)
+This behavior is intended for use with [device][device]
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.
 If no header is present, then a message is sent to all connected pipes.
 
 When using normal (cooked mode) _BUS_ sockets, no message headers are present.
+
+{{#include ../refs.md}}

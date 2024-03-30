@@ -12,4 +12,28 @@ fold.level = 1
 
 [preprocessor.indexing]
 
+[preprocessor.indexing.see_instead]
+
+# "*PULL* protocol" = "protocol, *PULL*"
+
+#"protocol, PUB" = "PUB"
+# "_PAIR_&zwj;" = "protocol, _PAIR_"
+
+[preprocessor.indexing.nest_under]
+# hacks to allow us to also place some entries underneath
+"*BUS*" = "protocol"
+"*PAIR*" = "protocol"
+"*PULL*" = "protocol"
+"*PUSH*" = "protocol"
+"*REQ*" = "protocol"
+"*REP*" = "protocol"
+"*PUB*" = "protocol"
+"*SUB*" = "protocol"
+"*SURVEYOR*" = "protocol"
+"*RESPONDENT*" = "protocol"
+
+"*tcp*" = "transport"
+
+"`tcp://`" = "URI"
+
 [preprocessor.alerts]

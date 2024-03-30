@@ -1,6 +1,6 @@
 # PUB Protocol
 
-The {{i:_PUB_ protocol}}{{hi:protocol, _PUB_} is one half of a {{i:publisher}}/subscriber pattern.
+The {{i:*PUB* protocol}}{{hi:*PUB*}} is one half of a {{i:publisher}}/subscriber pattern.
 In this pattern, a publisher sends data, which is broadcast to all
 subscribers.
 The subscribing applications only see the data to which
@@ -22,7 +22,7 @@ Applications should construct their messages accordingly.
 
 ## Socket Operations
 
-The [`nng_pub0_open()`](../api/nng_pub_open.md) functions create a publisher socket.
+The [`nng_pub0_open()`][nng_pub_open] functions create a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 

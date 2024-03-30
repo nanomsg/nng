@@ -6,11 +6,18 @@
 
   - [RAW mode](./overview/raw.md)
 
-- [Protocols](./protocols/index.md)
+- [Protocols](./proto/index.md)
 
-  - [BUS](protocols/bus.md)
-  - [PUB](protocols/pub.md)
-  - [REP](protocols/rep.md)
+  - [BUS](proto/bus.md)
+  - [PAIR](proto/pair.md)
+  - [PUB](proto/pub.md)
+  - [PULL](proto/pull.md)
+  - [PUSH](proto/push.md)
+  - [REP](proto/rep.md)
+  - [REQ](proto/req.md)
+  - [RESPONDENT](proto/respondent.md)
+  - [SUB](proto/sub.md)
+  - [SURVEYOR](proto/surveyor.md)
 
 - [Transports](./transports/index.md)
 

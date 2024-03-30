@@ -1,17 +1,15 @@
 # TCP transport
 
-{{hi: transport, _tcp_}}
-The {{i:_tcp_ transport}} provides communication support between
+The {{i:*tcp* transport}}{{hi:*tcp*}} provides communication support between
 sockets across a {{i:TCP/IP}} network.
 
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 
 ## URI Format
 
-{{hi:URI, `tcp://`}}
-This transport uses URIs using the scheme `tcp://`, followed by
+This transport uses URIs using the scheme {{i:`tcp://`}}, followed by
 an IP address or hostname, followed by a colon and finally a
-TCP port number.{{hi:port number, TCP}}
+TCP {{i:port number}}.
 For example, to contact port 80 on the localhost either of the following URIs
 could be used: `tcp://127.0.0.1:80` or `tcp://localhost:80`.
 
