@@ -28,8 +28,8 @@ int nng_ctx_setopt_uint64(nng_ctx ctx, const char *opt, uint64_t u64);
 
 > [!IMPORTANT]
 > These functions are deprecated.
-> Please see [nng_ctx_set()](nng_ctx_set.md).
-> They may not be present if the library was built with `NNG_ELIDE_DEPRECATED`.
+> Please see [nng_ctx_set()][nng_ctx_set].
+> They may not be present if the library was built with {{i:`NNG_ELIDE_DEPRECATED`}}.
 > They may also be removed entirely in a future version of _NNG_.
 
 The `nng_ctx_setopt()` functions are used to configure options for
@@ -61,7 +61,7 @@ on the actual option, and will be documented with the option itself.
 
 - `nng_ctx_setopt_ms()`:\
   This function is used to configure time durations (such as timeouts) using
-  type [`nng_duration`](nng_duration.md).
+  type [`nng_duration`][nng_duration].
   The duration _dur_ is an integer number of milliseconds.
 
 - `nng_ctx_setopt_size()`:\
@@ -94,5 +94,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_set](nng_ctx_set.md),
-[nng_options](nng_options.md)
+[nng_ctx_set][nng_ctx_set],
+[Options][options]
+
+{{#include ../refs.md}}

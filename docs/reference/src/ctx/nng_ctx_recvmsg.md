@@ -14,12 +14,12 @@ int nng_ctx_recvmsg(nng_ctx ctx, nng_msg **msgp, int flags);
 
 ## DESCRIPTION
 
-The `nng_ctx_recvmsg()` receives a message on context _ctx_, storing the
-received message at the location pointed to by _msgp_.
+The `nng_ctx_recvmsg()` receives a message on [context][context] _ctx_, storing the
+received [message][msg] at the location pointed to by _msgp_.
 
 The _flags_ may contain the following value:
 
-- `NNG_FLAG_NONBLOCK`:\
+- {{i:`NNG_FLAG_NONBLOCK`}}:\
   The function returns immediately, even if no message is available.
   Without this flag, the function will wait until a message is receivable
   on the context _ctx_, or any configured timer expires.
@@ -44,7 +44,10 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_msg_free()](../msg/nng_msg_free.md),
-[nng_ctx_open()](nng_ctx_open.md),
-[nng_ctx_recv()](nng_ctx_recv.md),
-[nng_ctx_sendmsg()](nng_ctx_sendmsg.md)
+[nng_msg_free][nng_msg_free],
+[nng_ctx_open][nng_ctx_open],
+[nng_ctx_recv][nng_ctx_recv],
+[nng_ctx_sendmsg][nng_ctx_sendmsg],
+[Messages][msg]
+
+{{#include ../refs.md}}

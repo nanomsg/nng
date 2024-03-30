@@ -15,7 +15,7 @@ void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
 ## DESCRIPTION
 
 The `nng_ctx_send()` sends a [message](../msg/index.md) using the
-[context](nng_ctx.md) _ctx_ asynchronously.
+[context][nng_ctx] _ctx_ asynchronously.
 
 The message to send must have previously been set on the _aio_
 using the [`nng_aio_set_msg()`](../aio/nng_aio_set_msg.md) function.
@@ -61,8 +61,10 @@ socket, or deallocating the message with [`nng_msg_free()`](../msg/nng_msg_free.
 
 [nng_aio_get_msg](../aio/nng_aio_get_msg.md),
 [nng_aio_set_msg](../aio/nng_aio_set_msg.md),
-[nng_ctx_sendmsg](nng_ctx_sendmsg.md),
+[nng_ctx_sendmsg][nng_ctx_sendmsg],
 [nng_msg_alloc](../msg/nng_msg_alloc.md),
 [nng_msg_free](../msg/nng_msg_free.md),
-[Asynchronous I/O](../aio/index.md),
-[Messages](../msg/index.md)
+[Asynchronous I/O][aio],
+[Messages][msg]
+
+{{#include ../refs.md}}

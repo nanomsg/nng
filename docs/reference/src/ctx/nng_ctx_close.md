@@ -14,7 +14,7 @@ int nng_ctx_close(nng_ctx ctx);
 
 ## DESCRIPTION
 
-The `nng_ctx_close()` function closes the context _ctx_.
+The `nng_ctx_close()` function closes the [context][context] _ctx_.
 Messages that have been submitted for sending may be flushed or delivered,
 depending upon the transport.
 
@@ -25,7 +25,7 @@ call is executed may also return with an `NNG_ECLOSED` result.
 
 > [!NOTE]
 > Closing the socket associated with _ctx_
-> (using [`nng_close()`](../socket/nng_close.md)) also closes this context.
+> (using [`nng_close()`][nng_close]) also closes this context.
 
 ## RETURN VALUES
 
@@ -37,5 +37,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_close](nng_close.md),
-[nng_ctx_open](nng_ctx_open.md)
+[nng_close][nng_close],
+[nng_ctx_open][nng_ctx_open]
+
+{{#include ../refs.md}}

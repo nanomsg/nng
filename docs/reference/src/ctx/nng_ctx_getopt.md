@@ -1,36 +1,39 @@
-# nng_ctx_get
+# nng_ctx_getopt
 
 ## NAME
 
-nng_ctx_get --- get context option
+nng_ctx_getopt --- get context option (deprecated)
 
 ## SYNOPSIS
 
 ```c
 #include <nng/nng.h>
 
-int nng_ctx_get(nng_ctx ctx, const char *opt, void *val, size_t *valszp);
+int nng_ctx_getopt(nng_ctx ctx, const char *opt, void *val, size_t *valszp);
 
-int nng_ctx_get_bool(nng_ctx ctx, const char *opt, bool *bvalp);
+int nng_ctx_getopt_bool(nng_ctx ctx, const char *opt, bool *bvalp);
 
-int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *ivalp);
+int nng_ctx_getopt_int(nng_ctx ctx, const char *opt, int *ivalp);
 
-int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *durp);
+int nng_ctx_getopt_ms(nng_ctx ctx, const char *opt, nng_duration *durp);
 
-int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *zp);
+int nng_ctx_getopt_size(nng_ctx ctx, const char *opt, size_t *zp);
 
-int nng_ctx_get_string(nng_ctx ctx, const char *opt, char **strp);
+int nng_ctx_getopt_string(nng_ctx ctx, const char *opt, char **strp);
 
-int nng_ctx_get_uint64(nng_ctx ctx, const char *opt, uint64_t *u64p);
+int nng_ctx_getopt_uint64(nng_ctx ctx, const char *opt, uint64_t *u64p);
 ```
 
 ## DESCRIPTION
 
-{{hi:options, context}}
-The `nng_ctx_get()` functions are used to retrieve option values for
-the [context](index.md) _ctx_.
+> [!IMPORTANT]
+> These functions are deprecated. Please see [nng_ctx_get][nng_ctx_get].
+> They may not be present if the library was built with {{i:`NNG_ELIDE_DEPRECATED`}}.
+> They may also be removed entirely in a future version of _NNG_.
+
+The `nng_ctx_getopt()` functions are used to retrieve option values for
+the [context][context] _ctx_.
 The actual options that may be retrieved in this way vary.
-A number of them are documented in [nng_options](../socket/nng_options.md).
 
 > [!NOTE]
 > Context options are protocol specific.
@@ -44,12 +47,12 @@ The forms vary based on the type of the option they take.
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
 
-- `nng_ctx_get()`:\
+- `nng_ctx_getopt()`:\
    This function is untyped and can be used to retrieve the value of any option.
   The caller must store a pointer to a buffer to receive the value in _val_,
   and the size of the buffer shall be stored at the location referenced by
   _valszp_.\
-   \
+  \
    When the function returns, the actual size of the data copied (or that
   would have been copied if sufficient space were present) is stored at
   the location referenced by _valszp_.
@@ -62,29 +65,31 @@ on the actual option, and will be documented with the option itself.
   This can be used to determine the size of the buffer needed to receive
   the object.
 
-- `nng_ctx_get_bool()`:\
+- `nng_ctx_getopt_bool()`:\
   This function is for options which take a Boolean (`bool`).
   The value will be stored at _ivalp_.
 
-- `nng_ctx_get_int()`:\
+- `nng_ctx_getopt_int()`:\
   This function is for options which take an integer (`int`).
   The value will be stored at _ivalp_.
 
-- `nng_ctx_get_ms()`:\
-  This function is used to retrieve time [durations](nng_duration.md)
+- `nng_ctx_getopt_ms()`:\
+  This function is used to retrieve time [durations][nng_duration]
   (such as timeouts), stored in _durp_ as a number of milliseconds.
-  (The special value {{i:`NNG_DURATION_INFINITE`}} means an infinite amount of time, and
-  the special value {{i:`NNG_DURATION_DEFAULT`}} means a context-specific default.)
-- `nng_ctx_get_size()`:\
+  (The special value `NNG_DURATION_INFINITE` means an infinite amount of time, and
+  the special value `NNG_DURATION_DEFAULT` means a context-specific default.)
+
+- `nng_ctx_getopt_size()`:\
   This function is used to retrieve a size into the pointer _zp_,
   typically for buffer sizes, message maximum sizes, and similar options.
-- `nng_ctx_get_string()`:\
-  This function is used to retrieve a string into _strp_.
-  This string is created from the source using [`nng_strdup()`](nng_strdup.md)
-  and consequently must be freed by the caller using
-  [`nng_strfree()`](nng_strfree.md) when it is no longer needed.
 
-- `nng_ctx_get_uint64()`:\
+- `nng_ctx_getopt_string()`:\
+  This function is used to retrieve a string into _strp_.
+  This string is created from the source using [`nng_strdup()`][nng_strdup]
+  and consequently must be freed by the caller using
+  [`nng_strfree()`][nng_strfree] when it is no longer needed.
+
+- `nng_ctx_getopt_uint64()`:\
   This function is used to retrieve a 64-bit unsigned value into the value
   referenced by _u64p_.
   This is typically used for options related to identifiers, network
@@ -105,8 +110,9 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_set](nng_ctx_set.md),
-[nng_strdup](nng_strdup.md),
-[nng_strfree](nng_strfree.md),
-[nng_duration](nng_duration.md),
-[nng_options](../socket/nng_options.md)
+[nng_strdup][nng_strdup],
+[nng_strfree][nng_strfree],
+[nng_duration][duration],
+[nng_options][options]
+
+{{#include ../refs.md}}

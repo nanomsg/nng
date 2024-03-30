@@ -59,17 +59,17 @@
 
   - [Contexts](api/context/index.md)
 
-    - [nng_ctx_close](api/context/nng_ctx_close.md)
-    - [nng_ctx_get](api/context/nng_ctx_get.md)
-    - [nng_ctx_getopt](api/context/nng_ctx_getopt.md)
-    - [nng_ctx_id](api/context/nng_ctx_id.md)
-    - [nng_ctx_open](api/context/nng_ctx_open.md)
-    - [nng_ctx_recv](api/context/nng_ctx_recv.md)
-    - [nng_ctx_recvmsg](api/context/nng_ctx_recvmsg.md)
-    - [nng_ctx_send](api/context/nng_ctx_send.md)
-    - [nng_ctx_sendmsg](api/context/nng_ctx_sendmsg.md)
-    - [nng_ctx_set](api/context/nng_ctx_set.md)
-    - [nng_ctx_setopt](api/context/nng_ctx_setopt.md)
+    - [nng_ctx_close](ctx/nng_ctx_close.md)
+    - [nng_ctx_get](ctx/nng_ctx_get.md)
+    - [nng_ctx_getopt](ctx/nng_ctx_getopt.md)
+    - [nng_ctx_id](ctx/nng_ctx_id.md)
+    - [nng_ctx_open](ctx/nng_ctx_open.md)
+    - [nng_ctx_recv](ctx/nng_ctx_recv.md)
+    - [nng_ctx_recvmsg](ctx/nng_ctx_recvmsg.md)
+    - [nng_ctx_send](ctx/nng_ctx_send.md)
+    - [nng_ctx_sendmsg](ctx/nng_ctx_sendmsg.md)
+    - [nng_ctx_set](ctx/nng_ctx_set.md)
+    - [nng_ctx_setopt](ctx/nng_ctx_setopt.md)
 
   - [Asynchronous I/O](./api/aio/index.md)
 

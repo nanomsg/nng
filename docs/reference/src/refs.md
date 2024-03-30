@@ -1,10 +1,12 @@
 <!-- Concepts -->
 
-[context]: ../overview/context.md
+[aio]: ../aio/index.md
+[context]: ../ctx/index.md
 [device]: ../overview/device.md
 [duration]: ../overview/duration.md
 [msg]: ../msg/index.md
 [pipe]: ../overview/pipe.md
+[socket]: ../sock/index.md
 [sockadddr]: ../overview/sockaddr.md
 [sockaddr_in]: ../overview/sockaddr_in.md
 [sockaddr_in6]: ../overview/sockaddr_in6.md
@@ -63,6 +65,20 @@
 [nng_msg_reserve]: ../msg/nng_msg_reserve.md
 [nng_msg_set_pipe]: ../msg/nng_msg_set_pipe.md
 [nng_msg_trim]: ../msg/nng_msg_trim.md
+
+<!-- Contexts -->
+
+[nng_ctx_close]: ../ctx/nng_ctx_close.md
+[nng_ctx_get]: ../ctx/nng_ctx_get.md
+[nng_ctx_getopt]: ../ctx/nng_ctx_getopt.md
+[nng_ctx_id]: ../ctx/nng_ctx_id.md
+[nng_ctx_open]: ../ctx/nng_ctx_open.md
+[nng_ctx_recv]: ../ctx/nng_ctx_recv.md
+[nng_ctx_recvmsg]: ../nng_ctx_recvmsg.md
+[nng_ctx_send]: ../nng_ctx_send.md
+[nng_ctx_sendmsg]: ../ctx/nng_ctx_sendmsg.dm
+[nng_ctx_set]: ../ctx/nng_ctx_set.md
+[nng_ctx_setopt]: ../ctx/nng_ctx_setopt.md
 
 <!-- Threads -->
 

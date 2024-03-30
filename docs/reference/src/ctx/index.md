@@ -18,9 +18,9 @@ An `nng_ctx`{{hi:context}} is a handle to an underlying context object,
 which keeps the protocol state for some stateful protocols.
 The purpose of a separate context object is to permit applications to
 share a single [socket](../socket/index.md), with its various underlying
-[dialers](nng_dialer.md),
-[listeners](nng_listener.md),
-[pipes](nng_pipe.md),
+[dialers][nng_dialer],
+[listeners][nng_listener],
+[pipes][nng_pipe],
 while still benefiting from separate state tracking.
 
 For example, a [_REQ_](../protocols/req.md) context will contain the request ID
@@ -121,9 +121,9 @@ echo(void *arg)
 ```
 
 Given the above fragment, the following example shows setting up the
-service. It assumes that the [socket](nng_socket.md) has already been
+service. It assumes that the [socket][nng_socket] has already been
 created and any transports set up as well with functions such as
-[`nng_dial()`](nng_dial.md) or [`nng_listen()`](nng_listen.md).
+[`nng_dial()`][nng_dial] or [`nng_listen()`](nng_listen.md).
 
 ```c
 #define CONCURRENCY 1024
@@ -145,16 +145,18 @@ start_echo_service(nng_socket rep_socket)
 
 ## SEE ALSO
 
-[nng_ctx_close](nng_ctx_close.md),
-[nng_ctx_open](nng_ctx_open.md),
-[nng_ctx_get](nng_ctx_get.md),
-[nng_ctx_id](nng_ctx_id.md)
-[nng_ctx_recv](nng_ctx_recv.md),
-[nng_ctx_recvmsg](nng_ctx_recvmsg.md),
-[nng_ctx_send](nng_ctx_send.md),
-[nng_ctx_sendmsg](nng_ctx_sendmsg.md),
-[nng_ctx_set](nng_ctx_set.md),
-[nng_dialer](nng_dialer.md),
-[nng_listener](nng_listener.md),
+[nng_ctx_close][nng_ctx_close],
+[nng_ctx_open][nng_ctx_open],
+[nng_ctx_get][nng_ctx_get],
+[nng_ctx_id][nng_ctx_id]
+[nng_ctx_recv][nng_ctx_recv],
+[nng_ctx_recvmsg][nng_ctx_recvmsg],
+[nng_ctx_send][nng_ctx_send],
+[nng_ctx_sendmsg][nng_ctx_sendmsg],
+[nng_ctx_set][nng_ctx_set],
+[nng_dialer][nng_dialer],
+[nng_listener][nng_listener],
 [nng_socket](../socket/index.md),
-[nng_options](nng_options.md)
+[nng_options][nng_options]
+
+{{#include ../refs.md}}

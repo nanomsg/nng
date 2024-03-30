@@ -14,8 +14,8 @@ int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
 
 ## DESCRIPTION
 
-The `nng_ctx_open()` function creates a separate {{i:context}} to be used with
-the socket _s_,
+The `nng_ctx_open()` function creates a separate {{hi:context}}[context][context] to be used with
+the [socket][socket] _s_,
 and returns it at the location pointed by _ctxp_.
 
 > [!NOTE]
@@ -24,7 +24,7 @@ and returns it at the location pointed by _ctxp_.
 Contexts allow the independent and concurrent use of stateful operations
 using the same socket.
 For example, two different contexts created on a
-[_REP_](../protocols/rep.md)
+[_REP_][rep]
 socket can each receive requests, and send replies to them, without any
 regard to or interference with each other.
 
@@ -32,10 +32,10 @@ regard to or interference with each other.
 > Using contexts is an excellent way to write simpler concurrent
 > applications, while retaining the benefits of the protocol-specific
 > advanced processing, avoiding the need to bypass that with
-> {{hi:raw mode}}[raw mode](../overview/raw.md) sockets.
+> {{hi:raw mode}}[raw mode][raw] sockets.
 
 > [!NOTE]
-> Use of contexts with [raw mode](../overview/raw.md) sockets is
+> Use of contexts with [raw mode][raw] sockets is
 > nonsensical, and not supported.
 
 ## RETURN VALUES
@@ -49,8 +49,11 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_close](nng_ctx_close.md),
-[nng_ctx_get](nng_ctx_get.md),
-[nng_ctx_recv](nng_ctx_recv.md),
-[nng_ctx_send](nng_ctx_send.md),
-[nng_ctx_set](nng_ctx_set.md)
+[nng_ctx_close][nng_ctx_close],
+[nng_ctx_get][nng_ctx_get],
+[nng_ctx_recv][nng_ctx_recv],
+[nng_ctx_send][nng_ctx_send],
+[nng_ctx_set][nng_ctx_set],
+[Sockets][socket]
+
+{{#include ../refs.md}}

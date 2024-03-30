@@ -14,7 +14,7 @@ int nng_ctx_sendmsg(nng_ctx c, nng_msg *msg, int flags);
 
 ## DESCRIPTION
 
-The `nng_ctx_sendmsg()` sends message _msg_ using the context _ctx_.
+The `nng_ctx_sendmsg()` sends [message][msg] _msg_ using the [context][context] _ctx_.
 
 If the function returns zero, indicating it has accepted the message for
 delivery, then the _msg_ is owned by the socket _s_, and the caller
@@ -31,20 +31,20 @@ another socket, or simply trying again later.
 
 The _flags_ may contain the following value:
 
-- `NNG_FLAG_NONBLOCK`:\
+- {{i:`NNG_FLAG_NONBLOCK`}}:\
   The function returns immediately, regardless of whether
   the context is able to accept the data or not.
   If the context is unable to accept the data (such as if backpressure exists
   because the peers are consuming messages too slowly, or no peer is present),
   then the function will return with `NNG_EAGAIN`.
   If this flag is not specified, then the function will block if such a
-  condition exists.
+  condition exists.[^1]
 
-> [!NOTE]
-> Regardless of the presence or absence of `NNG_FLAG_NONBLOCK`, there may
-> be queues between the sender and the receiver.
-> Furthermore, there is no guarantee that the message has actually been delivered.
-> Finally, with some protocols, the semantic is implicitly `NNG_FLAG_NONBLOCK`.
+[^1]:
+    Regardless of the presence or absence of {{i:`NNG_FLAG_NONBLOCK`}}, there may
+    be queues between the sender and the receiver.
+    Furthermore, there is no guarantee that the message has actually been delivered.
+    Finally, with some protocols, the semantic is implicitly `NNG_FLAG_NONBLOCK`.
 
 ## RETURN VALUES
 
@@ -63,5 +63,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_ctx_send()](nng_ctx_send.md),
-[Messages](../msg/index.md)
+[nng_ctx_send][nng_ctx_send],
+[Messages][msg]
+
+{{#include ../refs.md}}
