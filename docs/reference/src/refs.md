@@ -6,6 +6,8 @@
 [duration]: ../overview/duration.md
 [msg]: ../msg/index.md
 [pipe]: ../overview/pipe.md
+[dialer]: ../overview/dialer.md
+[listener]: ../overview/listener.md
 [socket]: ../sock/index.md
 [sockaddr]: ../overview/sockaddr.md
 [sockaddr_in]: ../overview/sockaddr_in.md
@@ -158,6 +160,7 @@
 [NNG_OPT_PEER_UID]: ../opts/ipc_options.md
 [NNG_OPT_PEER_ZONEID]: ../opts/ipc_options.md
 [NNG_OPT_URL]: ../api/nng_options.md#NNG_OPT_URL
+[NNG_OPT_SOCKET_FD]: ../opts/sock_options.md
 
 <!-- External -->
 

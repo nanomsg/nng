@@ -22,6 +22,7 @@
   - [IPC](tran/ipc.md)
   - [INPROC](tran/inproc.md)
   - [TCP](tran/tcp.md)
+  - [SOCKET](tran/socket.md)
 
 - [API Reference](./api/index.md)
 
