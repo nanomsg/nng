@@ -1,21 +1,12 @@
-= nng_id_map(3supp)
-//
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
-//
-// This document is supplied under the terms of the MIT License, a
-// copy of which should be located in the distribution where this
-// file was obtained (LICENSE.txt).  A copy of the license may also be
-// found online at https://opensource.org/licenses/MIT.
-//
+# nng_id_map
 
-== NAME
+## NAME
 
-nng_id_map - identifier based mapping table
+nng_id_map --- identifier based mapping table
 
-== SYNOPSIS
+## SYNOPSIS
 
-[source, c]
-----
+```c
 #include <nng/nng.h>
 #include <nng/supplemental/util/idhash.h>
 
@@ -29,13 +20,12 @@ void *nng_id_get(nng_id_map *map, uint64_t id);
 int   nng_id_set(nng_id_map *map, uint64_t, void *value);
 int   nng_id_alloc(nng_id_map *map, uint64_t *id_p, void *value);
 int   nng_id_remove(nng_id_map *map, uint64_t id);
+```
 
-----
-
-== DESCRIPTION
+## DESCRIPTION
 
 These functions provide support for managing tables of data based on
-identifiers, ensuring that identifiers are allocated uniquely and within
+{{i:identifiers}}, ensuring that identifiers are allocated uniquely and within
 specified range limits.
 
 The table stores data pointers (which must not be `NULL`) at a logical numeric index.
@@ -43,22 +33,27 @@ It does so efficiently, even if large gaps exist, and it provides a means to eff
 allocate a numeric identifier from a pool of unused identifiers.
 
 Identifiers are allocated in increasing order, without reusing old identifiers until the
-largest possible identifier is allocated.  After wrapping, only identifiers that are no longer
+largest possible identifier is allocated. After wrapping, only identifiers that are no longer
 in use will be considered.
-No effort to order the availability of identifiers based on when they were freed is made.
+No effort is made to order the availability of identifiers based on when they were freed.[^1]
+
+[^1]:
+    The concern about possibly reusing a recently released identifier
+    comes into consideration after the range has wrapped. Given a sufficiently
+    large range, this is unlikely to be a concern.
 
 An initial table is allocated with `nng_id_map_alloc()`, which takes the lowest legal identifier in _lo_,
 and the largest legal identifier in _hi_.
 The new table is returned in _map_p_, and should be used as the _map_ argument to the rest of these functions.
 
-****
-As a special convenience, if these are specified as zero, then a full range of 32-bit identifiers is assumed.
-If identifiers larger than or equal to 2^32^ are required, then both _lo_ and _hi_ must be specified with the
-exact values desired.
-****
+If these _lo_ and _hi_ are both zero, then a full range of 32-bit identifiers is assumed.[^2]
+
+[^2]:
+    Consequently, if identifiers larger than or equal to 2<sup>32</sup> are required, then both _lo_ and _hi_ must be specified with the
+    exact values desired.
 
 The _flags_ argument is a bit mask of flags for the table.
-If `NNG_MAP_RANDOM` is specified, then the starting point for allocations is randomized, but subsequent allocations will then be monotonically increasing.
+If {{i:`NNG_MAP_RANDOM`}} is specified, then the starting point for allocations is randomized, but subsequent allocations will then be monotonically increasing.
 This is useful to reduce the odds of different instances of an application using the same identifiers at the same time.
 
 The `nng_id_get()` function returns the value previously stored with the given identifier.
@@ -74,27 +69,24 @@ the supplied _value_.
 
 The `nng_id_remove()` function removes the identifier and its associated value from the table.
 
-NOTE: These functions are limited to storing at most 2^32^ identifiers, even though the identifers may
-themselves be larger than 2^32^.
+> [!NOTE]
+> These functions are limited to storing at most 2<sup>32</sup> used identifiers, even though the identifers may
+> themselves be larger than 2<sup>32</sup>.
 
-IMPORTANT: These functions are *not* thread-safe.
-Callers should use a xref:nng_mtx_lock.3supp[mutex] or similar approach when thread-safety is needed.
+> [!NOTE]
+> These functions are _not_ thread-safe.
+> Callers should use a [mutex][mutex] or similar approach when thread-safety is needed.
 
-== RETURN VALUES
+## RETURN VALUES
 
 The `nng_id_map_alloc()`, `nng_id_set()`, `nng_id_alloc()`, and `nng_id_remove()` functions
 return 0 on success, or -1 on failure.
 
 The `nng_id_map_get()` function returns the requested data pointer, or `NULL` if the identifier was not found.
 
-== ERRORS
+## ERRORS
 
-[horizontal]
-`NNG_ENOENT`:: The _id_ does not exist in the table.
-`NNG_ENOMEM`:: Insufficient memory is available, or the table is full.
+- `NNG_ENOENT`: The _id_ does not exist in the table.
+- `NNG_ENOMEM`: Insufficient memory is available, or the table is full.
 
-== SEE ALSO
-
-[.text-left]
-xref:nng_mtx_lock.3supp.adoc[nng(7)]
-xref:nng.7.adoc[nng(7)]
+{{#include ../refs.md}}

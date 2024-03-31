@@ -137,6 +137,7 @@
 [nng_alloc]: ../util/nng_alloc.md
 [nng_clock]: ../util/nng_clock.md
 [nng_free]: ../util/nng_free.md
+[nng_id_map]: ../util/nng_id_map.md
 [nng_msleep]: ../util/nng_msleep.md
 [nng_random]: ../util/nng_random.md
 [nng_sleep_aio]: ../util/nng_sleep_aio.md
