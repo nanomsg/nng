@@ -23,14 +23,14 @@ transfer user data (they may transfer protocol data though) -- in this case
 this function will generally return zero.
 
 This function is most useful when used with operations that make use of
-of a scatter/gather vector (set by [`nng_aio_set_iov()`](nng_aio_set_iov.md)).
+of a scatter/gather vector (set by [`nng_aio_set_iov()`][nng_aio_set_iov]).
 
 > [!NOTE]
 > The return value from this function is undefined if the operation
 > has not completed yet.
 > Either call this from the handle's completion callback,
 > or after waiting for the operation to complete with
-> [`nng_aio_wait()`](nng_aio_wait.md).
+> [`nng_aio_wait()`][nng_aio_wait].
 
 ## RETURN VALUES
 
@@ -38,7 +38,9 @@ The number of bytes transferred by the operation.
 
 ## SEE ALSO
 
-[nng_aio_alloc](nng_aio_alloc.md),
-[nng_aio_result](nng_aio_result.md),
-[nng_aio_set_iov](nng_aio_set_iov.md),
-[nng_aio_wait](nng_aio_wait.md)
+[nng_aio_alloc][nng_aio_alloc],
+[nng_aio_result][nng_aio_result],
+[nng_aio_set_iov][nng_aio_set_iov],
+[nng_aio_wait][nng_aio_wait]
+
+{{#include ../refs.md}}

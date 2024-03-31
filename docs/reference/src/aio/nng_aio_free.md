@@ -19,7 +19,7 @@ The `nng_aio_free()` function frees an allocated asynchronous I/O handle.
 If any operation is in progress, the operation is canceled, and the
 caller is blocked until the operation is completely canceled, to ensure
 that it is safe to deallocate the handle and any associated resources.
-(This is done by implicitly calling [`nng_aio_stop()`](nng_aio_stop.md).)
+(This is done by implicitly calling [`nng_aio_stop()`][nng_aio_stop].)
 
 The `nng_aio_reap()` function is the same as `nng_aio_free()`, but does
 its work in a background thread.
@@ -30,5 +30,7 @@ This can be useful to discard the _aio_ object from within the callback for the 
 
 ## SEE ALSO
 
-[nng_aio_alloc](nng_aio_alloc.md),
-[nng_aio_stop](nng_aio_stop.md)
+[nng_aio_alloc][nng_aio_alloc],
+[nng_aio_stop][nng_aio_stop]
+
+{{#include ../refs.md}}

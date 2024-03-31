@@ -24,7 +24,7 @@ Otherwise a non-zero error code is returned.
 > has not completed yet.
 > Either call this from the handle's completion
 > callback, or after waiting for the operation to complete with
-> [`nng_aio_wait()`](nng_aio_wait.md).
+> [`nng_aio_wait()`][nng_aio_wait].
 
 ## RETURN VALUES
 
@@ -40,7 +40,9 @@ Various other return values are possible depending on the operation.
 
 ## SEE ALSO
 
-[nng_aio_abort](nng_aio_abort.md),
-[nng_aio_alloc](nng_aio_alloc.md),
-[nng_aio_wait](nng_aio_wait.md),
+[nng_aio_abort][nng_aio_abort],
+[nng_aio_alloc][nng_aio_alloc],
+[nng_aio_wait][nng_aio_wait],
 [nng_strerror](../util/nng_strerror.md)
+
+{{#include ../refs.md}}

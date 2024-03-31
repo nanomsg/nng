@@ -29,7 +29,7 @@ It will be called with the argument _arg_.
 
 > [!TIP]
 > If more complex or blocking work needs to be performed by _callb_, a separate
-> thread can be used, along with a [condition variable](nng_cv_alloc.md)
+> thread can be used, along with a [condition variable][nng_cv_alloc]
 > which can be signaled by the callback.
 
 Asynchronous I/O operations all take an [`nng_aio`](index.md)
@@ -38,15 +38,15 @@ Such operations are usually started by a function that returns immediately.
 The operation is then run asynchronously, and completes sometime later.
 When that operation is complete, the callback supplied here is called,
 and that callback is able to determine the result of the operation using
-[`nng_aio_result()`](nng_aio_result.md), [`nng_aio_count()`](nng_aio_count.md),
-and [`nng_aio_get_output()`](nng_aio_get_output.md).
+[`nng_aio_result()`][nng_aio_result], [`nng_aio_count()`][nng_aio_count],
+and [`nng_aio_get_output()`][nng_aio_get_output].
 
 It is possible to wait synchronously for an otherwise asynchronous operation
-by using the function [`nng_aio_wait()`](nng_aio_wait.md).
+by using the function [`nng_aio_wait()`][nng_aio_wait].
 In that case, it is permissible for _callb_ and _arg_ to both be `NULL`.
 Note that if these are `NULL`, then it will not be possible to determine when the
 operation is complete except by calling the aforementioned
-[`nng_aio_wait()`](nng_aio_wait.md).
+[`nng_aio_wait()`][nng_aio_wait].
 
 ## RETURN VALUES
 
@@ -58,17 +58,18 @@ This function returns 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[nng_aio_abort](nng_aio_abort.md),
-[nng_aio_cancel](nng_aio_cancel.md),
-[nng_aio_count](nng_aio_count.md),
-[nng_aio_free](nng_aio_free.md),
-[nng_aio_get_input](nng_aio_get_input.md),
-[nng_aio_get_msg](nng_aio_get_msg.md),
-[nng_aio_get_output](nng_aio_get_output.md),
-[nng_aio_result](nng_aio_result.md),
-[nng_aio_set_input](nng_aio_set_input.md),
-[nng_aio_set_iov](nng_aio_set_iov.md),
-[nng_aio_set_msg](nng_aio_set_msg.md),
-[nng_aio_set_timeout](nng_aio_set_timeout.md),
-[nng_aio_stop](nng_aio_stop.md),
-[nng_aio_wait](nng_aio_wait.md)
+[nng_aio_abort][nng_aio_abort],
+[nng_aio_cancel][nng_aio_cancel],
+[nng_aio_count][nng_aio_count],
+[nng_aio_free][nng_aio_free],
+[nng_aio_get_msg][nng_aio_get_msg],
+[nng_aio_get_output][nng_aio_get_output],
+[nng_aio_result][nng_aio_result],
+[nng_aio_set_input][nng_aio_set_input],
+[nng_aio_set_iov][nng_aio_set_iov],
+[nng_aio_set_msg][nng_aio_set_msg],
+[nng_aio_set_timeout][nng_aio_set_timeout],
+[nng_aio_stop][nng_aio_stop],
+[nng_aio_wait][nng_aio_wait]
+
+{{#include ../refs.md}}

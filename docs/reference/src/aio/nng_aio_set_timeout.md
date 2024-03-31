@@ -25,8 +25,8 @@ If the timer expires before the operation is completed, then it is
 aborted with an error of `NNG_ETIMEDOUT`.
 The _timeout_ is specified as a relative number of milliseconds.
 
-If the timeout is `NNG_DURATION_INFINITE`, then no timeout is used.
-If the timeout is `NNG_DURATION_DEFAULT`, then a "default" or socket-specific
+If the timeout is {{i:`NNG_DURATION_INFINITE`}}, then no timeout is used.
+If the timeout is {{i:`NNG_DURATION_DEFAULT`}}, then a "default" or socket-specific
 timeout is used.
 (This is frequently the same as `NNG_DURATION_INFINITE`.)
 
@@ -48,6 +48,8 @@ or absolute timeout.
 
 ## SEE ALSO
 
-[nng_aio_cancel](nng_aio_cancel.md),
-[nng_aio_result](nng_aio_result.md),
-[nng_clock](../util/nng_clock.md)
+[nng_aio_cancel][nng_aio_cancel],
+[nng_aio_result][nng_aio_result],
+[nng_clock][nng_clock]
+
+{{#include ../refs.md}}

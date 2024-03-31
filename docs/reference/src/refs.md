@@ -81,6 +81,24 @@
 [nng_ctx_set]: ../ctx/nng_ctx_set.md
 [nng_ctx_setopt]: ../ctx/nng_ctx_setopt.md
 
+<!-- Async IO -->
+
+[nng_aio_abort]: ../aio/nng_aio_abort.md
+[nng_aio_alloc]: ../aio/nng_aio_alloc.md
+[nng_aio_busy]: ../aio/nng_aio_busy.md
+[nng_aio_cancel]: ../aio/nng_aio_cancel.md
+[nng_aio_count]: ../aio/nng_aio_count.md
+[nng_aio_free]: ../aio/nng_aio_free.md
+[nng_aio_get_msg]: ../aio/nng_aio_get_msg.md
+[nng_aio_get_output]: ../aio/nng_aio_get_output.md
+[nng_aio_result]: ../aio/nng_aio_result.md
+[nng_aio_set_input]: ../aio/nng_aio_set_input.md
+[nng_aio_set_iov]: ../aio/nng_aio_set_iov.md
+[nng_aio_set_msg]: ../aio/nng_aio_set_msg.md
+[nng_aio_set_timeout]: ../aio/nng_aio_set_timeout.md
+[nng_aio_stop]: ../aio/nng_aio_stop.md
+[nng_aio_wait]: ../aio/nng_aio_wait.md
+
 <!-- Threads -->
 
 [nng_cv_alloc]: ../thr/nng_cv_alloc.md

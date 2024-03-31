@@ -16,7 +16,7 @@ int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
 
 The `nng_aio_set_iov()` function sets a {{i:scatter/gather}} vector _iov_ on the handle _aio_.
 
-The _iov_ is a pointer to an array of _niov_ [`nng_iov`](nng_iov.md)
+The _iov_ is a pointer to an array of _niov_ [`nng_iov`][nng_iov]
 structures, which have the following definition:
 
 ```c
@@ -38,3 +38,5 @@ This function returns 0 on success, and non-zero otherwise.
 ## ERRORS
 
 - `NNG_EINVAL`: Value of specified _niov_ is too large.
+
+{{#include ../refs.md}}

@@ -23,7 +23,7 @@ been completed or canceled, and any callback has been
 executed, then it returns false.
 
 This is the same test used internally by
-[`nng_aio_wait()`](nng_aio_wait.md).
+[`nng_aio_wait()`][nng_aio_wait].
 
 > [!IMPORTANT]
 > Care should be taken to ensure that the _aio_ object is not
@@ -36,6 +36,8 @@ True if the _aio_ is busy, false otherwise.
 
 ## SEE ALSO
 
-[nng_aio_abort](nng_aio_abort.md),
-[nng_aio_alloc](nng_aio_alloc.md),
-[nng_aio_wait](nng_aio_wait.md)
+[nng_aio_abort][nng_aio_abort],
+[nng_aio_alloc][nng_aio_alloc],
+[nng_aio_wait][nng_aio_wait]
+
+{{#include ../refs.md}}

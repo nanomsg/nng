@@ -34,9 +34,11 @@ currently defined can accept more than four parameters.
 > in use by an active asynchronous operation.
 
 An input parameter set with this function may be retrieved later with
-the [`nng_aio_get_input()`](nng_aio_get_input.md) function.
+the [`nng_aio_get_input()`][nng_aio_get_input] function.
 
 ## SEE ALSO
 
-[nng_aio_alloc](nng_aio_alloc.md),
-[nng_aio_get_input](../aio_provider/nng_aio_get_input.md)
+[nng_aio_alloc][nng_aio_alloc],
+[nng_aio_get_input][nng_aio_get_input]
+
+{{#include ../refs.md}}

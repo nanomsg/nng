@@ -24,10 +24,12 @@ function will not be called until the callback has completed.
 
 > [!IMPORTANT]
 > This function should never be called from a function that itself
-> is a callback of an [`nng_aio`](index.md), either this one or any other.
+> is a callback of an [`nng_aio`][aio], either this one or any other.
 > Doing so may result in a deadlock.
 
 ## SEE ALSO
 
-[nng_aio_abort](nng_aio_abort.md),
-[nng_aio_busy](nng_aio_busy.md)
+[nng_aio_abort][nng_aio_abort],
+[nng_aio_busy][nng_aio_busy]
+
+{{#include ../refs.md}}
