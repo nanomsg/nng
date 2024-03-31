@@ -39,9 +39,8 @@ disposing of it when it is no longer needed.
 > [!NOTE]
 > The semantics of what receiving a message means vary from protocol to
 > protocol, so examination of the protocol documentation is encouraged.
-> (For example, with a [_REQ_][req] socket a message may only be received
-> after a request has been sent).
-> Furthermore, some protocols do not support receiving data at all.
+> Furthermore, some protocols do not support receiving data at all, or
+> may require other conditions be met before receiving messages.
 
 ## RETURN VALUES
 

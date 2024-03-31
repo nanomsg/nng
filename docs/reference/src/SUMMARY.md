@@ -66,6 +66,9 @@
     - [nng_recvmsg](sock/nng_recvmsg.md)
     - [nng_rep_open](sock/nng_rep_open.md)
     - [nng_req_open](sock/nng_req_open.md)
+    - [nng_send](sock/nng_send.md)
+    - [nng_send_aio](sock/nng_send_aio.md)
+    - [nng_sendmsg](sock/nng_sendmsg.md)
     - [nng_sub_open](sock/nng_sub_open.md)
     - [nng_surveyor_open](sock/nng_surveyor_open.md)
 

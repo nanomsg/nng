@@ -46,11 +46,8 @@ updated with the actual message body length copied into _data_.
 > [!NOTE]
 > The semantics of what receiving a message means vary from protocol to
 > protocol, so examination of the protocol documentation is encouraged.
-> (For example, with a [_REQ_][req] socket a message may only be received
-> after a request has been sent, and a [_SUB_][sub] socket
-> may only receive messages corresponding to topics to which it has subscribed.)
-> Furthermore, some protocols may not support receiving data at all, such as
-> [_PUB_][pub].
+> Furthermore, some protocols may not support receiving data at all, or
+> may require other conditions be met before they can receive.
 
 > [!TIP]
 > The `NNG_FLAG_ALLOC` flag can be used to reduce data copies, thereby

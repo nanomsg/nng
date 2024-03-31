@@ -38,12 +38,8 @@ but `nng_aio_result()` will be non-zero.
 > [!NOTE]
 > The semantics of what receiving a message means varies from protocol to
 > protocol, so examination of the protocol documentation is encouraged.
-> For example, with [_PUB_][pub] socket the data is broadcast, so that
-> only peers who have a suitable subscription will be able to receive it.
-> Furthermore, some protocols may not support receiving (such as
-> _PUB_) or may require other conditions.
-> (For example, [_REQ_][req] sockets cannot normally receive data
-> until they have first sent a request.)
+> Furthermore, some protocols may not support receiving
+> or may require other conditions be met before receiving messages.
 
 ## ERRORS
 
