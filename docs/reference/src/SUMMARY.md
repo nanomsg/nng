@@ -1,7 +1,5 @@
 # Summary
 
-- [Chapter 1](./chapter_1.md)
-
 - [Overview](./overview/index.md)
 
   - [RAW mode](./overview/raw.md)
@@ -51,11 +49,11 @@
     - [nng_msg_set_pipe](msg/nng_msg_set_pipe.md)
     - [nng_msg_trim](msg/nng_msg_trim.md)
 
-  - [Sockets](api/socket/index.md)
+  - [Sockets](sock/index.md)
 
-    - [nng_bus_open](api/socket/nng_bus_open.md)
-    - [nng_close](api/socket/nng_close.md)
-    - [nng_pub_open](api/socket/nng_pub_open.md)
+    - [nng_bus_open](sock/nng_bus_open.md)
+    - [nng_close](sock/nng_close.md)
+    - [nng_pub_open](sock/nng_pub_open.md)
 
   - [Contexts](ctx/index.md)
 

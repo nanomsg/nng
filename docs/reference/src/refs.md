@@ -12,6 +12,7 @@
 [sockaddr_in6]: ../overview/sockaddr_in6.md
 [raw]: ../overview/raw.md
 [url]: ../overview/url.md
+[transport]: ../tran/index.md
 
 <!-- Protocols -->
 
@@ -26,20 +27,20 @@
 [sub]: ../proto/sub.md
 [surveyor]: ../proto/surveyor.md
 
-<!-- API -->
+<!-- Sockets -->
 
-[nng_bus_open]: ../api/nng_bus_open.md
-[nng_ctx_open]: ../api/nng_ctx_open.md
-[nng_pair_open]: ../api/nng_pair_open.md
-[nng_pub_open]: ../api/nng_pub_open.md
-[nng_pull_open]: ../api/nng_pull_open.md
-[nng_push_open]: ../api/nng_push_open.md
-[nng_rep_open]: ../api/nng_rep_open.md
-[nng_req_open]: ../api/nng_req_open.md
-[nng_respondent_open]: ../api/nng_respondent_open.md
-[nng_socket_set]: ../api/nng_socket_set.md
-[nng_surveyor_open]: ../api/nng_surveyor_open.md
-[nng_sub_open]: ../api/nng_sub_open.md
+[nng_bus_open]: ../sock/nng_bus_open.md
+[nng_pair_open]: ../sock/nng_pair_open.md
+[nng_pub_open]: ../sock/nng_pub_open.md
+[nng_pull_open]: ../sock/nng_pull_open.md
+[nng_push_open]: ../sock/nng_push_open.md
+[nng_rep_open]: ../sock/nng_rep_open.md
+[nng_req_open]: ../sock/nng_req_open.md
+[nng_respondent_open]: ../sock/nng_respondent_open.md
+[nng_socket_set]: ../sock/nng_socket_set.md
+[nng_surveyor_open]: ../sock/nng_surveyor_open.md
+[nng_sub_open]: ../sock/nng_sub_open.md
+[nng_close]: ../sock/nng_close.md
 
 <!-- Messages -->
 
