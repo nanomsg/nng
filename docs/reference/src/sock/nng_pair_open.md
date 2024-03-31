@@ -29,7 +29,7 @@ int nng_pair1_open_poly(nng_socktet *s);
 ## DESCRIPTION
 
 The `nng_pair0_open()` and `nng_pair1_open()` functions
-create a [_PAIR_][pair] version 0 or version 1
+create a [{{i:*PAIR*}}][pair] version 0 or version 1
 [socket][socket] and return it at the location pointed to by _s_.
 
 The `nng_pair0_open_raw()` and `nng_pair1_open_raw()` functions

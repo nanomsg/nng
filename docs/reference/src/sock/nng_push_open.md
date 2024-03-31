@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng_push_open --- create push socket
+nng_push_open --- create _PUSH_ socket
 
 ## SYNOPSIS
 
@@ -17,7 +17,7 @@ int nng_push0_open_raw(nng_socket *s);
 
 ## DESCRIPTION
 
-The `nng_push0_open()` function creates a [_PUSH_][push] version 0
+The `nng_push0_open()` function creates a [{{i:*PUSH*}}][push] version 0
 [socket][socket] and returns it at the location pointed to by _s_.
 
 The `nng_push0_open_raw()` function creates a _PUSH_ version 0 socket in

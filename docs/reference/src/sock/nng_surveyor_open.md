@@ -17,7 +17,7 @@ int nng_surveyor0_open_raw(nng_socket *s);
 
 ## DESCRIPTION
 
-The `nng_surveyor0_open()` function creates a [_SURVEYOR_][surveyor]
+The `nng_surveyor0_open()` function creates a [{{i:*SURVEYOR*}}][surveyor]
 version 0 [socket][socket] and returns it at the location
 pointed to by _s_.
 

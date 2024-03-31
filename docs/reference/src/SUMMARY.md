@@ -58,6 +58,9 @@
     - [nng_pub_open](sock/nng_pub_open.md)
     - [nng_pull_open](sock/nng_pull_open.md)
     - [nng_push_open](sock/nng_push_open.md)
+    - [nng_respondent_open](sock/nng_respondent_open.md)
+    - [nng_rep_open](sock/nng_rep_open.md)
+    - [nng_req_open](sock/nng_req_open.md)
     - [nng_sub_open](sock/nng_sub_open.md)
     - [nng_surveyor_open](sock/nng_surveyor_open.md)
 

@@ -17,7 +17,7 @@ int nng_bus0_open_raw(nng_socket *s);
 
 ## DESCRIPTION
 
-The `nng_bus0_open()` function creates a [_BUS_][bus] version 0
+The `nng_bus0_open()` function creates a [{{i:*BUS*}}][bus] version 0
 [socket][socket] and returns it at the location pointed to by _s_.
 
 The `nng_bus0_open_raw()` function creates a _BUS_ version 0
@@ -34,7 +34,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[BUS protocol][bus],
+[_BUS_ protocol][bus],
 [RAW mode][raw]
 
 {{#include ../refs.md}}

@@ -17,7 +17,7 @@ int nng_sub0_open_raw(nng_socket *s);
 
 ## DESCRIPTION
 
-The `nng_sub0_open()` function creates a [_SUB_][sub] version 0
+The `nng_sub0_open()` function creates a [{{i:*SUB*}}][sub] version 0
 [socket][socket] and returns it at the location pointed to by _s_.
 
 The `nng_sub0_open_raw()` function creates a _SUB_ version 0

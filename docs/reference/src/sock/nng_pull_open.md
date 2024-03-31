@@ -17,7 +17,7 @@ int nng_pull0_open_raw(nng_socket *s);
 
 ## DESCRIPTION
 
-The `nng_pull0_open()` function creates a [_PULL_][pull] version 0
+The `nng_pull0_open()` function creates a [{{i:*PULL*}}][pull] version 0
 [socket][socket] and returns it at the location pointed to by _s_.
 
 The `nng_pull0_open_raw()` function creates a _PULL_ version 0

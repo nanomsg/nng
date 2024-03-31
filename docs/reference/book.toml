@@ -14,13 +14,9 @@ fold.level = 1
 
 [preprocessor.indexing.see_instead]
 
-# "*PULL* protocol" = "protocol, *PULL*"
-
-#"protocol, PUB" = "PUB"
-# "_PAIR_&zwj;" = "protocol, _PAIR_"
+# "*PUSH* (protocol)" = "protocol, *PUSH*"
 
 [preprocessor.indexing.nest_under]
-# hacks to allow us to also place some entries underneath
 "body" = "message"
 "header" = "message"
 
