@@ -15,6 +15,8 @@ fold.level = 1
 [preprocessor.indexing.see_instead]
 
 # "*PUSH* (protocol)" = "protocol, *PUSH*"
+"URI" = "URI"
+"option" = "Options"
 
 [preprocessor.indexing.nest_under]
 "body" = "message"
@@ -38,11 +40,25 @@ fold.level = 1
 "*ws*" = "transport"
 "*wss*" = "transport"
 
+"`abstract://`" = "URI"
 "`inproc://`" = "URI"
 "`ipc://`" = "URI"
 "`tls+tcp://`" = "URI"
 "`tcp://`" = "URI"
+"`unix://`" = "URI"
 "`ws://`" = "URI"
 "`wss://`" = "URI"
+
+"`NNG_OPT_LOCADDR`" = "option"
+"`NNG_OPT_REMADDR`" = "option"
+"`NNG_OPT_PEER_GID`" = "option"
+"`NNG_OPT_PEER_PID`" = "option"
+"`NNG_OPT_PEER_UID`" = "option"
+"`NNG_OPT_SUB_PREFNEW`" = "option"
+"`NNG_OPT_SUB_SUBSCRIBE`" = "option"
+"`NNG_OPT_SUB_UNSUBSCRIBE`" = "option"
+"`NNG_OPT_SURVEYOR_SURVEYTIME`" = "option"
+"`NNG_OPT_REQ_RESENDTIME`" = "option"
+"`NNG_OPT_REQ_RESENDTICK`" = "option"
 
 [preprocessor.alerts]

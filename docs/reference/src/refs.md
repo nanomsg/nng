@@ -7,9 +7,11 @@
 [msg]: ../msg/index.md
 [pipe]: ../overview/pipe.md
 [socket]: ../sock/index.md
-[sockadddr]: ../overview/sockaddr.md
+[sockaddr]: ../overview/sockaddr.md
 [sockaddr_in]: ../overview/sockaddr_in.md
 [sockaddr_in6]: ../overview/sockaddr_in6.md
+[sockaddr_ipc]: ../overview/sockaddr_ipc.md
+[sockaddr_abstract]: ../overview/sockaddr_abstract.md
 [raw]: ../overview/raw.md
 [url]: ../overview/url.md
 [transport]: ../tran/index.md
@@ -147,8 +149,14 @@
 [NNG_OPT_SENDBUF]: ../opts/nng_opt_sendbuf.md
 [NNG_OPT_LOCADDR]: ../opts/nng_opt_locaddr.md
 [NNG_OPT_REMADDR]: ../api/nng_options.md#NNG_OPT_REMADDR
-[NNG_OPT_TCP_KEEPALIVE]: ../api/nng_tcp_options.md#NNG_OPT_TCP_KEEPALIVE
-[NNG_OPT_TCP_NODELAY]: ../api/nng_tcp_options.md#NNG_OPT_TCP_NODELAY
+[NNG_OPT_TCP_KEEPALIVE]: ../opts/tcp_options.md#NNG_OPT_TCP_KEEPALIVE
+[NNG_OPT_TCP_NODELAY]: ../opts/tcp_options.md#NNG_OPT_TCP_NODELAY
+[NNG_OPT_IPC_SECURITY_DESCRIPTOR]: ../opts/ipc_options.md
+[NNG_OPT_IPC_PERMISSIONS]: ../opts/ipc_options.md
+[NNG_OPT_PEER_GID]: ../opts/ipc_options.md
+[NNG_OPT_PEER_PID]: ../opts/ipc_options.md
+[NNG_OPT_PEER_UID]: ../opts/ipc_options.md
+[NNG_OPT_PEER_ZONEID]: ../opts/ipc_options.md
 [NNG_OPT_URL]: ../api/nng_options.md#NNG_OPT_URL
 
 <!-- External -->

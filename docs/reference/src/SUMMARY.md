@@ -19,6 +19,7 @@
 
 - [Transports](tran/index.md)
 
+  - [IPC](tran/ipc.md)
   - [INPROC](tran/inproc.md)
   - [TCP](tran/tcp.md)
 
