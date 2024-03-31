@@ -1,28 +1,18 @@
-= nng_send_aio(3)
-//
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
-//
-// This document is supplied under the terms of the MIT License, a
-// copy of which should be located in the distribution where this
-// file was obtained (LICENSE.txt).  A copy of the license may also be
-// found online at https://opensource.org/licenses/MIT.
-//
+# nng_send_aio
 
-== NAME
+## NAME
 
-nng_send_aio - send message asynchronously
+nng_send_aio --- send message asynchronously
 
-== SYNOPSIS
+## SYNOPSIS
 
-[source, c]
-----
+```
 #include <nng/nng.h>
 
 void nng_send_aio(nng_socket s, nng_aio *aio);
-----
+```
 
-== DESCRIPTION
+## DESCRIPTION
 
 The `nng_send_aio()` sends a xref:nng_msg.5.adoc[message] using the
 xref:nng_socket.5.adoc[socket] _s_ asynchronously.
@@ -63,29 +53,29 @@ xref:nng_sub.7.adoc[_sub_]) or may require other conditions.
 (For example, xref:nng_rep.7.adoc[_rep_] sockets cannot normally send data, which
 are responses to requests, until they have first received a request.)
 
-== RETURN VALUES
+## RETURN VALUES
 
 None.  (The operation completes asynchronously.)
 
-== ERRORS
+## ERRORS
 
-[horizontal]
-`NNG_ECANCELED`:: The operation was aborted.
-`NNG_ECLOSED`:: The socket _s_ is not open.
-`NNG_EMSGSIZE`:: The message is too large.
-`NNG_ENOMEM`:: Insufficient memory is available.
-`NNG_ENOTSUP`:: The protocol for socket _s_ does not support sending.
-`NNG_ESTATE`:: The socket _s_ cannot send data in this state.
-`NNG_ETIMEDOUT`:: The send timeout expired.
+* `NNG_ECANCELED`: The operation was aborted.
+* `NNG_ECLOSED`: The socket _s_ is not open.
+* `NNG_EMSGSIZE`: The message is too large.
+* `NNG_ENOMEM`: Insufficient memory is available.
+* `NNG_ENOTSUP`: The protocol for socket _s_ does not support sending.
+* `NNG_ESTATE`: The socket _s_ cannot send data in this state.
+* `NNG_ETIMEDOUT`: The send timeout expired.
 
-== SEE ALSO
+## SEE ALSO
 
-[.text-left]
-xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg(3)],
-xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg(3)],
-xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
-xref:nng_strerror.3.adoc[nng_strerror(3)],
-xref:nng_aio.5.adoc[nng_aio(5)],
-xref:nng_msg.5.adoc[nng_msg(5)],
-xref:nng_socket.5.adoc[nng_socket(5)],
-xref:nng.7.adoc[nng(7)]
+[nng_aio_get_msg][nng_aio_get_msg],
+[nng_aio_set_msg][nng_aio_set_msg],
+[nng_msg_alloc][nng_msg_alloc],
+[nng_strerror][nng_strerror],
+[nng_aio][nng_aio],
+[nng_msg][nng_msg],
+[nng_socket][nng_socket],
+[nng][nng]
+
+{{#include ../refs.md}}

@@ -54,6 +54,12 @@
 [nng_surveyor_open]: ../sock/nng_surveyor_open.md
 [nng_close]: ../sock/nng_close.md
 [nng_device]: ../sock/nng_device.md
+[nng_recv]: ../sock/nng_recv.md
+[nng_recv_aio]: ../sock/nng_recv_aio.md
+[nng_recvmsg]: ../sock/nng_recvmsg.md
+[nng_send]: ../sock/nng_send.md
+[nng_send_aio]: ../sock/nng_send_aio.md
+[nng_sendmsg]: ../sock/nng_sendmsg.md
 
 <!-- Messages -->
 

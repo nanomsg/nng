@@ -1,28 +1,18 @@
-= nng_sendmsg(3)
-//
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
-//
-// This document is supplied under the terms of the MIT License, a
-// copy of which should be located in the distribution where this
-// file was obtained (LICENSE.txt).  A copy of the license may also be
-// found online at https://opensource.org/licenses/MIT.
-//
+# nng_sendmsg
 
-== NAME
+## NAME
 
-nng_sendmsg - send message
+nng_sendmsg --- send message
 
-== SYNOPSIS
+## SYNOPSIS
 
-[source, c]
-----
+```
 #include <nng/nng.h>
 
 int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
-----
+```
 
-== DESCRIPTION
+## DESCRIPTION
 
 The `nng_sendmsg()` sends message _msg_ using the socket _s_.
 
@@ -66,29 +56,29 @@ Furthermore, there is no guarantee that the message has actually been delivered.
 Finally, with some protocols, the semantic is implicitly `NNG_FLAG_NONBLOCK`,
 such as with xref:nng_pub.7.adoc[_pub_] sockets, which are best-effort delivery only.
 
-== RETURN VALUES
+## RETURN VALUES
 
 This function returns 0 on success, and non-zero otherwise.
 
-== ERRORS
+## ERRORS
 
-[horizontal]
-`NNG_EAGAIN`:: The operation would block, but `NNG_FLAG_NONBLOCK` was specified.
-`NNG_ECLOSED`:: The socket _s_ is not open.
-`NNG_EINVAL`:: An invalid set of _flags_ was specified.
-`NNG_EMSGSIZE`:: The value of _size_ is too large.
-`NNG_ENOMEM`:: Insufficient memory is available.
-`NNG_ENOTSUP`:: The protocol for socket _s_ does not support sending.
-`NNG_ESTATE`:: The socket _s_ cannot send data in this state.
-`NNG_ETIMEDOUT`:: The operation timed out.
+* `NNG_EAGAIN`: The operation would block, but `NNG_FLAG_NONBLOCK` was specified.
+* `NNG_ECLOSED`: The socket _s_ is not open.
+* `NNG_EINVAL`: An invalid set of _flags_ was specified.
+* `NNG_EMSGSIZE`: The value of _size_ is too large.
+* `NNG_ENOMEM`: Insufficient memory is available.
+* `NNG_ENOTSUP`: The protocol for socket _s_ does not support sending.
+* `NNG_ESTATE`: The socket _s_ cannot send data in this state.
+* `NNG_ETIMEDOUT`: The operation timed out.
 
-== SEE ALSO
+## SEE ALSO
 
-[.text-left]
-xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
-xref:nng_recvmsg.3.adoc[nng_recvmsg(3)],
-xref:nng_send.3.adoc[nng_send(3)],
-xref:nng_strerror.3.adoc[nng_strerror(3)],
-xref:nng_msg.5.adoc[nng_msg(5)],
-xref:nng_socket.5.adoc[nng_socket(5)],
-xref:nng.7.adoc[nng(7)]
+[nng_msg_alloc][nng_msg_alloc],
+[nng_recvmsg][nng_recvmsg],
+[nng_send][nng_send],
+[nng_strerror][nng_strerror],
+[nng_msg][nng_msg],
+[nng_socket][nng_socket],
+[nng][nng]
+
+{{#include ../refs.md}}
