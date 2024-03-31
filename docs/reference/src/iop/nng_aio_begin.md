@@ -24,7 +24,7 @@ This operation should be called at the start of any I/O operation, and must
 be called not more than once for a given I/O operation on a given _aio_.
 
 Once this function is called, if `true` is returned, then the provider MUST
-guarantee that [`nng_aio_finish()`](nng_aio_finish.md) is called for the _aio_
+guarantee that [`nng_aio_finish()`][nng_aio_finish] is called for the _aio_
 exactly once, when the operation is complete or canceled.
 
 > [!TIP]
@@ -39,6 +39,8 @@ exactly once, when the operation is complete or canceled.
 
 ## SEE ALSO
 
-[nng_aio_cancel](../aio/nng_aio_cancel.md),
-[nng_aio_defer](nng_aio_defer.md),
-[nng_aio_finish](nng_aio_finish.md)
+[nng_aio_cancel][nng_aio_cancel],
+[nng_aio_defer][nng_aio_defer],
+[nng_aio_finish][nng_aio_finish]
+
+{{#include ../refs.md}}

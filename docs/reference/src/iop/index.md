@@ -13,9 +13,11 @@ other consumer functions for [Aysnchronous I/O](../aio/index.md).
 
 ## See Also
 
-[nng_aio_begin](nng_aio_begin.md),
-[nng_aio_defer](nng_aio_defer.md),
-[nng_aio_finish](nng_aio_finish.md),
-[nng_aio_get_input](nng_aio_get_input.md),
-[nng_aio_set_output](nng_aio_set_output.md),
-[Asynchronous I/O](../aio/index.md)
+[nng_aio_begin][nng_aio_begin],
+[nng_aio_defer][nng_aio_defer],
+[nng_aio_finish][nng_aio_finish],
+[nng_aio_get_input][nng_aio_get_input],
+[nng_aio_set_output][nng_aio_set_output],
+[Asynchronous I/O][aio]
+
+{{#include ../refs.md}}

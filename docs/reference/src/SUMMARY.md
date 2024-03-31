@@ -87,13 +87,13 @@
     - [nng_aio_stop](aio/nng_aio_stop.md)
     - [nng_aio_wait](aio/nng_aio_wait.md)
 
-  - [Asynchronous I/O for Providers](api/aio_provider/index.md)
+  - [I/O Provider API](iop/index.md)
 
-    - [nng_aio_begin](api/aio_provider/nng_aio_begin.md)
-    - [nng_aio_defer](api/aio_provider/nng_aio_defer.md)
-    - [nng_aio_finish](api/aio_provider/nng_aio_finish.md)
-    - [nng_aio_get_input](api/aio_provider/nng_aio_get_input.md)
-    - [nng_aio_set_output](api/aio_provider/nng_aio_set_output.md)
+    - [nng_aio_begin](iop/nng_aio_begin.md)
+    - [nng_aio_defer](iop/nng_aio_defer.md)
+    - [nng_aio_finish](iop/nng_aio_finish.md)
+    - [nng_aio_get_input](iop/nng_aio_get_input.md)
+    - [nng_aio_set_output](iop/nng_aio_set_output.md)
 
   - [Utility Functions](util/index.md)
 

@@ -10,4 +10,6 @@ The [{{i:*inproc* transport}}][inproc] provides {{i: intra-process}} communicati
 
 ## TCP
 
-The [{{i:*tcp* transport}}][tcp] provides communication over {{i:TCP/IP}} networks.
+The {{hi:*tcp* transport}}[_tcp_ transport][tcp] provides communication over {{i:TCP/IP}} networks.
+
+{{#include ../refs.md}}

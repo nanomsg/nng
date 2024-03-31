@@ -31,11 +31,11 @@ completed, or be in a state where it is no longer possible to unschedule it.
 In this case, the _cancelfn_ should just return without making any changes.
 
 If the cancellation routine successfully canceled the operation, it should
-ensure that [`nng_aio_finish()`](nng_aio_finish.md) is called, with the
+ensure that [`nng_aio_finish()`][nng_aio_finish] is called, with the
 error code specified by _err_.
 
 > [!IMPORTANT]
-> It is mandatory that I/O providers call [`nng_aio_finish()`](nng_aio_finish.md) _*exactly once*_ when they are finished with the operation.
+> It is mandatory that I/O providers call [`nng_aio_finish()`][nng_aio_finish] _*exactly once*_ when they are finished with the operation.
 
 > [!IMPORTANT]
 > Care must be taken to ensure that cancellation and completion of
@@ -53,6 +53,8 @@ error code specified by _err_.
 
 ## SEE ALSO
 
-[nng_aio_alloc](../aio/nng_aio_alloc.md),
-[nng_aio_cancel](../aio/nng_aio_cancel.md),
-[nng_aio_finish](nng_aio_finish.md)
+[nng_aio_alloc][nng_aio_alloc],
+[nng_aio_cancel][nng_aio_cancel],
+[nng_aio_finish][nng_aio_finish]
+
+{{#include ../refs.md}}

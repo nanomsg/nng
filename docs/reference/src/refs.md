@@ -27,6 +27,13 @@
 [sub]: ../proto/sub.md
 [surveyor]: ../proto/surveyor.md
 
+<!-- Transports -->
+
+[inproc]: ../tran/inproc.md
+[ipc]: ../tran/ipc.md
+[tls]: ../tran/tls.md
+[tcp]: ../tran/tcp.md
+
 <!-- Sockets -->
 
 [nng_bus_open]: ../sock/nng_bus_open.md
@@ -98,6 +105,14 @@
 [nng_aio_set_timeout]: ../aio/nng_aio_set_timeout.md
 [nng_aio_stop]: ../aio/nng_aio_stop.md
 [nng_aio_wait]: ../aio/nng_aio_wait.md
+
+<!-- IO Provider -->
+
+[nng_aio_begin]: ../iop/nng_aio_begin.md
+[nng_aio_defer]: ../iop/nng_aio_defer.md
+[nng_aio_finish]: ../iop/nng_aio_finish.md
+[nng_aio_get_input]: ../iop/nng_aio_get_input.md
+[nng_aio_set_output]: ../iop/nng_aio_set_output.md
 
 <!-- Threads -->
 

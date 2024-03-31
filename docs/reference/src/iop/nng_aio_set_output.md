@@ -29,8 +29,10 @@ currently defined can return more than four results.
 > three (3) will be ignored.
 
 An output result set with this function may be retrieved later with
-the [`nng_aio_get_output()`](../aio/nng_aio_get_output.md) function.
+the [`nng_aio_get_output()`][nng_aio_get_output] function.
 
 ## SEE ALSO
 
-[nng_aio_get_output](../aio/nng_aio_get_output.md)
+[nng_aio_get_output][nng_aio_get_output]
+
+{{#include ../refs.md}}
