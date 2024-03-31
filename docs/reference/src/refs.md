@@ -45,8 +45,8 @@
 [nng_req_open]: ../sock/nng_req_open.md
 [nng_respondent_open]: ../sock/nng_respondent_open.md
 [nng_socket_set]: ../sock/nng_socket_set.md
-[nng_surveyor_open]: ../sock/nng_surveyor_open.md
 [nng_sub_open]: ../sock/nng_sub_open.md
+[nng_surveyor_open]: ../sock/nng_surveyor_open.md
 [nng_close]: ../sock/nng_close.md
 [nng_device]: ../sock/nng_device.md
 
