@@ -37,6 +37,7 @@
 [ipc]: ../tran/ipc.md
 [tls]: ../tran/tls.md
 [tcp]: ../tran/tcp.md
+[sockfd]: ../tran/socket.md
 
 <!-- Sockets -->
 
@@ -141,6 +142,7 @@
 [nng_msleep]: ../util/nng_msleep.md
 [nng_random]: ../util/nng_random.md
 [nng_sleep_aio]: ../util/nng_sleep_aio.md
+[nng_socket_pair]: ../util/nng_socket_pair.md
 [nng_strdup]: ../util/nng_strdup.md
 [nng_strerror]: ../util/nng_strerror.md
 [nng_strfree]: ../util/nng_strfree.md

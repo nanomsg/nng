@@ -1,4 +1,4 @@
-BSD Socket transport (experimental)
+BSD Socket Transport (Experimental)
 
 The {{i:_socket_ transport}} supports communication between
 peers across arbitrary BSD sockets, such as those that are
