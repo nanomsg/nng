@@ -53,6 +53,7 @@
 
     - [nng_bus_open](sock/nng_bus_open.md)
     - [nng_close](sock/nng_close.md)
+    - [nng_device](sock/nng_device.md)
     - [nng_pub_open](sock/nng_pub_open.md)
 
   - [Contexts](ctx/index.md)
