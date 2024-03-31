@@ -56,6 +56,8 @@
     - [nng_device](sock/nng_device.md)
     - [nng_pair_open](sock/nng_pair_open.md)
     - [nng_pub_open](sock/nng_pub_open.md)
+    - [nng_pull_open](sock/nng_pull_open.md)
+    - [nng_push_open](sock/nng_push_open.md)
     - [nng_sub_open](sock/nng_sub_open.md)
     - [nng_surveyor_open](sock/nng_surveyor_open.md)
 

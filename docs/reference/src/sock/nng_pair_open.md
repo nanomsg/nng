@@ -55,6 +55,6 @@ These functions returns 0 on success, and non-zero otherwise.
 ## SEE ALSO
 
 [Sockets][socket],
-[PAIR Protocol][pair]
+[_PAIR_ Protocol][pair]
 
 {{#include ../refs.md}}

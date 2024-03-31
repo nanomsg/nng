@@ -1,27 +1,26 @@
-# nng_pub_open
+# nng_push_open
 
 ## NAME
 
-nng_pub_open --- create _PUB_ socket
+nng_push_open --- create push socket
 
 ## SYNOPSIS
 
 ```c
 #include <nng/nng.h>
-#include <nng/protocol/pubsub0/pub.h>
+#include <nng/protocol/pipeline0/push.h>
 
-int nng_pub0_open(nng_socket *s);
+int nng_push0_open(nng_socket *s);
 
-int nng_pub0_open_raw(nng_socket *s);
+int nng_push0_open_raw(nng_socket *s);
 ```
 
 ## DESCRIPTION
 
-The `nng_pub0_open()` function creates a [_PUB_][pub] version 0
+The `nng_push0_open()` function creates a [_PUSH_][push] version 0
 [socket][socket] and returns it at the location pointed to by _s_.
 
-The `nng_pub0_open_raw()` function creates a _PUB_ version 0
-socket in
+The `nng_push0_open_raw()` function creates a _PUSH_ version 0 socket in
 [raw mode][raw] and returns it at the location pointed to by _s_.
 
 ## RETURN VALUES
@@ -35,8 +34,8 @@ These functions return 0 on success, and non-zero otherwise.
 
 ## SEE ALSO
 
-[Sockets][socket]
-[_PUB_ Protocol][pub],
-[_SUB_ Protocol][sub]
+[Sockets][socket],
+[_PULL_ Protocol][pull],
+[_PUSH_ Protocol][push]
 
 {{#include ../refs.md}}
