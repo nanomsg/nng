@@ -1,0 +1,37 @@
+## nng_aio_result
+
+Return result of asynchronous operation.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_aio_result(nng_aio *aio);
+```
+
+### Description
+
+The `nng_aio_result()` returns the result of the operation associated with the handle _aio_.
+If the operation was successful, then 0 is returned.
+Otherwise a non-zero error code is returned.
+
+NOTE: The return value from this function is undefined if the operation has not completed yet.
+Either call this from the handle's completion callback, or after waiting for the operation to complete with xref:nng_aio_wait.3.adoc[`nng_aio_wait`].
+
+### Return Values
+
+The result of the operation, either zero on success, or an error number on failure.
+
+### Errors
+
+[horizontal]
+`NNG_ETIMEDOUT`:: The operation timed out.
+`NNG_ECANCELED`:: The operation was canceled.
+
+Various other return values are possible depending on the operation.
+
+### See Also
+
+xref:nng_aio_abort.adoc[nng_aio_abort],
+xref:nng_aio_wait.adoc[nng_aio_wait]

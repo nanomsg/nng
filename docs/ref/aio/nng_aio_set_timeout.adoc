@@ -1,0 +1,42 @@
+## nng_aio_set_timeout
+
+Set asynchronous I/O timeout.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef int nng_duration;
+void nng_aio_set_timeout(nng_aio *aio, nng_duration timeout);
+
+typedef uint64_t nng_time;
+void nng_aio_set_expire(nng_aio *aio, nng_time expiration);
+```
+
+### Description
+
+The `nng_aio_set_timeout` function sets a _timeout_(((timeout))) for the asynchronous operation associated with _aio_.
+This causes a timer to be started when the operation is actually started.
+If the timer expires before the operation is completed, then it is aborted with an error of `NNG_ETIMEDOUT`.
+The _timeout_ is specified as a relative number of milliseconds.
+
+If the timeout is `NNG_DURATION_INFINITE`, then no timeout is used.
+If the timeout is `NNG_DURATION_DEFAULT`, then a "default" or socket-specific timeout is used.
+(This is frequently the same as `NNG_DURATION_INFINITE`.)
+
+The `nng_aio_set_expire` function is similar to `nng_aio_set_timeout`, but sets an absolute expiration time based on the system clock.
+The _expiration_ is expressed as a number of milliseconds since some point in the past.
+The xref:../util/nng_clock.adoc[`nng_clock`] function can be used to determine the current value of the clock.
+
+TIP: As most operations involve some context switching, it is usually a good idea to allow at least a few dozen milliseconds before timing them out.
+A very short timeout might not allow the operation to properly begin before giving up!
+
+The value of _timeout_ set for the _aio_ is persistent.
+If the handle is reused for multiple operations, they will have the same relative timeout.
+
+### See Also
+
+xref:nng_aio_cancel.adoc[nng_aio_cancel],
+xref:nng_aio_result.adoc[nng_aio_result],
+xref:../util/nng_clock.adoc[nng_clock]

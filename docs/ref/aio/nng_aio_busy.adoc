@@ -1,0 +1,33 @@
+## nng_aio_busy
+
+Test if asynchronous I/O is busy.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+bool nng_aio_busy(nng_aio *aio);
+```
+
+### Description
+
+The `nng_aio_busy` function returns true if the _aio_ is currently busy performing an asynchronous I/O operation or is executing a completion callback.
+
+If no operation has been started, or the operation has been completed or canceled, and any callback has been executed, then it returns false.
+
+This is the same test used internally by xref:nng_aio_wait.3.adoc[`nng_aio_wait`]
+
+IMPORTANT: Care should be taken to ensure that the _aio_ object is not
+freed when using this function.  The caller is responsible for
+coordinating any use of this with any reuse of the _aio_.
+
+### Return Values
+
+This function `true` if the _aio_ is busy, `false` otherwise.
+
+### See Also
+
+xref:nng_aio_abort.adoc[nng_aio_abort],
+xref:nng_aio_alloc.adoc[nng_aio_alloc],
+xref:nng_aio_wait.adoc[nng_aio_wait]

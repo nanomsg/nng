@@ -1,0 +1,23 @@
+## nng_aio_get_msg
+
+Cet message from asynchronous receive
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+nng_msg *nng_aio_get_msg(nng_aio *aio);
+```
+
+### Description
+
+The `nng_aio_get_msg` function gets any message stored in _aio_ as either a result of a successful receive
+(see xref:nng_recv_aio.3.adoc[`nng_recv_aio`])
+or that was previously stored with xref:nng_aio_set_msg.adoc[`nng_aio_set_msg`].
+
+### See Also
+
+xref:nng_aio_set_msg.adoc[nng_aio_set_msg],
+xref:../sock/nng_recv_aio.adoc[nng_recv_aio],
+xref:nng_msg.5.adoc[nng_msg]

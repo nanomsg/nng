@@ -1,0 +1,29 @@
+## nng_aio_cancel
+
+Cancel asynchronous I/O operation.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_aio_cancel(nng_aio *aio);
+```
+
+### Description
+
+The `nng_aio_cancel` function aborts an operation previously started with the handle _aio_.
+If the operation is aborted, then the callback for the handle will be called, and the function xref:nng_aio_result.adoc[`nng_aio_result`] will return the error `NNG_ECANCELED`.
+
+This function does not wait for the operation to be fully aborted, but returns immediately.
+
+If no operation is currently in progress (either because it has already finished, or no operation has been started yet), then this function has no effect.
+
+This function is the same as calling
+xref:nng_aio_abort.adoc[`nng_aio_abort`] with the error `NNG_ECANCELED`.
+
+## See Also
+
+xref:nng_aio_abort.adoc[nng_aio_abort],
+xref:nng_aio_result.adoc[nng_aio_result],
+xref:nng_aio_wait.adoc[nng_aio_wait]

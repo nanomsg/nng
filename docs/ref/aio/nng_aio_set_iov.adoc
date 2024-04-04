@@ -1,0 +1,49 @@
+## nng_aio_set_iov
+
+set scatter/gather vector
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
+```
+
+### Description
+
+The `nng_aio_set_iov` function sets a ((scatter/gather)) vector _iov_ on the handle _aio_.
+
+The _iov_ is a pointer to an array of _niov_ xref:nng_iov.5.adoc[`nng_iov`] structures, which have the following definition:
+
+```c
+    typedef struct nng_iov {
+        void * iov_buf;
+        size_t iov_len;
+    };
+```
+
+The _iov_ is copied into storage in the _aio_ itself, so that callers may use stack allocated `nng_iov` structures.
+The values pointed to by the `iov_buf` members are *not* copied by this function though.
+
+A maximum of four (4) `nng_iov` members may be supplied.
+
+NOTE: Earlier versions of the library could accept longer scatter-gather lists.
+However, no known consumers have ever needed a scatter-gather list longer than 4 vectors.
+As a result, the implementation limit was reduced, and heap allocations which could fail were removed.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_EINVAL`:: Value of specified _niov_ is too large.
+
+### See Also
+
+[.text-left]
+xref:nng_aio_count.adoc[nng_aio_count],
+xref:nng_aio_result.adoc[nng_aio_result],
+xref:nng_iov.5.adoc[nng_iov]

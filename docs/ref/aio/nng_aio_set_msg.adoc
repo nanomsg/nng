@@ -1,0 +1,23 @@
+## nng_aio_set_msg
+
+Set message for asynchronous send.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_aio_set_msg(nng_aio *aio, nng_msg *msg);
+```
+
+### Description
+
+The `nng_aio_set_msg` function sets the message that will be used for an asynchronous send operation (see xref:../sock/nng_send_aio.adoc[`nng_send_aio`]).
+
+
+### See Also
+
+[.text-left]
+xref:nng_aio_get_msg.adoc[nng_aio_get_msg],
+xref:../sock/nng_send_aio.adoc[nng_send_aio],
+xref:nng_msg.adoc[nng_msg]

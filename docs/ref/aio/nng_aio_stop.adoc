@@ -1,0 +1,30 @@
+## nng_aio_stop
+
+Stop asynchronous I/O operation.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_aio_stop(nng_aio *aio);
+```
+
+### Description
+
+The `nng_aio_stop` function stops the asynchronous I/O operation associated with _aio_ by aborting with `NNG_ECANCELED`, and then waits for it to complete or to be completely aborted, and for the callback associated with the _aio_ to have completed executing.
+
+Further calls to
+xref:../iop/nng_aio_begin.adoc[`nng_aio_begin`] using this _aio_ will return false.
+
+It is safe to call this for an _aio_, even when no operation is currently pending for it.
+
+TIP: When multiple asynchronous I/O handles are in use and need to be shut down, it is safest to stop all of them, before deallocating any of them with xref:nng_aio_free.adoc[`nng_aio_free`].
+This is particularly true if the callbacks might attempt to reschedule additional operations.
+
+### See Also
+
+xref:nng_aio_cancel.adoc[nng_aio_cancel],
+xref:nng_aio_free..adoc[nng_aio_free],
+xref:../iop/nng_aio_begin.adoc[nng_aio_begin],
+xref:nng_aio_wait.adoc[nng_aio_wait]
