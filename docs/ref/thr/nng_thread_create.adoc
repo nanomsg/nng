@@ -1,0 +1,56 @@
+## nng_thread_create
+
+Create thread.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+typedef struct nng_thread nng_thread;
+
+int nng_thread_create(nng_thread **thrp, void (*func)(void *), void *arg);
+```
+
+### Description
+
+The `nng_thread_create` function creates a single thread of execution, running _func_ with the argument _arg_.
+The thread is started immediately.
+A pointer to the thread object is returned in _thrp_.
+
+The intention of this program is to facilitate writing parallel programs.
+Threads created by this program will be based upon the underlying threading mechanism of the system.
+This may include use of coroutines.
+
+Using threads created by this function can make it easy to write programs that use simple sequential execution, using functions that would otherwise normally wait synchronously for completion.
+
+When the thread is no longer needed, the xref:nng_thread_destroy.adoc[`nng_thread_destroy`] function should be used to reap it.
+(This function will block waiting for _func_ to return.)
+
+IMPORTANT: Thread objects created by this function may not be real system level threads capable of performing blocking I/O operations using normal blocking system calls.
+If use of blocking system calls is required (not including APIs provided by the _NNG_ library itself of course), then real OS-specific threads should be created instead (such as with `pthread_create` or similar functions.)
+
+IMPORTANT: Thread objects created by this function cannot be passed to any system threading functions.
+
+TIP: The system may impose limits on the number of threads that can be created.
+Typically applications should not create more than a dozen of these.
+If greater concurrency or scalability is needed, consider instead using an xref:../aio/index.adoc[asynchronous] model.
+
+TIP: Threads can be synchronized using xref:nng_mtx_alloc.adoc[mutexes] and xref:nng_cv_alloc.adoc[condition variables].
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient free memory exists.
+
+### See Also
+
+xref:../aio/index.adoc[Asynchronous I/O],
+xref:nng_cv_alloc.adoc[nng_cv_alloc],
+xref:nng_mtx_alloc.adoc[nng_mtx_alloc],
+xref:nng_thread_destroy.adoc[nng_thread_destroy]

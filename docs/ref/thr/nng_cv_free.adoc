@@ -1,0 +1,20 @@
+## nng_cv_free
+
+Free condition variable.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_cv_free(nng_cv *cv);
+```
+
+### Description
+
+The `nng_cv_free` function frees the condition variable _cv_.
+
+### See Also
+
+xref:nng_cv_alloc.adoc[nng_cv_alloc]

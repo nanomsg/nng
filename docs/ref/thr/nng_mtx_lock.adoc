@@ -1,0 +1,34 @@
+## nng_mtx_lock
+
+Lock mutex.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_mtx_lock(nng_mtx *mtx);
+```
+
+### Description
+
+The `nng_mtx_lock` acquires exclusive ownership of the mutex _mtx_.
+If the lock is already owned, this function will wait until the current owner releases it with xref:nng_mtx_unlock.adoc[`nng_mtx_unlock`].
+
+If multiple threads are waiting for the lock, the order of acquisition is not specified.
+
+NOTE: A mutex can _only_ be unlocked by the thread that locked it.
+
+IMPORTANT: Mutex locks are _not_ recursive.footnote:[_NNG_ offers neither a non-blocking variant that can fail,
+nor recursive mutexes.
+This is by design, as typically the need for them is the result of poor design.
+If such capabilities are needed, they may be synthesized fairly easily from mutexes and condition variables.]
+
+Attempts to reacquire the same mutex may result in deadlock or aborting the current program.
+It is a programming error for the owner of a mutex to attempt to reacquire it.
+
+### See Also
+
+xref:nng_mtx_alloc.adoc[nng_mtx_alloc],
+xref:nng_mtx_unlock.adoc[nng_mtx_unlock]

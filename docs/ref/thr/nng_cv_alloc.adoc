@@ -1,0 +1,39 @@
+## nng_cv_alloc
+
+Allocate condition variable.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+typedef struct nng_cv nng_cv;
+
+int nng_cv_alloc(nng_cv **cvp, nng_mtx *mtx);
+```
+
+### Description
+
+The `nng_cv_alloc` function allocates a condition variable, using the mutex _mtx_, and returns it in _cvp_.
+
+Every condition variable is associated with a mutex, which must be owned when a thread waits for the condition using xref:nng_cv_wait.adoc[`nng_cv_wait`] or xref:nng_cv_until.adoc[`nng_cv_until`].
+The mutex must also be owned when signaling the condition using the xref:nng_cv_wake.adoc[`nng_cv_wake`] or xref:nng_cv_wake1.adoc[`nng_cv_wake1`] functions.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient free memory exists.
+
+### See Also
+
+xref:nng_cv_free.adoc[nng_cv_free],
+xref:nng_cv_until.adoc[nng_cv_until],
+xref:nng_cv_wait.adoc[nng_cv_wait],
+xref:nng_cv_wake.adoc[nng_cv_wake],
+xref:nng_cv_wake1.adoc[nng_cv_wake1],
+xref:nng_mtx_alloc.adoc[nng_mtx_alloc]

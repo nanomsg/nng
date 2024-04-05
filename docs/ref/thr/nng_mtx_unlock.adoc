@@ -1,0 +1,24 @@
+## nng_mtx_unlock
+
+Unlock mutex.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_mtx_unlock(nng_mtx *mtx);
+```
+
+### Description
+
+The `nng_mtx_unlock` relinquishes ownership of the mutex _mtx_ that was previously acquired via xref:nng_mtx_lock.adoc[`nng_mtx_lock`].
+
+IMPORTANT: A mutex can _only_ be unlocked by the thread that locked it.
+Attempting to unlock a mutex that is not owned by the caller will result in undefined behavior.
+
+### See Also
+
+xref:nng_mtx_alloc.adoc[nng_mtx_alloc],
+xref:nng_mtx_lock.adoc[nng_mtx_lock]

@@ -1,0 +1,21 @@
+## nng_mtx_free
+
+Free mutex.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_mtx_free(nng_mtx *mtx);
+```
+
+### Description
+
+The `nng_mtx_free` function frees the mutex _mtx_.
+The mutex must not be locked when this function is called.
+
+### See Also
+
+xref:nng_mtx_alloc.adoc[nng_mtx_alloc]

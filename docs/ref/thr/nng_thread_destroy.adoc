@@ -1,0 +1,23 @@
+## nng_thread_destroy
+
+Destroy thread.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_thread_destroy(nng_thread *thread);
+```
+
+### Description
+
+The `nng_thread_destroy` function reaps the _thread_.
+It waits for the thread function to return, and then deallocates the resources for the thread.
+
+IMPORTANT: Do not call this function from the thread function itself, or a deadlock will occur.
+
+### See Also
+
+xref:nng_thread_create.adoc[nng_thread_create]

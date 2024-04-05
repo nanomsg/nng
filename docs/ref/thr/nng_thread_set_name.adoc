@@ -1,0 +1,27 @@
+## nng_thread_set_name
+
+Set thread name.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_thread_set_name(nng_thread *thread, const char *name);
+```
+
+### Description
+
+The `nng_thread_set_name` function attempts to set the name for the _thread_ to _name_.
+
+If _thread_ is `NULL`, then the name is set for the calling thread.
+
+Support for this, and how names are exposed, varies between platform implementations.
+This function is intended to facilitate debugging applications that have many threads.
+
+TIP: Internal threads created by _NNG_ will have names beginning with `nng:`.
+
+### See Also
+
+xref:nng_thread_create.adoc[nng_thread_create]

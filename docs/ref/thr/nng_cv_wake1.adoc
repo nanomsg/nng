@@ -1,0 +1,48 @@
+## nng_cv_wake1
+
+Wake one waiter.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_cv_wake1(nng_cv *cv);
+```
+
+### Description
+
+The `nng_cv_wake1` wakes at most one thread waiting for the condition
+variable _cv_
+to be signaled in the xref:nng_cv_wait.adoc[`nng_cv_wait`] or
+xref:nng_cv_until.adoc[`nng_cv_until`] functions.
+
+The caller must have have ownership of the mutex that was used when
+_cv_ was allocated.
+
+NOTE: The caller should already have set the condition that the waiters
+will check, while holding the mutex.
+
+NOTE: The caller cannot predict which waiter will be woken, and so the design must
+ensure that it is sufficient that _any_ waiter be woken.
+When in doubt, it is safer to use xref:nng_cv_wake.adoc[`nng_cv_wake`].
+
+### Return Values
+
+None.
+
+### Errors
+
+None.
+
+### See Also
+
+xref:nng_cv_alloc.adoc[nng_cv_alloc],
+xref:nng_cv_until.adoc[nng_cv_until],
+xref:nng_cv_wait.adoc[nng_cv_wait],
+xref:nng_cv_wake.adoc[nng_cv_wake],
+xref:nng_mtx_alloc.adoc[nng_mtx_alloc],
+xref:nng_mtx_lock.adoc[nng_mtx_lock],
+xref:nng_mtx_unlock.adoc[nng_mtx_unlock],
+xref:nng.adoc[nng]
