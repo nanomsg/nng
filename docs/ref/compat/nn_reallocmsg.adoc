@@ -1,0 +1,36 @@
+## nn_reallocmsg
+
+Reallocate message (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+void *nn_reallocmsg(void *old, size_t size);
+```
+
+### Description
+
+The `nn_reallocmsg` reallocates the message _old_, making it of size _size_.
+
+On success, the contents of _old_ are copied into the new message (truncating if appropriate), then _old_ is deallocated, and a pointer to the new message payload is returned.
+
+On failure, the _old_ message is unchanged, and the value `NULL` is returnedto the caller.
+
+### Return Values
+
+This function returns a pointer to message buffer space, or `NULL` on failure.
+
+### Errors
+
+[horizontal]
+`ENOMEM`:: Insufficient memory is available.
+`EINVAL`:: An invalid _size_ was specified.
+`ETERM`:: The library is shutting down.
+
+### See Also
+
+xref:nn_allocmsg.adoc[nn_allocmsg],
+xref:nn_freemsg.adoc[nn_freemsg],
+xref:nn_errno.adoc[nn_errno]

@@ -1,0 +1,68 @@
+## nn_poll
+
+Poll sockets (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+#define NN_POLLIN  1
+#define NN_POLLOUT 2
+
+struct nn_pollfd {
+    int      fd;
+    uint16_t events;
+    uint16_t revents;
+};
+
+int nn_poll(struct nn_pollfd *pfds, int npfd, int timeout);
+```
+
+### Description
+
+The `nn_poll` function polls a group of sockets for readiness to send or receive.
+
+The array of _nfds_ sockets to poll for are passed into _pfds_.
+Each member of this array is initialized with the `fd` field set to the socket, and the `events` field set to a mask that can contain either or both of the flags `NN_POLLIN` and `NN_POLLOUT`.
+
+The flag `NN_POLLIN` indicates that a socket is ready for receiving without blocking (a message is available on the socket), and the flag `NN_POLLOUT` indicates that a socket is ready for sending without blocking.
+
+Upon success, the function returns the number of updates the `revents` field of each member of the _pfds_ array, setting it to indicate whether the requested status is true or not.
+
+NOTE: The `revents` field will only have a flag set if the corresponding flag was also set in the `events` field.
+
+If the _timeout_ field is positive, then this function will wait for up the that many milliseconds.
+If none of the requested events occurs before that timeout occurs, then the function will return -1 and set the error to `ETIMEDOUT`.
+
+If the _timeout_ is zero, then this function will return immediately, after updating the current status of the sockets.
+
+If the _timeout_ is -1, then the function waits forever, or until one of the requested events occurs.
+
+IMPORTANT: This function is only suitable for use with sockets obtained with the xref:nn_socket.adoc[`nn_socket`] function, and is not compatible with file descriptors obtained via any other means.
+This includes file descriptors obtained using the `NN_SNDFD` or `NN_RCVFD`
+options with xref:nn_getsockopt.adoc[`nn_getsockopt`]
+
+NOTE: This function is significantly less efficient than other polling or asynchronous I/O mechanisms, and is provided for API compatibility only.
+It's use is discouraged.
+
+NOTE: This function is *not* supported on systems other than POSIX derived platforms and Windows.
+
+### Return Values
+
+This function returns the number of sockets with events on success, or -1 on error.
+
+### Errors
+
+[horizontal]
+`ENOMEM`:: Insufficient memory available.
+`EBADF`:: One of the sockets is not open.
+`ETIMEDOUT`:: Operation timed out.
+`ENOTSUP`:: This function is not supported on this platform.
+
+### See Also
+
+xref:nn_errno.adoc[nn_errno],
+xref:nn_recv.adoc[nn_recv],
+xref:nn_send.adoc[nn_send],
+xref:nn_socket.adoc[nn_socket]

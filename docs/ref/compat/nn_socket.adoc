@@ -1,0 +1,54 @@
+## nn_socket
+
+Create socket (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+int nn_socket(int af, int proto);
+```
+
+### Description
+
+The `nn_socket` function creates socket using the address family _af_ and
+protocol _proto_ and returns it.
+
+The address family _af_ can be one of two values:
+
+[horizontal]
+`AF_SP`:: Normal socket.
+`AF_SP_RAW`:: Raw mode socket.
+
+The protocol indicates the protocol to be used when creating the socket.
+The following protocols are defined:
+
+[horizontal]
+`NN_PAIR`:: xref:nng_pair.adoc[Pair] protocol.
+`NN_PUB`:: xref:nng_pub.adoc[Publisher] protocol.
+`NN_SUB`:: xref:nng_sub.adoc[Subscriber] protocol.
+`NN_REQ`:: xref:nng_req.adoc[Requestor] protocol.
+`NN_REP`:: xref:nng_rep.adoc[Replier] protocol.
+`NN_PUSH`:: xref:nng_push.adoc[Push] protocol.
+`NN_PULL`:: xref:nng_pull.adoc[Pull] protocol.
+`NN_SURVEYOR`:: xref:nng_surveyor.adoc[Surveyor] protocol.
+`NN_RESPONDENT`:: xref:nng_respondent.adoc[Respondent] protocol.
+`NN_BUS`:: xref:nng_bus.adoc[Bus] protocol.
+
+### Return Values
+
+This function returns a valid socket number on success, and -1 on failure.
+
+### Errors
+
+[horizontal]
+`ENOMEM`:: Insufficient memory is available.
+`ENOTSUP`:: The protocol is not supported.
+`ETERM`:: The library is shutting down.
+
+### See Also
+
+xref:nng_socket.adoc[nng_socket],
+xref:nn_close.adoc[nn_close],
+xref:nn_errno.adoc[nn_errno]

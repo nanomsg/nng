@@ -1,0 +1,24 @@
+## nn_strerror
+
+Return message for error (compatible API).
+
+### Synopsis
+
+[source,c]
+```
+#include <nanomsg/nn.h>
+
+const char *nn_strerror(int err);
+```
+
+### Description
+
+The `nn_strerror` function returns a human readable message corresponding to the given error number _err_.
+
+### Return Values
+
+This function returns the message corresponding to _err_.
+
+### See Also
+
+xref:nn_errno.adoc[nn_errno]

@@ -1,0 +1,40 @@
+## nn_connect
+
+Connect to remote peer (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+int nn_connect(int sock, const char *url)
+```
+
+### Description
+
+The `nn_connect` function arranges for the socket _sock_ to initiate connection to a peer at the address specified by _url_.
+An identifier for this socket's association with the _url_ is returned to the caller on success.
+This identifier can be used with xref:nn_shutdown.adoc[`nn_shutdown`] to remove the association later.
+
+NOTE: The connect operation is performed asynchronously, and may not have completed before this function returns control to the caller.
+
+IMPORTANT: Only transports supported by legacy _libnanomsg_ may be used with this function.
+In particular, only the schemes `tcp://`, `ipc://`, `inproc://`, and `ws://` are supported with this function.
+
+### Return Values
+
+This function returns a positive identifier success, and -1 on error.
+
+### Errors
+
+[horizontal]
+`ECONNREFUSED`:: The connection attempt was refused.
+`EBADF`:: The socket _sock_ is not open.
+`EINVAL`:: An invalid _url_ was supplied.
+
+### See Also
+
+xref:nn_bind.adoc[nn_bind],
+xref:nn_errno.adoc[nn_errno],
+xref:nn_shutdown.adoc[nn_shutdown],
+xref:nn_socket.adoc[nn_socket]

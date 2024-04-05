@@ -1,0 +1,55 @@
+## nn_errno
+
+Return most recent error (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+int nn_errno(void);
+```
+
+### Description
+
+The `nn_errno` function returns the error number corresponding to the
+most recent failed operation by the calling thread.
+
+IMPORTANT: The error numbers returned from this function includes errors caused by system functions, which overlap the usual `errno` variable.
+However, the values returned may include numeric values that are not defined by the system, but are unique to _libnanomsg_.
+
+This library implements the following error numbers, in addition to any others that might be set for `errno` by the underlying system:
+
+### Return Values
+
+This function returns the value of `errno`.
+If no operation has failed, then this will be zero.
+
+### Errors
+
+[horizontal]
+`EINTR`:: Operation interrupted.
+`ENOMEM`:: Insufficient memory.
+`EINVAL`:: Invalid argument.
+`EBUSY`:: Resource is busy.
+`ETIMEDOUT`:: Operation timed out.
+`ECONNREFUSED`:: Connection refused by peer.
+`EBADF`:: Invalid or closed socket.
+`EAGAIN`:: Operation would block.
+`ENOTSUP`:: Protocol or option not supported.
+`EADDRINUSE`:: Requested address is already in use.
+`EFSM`:: Protocol state incorrect.
+`EPROTO`:: Protocol error.
+`EHOSTUNREACH`:: Remote peer is unreachable.
+`EADDRNOTAVAIL`:: Requested address is not available.
+`EACCES`:: Permission denied.
+`EMSGSIZE`:: Message is too large.
+`ECONNABORTED`:: Connection attempt aborted.
+`ECONNRESET`:: Connection reset by peer.
+`EEXIST`:: Resource already exists.
+`EMFILE`:: Too many open files.
+`ENOSPC`:: Insufficient persistent storage.
+
+### See Also
+
+xref:nn_strerror.adoc[nn_strerror]

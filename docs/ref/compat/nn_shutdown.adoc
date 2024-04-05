@@ -1,0 +1,34 @@
+## nn_shutdown
+
+Shut down endpoint (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+int nn_shutdown(int sock, int ep)
+```
+
+### Description
+
+The `nn_shutdown` shuts down the endpoint _ep_, which is either a listener or a dialer, on the socket _sock_.
+This will stop the socket from either accepting new connections, or establishing old ones.
+Additionally, any established connections associated with _ep_ will be closed.
+
+### Return Values
+
+This function returns zero on success, and -1 on error.
+
+### Errors
+
+[horizontal]
+`EBADF`:: The socket _sock_ is not open.
+`EINVAL`:: An invalid _ep_ was supplied.
+
+### See Also
+
+xref:nn_bind.adoc[nn_bind],
+xref:nn_connect.adoc[nn_connect],
+xref:nn_errno.adoc[nn_errno],
+xref:nn_socket.adoc[nn_socket]

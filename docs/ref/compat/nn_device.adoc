@@ -1,0 +1,34 @@
+## nn_device
+
+Create forwarding device (compatible API).
+
+### Synopsis
+
+[source,c]
+```
+#include <nanomsg/nn.h>
+
+int nn_device(int sock1, int sock2);
+```
+
+### Description
+
+The `nn_device` function is used to create a forwarder, where messages received on one of the two sockets _sock1_ and _sock2_ are forwarded to the other.
+
+The two sockets must be compatible, and must be raw mode sockets.
+
+### Return Values
+
+This function blocks forever, and will return -1 only when one of the sockets is closed or an error occurs.
+
+### Errors
+
+[horizontal]
+`EBADF`:: One of the two sockets is invalid or not open, or has
+`EINVAL`:: The sockets are not compatible with each other, or not both raw.
+`ENOMEM`:: Insufficient memory is available.
+
+### See Also
+
+xref:nn_errno.adoc[nn_errno],
+xref:nn_socket.adoc[nn_socket]

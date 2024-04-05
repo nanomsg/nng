@@ -1,0 +1,32 @@
+## nn_close
+
+Close socket (compatible API).
+
+### Synopsis
+
+[source,c]
+```
+#include <nanomsg/nn.h>
+
+int nn_close(int sock);
+```
+
+### Description
+
+The `nn_close` function closes the socket _sock_.
+Any operations that are currently in progress will be terminated, and will fail with error `EBADF`.
+
+### Return Values
+
+This function returns zero on success, and -1 on failure.
+
+### Errors
+
+[horizontal]
+`EBADF`:: The socket is not open.
+`ETERM`:: The library is shutting down.
+
+### See Also
+
+xref:nn_errno.adoc[nn_errno],
+xref:nn_socket.adoc[nn_socket]

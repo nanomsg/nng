@@ -1,0 +1,26 @@
+## nn_freemsg
+
+Free message (compatible API).
+
+### Synopsis
+
+[source,c]
+```
+#include <nanomsg/nn.h>
+
+int nn_freemsg(void *msg);
+```
+
+### Description
+
+The `nn_freemsg` deallocates a message previously allocated with xref:nn_allocmsg.adoc[`nn_allocmsg`] or similar functions.
+
+### Return Values
+
+This function always returns 0.
+
+### See Also
+
+xref:nn_allocmsg.adoc[nn_allocmsg],
+xref:nn_freemsg.adoc[nn_freemsg],
+xref:nn_errno.adoc[nn_errno]

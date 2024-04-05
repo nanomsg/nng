@@ -1,0 +1,41 @@
+## nn_bind
+
+Accept connections from remote peers (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+int nn_bind(int sock, const char *url)
+```
+
+### Description
+
+The `nn_bind` function arranges for the socket _sock_ to accept connections at the address specified by _url_.
+An identifier for this socket's association with the _url_ is returned to the caller on success.
+This identfier can be used with xref:nn_shutdown.adoc[`nn_shutdown`] to remove the association later.
+
+NOTE: The bind operation is performed asynchronously, and may not have completed before this function returns control to the caller.
+
+IMPORTANT: Only transports supported by legacy _libnanomsg_ may be used with this function.
+In particular, only the schemes `tcp://`, `ipc://`, `inproc://`, and `ws://` are supported with this function.
+
+### Return Values
+
+This function returns a positive identifier on success, and -1 on error.
+
+### Errors
+
+[horizontal]
+`EADDRINUSE`:: The address specified by _url_ is already in use.
+`EADDRNOTAVAIL`:: The address specified by _url_ is not available.
+`EBADF`:: The socket _sock_ is not open.
+`EINVAL`:: An invalid _url_ was supplied.
+
+### See Also
+
+xref:nn_connect.adoc[nn_connect],
+xref:nn_errno.adoc[nn_errno],
+xref:nn_shutdown.adoc[nn_shutdown],
+xref:nn_socket.adoc[nn_socket]

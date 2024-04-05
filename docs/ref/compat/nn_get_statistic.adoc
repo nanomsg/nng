@@ -1,0 +1,19 @@
+## nn_get_statistic
+
+Get statistic (stub).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+uint64_t nn_get_statistic(int sock, int stat);
+```
+
+### Description
+
+The `nn_get_statistic` function exists only as a stub, and always returns zero.
+
+### Return Values
+
+Zero.

@@ -1,0 +1,44 @@
+## nn_recv
+
+Receive data (compatible API).
+
+### Synopsis
+
+```c
+#include <nanomsg/nn.h>
+
+int nn_recv(int sock, void *data, size_t size, int flags)
+```
+
+### Description
+
+The `nn_recv` function receives a message from the socket _sock_.
+The message body must fit within _size_ bytes, and will be stored at the location specified by _data_, unless _size_ is the special value `NN_MSG`, indicating a zero-copy operation.
+
+If _size_ has the special value `NN_MSG`, then a zero-copy operation is performed.
+In this case, instead of copying the message data into the address specified by _data_, a new message large enough to hold the message data will be allocated (as if by the function xref:nn_allocmsg.adoc[`nn_allocmsg`]), and the message payload will be stored accordingly.
+In this case, the value stored at _data_ will not be message data, but a pointer to the message itself.
+In this case, on success, the caller takes responsibility for the final disposition of the message.
+
+The _flags_ field may contain the special flag `NN_DONTWAIT`.
+In this case, if the no message is available for immediate receipt, the operation shall not block, but instead will fail with the error `EAGAIN`.
+
+### Return Values
+
+This function returns the number of bytes sent on success, and -1 on error.
+
+### Errors
+
+[horizontal]
+`EAGAIN`:: The operation would block.
+`EBADF`:: The socket _sock_ is not open.
+`EFSM`:: The socket cannot receive in this state.
+`ENOTSUP`:: This protocol cannot receive.
+`ETIMEDOUT`:: Operation timed out.
+
+### See Also
+
+xref:nn_errno.adoc[nn_errno],
+xref:nn_recvmsg.adoc[nn_recvmsg],
+xref:nn_send.adoc[nn_send],
+xref:nn_socket.adoc[nn_socket]
