@@ -1,0 +1,36 @@
+## nng_strdup
+
+Duplicate string.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+char *nng_strdup(const char *src);
+```
+
+### Description
+
+The `nng_strdup` duplicates the string _src_ and returns it.
+
+This is logically equivalent to using xref:nng_alloc.adoc[`nng_alloc`] to allocate a region of memory of `strlen(s) + 1` bytes, and then using `strcpy` to copy the string into the destination before returning it.
+
+The returned string should be deallocated using xref:nng_strfree.adoc[`nng_strfree`], or using the xref:nng_free.adoc[`nng_free`] with the length of the returned string plus one (for the `NUL` terminating byte).
+
+IMPORTANT: Do not use the system `free`, {cpp} `delete` operator or similar functions to deallocate the string, since those may use a different memory arena!
+
+### Return Values
+
+This function returns the new string on success, and `NULL` on failure.
+
+### Errors
+
+No errors are returned, but a `NULL` return value should be
+treated the same as `NNG_ENOMEM`.
+
+### See Also
+
+xref:nng_alloc.adoc[nng_alloc],
+xref:nng_free.adoc[nng_free],
+xref:nng_strfree.adoc[nng_strfree]

@@ -1,0 +1,22 @@
+## nng_random
+
+Get random number.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+uint32_t nng_random(void);
+```
+
+### Description
+
+The `nng_random` returns a random number.
+The value returned is suitable for use with cryptographic functions such as key generation.
+The value is obtained using platform specific cryptographically strong random number facilities when available.
+
+### Return Values
+
+Random 32-bit unsigned number.

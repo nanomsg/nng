@@ -1,0 +1,34 @@
+## nng_clock
+
+Get time.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+typedef uint64_t nng_time;
+
+nng_time nng_clock(void);
+```
+
+### Description
+
+The `nng_clock` returns the number of elapsed milliseconds since some arbitrary time in the past.
+The resolution of the clock depends on the underlying timing facilities of the system.
+This function may be used for timing, but applications should not expect very fine-grained values.
+
+NOTE: The reference time will be the same for a given program, but different programs may have different references.
+
+TIP: This function is intended to assist in setting appropriate timeouts.
+
+### Return Values
+
+Milliseconds since reference time.
+
+### See Also
+
+xref:../aio/nng_sleep_aio.adoc[nng_sleep_aio],
+xref:../aio/nng_cv_until.adoc[nng_cv_until],
+xref:nng_msleep.adoc[nng_msleep]

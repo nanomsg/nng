@@ -1,0 +1,35 @@
+## nng_alloc
+
+Allocate memory.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void *nng_alloc(size_t size);
+```
+
+### Description
+
+The `nng_alloc` function allocates a contiguous memory region of at least _size_ bytes.
+The memory will be 64-bit aligned.
+
+The returned memory can be used to hold message buffers, in which case it can be directly passed to xref:../nng_send.adoc[`nng_send`] using the flag ((`NNG_FLAG_ALLOC`)).
+Alternatively, it can be freed when no longer needed using xref:nng_free.adoc[`nng_free`].
+
+IMPORTANT: Do not use the system `free` function to release this memory.
+Doing so may lead to a crash or other undesirable and unpredictable behavior.
+
+### Return Values
+
+This function returns a pointer to the allocated memory on success, and `NULL` otherwise.
+
+### Errors
+
+No errors are returned, but a `NULL` return value should be treated the same as `NNG_ENOMEM`.
+
+### See Also
+
+xref:nng_free.adoc[nng_free],
+xref:../sock/nng_send.adoc[nng_send]
