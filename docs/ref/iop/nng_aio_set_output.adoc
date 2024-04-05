@@ -1,0 +1,30 @@
+## nng_aio_set_output
+
+Set output result.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
+```
+
+### Description
+
+The `nng_aio_set_output` function sets the output result at _index_ to _result_ for the asynchronous operation associated with _aio_.
+
+The type and semantics of output results are determined by specific operations.
+The operation must supply appropriate output results when the operation completes successfully.
+
+The valid values of _index_ range from zero (0) to three (3), as no operation currently defined can return more than four results.
+Attempts to set results with an _index_ greater than three (3) will be ignored.
+
+An output result set with this function may be retrieved later with
+the xref:nng_aio_get_output.adoc[`nng_aio_get_output`] function.
+
+
+### See Also
+
+xref:nng_aio_get_input.adoc[nng_aio_get_inpput],
+xref:../aio/nng_aio_get_output.adoc[nng_aio_get_output]

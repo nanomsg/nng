@@ -1,0 +1,42 @@
+## nng_aio_defer
+
+Defer asynchronous I/O operation.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef void (*nng_aio_cancelfn)(nng_aio *aio, void *arg, int err);
+
+void nng_aio_defer(nng_aio *aio, nng_aio_cancelfn fn, void *arg);
+```
+
+### Description
+
+The `nng_aio_defer` function marks the operation associated with _aio_ as deferred for asynchronous completion, registering a cancellation function _fn_ and associated argument _arg_.
+This permits the operation to be canceled.
+
+If the _aio_ is canceled, the cancellation routine _fn_ will be called with the _aio_, the _arg_ specified by `nng_aio_defer`, and an error value in _err_, which is the reason for cancellation.
+
+The operation may not be cancelable; for example it may have already been completed, or be in a state where it is no longer possible to unschedule it.
+In this case, the _cancelfn_ should just return without making any changes.
+
+If the cancellation routine successfully canceled the operation, it should ensure that xref:nng_aio_finish.adoc[`nng_aio_finish`] is called, with the error code specified by _err_.
+
+IMPORTANT: It is mandatory that I/O providers call xref:nng_aio_finish.adoc[`nng_aio_finish`] *exactly once* when they are finished with the operation.
+
+IMPORTANT: Care must be taken to ensure that cancellation and completion of the routine are thread-safe.
+This will usually involve the use of locks or other synchronization primitives.
+
+TIP: This function is only for I/O providers (those actually performing the operation such as HTTP handler functions or transport providers).
+Ordinary users of the _aio_ should not call this function.
+
+
+TIP: When completing an operation synchronously, calling `nng_aio_defer` is unnecessary.
+
+### See Also
+
+xref:../aio/nng_aio_cancel.adoc[nng_aio_cancel],
+xref:nng_aio_finish.adoc[nng_aio_finish],
+xref:../aio/nng_aio_result.adoc[nng_aio_result]

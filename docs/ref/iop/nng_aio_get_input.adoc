@@ -1,0 +1,27 @@
+## nng_aio_get_input
+
+Return input parameter.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void *nng_aio_get_input(nng_aio *aio, unsigned int index);
+```
+
+### Description
+
+The `nng_aio_get_input` function returns the value of the input parameter previously set at _index_ on _aio_ with the xref:../aio/nng_aio_set_input.adoc[`nng_aio_set_input`] function.
+
+The valid values of _index_ range from zero (0) to three (3), as no operation currently defined can accept more than four parameters.
+If the index supplied is outside of this range, or of the input parameter was not previously set, then `NULL` is returned.
+
+### Return Values
+
+Value previously set, or `NULL`.
+
+### See Also
+
+xref:../aio/nng_aio_set_input.adoc[nng_aio_set_input],
+xref:nng_aio_set_output.adoc[nng_aio_set_output]
