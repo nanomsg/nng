@@ -1,0 +1,22 @@
+## nng_strerror
+
+Return an error description.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+const char * nng_strerror(int err);
+```
+
+### Description
+
+The `nng_strerror` returns the human-readable description of the given error in `err`.footnote:[The error message is provided in US English, but in the future locale-specific strings may be available.]
+
+NOTE: The specific strings associated with specific error codes are subject to change without notice.
+Therefore applications must not depend on the message contents, but pass them verbatim when supplying information to end-users, such as in diagnostic messages or log entries.
+
+### Return Values
+
+This function returns the human-readable error message, terminated by a `NUL` byte.

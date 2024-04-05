@@ -1,0 +1,22 @@
+## nng_msleep
+
+Sleep milliseconds.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_msleep(nng_duration msec);
+```
+
+### Description
+
+The `nng_msleep` blocks the caller for at least _msec_ milliseconds.footnote:[This function may block for longer than requested.
+The actual wait time is determined by the timer resolution of the underlying system.]
+
+### See Also
+
+xref:../aio/nng_sleep_aio.adoc[nng_sleep_aio],
+xref:nng_clock.adoc[nng_clock]
