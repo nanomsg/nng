@@ -1,0 +1,35 @@
+## nng_ctx_close
+
+Close context.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_ctx_close(nng_ctx ctx);
+```
+
+### Description
+
+The `nng_ctx_close` function closes the context _ctx_.
+Messages that have been submitted for sending may be flushed or delivered, depending upon the transport.
+
+Further attempts to use the context after this call returns will result in `NNG_ECLOSED`.
+Threads waiting for operations on the context when this call is executed may also return with an `NNG_ECLOSED` result.
+
+TIP: Closing the socket associated with _ctx_ also closes this context.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ECLOSED`:: The context _ctx_ is already closed or was never opened.
+
+### See Also
+
+xref:../sock/nng_close.adoc[nng_close],
+xref:nng_ctx_open.adoc[nng_ctx_open]

@@ -1,0 +1,43 @@
+## nng_ctx_setopt
+
+Set context option (deprecated).
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_ctx_setopt(nng_ctx ctx, const char *opt, const void *val, size_t valsz);
+int nng_ctx_setopt_bool(nng_ctx ctx, const char *opt, int bval);
+int nng_ctx_setopt_int(nng_ctx ctx, const char *opt, int ival);
+int nng_ctx_setopt_ms(nng_ctx ctx, const char *opt, nng_duration dur);
+int nng_ctx_setopt_size(nng_ctx ctx, const char *opt, size_t z);
+int nng_ctx_setopt_string(nng_ctx ctx, const char *opt, const char *str);
+int nng_ctx_setopt_uint64(nng_ctx ctx, const char *opt, uint64_t u64);
+```
+
+### Description
+
+NOTE: These functions are deprecated.
+They may not be present if the library was built with ((`NNG_ELIDE_DEPRECATED`)).
+
+These deprecated functions have one-to-one modern equivalents with the same arguments and semantics, as follows:
+
+[width=50%,]
+|===
+| Legacy Function | Modern Equivalent
+
+| `nng_ctx_setopt` | `nng_ctx_set`
+| `nng_ctx_setopt_bool`| `nng_ctx_set_bool`
+| `nng_ctx_setopt_int`| `nng_ctx_set_int`
+| `nng_ctx_setopt_ms`| `nng_ctx_set_ms`
+| `nng_ctx_setopt_size`| `nng_ctx_set_size`
+| `nng_ctx_setopt_string`| `nng_ctx_set_string`
+| `nng_ctx_setopt_uint64`| `nng_ctx_set_uint64`
+|===
+
+Please see the documentation for the modern equivalents for more detail.
+
+### See Also
+
+xref:../ctx/nng_ctx_set.adoc[nng_ctx_set]

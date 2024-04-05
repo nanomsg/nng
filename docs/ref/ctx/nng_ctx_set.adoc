@@ -1,0 +1,81 @@
+## nng_ctx_set
+
+Set context option.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_ctx_set(nng_ctx ctx, const char *opt, const void *val, size_t valsz);
+
+int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int bval);
+
+int nng_ctx_set_int(nng_ctx ctx, const char *opt, int ival);
+
+int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration dur);
+
+int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t z);
+
+int nng_ctx_set_string(nng_ctx ctx, const char *opt, const char *str);
+
+int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t u64);
+```
+
+### Description
+
+(((options, context)))
+The `nng_ctx_set` functions are used to configure options for the context _ctx_.
+The actual options that may be configured in this way vary, and are specified by _opt_.
+
+TIP: Context options are protocol specific.
+See the option documentation for more information.
+
+#### Forms
+
+The details of the type, size, and semantics of the option will depend on the actual option, and will be documented with the option itself.
+
+`nng_ctx_set`::
+This function is untyped, and can be used to configure any arbitrary data.
+The _val_ pointer addresses the data to copy, and _valsz_ is the size of the objected located at _val_.
+
+TIP: It may be easier to use one of the typed forms of this function.
+
+`nng_ctx_set_bool`::
+This function sets a Boolean (`bool`) option to _bval_.
+
+`nng_ctx_set_int`::
+This function sets an integer (`int`) option to _ival_.
+
+`nng_ctx_set_ms`::
+This function sets a duration (xref:nng_duration.adoc[`nng_duration`]) option to _dur_, which is an integer number of milliseconds.
+
+`nng_ctx_set_size`::
+This function sets a size (`size_t`) option to _z_.
+
+`nng_ctx_set_string`::
+This function sets a string (`const char *`) option to _str_.
+Strings passed this way must be legal UTF-8 or ASCII strings, terminated with a `NUL` (`\0`) byte.
+(Other constraints may apply as well, see the documentation for each option for details.)
+
+`nng_ctx_set_uint64`::
+This function sets a 64-bit unsigned integer (`uint64_t`) option to _u64_.
+
+### Return Values
+
+These functions return 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ECLOSED`:: Parameter _s_ does not refer to an open socket.
+`NNG_EINVAL`:: The value being passed is invalid.
+`NNG_ENOTSUP`:: The option _opt_ is not supported.
+`NNG_EREADONLY`:: The option _opt_ is read-only.
+`NNG_ESTATE`:: The socket is in an inappropriate state for setting this option.
+
+### See Also
+
+xref:../opts/index.adoc[Options],
+xref:nng_ctx_get.adoc[nng_ctx_get],
+xref:nng_socket_set.adoc[nng_socket_set]

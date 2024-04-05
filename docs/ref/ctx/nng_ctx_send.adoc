@@ -1,0 +1,46 @@
+## nng_ctx_send
+
+Send message using context asynchronously.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
+```
+
+### Description
+
+The `nng_ctx_send` sends a xref:../msg/index.adoc[message] using the context _ctx_ asynchronously.
+
+The message to send must have previously been set on the _aio_ using the xref:../aio/nng_aio_set_msg.adoc[`nng_aio_set_msg`] function.
+
+If the message was successfully queued for delivery to the socket, then the _aio_ will be completed, and xref:../aio/nng_aio_result.adoc[`nng_aio_result`] will return zero.
+In this case the context will dispose of the message when it is finished with it.
+
+NOTE: The operation will complete, and the callback associated with the _aio_ will execute, as soon as the socket accepts the message for delivery.
+This does _not_ indicate that the message was actually delivered, as it may still be buffered in the sending or receiving sockets, or in flight over the physical medium.
+
+If the operation fails for any reason, then the _aio_ callback will be executed and `nng_aio_result` will return a non-zero error status.
+In this case, the callback has a responsibility to retrieve the message from the _aio_ with xref:nng_aio_get_msg.adoc[`nng_aio_get_msg`] and dispose of it appropriately.footnote:[This may include re-sending on the same or a different socket, or deallocating the message with xref:../msg/nng_msg_free.adoc[`nng_msg_free`].]
+
+TIP: The semantics of what sending a message means varies from protocol to protocol, so examination of the protocol documentation is encouraged.
+
+### Errors
+
+[horizontal]
+`NNG_ECANCELED`:: The operation was aborted.
+`NNG_ECLOSED`:: The context _ctx_ is not open.
+`NNG_EMSGSIZE`:: The message is too large.
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol for context _ctx_ does not support sending.
+`NNG_ESTATE`:: The context _ctx_ cannot send data in this state.
+`NNG_ETIMEDOUT`:: The send timeout expired.
+
+### See Also
+
+xref:../aio/index.adoc[Asynchronous I/O],
+xref:../msg/index.adoc[Messages],
+xref:../aio/nng_aio_get_msg.adoc[nng_aio_get_msg],
+xref:../aio/nng_aio_set_msg.adoc[nng_aio_set_msg]

@@ -1,0 +1,43 @@
+## nng_ctx_recvmsg
+
+Receive message using context.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_ctx_recvmsg(nng_ctx ctx, nng_msg **msgp, int flags);
+```
+
+### Description
+
+The `nng_ctx_recvmsg` receives a message on context _ctx_, storing the received xref:../msg/index.adoc[message] at the location pointed to by _msgp_.
+
+The _flags_ may contain the following value:
+
+`NNG_FLAG_NONBLOCK`::
+  The function returns immediately, even if no message is available.
+  Without this flag, the function will wait until a message is receivable on the context _ctx_, or any configured timer expires.
+
+TIP: The semantics of what receiving a message means vary from protocol to protocol, so examination of the protocol documentation is encouraged.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_EAGAIN`:: The operation would block, but `NNG_FLAG_NONBLOCK` was specified.
+`NNG_ECLOSED`:: The context or socket is not open.
+`NNG_EINVAL`:: An invalid set of _flags_ was specified.
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol does not support receiving.
+`NNG_ESTATE`:: The context cannot receive data in this state.
+`NNG_ETIMEDOUT`:: The operation timed out.
+
+### See Also
+
+xref:../msg/index.adoc[Messages],
+xref:nng_ctx_recv.adoc[nng_ctx_recv]

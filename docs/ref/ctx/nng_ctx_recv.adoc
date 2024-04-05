@@ -1,0 +1,45 @@
+## nng_ctx_recv
+
+Receive message using context asynchronously.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_ctx_recv(nng_ctx ctx, nng_aio *aio);
+```
+
+### Description
+
+The `nng_ctx_recv` function receives a xref:../msg/index.adoc[message] using the context _s_ asynchronously.
+
+When a message is successfully received by the context, it is stored in the _aio_ and the completion callback on the _aio_ is executed.
+In this case, xref:nng_aio_result.adoc[`nng_aio_result`] will return zero.
+The received message will be available via xref:nng_aio_get_msg.adoc[`nng_aio_get_msg`]. 
+The callback function is responsible for retrieving the message and disposing of it appropriately.
+
+IMPORTANT: Failing to accept and dispose of the message in this case will leak the message.
+
+If for some reason the asynchronous receive does not complete successfully, then the callback will be executed and xref:nng_aio_result.adoc[`nng_aio_result`] will return a non-zero error.
+In this case there will be no message in the _aio_.
+
+TIP: The semantics of what receiving a message means varies from protocol to protocol, so examination of the protocol documentation is encouraged.
+
+### Errors
+
+[horizontal]
+`NNG_ECANCELED`:: The operation was aborted.
+`NNG_ECLOSED`:: The context _ctx_ is not open.
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol for context _ctx_ does not support receiving.
+`NNG_ESTATE`:: The context _ctx_ cannot receive data in this state.
+`NNG_ETIMEDOUT`:: The receive timeout expired.
+
+### See Also
+
+xref:../aio/index.adoc[Asynchronous I/O],
+xref:../msg/index.adoc[Messages],
+xref:../aio/nng_aio_get_msg.adoc[nng_aio_get_msg],
+xref:../aio/nng_aio_result.adoc[nng_aio_result],
+xref:../aio/nng_ctx_recvmsg[nng_ctx_recvmsg]

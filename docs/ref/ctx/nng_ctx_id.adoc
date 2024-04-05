@@ -1,0 +1,29 @@
+## nng_ctx_id
+
+Return numeric context identifier.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_ctx_id(nng_ctx c);
+```
+
+### Description
+
+The `nng_ctx_id` function returns a positive identifier for the context _c_,  if it is valid.
+Otherwise it returns `-1`.
+
+A context is considered valid if it was ever opened with xref:nng_ctx_open.adoc[`nng_ctx_open`].
+
+Contexts that are allocated on the stack or statically should be initialized with the macro ((`NNG_CTX_INITIALIZER`)) to ensure that they cannot be confused with another valid context.
+
+### Return Values
+
+This function returns the positive value for the context identifier, or `-1` if the context is invalid.
+
+
+### See Also
+
+xref:nng_ctx_open.adoc[nng_ctx_open]

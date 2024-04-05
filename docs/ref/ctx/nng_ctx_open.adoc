@@ -1,0 +1,39 @@
+## nng_ctx_open
+
+Create context.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
+```
+
+### Description
+
+The `nng_ctx_open` function creates a separate ((context)) to be used with the socket _s_, and returns it at the location pointed by _ctxp_.
+Only stateful protocols support creation of separate contexts.footnote:[Stateless protocols by their very nature have no need for contexts.]
+
+Contexts allow the independent and concurrent use of stateful operations using the same socket.footnote:[For example, two different contexts created on a xref:../proto/rep.adoc[_rep_] socket can each receive requests, and send replies to them, without any regard to or interference with each other.]
+
+TIP: Using contexts is an excellent way to write simpler concurrent applications, while retaining the benefits of the protocol-specific
+advanced processing, avoiding the need to bypass that with xref:nng.adoc#raw_mode[raw mode](((raw mode))) sockets.footnote:[Use of contexts with xref:nng.adoc#raw_mode[raw mode] sockets is nonsensical, and not supported.]
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol does not support separate contexts, or the socket was opened in raw mode.
+
+### See Also
+
+xref:nng_ctx_close.adoc[nng_ctx_close],
+xref:nng_ctx_get.adoc[nng_ctx_get],
+xref:nng_ctx_recv.adoc[nng_ctx_recv],
+xref:nng_ctx_send.adoc[nng_ctx_send],
+xref:nng_ctx_set.adoc[nng_ctx_set]
