@@ -1,0 +1,51 @@
+STYLE GUIDE for the Reference Manual
+
+The first version of the reference manual was designed around the model of UNIX
+manual pages.  While this is convenient for some uses, it is not the principal
+way that this documentation is accessed, and we are thus making changes that are
+more in line with how this is used by users, and friendlier for folks who may not
+have thirty-odd years of UNIX history behind them.
+
+1. Section numbers are gone.  Don't use them.
+
+2. Organize pages logically into functional areas.
+
+3. The NAME section is gone.  Instead the title is a level 2 title of the page.
+
+4. Section names are in Title Case, not UPPERCASE.  The rationale here is
+   that while upper case is nicer for reading man pages in a monochrome text terminal, this
+   again is not how these are accessed, and the huge fonts and SCREAMING CASE is generally
+   hostile (to the user, and the use of screen or paper real-estate.)
+   
+5. Functions in prose are given without parens (e.g. `printf` not `printf()`.)  Rationale
+   is that it reads better and those parens waste space and break the reading flow while
+   not really aiding comprehension.
+   
+6. Variables are in _italics_ (just like before).
+
+7. Avoid long sentences.  Especially avoid the use of the semicolon.
+
+8. Avoid passive voice.
+
+9. One sentence per line, without breaking for columns.  (Eases certain editing and
+   future processing.)
+   
+10. Use Markdown compatible syntax when possible.  E.g. ## Title not == Title.  (Rationale -
+    easier to read and edit in markdown only contexts, and easier for future conversion tasks.)
+    
+11. Limit cross-references to only those that are immediately useful, such as functions that
+    will necessarily be used together or whether the cross reference might otherwise not be
+    obvious.  Don't link to thinks that are also.  Rationale: Again, these aren't man pages,
+    and the presentation will always be together with related content, so a long list of SEE ALSO
+    links doesn't really bring value, and dilutes the value to be gained by any meaningful cross
+    references.
+    
+12. Don't keep "empty" sections, like "RETURN VALUES ... None." for a function that is void.
+    This again is hostile to readability and wastes space.
+    
+13. Inline cross references should be made only once.  No need to fill the page with links.
+    Repeated links don't bring value and simply interfere with the flow of the text.
+    
+14. Limit the use of callouts and admonitions.  Too many of these create fatigue for the
+    reader without really helping.  Consider using foot-notes for supplementary information
+    that isn't critical.
