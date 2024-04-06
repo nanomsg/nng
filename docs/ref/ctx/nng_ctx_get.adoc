@@ -30,8 +30,8 @@ The `nng_ctx_get` functions are used to retrieve option values for the xref:nng_
 The actual options that may be retrieved in this way vary.
 A number of them are documented in xref:nng_options.adoc[nng_options].
 
-NOTE: Context options are protocol specific.
-The details will be documented with the protocol.
+TIP: Context options are protocol specific.
+See the option documentation for more information.
 
 #### Forms
 
