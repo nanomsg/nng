@@ -1,0 +1,37 @@
+## nng_msg_header_insert
+
+Prepend to message header.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_msg_header_insert(nng_msg *msg, const void *val, size_t size);
+int nng_msg_header_insert_u16(nng_msg *msg, uint16_t val16);
+int nng_msg_header_insert_u32(nng_msg *msg, uint32_t val32);
+int nng_msg_header_insert_u64(nng_msg *msg, uint64_t val64);
+```
+
+### Description
+
+These function prependsdata to the front of the headers of message _msg_, reallocating if necessary.
+
+The `nng_msg_header_insert` function prepends _size_ bytes, copying them from _val_.
+The remaining functions prepend the specified value (such as _val32_) in network-byte order (big-endian).
+
+### Return Values
+
+These functions return 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient free memory exists.
+
+### See Also
+
+xref:nng_msg_header.adoc[nng_msg_header],
+xref:nng_msg_header_append.adoc[nng_msg_header_append],
+xref:nng_msg_header_trim.adoc[nng_msg_header_trim],
+xref:nng_msg_realloc.adoc[nng_msg_realloc],

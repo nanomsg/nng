@@ -1,0 +1,33 @@
+## nng_msg_get_pipe
+
+Get pipe for message.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+nng_pipe nng_msg_get_pipe(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_get_pipe` function returns the xref:../pipe/index.adoc[pipe] object associated with message _msg_.
+On receive, this is the pipe from which a message was received.
+On transmit, this would be the pipe that the message should be delivered to, if a specific peer is required.
+
+Not all protocols support overriding the destination pipe.
+
+The most usual use case for this is to obtain information about the peer from which the message was received.
+This can be used to provide different behaviors for different peers such as a higher level of authentication for peers located on an untrusted network.
+The xref:../pipe/nng_pipe_get.adoc[`nng_pipe_get`] function is useful in this situation.
+
+### Return Values
+
+This function returns the pipe associated with this message.
+If the message is not associated with a pipe, then xref:nng_pipe_id.adoc[`nng_pipe_id`] on the return value will return a negative number.
+
+### See Also
+
+xref:nng_msg_set_pipe.adoc[nng_msg_set_pipe],
+xref:../pipe/nng_pipe_get.adoc[nng_pipe_get]

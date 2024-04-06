@@ -1,0 +1,25 @@
+## nng_msg_len
+
+Return message body length.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+size_t nng_msg_len(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_len` returns the length of the body of message _msg_.
+
+### Return Values
+
+Length of message body.
+
+### See Also
+
+xref:nng_msg_alloc.adoc[nng_msg_alloc],
+xref:nng_msg_body.adoc[nng_msg_body],
+xref:nng_msg_capacity.adoc[nng_msg_capacity]

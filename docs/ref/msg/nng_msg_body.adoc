@@ -1,0 +1,34 @@
+## nng_msg_body
+
+Return message body.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void *nng_msg_body(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_body` function returns a pointer to the start of the body
+content of the message _msg_.
+
+The returned message body is invalidated by a call to any of the functions that modify the message itself.
+Such functions are xref:nng_msg_free.adoc[`nng_msg_free`], xref:nng_msg_realloc.adoc[`nng_msg_realloc`], any of the xref:nng_msg_trim.adoc[`nng_msg_trim`], xref:nng_msg_append.adoc[`nng_msg_append`], or xref:nng_msg_insert.adoc[`nng_msg_insert`] variants.
+
+### Return Values
+
+Pointer to start of message body.
+
+### See Also
+
+xref:nng_msg_append.adoc[nng_msg_append],
+xref:nng_msg_free.adoc[nng_msg_free],
+xref:nng_msg_insert.adoc[nng_msg_insert],
+xref:nng_msg_len.adoc[nng_msg_len],
+xref:nng_msg_capacity.adoc[nng_msg_capacity],
+xref:nng_msg_reserve.adoc[nng_msg_reserve],
+xref:nng_msg_realloc.adoc[nng_msg_realloc],
+xref:nng_msg_trim.adoc[nng_msg_trim]

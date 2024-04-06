@@ -23,7 +23,7 @@ func dofile(file string) {
 			continue
 		case strings.HasPrefix(line, "[.text-left]"):
 			continue
-		case strings.HasPrefix(line, "[source, c]"):
+		case strings.HasPrefix(line, "[source, c]") || strings.HasPrefix(line,"[source,c]"):
 			out.WriteString("```c\n")
 			scanner.Scan() // eat the next line
 			continue

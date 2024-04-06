@@ -1,0 +1,23 @@
+## nng_msg_set_pipe
+
+Set pipe for message.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_msg_set_pipe(nng_msg *msg, nng_pipe p);
+```
+
+### Description
+
+The `nng_msg_set_pipe` function sets the xref:../pipe/index.adoc[pipe] associated with message _m_ to _p_.
+This is most often useful when used with protocols that support directing a message to a specific peer.
+
+Not all protocols support overriding the destination pipe.
+
+### See Also
+
+xref:nng_msg_get_pipe.adoc[nng_msg_get_pipe],
+xref:../pipe/nng_pipe_get.adoc[nng_pipe_getopt]

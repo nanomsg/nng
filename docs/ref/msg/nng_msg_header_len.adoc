@@ -1,0 +1,23 @@
+## nng_msg_header_len
+
+Return message header length.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+size_t nng_msg_header_len(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_header_len` returns the length of message header of _msg_.
+
+### Return Values
+
+Length of message header.
+
+### See Also
+
+xref:nng_msg_header.adoc[nng_msg_header]

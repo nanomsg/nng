@@ -1,0 +1,38 @@
+## nng_msg_reserve
+
+Reserve storage for a message.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_msg_reserve(nng_msg *msg, size_t capacity);
+```
+
+### Description
+
+The `nng_msg_reserve` function ensures a message has allocated enough storage to accommodate a body of the given length.
+This message attempts to avoid extra allocations, and will reuse the existing memory when possible.
+
+TIP: Using this message before xref:nng_msg_append.adoc[`nng_msg_append`] will prevent additional memory allocations until the message's length exceeds the alotted capacity.
+
+NOTE: Reallocation invalidates any previously obtained pointers to the message body or header.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient free memory exists to reallocate a message.
+
+### See Also
+
+xref:nng_msg_alloc.adoc[nng_msg_alloc],
+xref:nng_msg_append.adoc[nng_msg_append],
+xref:nng_msg_body.adoc[nng_msg_body],
+xref:nng_msg_capacity.adoc[nng_msg_capacity],
+xref:nng_msg_insert.adoc[nng_msg_insert],
+xref:nng_msg_len.adoc[nng_msg_len]

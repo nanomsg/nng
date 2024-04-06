@@ -1,0 +1,27 @@
+## nng_msg_capacity
+
+Return message body length.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+size_t nng_msg_capacity(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_capacity` returns the storage allocated for the body of message _msg_.
+The capacity includes the current contents of the message and free space after it.
+The message body may grow to capacity without performing any further allocations.
+
+### Return Values
+
+Allocated capacity for message body.
+
+### See Also
+
+xref:nng_msg_reserve.adoc[nng_msg_reserve],
+xref:nng_msg_alloc.adoc[nng_msg_alloc],
+xref:nng_msg_body.adoc[nng_msg_body]

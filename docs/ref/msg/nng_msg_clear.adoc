@@ -1,0 +1,15 @@
+## nng_msg_clear
+
+Clear message body content.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_msg_clear(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_clear` function resets the body length of _msg_ to zero.

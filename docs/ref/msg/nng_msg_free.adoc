@@ -1,0 +1,20 @@
+## nng_msg_free
+
+Free a message.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_msg_free(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_free` function deallocates the message _msg_ entirely.
+
+### See Also
+
+xref:nng_msg_alloc.adoc[nng_msg_alloc],
+xref:nng_msg_realloc.adoc[nng_msg_realloc]

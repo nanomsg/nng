@@ -1,0 +1,19 @@
+## nng_msg_header_clear
+
+Clear message header.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_msg_header_clear(nng_msg *msg);
+```
+
+### Description
+
+The `nng_msg_clear` function resets the header length of _msg_ to zero.
+
+### See Also
+
+xref:nng_msg_header.adoc[nng_msg_header]
