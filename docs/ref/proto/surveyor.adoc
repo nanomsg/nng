@@ -68,7 +68,7 @@ When a survey message is received by a forwarding node (see xref:nng_device.adoc
 (This peer ID, except for the most significant bit, has meaning only to the forwarding node itself.)
 
 It may help to think of prepending a peer ID as pushing a peer ID onto the front of the stack of headers for the message.
-(It will use the peer IDit popped from the front to determine the next intermediate destination for the response.)
+(It will use the peer ID it popped from the front to determine the next intermediate destination for the response.)
 
 When a response message is created, it is created using the same headers that the survey contained.
 
