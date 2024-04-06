@@ -1,0 +1,43 @@
+## Respondent Protocol (_RESPONDENT_)
+
+The ((_RESPONDENT_ protocol))(((protocol, _RESPONDENT_))) is one half of a ((survey pattern)).
+In this pattern, a surveyor sends a survey, which is broadcast to all peer respondents.
+The respondents then have a chance to reply (but are not obliged to reply).
+The survey itself is a timed event, so that responses received after the survey has finished are discarded.
+
+This protocol is useful in solving voting problems, such as leader election, as well as certain kinds of service discovery problems.
+
+The _RESPONDENT_ protocol is the respondent side, and the xref:surveyor.adoc[_SURVEYOR_] protocol is the surveyor side.
+
+#### Socket Operations
+
+The xref:nng_respondent_open.adoc[`nng_respondent_open`] functions create a respondent socket.
+This socket may be used to receive messages, and then to send replies.
+A reply can only be sent after receiving a survey, and the reply will be sent to surveyor from whom survey was received.
+
+Respondents may discard a survey by simply not replying to it.
+
+xref:../sock/raw.adoc[Raw mode] sockets ignore all these restrictions.
+
+#### Context Operations
+
+This protocol supports the creation of xref:../ctx/index.adoc[contexts] for concurrent use cases using xref:../ctx/nng_ctx_open.adoc[`nng_ctx_open`].
+
+Incoming surveys will be routed to and received by only one context.
+Additional surveys may be received by other contexts in parallel.
+Replies made using a context will be returned to the the surveyor that issued the survey most recently received by that context.
+The restrictions for order of operations with sockets apply equally well for contexts, except that each context will be treated as if it were a separate socket.
+
+#### Protocol Versions
+
+Only version 0 of this protocol is supported.footnote:[At the time of writing, no other versions of this protocol have been defined.
+An earlier and incompatible version of the protocol was used in older pre-releases of http://nanomsg.org[nanomsg], but was not released in any production version.]
+
+#### Protocol Options
+
+The _RESPONDENT_ protocol has no protocol-specific options.
+
+#### Protocol Headers
+
+The _RESPONDENT_ protocol uses a _backtrace_(((backtrace))) in the header.
+This is documented in the xref:nng_surveyor.adoc[_SURVEYOR_] protocol.

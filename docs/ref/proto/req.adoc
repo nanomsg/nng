@@ -1,0 +1,98 @@
+## Request Protocol (_REQ_)
+
+The ((_REQ_ protocol))(((protocol, _REQ_))) is one half of a ((request/reply pattern)).
+In this pattern, a requester sends a message to one replier, who is expected to reply.
+The request is resent if no reply arrives, until a reply is received or the request times out.
+
+This protocol is useful in setting up RPC-like services.
+It is also "reliable", in that a requester will keep retrying until a reply is received.
+
+NOTE: Because requests are resent, it is important that they be ((idempotent)) to ensure predictable and repeatable behavior even in the face of duplicated requests. If requests are not idempotent, then the automatic retry behavior should be disabled by setting `NNG_OPT_REQ_RESENDTIME` to zero.
+
+(((load-balancing)))
+The requester only has one outstanding request at a time{empty}footnote:[Unless a context or raw mode is used.] and it will generally attempt to spread work requests to different peer repliers.
+
+TIP: This property, when combined with xref:../sock/nng_device.adoc[`nng_device`] can help provide a degree of load-balancing.
+
+The _REQ_ protocol is the requester side, and the xref:nng_rep.adoc[_REQ_] protocol is the replier side.
+
+#### Socket Operations
+
+The xref:nng_req_open.adoc[`nng_req_open`] functions create a requester socket.
+This socket may be used to send messages (requests), and then to receive replies.
+
+A reply can only be received after sending a request.
+(Attempts to receive a message will result in `NNG_ESTATE` if there is no outstanding request.)
+
+Furthermore, only a single receive operation may be pending at a time.
+Attempts to post more receive operations concurrently will result in `NNG_ESTATE`.
+
+Requests may be canceled by sending a different request.
+This will cause the requester to discard any reply from the earlier request, but it will not stop a replier
+from processing a request it has already received or terminate a request that has already been placed on the wire.
+
+xref:../sock/raw.adoc[Raw mode] sockets ignore all these restrictions.
+
+#### Context Operations
+
+This protocol supports the creation of xref:../ctx/index.adoc[contexts] for concurrent use cases using xref:../ctx/nng_ctx_open.adoc[`nng_ctx_open`].
+
+The `NNG_OPT_REQ_RESENDTIME` value may be configured differently on contexts.
+
+Each context may have at most one outstanding request, and operates independently from the others.
+
+The restrictions for order of operations with sockets apply equally well for contexts, except that each context will be treated as if it were a separate socket.
+
+#### Protocol Versions
+
+Only version 0 of this protocol is supported.footnote:[At the time of writing, no other versions of this protocol have been defined.]
+
+#### Protocol Options
+
+The following protocol-specific option is available.
+
+((`NNG_OPT_REQ_RESENDTIME`))::
+
+(xref:nng_duration.adoc[`nng_duration`])
+When a new request is started, a timer of this duration is also started.
+If no reply is received before this timer expires, then the request will
+be resent.
++
+(Requests are also automatically resent if the peer to whom
+the original request was sent disconnects, or if a peer becomes available
+while the requester is waiting for an available peer.)
++
+Resending may be deferred up to the value of the `NNG_OPT_RESENDTICK` parameter.
+
+((`NNG_OPT_REQ_RESENDTICK`))::
+
+(xref:nng_duration.adoc[`nng_duration`])
+This is the granularity of the clock that is used to check for resending.
+The default is a second.
+Setting this to a higher rate will allow for more timely resending to occur, but may incur significant additional overhead when the socket has many outstanding requests (contexts).
++
+When there are no requests outstanding that have a resend set, then the clock does not tick at all.
++
+This option is socket-wide, and is only available for the socket itself.
+
+
+#### Protocol Headers
+
+This protocol uses a _backtrace_(((backtrace))) in the header.
+This form uses a stack of 32-bit big-endian identifiers.
+There *must* be at least one identifier, the __request ID__, which will be the last element in the array, and *must* have the most significant bit set.
+
+There may be additional __peer ID__s preceding the request ID.
+These will be distinguishable from the request ID by having their most significant bit clear.
+
+When a request message is received by a forwarding node (see xref:nng_device.adoc[`nng_device`]), the forwarding node prepends a 32-bit peer ID (which *must* have the most significant bit clear), which is the forwarder's way of identifying the directly connected peer from which it received the message.
+(This peer ID, except for the most significant bit, has meaning only to the forwarding node itself.)
+
+It may help to think of prepending a peer ID as pushing a peer ID onto the front of the stack of headers for the message.
+(It will use the peer ID it popped from the front to determine the next intermediate destination for the reply.)
+
+When a reply message is created, it is created using the same headers that the request contained.
+
+A forwarding node can pop the peer ID it originally pushed on the message, stripping it from the front of the message as it does so.
+
+When the reply finally arrives back at the initiating requester, it should have only a single element in the message, which will be the request ID it originally used for the request.

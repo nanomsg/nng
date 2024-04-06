@@ -1,0 +1,44 @@
+## Reply Protocol (_REP_)
+
+The ((_REP_ protocol))(((protocol, _REP_))) is one half of a ((request/reply pattern)).
+In this pattern, a requester sends a message to one replier, whois expected to reply.
+The request is resent if no reply arrives, until a reply is received or the request times out.
+
+This protocol is useful in setting up RPC-like services.
+It is also "reliable", in that a requester will keep retrying until a reply is received.
+
+The _REP_ protocol is the replier side, and the xref:req.adoc[_REQ_] protocol is the requester side.
+
+#### Socket Operations
+
+The xref:../socket/nng_rep_open.adoc[`nng_rep_open`] functions create a replier socket.
+This socket may be used to receive messages (requests), and then to send replies.
+
+A reply can only be sent after receiving a request.
+Send operations will result in `NNG_ESTATE` if no corresponding request was previously received.
+
+Likewise, only one receive operation may be pending at a time.footnote:[However contexts can be used to allow concurrent request processing.]
+Any additional concurrent receive operations will result in `NNG_ESTATE`.
+
+xref:../sock/nng.adoc#raw_mode[Raw mode] sockets ignore all these restrictions.
+
+#### Context Operations
+
+This protocol supports the creation of xref:../ctx/index.adoc[contexts] for concurrent processing using xref:../ctx/nng_ctx_open.adoc[`nng_ctx_open`].
+
+Each context may have at most one outstanding request, and operates independently of the others.
+The restrictions for order of operations with sockets apply equally well for contexts, except that each context will be treated as if it were a separate socket.
+
+#### Protocol Versions
+
+Only version 0 of this protocol is supported.footnote:[At the time of writing, no other versions of this protocol have been defined.]
+
+#### Protocol Options
+
+The _rep_ protocol has no protocol-specific options.
+
+#### Protocol Headers
+
+(((backtrace)))
+The _REP_ protocol uses a _backtrace_ in the header.
+This is documented in the xref:req.adoc[_REQ_] protocol.
