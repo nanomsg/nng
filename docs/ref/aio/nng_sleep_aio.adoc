@@ -1,0 +1,27 @@
+## nng_sleep_aio
+
+Sleep asynchronously.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_sleep_aio(nng_duration msec, nng_aio *aio);
+```
+
+### Description
+
+The `nng_sleep_aio` function provides an asynchronous delay mechanism, causing the callback for _aio_ to be executed after _msec_ milliseconds.
+If the sleep finishes completely, the result will always be zero.
+
+### Errors
+
+[horizontal]
+`NNG_ETIMEDOUT`:: The sleep was interrupted by a timeout.footnote:[This seemingly paradoxical situation happens if the _aio_ has a timeout set with xref:nng_aio_set_timeout.adoc[`nng_aio_set_timeout`] that is shorter than _msec_.]
+`NNG_ECANCELED`:: The operation was canceled.
+
+### See Also
+
+xref:nng_aio_abort.adoc[nng_aio_abort],
+xref:nng_aio_set_timeout.adoc[nng_aio_set_timeout]
