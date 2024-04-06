@@ -10,15 +10,10 @@ Set context option.
 int nng_ctx_set(nng_ctx ctx, const char *opt, const void *val, size_t valsz);
 
 int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int bval);
-
 int nng_ctx_set_int(nng_ctx ctx, const char *opt, int ival);
-
 int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration dur);
-
 int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t z);
-
 int nng_ctx_set_string(nng_ctx ctx, const char *opt, const char *str);
-
 int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t u64);
 ```
 
@@ -35,11 +30,11 @@ See the option documentation for more information.
 
 The details of the type, size, and semantics of the option will depend on the actual option, and will be documented with the option itself.
 
+TIP: It is recommended to use one of the typed forms of this function instead of `nng_set`, when possible.
+
 `nng_ctx_set`::
 This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _valsz_ is the size of the objected located at _val_.
-
-TIP: It may be easier to use one of the typed forms of this function.
 
 `nng_ctx_set_bool`::
 This function sets a Boolean (`bool`) option to _bval_.
@@ -55,8 +50,7 @@ This function sets a size (`size_t`) option to _z_.
 
 `nng_ctx_set_string`::
 This function sets a string (`const char *`) option to _str_.
-Strings passed this way must be legal UTF-8 or ASCII strings, terminated with a `NUL` (`\0`) byte.
-(Other constraints may apply as well, see the documentation for each option for details.)
+Strings must be legal UTF-8, terminated with a `NUL` (`\0`) byte.
 
 `nng_ctx_set_uint64`::
 This function sets a 64-bit unsigned integer (`uint64_t`) option to _u64_.

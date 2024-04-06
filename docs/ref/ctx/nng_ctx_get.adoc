@@ -10,25 +10,18 @@ Get context option.
 int nng_ctx_get(nng_ctx ctx, const char *opt, void *val, size_t *valszp);
 
 int nng_ctx_get_bool(nng_ctx ctx, const char *opt, bool *bvalp);
-
 int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *ivalp);
-
 int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *durp);
-
 int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *zp);
-
 int nng_ctx_get_string(nng_ctx ctx, const char *opt, char **strp);
-
 int nng_ctx_get_uint64(nng_ctx ctx, const char *opt, uint64_t *u64p);
-
 ```
 
 ### Description
 
 (((options, context)))
-The `nng_ctx_get` functions are used to retrieve option values for the xref:nng_ctx.adoc[context] _ctx_.
+The `nng_ctx_get` functions are used to retrieve option values for the context _ctx_.
 The actual options that may be retrieved in this way vary.
-A number of them are documented in xref:nng_options.adoc[nng_options].
 
 TIP: Context options are protocol specific.
 See the option documentation for more information.
@@ -36,10 +29,12 @@ See the option documentation for more information.
 #### Forms
 
 In all of these forms, the option _opt_ is retrieved from the context _ctx_.
-The forms vary based on the type of the option they take.
+The forms vary based on the type of the option.
 
 The details of the type, size, and semantics of the option will depend on the actual option.
 See the documentation for the option itself for more information.
+
+TIP: It is recommended to use one of the typed forms of this function instead of `nng_get`, when possible.
 
 `nng_ctx_get`::
 This function is untyped and can be used to retrieve the value of any option.
@@ -51,8 +46,6 @@ Therefore the caller should check for truncation by verifying that the returned 
  +
 It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
 This can be used to determine the size of the buffer needed to receive the object.
-
-TIP: It may be easier to use one of the typed forms of this function.
 
 `nng_ctx_get_bool`::
 This retrieves a Boolean (`bool`) into _bvalp_.
@@ -97,6 +90,6 @@ These functions return 0 on success, and non-zero otherwise.
 
 xref:../opts/index.adoc[Options],
 xref:nng_ctx_set.adoc[nng_ctx_set],
+xref:../sock/nng_socket_get.adoc[nng_socket_get],
 xref:../util/nng_strdup.adoc[nng_strdup],
-xref:../util/nng_strfree.adoc[nng_strfree],
-xref:nng_options.adoc[nng_options]
+xref:../util/nng_strfree.adoc[nng_strfree]
