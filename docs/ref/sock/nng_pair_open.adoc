@@ -1,0 +1,47 @@
+## nng_pair_open
+
+Create pair socket.
+
+### Synopsis
+
+.Version 0
+```c
+#include <nng/protocol/pair0/pair.h>
+
+int nng_pair0_open(nng_socket *s);
+int nng_pair0_open_raw(nng_socket *s);
+```
+
+.Version 1
+```c
+#include <nng/protocol/pair1/pair.h>
+
+int nng_pair1_open(nng_socket *s);
+int nng_pair1_open_raw(nng_socket *s);
+int nng_pair1_open_poly(nng_socktet *s);
+```
+
+### Description
+
+The `nng_pair0_open` and `nng_pair1_open` functions
+create a xref:nng_pair.adoc[_PAIR_] version 0 or version 1 xref:../index.adoc[socket] and return it at the location pointed to by _s_.
+
+The `nng_pair0_open_raw` and `nng_pair1_open_raw` functions create a _PAIR_ version 0 or version 1 socket in xref:../sock/raw.adoc[raw mode] and return it at the location pointed to by _s_.
+
+The `nng_pair1_open_poly` function opens a pair version 1 socket in polyamorous mode.
+
+NOTE: Polyamorous mode is deprecated.
+
+### Return Values
+
+These functions returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+
+### See Also
+
+xref:../proto/pair.adoc[Pair Protocol (_PAIR_)]

@@ -1,0 +1,35 @@
+## nng_bus_open
+
+Create bus socket.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/protocol/bus0/bus.h>
+
+int nng_bus0_open(nng_socket *s);
+int nng_bus0_open_raw(nng_socket *s);
+```
+
+### Description
+
+The `nng_bus0_open` function creates a xref:../proto/bus.adoc[_BUS_] version 0
+xref:index.adoc[socket] and returns it at the location pointed to by _s_.
+
+The `nng_bus0_open_raw` function creates a _BUS_ version 0 socket in
+xref:../sock/raw.adoc[raw mode], and returns it at the location pointed to by _s_.
+
+### Return Values
+
+These functions return 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+
+### See Also
+
+xref:../proto/bus.adoc[Bus Protocol (_BUS_)]

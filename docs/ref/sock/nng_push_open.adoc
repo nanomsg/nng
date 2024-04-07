@@ -1,0 +1,34 @@
+## nng_push_open
+
+Create push socket.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/protocol/pipeline0/push.h>
+
+int nng_push0_open(nng_socket *s);
+int nng_push0_open_raw(nng_socket *s);
+```
+
+### Description
+
+The `nng_push0_open` function creates a xref:../proto/push.adoc[_PUSH_] version 0 xref:../sock/index.adoc[socket] and returns it at the location pointed to by _s_.
+
+The `nng_push0_open_raw` function creates a _PUSH_ version 0 socket in xref:../sock/index.adoc[raw mode] and returns it at the location pointed to by _s_.
+
+### Return Values
+
+These functions return 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+
+### See Also
+
+xref:../proto/pull.adoc[Pull Protocol (_PULL_)],
+xref:../proto/push.adoc[Push Protocol (_PUSH_)]

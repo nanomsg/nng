@@ -1,0 +1,35 @@
+## nng_surveyor_open
+
+Create surveyor socket.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+#include <nng/protocol/survey0/survey.h>
+
+int nng_surveyor0_open(nng_socket *s);
+int nng_surveyor0_open_raw(nng_socket *s);
+```
+
+### Description
+
+The `nng_surveyor0_open` function creates a xref:../proto/surveyor.adoc[_SURVEYOR_] version 0 xref:../sock/index.adoc[socket] and returns it at the location pointed to by _s_.
+
+The `nng_surveyor0_open_raw` function creates a _SURVEYOR_ version 0 socket in xref:../sock/raw.adoc[raw mode] 
+version 0 xref:nng_socket.adoc[socket] in and returns it at the location pointed to by _s_.
+
+### Return Values
+
+These functions return 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+
+### See Also
+
+xref:../proto/respondent.adoc[Respondent Protocol (_RESPONDENT_)],
+xref:../proto/surveyor.adoc[Surveyor Protocol (_SURVEYOR_)]
