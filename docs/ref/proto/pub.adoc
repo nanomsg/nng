@@ -12,25 +12,20 @@ The subscribers maintain their own subscriptions, and filter them locally.footno
 The topics that subscribers subscribe to is just the first part of the message body.
 Applications should construct their messages accordingly.
 
-#### Socket Operations
+### Socket Operations
 
 The xref:../sock/nng_pub_open.adoc[`nng_pub_open`] functions create a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 
-#### Protocol Versions
+### Protocol Versions
 
 Only version 0 of this protocol is supported.footnote:[At the time of writing, no other versions of this protocol have been defined.]
 
-#### Protocol Options
+### Protocol Options
 
 The _PUB_ protocol has no protocol-specific options.
 
-#### Protocol Headers
+### Protocol Headers
 
 The _PUB_ protocol has no protocol-specific headers.
-
-### See Also
-
-xref:sub.adoc[Subscriber Protocol (_SUB_)],
-xref:../sock/nng_pub_open.adoc[nng_pub_open]

@@ -16,21 +16,21 @@ If a message cannot be delivered for any reason it is discarded.
 TIP: In order to minimize the likelihood of message loss, this protocol should not be used for high throughput communications.
 Furthermore, the more traffic _in aggregate_ that occurs across the topology, the more likely that message loss is to occur.
 
-#### Socket Operations
+### Socket Operations
 
 The xref:../sock/nng_bus_open.adoc[`nng_bus_open`] functions create a _BUS_ socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.
 
-#### Protocol Versions
+### Protocol Versions
 
 Only version 0 of this protocol is supported.footnote:[At the time of writing, no other versions of this protocol have been defined.]
 
-#### Protocol Options
+### Protocol Options
 
 The _BUS_ protocol has no protocol-specific options.
 
-#### Protocol Headers
+### Protocol Headers
 
 When using a _BUS_ socket in xref:../sock/raw.adoc[raw mode], received messages will contain the incoming xref:../pipe/index.adoc[pipe] ID as the sole element in the header.
 If a message containing such a header is sent using a raw _BUS_ socket, then, the message will be delivered to all connected pipes _except_ the one identified in the header.

@@ -7,7 +7,7 @@ In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent by a pusher will be sent to one of its ready peer pullers, chosen in a round-robin fashion.
 This property makes this pattern useful in ((load-balancing)) scenarios.
 
-#### Socket Operations
+### Socket Operations
 
 The xref:nng_push_open.adoc[`nng_push0_open`] call creates a pusher socket.
 This socket may be used to send messages, but is unable to receive them.
@@ -19,11 +19,11 @@ If no peer is available to receive a message, then the send operation will wait 
 NOTE: Although the pipeline protocol honors flow control, and attempts to avoid dropping messages, no guarantee of delivery is made.
 Furthermore, as there is no capability for message acknowledgment, applications that need reliable delivery are encouraged to consider the xref:nng_req.adoc[_REQ_] protocol instead.
 
-#### Protocol Versions
+### Protocol Versions
 
 Only version 0 of this protocol is supported.footnote:[At the time of writing, no other versions of this protocol have been defined.]
 
-#### Protocol Options
+### Protocol Options
 
 xref:nng_options.adoc#NNG_OPT_SENDBUF[`NNG_OPT_SENDBUF`]::
 
@@ -34,6 +34,6 @@ xref:nng_options.adoc#NNG_OPT_SENDBUF[`NNG_OPT_SENDBUF`]::
 
 NOTE: Transport layer buffering may occur in addition to any socket buffer determined by this option.
 
-#### Protocol Headers
+### Protocol Headers
 
 The _PUSH_ protocol has no protocol-specific headers.
