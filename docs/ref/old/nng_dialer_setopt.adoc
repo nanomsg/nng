@@ -1,0 +1,45 @@
+## nng_dialer_setopt
+
+Set dialer option (deprecated).
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_dialer_setopt(nng_dialer d, const char *opt, const void *val, size_t valsz);
+int nng_dialer_setopt_bool(nng_dialer d, const char *opt, bool bval);
+int nng_dialer_setopt_int(nng_dialer d, const char *opt, int ival);
+int nng_dialer_setopt_ms(nng_dialer d, const char *opt, nng_duration dur);
+int nng_dialer_setopt_ptr(nng_dialer d, const char *opt, void *ptr);
+int nng_dialer_setopt_size(nng_dialer d, const char *opt, size_t z);
+int nng_dialer_setopt_string(nng_dialer d, const char *opt, const char *str);
+int nng_dialer_setopt_uint64(nng_dialer d, const char *opt, uint64_t u64);
+```
+
+### Description
+
+NOTE: These functions are deprecated.
+They may not be present if the library was built with ((`NNG_ELIDE_DEPRECATED`)).
+
+These deprecated functions have one-to-one modern equivalents with the same arguments and semantics, as follows:
+
+[width=50%,]
+|===
+| Legacy Function | Modern Equivalent
+
+| `nng_dialer_setopt` | `nng_dialer_set`
+| `nng_dialer_setopt_bool`| `nng_dialer_set_bool`
+| `nng_dialer_setopt_int`| `nng_dialer_set_int`
+| `nng_dialer_setopt_ms`| `nng_dialer_set_ms`
+| `nng_dialer_setopt_ptr`| `nng_dialer_set_ptr`
+| `nng_dialer_setopt_size`| `nng_dailer_set_size`
+| `nng_dialer_setopt_string`| `nng_dialer_set_string`
+| `nng_dialer_setopt_uint64`| `nng_dialer_set_uint64`
+|===
+
+Please see the documentation for the modern equivalents for more detail.
+
+### See Also
+
+xref:../dialer/nng_dialer_set.adoc[nng_dialer_set]

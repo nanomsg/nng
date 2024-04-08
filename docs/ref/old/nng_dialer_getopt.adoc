@@ -1,0 +1,47 @@
+## nng_dialer_getopt
+
+Get dialer option (deprecated).
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_dialer_getopt(nng_dialer d, const char *opt, void *val, size_t *valszp);
+int nng_dialer_getopt_bool(nng_dialer d, const char *opt, bool *bvalp);
+int nng_dialer_getopt_int(nng_dialer d, const char *opt, int *ivalp);
+int nng_dialer_getopt_ms(nng_dialer d, const char *opt, nng_duration *durp);
+int nng_dialer_getopt_ptr(nng_dialer d, const char *opt, void **ptr);
+int nng_dialer_getopt_size(nng_dialer d, const char *opt, size_t *zp);
+int nng_dialer_getopt_sockaddr(nng_dialer d, const char *opt, nng_sockaddr *sap);
+int nng_dialer_getopt_string(nng_dialer d, const char *opt, char **strp);
+int nng_dialer_getopt_uint64(nng_dialer d, const char *opt, uint64_t *u64p);
+```
+
+### Description
+
+NOTE: These functions are deprecated.
+They may not be present if the library was built with ((`NNG_ELIDE_DEPRECATED`)).
+
+These deprecated functions have one-to-one modern equivalents with the same arguments and semantics, as follows:
+
+[width=50%,]
+|===
+| Legacy Function | Modern Equivalent
+
+| `nng_dialer_getopt` | `nng_dialer_get`
+| `nng_dialer_getopt_bool`| `nng_dialer_get_bool`
+| `nng_dialer_getopt_int`| `nng_dialer_get_int`
+| `nng_dialer_getopt_ms`| `nng_dialer_get_ms`
+| `nng_dialer_getopt_ptr`| `nng_dialer_get_ptr`
+| `nng_dialer_getopt_size`| `nng_dialer_get_size`
+| `nng_dialer_getopt_sockaddr`| `nng_dialer_get_addr`
+| `nng_dialer_getopt_string`| `nng_dialer_get_string`
+| `nng_dialer_getopt_uint64`| `nng_dialer_get_uint64`
+|===
+
+Please see the documentation for the modern equivalents for more detail.
+
+### See Also
+
+xref:../dialer/nng_dialer_get.adoc[nng_dialer_get]

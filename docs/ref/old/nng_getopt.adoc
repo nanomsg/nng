@@ -1,0 +1,45 @@
+## nng_getopt
+
+Get socket option (deprecated).
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_getopt(nng_socket s, const char *opt, void *val, size_t *valszp);
+int nng_getopt_bool(nng_socket s, const char *opt, bool *bvalp);
+int nng_getopt_int(nng_socket s, const char *opt, int *ivalp);
+int nng_getopt_ms(nng_socket s, const char *opt, nng_duration *durp);
+int nng_getopt_ptr(nng_socket s, const char *opt, void **ptr);
+int nng_getopt_size(nng_socket s, const char *opt, size_t *zp);
+int nng_getopt_string(nng_socket s, const char *opt, char **strp);
+int nng_getopt_uint64(nng_socket s, const char *opt, uint64_t *u64p);
+```
+
+### Description
+
+NOTE: These functions are deprecated.
+They may not be present if the library was built with ((`NNG_ELIDE_DEPRECATED`)).
+
+These deprecated functions have one-to-one modern equivalents with the same arguments and semantics, as follows:
+
+[width=50%,]
+|===
+| Legacy Function | Modern Equivalent
+
+| `nng_getopt` | `nng_socket_get`
+| `nng_getopt_bool`| `nng_socket_get_bool`
+| `nng_getopt_int`| `nng_socket_get_int`
+| `nng_getopt_ms`| `nng_socket_get_ms`
+| `nng_getopt_ptr`| `nng_socket_get_ptr`
+| `nng_getopt_size`| `nng_socket_get_size`
+| `nng_getopt_string`| `nng_socket_get_string`
+| `nng_getopt_uint64`| `nng_socket_get_uint64`
+|===
+
+Please see the documentation for the modern equivalents for more detail.
+
+### See Also
+
+xref:../sock/nng_socket_get.adoc[nng_socket_get]

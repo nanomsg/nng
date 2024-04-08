@@ -27,7 +27,7 @@ These deprecated functions have one-to-one modern equivalents with the same argu
 |===
 | Legacy Function | Modern Equivalent
 
-| `nng_ctx_getopt` | `nng_ctx_set`
+| `nng_ctx_getopt` | `nng_ctx_get`
 | `nng_ctx_getopt_bool`| `nng_ctx_get_bool`
 | `nng_ctx_getopt_int`| `nng_ctx_get_int`
 | `nng_ctx_getopt_ms`| `nng_ctx_get_ms`

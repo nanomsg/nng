@@ -1,0 +1,45 @@
+## nng_setopt
+
+Set socket option (deprecated).
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_setopt(nng_socket s, const char *opt, const void *val, size_t valsz);
+int nng_setopt_bool(nng_socket s, const char *opt, bool bval);
+int nng_setopt_int(nng_socket s, const char *opt, int ival);
+int nng_setopt_ms(nng_socket s, const char *opt, nng_duration dur);
+int nng_setopt_ptr(nng_socket s, const char *opt, void *ptr);
+int nng_setopt_size(nng_socket s, const char *opt, size_t z);
+int nng_setopt_string(nng_socket s, const char *opt, const char *str);
+int nng_setopt_uint64(nng_socket s, const char *opt, uint64_t u64);
+```
+
+### Description
+
+NOTE: These functions are deprecated.
+They may not be present if the library was built with ((`NNG_ELIDE_DEPRECATED`)).
+
+These deprecated functions have one-to-one modern equivalents with the same arguments and semantics, as follows:
+
+[width=50%,]
+|===
+| Legacy Function | Modern Equivalent
+
+| `nng_setopt` | `nng_socket_set`
+| `nng_setopt_bool`| `nng_socket_set_bool`
+| `nng_setopt_int`| `nng_socket_set_int`
+| `nng_setopt_ms`| `nng_socket_set_ms`
+| `nng_setopt_ptr`| `nng_socket_set_ptr`
+| `nng_setopt_size`| `nng_socket_set_size`
+| `nng_setopt_string`| `nng_socket_set_string`
+| `nng_setopt_uint64`| `nng_socket_set_uint64`
+|===
+
+Please see the documentation for the modern equivalents for more detail.
+
+### See Also
+
+xref:../sock/nng_socket_set.adoc[nng_socket_set]
