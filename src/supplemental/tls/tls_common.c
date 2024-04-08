@@ -1644,6 +1644,12 @@ nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
 }
 
 void
+nng_tls_config_hold(nng_tls_config *cfg)
+{
+	NNI_ARG_UNUSED(cfg);
+}
+
+void
 nng_tls_config_free(nng_tls_config *cfg)
 {
 	NNI_ARG_UNUSED(cfg);
