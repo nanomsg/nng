@@ -1,0 +1,33 @@
+## nng_stat_find
+
+Find statistic by name.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+nng_stat *nng_stat_find(nng_stat *stat, const char *name);
+```
+
+### Description
+
+The `nng_stat_find` function searches the statistics tree _stat_, looking for a statistic whose name is _name_.
+If it finds one, it returns it.
+Otherwise `NULL` is returned.
+
+NOTE: If multiple statistics have that name, then only the first match is returned.
+
+### Return Values
+
+The matching statistic, or NULL if no match is found.
+
+### See Also
+
+xref:nng_stat_child.adoc[nng_stat_child],
+xref:nng_stat_find_dialer.adoc[nng_stat_find_dialer],
+xref:nng_stat_find_listener.adoc[nng_stat_find_listner],
+xref:nng_stat_find_socket.adoc[nng_stat_find_socket],
+xref:nng_stats_get.adoc[nng_stats_get]

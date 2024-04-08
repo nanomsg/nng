@@ -1,0 +1,35 @@
+## nng_stat_find_dialer
+
+Find dialer statistics.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+typedef struct nng_dialer nng_dialer;
+
+nng_stat *nng_stat_find_dialer(nng_stat *stat, nng_dialer dialer);
+```
+
+### Description
+
+The `nng_stat_find_dialer` function returns the statistics tree within _stat_ associated with the dialer _dialer_, if such a tree exists.
+Otherwise `NULL` is returned.
+
+Generally, there will be child statistics of the returned value, each corresponding to a specific metric.
+These can be further scanned using either xref:nng_stat_find.adoc[nng_stat_find]
+or by walking the tree with xref:nng_stat_child.adoc[nng_stat_child].
+
+### Return Values
+
+The matching statistic, or NULL if no match is found.
+
+### See Also
+
+xref:nng_stat_child.adoc[nng_stat_child],
+xref:nng_stat_find.adoc[nng_stat_find],
+xref:nng_stat_find_listener.adoc[nng_stat_find_listener],
+xref:nng_stat_find_socket.adoc[nng_stat_find_socket],
+xref:nng_stats_get.adoc[nng_stats_get]

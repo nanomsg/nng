@@ -1,0 +1,34 @@
+## nng_stat_timestamp
+
+Get statistic timestamp.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+uint64_t nng_stat_timestamp(nng_stat *stat);
+```
+
+### Description
+
+The `nng_stat_timestamp` function returns the a timestamp, which is measured as a number of milliseconds since some arbitrary value in the past.
+
+Even within the same snapshot, statistics might have different timestamp values, as the timestamp represents the time when that particular statistic was captured.
+
+TIP: These values are intended to facilitate calculation of rates, by comparing values from one snapshot with a subsequent one.
+
+TIP: The values used here have the same offset as the xref:../util/nng_clock.adoc[`nng_clock`] supplemental function.
+This can be useful when converting these values to local clock time.
+
+### Return Values
+
+The timestamp when _stat_ was captured, measured as a number of milliseconds since some time in the past.
+
+### See Also
+
+xref:nng_stats_get.adoc[nng_stats_get],
+xref:nng_stat_value.adoc[nng_stat_value],
+xref:../util/nng_clock.adoc[nng_clock]

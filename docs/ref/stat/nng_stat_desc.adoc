@@ -1,0 +1,30 @@
+## nng_stat_desc
+
+Get statistic description.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+const char *nng_stat_desc(nng_stat *stat);
+```
+
+### Description
+
+The `nng_stat_desc` function returns a brief, human-readable description for the statistic _stat_.
+
+TIP: This description can be used for a tool-tip in user interfaces displaying these statistic values.
+
+NOTE: At this time, only English descriptions are provided.
+
+### Return Values
+
+The description of statistic _stat_.
+
+### See Also
+
+xref:nng_stat_name.adoc[nng_stats_name],
+xref:nng_stats_get.adoc[nng_stats_get]

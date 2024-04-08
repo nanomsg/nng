@@ -1,0 +1,29 @@
+## nng_stat_child
+
+Get child statistic.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+nng_stat *nng_stat_child(nng_stat *parent);
+```
+
+### Description
+
+The `nng_stat_child` function returns the first child statistic of the statistic _parent_.
+If no children are present, then `NULL` is returned.
+
+TIP: Only statistics with type (see xref:nng_stat_type.adoc[`nng_stat_type`]) of `NNG_STAT_SCOPE` will have children.
+
+### Return Values
+
+The first child statistic of _parent_, or NULL if _parent_ has no children.
+
+### See Also
+
+xref:nng_stat_next.adoc[nng_stat_next],
+xref:nng_stats_get.adoc[nng_stats_get]

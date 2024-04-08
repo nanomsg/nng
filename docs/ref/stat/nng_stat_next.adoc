@@ -1,0 +1,28 @@
+## nng_stat_next
+
+Get next statistic.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+nng_stat *nng_stat_next(nng_stat *stat);
+```
+
+### Description
+
+The `nng_stat_next` function returns the next sibling statistic of the
+statistic _stat_.
+If no more siblings are present, then `NULL` is returned.
+
+### Return Values
+
+The next sibling statistic of _stat_, or NULL if _stat_ is the last sibling.
+
+### See Also
+
+xref:nng_stat_child.adoc[nng_stat_child],
+xref:nng_stats_get.adoc[nng_stats_get]

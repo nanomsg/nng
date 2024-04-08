@@ -1,0 +1,35 @@
+## nng_stat_find_socket
+
+Find socket statistics.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+typedef struct nng_socket nng_socket;
+
+nng_stat *nng_stat_find_socket(nng_stat *stat, nng_socket socket);
+```
+
+### Description
+
+The `nng_stat_find_socket` function returns the statistics tree within _stat_ associated with the socket _socket_, if such a tree exists.
+Otherwise `NULL` is returned.
+
+Generally, there will be child statistics of the returned value, each corresponding to a specific metric.
+These can be further scanned using either xref:nng_stat_find.adoc[nng_stat_find] or by walking the tree with
+xref:nng_stat_child.adoc[nng_stat_child].
+
+### Return Values
+
+The matching statistic, or NULL if no match is found.
+
+### See Also
+
+xref:nng_stat_child.adoc[nng_stat_child],
+xref:nng_stat_find.adoc[nng_stat_find],
+xref:nng_stat_find_dialer.adoc[nng_stat_find_dialer],
+xref:nng_stat_find_listener.adoc[nng_stat_find_listener],
+xref:nng_stats_get.adoc[nng_stats_get]

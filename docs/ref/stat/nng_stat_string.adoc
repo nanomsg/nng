@@ -1,0 +1,31 @@
+## nng_stat_string
+
+Get statistic string value.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+const char *nng_stat_string(nng_stat *stat);
+```
+
+### Description
+
+The `nng_stat_string` function returns a string value for the statistic _stat_, which must be of type `NNG_STAT_STRING` (see xref:nng_stat_type.adoc[`nng_stat_type`]).
+
+If the statistic is not of type `NNG_STAT_STRING`, then `NULL` will be returned.
+
+NOTE: The returned string is valid until xref:nng_stats_free.adoc[`nng_stats_free`] is called to free the memory for the snapshot.
+
+### Return Values
+
+The string value associated with _stat_, or `NULL` if the statistic is not a string type.
+
+### See Also
+
+xref:nng_stats_get.adoc[nng_stats_get],
+xref:nng_stat_type.adoc[nng_stats_type],
+xref:nng_stat_value.adoc[nng_stats_value]

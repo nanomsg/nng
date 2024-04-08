@@ -1,0 +1,27 @@
+## nng_stat_name
+
+Get statistic name.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+const char *nng_stat_name(nng_stat *stat);
+```
+
+### Description
+
+The `nng_stat_name` function returns the name for the statistic _stat_.
+
+NOTE: The global root statistic will have the empty string ("") as it's name.
+
+### Return Values
+
+The name of statistic _stat_.
+
+### See Also
+
+xref:nng_stats_get.adoc[nng_stats_get]

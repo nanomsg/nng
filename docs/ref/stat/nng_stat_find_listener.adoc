@@ -1,0 +1,38 @@
+## nng_stat_find_listener
+
+Find listener statistics.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+typedef struct nng_listener nng_listener;
+
+nng_stat *nng_stat_find_listener(nng_stat *stat, nng_listener listener);
+```
+
+### Description
+
+The `nng_stat_find_listener` function returns the statistics tree within _stat_ associated with the listener _listener_, if such a tree exists.
+Otherwise `NULL` is returned.
+
+Generally, there will be child statistics of the returned value, each corresponding to a specific metric.
+These can be further scanned using either xref:nng_stat_find.adoc[nng_stat_find] or by walking the tree with xref:nng_stat_child.adoc[nng_stat_child].
+
+### Return Values
+
+The matching statistic, or NULL if no match is found.
+
+### Errors
+
+None.
+
+### See Also
+
+xref:nng_stat_child.adoc[nng_stat_child],
+xref:nng_stat_find.adoc[nng_stat_find],
+xref:nng_stat_find_dialer.adoc[nng_stat_find_dialer],
+xref:nng_stat_find_socket.adoc[nng_stat_find_socket],
+xref:nng_stats_get.adoc[nng_stats_get]
