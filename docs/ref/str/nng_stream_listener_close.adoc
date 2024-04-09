@@ -1,0 +1,43 @@
+## nng_stream_listener_close
+
+Close byte stream listener.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_listener_close(nng_stream_listener *l);
+```
+
+### Description
+
+The `nng_stream_listener_close` function closes the supplied connected byte
+stream listener _l_,
+but does not free the underlying resources associated with it.
+
+If any
+xref:nng_stream_listener_accept.adoc[accept] operations using _d_ are in progress, they will be terminated with an `NNG_ECLOSED` error condition.
+
+Furthermore any future accesses to the listener _l_ will also result in `NNG_ECLOSED`.
+
+NOTE: This function does not release the memory for the listener, so the
+application should still free the memory using
+xref:nng_stream_listener_free.adoc[`nng_stream_listener_free`]
+once it is certain that nothing else is using it.
+
+### Return Values
+
+None.
+
+### Errors
+
+None.
+
+### See Also
+
+xref:nng_strerror.adoc[nng_strerror],
+xref:nng_stream_listener_accept.adoc[nng_stream_listener_accept],
+xref:nng_stream_listener_alloc.adoc[nng_stream_listener_alloc],
+xref:nng_stream_listener_free.adoc[nng_stream_listener_free],
+xref:nng_stream_listener.adoc[nng_stream_listener]

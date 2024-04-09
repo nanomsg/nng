@@ -1,0 +1,98 @@
+## nng_stream_get
+
+Get option from byte stream.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_stream_get(nng_stream *s, const char *opt, void *val, size_t *sizep);
+
+int nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
+int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
+int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
+int nng_stream_get_ptr(nng_stream *s, const char *opt, void **valp);
+int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
+int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
+```
+
+### Description
+
+The `nng_stream_get` functions are used to retrieve option values for the byte stream _s_.
+
+The actual options that may be retrieved in this way vary.
+A number of them are documented in xref:../opts/index.adoc[Options].
+
+#### Forms
+In all of these forms, the option _opt_ is retrieved from the connected
+byte stream _s_.
+The forms vary based on the type of the option they take.
+
+The details of the type, size, and semantics of the option will depend
+on the actual option, and will be documented with the option itself.
+
+TIP: It may be easier to use one of the typed forms of this function.
+
+`nng_stream_get`::
+This function is untyped and can be used to retrieve the value of any option.
+The caller must store a pointer to a buffer to receive the value in _val_, and the size of the buffer shall be stored at the location referenced by _sizep_.
++
+When the function returns, the actual size of the data copied (or that would have been copied if sufficient space were present) is stored at the location referenced by _sizep_.
+If the caller's buffer is not large enough to hold the entire object, then the copy is truncated.
+Therefore the caller should check for truncation by verifying that the returned size in _sizep_ does not exceed the original buffer size.
++
+It is acceptable to pass `NULL` for _val_ if the value in _sizep_ is zero.
+This can be used to determine the size of the buffer needed to receive the object.
+
+`nng_stream_get_bool`::
+This function is for options which take a Boolean (`bool`).
+
+`nng_stream_get_int`::
+This function is for options which take an integer (`int`).
+
+`nng_stream_get_ms`::
+This function is used to retrieve time durations (`nng_duration`), stored as a number of milliseconds.
+(The special value ((`NNG_DURATION_INFINITE`)) means an infinite amount of time, and the special value ((`NNG_DURATION_DEFAULT`)) means a context-specific default.)
+
+`nng_stream_get_ptr`::
+This function is used to retrieve a pointer to structured data.
+The data referenced is generally managed using other functions.
+Note that this form is somewhat special in that the object is generally not copied, but instead the *pointer* to the object is copied.
++
+Care must be taken to ensure that the application respects any considerations about the lifetime of the underyling object.
+See the documentation for the option for more specific guidance.
+
+`nng_stream_get_size`::
+This function is used to retrieve a size option.
+
+`nng_stream_get_addr`::
+This function is used to retrieve a xref:../opts/nng_sockaddr.adoc[socket address].
+
+`nng_stream_get_string`::
+This function is used to retrieve a `NUL`-terminated string.
+This string is created from the source using xref:nng_strdup.adoc[`nng_strdup`].
+Consequently, it  must be freed by the caller using xref:nng_strfree.adoc[`nng_strfree`] when it is no longer needed.
+
+`nng_stream_get_uint64`::
+This function is used to retrieve a 64-bit unsigned value.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ECLOSED`:: The connection is closed.
+`NNG_EINVAL`:: There was insufficient space to receive the object.
+	The amount of data actually needed is returned in _sizep_.
+`NNG_ENOTSUP`:: The option is not supported.
+`NNG_EWRITEONLY`:: The option may not read.
+
+### See Also
+
+xref:../opts/index.adoc[Options],
+xref:nng_stream_set.adoc[nng_stream_set]

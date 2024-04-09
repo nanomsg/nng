@@ -1,0 +1,46 @@
+## nng_stream_dialer_alloc
+
+Allocate byte stream dialer.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_stream_dialer_alloc(nng_stream_dialer **dp, const char *addr);
+
+int nng_stream_dialer_alloc_url(nng_stream_dialer **dp, const nng_url *url);
+```
+
+### Description
+
+These functions allocates a dialer for byte streams.
+Dialers create byte stream objects by initiating outgoing connections, via the xref:nng_stream_dialer_dial.adoc[`nng_stream_dialer_dial`] function.
+
+The first form, `nng_stream_dialer_alloc`, connects to the address specified by _addr_, which should be a string representing a URL.
+
+The second form, `nng_stream_dialer_alloc_url`, takes a pre-parsed or pre-constructed
+xref:../util/nng_url.adoc[`nng_url`] object to determine the remote address.
+
+These functions may support different URL schemes, such as `ipc://`, `tcp://`, `tls+tcp://`, or `ws://`.
+
+Both forms store the dialer in the location referenced by _dp_.
+
+### Return Values
+
+These functions return 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient free memory exists.
+`NNG_ENOTSUP`:: The URL scheme is not supported by the implementation.
+`NNG_EADDRINVAL`:: The URL requested is invalid.
+
+### See Also
+
+xref:nng_stream_dialer_close.adoc[nng_stream_dialer_close],
+xref:nng_stream_dialer_dial.adoc[nng_stream_dialer_dial],
+xref:nng_stream_dialer_free.adoc[nng_stream_dialer_free],
+xref:nng_stream_dialer_get.adoc[nng_stream_dialer_get],
+xref:nng_stream_dialer_set.adoc[nng_stream_dialer_set]

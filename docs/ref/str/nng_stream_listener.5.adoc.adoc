@@ -1,0 +1,27 @@
+## nng_stream_listener
+
+Byte stream listener.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stream_listener nng_stream_listener;
+```
+
+### Description
+
+(((IPC, listener)))
+An `nng_stream_listener` is a handle to a byte stream listener, which is responsible for accepting incoming connections and creating corresponding `nng_stream` from them.
+
+NOTE: The `nng_stream_listener` object is a low-level object for raw byte stream connections, and should not be confused with a high-level xref:../listener/nng_listener.adoc[`nng_listener`] object.
+
+### See Also
+
+xref:nng_stream_listener_accept.adoc[nng_stream_listener_accept],
+xref:nng_stream_listener_alloc.adoc[nng_stream_listener_alloc],
+xref:nng_stream_listener_close.adoc[nng_stream_listener_close],
+xref:nng_stream_listener_free.adoc[nng_stream_listener_free],
+xref:nng_stream_listener_listen.adoc[nng_stream_listener_listen],
+xref:nng_stream_dialer.adoc[nng_stream_dialer]

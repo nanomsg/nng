@@ -1,0 +1,25 @@
+## nng_stream_dialer
+
+Byte stream dialer.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+typedef struct nng_stream_dialer nng_stream_dialer;
+```
+
+### Description
+
+(((byte stream, dialer)))
+An `nng_stream_dialer` is a handle to a dialer for byte streams, and is responsible for creating `nng_stream` objects (corresponding to connected byte streams) by connecting to remote peers.
+
+NOTE: The `nng_stream_dialer` object is used for low-level byte stream connections, and should not be confused with a high-level xref:../dialer/index.adoc[`nng_dialer`] object.
+
+### See Also
+
+xref:nng_stream_dialer_alloc.adoc[nng_stream_dialer_alloc],
+xref:nng_stream_dialer_close.adoc[nng_stream_dialer_close],
+xref:nng_stream_dialer_dial.adoc[nng_stream_dialer_dial],
+xref:nng_stream_dialer_free.adoc[nng_stream_dialer_free]

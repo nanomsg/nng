@@ -1,0 +1,26 @@
+## nng_stream_dialer_close
+
+Close byte stream dialer.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_dialer_close(nng_stream_dialer *d);
+```
+
+### Description
+
+The `nng_stream_dialer_close` function closes the supplied byte stream dialer _d_,
+but does not free the underlying resources associated with it.
+
+Any pending or new operations using _d_ will fail with an `NNG_ECLOSED` error condition.
+
+NOTE: This function does not release the memory for the dialer, so the application should still free the memory using  xref:nng_stream_dialer_free.adoc[`nng_stream_dialer_free`] once it is certain that nothing else is using it.
+
+### See Also
+
+xref:nng_stream_dialer_alloc.adoc[nng_stream_dialer_alloc],
+xref:nng_stream_dialer_dial.adoc[nng_stream_dialer_dial],
+xref:nng_stream_dialer_free.adoc[nng_stream_dialer_free]

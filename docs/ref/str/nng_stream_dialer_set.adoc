@@ -1,0 +1,89 @@
+## nng_stream_dialer_set
+
+Set option on byte stream dialer.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_stream_dialer_set(nng_stream_dialer *d, const char *name, const void *data, size_t size);
+
+int nng_stream_dialer_set_bool(nng_stream_dialer *d, const char *opt, bool val);
+int nng_stream_dialer_set_int(nng_stream_dialer *d, const char *opt, int val);
+int nng_stream_dialer_set_ms(nng_stream_dialer *d, const char *opt, nng_duration val);
+int nng_stream_dialer_set_ptr(nng_stream_dialer *d, const char *opt, void *val);
+int nng_stream_dialer_set_size(nng_stream_dialer *d, const char *opt, size_t val);
+int nng_stream_dialer_set_string(nng_stream_dialer *d, const char *opt, const char *val);
+int nng_stream_dialer_set_uint64(nng_stream_dialer *d, const char *opt, uint64_t val);
+int nng_stream_dialer_set_addr(nng_stream_dialer *d, const char *opt, const nng_sockaddr *val);
+```
+
+### Description
+
+The `nng_stream_dialer_set` functions are used to configure options for the byte stream dialer _d_.
+The actual options that may be configured in this way vary, and are specified by _opt_.
+A number of them are documented in xref:../opts/index.adoc[Options].
+
+Additionally some transport-specific options are documented with the transports.
+
+TIP: It may be easier to use one of the typed forms of this function.
+
+#### Forms
+
+The details of the type, size, and semantics of the option will depend on the actual option, and will be documented with the option itself.
+
+`nng_stream_dialer_set`::
+This function is untyped, and can be used to configure any arbitrary data.
+The _val_ pointer addresses the data to copy, and _size_ is the
+size of the objected located at _val_.
+
+`nng_stream_dialer_set_bool`::
+This function is for options which take a Boolean (`bool`).
+
+`nng_stream_dialer_set_int`::
+This function is for options which take an integer (`int`).
+
+`nng_stream_dialer_set_ms`::
+This function is used to configure time durations (such as timeouts) using the type xref:nng_duration.adoc[`nng_duration`].
+The duration is an integer number of milliseconds.
+
+`nng_stream_dialer_set_ptr`::
+This function is used to pass a pointer to structured data.
+The data referenced by is generally managed by other functions.
++
+NOTE: This form is somewhat special in that the object is generally not copied, but instead the *pointer* to the object is copied.
+Please see the documentation for the specific option for further details.
+
+`nng_stream_dialer_set_size`::
+This function is used to set a size option.
+
+`nng_stream_dialer_set_string`::
+This function is used to set a string option.
+Strings passed this way must be legal UTF-8 strings, terminated with a `NUL` (`\0`) byte.
+
+`nng_stream_dialer_set_uint64`::
+This function is used to configure a 64-bit unsigned value/
+This is typically used for identifiers, network numbers,
+and similar options.
+
+`nng_stream_dialer_set_addr`::
+This function is used to configure a xref:../opts/nng_sockaddr.adoc[socket address].
+The value is copied, and thus the caller may discard the supplied value immediately after this function returns.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_ECLOSED`:: The dialer is closed.
+`NNG_EINVAL`:: Either _data_ or _size_ are invalid.
+`NNG_ENOTSUP`:: The option is not supported.
+`NNG_EREADONLY`:: The option may not be modified.
+
+### See Also
+
+xref:../opts/index.adoc[Options],
+xref:nng_stream_dialer_get.adoc[nng_stream_dialer_get]

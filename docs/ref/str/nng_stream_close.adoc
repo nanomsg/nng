@@ -1,0 +1,29 @@
+## nng_stream_close
+
+Close byte stream.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_close(nng_stream *s);
+```
+
+### Description
+
+The `nng_stream_close` function closes the byte stream _s_.
+
+Any pending operations, as well as any further new operations, will fail with an `NNG_ECLOSED` error.
+
+NOTE: Closing the connection while data is in transmission will likely lead to loss of that data.
+There is no automatic linger or flush to ensure that the socket send buffers have completely transmitted.
+
+NOTE: Closing the connection does not free the resources associated with it.
+Once it is certain that no more operations are pending on the connection, it should be freed with xref:nng_stream_free.adoc[`nng_stream_free`].
+
+### See Also
+
+xref:nng_stream_free.adoc[nng_stream_free],
+xref:nng_stream_recv.adoc[nng_stream_recv],
+xref:nng_stream_send.adoc[nng_stream_send]

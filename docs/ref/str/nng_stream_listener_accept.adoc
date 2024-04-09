@@ -1,0 +1,37 @@
+## nng_stream_listener_accept
+
+Accept incoming byte stream connection.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_listener_accept(nng_stream_listener *l, nng_aio *aio);
+```
+
+### Description
+
+The `nng_stream_listener_accept` attempts to accept an incoming byte stream connection from a remote peer, using the listener _l_.
+The operation is completed asynchronously, using _aio_.
+
+This operation can only be done after the listener is already xref:nng_stream_listener_listen.adoc[listening].
+
+If a connection is successfully established, the _aio_ will have the resulting `nng_stream` object stored as its first output, which can be retrieved with xref:../aio/nng_aio_get_output.adoc[`nng_aio_get_output`].
+
+### Errors
+
+[horizontal]
+`NNG_ECANCELED`:: The operation was aborted.
+`NNG_ECLOSED`:: The listener is closed.
+`NNG_ECONNRESET`:: The connection was reset by the peer.
+`NNG_ENOMEM`:: Insufficient free memory exists.
+`NNG_ESTATE`:: The listener is not not listening.
+
+### See Also
+
+xref:../aio/index.adoc[Asynchronous I/O],
+xref:nng_stream_listener_alloc.adoc[nng_stream_listener_alloc],
+xref:nng_stream_listener_close.adoc[nng_stream_listener_close],
+xref:nng_stream_listener_free.adoc[nng_stream_listener_free],
+xref:nng_stream_listener_listen.adoc[nng_stream_listener_listen],

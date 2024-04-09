@@ -1,0 +1,28 @@
+## nng_stream_free
+
+Free byte stream.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_free(nng_stream *s);
+```
+
+### Description
+
+The `nng_stream_free` function closes the byte stream _s_, and frees the underlying resources associated with it.
+
+Any pending operations using _s_ will fail with an `NNG_ECLOSED` error.
+
+WARNING: It is important that the application ensure that no further accesses are made to _s_, as the memory backing it will be reclaimed for other uses.
+
+NOTE: Closing the connection while data is in transmission will likely lead to loss of that data.
+There is no automatic linger or flush to ensure that the socket send buffers have completely transmitted.
+
+### See Also
+
+xref:nng_stream_close.adoc[nng_stream_close],
+xref:nng_stream_recv.adoc[nng_stream_recv],
+xref:nng_stream_send.adoc[nng_stream_send]

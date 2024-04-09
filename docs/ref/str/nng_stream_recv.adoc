@@ -1,0 +1,43 @@
+## nng_stream_recv
+
+Receive from byte stream.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_recv(nng_stream *s, nng_aio *aio);
+```
+
+### Description
+
+The `nng_stream_recv` function starts an asynchronous receive from the byte stream _s_ into the scatter/gather vector located in the asynchronous I/O structure _aio_.
+
+NOTE: The xref:../aio/nng_aio_set_iov.adoc[`nng_aio_set_iov`] function must have been called first, to set the scatter/gather vector for _aio_.
+
+This function returns immediately, with no return value.
+Completion of the operation is signaled via the _aio_, and the final result may be obtained via xref:nng_aio_result.adoc[`nng_aio_result`].
+That result will either be zero or an error code.
+
+The I/O operation completes as soon as at least one byte has been received, or an error has occurred.
+Therefore, the number of bytes read may be less than requested.
+The actual number of bytes read can be determined with xref:../aio/nng_aio_count.adoc[`nng_aio_count`].
+
+### Errors
+
+[horizontal]
+`NNG_ECANCELED`:: The operation was canceled.
+`NNG_ECLOSED`:: The connection was closed.
+`NNG_ECONNRESET`:: The peer closed the connection.
+`NNG_ECONNSHUT`:: Remote peer shutdown after sending data.
+`NNG_EINVAL`:: The _aio_ does not contain a valid scatter/gather vector.
+`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
+`NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
+
+### See Also
+
+xref:../aio/index.adoc[Asynchronous I/O],
+xref:nng_aio_count.adoc[nng_aio_count],
+xref:nng_aio_result.adoc[nng_aio_result],
+xref:nng_aio_set_iov.adoc[nng_aio_set_iov]

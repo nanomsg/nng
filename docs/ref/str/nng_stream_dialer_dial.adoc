@@ -1,0 +1,37 @@
+## nng_stream_dialer_dial
+
+Initiate outgoing byte stream connection.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+void nng_stream_dialer_dial(nng_stream_dialer *d, nng_aio *aio);
+```
+
+### Description
+
+The `nng_stream_dialer_dial` attempts to establish a connection to the remote peer for the dialer _d_.
+The operation is completed asynchronously, using _aio_.
+
+TIP: The peer address is determined by the address specified using xref:nng_stream_dialer_alloc.adoc[`nng_stream_dialer_alloc`] or xref:nng_stream_dialer_alloc.adoc[`nng_stream_dialer_alloc_url`].
+
+If a connection is successfully established, the _aio_ will have the resulting `nng_stream` object stored as its first output.
+(See xref:../aio/nng_aio_get_output.adoc[`nng_aio_get_output`].)
+
+### Errors
+
+[horizontal]
+`NNG_EADDRINVAL`:: The address specified is invalid.
+`NNG_ECANCELED`:: The operation was aborted.
+`NNG_ECLOSED`:: The dialer is closed.
+`NNG_ECONNREFUSED`:: The connection was refused by the server.
+`NNG_ECONNRESET`:: The connection was reset by the server.
+`NNG_ENOMEM`:: Insufficient free memory exists.
+
+### See Also
+
+xref:../aio/index.adoc[Asynchronous I/O],
+xref:nng_stream_dialer_alloc.adoc[nng_stream_dialer_alloc],
+xref:nng_stream_dialer_close.adoc[nng_stream_dialer_close]

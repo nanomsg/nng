@@ -1,0 +1,40 @@
+## nng_stream_listener_listen
+
+Bind listener to configured address.
+
+### Synopsis
+
+```c
+#include <nng/nng.h>
+
+int nng_stream_listener_listen(nng_stream_listener *l);
+```
+
+### Description
+
+The `nng_stream_listener_listen` attempts to bind the listener _l_ to the local address specified when the listener was created.
+
+This must generally be done before accepting incoming connections using xref:nng_stream_listener_accept.adoc[`nng_stream_listener_accept`].
+
+For some transports this will also perform other actions.
+For example, with TCP listeners it will configure the  underlying port into passive mode, ready to accept an incoming connection, and established a listen queue for receiving incoming connections.
+
+If binding the listener requires allocation of an address (for example when a TCP port number of zero is specified, indicating that an ephemeral port should be used), this operation will allocate that resource.
+This can permit retrieval of the selected address using
+xref:nng_stream_listener_get.adoc[`nng_stream_listener_get`], typically with the `NNG_OPT_LOCADDR` option.
+
+### Return Values
+
+This function returns 0 on success, and non-zero otherwise.
+
+### Errors
+
+[horizontal]
+`NNG_EADDRINUSE`:: The address is already in use.
+`NNG_EADDRINVAL`:: The address is invalid or unavailable.
+`NNG_ECLOSED`:: The listener has been closed.
+`NNG_ESTATE`:: The listener is already bound.
+
+### See Also
+
+xref:nng_stream_listener_accept.adoc[nng_stream_listener_accept]
