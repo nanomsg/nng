@@ -15,6 +15,7 @@
 // normally be running.  This is the only time it can fail with correct
 // arguments, and then only if it is interrupted with a signal.
 
+#include <stddef.h>
 #include <sys/random.h>
 
 #include "core/nng_impl.h"
