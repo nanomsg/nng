@@ -72,7 +72,7 @@ extern "C" {
 // NNG_PROTOCOL_NUMBER is used by protocol headers to calculate their
 // protocol number from a major and minor number.  Applications should
 // probably not need to use this.
-#define NNG_PROTOCOL_NUMBER(maj, min) (((x) * 16) + (y))
+#define NNG_PROTOCOL_NUMBER(maj, min) (((x) *16) + (y))
 
 // Types common to nng.
 
@@ -617,7 +617,7 @@ NNG_DECL void nng_aio_finish(nng_aio *, int);
 // final argument is passed to the cancelfn.  The final argument of the
 // cancellation function is the error number (will not be zero) corresponding
 // to the reason for cancellation, e.g. NNG_ETIMEDOUT or NNG_ECANCELED.
-typedef void  (*nng_aio_cancelfn)(nng_aio *, void *, int);
+typedef void (*nng_aio_cancelfn)(nng_aio *, void *, int);
 NNG_DECL void nng_aio_defer(nng_aio *, nng_aio_cancelfn, void *);
 
 // nng_aio_sleep does a "sleeping" operation, basically does nothing
@@ -1465,6 +1465,91 @@ enum {
 	// variable.
 	NNG_INIT_MAX_POLLER_THREADS,
 };
+
+// Logging support.
+
+// Log levels.  These correspond to RFC 5424 (syslog) levels.
+// NNG never only uses priorities 3 - 7.
+//
+// Note that LOG_EMER is 0, but we don't let applications submit'
+// such messages, so this is a useful value to prevent logging altogether.
+typedef enum nng_log_level {
+	NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
+	NNG_LOG_ERR    = 3,
+	NNG_LOG_WARN   = 4,
+	NNG_LOG_NOTICE = 5,
+	NNG_LOG_INFO   = 6,
+	NNG_LOG_DEBUG  = 7
+} nng_log_level;
+
+// Facilities.  Also from RFC 5424.
+// Not all values are enumerated here. Values not enumerated here
+// should be assumed reserved for system use, and not available for
+// NNG or general applications.
+typedef enum nng_log_facility {
+	NNG_LOG_USER   = 1,
+	NNG_LOG_DAEMON = 3,
+	NNG_LOG_AUTH   = 10, // actually AUTHPRIV, for sensitive logs
+	NNG_LOG_LOCAL0 = 16,
+	NNG_LOG_LOCAL1 = 17,
+	NNG_LOG_LOCAL2 = 18,
+	NNG_LOG_LOCAL3 = 19,
+	NNG_LOG_LOCAL4 = 20,
+	NNG_LOG_LOCAL5 = 21,
+	NNG_LOG_LOCAL6 = 22,
+	NNG_LOG_LOCAL7 = 23,
+} nng_log_facility;
+
+// Logging function, which may be supplied by application code.  Only
+// one logging function may be registered.  The level and facility are
+// as above.  The message ID is chosen by the submitter - internal NNG
+// messages will have MSGIDs starting with "NNG-".  The MSGID should be
+// not more than 8 characters, though this is not a hard requirement.
+// Loggers are required ot make a copy of the msgid and message if required,
+// because the values will not be valid once the logger returns.
+typedef void (*nng_logger)(nng_log_level level, nng_log_facility facility,
+    const char *msgid, const char *msg);
+
+// Discard logger, simply throws logs away.
+extern void nng_null_logger(
+    nng_log_level, nng_log_facility, const char *, const char *);
+
+// Very simple, prints formatted messages to stderr.
+extern void nng_stderr_logger(
+    nng_log_level, nng_log_facility, const char *, const char *);
+
+// Performs an appropriate logging function for the system.  On
+// POSIX systems it uses syslog(3).  Details vary by system, and the
+// logging may be influenced by other APIs not provided by NNG, such as
+// openlog() for POSIX systems.  This may be nng_stderr_logger on
+// other systems.
+extern void nng_system_logger(
+    nng_log_level, nng_log_facility, const char *, const char *);
+
+// Set the default facility to use when logging.  NNG uses NNG_LOG_USER by
+// default.
+extern void nng_log_set_facility(nng_log_facility facility);
+
+// Set the default logging level.  Use NNG_LOG_DEBUG to get everything.
+// Use NNG_LOG_NONE to prevent logging altogether.  Logs that are less
+// severe (numeric level is higher) will be discarded.
+extern void nng_log_set_level(nng_log_level level);
+
+// Register a logger.
+extern void nng_log_set_logger(nng_logger logger);
+
+// Log a message.  The msg is formatted using following arguments as per
+// sprintf. The msgid may be NULL.
+extern void nng_log_err(const char *msgid, const char *msg, ...);
+extern void nng_log_warn(const char *msgid, const char *msg, ...);
+extern void nng_log_notice(const char *msgid, const char *msg, ...);
+extern void nng_log_info(const char *msgid, const char *msg, ...);
+extern void nng_log_debug(const char *msgid, const char *msg, ...);
+
+// Log an authentication related message.  These will use the NNG_LOG_AUTH
+// facility.
+extern void nng_log_auth(
+    nng_log_level level, const char *msgid, const char *msg, ...);
 
 #ifdef __cplusplus
 }

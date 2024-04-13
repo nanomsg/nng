@@ -1,0 +1,47 @@
+= nng_log_set_facility(3)
+//
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_log_set_facility - set facility used for log messages
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef enum nng_log_facility {
+	NNG_LOG_USER   = 1,
+	NNG_LOG_DAEMON = 3,
+	NNG_LOG_AUTH   = 10,
+	NNG_LOG_LOCAL0 = 16,
+	NNG_LOG_LOCAL1 = 17,
+	NNG_LOG_LOCAL2 = 18,
+	NNG_LOG_LOCAL3 = 19,
+	NNG_LOG_LOCAL4 = 20,
+	NNG_LOG_LOCAL5 = 21,
+	NNG_LOG_LOCAL6 = 22,
+	NNG_LOG_LOCAL7 = 23,
+} nng_log_facility;
+
+void nng_log_set_facility(nng_log_facility facility);
+----
+
+== DESCRIPTION
+
+The `nng_log_set_facility` is used to set the _facility_ of the application posting logs.
+This is used to assist with directing log content when handled by services such as `syslog`.
+
+Note that while the log levels used here overlap with common levels used by the syslog facility on POSIX systems, applications should not rely on this.
+
+== SEE ALSO
+
+xref:nng_log_set_level.3.adoc[nng_log_set_level(3)]

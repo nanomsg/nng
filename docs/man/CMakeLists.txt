@@ -115,6 +115,10 @@ if (NNG_ENABLE_DOC)
             nng_listener_set
             nng_listener_setopt
             nng_listener_start
+            nng_log
+            nng_log_set_facility
+            nng_log_set_loevel
+            nng_log_set_logger
             nng_msg_alloc
             nng_msg_append
             nng_msg_body
