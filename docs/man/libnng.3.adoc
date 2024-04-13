@@ -283,6 +283,16 @@ universal resource locators (URLS).
 |xref:nng_url_parse.3.adoc[nng_url_parse()]|create URL structure from string
 |===
 
+=== Logging Support
+
+Common functionality for message logging.
+
+|===
+|xref:nng_log.3.adoc[nng_log()]|log a message
+|xref:nng_log_facility.3.adoc[nng_log_set_facility()]|set log facility
+|xref:nng_log_level.3.adoc[nng_log_set_level()]|set log level
+|xref:nng_log_logger.3.adoc[nng_log_set_logger()]|set logging handler
+|===
 
 === Supplemental API
 
