@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -26,11 +26,11 @@ static void rep0_pipe_recv_cb(void *);
 static void rep0_pipe_fini(void *);
 
 struct rep0_ctx {
-	rep0_sock *   sock;
+	rep0_sock    *sock;
 	uint32_t      pipe_id;
-	rep0_pipe *   spipe; // send pipe
-	nni_aio *     saio;  // send aio
-	nni_aio *     raio;  // recv aio
+	rep0_pipe    *spipe; // send pipe
+	nni_aio      *saio;  // send aio
+	nni_aio      *raio;  // recv aio
 	nni_list_node sqnode;
 	nni_list_node rqnode;
 	size_t        btrace_len;
@@ -51,8 +51,8 @@ struct rep0_sock {
 
 // rep0_pipe is our per-pipe protocol private structure.
 struct rep0_pipe {
-	nni_pipe *    pipe;
-	rep0_sock *   rep;
+	nni_pipe     *pipe;
+	rep0_sock    *rep;
 	uint32_t      id;
 	nni_aio       aio_send;
 	nni_aio       aio_recv;
@@ -65,9 +65,9 @@ struct rep0_pipe {
 static void
 rep0_ctx_close(void *arg)
 {
-	rep0_ctx * ctx = arg;
+	rep0_ctx  *ctx = arg;
 	rep0_sock *s   = ctx->sock;
-	nni_aio *  aio;
+	nni_aio   *aio;
 
 	nni_mtx_lock(&s->lk);
 	if ((aio = ctx->saio) != NULL) {
@@ -97,7 +97,7 @@ static void
 rep0_ctx_init(void *carg, void *sarg)
 {
 	rep0_sock *s   = sarg;
-	rep0_ctx * ctx = carg;
+	rep0_ctx  *ctx = carg;
 
 	NNI_LIST_NODE_INIT(&ctx->sqnode);
 	NNI_LIST_NODE_INIT(&ctx->rqnode);
@@ -109,7 +109,7 @@ rep0_ctx_init(void *carg, void *sarg)
 static void
 rep0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 {
-	rep0_ctx * ctx = arg;
+	rep0_ctx  *ctx = arg;
 	rep0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->lk);
@@ -128,10 +128,10 @@ rep0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 static void
 rep0_ctx_send(void *arg, nni_aio *aio)
 {
-	rep0_ctx * ctx = arg;
+	rep0_ctx  *ctx = arg;
 	rep0_sock *s   = ctx->sock;
 	rep0_pipe *p;
-	nni_msg *  msg;
+	nni_msg   *msg;
 	int        rv;
 	size_t     len;
 	uint32_t   p_id; // pipe id
@@ -264,7 +264,7 @@ static void
 rep0_pipe_fini(void *arg)
 {
 	rep0_pipe *p = arg;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	if ((msg = nni_aio_get_msg(&p->aio_recv)) != NULL) {
 		nni_aio_set_msg(&p->aio_recv, NULL);
@@ -300,6 +300,9 @@ rep0_pipe_start(void *arg)
 
 	if (nni_pipe_peer(p->pipe) != NNG_REP0_PEER) {
 		// Peer protocol mismatch.
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->pipe), NNG_REP0_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -320,7 +323,7 @@ rep0_pipe_close(void *arg)
 {
 	rep0_pipe *p = arg;
 	rep0_sock *s = p->rep;
-	rep0_ctx * ctx;
+	rep0_ctx  *ctx;
 
 	nni_aio_close(&p->aio_send);
 	nni_aio_close(&p->aio_recv);
@@ -358,9 +361,9 @@ rep0_pipe_send_cb(void *arg)
 {
 	rep0_pipe *p = arg;
 	rep0_sock *s = p->rep;
-	rep0_ctx * ctx;
-	nni_aio *  aio;
-	nni_msg *  msg;
+	rep0_ctx  *ctx;
+	nni_aio   *aio;
+	nni_msg   *msg;
 	size_t     len;
 
 	if (nni_aio_result(&p->aio_send) != 0) {
@@ -400,7 +403,7 @@ rep0_pipe_send_cb(void *arg)
 static void
 rep0_cancel_recv(nni_aio *aio, void *arg, int rv)
 {
-	rep0_ctx * ctx = arg;
+	rep0_ctx  *ctx = arg;
 	rep0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->lk);
@@ -415,11 +418,11 @@ rep0_cancel_recv(nni_aio *aio, void *arg, int rv)
 static void
 rep0_ctx_recv(void *arg, nni_aio *aio)
 {
-	rep0_ctx * ctx = arg;
+	rep0_ctx  *ctx = arg;
 	rep0_sock *s   = ctx->sock;
 	rep0_pipe *p;
 	size_t     len;
-	nni_msg *  msg;
+	nni_msg   *msg;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -472,10 +475,10 @@ rep0_pipe_recv_cb(void *arg)
 {
 	rep0_pipe *p = arg;
 	rep0_sock *s = p->rep;
-	rep0_ctx * ctx;
-	nni_msg *  msg;
-	uint8_t *  body;
-	nni_aio *  aio;
+	rep0_ctx  *ctx;
+	nni_msg   *msg;
+	uint8_t   *body;
+	nni_aio   *aio;
 	size_t     len;
 	int        hops;
 	int        ttl;

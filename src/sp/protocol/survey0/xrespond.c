@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -37,8 +37,8 @@ static void xresp0_pipe_fini(void *);
 
 // resp0_sock is our per-socket protocol private structure.
 struct xresp0_sock {
-	nni_msgq *     urq;
-	nni_msgq *     uwq;
+	nni_msgq      *urq;
+	nni_msgq      *uwq;
 	nni_atomic_int ttl;
 	nni_id_map     pipes;
 	nni_aio        aio_getq;
@@ -47,10 +47,10 @@ struct xresp0_sock {
 
 // resp0_pipe is our per-pipe protocol private structure.
 struct xresp0_pipe {
-	nni_pipe *   npipe;
+	nni_pipe    *npipe;
 	xresp0_sock *psock;
 	uint32_t     id;
-	nni_msgq *   sendq;
+	nni_msgq    *sendq;
 	nni_aio      aio_getq;
 	nni_aio      aio_putq;
 	nni_aio      aio_send;
@@ -150,6 +150,9 @@ xresp0_pipe_start(void *arg)
 	int          rv;
 
 	if (nni_pipe_peer(p->npipe) != NNI_PROTO_SURVEYOR_V0) {
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->npipe), NNI_PROTO_SURVEYOR_V0);
 		return (NNG_EPROTO);
 	}
 
@@ -195,7 +198,7 @@ void
 xresp0_sock_getq_cb(void *arg)
 {
 	xresp0_sock *s = arg;
-	nni_msg *    msg;
+	nni_msg     *msg;
 	uint32_t     id;
 	xresp0_pipe *p;
 
@@ -262,8 +265,8 @@ xresp0_recv_cb(void *arg)
 {
 	xresp0_pipe *p   = arg;
 	xresp0_sock *s   = p->psock;
-	nni_msgq *   urq = s->urq;
-	nni_msg *    msg;
+	nni_msgq    *urq = s->urq;
+	nni_msg     *msg;
 	int          hops;
 	int          ttl;
 

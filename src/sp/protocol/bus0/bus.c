@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -157,6 +157,9 @@ bus0_pipe_start(void *arg)
 	bus0_sock *s = p->bus;
 
 	if (nni_pipe_peer(p->pipe) != NNI_PROTO_BUS_V0) {
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer pipe protocol %d is not BUS protocol, rejected.",
+		    nni_pipe_peer(p->pipe));
 		return (NNG_EPROTO);
 	}
 

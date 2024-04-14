@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -39,9 +39,9 @@ struct pull0_sock {
 
 // pull0_pipe is our per-pipe protocol private structure.
 struct pull0_pipe {
-	nni_pipe *    p;
-	pull0_sock *  s;
-	nni_msg *     m;
+	nni_pipe     *p;
+	pull0_sock   *s;
+	nni_msg      *m;
 	nni_aio       aio;
 	bool          closed;
 	nni_list_node node;
@@ -104,6 +104,9 @@ pull0_pipe_start(void *arg)
 
 	if (nni_pipe_peer(p->p) != NNI_PROTO_PUSH_V0) {
 		// Peer protocol mismatch.
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->p), NNI_PROTO_PUSH_V0);
 		return (NNG_EPROTO);
 	}
 
@@ -137,9 +140,9 @@ pull0_recv_cb(void *arg)
 {
 	pull0_pipe *p  = arg;
 	pull0_sock *s  = p->s;
-	nni_aio *   ap = &p->aio;
-	nni_aio *   as;
-	nni_msg *   m;
+	nni_aio    *ap = &p->aio;
+	nni_aio    *as;
+	nni_msg    *m;
 
 	if (nni_aio_result(ap) != 0) {
 		// Failed to get a message, probably the pipe is closed.
@@ -185,7 +188,7 @@ static void
 pull0_sock_close(void *arg)
 {
 	pull0_sock *s = arg;
-	nni_aio *   a;
+	nni_aio    *a;
 	nni_mtx_lock(&s->m);
 	while ((a = nni_list_first(&s->rq)) != NULL) {
 		nni_aio_list_remove(a);

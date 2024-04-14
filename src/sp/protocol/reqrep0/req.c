@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -197,6 +197,9 @@ req0_pipe_start(void *arg)
 	req0_sock *s = p->req;
 
 	if (nni_pipe_peer(p->pipe) != NNG_REQ0_PEER) {
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->pipe), NNG_REQ0_PEER);
 		return (NNG_EPROTO);
 	}
 
