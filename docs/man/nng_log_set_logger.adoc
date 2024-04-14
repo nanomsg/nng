@@ -36,6 +36,7 @@ Only a single logger may be registered at a time.
 If needed, the logger should make copies of either _msgid_ or _msg_, as those may not be valid once the logger function returns.
 
 The `nng_null_logger` function is an implementation of `nng_logger` that simply discards the content.
+This is the default logger, so logging is disabled by default.
 
 The `nng_stderr_logger` function is an implementation that logs messages to the standard error stream.
 It will attempt to colorize messages by the severity, if the standard error is a terminal device.

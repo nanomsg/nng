@@ -55,6 +55,9 @@ The severity can be one of the following values:
 The message itself is handled according to the logging facility set up with xref:nng_mg_set_logger.3.adoc[`nng_log_set_logger`].
 Message delivery is best effort, and messages may be suppressed based on the priority set with xref:nng_log_set_level.3.adoc[`nng_log_set_level`].
 
+Note that in order to get log messages, a suitable logger must be set using `nng_log_set_logger`.
+The default logger, `nng_null_logger` simply discards logged content.
+
 == SEE ALSO
 
 xref:nng_log_set_facility.3.adoc[nng_log_set_facility(3)],
