@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -44,6 +45,8 @@ nni_init_helper(void)
 	nni_sp_tran_sys_init();
 
 	nni_inited = true;
+	nng_log_notice(
+	    "NNG-INIT", "NNG library version %s initialized", nng_version());
 
 	return (0);
 }
@@ -51,7 +54,12 @@ nni_init_helper(void)
 int
 nni_init(void)
 {
-	return (nni_plat_init(nni_init_helper));
+	int rv;
+	if ((rv = nni_plat_init(nni_init_helper)) != 0) {
+		nng_log_err("NNG-INIT",
+		    "NNG library initialization failed: %s", nng_strerror(rv));
+	}
+	return (rv);
 }
 
 // accessing the list of parameters
@@ -60,7 +68,7 @@ typedef struct nni_init_param {
 	nng_init_parameter param;
 	uint64_t           value;
 #ifdef NNG_TEST_LIB
-	uint64_t           effective;
+	uint64_t effective;
 #endif
 } nni_init_param;
 
@@ -114,7 +122,7 @@ nni_init_set_effective(nng_init_parameter p, uint64_t value)
 		}
 	}
 	if ((item = NNI_ALLOC_STRUCT(item)) != NULL) {
-		item->param = p;
+		item->param     = p;
 		item->effective = value;
 		nni_list_append(&nni_init_params, item);
 	}
@@ -134,10 +142,9 @@ nni_init_get_effective(nng_init_parameter p)
 			return (item->effective);
 		}
 	}
-	return ((uint64_t)-1);
+	return ((uint64_t) -1);
 }
 #endif
-
 
 static void
 nni_init_params_fini(void)
