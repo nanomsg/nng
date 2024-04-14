@@ -17,6 +17,7 @@
 #include "mbedtls/version.h" // Must be first in order to pick up version
 
 #include "mbedtls/error.h"
+#include "nng/nng.h"
 
 // mbedTLS renamed this header for 2.4.0.
 #if MBEDTLS_VERSION_MAJOR > 2 || MBEDTLS_VERSION_MINOR >= 4
@@ -97,6 +98,22 @@ tls_random(void *arg, unsigned char *buf, size_t sz)
 #else
 	return (tls_get_entropy(arg, buf, sz));
 #endif
+}
+
+static void
+tls_log_err(const char *msgid, const char *context, int errnum)
+{
+	char errbuf[256];
+	mbedtls_strerror(errnum, errbuf, sizeof(errbuf));
+	nng_log_err(msgid, "%s: %s", context, errbuf);
+}
+
+static void
+tls_log_warn(const char *msgid, const char *context, int errnum)
+{
+	char errbuf[256];
+	mbedtls_strerror(errnum, errbuf, sizeof(errbuf));
+	nng_log_warn(msgid, "%s: %s", context, errbuf);
 }
 
 // tls_mk_err converts an mbed error to an NNG error.
@@ -193,6 +210,8 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg)
 	mbedtls_ssl_set_bio(&ec->ctx, tls, net_send, net_recv, NULL);
 
 	if ((rv = mbedtls_ssl_setup(&ec->ctx, &cfg->cfg_ctx)) != 0) {
+		tls_log_warn(
+		    "NNG-TLS-CONN-FAIL", "Failed to setup TLS connection", rv);
 		return (tls_mk_err(rv));
 	}
 
@@ -266,6 +285,7 @@ conn_handshake(nng_tls_engine_conn *ec)
 		return (0);
 
 	default:
+		tls_log_warn("NNG-TLS-HANDSHAKE", "TLS handshake failed", rv);
 		return (tls_mk_err(rv));
 	}
 }
@@ -393,8 +413,10 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 	rv = mbedtls_ssl_config_defaults(&cfg->cfg_ctx, ssl_mode,
 	    MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
 	if (rv != 0) {
+		tls_log_err("NNG-TLS-CONFIG-INIT-FAIL",
+		    "Failed to initialize TLS configuration", rv);
 		config_fini(cfg);
-		return (rv);
+		return (tls_mk_err(rv));
 	}
 
 	mbedtls_ssl_conf_authmode(&cfg->cfg_ctx, auth_mode);
@@ -461,12 +483,16 @@ config_ca_chain(nng_tls_engine_config *cfg, const char *certs, const char *crl)
 	pem = (const uint8_t *) certs;
 	len = strlen(certs) + 1;
 	if ((rv = mbedtls_x509_crt_parse(&cfg->ca_certs, pem, len)) != 0) {
+		tls_log_err("NNG-TLS-CA-FAIL",
+		    "Failed to parse CA certificate(s)", rv);
 		return (tls_mk_err(rv));
 	}
 	if (crl != NULL) {
 		pem = (const uint8_t *) crl;
 		len = strlen(crl) + 1;
 		if ((rv = mbedtls_x509_crl_parse(&cfg->crl, pem, len)) != 0) {
+			tls_log_err("NNG-TLS-CRL-FAIL",
+			    "Failed to parse revocation list", rv);
 			return (tls_mk_err(rv));
 		}
 	}
@@ -493,6 +519,8 @@ config_own_cert(nng_tls_engine_config *cfg, const char *cert, const char *key,
 	pem = (const uint8_t *) cert;
 	len = strlen(cert) + 1;
 	if ((rv = mbedtls_x509_crt_parse(&p->crt, pem, len)) != 0) {
+		tls_log_err("NNG-TLS-CRT-FAIL",
+		    "Failure parsing our own certificate", rv);
 		rv = tls_mk_err(rv);
 		goto err;
 	}
@@ -507,12 +535,15 @@ config_own_cert(nng_tls_engine_config *cfg, const char *cert, const char *key,
 	    pass != NULL ? strlen(pass) : 0, tls_random, NULL);
 #endif
 	if (rv != 0) {
+		tls_log_err("NNG-TLS-KEY", "Failure parsing private key", rv);
 		rv = tls_mk_err(rv);
 		goto err;
 	}
 
 	rv = mbedtls_ssl_conf_own_cert(&cfg->cfg_ctx, &p->crt, &p->key);
 	if (rv != 0) {
+		tls_log_err("NNG-TLS-SELF",
+		    "Failure configuring self certificate", rv);
 		rv = tls_mk_err(rv);
 		goto err;
 	}
@@ -536,6 +567,8 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	int maj = MBEDTLS_SSL_MAJOR_VERSION_3;
 
 	if (min_ver > max_ver) {
+		nng_log_err("TLS-CFG-VER",
+		    "TLS maximum version must be larger than mimumum version");
 		return (NNG_ENOTSUP);
 	}
 	switch (min_ver) {
@@ -553,6 +586,8 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		v1 = MBEDTLS_SSL_MINOR_VERSION_3;
 		break;
 	default:
+		nng_log_err(
+		    "TLS-CFG-VER", "TLS minimum version not supported");
 		return (NNG_ENOTSUP);
 	}
 
@@ -575,6 +610,8 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		// Note that this means that if we ever TLS 1.4 or 2.0,
 		// then this will break.  That's sufficiently far out
 		// to justify not worrying about it.
+		nng_log_err(
+		    "TLS-CFG-VER", "TLS maximum version not supported");
 		return (NNG_ENOTSUP);
 	}
 
@@ -629,6 +666,7 @@ nng_tls_engine_init_mbed(void)
 	mbedtls_ctr_drbg_init(&cfg->rng_ctx);
 	rv = mbedtls_ctr_drbg_seed(&rng_ctx, tls_get_entropy, NULL, NULL, 0);
 	if (rv != 0) {
+		tls_log_err("NNG-TLS-RNG", "Failed initializing CTR DRBG", rv);
 		nni_mtx_fini(&rng_lock);
 		return (rv);
 	}
