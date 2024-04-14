@@ -58,16 +58,28 @@ nng_null_logger(nng_log_level level, nng_log_facility facility,
 }
 
 void
-nng_stderr_logger(nng_log_level level, nng_log_facility facility,
-    const char *msgid, const char *msg)
+stderr_logger(nng_log_level level, nng_log_facility facility,
+    const char *msgid, const char *msg, bool timechk)
 {
 	const char *sgr, *sgr0;
 	// Initial implementation.
-	bool        colors = false;
-	const char *level_str;
-	time_t      now;
-	char        when[64];
+	bool             colors = false;
+	const char      *level_str;
+	char             when[64];
+	struct tm       *tm;
+	static struct tm last_log = { 0 };
+	time_t           now;
+	uint64_t         sec;
+	uint32_t         nsec;
+
 	NNI_ARG_UNUSED(facility);
+
+	if (nni_time_get(&sec, &nsec) != 0) {
+		// default to the epoch if we can't get a clock for some reason
+		sec  = 0;
+		nsec = 0;
+	}
+	now = (time_t) sec;
 
 #ifdef NNG_PLATFORM_WINDOWS
 	// NB: We are blithely assuming the user has a modern console.
@@ -79,7 +91,6 @@ nng_stderr_logger(nng_log_level level, nng_log_facility facility,
 	colors = isatty(fileno(stderr)) && (getenv("TERM") != NULL) &&
 	    (getenv("TERM")[0] != 0);
 #else
-	now    = 0;
 	colors = false;
 #endif
 
@@ -92,15 +103,13 @@ nng_stderr_logger(nng_log_level level, nng_log_facility facility,
 	    (getenv("NO_COLOR") != NULL)) {
 		colors = false;
 	}
-	now = time(NULL);
 #ifdef NNG_HAVE_LOCALTIME_R
-	struct tm tm;
+	struct tm tm_buf;
 	// No timezone offset, not strictly ISO8601 compliant
-	strftime(when, sizeof(when), "%Y-%m-%d %T", localtime_r(&now, &tm));
+	tm = localtime_r(&now, &tm_buf);
 #else
-	strftime(when, sizeof(when), "%Y-%m-%d %T", localtime(&now));
+	tm = localtime(&now);
 #endif
-
 	switch (level) {
 	case NNG_LOG_ERR:
 		sgr       = "\x1b[31m"; // red
@@ -139,8 +148,30 @@ nng_stderr_logger(nng_log_level level, nng_log_facility facility,
 		sgr0 = "";
 	}
 
-	(void) fprintf(stderr, "%s[%-6s]: %s: %s%s%s%s\n", sgr, level_str,
-	    when, msgid ? msgid : "", msgid ? ": " : "", msg, sgr0);
+	if (timechk &&
+	    ((last_log.tm_mday != tm->tm_mday) ||
+	        (last_log.tm_mon != tm->tm_mon) ||
+	        (last_log.tm_year != tm->tm_year))) {
+		char new_day[64];
+		strftime(new_day, sizeof(new_day),
+		    "Date changed to %Y-%m-%d, TZ is %z", tm);
+		stderr_logger(
+		    NNG_LOG_DEBUG, facility, "NNG-DATE", new_day, false);
+		last_log = *tm;
+	}
+
+	strftime(when, sizeof(when), "%H:%M:%S", tm);
+	// we print with millisecond resolution
+	(void) fprintf(stderr, "%s[%-6s]: %s.%03d: %s%s%s%s\n", sgr, level_str,
+	    when, nsec / 1000000, msgid ? msgid : "", msgid ? ": " : "", msg,
+	    sgr0);
+}
+
+void
+nng_stderr_logger(nng_log_level level, nng_log_facility facility,
+    const char *msgid, const char *msg)
+{
+	stderr_logger(level, facility, msgid, msg, true);
 }
 
 void

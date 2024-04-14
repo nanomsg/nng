@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -202,6 +202,12 @@ extern const char *nuts_client_crt;
 #define NUTS_TESTS TEST_LIST
 
 #define NUTS_PROTO(x, y) (((x) << 4u) | (y))
+
+#define NUTS_ENABLE_LOG(level)                         \
+	do {                                           \
+		nng_log_set_logger(nng_stderr_logger); \
+		nng_log_set_level(level);              \
+	} while (0)
 
 #ifdef __cplusplus
 };
