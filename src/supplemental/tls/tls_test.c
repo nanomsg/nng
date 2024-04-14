@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 void
@@ -14,6 +15,7 @@ test_tls_config_version(void)
 {
 	nng_tls_config *cfg;
 
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
 	NUTS_PASS(nng_tls_config_alloc(&cfg, NNG_TLS_MODE_SERVER));
 
 	// Verify that min ver < max ver
@@ -50,8 +52,9 @@ void
 test_tls_conn_refused(void)
 {
 	nng_stream_dialer *dialer;
-	nng_aio *          aio;
+	nng_aio           *aio;
 
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_aio_set_timeout(aio, 5000); // 5 sec
 
@@ -69,20 +72,21 @@ void
 test_tls_large_message(void)
 {
 	nng_stream_listener *l;
-	nng_stream_dialer *  d;
-	nng_aio *            aio1, *aio2;
-	nng_stream *         s1;
-	nng_stream *         s2;
-	nng_tls_config *     c1;
-	nng_tls_config *     c2;
+	nng_stream_dialer   *d;
+	nng_aio             *aio1, *aio2;
+	nng_stream          *s1;
+	nng_stream          *s2;
+	nng_tls_config      *c1;
+	nng_tls_config      *c2;
 	char                 addr[32];
-	uint8_t *            buf1;
-	uint8_t *            buf2;
+	uint8_t             *buf1;
+	uint8_t             *buf2;
 	size_t               size = 450001;
-	void *               t1;
-	void *               t2;
+	void                *t1;
+	void                *t2;
 	int                  port;
 
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
 	// allocate messages
 	NUTS_ASSERT((buf1 = nng_alloc(size)) != NULL);
 	NUTS_ASSERT((buf2 = nng_alloc(size)) != NULL);
@@ -108,7 +112,7 @@ test_tls_large_message(void)
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 
-	snprintf(addr, sizeof (addr), "tls+tcp://127.0.0.1:%d", port);
+	snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%d", port);
 	NUTS_PASS(nng_stream_dialer_alloc(&d, addr));
 	NUTS_PASS(nng_tls_config_alloc(&c2, NNG_TLS_MODE_CLIENT));
 	NUTS_PASS(nng_tls_config_ca_chain(c2, nuts_server_crt, NULL));
@@ -147,9 +151,29 @@ test_tls_large_message(void)
 	nng_aio_free(aio2);
 }
 
+void
+test_tls_garbled_cert(void)
+{
+	nng_stream_listener *l;
+	nng_tls_config      *c1;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+
+	// Allocate the listener first.  We use a wild-card port.
+	NUTS_PASS(nng_stream_listener_alloc(&l, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_tls_config_alloc(&c1, NNG_TLS_MODE_SERVER));
+	NUTS_FAIL(nng_tls_config_own_cert(
+	              c1, nuts_garbled_crt, nuts_server_key, NULL),
+	    NNG_ECRYPTO);
+
+	nng_stream_listener_free(l);
+	nng_tls_config_free(c1);
+}
+
 TEST_LIST = {
 	{ "tls config version", test_tls_config_version },
 	{ "tls conn refused", test_tls_conn_refused },
 	{ "tls large message", test_tls_large_message },
+	{ "tls garbled cert", test_tls_garbled_cert },
 	{ NULL, NULL },
 };

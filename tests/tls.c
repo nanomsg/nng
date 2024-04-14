@@ -275,6 +275,9 @@ init_listener_tls_file(nng_listener l)
 TestMain("TLS Transport", {
 	static trantest tt;
 
+	nng_log_set_logger(nng_stderr_logger);
+	nng_log_set_level(NNG_LOG_INFO);
+
 	if (strcmp(nng_tls_engine_name(), "none") == 0) {
 		Skip("TLS not enabled");
 	}
@@ -332,7 +335,7 @@ TestMain("TLS Transport", {
 		nng_socket   s2;
 		nng_listener l;
 		nng_dialer   d;
-		char *       addr;
+		char        *addr;
 
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
@@ -454,7 +457,7 @@ TestMain("TLS Transport", {
 		nng_socket   s2; // client
 		nng_listener l;
 		char         addr[NNG_MAXADDRLEN];
-		nng_msg *    msg;
+		nng_msg     *msg;
 		nng_pipe     p;
 		bool         b;
 		nng_dialer   d;
@@ -500,7 +503,7 @@ TestMain("TLS Transport", {
 		nng_listener l;
 		nng_dialer   d;
 		char         addr[NNG_MAXADDRLEN];
-		nng_msg *    msg;
+		nng_msg     *msg;
 		nng_pipe     p;
 		bool         b;
 
@@ -576,8 +579,8 @@ TestMain("TLS Transport", {
 		So(nng_listener_set_int(l, NNG_OPT_TCP_NODELAY, x) ==
 		    NNG_EBADTYPE);
 		// This assumes sizeof (bool) != sizeof (int)
-		So(nng_listener_set(
-		       l, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) == NNG_EINVAL);
+		So(nng_listener_set(l, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) ==
+		    NNG_EINVAL);
 
 		nng_dialer_close(d);
 		nng_listener_close(l);
@@ -607,8 +610,7 @@ TestMain("TLS Transport", {
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
 		So(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == false);
-		So(nng_dialer_set_bool(d, NNG_OPT_TCP_KEEPALIVE, true) ==
-		    0);
+		So(nng_dialer_set_bool(d, NNG_OPT_TCP_KEEPALIVE, true) == 0);
 		So(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == true);
 		So(nng_dialer_get_int(d, NNG_OPT_TCP_KEEPALIVE, &x) ==
@@ -618,8 +620,7 @@ TestMain("TLS Transport", {
 		    NNG_EBADTYPE);
 
 		So(nng_listener_create(&l, s, "tcp://127.0.0.1:4999") == 0);
-		So(nng_listener_get_bool(l, NNG_OPT_TCP_KEEPALIVE, &v) ==
-		    0);
+		So(nng_listener_get_bool(l, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == false);
 		x = 1;
 		So(nng_listener_set_int(l, NNG_OPT_TCP_KEEPALIVE, x) ==
