@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -25,6 +25,8 @@ nni_sp_tran_register(nni_sp_tran *tran)
 	if (!nni_list_node_active(&tran->tran_link)) {
 		tran->tran_init();
 		nni_list_append(&sp_tran_list, tran);
+		nng_log_info(
+		    "NNG-TRAN", "Registered transport: %s", tran->tran_scheme);
 	}
 	nni_rwlock_unlock(&sp_tran_lk);
 }
