@@ -10,6 +10,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "core/strs.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -21,7 +22,7 @@ static void listener_accept_start(nni_listener *);
 static void listener_accept_cb(void *);
 static void listener_timer_cb(void *);
 
-static nni_id_map listeners = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
+static nni_id_map listeners    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
 static nni_mtx    listeners_lk = NNI_MTX_INITIALIZER;
 
 uint32_t
@@ -223,12 +224,12 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	l->l_url     = url;
-	l->l_closed  = false;
-	l->l_data    = NULL;
-	l->l_ref     = 1;
-	l->l_sock    = s;
-	l->l_tran    = tran;
+	l->l_url    = url;
+	l->l_closed = false;
+	l->l_data   = NULL;
+	l->l_ref    = 1;
+	l->l_sock   = s;
+	l->l_tran   = tran;
 	nni_atomic_flag_reset(&l->l_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
@@ -363,6 +364,8 @@ listener_accept_cb(void *arg)
 	case NNG_ECONNRESET:   // remote condition, no cool down
 	case NNG_ETIMEDOUT:    // No need to sleep, we timed out already.
 	case NNG_EPEERAUTH:    // peer validation failure
+		nng_log_warn("NNG-ACCEPT-FAIL", "Failed accepting on %s: %s",
+		    l->l_url->u_rawurl, nng_strerror(rv));
 		nni_listener_bump_error(l, rv);
 		listener_accept_start(l);
 		break;
@@ -400,6 +403,8 @@ nni_listener_start(nni_listener *l, int flags)
 	}
 
 	if ((rv = l->l_ops.l_bind(l->l_data)) != 0) {
+		nng_log_warn("NNG-BIND-FAIL", "Failed binding to %s: %s",
+		    l->l_url->u_rawurl, nng_strerror(rv));
 		nni_listener_bump_error(l, rv);
 		nni_atomic_flag_reset(&l->l_started);
 		return (rv);
