@@ -940,7 +940,7 @@ int
 nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 {
 	nni_sockopt *sopt;
-	int rv;
+	int          rv;
 
 	// grab a hold on the dialer for the socket
 	if ((rv = nni_dialer_hold(d)) != 0) {
@@ -1522,6 +1522,8 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 		nni_stat_inc(&d->st_reject, 1);
 		nni_stat_inc(&s->st_rejects, 1);
 #endif
+		nng_log_debug("NNG-PIPEREJECT",
+		    "Pipe closed by pipe callback before added to socket");
 		nni_pipe_rele(p);
 		return;
 	}

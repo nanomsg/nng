@@ -388,6 +388,9 @@ dialer_connect_cb(void *arg)
 	case NNG_ECONNREFUSED:
 	case NNG_ETIMEDOUT:
 	default:
+		nng_log_warn("NNG-CONN-FAIL", "Failed connecting to %s: %s",
+		    d->d_url->u_rawurl, nng_strerror(rv));
+
 		nni_dialer_bump_error(d, rv);
 		if (user_aio == NULL) {
 			nni_dialer_timer_start(d);
@@ -410,7 +413,7 @@ dialer_connect_start(nni_dialer *d)
 int
 nni_dialer_start(nni_dialer *d, unsigned flags)
 {
-	int      rv = 0;
+	int      rv  = 0;
 	nni_aio *aio = NULL;
 
 	if (nni_atomic_flag_test_and_set(&d->d_started)) {
