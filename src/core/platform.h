@@ -234,8 +234,8 @@ extern bool nni_atomic_cas(nni_atomic_int *, int, int);
 
 // atomic pointers.  We only support a few operations.
 typedef struct nni_atomic_ptr nni_atomic_ptr;
-extern void nni_atomic_set_ptr(nni_atomic_ptr *, void *);
-extern void *nni_atomic_get_ptr(nni_atomic_ptr *);
+extern void                   nni_atomic_set_ptr(nni_atomic_ptr *, void *);
+extern void                  *nni_atomic_get_ptr(nni_atomic_ptr *);
 
 //
 // Clock Support
@@ -248,6 +248,9 @@ extern void *nni_atomic_get_ptr(nni_atomic_ptr *);
 // relax this last constraint, but there is no reason to, and leaves us the
 // option of using negative values for other purposes in the future.)
 extern nni_time nni_clock(void);
+
+// Get the real time, in seconds and nanoseconds
+extern int nni_time_get(uint64_t *seconds, uint32_t *nanoseconds);
 
 // nni_msleep sleeps for the specified number of milliseconds (at least).
 extern void nni_msleep(nni_duration);
@@ -445,7 +448,7 @@ extern int nni_plat_udp_sockname(nni_plat_udp *, nni_sockaddr *);
 // in APIs to transport file descriptors, or across a fork/exec boundary (so
 // that child processes may use these with socket to inherit a socket that is
 // connected to the parent.)
-extern int nni_socket_pair(int [2]);
+extern int nni_socket_pair(int[2]);
 
 //
 // File/Store Support
