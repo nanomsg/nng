@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -35,11 +35,11 @@ static void resp0_pipe_recv_cb(void *);
 static void resp0_pipe_fini(void *);
 
 struct resp0_ctx {
-	resp0_sock *  sock;
+	resp0_sock   *sock;
 	uint32_t      pipe_id;
-	resp0_pipe *  spipe; // send pipe
-	nni_aio *     saio;  // send aio
-	nni_aio *     raio;  // recv aio
+	resp0_pipe   *spipe; // send pipe
+	nni_aio      *saio;  // send aio
+	nni_aio      *raio;  // recv aio
 	nni_list_node sqnode;
 	nni_list_node rqnode;
 	size_t        btrace_len;
@@ -60,8 +60,8 @@ struct resp0_sock {
 
 // resp0_pipe is our per-pipe protocol private structure.
 struct resp0_pipe {
-	nni_pipe *    npipe;
-	resp0_sock *  psock;
+	nni_pipe     *npipe;
+	resp0_sock   *psock;
 	bool          busy;
 	bool          closed;
 	uint32_t      id;
@@ -74,9 +74,9 @@ struct resp0_pipe {
 static void
 resp0_ctx_close(void *arg)
 {
-	resp0_ctx * ctx = arg;
+	resp0_ctx  *ctx = arg;
 	resp0_sock *s   = ctx->sock;
-	nni_aio *   aio;
+	nni_aio    *aio;
 
 	// complete any outstanding operations here, cancellation, etc.
 
@@ -108,7 +108,7 @@ static void
 resp0_ctx_init(void *carg, void *sarg)
 {
 	resp0_sock *s   = sarg;
-	resp0_ctx * ctx = carg;
+	resp0_ctx  *ctx = carg;
 
 	NNI_LIST_NODE_INIT(&ctx->sqnode);
 	NNI_LIST_NODE_INIT(&ctx->rqnode);
@@ -120,7 +120,7 @@ resp0_ctx_init(void *carg, void *sarg)
 static void
 resp0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 {
-	resp0_ctx * ctx = arg;
+	resp0_ctx  *ctx = arg;
 	resp0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -138,10 +138,10 @@ resp0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 static void
 resp0_ctx_send(void *arg, nni_aio *aio)
 {
-	resp0_ctx * ctx = arg;
+	resp0_ctx  *ctx = arg;
 	resp0_sock *s   = ctx->sock;
 	resp0_pipe *p;
-	nni_msg *   msg;
+	nni_msg    *msg;
 	size_t      len;
 	uint32_t    pid;
 	int         rv;
@@ -269,7 +269,7 @@ static void
 resp0_pipe_fini(void *arg)
 {
 	resp0_pipe *p = arg;
-	nng_msg *   msg;
+	nng_msg    *msg;
 
 	if ((msg = nni_aio_get_msg(&p->aio_recv)) != NULL) {
 		nni_aio_set_msg(&p->aio_recv, NULL);
@@ -305,6 +305,9 @@ resp0_pipe_start(void *arg)
 	int         rv;
 
 	if (nni_pipe_peer(p->npipe) != NNI_PROTO_SURVEYOR_V0) {
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->npipe), NNI_PROTO_SURVEYOR_V0);
 		return (NNG_EPROTO);
 	}
 
@@ -324,7 +327,7 @@ resp0_pipe_close(void *arg)
 {
 	resp0_pipe *p = arg;
 	resp0_sock *s = p->psock;
-	resp0_ctx * ctx;
+	resp0_ctx  *ctx;
 
 	nni_aio_close(&p->aio_send);
 	nni_aio_close(&p->aio_recv);
@@ -356,9 +359,9 @@ resp0_pipe_send_cb(void *arg)
 {
 	resp0_pipe *p = arg;
 	resp0_sock *s = p->psock;
-	resp0_ctx * ctx;
-	nni_aio *   aio;
-	nni_msg *   msg;
+	resp0_ctx  *ctx;
+	nni_aio    *aio;
+	nni_msg    *msg;
 	size_t      len;
 
 	if (nni_aio_result(&p->aio_send) != 0) {
@@ -398,7 +401,7 @@ resp0_pipe_send_cb(void *arg)
 static void
 resp0_cancel_recv(nni_aio *aio, void *arg, int rv)
 {
-	resp0_ctx * ctx = arg;
+	resp0_ctx  *ctx = arg;
 	resp0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -413,11 +416,11 @@ resp0_cancel_recv(nni_aio *aio, void *arg, int rv)
 static void
 resp0_ctx_recv(void *arg, nni_aio *aio)
 {
-	resp0_ctx * ctx = arg;
+	resp0_ctx  *ctx = arg;
 	resp0_sock *s   = ctx->sock;
 	resp0_pipe *p;
 	size_t      len;
-	nni_msg *   msg;
+	nni_msg    *msg;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -470,9 +473,9 @@ resp0_pipe_recv_cb(void *arg)
 {
 	resp0_pipe *p = arg;
 	resp0_sock *s = p->psock;
-	resp0_ctx * ctx;
-	nni_msg *   msg;
-	nni_aio *   aio;
+	resp0_ctx  *ctx;
+	nni_msg    *msg;
+	nni_aio    *aio;
 	int         hops;
 	size_t      len;
 	int         ttl;

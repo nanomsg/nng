@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -39,9 +39,9 @@ static void pair1poly_pipe_fini(void *);
 
 // pair1poly_sock is our per-socket protocol private structure.
 struct pair1poly_sock {
-	nni_msgq *     uwq;
-	nni_msgq *     urq;
-	nni_sock *     sock;
+	nni_msgq      *uwq;
+	nni_msgq      *urq;
+	nni_sock      *sock;
 	nni_atomic_int ttl;
 	nni_mtx        mtx;
 	nni_id_map     pipes;
@@ -60,9 +60,9 @@ struct pair1poly_sock {
 
 // pair1poly_pipe is our per-pipe protocol private structure.
 struct pair1poly_pipe {
-	nni_pipe *      pipe;
+	nni_pipe       *pipe;
 	pair1poly_sock *pair;
-	nni_msgq *      send_queue;
+	nni_msgq       *send_queue;
 	nni_aio         aio_send;
 	nni_aio         aio_recv;
 	nni_aio         aio_get;
@@ -230,9 +230,12 @@ pair1poly_pipe_start(void *arg)
 
 	nni_mtx_lock(&s->mtx);
 	if (nni_pipe_peer(p->pipe) != NNG_PAIR1_PEER) {
+		// Peer protocol mismatch.
 		nni_mtx_unlock(&s->mtx);
 		BUMP_STAT(&s->stat_reject_mismatch);
-		// Peer protocol mismatch.
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->pipe), NNG_PAIR1_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -284,9 +287,9 @@ pair1poly_pipe_recv_cb(void *arg)
 {
 	pair1poly_pipe *p = arg;
 	pair1poly_sock *s = p->pair;
-	nni_msg *       msg;
+	nni_msg        *msg;
 	uint32_t        hdr;
-	nni_pipe *      pipe = p->pipe;
+	nni_pipe       *pipe = p->pipe;
 	size_t          len;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
@@ -334,7 +337,7 @@ pair1poly_sock_get_cb(void *arg)
 {
 	pair1poly_pipe *p;
 	pair1poly_sock *s = arg;
-	nni_msg *       msg;
+	nni_msg        *msg;
 	uint32_t        id;
 
 	if (nni_aio_result(&s->aio_get) != 0) {
@@ -386,7 +389,7 @@ static void
 pair1poly_pipe_get_cb(void *arg)
 {
 	pair1poly_pipe *p = arg;
-	nni_msg *       msg;
+	nni_msg        *msg;
 
 	if (nni_aio_result(&p->aio_get) != 0) {
 		nni_pipe_close(p->pipe);

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,6 +11,7 @@
 #include <stdlib.h>
 
 #include "core/nng_impl.h"
+#include "core/pipe.h"
 #include "nng/protocol/pair0/pair.h"
 
 // Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
@@ -157,12 +158,18 @@ pair0_pipe_start(void *arg)
 
 	if (nni_pipe_peer(p->pipe) != NNI_PROTO_PAIR_V0) {
 		// Peer protocol mismatch.
+		nng_log_warn("NNG-PEER-MISMATCH",
+		    "Peer protocol mismatch: %d != %d, rejected.",
+		    nni_pipe_peer(p->pipe), NNI_PROTO_PAIR_V0);
 		return (NNG_EPROTO);
 	}
 
 	nni_mtx_lock(&s->mtx);
 	if (s->p != NULL) {
 		nni_mtx_unlock(&s->mtx);
+		nng_log_warn("NNG-PAIR-BUSY",
+		    "Peer pipe protocol %d is already paired, rejected.",
+		    nni_pipe_peer(p->pipe));
 		return (NNG_EBUSY); // Already have a peer, denied.
 	}
 	s->p        = p;
