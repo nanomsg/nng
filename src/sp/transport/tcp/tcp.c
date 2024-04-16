@@ -55,8 +55,7 @@ struct tcptran_ep {
 	bool                 started;
 	bool                 closed;
 	nng_url             *url;
-	const char          *host; // for dialers
-	nng_sockaddr         src;
+	const char          *host;   // for dialers
 	int                  refcnt; // active pipes
 	nni_aio             *useraio;
 	nni_aio             *connaio;
@@ -385,6 +384,9 @@ tcptran_pipe_recv_cb(void *arg)
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
+			nng_log_warn("NNG-RCVMAX",
+			    "Rejected oversize message of %lu bytes on TCP",
+			    (unsigned long) len);
 			rv = NNG_EMSGSIZE;
 			goto recv_error;
 		}

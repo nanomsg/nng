@@ -25,14 +25,13 @@ typedef struct ipc_ep   ipc_ep;
 
 // ipc_pipe is one end of an IPC connection.
 struct ipc_pipe {
-	nng_stream *    conn;
+	nng_stream     *conn;
 	uint16_t        peer;
 	uint16_t        proto;
 	size_t          rcv_max;
 	bool            closed;
-	nni_sockaddr    sa;
-	ipc_ep *        ep;
-	nni_pipe *      pipe;
+	ipc_ep         *ep;
+	nni_pipe       *pipe;
 	nni_list_node   node;
 	nni_atomic_flag reaped;
 	nni_reap_node   reap;
@@ -47,24 +46,23 @@ struct ipc_pipe {
 	nni_aio         tx_aio;
 	nni_aio         rx_aio;
 	nni_aio         neg_aio;
-	nni_msg *       rx_msg;
+	nni_msg        *rx_msg;
 	nni_mtx         mtx;
 };
 
 struct ipc_ep {
 	nni_mtx              mtx;
-	nni_sockaddr         sa;
 	size_t               rcv_max;
 	uint16_t             proto;
 	bool                 started;
 	bool                 closed;
 	bool                 fini;
 	int                  ref_cnt;
-	nng_stream_dialer *  dialer;
+	nng_stream_dialer   *dialer;
 	nng_stream_listener *listener;
-	nni_aio *            user_aio;
-	nni_aio *            conn_aio;
-	nni_aio *            time_aio;
+	nni_aio             *user_aio;
+	nni_aio             *conn_aio;
+	nni_aio             *time_aio;
 	nni_list             busy_pipes; // busy pipes -- ones passed to socket
 	nni_list             wait_pipes; // pipes waiting to match to socket
 	nni_list             neg_pipes;  // pipes busy negotiating
@@ -140,7 +138,7 @@ static void
 ipc_pipe_fini(void *arg)
 {
 	ipc_pipe *p = arg;
-	ipc_ep *  ep;
+	ipc_ep   *ep;
 
 	ipc_pipe_stop(p);
 	if ((ep = p->ep) != NULL) {
@@ -196,7 +194,7 @@ ipc_pipe_alloc(ipc_pipe **pipe_p)
 static void
 ipc_ep_match(ipc_ep *ep)
 {
-	nni_aio * aio;
+	nni_aio  *aio;
 	ipc_pipe *p;
 
 	if (((aio = ep->user_aio) == NULL) ||
@@ -215,9 +213,9 @@ static void
 ipc_pipe_neg_cb(void *arg)
 {
 	ipc_pipe *p   = arg;
-	ipc_ep *  ep  = p->ep;
-	nni_aio * aio = &p->neg_aio;
-	nni_aio * user_aio;
+	ipc_ep   *ep  = p->ep;
+	nni_aio  *aio = &p->neg_aio;
+	nni_aio  *user_aio;
 	int       rv;
 
 	nni_mtx_lock(&ep->mtx);
@@ -294,10 +292,10 @@ ipc_pipe_send_cb(void *arg)
 {
 	ipc_pipe *p = arg;
 	int       rv;
-	nni_aio * aio;
+	nni_aio  *aio;
 	size_t    n;
-	nni_msg * msg;
-	nni_aio * tx_aio = &p->tx_aio;
+	nni_msg  *msg;
+	nni_aio  *tx_aio = &p->tx_aio;
 
 	nni_mtx_lock(&p->mtx);
 	if ((rv = nni_aio_result(tx_aio)) != 0) {
@@ -342,11 +340,11 @@ static void
 ipc_pipe_recv_cb(void *arg)
 {
 	ipc_pipe *p = arg;
-	nni_aio * aio;
+	nni_aio  *aio;
 	int       rv;
 	size_t    n;
-	nni_msg * msg;
-	nni_aio * rx_aio = &p->rx_aio;
+	nni_msg  *msg;
+	nni_aio  *rx_aio = &p->rx_aio;
 
 	nni_mtx_lock(&p->mtx);
 
@@ -384,6 +382,9 @@ ipc_pipe_recv_cb(void *arg)
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcv_max) && (p->rcv_max > 0)) {
+			nng_log_warn("NNG-RCVMAX",
+			    "Rejected oversize message of %lu bytes on IPC",
+			    (unsigned long) len);
 			rv = NNG_EMSGSIZE;
 			goto error;
 		}
@@ -656,7 +657,7 @@ ipc_pipe_start(ipc_pipe *p, nng_stream *conn, ipc_ep *ep)
 static void
 ipc_ep_close(void *arg)
 {
-	ipc_ep *  ep = arg;
+	ipc_ep   *ep = arg;
 	ipc_pipe *p;
 
 	nni_mtx_lock(&ep->mtx);
@@ -720,9 +721,9 @@ ipc_ep_timer_cb(void *arg)
 static void
 ipc_ep_accept_cb(void *arg)
 {
-	ipc_ep *    ep  = arg;
-	nni_aio *   aio = ep->conn_aio;
-	ipc_pipe *  p;
+	ipc_ep     *ep  = arg;
+	nni_aio    *aio = ep->conn_aio;
+	ipc_pipe   *p;
 	int         rv;
 	nng_stream *conn;
 
@@ -774,9 +775,9 @@ error:
 static void
 ipc_ep_dial_cb(void *arg)
 {
-	ipc_ep *    ep  = arg;
-	nni_aio *   aio = ep->conn_aio;
-	ipc_pipe *  p;
+	ipc_ep     *ep  = arg;
+	nni_aio    *aio = ep->conn_aio;
+	ipc_pipe   *p;
 	int         rv;
 	nng_stream *conn;
 
@@ -846,7 +847,7 @@ ipc_ep_init(ipc_ep **epp, nni_sock *sock)
 static int
 ipc_ep_init_dialer(void **dp, nni_url *url, nni_dialer *dialer)
 {
-	ipc_ep *  ep;
+	ipc_ep   *ep;
 	int       rv;
 	nni_sock *sock = nni_dialer_sock(dialer);
 
@@ -869,7 +870,7 @@ ipc_ep_init_dialer(void **dp, nni_url *url, nni_dialer *dialer)
 static int
 ipc_ep_init_listener(void **dp, nni_url *url, nni_listener *listener)
 {
-	ipc_ep *  ep;
+	ipc_ep   *ep;
 	int       rv;
 	nni_sock *sock = nni_listener_sock(listener);
 
@@ -1146,7 +1147,6 @@ static nni_sp_tran ipc_tran_abstract = {
 	.tran_fini     = ipc_tran_fini,
 };
 #endif
-
 
 #ifndef NNG_ELIDE_DEPRECATED
 int
