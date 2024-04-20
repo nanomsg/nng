@@ -57,6 +57,7 @@ nng_sources(
         protocol.h
         reap.c
         reap.h
+        sockaddr.c
         socket.c
         socket.h
         sockimpl.h
