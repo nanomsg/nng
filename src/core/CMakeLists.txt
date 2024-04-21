@@ -57,6 +57,7 @@ nng_sources(
         protocol.h
         reap.c
         reap.h
+        sockaddr.c
         socket.c
         socket.h
         sockimpl.h
@@ -86,5 +87,6 @@ nng_test(log_test)
 nng_test(message_test)
 nng_test(reconnect_test)
 nng_test(sock_test)
+nng_test(sockaddr_test)
 nng_test(stats_test)
 nng_test(url_test)

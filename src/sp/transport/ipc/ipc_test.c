@@ -42,7 +42,7 @@ test_ipc_dialer_perms(void)
 {
 	nng_socket s;
 	nng_dialer d;
-	char *     addr;
+	char      *addr;
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
@@ -59,7 +59,7 @@ test_ipc_dialer_properties(void)
 	nng_dialer   d;
 	nng_sockaddr sa;
 	size_t       z;
-	char         *addr;
+	char        *addr;
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
@@ -84,10 +84,10 @@ test_ipc_listener_perms(void)
 {
 	nng_socket   s;
 	nng_listener l;
-	char         *addr;
+	char        *addr;
 
 #ifndef _WIN32
-	char *      path;
+	char       *path;
 	struct stat st;
 #endif
 
@@ -125,7 +125,7 @@ test_ipc_listener_properties(void)
 	nng_listener l;
 	nng_sockaddr sa;
 	size_t       z;
-	char         *addr;
+	char        *addr;
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
@@ -154,8 +154,9 @@ test_ipc_recv_max(void)
 	nng_socket   s1;
 	nng_listener l;
 	size_t       sz;
-	char         *addr;
+	char        *addr;
 
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
@@ -184,12 +185,12 @@ test_abstract_sockets(void)
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 	nng_socket   s1;
 	nng_socket   s2;
-	char         *addr;
+	char        *addr;
 	nng_pipe     p1;
 	nng_pipe     p2;
 	nng_sockaddr sa1;
 	nng_sockaddr sa2;
-	char *       prefix = "abstract://";
+	char        *prefix = "abstract://";
 
 	NUTS_ADDR(addr, "abstract");
 	NUTS_OPEN(s1);
@@ -341,7 +342,7 @@ test_unix_alias(void)
 	char         rng[20];
 	nng_sockaddr sa1;
 	nng_sockaddr sa2;
-	nng_msg *    msg;
+	nng_msg     *msg;
 	nng_pipe     p;
 
 	// Presumes /tmp.
@@ -385,11 +386,11 @@ test_ipc_pipe_peer(void)
 #ifdef NNG_PLATFORM_POSIX
 	// this test verifies that closing a socket peer
 	// during negotiation is ok.
-	nng_socket   s0, s1;
-	nng_msg     *msg;
-	nng_pipe     p;
-	uint64_t     id;
-	char         *addr;
+	nng_socket s0, s1;
+	nng_msg   *msg;
+	nng_pipe   p;
+	uint64_t   id;
+	char      *addr;
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s0);
@@ -431,7 +432,6 @@ test_ipc_pipe_peer(void)
 	NUTS_CLOSE(s1);
 #endif // NNG_PLATFORM_POSIX
 }
-
 
 TEST_LIST = {
 	{ "ipc path too long", test_path_too_long },

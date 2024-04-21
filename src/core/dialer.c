@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -388,8 +388,10 @@ dialer_connect_cb(void *arg)
 	case NNG_ECONNREFUSED:
 	case NNG_ETIMEDOUT:
 	default:
-		nng_log_warn("NNG-CONN-FAIL", "Failed connecting to %s: %s",
-		    d->d_url->u_rawurl, nng_strerror(rv));
+		nng_log_warn("NNG-CONN-FAIL",
+		    "Failed connecting socket<%u> to %s: %s",
+		    nni_sock_id(d->d_sock), d->d_url->u_rawurl,
+		    nng_strerror(rv));
 
 		nni_dialer_bump_error(d, rv);
 		if (user_aio == NULL) {
@@ -440,6 +442,9 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 		rv = nni_aio_result(aio);
 		nni_aio_free(aio);
 	}
+
+	nng_log_info("NNG-DIAL", "Starting dialer for socket<%u> on %s",
+	    nni_sock_id(d->d_sock), d->d_url->u_rawurl);
 
 	return (rv);
 }

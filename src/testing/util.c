@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #define TEST_NO_MAIN
 
 #ifdef _WIN32
@@ -72,7 +73,7 @@ nuts_clock(void)
 	}
 	tv.tv_sec -= epoch;
 	return (
-	    ((uint64_t)(tv.tv_sec) * 1000) + (uint64_t)(tv.tv_usec / 1000));
+	    ((uint64_t) (tv.tv_sec) * 1000) + (uint64_t) (tv.tv_usec / 1000));
 #endif
 
 #ifdef _WIN32
@@ -161,4 +162,47 @@ nuts_sleep(int msec)
 #else
 	poll(NULL, 0, msec);
 #endif
+}
+
+#define NUTS_COLOR_DEFAULT_ 0
+#define NUTS_COLOR_GREEN_ 1
+#define NUTS_COLOR_RED_ 2
+#define NUTS_COLOR_DEFAULT_INTENSIVE_ 3
+#define NUTS_COLOR_GREEN_INTENSIVE_ 4
+#define NUTS_COLOR_RED_INTENSIVE_ 5
+
+void
+nuts_logger(nng_log_level level, nng_log_facility fac, const char *msgid,
+    const char *msg)
+{
+	(void) fac;
+	char *lstr;
+	int   color;
+	switch (level) {
+	case NNG_LOG_DEBUG:
+		lstr  = "DEBUG";
+		color = NUTS_COLOR_DEFAULT_;
+		break;
+	case NNG_LOG_INFO:
+		lstr  = "INFO";
+		color = NUTS_COLOR_DEFAULT_;
+		break;
+	case NNG_LOG_NOTICE:
+		lstr  = "NOTICE";
+		color = NUTS_COLOR_DEFAULT_INTENSIVE_;
+		break;
+	case NNG_LOG_WARN:
+		lstr  = "WARNING";
+		color = NUTS_COLOR_RED_;
+		break;
+	case NNG_LOG_ERR:
+		lstr  = "ERROR";
+		color = NUTS_COLOR_RED_INTENSIVE_;
+		break;
+	default:
+		lstr  = "LEVEL UNKNOWN";
+		color = NUTS_COLOR_DEFAULT_;
+		break;
+	}
+	test_message_color_(color, "%s: %s: %s", lstr, msgid, msg);
 }

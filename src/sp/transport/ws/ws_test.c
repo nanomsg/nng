@@ -144,7 +144,7 @@ test_ws_recv_max(void)
 	nng_socket   s1;
 	nng_listener l;
 	size_t       sz;
-	char *       addr;
+	char        *addr;
 
 	memset(msg, 0, sizeof(msg)); // required to silence valgrind
 

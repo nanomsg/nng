@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -11,6 +11,7 @@
 
 #include "core/nng_impl.h"
 #include "core/strs.h"
+#include "nng/nng.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -364,8 +365,10 @@ listener_accept_cb(void *arg)
 	case NNG_ECONNRESET:   // remote condition, no cool down
 	case NNG_ETIMEDOUT:    // No need to sleep, we timed out already.
 	case NNG_EPEERAUTH:    // peer validation failure
-		nng_log_warn("NNG-ACCEPT-FAIL", "Failed accepting on %s: %s",
-		    l->l_url->u_rawurl, nng_strerror(rv));
+		nng_log_warn("NNG-ACCEPT-FAIL",
+		    "Failed accepting for socket<%u> on %s: %s",
+		    nni_sock_id(l->l_sock), l->l_url->u_rawurl,
+		    nng_strerror(rv));
 		nni_listener_bump_error(l, rv);
 		listener_accept_start(l);
 		break;
@@ -395,7 +398,9 @@ listener_accept_start(nni_listener *l)
 int
 nni_listener_start(nni_listener *l, int flags)
 {
-	int rv;
+	int    rv;
+	char  *url;
+	size_t sz;
 	NNI_ARG_UNUSED(flags);
 
 	if (nni_atomic_flag_test_and_set(&l->l_started)) {
@@ -403,12 +408,21 @@ nni_listener_start(nni_listener *l, int flags)
 	}
 
 	if ((rv = l->l_ops.l_bind(l->l_data)) != 0) {
-		nng_log_warn("NNG-BIND-FAIL", "Failed binding to %s: %s",
-		    l->l_url->u_rawurl, nng_strerror(rv));
+		nng_log_warn("NNG-BIND-FAIL",
+		    "Failed binding socket<%u> to %s: %s",
+		    nni_sock_id(l->l_sock), l->l_url->u_rawurl,
+		    nng_strerror(rv));
 		nni_listener_bump_error(l, rv);
 		nni_atomic_flag_reset(&l->l_started);
 		return (rv);
 	}
+	// collect the URL which may have changed (e.g. binding to port 0)
+	sz = sizeof(url);
+	(void) (nni_listener_getopt(
+	    l, NNG_OPT_URL, &url, &sz, NNI_TYPE_STRING));
+	nng_log_info("NNG-LISTEN", "Starting listener for socket<%u> on %s",
+	    nni_sock_id(l->l_sock), url);
+	nni_strfree(url);
 
 	listener_accept_start(l);
 

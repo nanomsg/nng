@@ -1,0 +1,42 @@
+= nng_log_get_level(3)
+//
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_log_get_level - get minimum level for logging messagse
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef enum nng_log_level {
+	NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
+	NNG_LOG_ERR    = 3,
+	NNG_LOG_WARN   = 4,
+	NNG_LOG_NOTICE = 5,
+	NNG_LOG_INFO   = 6,
+	NNG_LOG_DEBUG  = 7
+} nng_log_level;
+
+nng_log_level nng_log_set_level(void);
+----
+
+== DESCRIPTION
+
+The `nng_log_get_level` function is used to get the minimum severity to _level_ for processing log messages.
+The intended use case is to avoid expensive operations used solely to provide debugging information in logs,
+if the logged content would merely be discarded.
+
+== SEE ALSO
+
+xref:nng_log_set_facility.3.adoc[nng_log_set_facility(3)],
+xref:nng_log_set_level.3.adoc[nng_log_set_level(3)]

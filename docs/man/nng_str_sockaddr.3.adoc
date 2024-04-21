@@ -1,0 +1,52 @@
+= nng_str_sockaddr(3)
+//
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+
+nng_str_sockaddr - get string representation of socket address
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+#define NNG_MAXADDRSTRLEN (NNG_MAXADDRLEN+16)
+const char *nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz)
+----
+
+== DESCRIPTION
+
+The `nng_str_sockaddr()` is used to provide a displayable representation
+for the socket address _sa_.
+The content will be stored the location provided by _buf_, and will be
+formatted to fit within _bufsz_ bytes, truncating if necessary.
+
+As long as _bufsz_ is greater than zero, the result will be properly
+zero-terminated in the usual fashion.
+
+The `NNG_MAXADDRSTRLEN` can be used to provide a buffer large enough to hold most socket addresses.
+It is possible for applications to use very much larger socket addresses (using very long paths
+for IPC or inproc), but such addresses are not generally compatible with other implementations,
+and will be truncated here.
+
+== RETURN VALUES
+
+This function returns the _buf_ argument.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)]
