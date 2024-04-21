@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 # Copyright 2019 Devolutions <info@devolutions.net>
 #
@@ -116,8 +116,9 @@ if (NNG_ENABLE_DOC)
             nng_listener_setopt
             nng_listener_start
             nng_log
+            nng_log_get_level
             nng_log_set_facility
-            nng_log_set_loevel
+            nng_log_set_level
             nng_log_set_logger
             nng_msg_alloc
             nng_msg_append
@@ -181,6 +182,7 @@ if (NNG_ENABLE_DOC)
             nng_stat_type
             nng_stat_unit
             nng_stat_value
+            nng_str_sockaddr
             nng_strdup
             nng_strerror
             nng_strfree

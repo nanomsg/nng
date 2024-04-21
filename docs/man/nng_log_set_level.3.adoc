@@ -39,4 +39,5 @@ Use `NNG_LOG_DEBUG` to receive all log messages.
 
 == SEE ALSO
 
+xref:nng_log_get_level.3.adoc[nng_log_set_level(3)]
 xref:nng_log_set_facility.3.adoc[nng_log_set_facility(3)]
