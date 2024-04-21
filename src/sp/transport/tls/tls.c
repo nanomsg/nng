@@ -380,7 +380,6 @@ tlstran_pipe_recv_cb(void *arg)
 			nng_sockaddr_storage ss;
 			nng_sockaddr        *sa = (nng_sockaddr *) &ss;
 			char                 peername[64] = "unknown";
-			int                  rv;
 			if ((rv = nng_stream_get_addr(
 			         p->tls, NNG_OPT_REMADDR, sa)) == 0) {
 				(void) nng_str_sockaddr(

@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 #include "nng/nng.h"
 
@@ -73,19 +74,27 @@ nni_inet_ntop(const uint8_t addr[16], char buf[46])
 		maxoff = 0xff; // too big for anything
 	}
 
-	int   idx = 0;
-	char *sep = "";
+	int  idx = 0;
+	bool sep = false;
 	for (uint8_t i = 0; i < 16; i += 2) {
+		// We have 46 bytes allocated, which is a "theoretical"
+		// maximum only.  In practice the worst case is really
+		// 8 groups of four digits with 7 colons, so 39 bytes plus
+		// the null is 40 bytes.  We only use the v4 mapped syntax
+		// when presented with ::ffff: - so 23 bytes for that syntax.
 		if (i == maxoff) {
-			buf[idx++] = ':';
-			buf[idx++] = ':';
-			buf[idx]   = 0;
-			sep        = "";
+			NNI_ASSERT(idx <= 43);
+			strcat(buf + idx, "::");
+			idx += 2;
+			sep = false;
 		} else if (i < maxoff || i >= maxoff + maxcnt) {
-			idx += snprintf(buf + idx, 46 - idx, "%s%x", sep,
+			// this takes at most six bytes -- four hax digits a
+			// colon, and a null
+			NNI_ASSERT(idx <= 40);
+			snprintf(buf + idx, 6, sep ? ":%x" : "%x",
 			    (((uint16_t) addr[i]) << 8) + addr[i + 1]);
-			buf[idx] = 0;
-			sep      = ":";
+			idx += strlen(buf + idx);
+			sep = true;
 		}
 	}
 	return (buf);
@@ -150,7 +159,7 @@ nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz)
 	case NNG_AF_ABSTRACT:
 		return (str_sa_abstract(&sa->s_abstract, buf, bufsz));
 	case NNG_AF_ZT:
-	    return (str_sa_zt(&sa->s_zt, buf, bufsz));
+		return (str_sa_zt(&sa->s_zt, buf, bufsz));
 	case NNG_AF_UNSPEC:
 	default:
 		return ("unknown");
