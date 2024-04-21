@@ -57,8 +57,8 @@ extern "C" {
 // We use SemVer, and these versions are about the API, and
 // may not necessarily match the ABI versions.
 #define NNG_MAJOR_VERSION 1
-#define NNG_MINOR_VERSION 7
-#define NNG_PATCH_VERSION 3
+#define NNG_MINOR_VERSION 8
+#define NNG_PATCH_VERSION 0
 #define NNG_RELEASE_SUFFIX \
 	"" // if non-empty (i.e. "pre"), this is a pre-release
 
