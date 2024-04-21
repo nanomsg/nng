@@ -3,7 +3,7 @@
  * <https://github.com/mity/acutest>
  *
  * Copyright 2013-2020 Martin Mitas
- * Copyright 2019 Garrett D'Amore
+ * Copyright 2024 Garrett D'Amore
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -361,6 +361,7 @@ extern const struct test_ test_list_[];
 int test_check_(int cond, const char* file, int line, const char* fmt, ...);
 void test_case_(const char* fmt, ...);
 void test_message_(const char* fmt, ...);
+void test_message_color_(int, const char* fmt, ...);
 void test_dump_(const char* title, const void* addr, size_t size);
 void test_abort_(void) TEST_ATTRIBUTE_(noreturn);
 
@@ -776,6 +777,38 @@ test_message_(const char* fmt, ...)
     if(line_beg[0] != '\0') {
         test_line_indent_(test_case_name_[0] ? 3 : 2);
         printf("%s\n", line_beg);
+    }
+}
+
+/* Print a message in color, unconditionally (based on verbosity). */
+void TEST_ATTRIBUTE_(format (printf, 2, 3))
+test_message_color_(int color, const char* fmt, ...)
+{
+    char buffer[TEST_MSG_MAXSIZE];
+    char* line_beg;
+    char* line_end;
+    va_list args;
+
+    if(test_verbose_level_ < 3)
+        return;
+
+    va_start(args, fmt);
+    vsnprintf(buffer, TEST_MSG_MAXSIZE, fmt, args);
+    va_end(args);
+    buffer[TEST_MSG_MAXSIZE-1] = '\0';
+
+    line_beg = buffer;
+    while(1) {
+        line_end = strchr(line_beg, '\n');
+        if(line_end == NULL)
+            break;
+        test_line_indent_(test_case_name_[0] ? 3 : 2);
+        test_print_in_color_(color, "%.*s\n", (int)(line_end - line_beg), line_beg);
+        line_beg = line_end + 1;
+    }
+    if(line_beg[0] != '\0') {
+        test_line_indent_(test_case_name_[0] ? 3 : 2);
+        test_print_in_color_(color, "%s\n", line_beg);
     }
 }
 

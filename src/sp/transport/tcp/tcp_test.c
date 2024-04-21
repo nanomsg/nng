@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
@@ -256,7 +256,6 @@ test_tcp_recv_max(void)
 	char        *addr;
 
 	NUTS_ADDR(addr, "tcp");
-	NUTS_ENABLE_LOG(NNG_LOG_INFO);
 
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
