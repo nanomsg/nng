@@ -1,0 +1,126 @@
+---
+version: v1.8.0
+layout: manpage_v2
+title: nng_tls_config_ca_chain(3tls)
+---
+<h1>nng_tls_config_ca_chain(3tls)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_tls_config_ca_chain - configure certificate authority certificate chain</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/tls/tls.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_tls_config_ca_chain</span><span class="tok-p">(</span><span class="tok-n">nng_tls_config</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">chain</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">crl</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_tls_config_ca_chain()</code> function configures a certificate or
+certificate chain to be used when validating peers using the configuration
+<em>cfg</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Certificates <strong>must</strong> be configured when using the authentication mode
+<code>NNG_TLS_AUTH_MODE_REQUIRED</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+This function may be called multiple times, to add additional chains
+to a configuration, without affecting those added previously.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The certificates located in <em>chain</em> must be a zero-terminated C string in
+<a href="https://tools.ietf.org/html/rfc7468">PEM</a> format.
+Multiple certificates may appear concatenated together,
+with the leaf certificate listed first.</p>
+</div>
+<div class="paragraph">
+<p>The <em>crl</em> may be <code>NULL</code>, or may also be a C string containing a PEM format
+certificate revocation list for the associated authority.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EBUSY</code>
+</td>
+<td class="hdlist2">
+<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>An invalid <em>chain</em> or <em>crl</em> was supplied.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(.3tls)</a>,
+<a href="nng_tls_config_auth_mode.3tls.html">nng_tls_config_auth_mode(.3tls)</a>,
+<a href="nng_tls_config_ca_file.3tls.html">nng_tls_config_ca_file(.3tls)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

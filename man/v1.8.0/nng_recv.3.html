@@ -1,0 +1,194 @@
+---
+version: v1.8.0
+layout: manpage_v2
+title: nng_recv(3)
+---
+<h1>nng_recv(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_recv - recv data</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_recv</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-n">s</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">data</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">sizep</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_recv()</code> receives a message.</p>
+</div>
+<div class="paragraph">
+<p>The <em>flags</em> is a bit mask that may contain any of the following values:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
+<dd>
+<p>The function returns immediately, even if no message is available.
+Without this flag, the function will wait until a message is received
+by the socket <em>s</em>, or any configured timer expires.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_FLAG_ALLOC</code></dt>
+<dd>
+<p>If this flag is present, then a zero-copy mode is used.
+In this case the caller must set the value of <em>data</em> to the location
+of another pointer (of type <code>void *</code>), and the <em>sizep</em> pointer must be set
+to a location to receive the size of the message body.
+The function will then allocate a message buffer
+(as if by <a href="nng_alloc.3.html"><code>nng_alloc()</code></a>), fill it with
+the message body, and store it at the address referenced by <em>data</em>, and update
+the size referenced by <em>sizep</em>.
+The caller is responsible for disposing of the received buffer either by
+the <a href="nng_free.3.html"><code>nng_free()</code></a> function or passing the message (also
+with the <code>NNG_FLAG_ALLOC</code> flag) in a call to <a href="nng_send.3.html"><code>nng_send()</code></a>.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>If the special flag <code>NNG_FLAG_ALLOC</code> (see above) is not specified, then the
+caller must set <em>data</em> to a buffer to receive the message body content,
+and must store the size of that buffer at the location pointed to by <em>sizep</em>.
+When the function returns, if it is successful, the size at <em>sizep</em> will be
+updated with the actual message body length copied into <em>data</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The semantics of what receiving a message means vary from protocol to
+protocol, so examination of the protocol documentation is encouraged.
+(For example, with a <a href="nng_req.7.html"><em>req</em></a> socket a message may only be received
+after a request has been sent, and a <a href="nng_sub.7.html"><em>sub</em></a> socket
+may only receive messages corresponding to topics to which it has subscribed.)
+Furthermore, some protocols may not support receiving data at all, such as
+<a href="nng_pub.7.html"><em>pub</em></a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <code>NNG_FLAG_ALLOC</code> flag can be used to reduce data copies, thereby
+increasing performance, particularly if the buffer is reused to send
+a response using the same flag.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EAGAIN</code>
+</td>
+<td class="hdlist2">
+<p>The operation would block, but <code>NNG_FLAG_NONBLOCK</code> was specified.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>The socket <em>s</em> is not open.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>An invalid set of <em>flags</em> was specified.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EMSGSIZE</code>
+</td>
+<td class="hdlist2">
+<p>The received message did not fit in the size provided.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The protocol for socket <em>s</em> does not support receiving.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ESTATE</code>
+</td>
+<td class="hdlist2">
+<p>The socket <em>s</em> cannot receive data in this state.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>The operation timed out.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_alloc.3.html">nng_alloc(3)</a>,
+<a href="nng_free.3.html">nng_free(3)</a>,
+<a href="nng_recvmsg.3.html">nng_recvmsg(3)</a>,
+<a href="nng_send.3.html">nng_send(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
