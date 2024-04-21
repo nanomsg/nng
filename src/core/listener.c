@@ -422,6 +422,7 @@ nni_listener_start(nni_listener *l, int flags)
 	    l, NNG_OPT_URL, &url, &sz, NNI_TYPE_STRING));
 	nng_log_info("NNG-LISTEN", "Starting listener for socket<%u> on %s",
 	    nni_sock_id(l->l_sock), url);
+	nni_strfree(url);
 
 	listener_accept_start(l);
 
