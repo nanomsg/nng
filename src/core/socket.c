@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,6 +10,7 @@
 
 #include "core/nng_impl.h"
 #include "list.h"
+#include "nng/nng.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -1543,6 +1544,14 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	nni_stat_register(&p->st_root);
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
+	nng_sockaddr sa;
+	char         addr[256] = "unknown";
+	size_t       sz        = sizeof(sa);
+	sa.s_family            = NNG_AF_UNSPEC;
+	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
+	nng_str_sockaddr(&sa, addr, sizeof(addr));
+	nng_log_debug("NNG-CONNECT", "Connected pipe<%u> on socket<%u> to %s",
+	    nni_pipe_id(p), nni_sock_id(s), addr);
 	nni_pipe_rele(p);
 }
 
@@ -1653,6 +1662,14 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_stat_register(&p->st_root);
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
+	nng_sockaddr sa;
+	char         addr[256] = "unknown";
+	size_t       sz        = sizeof(sa);
+	sa.s_family            = NNG_AF_UNSPEC;
+	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
+	nng_str_sockaddr(&sa, addr, sizeof(addr));
+	nng_log_debug("NNG-ACCEPT", "Accepted pipe<%u> on socket<%u> from %s",
+	    nni_pipe_id(p), nni_sock_id(s), addr);
 	nni_pipe_rele(p);
 }
 

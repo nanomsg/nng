@@ -382,9 +382,19 @@ ipc_pipe_recv_cb(void *arg)
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcv_max) && (p->rcv_max > 0)) {
+			uint64_t pid;
+			char     peer[64] = "";
+			if (nng_stream_get_uint64(
+			        p->conn, NNG_OPT_PEER_PID, &pid) == 0) {
+				snprintf(peer, sizeof(peer), " from PID %lu",
+				    (unsigned long) pid);
+			}
 			nng_log_warn("NNG-RCVMAX",
-			    "Rejected oversize message of %lu bytes on IPC",
-			    (unsigned long) len);
+			    "Oversize message of %lu bytes (> %lu) "
+			    "on socket<%u> pipe<%u> from IPC%s",
+			    (unsigned long) len, (unsigned long) p->rcv_max,
+			    nni_pipe_sock_id(p->pipe), nni_pipe_id(p->pipe),
+			    peer);
 			rv = NNG_EMSGSIZE;
 			goto error;
 		}

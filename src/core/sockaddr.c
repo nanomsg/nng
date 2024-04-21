@@ -26,7 +26,7 @@ str_sa_inet(const nng_sockaddr_in *sa, char *buf, size_t bufsz)
 	uint8_t *a_bytes = (uint8_t *) &sa->sa_addr;
 	uint8_t *p_bytes = (uint8_t *) &sa->sa_port;
 
-	snprintf(buf, bufsz, "inet{%u.%u.%u.%u:%u}", a_bytes[0], a_bytes[1],
+	snprintf(buf, bufsz, "%u.%u.%u.%u:%u", a_bytes[0], a_bytes[1],
 	    a_bytes[2], a_bytes[3],
 	    (((uint16_t) p_bytes[0]) << 8) + p_bytes[1]);
 	return (buf);
@@ -98,12 +98,12 @@ str_sa_inet6(const nng_sockaddr_in6 *sa, char *buf, size_t bufsz)
 	char           istr[46];
 
 	if (sa->sa_scope) {
-		snprintf(buf, bufsz, "inet6{[%s]:%u%%%u}",
+		snprintf(buf, bufsz, "[%s]:%u%%%u",
 		    nni_inet_ntop(sa->sa_addr, istr),
 		    (((uint16_t) (p_bytes[0])) << 8) + p_bytes[1],
 		    sa->sa_scope);
 	} else {
-		snprintf(buf, bufsz, "inet6{[%s]:%u}",
+		snprintf(buf, bufsz, "[%s]:%u",
 		    nni_inet_ntop(sa->sa_addr, istr),
 		    (((uint16_t) (p_bytes[0])) << 8) + p_bytes[1]);
 	}
@@ -114,7 +114,7 @@ static const char *
 str_sa_ipc(const nng_sockaddr_ipc *sa, char *buf, size_t bufsz)
 {
 	// does not deal well with embedded "{}" chars
-	snprintf(buf, bufsz, "ipc{%s}", sa->sa_path);
+	snprintf(buf, bufsz, "%s", sa->sa_path);
 	return (buf);
 }
 
@@ -122,14 +122,14 @@ static const char *
 str_sa_abstract(const nng_sockaddr_abstract *sa, char *buf, size_t bufsz)
 {
 	// does not deal well with embedded "{}" chars
-	snprintf(buf, bufsz, "abstract{%s}", sa->sa_name);
+	snprintf(buf, bufsz, "abstract[%s]", sa->sa_name);
 	return (buf);
 }
 
 static const char *
 str_sa_zt(const nng_sockaddr_zt *sa, char *buf, size_t bufsz)
 {
-	snprintf(buf, bufsz, "zt{%llx,%llx,%u}",
+	snprintf(buf, bufsz, "ZT:{%llx,%llx,%u}",
 	    (unsigned long long) sa->sa_nodeid,
 	    (unsigned long long) sa->sa_nwid, sa->sa_port);
 	return (buf);
@@ -153,6 +153,6 @@ nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz)
 	    return (str_sa_zt(&sa->s_zt, buf, bufsz));
 	case NNG_AF_UNSPEC:
 	default:
-		return ("unknown{}");
+		return ("unknown");
 	}
 }
