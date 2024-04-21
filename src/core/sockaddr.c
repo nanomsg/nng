@@ -7,7 +7,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
 #include "core/nng_impl.h"
 #include "nng/nng.h"
 

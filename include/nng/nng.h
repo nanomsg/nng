@@ -252,8 +252,14 @@ NNG_DECL int nng_socket_get_addr(nng_socket, const char *, nng_sockaddr *);
 
 // Utility function for getting a printable form of the socket address
 // for display in logs, etc.  It is not intended to be parsed, and the
-// display format may change without notice.
-NNG_DECL const char *nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz);
+// display format may change without notice.  Generally you should alow
+// at least NNG_MAXADDRSTRLEN if you want to avoid typical truncations.
+// It is still possible for very long IPC paths to be truncated, but that
+// is an edge case and applications that pass such long paths should
+// expect some truncation (but they may pass larger values).
+#define NNG_MAXADDRSTRLEN (NNG_MAXADDRLEN + 16) // extra bytes for scheme
+NNG_DECL const char *nng_str_sockaddr(
+    const nng_sockaddr *sa, char *buf, size_t bufsz);
 
 // Arguably the pipe callback functions could be handled as an option,
 // but with the need to specify an argument, we find it best to unify
@@ -1516,11 +1522,11 @@ typedef void (*nng_logger)(nng_log_level level, nng_log_facility facility,
     const char *msgid, const char *msg);
 
 // Discard logger, simply throws logs away.
-extern void nng_null_logger(
+NNG_DECL void nng_null_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Very simple, prints formatted messages to stderr.
-extern void nng_stderr_logger(
+NNG_DECL void nng_stderr_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Performs an appropriate logging function for the system.  On
@@ -1528,32 +1534,37 @@ extern void nng_stderr_logger(
 // logging may be influenced by other APIs not provided by NNG, such as
 // openlog() for POSIX systems.  This may be nng_stderr_logger on
 // other systems.
-extern void nng_system_logger(
+NNG_DECL void nng_system_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Set the default facility to use when logging.  NNG uses NNG_LOG_USER by
 // default.
-extern void nng_log_set_facility(nng_log_facility facility);
+NNG_DECL void nng_log_set_facility(nng_log_facility facility);
 
 // Set the default logging level.  Use NNG_LOG_DEBUG to get everything.
 // Use NNG_LOG_NONE to prevent logging altogether.  Logs that are less
 // severe (numeric level is higher) will be discarded.
-extern void nng_log_set_level(nng_log_level level);
+NNG_DECL void nng_log_set_level(nng_log_level level);
+
+// Get the current logging level.  The intention here os to allow
+// bypassing expensive formatting operations that will be discarded
+// anyway.
+NNG_DECL nng_log_level nng_log_get_level(void);
 
 // Register a logger.
-extern void nng_log_set_logger(nng_logger logger);
+NNG_DECL void nng_log_set_logger(nng_logger logger);
 
 // Log a message.  The msg is formatted using following arguments as per
 // sprintf. The msgid may be NULL.
-extern void nng_log_err(const char *msgid, const char *msg, ...);
-extern void nng_log_warn(const char *msgid, const char *msg, ...);
-extern void nng_log_notice(const char *msgid, const char *msg, ...);
-extern void nng_log_info(const char *msgid, const char *msg, ...);
-extern void nng_log_debug(const char *msgid, const char *msg, ...);
+NNG_DECL void nng_log_err(const char *msgid, const char *msg, ...);
+NNG_DECL void nng_log_warn(const char *msgid, const char *msg, ...);
+NNG_DECL void nng_log_notice(const char *msgid, const char *msg, ...);
+NNG_DECL void nng_log_info(const char *msgid, const char *msg, ...);
+NNG_DECL void nng_log_debug(const char *msgid, const char *msg, ...);
 
 // Log an authentication related message.  These will use the NNG_LOG_AUTH
 // facility.
-extern void nng_log_auth(
+NNG_DECL void nng_log_auth(
     nng_log_level level, const char *msgid, const char *msg, ...);
 
 #ifdef __cplusplus

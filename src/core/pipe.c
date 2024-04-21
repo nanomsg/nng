@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -10,6 +10,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -408,4 +409,15 @@ nni_pipe_bump_error(nni_pipe *p, int err)
 	} else {
 		nni_listener_bump_error(p->p_listener, err);
 	}
+}
+
+char *
+nni_pipe_peer_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
+{
+	nng_sockaddr sa;
+	size_t       sz = sizeof(sa);
+	sa.s_family     = AF_UNSPEC;
+	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
+	nng_str_sockaddr(&sa, buf, NNG_MAXADDRSTRLEN);
+	return (buf);
 }

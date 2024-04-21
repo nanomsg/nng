@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "core/pipe.h"
 #include "list.h"
 #include "nng/nng.h"
 #include "sockimpl.h"
@@ -1523,8 +1524,12 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 		nni_stat_inc(&d->st_reject, 1);
 		nni_stat_inc(&s->st_rejects, 1);
 #endif
-		nng_log_debug("NNG-PIPEREJECT",
-		    "Pipe closed by pipe callback before added to socket");
+		if (nng_log_get_level() >= NNG_LOG_DEBUG) {
+			char addr[NNG_MAXADDRSTRLEN];
+			nng_log_debug("NNG-PIPEREJECT",
+			    "Pipe on socket<%u> from %s rejected by callback",
+			    nni_pipe_sock_id(p), nni_pipe_peer_addr(p, addr));
+		}
 		nni_pipe_rele(p);
 		return;
 	}
@@ -1544,14 +1549,12 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	nni_stat_register(&p->st_root);
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
-	nng_sockaddr sa;
-	char         addr[256] = "unknown";
-	size_t       sz        = sizeof(sa);
-	sa.s_family            = NNG_AF_UNSPEC;
-	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
-	nng_str_sockaddr(&sa, addr, sizeof(addr));
-	nng_log_debug("NNG-CONNECT", "Connected pipe<%u> on socket<%u> to %s",
-	    nni_pipe_id(p), nni_sock_id(s), addr);
+	if (nng_log_get_level() >= NNG_LOG_DEBUG) {
+		char addr[NNG_MAXADDRSTRLEN];
+		nng_log_debug("NNG-CONNECT",
+		    "Connected pipe<%u> on socket<%u> to %s", nni_pipe_id(p),
+		    nni_sock_id(s), nni_pipe_peer_addr(p, addr));
+	}
 	nni_pipe_rele(p);
 }
 
@@ -1662,14 +1665,12 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_stat_register(&p->st_root);
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
-	nng_sockaddr sa;
-	char         addr[256] = "unknown";
-	size_t       sz        = sizeof(sa);
-	sa.s_family            = NNG_AF_UNSPEC;
-	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
-	nng_str_sockaddr(&sa, addr, sizeof(addr));
-	nng_log_debug("NNG-ACCEPT", "Accepted pipe<%u> on socket<%u> from %s",
-	    nni_pipe_id(p), nni_sock_id(s), addr);
+	if (nng_log_get_level() >= NNG_LOG_DEBUG) {
+		char addr[NNG_MAXADDRSTRLEN];
+		nng_log_debug("NNG-ACCEPT",
+		    "Accepted pipe<%u> on socket<%u> from %s", nni_pipe_id(p),
+		    nni_sock_id(s), nni_pipe_peer_addr(p, addr));
+	}
 	nni_pipe_rele(p);
 }
 

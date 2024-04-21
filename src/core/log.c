@@ -37,6 +37,12 @@ nng_log_set_level(nng_log_level level)
 	log_level = level;
 }
 
+nng_log_level
+nng_log_get_level(void)
+{
+	return (log_level);
+}
+
 void
 nng_log_set_logger(nng_logger logger)
 {
@@ -54,7 +60,6 @@ nng_null_logger(nng_log_level level, nng_log_facility facility,
 	NNI_ARG_UNUSED(facility);
 	NNI_ARG_UNUSED(msgid);
 	NNI_ARG_UNUSED(msg);
-	return;
 }
 
 void
