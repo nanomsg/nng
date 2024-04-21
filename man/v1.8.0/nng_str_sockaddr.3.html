@@ -1,0 +1,72 @@
+---
+version: v1.8.0
+layout: manpage_v2
+title: nng_str_sockaddr(3)
+---
+<h1>nng_str_sockaddr(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_str_sockaddr - get string representation of socket address</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-cp">#define NNG_MAXADDRSTRLEN (NNG_MAXADDRLEN+16)</span>
+<span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">nng_str_sockaddr</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-n">nng_sockaddr</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">sa</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">buf</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-kt">size_t</span><span class="tok-w"> </span><span class="tok-n">bufsz</span><span class="tok-p">)</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_str_sockaddr()</code> is used to provide a displayable representation
+for the socket address <em>sa</em>.
+The content will be stored the location provided by <em>buf</em>, and will be
+formatted to fit within <em>bufsz</em> bytes, truncating if necessary.</p>
+</div>
+<div class="paragraph">
+<p>As long as <em>bufsz</em> is greater than zero, the result will be properly
+zero-terminated in the usual fashion.</p>
+</div>
+<div class="paragraph">
+<p>The <code>NNG_MAXADDRSTRLEN</code> can be used to provide a buffer large enough to hold most socket addresses.
+It is possible for applications to use very much larger socket addresses (using very long paths
+for IPC or inproc), but such addresses are not generally compatible with other implementations,
+and will be truncated here.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns the <em>buf</em> argument.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_sockaddr.5.html">nng_sockaddr(5)</a></p>
+</div>
+</div>
+</div>

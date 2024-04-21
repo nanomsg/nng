@@ -1,0 +1,84 @@
+---
+version: v1.8.0
+layout: manpage_v2
+title: nng_aio(5)
+---
+<h1>nng_aio(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_aio - asynchronous I/O handle</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nng_aio</span><span class="tok-w"> </span><span class="tok-n">nng_aio</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <code>nng_aio</code> is an opaque structure used in conjunction with
+asynchronous I/O operations.
+Every asynchronous operation uses one of these structures, each of which
+can only be used with a single operation at a time.</p>
+</div>
+<div class="paragraph">
+<p>Asynchronous operations are performed without blocking calling application
+threads.
+Instead the application registers a callback function to be executed
+when the operation is complete (whether successfully or not).
+This callback will be executed exactly once.</p>
+</div>
+<div class="paragraph">
+<p>The asynchronous I/O framework also supports cancellation of
+operations that are already in progress
+(see <a href="nng_aio_cancel.3.html"><code>nng_aio_cancel()</code></a>), as well setting a maximum
+timeout for them to complete within
+(see <a href="nng_aio_set_timeout.3.html"><code>nng_aio_set_timeout()</code></a>).</p>
+</div>
+<div class="paragraph">
+<p>It is also possible to initiate an asynchronous operation, and wait for it to
+complete using <a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>These structures are created using the <a href="nng_aio_alloc.3.html"><code>nng_aio_alloc()</code></a>,
+and destroyed using <a href="nng_aio_free.3.html"><code>nng_aio_free()</code></a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_abort.3.html">nng_aio_abort(3)</a>,
+<a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a>,
+<a href="nng_aio_count.3.html">nng_aio_count(3)</a>,
+<a href="nng_aio_free.3.html">nng_aio_free(3)</a>,
+<a href="nng_aio_get_input.3.html">nng_aio_get_input(3)</a>,
+<a href="nng_aio_get_msg.3.html">nng_aio_get_msg(3)</a>,
+<a href="nng_aio_get_output.3.html">nng_aio_get_output(3)</a>,
+<a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
+<a href="nng_aio_set_input.3.html">nng_aio_set_input(3)</a>,
+<a href="nng_aio_set_iov.3.html">nng_aio_set_iov(3)</a>,
+<a href="nng_aio_set_msg.3.html">nng_aio_set_msg(3)</a>,
+<a href="nng_aio_set_timeout.3.html">nng_aio_set_timeout(3)</a>,
+<a href="nng_aio_stop.3.html">nng_aio_stop(3)</a>,
+<a href="nng_aio_wait.3.html">nng_aio_wait(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_aio.5.html">nng_aio(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

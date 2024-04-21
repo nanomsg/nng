@@ -1,0 +1,68 @@
+---
+version: v1.8.0
+layout: manpage_v2
+title: nng_log_set_logger(3)
+---
+<h1>nng_log_set_logger(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_log_set_logger - set logging handler</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-p">(</span><span class="tok-o">*</span><span class="tok-n">nng_logger</span><span class="tok-p">)(</span><span class="tok-n">nng_log_level</span><span class="tok-w"> </span><span class="tok-n">level</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_log_facility</span><span class="tok-w"> </span><span class="tok-n">facility</span><span class="tok-p">,</span>
+<span class="tok-w">    </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">);</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_null_logger</span><span class="tok-p">(</span><span class="tok-n">nng_log_level</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_log_facility</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-p">);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_stderr_logger</span><span class="tok-p">(</span><span class="tok-n">nng_log_level</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_log_facility</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-p">);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_system_logger</span><span class="tok-p">(</span><span class="tok-n">nng_log_level</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_log_facility</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-p">);</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_set_logger</span><span class="tok-p">(</span><span class="tok-n">nng_logger</span><span class="tok-w"> </span><span class="tok-n">logger</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_log_set_logger</code> is used to set the base logging function to <em>logger</em>.
+The <em>logger</em> may be a user defined function to process log messages.
+Only a single logger may be registered at a time.
+If needed, the logger should make copies of either <em>msgid</em> or <em>msg</em>, as those may not be valid once the logger function returns.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_null_logger</code> function is an implementation of <code>nng_logger</code> that simply discards the content.
+This is the default logger, so logging is disabled by default.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_stderr_logger</code> function is an implementation that logs messages to the standard error stream.
+It will attempt to colorize messages by the severity, if the standard error is a terminal device.
+This can be supressed by setting either the <code>NO_COLOR</code> or <code>NNG_LOG_NO_COLOR</code> environment variables.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_system_logger</code> attempts to use an appropriate system facility to log messages.
+For POSIX systems, this means using <code>syslog</code> to process the messages.
+For other the <code>nng_stderr_log</code> may be used as a fallback.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="nng_log_set_facility.3.html">nng_log_set_facility(3)</a>,
+<a href="nng_log_set_level.3.html">nng_log_set_level(3)</a>,
+<a href="nng_log.3.html">nng_log(3)</a></p>
+</div>
+</div>
+</div>
