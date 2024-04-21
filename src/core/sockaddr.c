@@ -16,7 +16,7 @@
 static const char *
 str_sa_inproc(const nng_sockaddr_inproc *sa, char *buf, size_t bufsz)
 {
-	snprintf(buf, bufsz, "inproc{%s}", sa->sa_name);
+	snprintf(buf, bufsz, "inproc[%s]", sa->sa_name);
 	return buf;
 }
 
@@ -37,8 +37,7 @@ static char *
 nni_inet_ntop(const uint8_t addr[16], char buf[46])
 {
 
-	const uint8_t v4map[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0xff,
-		0xff };
+	const uint8_t v4map[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
 	if (memcmp(addr, v4map, 12) == 0) {
 		snprintf(buf, 46, "::ffff:%u.%u.%u.%u", addr[12], addr[13],
@@ -75,6 +74,7 @@ nni_inet_ntop(const uint8_t addr[16], char buf[46])
 
 	int  idx = 0;
 	bool sep = false;
+	buf[0]   = 0;
 	for (uint8_t i = 0; i < 16; i += 2) {
 		// We have 46 bytes allocated, which is a "theoretical"
 		// maximum only.  In practice the worst case is really
@@ -106,10 +106,9 @@ str_sa_inet6(const nng_sockaddr_in6 *sa, char *buf, size_t bufsz)
 	char           istr[46];
 
 	if (sa->sa_scope) {
-		snprintf(buf, bufsz, "[%s]:%u%%%u",
-		    nni_inet_ntop(sa->sa_addr, istr),
-		    (((uint16_t) (p_bytes[0])) << 8) + p_bytes[1],
-		    sa->sa_scope);
+		snprintf(buf, bufsz, "[%s%%%u]:%u",
+		    nni_inet_ntop(sa->sa_addr, istr), sa->sa_scope,
+		    (((uint16_t) (p_bytes[0])) << 8) + p_bytes[1]);
 	} else {
 		snprintf(buf, bufsz, "[%s]:%u",
 		    nni_inet_ntop(sa->sa_addr, istr),
@@ -137,7 +136,7 @@ str_sa_abstract(const nng_sockaddr_abstract *sa, char *buf, size_t bufsz)
 static const char *
 str_sa_zt(const nng_sockaddr_zt *sa, char *buf, size_t bufsz)
 {
-	snprintf(buf, bufsz, "ZT:{%llx,%llx,%u}",
+	snprintf(buf, bufsz, "ZT[%llx:%llx:%u]",
 	    (unsigned long long) sa->sa_nodeid,
 	    (unsigned long long) sa->sa_nwid, sa->sa_port);
 	return (buf);
