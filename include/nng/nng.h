@@ -1567,6 +1567,24 @@ NNG_DECL void nng_log_debug(const char *msgid, const char *msg, ...);
 NNG_DECL void nng_log_auth(
     nng_log_level level, const char *msgid, const char *msg, ...);
 
+// Return an absolute time from some arbitrary point.  The value is
+// provided in milliseconds, and is of limited resolution based on the
+// system clock.  (Do not use it for fine-grained performance measurements.)
+NNG_DECL nng_time nng_clock(void);
+
+// Sleep for specified msecs.
+NNG_DECL void nng_msleep(nng_duration);
+
+// nng_random returns a "strong" (cryptographic sense) random number.
+NNG_DECL uint32_t nng_random(void);
+
+// nng_socket_pair is used to create a bound pair of file descriptors
+// typically using the socketpair() call.  The descriptors are backed
+// by reliable, bidirectional, byte streams.  This will return NNG_ENOTSUP
+// if the platform lacks support for this.  The argument is a pointer
+// to an array of file descriptors (or HANDLES or similar).
+NNG_DECL int nng_socket_pair(int[2]);
+
 #ifdef __cplusplus
 }
 #endif

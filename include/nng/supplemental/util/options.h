@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,6 +12,8 @@
 #define NNG_SUPPLEMENTAL_UTIL_OPTIONS_H
 
 #include <stdbool.h>
+
+#include <nng/nng.h>
 
 #ifdef __cplusplus
 extern "C" {

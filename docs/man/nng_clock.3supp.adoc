@@ -1,6 +1,6 @@
 = nng_clock(3supp)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -18,7 +18,6 @@ nng_clock - get time
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 typedef uint64_t nng_time;
 
@@ -37,8 +36,7 @@ very fine-grained values.
 IMPORTANT: The reference time will be the same for a given program,
 but different programs may have different references.
 
-TIP: This function is intended mostly to help with setting appropriate
-timeouts using xref:nng_cv_until.3supp.adoc[`nng_cv_until()`].
+TIP: This function should help with setting appropriate timeouts.
 
 == RETURN VALUES
 

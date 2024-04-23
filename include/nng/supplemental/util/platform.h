@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,17 +23,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <nng/nng.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Return an absolute time from some arbitrary point.  The value is
-// provided in milliseconds, and is of limited resolution based on the
-// system clock.  (Do not use it for fine-grained performance measurements.)
-NNG_DECL nng_time nng_clock(void);
-
-// Sleep for specified msecs.
-NNG_DECL void nng_msleep(nng_duration);
 
 // nng_thread is a handle to a "thread", which may be a real system
 // thread, or a coroutine on some platforms.
@@ -96,16 +90,6 @@ NNG_DECL void nng_cv_wake(nng_cv *);
 // reduce the thundering herd problem, but care must be taken to ensure
 // that no waiter starves forever.
 NNG_DECL void nng_cv_wake1(nng_cv *);
-
-// nng_random returns a "strong" (cryptographic sense) random number.
-NNG_DECL uint32_t nng_random(void);
-
-// nng_socket_pair is used to create a bound pair of file descriptors
-// typically using the socketpair() call.  The descriptors are backed
-// by reliable, bidirectional, byte streams.  This will return NNG_ENOTSUP
-// if the platform lacks support for this.  The argument is a pointer
-// to an array of file descriptors (or HANDLES or similar).
-NNG_DECL int nng_socket_pair(int [2]);
 
 #ifdef __cplusplus
 }

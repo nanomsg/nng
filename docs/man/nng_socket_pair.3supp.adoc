@@ -1,6 +1,6 @@
 = nng_socket_pair(3supp)
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,7 +17,6 @@ nng_socket_pair - create a connected pair of BSD sockets
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 int nng_socket_pair(int fds[2]);
 ----
@@ -34,7 +33,7 @@ using the `AF_UNIX` family and the `SOCK_STREAM` socket type.
 NOTE: At present only POSIX platforms implementing `socketpair()` are supported with this function.
 
 TIP: This function may be useful for creating a shared connection between a parent process and
-a child process on UNIX platforms, without requiring the processes use a shared filesystem or TCP connection.
+a child process on UNIX platforms, without requiring a shared filesystem or TCP connection.
 
 == RETURN VALUES
 
