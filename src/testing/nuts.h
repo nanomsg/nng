@@ -48,7 +48,6 @@ extern void nng_fini(void);
 #include <nng/protocol/survey0/respond.h>
 #include <nng/protocol/survey0/survey.h>
 #include <nng/supplemental/tls/tls.h>
-#include <nng/supplemental/util/platform.h>
 #include <nng/transport/ws/websocket.h>
 #include <supplemental/sha1/sha1.h>
 

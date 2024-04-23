@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -13,7 +13,6 @@
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -22,7 +21,7 @@ static int nclients = 200;
 
 static char *addr = "inproc:///atscale";
 nng_socket   rep;
-nng_thread * server;
+nng_thread  *server;
 
 void
 serve(void *arg)
@@ -87,7 +86,7 @@ transact(nng_socket *clients, int num)
 
 Main({
 	nng_socket *clients;
-	int *       results;
+	int        *results;
 
 	clients = calloc(nclients, sizeof(nng_socket));
 	results = calloc(nclients, sizeof(int));

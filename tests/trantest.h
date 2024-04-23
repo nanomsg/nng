@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -14,7 +14,6 @@
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "core/nng_impl.h"
@@ -28,11 +27,11 @@ typedef int (*trantest_proptest_t)(nng_msg *);
 typedef struct trantest trantest;
 
 struct trantest {
-	const char *tmpl;
-	char        addr[NNG_MAXADDRLEN + 1];
-	nng_socket  reqsock;
-	nng_socket  repsock;
-	nni_sp_tran *  tran;
+	const char  *tmpl;
+	char         addr[NNG_MAXADDRLEN + 1];
+	nng_socket   reqsock;
+	nng_socket   repsock;
+	nni_sp_tran *tran;
 	int (*init)(struct trantest *);
 	void (*fini)(struct trantest *);
 	int (*dialer_init)(nng_dialer);
@@ -105,7 +104,7 @@ trantest_next_address(char *out, const char *prefix)
 
 	// we append the port, and for web sockets also a /test path
 	(void) snprintf(out, NNG_MAXADDRLEN, "%s%u%s", prefix, trantest_port,
-		prefix[0] == 'w' ? "/test" : "");
+	    prefix[0] == 'w' ? "/test" : "");
 	trantest_port++;
 }
 
@@ -249,10 +248,10 @@ trantest_send_recv(trantest *tt)
 		nng_listener l = NNG_LISTENER_INITIALIZER;
 		nng_dialer   d = NNG_DIALER_INITIALIZER;
 		nng_pipe     p = NNG_PIPE_INITIALIZER;
-		nng_msg *    send;
-		nng_msg *    recv;
+		nng_msg     *send;
+		nng_msg     *recv;
 		size_t       len;
-		char *       url;
+		char        *url;
 
 		So(trantest_listen(tt, &l) == 0);
 		So(nng_listener_id(l) > 0);
@@ -299,9 +298,9 @@ trantest_send_recv_multi(trantest *tt)
 		nng_listener l = NNG_LISTENER_INITIALIZER;
 		nng_dialer   d = NNG_DIALER_INITIALIZER;
 		nng_pipe     p = NNG_PIPE_INITIALIZER;
-		nng_msg *    send;
-		nng_msg *    recv;
-		char *       url;
+		nng_msg     *send;
+		nng_msg     *recv;
+		char        *url;
 		int          i;
 		char         msgbuf[16];
 
@@ -353,8 +352,8 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 	Convey("Properties test", {
 		nng_listener l = NNG_LISTENER_INITIALIZER;
 		nng_dialer   d = NNG_DIALER_INITIALIZER;
-		nng_msg *    send;
-		nng_msg *    recv;
+		nng_msg     *send;
+		nng_msg     *recv;
 		int          rv;
 
 		So(trantest_listen(tt, &l) == 0);
@@ -388,9 +387,9 @@ trantest_send_recv_large(trantest *tt)
 	Convey("Send and recv large data", {
 		nng_listener l = NNG_LISTENER_INITIALIZER;
 		nng_dialer   d = NNG_DIALER_INITIALIZER;
-		nng_msg *    send;
-		nng_msg *    recv;
-		char *       data;
+		nng_msg     *send;
+		nng_msg     *recv;
+		char        *data;
 		size_t       size;
 
 		size = 1024 * 128; // bigger than any transport segment

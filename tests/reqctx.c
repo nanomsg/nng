@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -13,7 +13,6 @@
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -22,9 +21,9 @@ static struct {
 	nng_aio *aio;
 	enum { START, SEND, RECV } state;
 	nng_socket s;
-	nng_msg *  msg;
+	nng_msg   *msg;
 	int        cnt;
-	nng_mtx *  mtx;
+	nng_mtx   *mtx;
 } rep_state;
 
 void
@@ -117,7 +116,8 @@ TestMain("REQ concurrent contexts", {
 			nng_aio_set_timeout(saios[i], 5000);
 		}
 
-		So(nng_socket_set_int(rep_state.s, NNG_OPT_SENDBUF, NCTX) == 0);
+		So(nng_socket_set_int(rep_state.s, NNG_OPT_SENDBUF, NCTX) ==
+		    0);
 		So(i == NCTX);
 		for (i = 0; i < NCTX; i++) {
 			uint32_t tmp;
@@ -230,7 +230,7 @@ TestMain("REQ concurrent contexts", {
 	Convey("Given a socket and a context", {
 		nng_socket req;
 		nng_ctx    ctx;
-		nng_aio *  aio;
+		nng_aio   *aio;
 
 		So(nng_req0_open(&req) == 0);
 		So(nng_ctx_open(&ctx, req) == 0);

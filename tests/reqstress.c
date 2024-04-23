@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,7 +16,6 @@
 #include <nng/protocol/bus0/bus.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 #include <nng/transport/inproc/inproc.h>
 #include <nng/transport/ipc/ipc.h>
 #include <nng/transport/tcp/tcp.h>
@@ -64,9 +63,9 @@ typedef struct test_case {
 	int         nrecv;
 	int         nsend;
 	int         nfail;
-	nng_aio *   recv_aio;
-	nng_aio *   send_aio;
-	nng_aio *   time_aio;
+	nng_aio    *recv_aio;
+	nng_aio    *send_aio;
+	nng_aio    *time_aio;
 	char        buf[32];
 } test_case;
 
@@ -144,7 +143,7 @@ static void
 req_time_cb(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->time_aio)) != 0) {
@@ -167,7 +166,7 @@ static void
 req_recv_cb(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->recv_aio)) != 0) {

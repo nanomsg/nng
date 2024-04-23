@@ -1,6 +1,6 @@
 = nng_mtx_lock(3supp)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -18,7 +18,6 @@ nng_mtx_lock - lock mutex
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 void nng_mtx_lock(nng_mtx *mtx);
 ----
@@ -38,15 +37,6 @@ IMPORTANT: Mutex locks are _not_ recursive; attempts to reacquire the
 same mutex may result in deadlock or aborting the current program.
 It is a programming error for the owner of a mutex to attempt to
 reacquire it.
-
-****
-_NNG_ offers neither a non-blocking variant that can fail,
-nor recursive mutexes.
-This is by design, as _NNG_ itself does not use such things,
-and most often the need for them is the result of poor design.
-If such capabilities are needed, they may be synthesized fairly
-easily from mutexes and condition variables.
-****
 
 == RETURN VALUES
 

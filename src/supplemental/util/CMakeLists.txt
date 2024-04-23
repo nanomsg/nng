@@ -7,7 +7,7 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_sources(idhash.c options.c platform.c)
+nng_sources(idhash.c options.c)
 nng_headers(
 	nng/supplemental/util/idhash.h
 	nng/supplemental/util/options.h

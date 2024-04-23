@@ -1,6 +1,6 @@
 = nng_cv_until(3supp)
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -18,7 +18,6 @@ nng_cv_until - wait for condition or timeout
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 int nng_cv_until(nng_cv *cv, nng_time when);
 ----

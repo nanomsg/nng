@@ -1,6 +1,6 @@
 = nng_thread_set_name(3supp)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,7 +17,6 @@ nng_thread_set_name - set thread name
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 void nng_thread_set_name(nng_thread *thread, const char *name);
 ----

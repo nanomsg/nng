@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Lager Data, Inc. <support@lagerdata.com>
 //
@@ -31,7 +31,6 @@
 #include <nng/protocol/survey0/survey.h>
 #include <nng/supplemental/tls/tls.h>
 #include <nng/supplemental/util/options.h>
-#include <nng/supplemental/util/platform.h>
 #include <nng/transport/zerotier/zerotier.h>
 
 // Globals.  We need this to avoid passing around everything.
@@ -42,18 +41,18 @@ int          delay     = 0;
 nng_duration interval  = NNG_DURATION_INFINITE;
 nng_duration sendtimeo = NNG_DURATION_INFINITE;
 nng_duration recvtimeo = NNG_DURATION_INFINITE;
-void *       data      = NULL;
+void        *data      = NULL;
 size_t       datalen   = 0;
 int          compat    = 0;
 int          async     = 0;
 int          insecure  = 0;
-void *       cacert    = NULL;
+void        *cacert    = NULL;
 size_t       cacertlen = 0;
-void *       keyfile   = NULL;
+void        *keyfile   = NULL;
 size_t       keylen    = 0;
-void *       certfile  = NULL;
+void        *certfile  = NULL;
 size_t       certlen   = 0;
-const char * zthome    = NULL;
+const char  *zthome    = NULL;
 int          count     = 0;
 int          recvmaxsz = -1;
 
@@ -310,11 +309,11 @@ intarg(const char *val, int maxv)
 static void
 loadfile(const char *path, void **datap, size_t *lenp)
 {
-	FILE * f;
+	FILE  *f;
 	size_t total_read      = 0;
 	size_t allocation_size = BUFSIZ;
-	char * fdata;
-	char * realloc_result;
+	char  *fdata;
+	char  *realloc_result;
 
 	if (strcmp(path, "-") == 0) {
 		f = stdin;
@@ -385,7 +384,7 @@ configtls(nng_tls_config *tls)
 struct addr {
 	struct addr *next;
 	int          mode;
-	char *       val;
+	char        *val;
 };
 
 struct addr **
@@ -406,7 +405,7 @@ addaddr(struct addr **endp, int mode, const char *a)
 
 struct topic {
 	struct topic *next;
-	char *        val;
+	char         *val;
 };
 
 struct topic **
@@ -578,7 +577,7 @@ sendloop(nng_socket sock)
 
 	for (;;) {
 		int          rv;
-		nng_msg *    msg;
+		nng_msg     *msg;
 		nng_time     start;
 		nng_time     end;
 		nng_duration delta;
@@ -592,7 +591,7 @@ sendloop(nng_socket sock)
 			fatal("Send error: %s", nng_strerror(rv));
 		}
 		end   = nng_clock();
-		delta = (nng_duration)(end - start);
+		delta = (nng_duration) (end - start);
 
 		iters++;
 		// By default, we don't loop.
@@ -630,7 +629,7 @@ sendrecv(nng_socket sock)
 	// that we exit the receive loop, and can continue.
 	for (;;) {
 		int          rv;
-		nng_msg *    msg;
+		nng_msg     *msg;
 		nng_time     start;
 		nng_time     end;
 		nng_duration delta;
@@ -655,7 +654,7 @@ sendrecv(nng_socket sock)
 		// want to increment the iteration count.
 
 		for (;;) {
-			delta = (nng_duration)(nng_clock() - start);
+			delta = (nng_duration) (nng_clock() - start);
 
 			nng_duration expire = interval - delta;
 			if ((recvtimeo >= 0) && (expire > recvtimeo)) {
@@ -688,7 +687,7 @@ sendrecv(nng_socket sock)
 		}
 
 		end   = nng_clock();
-		delta = (nng_duration)(end - start);
+		delta = (nng_duration) (end - start);
 
 		iters++;
 		if ((count > 0) && (iters >= count)) {
@@ -709,13 +708,13 @@ int
 main(int ac, char **av)
 {
 	int            idx;
-	char *         arg;
+	char          *arg;
 	int            val;
 	int            rv;
 	char           scratch[512];
-	struct addr *  addrs = NULL;
-	struct addr ** addrend;
-	struct topic * topics = NULL;
+	struct addr   *addrs = NULL;
+	struct addr  **addrend;
+	struct topic  *topics = NULL;
 	struct topic **topicend;
 	nng_socket     sock;
 	int            port;
@@ -1092,7 +1091,7 @@ main(int ac, char **av)
 	}
 
 	for (struct addr *a = addrs; a != NULL; a = a->next) {
-		char *          act;
+		char           *act;
 		nng_listener    l;
 		nng_dialer      d;
 		nng_tls_config *tls;
@@ -1114,8 +1113,8 @@ main(int ac, char **av)
 				    nng_strerror(rv));
 			}
 			if (zthome != NULL) {
-				rv = nng_dialer_set(d, NNG_OPT_ZT_HOME,
-				    zthome, strlen(zthome) + 1);
+				rv = nng_dialer_set(d, NNG_OPT_ZT_HOME, zthome,
+				    strlen(zthome) + 1);
 				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 					fatal("Unable to set ZT home: %s",
 					    nng_strerror(rv));

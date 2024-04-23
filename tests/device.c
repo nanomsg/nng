@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,7 +12,6 @@
 
 #include <nng/nng.h>
 #include <nng/protocol/pair1/pair.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -38,7 +37,6 @@ dodev(void *arg)
 #define SECOND(x) ((x) *1000)
 
 Main({
-
 	Test("PAIRv1 device", {
 		const char *addr1 = "inproc://dev1";
 		const char *addr2 = "inproc://dev2";
@@ -55,8 +53,8 @@ Main({
 			nng_socket   end1;
 			nng_socket   end2;
 			nng_duration tmo;
-			nng_msg *    msg;
-			nng_thread * thr;
+			nng_msg     *msg;
+			nng_thread  *thr;
 
 			So(nng_pair1_open_raw(&dev1) == 0);
 			So(nng_pair1_open_raw(&dev2) == 0);
@@ -82,12 +80,13 @@ Main({
 			So(nng_dial(end2, addr2, NULL, 0) == 0);
 
 			tmo = SECOND(1);
-			So(nng_socket_set_ms(end1, NNG_OPT_RECVTIMEO, tmo) == 0);
-			So(nng_socket_set_ms(end2, NNG_OPT_RECVTIMEO, tmo) == 0);
+			So(nng_socket_set_ms(end1, NNG_OPT_RECVTIMEO, tmo) ==
+			    0);
+			So(nng_socket_set_ms(end2, NNG_OPT_RECVTIMEO, tmo) ==
+			    0);
 
 			nng_msleep(100);
 			Convey("Device can send and receive", {
-
 				So(nng_msg_alloc(&msg, 0) == 0);
 				APPENDSTR(msg, "ALPHA");
 				So(nng_sendmsg(end1, msg, 0) == 0);

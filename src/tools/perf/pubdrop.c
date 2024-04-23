@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,7 +15,6 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 // pubdrop - this is a simple testing utility that lets us measure PUB/SUB
 // performance, including dropped messages, delivery across multiple threads,
@@ -117,7 +116,7 @@ parse_int(const char *arg, const char *what)
 }
 
 struct pubdrop_args {
-	const char *       addr;
+	const char        *addr;
 	bool               start;
 	unsigned long long msgsize;
 	unsigned long long count;
@@ -128,8 +127,8 @@ struct pubdrop_args {
 	unsigned long long recvs;
 	nng_time           beg;
 	nng_time           end;
-	nng_mtx *          mtx;
-	nng_cv *           cv;
+	nng_mtx           *mtx;
+	nng_cv            *cv;
 };
 
 static void
@@ -138,7 +137,7 @@ pub_server(void *arg)
 	struct pubdrop_args *pa = arg;
 	nng_socket           sock;
 	int                  rv;
-	nng_msg *            msg;
+	nng_msg             *msg;
 	nng_time             start;
 	nng_time             end;
 
@@ -191,7 +190,7 @@ sub_client(void *arg)
 	struct pubdrop_args *pa = arg;
 	nng_socket           sock;
 	int                  rv;
-	nng_msg *            msg;
+	nng_msg             *msg;
 	unsigned long long   recvs;
 	unsigned long long   drops;
 	unsigned long long   gaps;
@@ -255,7 +254,7 @@ sub_client(void *arg)
 static void
 do_pubdrop(int argc, char **argv)
 {
-	nng_thread **       thrs;
+	nng_thread        **thrs;
 	struct pubdrop_args pa;
 	int                 rv;
 	int                 nsubs;

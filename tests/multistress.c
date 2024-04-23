@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -24,7 +24,6 @@
 #include <nng/protocol/reqrep0/req.h>
 #include <nng/protocol/survey0/respond.h>
 #include <nng/protocol/survey0/survey.h>
-#include <nng/supplemental/util/platform.h>
 #include <nng/transport/inproc/inproc.h>
 #include <nng/transport/ipc/ipc.h>
 #include <nng/transport/tcp/tcp.h>
@@ -69,9 +68,9 @@ typedef struct test_case {
 	int         nrecv;
 	int         nsend;
 	int         nfail;
-	nng_aio *   recd;
-	nng_aio *   sent;
-	nng_aio *   woke;
+	nng_aio    *recd;
+	nng_aio    *sent;
+	nng_aio    *woke;
 	char        addr[NNG_MAXADDRLEN];
 	char        buf[32];
 
@@ -151,7 +150,7 @@ static void
 req0_woke(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->woke)) != 0) {
@@ -173,7 +172,7 @@ static void
 req0_recd(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->recd)) != 0) {
@@ -290,7 +289,7 @@ static void
 pair0_woke(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->woke)) != 0) {
@@ -390,7 +389,7 @@ static void
 bus0_woke(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->woke)) != 0) {
@@ -470,7 +469,7 @@ void
 pub0_woke(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->woke)) != 0) {
@@ -627,7 +626,7 @@ void
 push0_woke(void *arg)
 {
 	test_case *c   = arg;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 	int        rv;
 
 	if ((rv = nng_aio_result(c->woke)) != 0) {

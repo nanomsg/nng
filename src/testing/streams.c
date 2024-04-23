@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,14 +11,13 @@
 #define TEST_NO_MAIN
 
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 typedef struct {
-	uint8_t *   base;
+	uint8_t    *base;
 	size_t      rem;
 	nng_iov     iov;
-	nng_aio *   upper_aio;
-	nng_aio *   lower_aio;
+	nng_aio    *upper_aio;
+	nng_aio    *lower_aio;
 	nng_stream *s;
 	void (*submit)(nng_stream *, nng_aio *);
 } stream_xfr_t;

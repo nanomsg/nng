@@ -1,6 +1,6 @@
 = nng_cv_wake(3supp)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -18,7 +18,6 @@ nng_cv_wake - wake all waiters
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 void nng_cv_wake(nng_cv *cv);
 ----

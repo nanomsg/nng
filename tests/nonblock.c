@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -19,7 +19,6 @@
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -42,7 +41,7 @@ repthr(void *arg)
 	for (;;) {
 		fd_set         fset;
 		struct timeval tmo;
-		char *         msgbuf;
+		char          *msgbuf;
 		size_t         msglen;
 
 		FD_ZERO(&fset);

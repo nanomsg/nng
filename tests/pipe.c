@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -14,7 +14,6 @@
 #include <nng/nng.h>
 #include <nng/protocol/pipeline0/pull.h>
 #include <nng/protocol/pipeline0/push.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -34,8 +33,8 @@ struct testcase {
 	int          rem;
 	int          err;
 	int          rej;
-	nng_mtx *    lk;
-	nng_cv *     cv;
+	nng_mtx     *lk;
+	nng_cv      *cv;
 };
 
 static bool
@@ -114,7 +113,6 @@ char       addr[64];
 static int cnt;
 
 TestMain("Pipe notify works", {
-
 	Convey("We can create a pipeline", {
 		struct testcase push;
 		struct testcase pull;
@@ -161,10 +159,10 @@ TestMain("Pipe notify works", {
 			So(nng_dialer_create(&push.d, push.s, addr) == 0);
 			So(nng_listener_id(pull.l) > 0);
 			So(nng_dialer_id(push.d) > 0);
-			So(nng_dialer_set_ms(
-			       push.d, NNG_OPT_RECONNMINT, 10) == 0);
-			So(nng_dialer_set_ms(
-			       push.d, NNG_OPT_RECONNMAXT, 10) == 0);
+			So(nng_dialer_set_ms(push.d, NNG_OPT_RECONNMINT, 10) ==
+			    0);
+			So(nng_dialer_set_ms(push.d, NNG_OPT_RECONNMAXT, 10) ==
+			    0);
 			So(nng_listener_start(pull.l, 0) == 0);
 			So(nng_dialer_start(push.d, 0) == 0);
 			So(expect(&pull, &pull.add_pre, 1));

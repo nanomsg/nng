@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -33,7 +33,6 @@
 #include <nng/protocol/pair1/pair.h>
 #include <nng/protocol/pipeline0/pull.h>
 #include <nng/protocol/pipeline0/push.h>
-#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -64,8 +63,8 @@ TestMain("Poll FDs", {
 			Convey("And it is always the same fd", {
 				int fd2;
 				sz = sizeof(fd2);
-				So(nng_socket_get(s1, NNG_OPT_RECVFD, &fd2, &sz) ==
-				    0);
+				So(nng_socket_get(
+				       s1, NNG_OPT_RECVFD, &fd2, &sz) == 0);
 				So(fd2 == fd);
 			});
 
