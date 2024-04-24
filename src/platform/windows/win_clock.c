@@ -24,12 +24,14 @@ nni_clock(void)
 int
 nni_time_get(uint64_t *seconds, uint32_t *nanoseconds)
 {
+#if defined(NNG_HAVE_TIMESPEC_GET)
 	struct timespec ts;
 	if (timespec_get(&ts, TIME_UTC) == TIME_UTC) {
 		*seconds     = ts.tv_sec;
 		*nanoseconds = ts.tv_nsec;
 		return (0);
 	}
+#endif
 	return (nni_win_error(GetLastError()));
 }
 

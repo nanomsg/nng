@@ -14,6 +14,7 @@
 if (NNG_PLATFORM_WINDOWS)
     nng_check_sym(InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
     nng_check_sym(snprintf stdio.h NNG_HAVE_SNPRINTF)
+    nng_check_sym(timespec_get time.h NNG_HAVE_TIMESPEC_GET)
     if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF)
         message(FATAL_ERROR
                 "Modern Windows API support is missing. "
