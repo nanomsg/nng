@@ -136,6 +136,8 @@ nni_aio_fini(nni_aio *aio)
 
 	if (fn != NULL) {
 		fn(aio, arg, NNG_ECLOSED);
+	} else {
+		nni_task_abort(&aio->a_task);
 	}
 
 	nni_task_fini(&aio->a_task);
@@ -215,6 +217,8 @@ nni_aio_stop(nni_aio *aio)
 
 		if (fn != NULL) {
 			fn(aio, arg, NNG_ECANCELED);
+		} else {
+			nni_task_abort(&aio->a_task);
 		}
 
 		nni_aio_wait(aio);
@@ -240,6 +244,8 @@ nni_aio_close(nni_aio *aio)
 
 		if (fn != NULL) {
 			fn(aio, arg, NNG_ECLOSED);
+		} else {
+			nni_task_abort(&aio->a_task);
 		}
 	}
 }
@@ -439,6 +445,8 @@ nni_aio_abort(nni_aio *aio, int rv)
 	// Stop any I/O at the provider level.
 	if (fn != NULL) {
 		fn(aio, arg, rv);
+	} else {
+		nni_task_abort(&aio->a_task);
 	}
 }
 
