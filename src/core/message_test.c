@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -349,7 +349,7 @@ test_msg_body_uint64(void)
 	nng_msg *msg;
 	uint64_t v;
 	uint8_t  data[] = { 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0,
-                0, 0, 0, 0, 0, 0, 3 };
+		 0, 0, 0, 0, 0, 0, 3 };
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 
@@ -452,7 +452,7 @@ test_msg_header_uint64(void)
 	nng_msg *msg;
 	uint64_t v;
 	uint8_t  data[] = { 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 2, 0,
-                0, 0, 0, 0, 0, 0, 3 };
+		 0, 0, 0, 0, 0, 0, 3 };
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 
@@ -485,7 +485,7 @@ void
 test_msg_capacity(void)
 {
 	nng_msg *msg;
-	char *   body;
+	char    *body;
 	char     junk[64];
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
@@ -506,7 +506,7 @@ void
 test_msg_reserve(void)
 {
 	nng_msg *msg;
-	char *   body;
+	char    *body;
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_ASSERT(nng_msg_capacity(msg) == 32); // initial empty
@@ -520,6 +520,23 @@ test_msg_reserve(void)
 	NUTS_ASSERT(body != nng_msg_body(msg));
 	NUTS_ASSERT(memcmp(nng_msg_body(msg), "abc", 4) == 0);
 	nng_msg_free(msg);
+}
+
+void
+test_msg_insert_stress(void)
+{
+	char junk[1024];
+
+	for (int j = 0; j < 128; j++) {
+		for (int i = 0; i < 1024; i++) {
+			nng_msg *msg;
+			memset(junk, i % 32 + 'A', sizeof(junk));
+			nng_msg_alloc(&msg, j);
+			nng_msg_insert(msg, junk, i);
+			NUTS_ASSERT(memcmp(nng_msg_body(msg), junk, i) == 0);
+			nng_msg_free(msg);
+		}
+	}
 }
 
 TEST_LIST = {
@@ -549,5 +566,6 @@ TEST_LIST = {
 	{ "msg header u32", test_msg_header_uint64 },
 	{ "msg capacity", test_msg_capacity },
 	{ "msg reserve", test_msg_reserve },
+	{ "msg insert stress", test_msg_insert_stress },
 	{ NULL, NULL },
 };
