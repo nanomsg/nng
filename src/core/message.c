@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -112,7 +112,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 
 	if ((ch->ch_ptr >= ch->ch_buf) && (ch->ch_ptr != NULL) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
-		size_t headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
+		size_t headroom = (size_t) (ch->ch_ptr - ch->ch_buf);
 		if (headwanted < headroom) {
 			headwanted = headroom; // Never shrink this.
 		}
@@ -260,26 +260,47 @@ nni_chunk_room(nni_chunk *ch)
 static int
 nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 {
-	int rv;
+	int  rv;
+	bool grow = false;
 
 	if (ch->ch_ptr == NULL) {
 		ch->ch_ptr = ch->ch_buf;
 	}
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
-	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap)) &&
-	    (len <= (size_t)(ch->ch_ptr - ch->ch_buf))) {
-		// There is already enough room at the beginning.
-		ch->ch_ptr -= len;
-	} else if ((ch->ch_len + len) <= ch->ch_cap) {
-		// We had enough capacity, just shuffle data down.
-		memmove(ch->ch_buf + len, ch->ch_ptr, ch->ch_len);
-	} else if ((rv = nni_chunk_grow(ch, 0, len)) == 0) {
-		// We grew the chunk, so adjust.
-		ch->ch_ptr -= len;
+	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
+
+		if (len <= (size_t) (ch->ch_ptr - ch->ch_buf)) {
+			// There is already enough room at the beginning.
+			ch->ch_ptr -= len;
+		} else if ((ch->ch_len + len + sizeof(uint64_t)) <=
+		    ch->ch_cap) {
+			// We have some room.  Split it between the head and
+			// tail. This is an attempt to reduce the likelhood of
+			// repeated shifts.  We round it up to preserve
+			// alignment along pointers.  Note that this
+			//
+			// We've ensured we have an extra
+			// pad for alignment in the check above.
+			size_t shift = ((ch->ch_cap - (ch->ch_len + len)) / 2);
+			shift        = (shift + (sizeof(uint64_t) - 1)) &
+			    ~(sizeof(uint64_t) - 1);
+			memmove(ch->ch_buf + shift, ch->ch_ptr, ch->ch_len);
+			ch->ch_ptr = ch->ch_buf + shift;
+		} else {
+			grow = true;
+		}
 	} else {
-		// Couldn't grow the chunk either.  Error.
-		return (rv);
+		grow = true;
+	}
+	if (grow) {
+		if ((rv = nni_chunk_grow(ch, 0, len)) == 0) {
+			// We grew the chunk, so adjust.
+			ch->ch_ptr -= len;
+		} else {
+			// Couldn't grow the chunk either.  Error.
+			return (rv);
+		}
 	}
 
 	ch->ch_len += len;
@@ -465,7 +486,8 @@ nni_msg_reserve(nni_msg *m, size_t capacity)
 size_t
 nni_msg_capacity(nni_msg *m)
 {
-	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr));
+	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) -
+	    m->m_body.ch_ptr));
 }
 
 void *
