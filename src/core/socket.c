@@ -83,7 +83,6 @@ struct nni_socket {
 
 	bool s_closing; // Socket is closing
 	bool s_closed;  // Socket closed, protected by global lock
-	bool s_ctxwait; // Waiting for contexts to close.
 
 	nni_mtx          s_pipe_cbs_mtx;
 	nni_sock_pipe_cb s_pipe_cbs[NNG_PIPE_EV_NUM];
@@ -734,7 +733,6 @@ nni_sock_shutdown(nni_sock *sock)
 	// a chance to do so gracefully.
 
 	while (!nni_list_empty(&sock->s_ctxs)) {
-		sock->s_ctxwait = true;
 		nni_cv_wait(&sock->s_close_cv);
 	}
 	nni_mtx_unlock(&sock_lk);
@@ -798,7 +796,6 @@ nni_sock_close(nni_sock *s)
 
 	// Wait for all other references to drop.  Note that we
 	// have a reference already (from our caller).
-	s->s_ctxwait = true;
 	while ((s->s_ref > 1) || (!nni_list_empty(&s->s_ctxs))) {
 		nni_cv_wait(&s->s_close_cv);
 	}
@@ -1307,9 +1304,7 @@ nni_ctx_rele(nni_ctx *ctx)
 	// tries to avoid ID reuse.
 	nni_id_remove(&ctx_ids, ctx->c_id);
 	nni_list_remove(&sock->s_ctxs, ctx);
-	if (sock->s_closed || sock->s_ctxwait) {
-		nni_cv_wake(&sock->s_close_cv);
-	}
+	nni_cv_wake(&sock->s_close_cv);
 	nni_mtx_unlock(&sock_lk);
 
 	nni_ctx_destroy(ctx);
@@ -1791,9 +1786,7 @@ nni_pipe_remove(nni_pipe *p)
 		d->d_pipe = NULL;
 		dialer_timer_start_locked(d); // Kick the timer to redial.
 	}
-	if (s->s_closing) {
-		nni_cv_wake(&s->s_cv);
-	}
+	nni_cv_wake(&s->s_cv);
 	nni_mtx_unlock(&s->s_mx);
 }
 
