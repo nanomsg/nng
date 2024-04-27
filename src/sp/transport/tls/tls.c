@@ -285,6 +285,7 @@ error:
 	if (rv == NNG_ECLOSED) {
 		rv = NNG_ECONNSHUT;
 	}
+	nni_list_remove(&ep->negopipes, p);
 	nng_stream_close(p->tls);
 
 	if ((uaio = ep->useraio) != NULL) {
