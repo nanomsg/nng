@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -65,7 +65,7 @@ struct ipc_ep {
 	nni_aio             *time_aio;
 	nni_list             busy_pipes; // busy pipes -- ones passed to socket
 	nni_list             wait_pipes; // pipes waiting to match to socket
-	nni_list             neg_pipes;  // pipes busy negotiating
+	nni_list             nego_pipes; // pipes busy negotiating
 	nni_reap_node        reap;
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
@@ -76,7 +76,7 @@ static void ipc_pipe_send_start(ipc_pipe *p);
 static void ipc_pipe_recv_start(ipc_pipe *p);
 static void ipc_pipe_send_cb(void *);
 static void ipc_pipe_recv_cb(void *);
-static void ipc_pipe_neg_cb(void *);
+static void ipc_pipe_nego_cb(void *);
 static void ipc_pipe_fini(void *);
 static void ipc_ep_fini(void *);
 
@@ -165,9 +165,6 @@ static void
 ipc_pipe_reap(ipc_pipe *p)
 {
 	if (!nni_atomic_flag_test_and_set(&p->reaped)) {
-		if (p->conn != NULL) {
-			nng_stream_close(p->conn);
-		}
 		nni_reap(&ipc_pipe_reap_list, p);
 	}
 }
@@ -183,7 +180,7 @@ ipc_pipe_alloc(ipc_pipe **pipe_p)
 	nni_mtx_init(&p->mtx);
 	nni_aio_init(&p->tx_aio, ipc_pipe_send_cb, p);
 	nni_aio_init(&p->rx_aio, ipc_pipe_recv_cb, p);
-	nni_aio_init(&p->neg_aio, ipc_pipe_neg_cb, p);
+	nni_aio_init(&p->neg_aio, ipc_pipe_nego_cb, p);
 	nni_aio_list_init(&p->send_q);
 	nni_aio_list_init(&p->recv_q);
 	nni_atomic_flag_reset(&p->reaped);
@@ -210,7 +207,7 @@ ipc_ep_match(ipc_ep *ep)
 }
 
 static void
-ipc_pipe_neg_cb(void *arg)
+ipc_pipe_nego_cb(void *arg)
 {
 	ipc_pipe *p   = arg;
 	ipc_ep   *ep  = p->ep;
@@ -261,7 +258,7 @@ ipc_pipe_neg_cb(void *arg)
 
 	// We are ready now.  We put this in the wait list, and
 	// then try to run the matcher.
-	nni_list_remove(&ep->neg_pipes, p);
+	nni_list_remove(&ep->nego_pipes, p);
 	nni_list_append(&ep->wait_pipes, p);
 
 	ipc_ep_match(ep);
@@ -276,6 +273,7 @@ error:
 	if (rv == NNG_ECLOSED) {
 		rv = NNG_ECONNSHUT;
 	}
+	nni_list_remove(&ep->nego_pipes, p);
 	nng_stream_close(p->conn);
 	// If we are waiting to negotiate on a client side, then a failure
 	// here has to be passed to the user app.
@@ -658,7 +656,7 @@ ipc_pipe_start(ipc_pipe *p, nng_stream *conn, ipc_ep *ep)
 	iov.iov_len     = 8;
 	iov.iov_buf     = &p->tx_head[0];
 	nni_aio_set_iov(&p->neg_aio, 1, &iov);
-	nni_list_append(&ep->neg_pipes, p);
+	nni_list_append(&ep->nego_pipes, p);
 
 	nni_aio_set_timeout(&p->neg_aio, 10000); // 10 sec timeout to negotiate
 	nng_stream_send(p->conn, &p->neg_aio);
@@ -679,7 +677,7 @@ ipc_ep_close(void *arg)
 	if (ep->listener != NULL) {
 		nng_stream_listener_close(ep->listener);
 	}
-	NNI_LIST_FOREACH (&ep->neg_pipes, p) {
+	NNI_LIST_FOREACH (&ep->nego_pipes, p) {
 		ipc_pipe_close(p);
 	}
 	NNI_LIST_FOREACH (&ep->wait_pipes, p) {
@@ -835,7 +833,7 @@ ipc_ep_init(ipc_ep **epp, nni_sock *sock)
 	nni_mtx_init(&ep->mtx);
 	NNI_LIST_INIT(&ep->busy_pipes, ipc_pipe, node);
 	NNI_LIST_INIT(&ep->wait_pipes, ipc_pipe, node);
-	NNI_LIST_INIT(&ep->neg_pipes, ipc_pipe, node);
+	NNI_LIST_INIT(&ep->nego_pipes, ipc_pipe, node);
 
 	ep->proto = nni_sock_proto_id(sock);
 
