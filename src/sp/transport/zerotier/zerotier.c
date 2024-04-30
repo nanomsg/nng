@@ -3072,7 +3072,7 @@ zt_pipe_getopt(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_getopt(zt_pipe_options, name, p, buf, szp, t));
 }
 
-static nni_tran_pipe_ops zt_pipe_ops = {
+static nni_sp_pipe_ops zt_pipe_ops = {
 	.p_init   = zt_pipe_init,
 	.p_fini   = zt_pipe_fini,
 	.p_send   = zt_pipe_send,
@@ -3215,7 +3215,7 @@ static nni_option zt_listener_options[] = {
 	},
 };
 
-static nni_tran_dialer_ops zt_dialer_ops = {
+static nni_sp_dialer_ops zt_dialer_ops = {
 	.d_init    = zt_dialer_init,
 	.d_fini    = zt_ep_fini,
 	.d_connect = zt_ep_connect,
@@ -3223,7 +3223,7 @@ static nni_tran_dialer_ops zt_dialer_ops = {
 	.d_options = zt_dialer_options,
 };
 
-static nni_tran_listener_ops zt_listener_ops = {
+static nni_sp_listener_ops zt_listener_ops = {
 	.l_init    = zt_listener_init,
 	.l_fini    = zt_ep_fini,
 	.l_bind    = zt_ep_bind,
@@ -3234,7 +3234,7 @@ static nni_tran_listener_ops zt_listener_ops = {
 
 // This is the ZeroTier transport linkage, and should be the
 // only global symbol in this entire file.
-static struct nni_tran zt_tran = {
+static struct nni_sp_tran zt_tran = {
 	.tran_scheme   = "zt",
 	.tran_dialer   = &zt_dialer_ops,
 	.tran_listener = &zt_listener_ops,
@@ -3254,5 +3254,5 @@ nng_zt_register(void)
 void
 nni_sp_zt_register(void)
 {
-	nni_tran_register(&zt_tran);
+	nni_sp_tran_register(&zt_tran);
 }
