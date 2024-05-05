@@ -422,8 +422,8 @@ nni_win_ipc_init(
 	c->stream.s_get   = ipc_get;
 	c->stream.s_set   = ipc_set;
 
-	if (((rv = nni_win_io_init(&c->recv_io, ipc_recv_cb, c)) != 0) ||
-	    ((rv = nni_win_io_init(&c->send_io, ipc_send_cb, c)) != 0)) {
+	if (((rv = nni_win_io_init(&c->recv_io, p, ipc_recv_cb, c)) != 0) ||
+	    ((rv = nni_win_io_init(&c->send_io, p, ipc_send_cb, c)) != 0)) {
 		ipc_free(c);
 		return (rv);
 	}

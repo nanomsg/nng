@@ -81,13 +81,13 @@ tcp_listener_funcs(nni_tcp_listener *l)
 static void
 tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 {
-	nni_tcp_conn *    c = io->ptr;
+	nni_tcp_conn     *c = io->ptr;
 	nni_tcp_listener *l = c->listener;
-	nni_aio *         aio;
+	nni_aio          *aio;
 	int               len1;
 	int               len2;
-	SOCKADDR *        sa1;
-	SOCKADDR *        sa2;
+	SOCKADDR         *sa1;
+	SOCKADDR         *sa2;
 	BOOL              nd;
 	BOOL              ka;
 
@@ -270,7 +270,7 @@ static void
 tcp_accept_cancel(nni_aio *aio, void *arg, int rv)
 {
 	nni_tcp_listener *l = arg;
-	nni_tcp_conn *    c;
+	nni_tcp_conn     *c;
 
 	nni_mtx_lock(&l->mtx);
 	if ((c = nni_aio_get_prov_data(aio)) != NULL) {
@@ -322,7 +322,7 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 	c->listener = l;
 	c->conn_aio = aio;
 	nni_aio_set_prov_data(aio, c);
-	if (((rv = nni_win_io_init(&c->conn_io, tcp_accept_cb, c)) != 0) ||
+	if (((rv = nni_win_io_init(&c->conn_io, s, tcp_accept_cb, c)) != 0) ||
 	    ((rv = nni_aio_schedule(aio, tcp_accept_cancel, l)) != 0)) {
 		nni_aio_set_prov_data(aio, NULL);
 		nni_mtx_unlock(&l->mtx);

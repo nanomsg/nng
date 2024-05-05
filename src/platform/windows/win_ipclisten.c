@@ -17,7 +17,7 @@
 
 typedef struct {
 	nng_stream_listener sl;
-	char *              path;
+	char               *path;
 	bool                started;
 	bool                closed;
 	HANDLE              f;
@@ -33,7 +33,7 @@ typedef struct {
 static void
 ipc_accept_done(ipc_listener *l, int rv)
 {
-	nni_aio *   aio;
+	nni_aio    *aio;
 	HANDLE      f;
 	nng_stream *c;
 
@@ -138,7 +138,7 @@ static int
 ipc_listener_set_sec_desc(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	ipc_listener *l = arg;
-	void *        desc;
+	void         *desc;
 	int           rv;
 
 	if ((rv = nni_copyin_ptr(&desc, buf, sz, t)) != 0) {
@@ -200,7 +200,7 @@ ipc_listener_listen(void *arg)
 	ipc_listener *l = arg;
 	int           rv;
 	HANDLE        f;
-	char *        path;
+	char         *path;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->started) {
@@ -331,7 +331,8 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_win_io_init(&l->io, ipc_accept_cb, l)) != 0) {
+	if ((rv = nni_win_io_init(&l->io, INVALID_HANDLE, ipc_accept_cb, l)) !=
+	    0) {
 		NNI_FREE_STRUCT(l);
 		return (rv);
 	}

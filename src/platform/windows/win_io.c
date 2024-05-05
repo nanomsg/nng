@@ -23,6 +23,8 @@ static int      win_io_nthr = 0;
 static HANDLE   win_io_h    = NULL;
 static nni_thr *win_io_thrs;
 
+static SRWLock win_io_lock = SRWLOCK_INIT;
+
 static void
 win_io_handler(void *arg)
 {
@@ -45,9 +47,15 @@ win_io_handler(void *arg)
 			break;
 		}
 
+		// The following is done under the win_io_lock to prevent
+		// a use after free race against nni_win_io_fini.
+		AcquireSRWLockShared(&win_io_lock);
 		item = CONTAINING_RECORD(olpd, nni_win_io, olpd);
-		rv   = ok ? 0 : nni_win_error(GetLastError());
-		item->cb(item, rv, (size_t) cnt);
+		if (item->cb != NULL) {
+			rv = ok ? 0 : nni_win_error(GetLastError());
+			item->cb(item, rv, (size_t) cnt);
+		}
+		ReleaseSRWLockShared(&win_io_lock);
 	}
 }
 
@@ -61,26 +69,44 @@ nni_win_io_register(HANDLE h)
 }
 
 int
-nni_win_io_init(nni_win_io *io, nni_win_io_cb cb, void *ptr)
+nni_win_io_init(nni_win_io *io, HANDLE h, nni_win_io_cb cb, void *ptr)
 {
 	ZeroMemory(&io->olpd, sizeof(io->olpd));
 
-	io->cb          = cb;
-	io->ptr         = ptr;
-	io->aio         = NULL;
-	io->olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (io->olpd.hEvent == NULL) {
-		return (nni_win_error(GetLastError()));
-	}
+	io->f   = h;
+	io->cb  = cb;
+	io->ptr = ptr;
+	io->aio = NULL;
 	return (0);
 }
 
 void
 nni_win_io_fini(nni_win_io *io)
 {
-	if (io->olpd.hEvent != NULL) {
-		CloseHandle((HANDLE) io->olpd.hEvent);
+	DWORD num;
+	// Make absolutely sure there is no I/O running.
+	if (io->f != INVALID_HANDLE) {
+		CancelIoEx(io->f, &o->olpd);
+		(void) GetOverlappedResult(io->f, &io->olpd, &num, TRUE);
 	}
+
+	// Now  acquire the win_io_lock to make sure that no threads are
+	// running in this loop.  Note that there is a subtle race here, where
+	// in theory its possible for the callback thread to be just about to
+	// to start the callback (entering this lock).  This is very narrow,
+	// and it's unlikely to be problematic if it does, because we do not
+	// immedately destroy the data behind the overlapped I/O. Closing this
+	// race requires stopping all of the threads in the thread pool (which
+	// means waking them all up).  This may be worth doing in the future.
+	// One problem with this approach is that we have to have a way to wake
+	// *all* of them, not just one.
+	//
+	// One approach to doing this would be to close the handle of the
+	// completion port itself, and generate a new one.  This seems likely
+	// to be rather expensive?
+	AcquireSRWLockExclusive(&win_io_lock);
+	io->cb = NULL;
+	ReleaseSRWLockExclusive(&win_io_lock);
 }
 
 int

@@ -38,7 +38,7 @@ static void udp_recv_start(nni_plat_udp *);
 int
 nni_plat_udp_open(nni_plat_udp **udpp, nni_sockaddr *sa)
 {
-	nni_plat_udp *   u;
+	nni_plat_udp    *u;
 	SOCKADDR_STORAGE ss;
 	int              sslen;
 	DWORD            no;
@@ -67,7 +67,7 @@ nni_plat_udp_open(nni_plat_udp **udpp, nni_sockaddr *sa)
 	(void) setsockopt(
 	    u->s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, sizeof(no));
 
-	if (((rv = nni_win_io_init(&u->rxio, udp_recv_cb, u)) != 0) ||
+	if (((rv = nni_win_io_init(&u->rxio, u->s, udp_recv_cb, u)) != 0) ||
 	    ((rv = nni_win_io_register((HANDLE) u->s)) != 0)) {
 		nni_plat_udp_close(u);
 		return (rv);
@@ -115,10 +115,10 @@ nni_plat_udp_send(nni_plat_udp *u, nni_aio *aio)
 {
 	SOCKADDR_STORAGE to;
 	int              tolen;
-	nng_sockaddr *   sa;
+	nng_sockaddr    *sa;
 	unsigned         naiov;
-	nni_iov *        aiov;
-	WSABUF *         iov;
+	nni_iov         *aiov;
+	WSABUF          *iov;
 	int              rv;
 	DWORD            nsent;
 
@@ -191,7 +191,7 @@ udp_recv_cb(nni_win_io *io, int rv, size_t num)
 {
 	nni_plat_udp *u = io->ptr;
 	nni_sockaddr *sa;
-	nni_aio *     aio;
+	nni_aio      *aio;
 
 	nni_mtx_lock(&u->lk);
 	if ((aio = nni_list_first(&u->rxq)) == NULL) {
@@ -226,7 +226,7 @@ udp_recv_start(nni_plat_udp *u)
 	DWORD    flags;
 	nni_iov *aiov;
 	unsigned naiov;
-	WSABUF * iov;
+	WSABUF  *iov;
 	nni_aio *aio;
 
 	if ((u->s == INVALID_SOCKET) || (u->closed)) {

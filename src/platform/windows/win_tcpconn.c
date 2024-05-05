@@ -448,8 +448,8 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
 	c->ops.s_get   = tcp_get;
 	c->ops.s_set   = tcp_set;
 
-	if (((rv = nni_win_io_init(&c->recv_io, tcp_recv_cb, c)) != 0) ||
-	    ((rv = nni_win_io_init(&c->send_io, tcp_send_cb, c)) != 0) ||
+	if (((rv = nni_win_io_init(&c->recv_io, s, tcp_recv_cb, c)) != 0) ||
+	    ((rv = nni_win_io_init(&c->send_io, s, tcp_send_cb, c)) != 0) ||
 	    ((rv = nni_win_io_register((HANDLE) s)) != 0)) {
 		tcp_free(c);
 		return (rv);
