@@ -23,7 +23,7 @@ static int      win_io_nthr = 0;
 static HANDLE   win_io_h    = NULL;
 static nni_thr *win_io_thrs;
 
-static SRWLock win_io_lock = SRWLOCK_INIT;
+static SRWLOCK win_io_lock = SRWLOCK_INIT;
 
 static void
 win_io_handler(void *arg)
@@ -85,8 +85,8 @@ nni_win_io_fini(nni_win_io *io)
 {
 	DWORD num;
 	// Make absolutely sure there is no I/O running.
-	if (io->f != INVALID_HANDLE) {
-		CancelIoEx(io->f, &o->olpd);
+	if (io->f != INVALID_HANDLE_VALUE) {
+		CancelIoEx(io->f, &io->olpd);
 		(void) GetOverlappedResult(io->f, &io->olpd, &num, TRUE);
 	}
 

@@ -331,8 +331,8 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_win_io_init(&l->io, INVALID_HANDLE, ipc_accept_cb, l)) !=
-	    0) {
+	if ((rv = nni_win_io_init(
+	         &l->io, INVALID_HANDLE_VALUE, ipc_accept_cb, l)) != 0) {
 		NNI_FREE_STRUCT(l);
 		return (rv);
 	}

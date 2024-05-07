@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -67,7 +67,8 @@ nni_plat_udp_open(nni_plat_udp **udpp, nni_sockaddr *sa)
 	(void) setsockopt(
 	    u->s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, sizeof(no));
 
-	if (((rv = nni_win_io_init(&u->rxio, u->s, udp_recv_cb, u)) != 0) ||
+	if (((rv = nni_win_io_init(&u->rxio, (HANDLE) u->s, udp_recv_cb, u)) !=
+	        0) ||
 	    ((rv = nni_win_io_register((HANDLE) u->s)) != 0)) {
 		nni_plat_udp_close(u);
 		return (rv);

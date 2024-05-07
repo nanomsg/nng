@@ -322,7 +322,8 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 	c->listener = l;
 	c->conn_aio = aio;
 	nni_aio_set_prov_data(aio, c);
-	if (((rv = nni_win_io_init(&c->conn_io, s, tcp_accept_cb, c)) != 0) ||
+	if (((rv = nni_win_io_init(
+	          &c->conn_io, (HANDLE) s, tcp_accept_cb, c)) != 0) ||
 	    ((rv = nni_aio_schedule(aio, tcp_accept_cancel, l)) != 0)) {
 		nni_aio_set_prov_data(aio, NULL);
 		nni_mtx_unlock(&l->mtx);
