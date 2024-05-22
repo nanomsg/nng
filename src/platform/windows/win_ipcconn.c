@@ -22,7 +22,6 @@ typedef struct ipc_conn {
 	HANDLE        f;
 	nni_win_io    recv_io;
 	nni_win_io    send_io;
-	nni_win_io    conn_io;
 	nni_list      recv_aios;
 	nni_list      send_aios;
 	nni_aio      *conn_aio;
@@ -319,7 +318,6 @@ ipc_conn_reap(void *arg)
 
 	nni_win_io_fini(&c->recv_io);
 	nni_win_io_fini(&c->send_io);
-	nni_win_io_fini(&c->conn_io);
 
 	if (c->f != INVALID_HANDLE_VALUE) {
 		CloseHandle(c->f);
