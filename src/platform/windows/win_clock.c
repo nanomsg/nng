@@ -24,7 +24,6 @@ nni_clock(void)
 int
 nni_time_get(uint64_t *seconds, uint32_t *nanoseconds)
 {
-	int             rv;
 	struct timespec ts;
 	if (timespec_get(&ts, TIME_UTC) == TIME_UTC) {
 		*seconds     = ts.tv_sec;
