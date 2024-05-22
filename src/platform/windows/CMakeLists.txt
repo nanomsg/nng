@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -13,14 +13,16 @@
 # the static library unless they also go into the dynamic.
 if (NNG_PLATFORM_WINDOWS)
     nng_check_sym(InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
+    nng_check_sym(timespec_get time.h NNG_HAVE_TIMESPEC_GET)
     nng_check_sym(snprintf stdio.h NNG_HAVE_SNPRINTF)
-    if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF)
+    if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF OR NOT NNG_HAVE_TIMESPEC_GET)
         message(FATAL_ERROR
                 "Modern Windows API support is missing. "
                 "Versions of Windows prior to Vista are not supported.  "
-                "Further, the 32-bit MinGW environment is not supported. "
+                "Further, the legacy MinGW environments are not supported. "
                 "Ensure you have at least Windows Vista or newer, and are "
-                "using either Visual Studio 2013 or newer or MinGW-W64.")
+                "using either Visual Studio 2013 or compatible compiler, "
+                "and are also using the universal C runtime (UCRT).")
     endif ()
     nng_link_libraries(ws2_32 mswsock advapi32)
 
