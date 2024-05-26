@@ -24,7 +24,6 @@ typedef struct ipc_conn {
 	nni_win_io    send_io;
 	nni_list      recv_aios;
 	nni_list      send_aios;
-	nni_aio      *conn_aio;
 	nng_sockaddr  sa;
 	bool          dialer;
 	int           recv_rv;
