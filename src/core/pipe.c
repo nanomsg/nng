@@ -406,7 +406,7 @@ nni_pipe_bump_error(nni_pipe *p, int err)
 {
 	if (p->p_dialer != NULL) {
 		nni_dialer_bump_error(p->p_dialer, err);
-	} else {
+	} else if (p->p_listener != NULL) {
 		nni_listener_bump_error(p->p_listener, err);
 	}
 }
