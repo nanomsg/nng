@@ -60,27 +60,14 @@ nni_win_io_register(HANDLE h)
 	return (0);
 }
 
-int
+void
 nni_win_io_init(nni_win_io *io, nni_win_io_cb cb, void *ptr)
 {
 	ZeroMemory(&io->olpd, sizeof(io->olpd));
 
-	io->cb          = cb;
-	io->ptr         = ptr;
-	io->aio         = NULL;
-	io->olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	if (io->olpd.hEvent == NULL) {
-		return (nni_win_error(GetLastError()));
-	}
-	return (0);
-}
-
-void
-nni_win_io_fini(nni_win_io *io)
-{
-	if (io->olpd.hEvent != NULL) {
-		CloseHandle((HANDLE) io->olpd.hEvent);
-	}
+	io->cb  = cb;
+	io->ptr = ptr;
+	io->aio = NULL;
 }
 
 int
