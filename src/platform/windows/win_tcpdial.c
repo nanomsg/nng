@@ -208,10 +208,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 
 	c->peername = ss;
 
-	if ((rv = nni_win_io_init(&c->conn_io, tcp_dial_cb, c)) != 0) {
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
+	nni_win_io_init(&c->conn_io, tcp_dial_cb, c);
 
 	nni_mtx_lock(&d->mtx);
 	if (d->closed) {

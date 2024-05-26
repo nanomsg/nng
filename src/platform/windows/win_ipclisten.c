@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -17,7 +17,7 @@
 
 typedef struct {
 	nng_stream_listener sl;
-	char *              path;
+	char               *path;
 	bool                started;
 	bool                closed;
 	HANDLE              f;
@@ -33,7 +33,7 @@ typedef struct {
 static void
 ipc_accept_done(ipc_listener *l, int rv)
 {
-	nni_aio *   aio;
+	nni_aio    *aio;
 	HANDLE      f;
 	nng_stream *c;
 
@@ -138,7 +138,7 @@ static int
 ipc_listener_set_sec_desc(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	ipc_listener *l = arg;
-	void *        desc;
+	void         *desc;
 	int           rv;
 
 	if ((rv = nni_copyin_ptr(&desc, buf, sz, t)) != 0) {
@@ -200,7 +200,7 @@ ipc_listener_listen(void *arg)
 	ipc_listener *l = arg;
 	int           rv;
 	HANDLE        f;
-	char *        path;
+	char         *path;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->started) {
@@ -310,7 +310,6 @@ ipc_listener_free(void *arg)
 		nni_cv_wait(&l->cv);
 	}
 	nni_mtx_unlock(&l->mtx);
-	nni_win_io_fini(&l->io);
 	nni_strfree(l->path);
 	nni_cv_fini(&l->cv);
 	nni_mtx_fini(&l->mtx);
@@ -321,7 +320,6 @@ int
 nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
 	ipc_listener *l;
-	int           rv;
 
 	if ((strcmp(url->u_scheme, "ipc") != 0) || (url->u_path == NULL) ||
 	    (strlen(url->u_path) == 0) ||
@@ -331,10 +329,7 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_win_io_init(&l->io, ipc_accept_cb, l)) != 0) {
-		NNI_FREE_STRUCT(l);
-		return (rv);
-	}
+	nni_win_io_init(&l->io, ipc_accept_cb, l);
 	l->started                       = false;
 	l->closed                        = false;
 	l->sec_attr.nLength              = sizeof(l->sec_attr);

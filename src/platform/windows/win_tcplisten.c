@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -81,13 +81,13 @@ tcp_listener_funcs(nni_tcp_listener *l)
 static void
 tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 {
-	nni_tcp_conn *    c = io->ptr;
+	nni_tcp_conn     *c = io->ptr;
 	nni_tcp_listener *l = c->listener;
-	nni_aio *         aio;
+	nni_aio          *aio;
 	int               len1;
 	int               len2;
-	SOCKADDR *        sa1;
-	SOCKADDR *        sa2;
+	SOCKADDR         *sa1;
+	SOCKADDR         *sa2;
 	BOOL              nd;
 	BOOL              ka;
 
@@ -97,6 +97,7 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	if ((aio = c->conn_aio) == NULL) {
 		// This case should not occur. The situation would indicate
 		// a case where the connection was accepted already.
+		NNI_ASSERT(false);
 		nni_mtx_unlock(&l->mtx);
 		return;
 	}
@@ -168,6 +169,7 @@ nni_tcp_listener_close(nni_tcp_listener *l)
 	if (!l->closed) {
 		nni_aio *aio;
 		l->closed = true;
+		closesocket(l->s);
 
 		NNI_LIST_FOREACH (&l->aios, aio) {
 			nni_tcp_conn *c;
@@ -177,7 +179,6 @@ nni_tcp_listener_close(nni_tcp_listener *l)
 				CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 			}
 		}
-		closesocket(l->s);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
@@ -270,7 +271,7 @@ static void
 tcp_accept_cancel(nni_aio *aio, void *arg, int rv)
 {
 	nni_tcp_listener *l = arg;
-	nni_tcp_conn *    c;
+	nni_tcp_conn     *c;
 
 	nni_mtx_lock(&l->mtx);
 	if ((c = nni_aio_get_prov_data(aio)) != NULL) {
@@ -322,8 +323,9 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 	c->listener = l;
 	c->conn_aio = aio;
 	nni_aio_set_prov_data(aio, c);
-	if (((rv = nni_win_io_init(&c->conn_io, tcp_accept_cb, c)) != 0) ||
-	    ((rv = nni_aio_schedule(aio, tcp_accept_cancel, l)) != 0)) {
+	nni_win_io_init(&c->conn_io, tcp_accept_cb, c);
+
+	if ((rv = nni_aio_schedule(aio, tcp_accept_cancel, l)) != 0) {
 		nni_aio_set_prov_data(aio, NULL);
 		nni_mtx_unlock(&l->mtx);
 		nng_stream_free(&c->ops);

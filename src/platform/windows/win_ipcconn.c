@@ -316,9 +316,6 @@ ipc_conn_reap(void *arg)
 	}
 	nni_mtx_unlock(&c->mtx);
 
-	nni_win_io_fini(&c->recv_io);
-	nni_win_io_fini(&c->send_io);
-
 	if (c->f != INVALID_HANDLE_VALUE) {
 		CloseHandle(c->f);
 	}
@@ -401,7 +398,6 @@ nni_win_ipc_init(
     nng_stream **connp, HANDLE p, const nng_sockaddr *sa, bool dialer)
 {
 	ipc_conn *c;
-	int       rv;
 
 	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
 		return (NNG_ENOMEM);
@@ -420,11 +416,8 @@ nni_win_ipc_init(
 	c->stream.s_get   = ipc_get;
 	c->stream.s_set   = ipc_set;
 
-	if (((rv = nni_win_io_init(&c->recv_io, ipc_recv_cb, c)) != 0) ||
-	    ((rv = nni_win_io_init(&c->send_io, ipc_send_cb, c)) != 0)) {
-		ipc_free(c);
-		return (rv);
-	}
+	nni_win_io_init(&c->recv_io, ipc_recv_cb, c);
+	nni_win_io_init(&c->send_io, ipc_send_cb, c);
 
 	c->f   = p;
 	*connp = (void *) c;
