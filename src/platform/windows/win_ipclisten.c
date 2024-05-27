@@ -42,6 +42,9 @@ ipc_accept_done(ipc_listener *l, int rv)
 	nni_cv_wake(&l->cv);
 
 	if (l->closed) {
+		rv = NNG_ECLOSED;
+	}
+	if (rv != 0) {
 		// Closed, so bail.
 		DisconnectNamedPipe(l->f);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -83,32 +86,25 @@ ipc_accept_start(ipc_listener *l)
 {
 	nni_aio *aio;
 
-	if (l->closed) {
-		while ((aio = nni_list_first(&l->aios)) != NULL) {
-			nni_list_remove(&l->aios, aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
-		nni_cv_wake(&l->cv);
-	}
-
 	while ((aio = nni_list_first(&l->aios)) != NULL) {
 		int rv;
 
-		if ((ConnectNamedPipe(l->f, &l->io.olpd)) ||
-		    ((rv = GetLastError()) == ERROR_IO_PENDING)) {
-			// Success, or pending, handled via completion pkt.
+		if (l->closed) {
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, NNG_ECLOSED);
+		} else if (ConnectNamedPipe(l->f, &l->io.olpd)) {
+			rv = 0;
+		} else if ((rv = GetLastError()) == ERROR_IO_PENDING) {
+			// asynchronous completion pending
 			return;
+		} else if (rv == ERROR_PIPE_CONNECTED) {
+			rv = 0;
 		}
-		if (rv == ERROR_PIPE_CONNECTED) {
-			// Kind of like success, but as this is technically
-			// an "error", we have to complete it ourself.
-			// Fake a completion.
-			ipc_accept_done(l, 0);
-		} else {
-			// Fast-fail (synchronous).
-			nni_aio_finish_error(aio, nni_win_error(rv));
-		}
+		// synchronous completion
+		ipc_accept_done(l, rv);
 	}
+
+	nni_cv_wake(&l->cv);
 }
 
 static void
