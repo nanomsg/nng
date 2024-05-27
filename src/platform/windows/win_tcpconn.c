@@ -26,43 +26,45 @@ tcp_recv_start(nni_tcp_conn *c)
 	unsigned i;
 	unsigned naiov;
 	nni_iov *aiov;
-	WSABUF  *iov;
+	WSABUF   iov[8]; // we don't support more than this
+	DWORD    nrecv;
 
-	if (c->closed) {
-		while ((aio = nni_list_first(&c->recv_aios)) != NULL) {
-			nni_list_remove(&c->recv_aios, aio);
+	c->recv_rv = 0;
+	while ((aio = nni_list_first(&c->recv_aios)) != NULL) {
+
+		if (c->closed) {
+			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
+			continue;
 		}
-		nni_cv_wake(&c->cv);
-	}
-again:
-	if ((aio = nni_list_first(&c->recv_aios)) == NULL) {
-		return;
-	}
+		nni_aio_get_iov(aio, &naiov, &aiov);
 
-	nni_aio_get_iov(aio, &naiov, &aiov);
-	iov = _malloca(naiov * sizeof(*iov));
+		// Put the AIOs in Windows form.
+		for (niov = 0, i = 0; i < naiov; i++) {
+			if (aiov[i].iov_len != 0) {
+				iov[niov].buf = aiov[i].iov_buf;
+				iov[niov].len = (ULONG) aiov[i].iov_len;
+				niov++;
+			}
+		}
 
-	// Put the AIOs in Windows form.
-	for (niov = 0, i = 0; i < naiov; i++) {
-		if (aiov[i].iov_len != 0) {
-			iov[niov].buf = aiov[i].iov_buf;
-			iov[niov].len = (ULONG) aiov[i].iov_len;
-			niov++;
+		flags = 0;
+		rv    = WSARecv(
+                    c->s, iov, niov, &nrecv, &flags, &c->recv_io.olpd, NULL);
+
+		if ((rv == SOCKET_ERROR) &&
+		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
+			// Synchronous error.
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, nni_win_error(rv));
+		} else {
+			// Callback completes.
+			return;
 		}
 	}
 
-	flags = 0;
-	rv    = WSARecv(c->s, iov, niov, NULL, &flags, &c->recv_io.olpd, NULL);
-	_freea(iov);
-
-	if ((rv == SOCKET_ERROR) &&
-	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
-		// Synchronous failure.
-		nni_aio_list_remove(aio);
-		nni_aio_finish_error(aio, nni_win_error(rv));
-		goto again;
-	}
+	// we received all pending requests
+	nni_cv_wake(&c->cv);
 }
 
 static void
@@ -70,12 +72,12 @@ tcp_recv_cb(nni_win_io *io, int rv, size_t num)
 {
 	nni_aio      *aio;
 	nni_tcp_conn *c = io->ptr;
+
 	nni_mtx_lock(&c->mtx);
-	if ((aio = nni_list_first(&c->recv_aios)) == NULL) {
-		// Should indicate that it was closed.
-		nni_mtx_unlock(&c->mtx);
-		return;
-	}
+	aio = nni_list_first(&c->recv_aios);
+	NNI_ASSERT(aio != NULL);
+	nni_aio_list_remove(aio);
+
 	if (c->recv_rv != 0) {
 		rv         = c->recv_rv;
 		c->recv_rv = 0;
@@ -84,12 +86,7 @@ tcp_recv_cb(nni_win_io *io, int rv, size_t num)
 		// A zero byte receive is a remote close from the peer.
 		rv = NNG_ECONNSHUT;
 	}
-	nni_aio_list_remove(aio);
-	if (c->closed) {
-		nni_cv_wake(&c->cv);
-	} else {
-		tcp_recv_start(c);
-	}
+	tcp_recv_start(c);
 	nni_mtx_unlock(&c->mtx);
 
 	nni_aio_finish_sync(aio, rv, num);
@@ -100,13 +97,19 @@ tcp_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
 	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
-	if (aio == nni_list_first(&c->recv_aios)) {
+	if ((aio == nni_list_first(&c->recv_aios)) && (c->recv_rv == 0)) {
 		c->recv_rv = rv;
 		CancelIoEx((HANDLE) c->s, &c->recv_io.olpd);
-	} else if (nni_aio_list_active(aio)) {
-		nni_aio_list_remove(aio);
-		nni_aio_finish_error(aio, rv);
-		nni_cv_wake(&c->cv);
+	} else {
+		nni_aio *srch;
+		NNI_LIST_FOREACH (&c->recv_aios, srch) {
+			if (aio == srch) {
+				nni_aio_list_remove(aio);
+				nni_aio_finish_error(aio, rv);
+				nni_cv_wake(&c->cv);
+				break;
+			}
+		}
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -121,11 +124,6 @@ tcp_recv(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
-	if (c->closed) {
-		nni_mtx_unlock(&c->mtx);
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
 	if ((rv = nni_aio_schedule(aio, tcp_recv_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
@@ -147,42 +145,35 @@ tcp_send_start(nni_tcp_conn *c)
 	unsigned i;
 	unsigned naiov;
 	nni_iov *aiov;
-	WSABUF  *iov;
+	WSABUF   iov[8];
 
-	if (c->closed) {
-		while ((aio = nni_list_first(&c->send_aios)) != NULL) {
-			nni_list_remove(&c->send_aios, aio);
+	while ((aio = nni_list_first(&c->send_aios)) != NULL) {
+		if (c->closed) {
+			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
+			continue;
 		}
-		nni_cv_wake(&c->cv);
-	}
+		nni_aio_get_iov(aio, &naiov, &aiov);
 
-again:
-	if ((aio = nni_list_first(&c->send_aios)) == NULL) {
-		return;
-	}
-
-	nni_aio_get_iov(aio, &naiov, &aiov);
-	iov = _malloca(naiov * sizeof(*iov));
-
-	// Put the AIOs in Windows form.
-	for (niov = 0, i = 0; i < naiov; i++) {
-		if (aiov[i].iov_len != 0) {
-			iov[niov].buf = aiov[i].iov_buf;
-			iov[niov].len = (ULONG) aiov[i].iov_len;
-			niov++;
+		// Put the AIOs in Windows form.
+		for (niov = 0, i = 0; i < naiov; i++) {
+			if (aiov[i].iov_len != 0) {
+				iov[niov].buf = aiov[i].iov_buf;
+				iov[niov].len = (ULONG) aiov[i].iov_len;
+				niov++;
+			}
 		}
-	}
 
-	rv = WSASend(c->s, iov, niov, NULL, 0, &c->send_io.olpd, NULL);
-	_freea(iov);
+		rv = WSASend(c->s, iov, niov, NULL, 0, &c->send_io.olpd, NULL);
 
-	if ((rv == SOCKET_ERROR) &&
-	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
-		// Synchronous failure.
-		nni_aio_list_remove(aio);
-		nni_aio_finish_error(aio, nni_win_error(rv));
-		goto again;
+		if ((rv == SOCKET_ERROR) &&
+		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
+			// Synchronous failure.
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, nni_win_error(rv));
+		} else {
+			return;
+		}
 	}
 }
 
@@ -194,10 +185,16 @@ tcp_send_cancel(nni_aio *aio, void *arg, int rv)
 	if (aio == nni_list_first(&c->send_aios)) {
 		c->send_rv = rv;
 		CancelIoEx((HANDLE) c->s, &c->send_io.olpd);
-	} else if (nni_aio_list_active(aio)) {
-		nni_aio_list_remove(aio);
-		nni_aio_finish_error(aio, rv);
-		nni_cv_wake(&c->cv);
+	} else {
+		nni_aio *srch;
+		NNI_LIST_FOREACH (&c->send_aios, srch) {
+			if (srch == aio) {
+				nni_aio_list_remove(aio);
+				nni_aio_finish_error(aio, rv);
+				nni_cv_wake(&c->cv);
+				break;
+			}
+		}
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -208,20 +205,15 @@ tcp_send_cb(nni_win_io *io, int rv, size_t num)
 	nni_aio      *aio;
 	nni_tcp_conn *c = io->ptr;
 	nni_mtx_lock(&c->mtx);
-	if ((aio = nni_list_first(&c->send_aios)) == NULL) {
-		// Should indicate that it was closed.
-		nni_mtx_unlock(&c->mtx);
-		return;
-	}
+	aio = nni_list_first(&c->send_aios);
+	NNI_ASSERT(aio != NULL);
+	nni_aio_list_remove(aio); // should always be at head
+
 	if (c->send_rv != 0) {
 		rv         = c->send_rv;
 		c->send_rv = 0;
 	}
-	nni_aio_list_remove(aio); // should always be at head
 	tcp_send_start(c);
-	if (c->closed) {
-		nni_cv_wake(&c->cv);
-	}
 	nni_mtx_unlock(&c->mtx);
 
 	nni_aio_finish_sync(aio, rv, num);
@@ -237,11 +229,6 @@ tcp_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
-	if (c->closed) {
-		nni_mtx_unlock(&c->mtx);
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
 	if ((rv = nni_aio_schedule(aio, tcp_send_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
@@ -262,8 +249,9 @@ tcp_close(void *arg)
 	if (!c->closed) {
 		c->closed = true;
 		if (c->s != INVALID_SOCKET) {
-			CancelIoEx((HANDLE) c->s, NULL); // cancel everything
 			shutdown(c->s, SD_BOTH);
+			closesocket(c->s);
+			c->s = INVALID_SOCKET;
 		}
 	}
 	nni_mtx_unlock(&c->mtx);
