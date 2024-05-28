@@ -150,10 +150,10 @@ ipc_pipe_fini(void *arg)
 		}
 		nni_mtx_unlock(&ep->mtx);
 	}
+	nng_stream_free(p->conn);
 	nni_aio_fini(&p->rx_aio);
 	nni_aio_fini(&p->tx_aio);
 	nni_aio_fini(&p->neg_aio);
-	nng_stream_free(p->conn);
 	if (p->rx_msg) {
 		nni_msg_free(p->rx_msg);
 	}
