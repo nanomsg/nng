@@ -70,28 +70,6 @@ static int                nni_aio_expire_q_cnt;
 // operations from starting, without waiting for any existing one to
 // complete, call nni_aio_close.
 
-// In some places we want to check that an aio is not in use.
-// Technically if these checks pass, then they should not need
-// to be done with a lock, because the caller should have the only
-// references to them.  However, race detectors can't necessarily
-// know about this semantic, and may complain about potential data
-// races.  To suppress false positives, define NNG_RACE_DETECTOR.
-// Note that this will cause extra locks to be acquired, affecting
-// performance, so don't use it in production.
-#ifdef __has_feature
-#if __has_feature(thread_sanitizer)
-#define NNG_RACE_DETECTOR
-#endif
-#endif
-
-#ifdef NNG_RACE_DETECTOR
-#define aio_safe_lock(l) nni_mtx_lock(l)
-#define aio_safe_unlock(l) nni_mtx_unlock(l)
-#else
-#define aio_safe_lock(l) ((void) 1)
-#define aio_safe_unlock(l) ((void) 1)
-#endif
-
 static nni_reap_list aio_reap_list = {
 	.rl_offset = offsetof(nni_aio, a_reap_node),
 	.rl_func   = (nni_cb) nni_aio_free,
@@ -350,8 +328,7 @@ nni_aio_begin(nni_aio *aio)
 	// checks may wish ignore or suppress these checks.
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
-	aio_safe_lock(&eq->eq_mtx);
-
+	nni_mtx_lock(&eq->eq_mtx);
 	NNI_ASSERT(!nni_aio_list_active(aio));
 	NNI_ASSERT(aio->a_cancel_fn == NULL);
 	NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
@@ -365,9 +342,6 @@ nni_aio_begin(nni_aio *aio)
 	aio->a_count     = 0;
 	aio->a_cancel_fn = NULL;
 
-	aio_safe_unlock(&eq->eq_mtx);
-
-	nni_mtx_lock(&eq->eq_mtx);
 	// We should not reschedule anything at this point.
 	if (aio->a_stop) {
 		aio->a_result    = NNG_ECANCELED;
