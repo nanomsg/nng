@@ -200,10 +200,10 @@ wstran_pipe_fini(void *arg)
 {
 	ws_pipe *p = arg;
 
+	nng_stream_free(p->ws);
 	nni_aio_free(p->rxaio);
 	nni_aio_free(p->txaio);
 
-	nng_stream_free(p->ws);
 	nni_mtx_fini(&p->mtx);
 	NNI_FREE_STRUCT(p);
 }
