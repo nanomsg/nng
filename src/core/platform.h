@@ -407,6 +407,10 @@ extern void nni_plat_udp_send(nni_plat_udp *, nni_aio *);
 // NNG_EMSGSIZE results.
 extern void nni_plat_udp_recv(nni_plat_udp *, nni_aio *);
 
+// nni_plat_udp_membership provides for joining or leaving multicast groups.
+extern int nni_plat_udp_multicast_membership(
+    nni_plat_udp *udp, nni_sockaddr *sa, bool join);
+
 //
 // Notification Pipe Pairs
 //

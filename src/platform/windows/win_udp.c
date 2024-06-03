@@ -315,6 +315,101 @@ nni_plat_udp_sockname(nni_plat_udp *udp, nni_sockaddr *sa)
 	return (nni_win_sockaddr2nn(sa, &ss));
 }
 
+// Joining a multicast group is different than binding to a multicast
+// group.  This allows to receive both unicast and multicast at the given
+// address.
+static int
+ip4_multicast_member(nni_plat_udp *udp, SOCKADDR *sa, bool join)
+{
+	IP_MREQ          mreq;
+	SOCKADDR_IN     *sin;
+	SOCKADDR_STORAGE local;
+	int              sz = sizeof(local);
+
+	if (getsockname(udp->s, (SOCKADDR *) &local, &sz) >= 0) {
+		if (local.ss_family != AF_INET) {
+			// address families have to match
+			return (NNG_EADDRINVAL);
+		}
+		sin                       = (SOCKADDR_IN *) &local;
+		mreq.imr_interface.s_addr = sin->sin_addr.s_addr;
+	} else {
+		mreq.imr_interface.s_addr = INADDR_ANY;
+	}
+
+	// Determine our local interface
+	sin = (SOCKADDR_IN *) sa;
+
+	mreq.imr_multiaddr.s_addr = sin->sin_addr.s_addr;
+	if (setsockopt(udp->s, IPPROTO_IP,
+	        join ? IP_ADD_MEMBERSHIP : IP_DROP_MEMBERSHIP,
+	        (const char *) &mreq, sizeof(mreq)) == 0) {
+		return (0);
+	}
+	return (nni_win_error(GetLastError()));
+}
+
+#ifdef NNG_ENABLE_IPV6
+static int
+ip6_multicast_member(nni_plat_udp *udp, SOCKADDR *sa, bool join)
+{
+	IPV6_MREQ        mreq;
+	SOCKADDR_IN6    *sin6;
+	SOCKADDR_STORAGE local;
+	int              sz = sizeof(local);
+
+	if (getsockname(udp->s, (SOCKADDR *) &local, &sz) >= 0) {
+		if (local.ss_family != AF_INET6) {
+			// address families have to match
+			return (NNG_EADDRINVAL);
+		}
+		sin6                  = (SOCKADDR_IN6 *) &local;
+		mreq.ipv6mr_interface = sin6->sin6_scope_id;
+	} else {
+		mreq.ipv6mr_interface = 0;
+	}
+
+	// Determine our local interface
+	sin6 = (SOCKADDR_IN6 *) sa;
+
+	mreq.ipv6mr_multiaddr = sin6->sin6_addr;
+	if (setsockopt(udp->s, IPPROTO_IPV6,
+	        join ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP,
+	        (const char *) &mreq, sizeof(mreq)) == 0) {
+		return (0);
+	}
+	return (nni_win_error(GetLastError()));
+}
+#endif
+
+int
+nni_plat_udp_multicast_membership(
+    nni_plat_udp *udp, nni_sockaddr *sa, bool join)
+{
+	SOCKADDR_STORAGE ss;
+	socklen_t        sz;
+	int              rv;
+
+	sz = nni_win_nn2sockaddr(&ss, sa);
+	if (sz < 1) {
+		return (NNG_EADDRINVAL);
+	}
+	switch (ss.ss_family) {
+	case AF_INET:
+		rv = ip4_multicast_member(udp, (struct sockaddr *) &ss, join);
+		break;
+#ifdef NNG_ENABLE_IPV6
+	case AF_INET6:
+		rv = ip6_multicast_member(udp, (struct sockaddr *) &ss, join);
+		break;
+#endif
+	default:
+		rv = NNG_EADDRINVAL;
+	}
+
+	return (rv);
+}
+
 int
 nni_win_udp_sysinit(void)
 {
