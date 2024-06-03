@@ -1262,6 +1262,39 @@ NNG_DECL int nng_stream_listener_set_ptr(
 NNG_DECL int nng_stream_listener_set_addr(
     nng_stream_listener *, const char *, const nng_sockaddr *);
 
+// UDP operations.  These are provided for convenience,
+// and should be considered somewhat experimental.
+
+// nng_udp represents a socket / file descriptor for use with UDP
+typedef struct nng_udp nng_udp;
+
+// nng_udp_open initializes a UDP socket.  The socket is bound
+// to the specified address.
+NNG_DECL int nng_udp_open(nng_udp **udpp, nng_sockaddr *sa);
+
+// nng_udp_close closes the underlying UDP socket.
+NNG_DECL void nng_udp_close(nng_udp *udp);
+
+// nng_udp_sockname determines the locally bound address.
+// This is useful to determine a chosen port after binding to port 0.
+NNG_DECL int nng_udp_sockname(nng_udp *udp, nng_sockaddr *sa);
+
+// nng_udp_send sends the data in the aio to the the
+// destination specified in the nng_aio.  The iovs are the UDP payload.
+// The destination address is the first input (0th) for the aio.
+NNG_DECL void nng_udp_send(nng_udp *udp, nng_aio *aio);
+
+// nng_udp_recv receives a message, storing it in the iovs
+// from the UDP payload.  If the UDP payload will not fit, then
+// NNG_EMSGSIZE results.  The senders address is stored in the
+// socket address (nng_sockaddr), which should have been specified
+// in the aio's first input.
+NNG_DECL void nng_udp_recv(nng_udp *udp, nng_aio *aio);
+
+// nng_udp_membership provides for joining or leaving multicast groups.
+NNG_DECL int nng_udp_multicast_membership(
+    nng_udp *udp, nng_sockaddr *sa, bool join);
+
 #ifndef NNG_ELIDE_DEPRECATED
 // These are legacy APIs that have been deprecated.
 // Their use is strongly discouraged.

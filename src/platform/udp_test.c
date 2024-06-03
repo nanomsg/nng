@@ -23,20 +23,18 @@
 void
 test_udp_pair(void)
 {
-	nng_sockaddr  sa1;
-	nng_sockaddr  sa2;
-	nni_plat_udp *u1;
-	nni_plat_udp *u2;
-	uint32_t      loopback;
-	nng_aio      *aio1;
-	nng_aio      *aio2;
-	nng_iov       iov1, iov2;
-	char          msg[] = "hello";
-	char          rbuf[1024];
-	nng_sockaddr  to;
-	nng_sockaddr  from;
-
-	NUTS_PASS(nni_init());
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
+	nng_udp     *u1;
+	nng_udp     *u2;
+	uint32_t     loopback;
+	nng_aio     *aio1;
+	nng_aio     *aio2;
+	nng_iov      iov1, iov2;
+	char         msg[] = "hello";
+	char         rbuf[1024];
+	nng_sockaddr to;
+	nng_sockaddr from;
 
 	loopback = htonl(0x7f000001); // 127.0.0.1
 
@@ -48,11 +46,11 @@ test_udp_pair(void)
 	sa2.s_in.sa_addr   = loopback;
 	sa2.s_in.sa_port   = 0;
 
-	NUTS_PASS(nni_plat_udp_open(&u1, &sa1));
-	NUTS_PASS(nni_plat_udp_open(&u2, &sa2));
+	NUTS_PASS(nng_udp_open(&u1, &sa1));
+	NUTS_PASS(nng_udp_open(&u2, &sa2));
 
-	NUTS_PASS(nni_plat_udp_sockname(u1, &sa1));
-	NUTS_PASS(nni_plat_udp_sockname(u2, &sa2));
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u2, &sa2));
 
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
@@ -68,8 +66,8 @@ test_udp_pair(void)
 	NUTS_PASS(nng_aio_set_iov(aio2, 1, &iov2));
 	NUTS_PASS(nng_aio_set_input(aio2, 0, &from));
 
-	nni_plat_udp_recv(u2, aio2);
-	nni_plat_udp_send(u1, aio1);
+	nng_udp_recv(u2, aio2);
+	nng_udp_send(u1, aio1);
 	nng_aio_wait(aio1);
 	nng_aio_wait(aio2);
 
@@ -83,26 +81,24 @@ test_udp_pair(void)
 
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
-	nni_plat_udp_close(u1);
-	nni_plat_udp_close(u2);
+	nng_udp_close(u1);
+	nng_udp_close(u2);
 }
 
 void
 test_udp_multi_send_recv(void)
 {
-	nng_sockaddr  sa1, sa2, sa3, sa4;
-	nni_plat_udp *u1;
-	nni_plat_udp *u2;
-	uint32_t      loopback;
-	nng_aio      *aio1, *aio2, *aio3, *aio4;
-	nng_iov       iov1, iov2, iov3, iov4;
-	char          msg1[] = "hello";
-	char          msg2[] = "there";
-	char          rbuf1[32];
-	char          rbuf2[32];
-	nng_sockaddr  to;
-
-	NUTS_PASS(nni_init());
+	nng_sockaddr sa1, sa2, sa3, sa4;
+	nng_udp     *u1;
+	nng_udp     *u2;
+	uint32_t     loopback;
+	nng_aio     *aio1, *aio2, *aio3, *aio4;
+	nng_iov      iov1, iov2, iov3, iov4;
+	char         msg1[] = "hello";
+	char         msg2[] = "there";
+	char         rbuf1[32];
+	char         rbuf2[32];
+	nng_sockaddr to;
 
 	loopback = htonl(0x7f000001); // 127.0.0.1
 
@@ -114,11 +110,11 @@ test_udp_multi_send_recv(void)
 	sa2.s_in.sa_addr   = loopback;
 	sa2.s_in.sa_port   = 0;
 
-	NUTS_PASS(nni_plat_udp_open(&u1, &sa1));
-	NUTS_PASS(nni_plat_udp_open(&u2, &sa2));
+	NUTS_PASS(nng_udp_open(&u1, &sa1));
+	NUTS_PASS(nng_udp_open(&u2, &sa2));
 
-	NUTS_PASS(nni_plat_udp_sockname(u1, &sa1));
-	NUTS_PASS(nni_plat_udp_sockname(u2, &sa2));
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u2, &sa2));
 
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
@@ -147,11 +143,11 @@ test_udp_multi_send_recv(void)
 	NUTS_PASS(nng_aio_set_iov(aio4, 1, &iov4));
 	NUTS_PASS(nng_aio_set_input(aio4, 0, &sa4));
 
-	nni_plat_udp_recv(u2, aio4);
-	nni_plat_udp_recv(u2, aio3);
-	nni_plat_udp_send(u1, aio2);
+	nng_udp_recv(u2, aio4);
+	nng_udp_recv(u2, aio3);
+	nng_udp_send(u1, aio2);
 	nng_msleep(100); // to keep order clear
-	nni_plat_udp_send(u1, aio1);
+	nng_udp_send(u1, aio1);
 	nng_aio_wait(aio1);
 	nng_aio_wait(aio2);
 	nng_aio_wait(aio3);
@@ -166,7 +162,7 @@ test_udp_multi_send_recv(void)
 	NUTS_ASSERT(strcmp(rbuf1, msg1) == 0);
 	NUTS_ASSERT(strcmp(rbuf2, msg2) == 0);
 
-	NUTS_PASS(nni_plat_udp_sockname(u1, &sa2));
+	NUTS_PASS(nng_udp_sockname(u1, &sa2));
 	NUTS_ASSERT(sa2.s_in.sa_family == sa3.s_in.sa_family);
 	NUTS_ASSERT(sa2.s_in.sa_addr == sa3.s_in.sa_addr);
 	NUTS_ASSERT(sa2.s_in.sa_port == sa3.s_in.sa_port);
@@ -179,21 +175,19 @@ test_udp_multi_send_recv(void)
 	nng_aio_free(aio2);
 	nng_aio_free(aio3);
 	nng_aio_free(aio4);
-	nni_plat_udp_close(u1);
-	nni_plat_udp_close(u2);
+	nng_udp_close(u1);
+	nng_udp_close(u2);
 }
 
 void
 test_udp_send_no_addr(void)
 {
-	nng_sockaddr  sa1;
-	nni_plat_udp *u1;
-	uint32_t      loopback;
-	nng_aio      *aio1;
-	nng_iov       iov1;
-	char          msg[] = "hello";
-
-	NUTS_PASS(nni_init());
+	nng_sockaddr sa1;
+	nng_udp     *u1;
+	uint32_t     loopback;
+	nng_aio     *aio1;
+	nng_iov      iov1;
+	char         msg[] = "hello";
 
 	loopback = htonl(0x7f000001); // 127.0.0.1
 
@@ -201,8 +195,8 @@ test_udp_send_no_addr(void)
 	sa1.s_in.sa_addr   = loopback;
 	sa1.s_in.sa_port   = 0; // wild card port binding
 
-	NUTS_PASS(nni_plat_udp_open(&u1, &sa1));
-	NUTS_PASS(nni_plat_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_open(&u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
 
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 
@@ -210,28 +204,26 @@ test_udp_send_no_addr(void)
 	iov1.iov_len = strlen(msg) + 1;
 	NUTS_PASS(nng_aio_set_iov(aio1, 1, &iov1));
 
-	nni_plat_udp_send(u1, aio1);
+	nng_udp_send(u1, aio1);
 	nng_aio_wait(aio1);
 
 	NUTS_FAIL(nng_aio_result(aio1), NNG_EADDRINVAL);
 
 	nng_aio_free(aio1);
-	nni_plat_udp_close(u1);
+	nng_udp_close(u1);
 }
 
 void
 test_udp_send_ipc(void)
 {
-	nng_sockaddr  sa1;
-	nng_sockaddr  sa2;
-	nni_plat_udp *u1;
-	uint32_t      loopback;
-	nng_aio      *aio1;
-	nng_iov       iov1;
-	char          msg[] = "hello";
-	int rv;
-
-	NUTS_PASS(nni_init());
+	nng_sockaddr sa1 = { 0 };
+	nng_sockaddr sa2 = { 0 };
+	nng_udp     *u1;
+	uint32_t     loopback;
+	nng_aio     *aio1;
+	nng_iov      iov1;
+	char         msg[] = "hello";
+	int          rv;
 
 	loopback = htonl(0x7f000001); // 127.0.0.1
 
@@ -242,8 +234,8 @@ test_udp_send_ipc(void)
 	sa2.s_ipc.sa_family = NNG_AF_IPC;
 	strcat(sa2.s_ipc.sa_path, "/tmp/bogus");
 
-	NUTS_PASS(nni_plat_udp_open(&u1, &sa1));
-	NUTS_PASS(nni_plat_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_open(&u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
 
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 
@@ -252,49 +244,126 @@ test_udp_send_ipc(void)
 	NUTS_PASS(nng_aio_set_iov(aio1, 1, &iov1));
 	NUTS_PASS(nng_aio_set_input(aio1, 0, &sa2));
 
-	nni_plat_udp_send(u1, aio1);
+	nng_udp_send(u1, aio1);
 	nng_aio_wait(aio1);
 
 	rv = nng_aio_result(aio1);
 	NUTS_ASSERT(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP);
 
 	nng_aio_free(aio1);
-	nni_plat_udp_close(u1);
+	nng_udp_close(u1);
 }
 
 void
 test_udp_bogus_bind(void)
 {
-	nni_plat_udp *u;
-	nng_sockaddr  sa;
-	int           rv;
+	nng_udp     *u;
+	nng_sockaddr sa = { 0 };
+	int          rv;
 
 	sa.s_ipc.sa_family = NNG_AF_IPC;
 	strcpy(sa.s_ipc.sa_path, "/tmp/t");
-	rv = nni_plat_udp_open(&u, &sa);
+	rv = nng_udp_open(&u, &sa);
 	// Some platforms reject IPC addresses altogether (Windows),
 	// whereas others just say it's not supported with UDP.
 	NUTS_ASSERT((rv == NNG_ENOTSUP) || (rv == NNG_EADDRINVAL));
 
 	// NULL address also bad.
-	NUTS_FAIL(nni_plat_udp_open(&u, NULL), NNG_EADDRINVAL);
+	NUTS_FAIL(nng_udp_open(&u, NULL), NNG_EADDRINVAL);
 }
 
 void
 test_udp_duplicate_bind(void)
 {
-	nni_plat_udp *u1;
-	nni_plat_udp *u2;
-	nng_sockaddr  sa;
+	nng_udp     *u1;
+	nng_udp     *u2;
+	nng_sockaddr sa = { 0 };
 
 	sa.s_in.sa_family = NNG_AF_INET;
 	sa.s_in.sa_addr   = htonl(0x7f000001);
 
-	NUTS_PASS(nni_init());
-	NUTS_PASS(nni_plat_udp_open(&u1, &sa));
-	NUTS_PASS(nni_plat_udp_sockname(u1, &sa));
-	NUTS_FAIL(nni_plat_udp_open(&u2, &sa), NNG_EADDRINUSE);
-	nni_plat_udp_close(u1);
+	NUTS_PASS(nng_udp_open(&u1, &sa));
+	NUTS_PASS(nng_udp_sockname(u1, &sa));
+	NUTS_FAIL(nng_udp_open(&u2, &sa), NNG_EADDRINUSE);
+	nng_udp_close(u1);
+}
+
+void
+test_udp_multicast_membership(void)
+{
+	nng_udp     *u1;
+	nng_sockaddr sa = { 0 };
+	nng_sockaddr mc = { 0 };
+
+	mc.s_in.sa_family = NNG_AF_INET;
+	mc.s_in.sa_addr   = htonl(0xe0000001); // 224.0.0.1 ... all hosts
+
+	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_addr   = htonl(0x7f000001);
+
+	NUTS_PASS(nng_udp_open(&u1, &sa));
+	NUTS_PASS(nng_udp_sockname(u1, &sa));
+	NUTS_PASS(nng_udp_multicast_membership(u1, &mc, true));
+	NUTS_PASS(nng_udp_multicast_membership(u1, &mc, false));
+	nng_udp_close(u1);
+}
+
+void
+test_udp_multicast_send_recv(void)
+{
+	nng_udp     *u1;
+	nng_udp     *u2;
+	nng_sockaddr sa1 = { 0 };
+	nng_sockaddr sa2 = { 0 };
+	nng_sockaddr ra2 = { 0 };
+	nng_sockaddr mc  = { 0 };
+	char        *msg = "multi";
+	nng_iov      iov1;
+	nng_iov      iov2;
+	nng_aio     *aio1;
+	nng_aio     *aio2;
+	char         rbuf[32];
+
+	mc.s_in.sa_family = NNG_AF_INET;
+	mc.s_in.sa_addr   = htonl(0xe0000001); // 224.0.0.1 ... all hosts
+
+	sa1.s_in.sa_family = NNG_AF_INET;
+	sa1.s_in.sa_addr   = htonl(0x7f000001);
+
+	sa2.s_in.sa_family = NNG_AF_INET;
+	sa2.s_in.sa_addr   = htonl(0x7f000001);
+
+	NUTS_PASS(nng_udp_open(&u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_open(&u2, &sa2));
+	NUTS_PASS(nng_udp_sockname(u2, &sa2));
+	NUTS_PASS(nng_udp_multicast_membership(u1, &mc, true));
+	NUTS_PASS(nng_udp_multicast_membership(u2, &mc, true));
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+
+	iov1.iov_buf = msg;
+	iov1.iov_len = strlen(msg) + 1;
+	NUTS_PASS(nng_aio_set_iov(aio1, 1, &iov1));
+	NUTS_PASS(nng_aio_set_input(aio1, 0, &sa2));
+
+	iov2.iov_buf = rbuf;
+	iov2.iov_len = sizeof(rbuf);
+	NUTS_PASS(nng_aio_set_iov(aio2, 1, &iov2));
+	NUTS_PASS(nng_aio_set_input(aio2, 0, &ra2));
+
+	nng_udp_recv(u2, aio2);
+	nng_udp_send(u1, aio1);
+	nng_aio_wait(aio1);
+	nng_aio_wait(aio2);
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_PASS(nng_aio_result(aio2));
+
+	NUTS_MATCH(msg, rbuf);
+	nng_udp_close(u1);
+	nng_udp_close(u2);
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
 }
 
 #ifdef NNG_ENABLE_IPV6
@@ -302,20 +371,20 @@ void
 test_udp_send_v6_from_v4(void)
 {
 	int           rv;
-	nni_plat_udp *u1;
-	nng_sockaddr  sa;
+	nng_udp      *u1;
+	nng_sockaddr  sa = { 0 };
 	nng_aio      *aio1;
 	nng_iov       iov1;
 	char         *msg        = "nope";
 	const uint8_t google[16] = { 0x26, 0x07, 0xf8, 0xb0, 0x40, 0x07, 0x40,
 		0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x20, 0x0e };
 
+	memset(&sa, 0, sizeof(sa));
 	sa.s_in.sa_family = NNG_AF_INET;
 	sa.s_in.sa_addr   = htonl(0x7f000001);
 
-	NUTS_PASS(nni_init());
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
-	NUTS_PASS(nni_plat_udp_open(&u1, &sa));
+	NUTS_PASS(nng_udp_open(&u1, &sa));
 
 	sa.s_in6.sa_family = NNG_AF_INET6;
 	memcpy(sa.s_in6.sa_addr, google, 16);
@@ -326,14 +395,14 @@ test_udp_send_v6_from_v4(void)
 	nng_aio_set_iov(aio1, 1, &iov1);
 	nng_aio_set_input(aio1, 0, &sa);
 
-	nni_plat_udp_send(u1, aio1);
+	nng_udp_send(u1, aio1);
 	nng_aio_wait(aio1);
 	rv = nng_aio_result(aio1);
 	NUTS_ASSERT((rv == NNG_EADDRINVAL) || (rv == NNG_ENOTSUP) ||
 	    (rv == NNG_EUNREACHABLE));
 
 	nng_aio_free(aio1);
-	nni_plat_udp_close(u1);
+	nng_udp_close(u1);
 }
 #endif // NNG_ENABLE_IPV6
 
@@ -344,6 +413,8 @@ NUTS_TESTS = {
 	{ "udp send ipc address", test_udp_send_ipc },
 	{ "udp bogus bind", test_udp_bogus_bind },
 	{ "udp duplicate bind", test_udp_duplicate_bind },
+	{ "udp multicast membership", test_udp_multicast_membership },
+	{ "udp multicast send recv", test_udp_multicast_send_recv },
 #ifdef NNG_ENABLE_IPV6
 	{ "udp send v6 from v4", test_udp_send_v6_from_v4 },
 #endif

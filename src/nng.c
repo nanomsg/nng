@@ -10,6 +10,7 @@
 
 #include "nng/nng.h"
 #include "core/nng_impl.h"
+#include "core/platform.h"
 
 // This file provides the "public" API.  This is a thin wrapper around
 // internal API functions.  We use the public prefix instead of internal,
@@ -2173,4 +2174,42 @@ int
 nng_socket_pair(int fds[2])
 {
 	return (nni_socket_pair(fds));
+}
+
+int
+nng_udp_open(nng_udp **udp, nng_sockaddr *sa)
+{
+	(void) nni_init();
+	return (nni_plat_udp_open((nni_plat_udp **) udp, sa));
+}
+
+void
+nng_udp_close(nng_udp *udp)
+{
+	nni_plat_udp_close((nni_plat_udp *) udp);
+}
+
+int
+nng_udp_sockname(nng_udp *udp, nng_sockaddr *sa)
+{
+	return (nni_plat_udp_sockname((nni_plat_udp *) udp, sa));
+}
+
+void
+nng_udp_send(nng_udp *udp, nng_aio *aio)
+{
+	nni_plat_udp_send((nni_plat_udp *) udp, aio);
+}
+
+void
+nng_udp_recv(nng_udp *udp, nng_aio *aio)
+{
+	nni_plat_udp_recv((nni_plat_udp *) udp, aio);
+}
+
+int
+nng_udp_multicast_membership(nng_udp *udp, nng_sockaddr *sa, bool join)
+{
+	return (
+	    nni_plat_udp_multicast_membership((nni_plat_udp *) udp, sa, join));
 }
