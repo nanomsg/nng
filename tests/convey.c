@@ -691,7 +691,9 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 		if (ptr == NULL) {
 			return;
 		}
-		memcpy(ptr, log->log_buf, log->log_length);
+		if (log->log_buf != NULL && log->log_length != 0) {
+			memcpy(ptr, log->log_buf, log->log_length);
+		}
 		memset(ptr + log->log_length, 0, newsz - log->log_length);
 		free(log->log_buf);
 		log->log_buf  = ptr;
