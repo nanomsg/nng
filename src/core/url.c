@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include "nng_impl.h"
 
 #include <ctype.h>
@@ -275,6 +276,32 @@ nni_url_default_port(const char *scheme)
 		}
 	}
 	return ("");
+}
+
+// Return the address family for an address scheme.
+// Returns NNG_AF_UNSPEC for unknown cases or where
+// we do not want to choose between AF_INET and AF_INET6.
+uint16_t
+nni_url_family(const char *scheme)
+{
+	if (strcmp(scheme, "ipc") == 0) {
+		return (NNG_AF_IPC);
+	}
+	if (strcmp(scheme, "inproc") == 0) {
+		return (NNG_AF_INPROC);
+	}
+	if (strcmp(scheme, "abstract") == 0) {
+		return (NNG_AF_ABSTRACT);
+	}
+#ifdef NNG_HAVE_INET6
+	if (strchr(scheme, '6') != NULL) {
+		return (NNG_AF_INET6);
+	}
+#endif
+	if (strchr(scheme, '4') != NULL) {
+		return (NNG_AF_INET);
+	}
+	return (NNG_AF_UNSPEC);
 }
 
 // URLs usually follow the following format:
@@ -600,7 +627,7 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 // nni_url_to_address resolves a URL into a sockaddr, assuming the URL is for
 // an IP address.
 int
-nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
+nni_url_to_address(nng_sockaddr *sa, const nni_url *url)
 {
 	int         af;
 	nni_aio     aio;

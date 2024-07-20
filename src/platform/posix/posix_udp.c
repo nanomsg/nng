@@ -9,8 +9,8 @@
 //
 
 #include "core/nng_impl.h"
-#include "nng/nng.h"
 #include "platform/posix/posix_impl.h"
+#include <nng/nng.h>
 #include <sys/errno.h>
 
 #ifdef NNG_PLATFORM_POSIX

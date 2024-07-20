@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -46,7 +46,8 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 	}
 
 	if ((strncmp(scheme, "tcp", 3) == 0) ||
-	    (strncmp(scheme, "tls", 3) == 0)) {
+	    (strncmp(scheme, "tls", 3) == 0) ||
+	    (strncmp(scheme, "udp", 3) == 0)) {
 		(void) snprintf(
 		    addr, sz, "%s://127.0.0.1:%u", scheme, nuts_next_port());
 		return;
@@ -84,6 +85,7 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 	}
 
 	// We should not be here.
+	nng_log_err("NUTS", "Unknown scheme");
 	abort();
 }
 

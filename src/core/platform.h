@@ -356,7 +356,7 @@ extern int nni_tcp_listener_get(
 // Symbolic service names will be looked up assuming SOCK_STREAM, so
 // they may not work with UDP.
 extern void nni_resolv_ip(
-    const char *, const char *, int, bool, nng_sockaddr *sa, nni_aio *);
+    const char *, const char *, uint16_t, bool, nng_sockaddr *sa, nni_aio *);
 
 // nni_parse_ip parses an IP address, without a port.
 extern int nni_parse_ip(const char *, nng_sockaddr *);

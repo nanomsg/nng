@@ -135,6 +135,9 @@ mark_as_advanced(NNG_TRANSPORT_WSS)
 option (NNG_TRANSPORT_FDC "Enable File Descriptor transport (EXPERIMENTAL)" ON)
 mark_as_advanced(NNG_TRANSPORT_FDC)
 
+option (NNG_TRANSPORT_UDP "Enable UDP transport (EXPERIMENTAL)" ON)
+mark_as_advanced(NNG_TRANSPORT_UDP)
+
 # ZeroTier
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
 mark_as_advanced(NNG_TRANSPORT_ZEROTIER)

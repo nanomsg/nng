@@ -29,6 +29,7 @@ struct nng_msg {
 	nni_chunk      m_body;
 	uint32_t       m_pipe; // set on receive
 	nni_atomic_int m_refcnt;
+	nng_sockaddr   m_addr; // set on receive, transport use
 };
 
 #if 0
@@ -544,6 +545,16 @@ nni_msg_chop(nni_msg *m, size_t len)
 	return (nni_chunk_chop(&m->m_body, len));
 }
 
+// Grow the message header, but don't put anything there.
+// This is useful for setting up to receive directly into it
+// for zero copy purposes.
+void
+nni_msg_header_extend(nni_msg *m, size_t len)
+{
+	NNI_ASSERT((len + m->m_header_len) <= sizeof(m->m_header_buf));
+	m->m_header_len += len;
+}
+
 int
 nni_msg_header_append(nni_msg *m, const void *data, size_t len)
 {
@@ -655,4 +666,16 @@ uint32_t
 nni_msg_get_pipe(const nni_msg *m)
 {
 	return (m->m_pipe);
+}
+
+const nng_sockaddr *
+nni_msg_address(const nni_msg *msg)
+{
+	return (&msg->m_addr);
+}
+
+void
+nni_msg_set_address(nng_msg *msg, const nng_sockaddr *addr)
+{
+	msg->m_addr = *addr;
 }

@@ -712,18 +712,9 @@ tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 
 	len             = (size_t) (semi - url->u_hostname);
 	url->u_hostname = semi + 1;
+	af              = nni_url_family(url->u_scheme);
 
-	if (strcmp(surl->u_scheme, "tls+tcp") == 0) {
-		af = NNG_AF_UNSPEC;
-	} else if (strcmp(surl->u_scheme, "tls+tcp4") == 0) {
-		af = NNG_AF_INET;
-#ifdef NNG_ENABLE_IPV6
-	} else if (strcmp(surl->u_scheme, "tls+tcp6") == 0) {
-		af = NNG_AF_INET6;
-#endif
-	} else {
-		return (NNG_EADDRINVAL);
-	}
+	rv = nni_url_to_address(sa, url);
 
 	if ((src = nni_alloc(len + 1)) == NULL) {
 		return (NNG_ENOMEM);

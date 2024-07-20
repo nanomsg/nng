@@ -8,6 +8,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
+#include "nng/nng.h"
 #include "nng_impl.h"
 
 #include <string.h>
@@ -761,7 +763,16 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 			ms               = aio->a_timeout;
 		}
 	}
-	aio->a_expire = nni_clock() + ms;
+	switch (ms) {
+	case NNG_DURATION_INFINITE:
+	case NNG_DURATION_DEFAULT:
+		// infinite sleep
+		aio->a_expire = NNI_TIME_NEVER;
+		break;
+	default:
+		aio->a_expire = nni_clock() + ms;
+		break;
+	}
 
 	if ((rv = nni_aio_schedule(aio, nni_sleep_cancel, NULL)) != 0) {
 		nni_aio_finish_error(aio, rv);

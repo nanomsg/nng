@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -20,9 +20,9 @@ extern int      nni_msg_realloc(nni_msg *, size_t);
 extern int      nni_msg_reserve(nni_msg *, size_t);
 extern size_t   nni_msg_capacity(nni_msg *);
 extern int      nni_msg_dup(nni_msg **, const nni_msg *);
-extern void *   nni_msg_header(nni_msg *);
+extern void    *nni_msg_header(nni_msg *);
 extern size_t   nni_msg_header_len(const nni_msg *);
-extern void *   nni_msg_body(nni_msg *);
+extern void    *nni_msg_body(nni_msg *);
 extern size_t   nni_msg_len(const nni_msg *);
 extern int      nni_msg_append(nni_msg *, const void *, size_t);
 extern int      nni_msg_insert(nni_msg *, const void *, size_t);
@@ -54,6 +54,14 @@ extern uint32_t nni_msg_get_pipe(const nni_msg *);
 extern void     nni_msg_clone(nni_msg *);
 extern nni_msg *nni_msg_unique(nni_msg *);
 extern bool     nni_msg_shared(nni_msg *);
+
+// Socket address access. Principally useful for transports like UDP,
+// which may need to remember or add the socket address later.
+// SP transports will generally not support upper layers setting the
+// address on send, but will take the information from the pipe.
+// It may be set on receive, depending upon the transport.
+extern const nng_sockaddr *nni_msg_address(const nni_msg *);
+extern void nni_msg_set_address(nng_msg *, const nng_sockaddr *);
 
 // nni_msg_pull_up ensures that the message is unique, and that any
 // header present is "pulled up" into the message body.  If the function

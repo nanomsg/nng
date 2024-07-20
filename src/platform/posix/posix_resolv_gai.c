@@ -236,7 +236,7 @@ done:
 }
 
 void
-nni_resolv_ip(const char *host, const char *serv, int af, bool passive,
+nni_resolv_ip(const char *host, const char *serv, uint16_t af, bool passive,
     nng_sockaddr *sa, nni_aio *aio)
 {
 	resolv_item *item;
