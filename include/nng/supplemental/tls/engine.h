@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -150,6 +150,12 @@ typedef struct nng_tls_engine_config_ops_s {
 	int (*own_cert)(
 	    nng_tls_engine_config *, const char *, const char *, const char *);
 
+	// psk configures a PSK identity and key.  This can be called
+	// once for clients, or multiple times for servers.  However, not all
+	// implementations support multiple PSKs for a server.
+	int (*psk)(
+	    nng_tls_engine_config *, const char *, const uint8_t *, size_t);
+
 	// version configures the minimum and maximum TLS versions.  The
 	// engine should default to supporting TLS1.0 through 1.2, and
 	// optionally 1.3 if it can.  The engine should restrict the
@@ -163,8 +169,9 @@ typedef struct nng_tls_engine_config_ops_s {
 
 typedef enum nng_tls_engine_version_e {
 	NNG_TLS_ENGINE_V0      = 0,
-	NNG_TLS_ENGINE_V1      = 1,
-	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V1,
+	NNG_TLS_ENGINE_V1      = 1, // adds FIPS, TLS 1.3 support
+	NNG_TLS_ENGINE_V2      = 2, // adds PSK support
+	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V2,
 } nng_tls_engine_version;
 
 typedef struct nng_tls_engine_s {

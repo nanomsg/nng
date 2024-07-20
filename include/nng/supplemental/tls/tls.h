@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,6 +17,8 @@ extern "C" {
 
 #include <stddef.h>
 #include <stdint.h>
+
+#include <nng/nng.h>
 
 // Note that TLS functions may be stubbed out if TLS is not enabled in
 // the build.
@@ -115,6 +117,14 @@ NNG_DECL int nng_tls_config_ca_file(nng_tls_config *, const char *);
 // different cryptographic algorithms.  Clients only get one.)
 NNG_DECL int nng_tls_config_cert_key_file(
     nng_tls_config *, const char *, const char *);
+
+// nng_tls_config_psk_identity is used to pass TLS PSK parameters.  The
+// identity, and an associated key.  Clients can only do this once.
+// Servers can do it multiple times, potentially, to provide for different
+// keys for different client identities.  There is no way to remove these
+// from a configuration.
+NNG_DECL int nng_tls_config_psk(
+    nng_tls_config *, const char *, const uint8_t *, size_t);
 
 // Configure supported TLS version.  By default we usually restrict
 // ourselves to TLS 1.2 and newer.  We do not support older versions.

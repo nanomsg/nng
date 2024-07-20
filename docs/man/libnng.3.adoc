@@ -1,6 +1,6 @@
 = libnng(3)
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
@@ -471,6 +471,7 @@ with TLS support.
 |xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain()]|set certificate authority chain
 |xref:nng_tls_config_ca_file.3tls.adoc[nng_tls_config_ca_file()]|load certificate authority from file
 |xref:nng_tls_config_cert_key_file.3tls.adoc[nng_tls_config_cert_key_file()]|load own certificate and key from file
+|xref:nng_tls_config_psk.3tls.adoc[nng_tls_config_psk()]|set pre-shared key and identity
 |xref:nng_tls_config_own_cert.3tls.adoc[nng_tls_config_own_cert()]|set own certificate and key
 |xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free()]|free TLS configuration
 |xref:nng_tls_config_server_name.3tls.adoc[nng_tls_config_server_name()]|set remote server name

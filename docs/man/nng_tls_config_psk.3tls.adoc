@@ -1,0 +1,65 @@
+= nng_tls_config_psk(3tls)
+//
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls_config_psk - configure pre-shared keys (PSK) for TLS
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
+
+int nng_tls_config_psk(nng_tls_config *cfg, const char *identity,
+    const uint8_t *key, size_t key_len);
+----
+
+== DESCRIPTION
+
+The `nng_tls_config_psk()` function configures a pre-shared secret to use for TLS connections.
+
+Client mode configurations can call this just once, to set their own _identity_
+and a single _key_ of __key_len__ bytes in size.
+
+Server mode configurations can call this multiple times,
+and servers will look up the appropriate key to use when a client connects.
+
+The _identity_ may be thought of at some level as a public value like a user name,
+and the _key_ of course is the confidential material used to establish keys.
+Both parties my have the same values for _identity_, _key_, and __key_len__.
+
+Implementations may impose limits on whether this functionality is supported, as well
+as limitations on the length of keys or identities, but generally key lengths of up
+to 32 bytes as well as identities of up to 64 bytes will be supported wherever PSK
+configurations are present.
+
+Note that while some implementations may allow arbitrary byte patterns in the identity,
+this implementation does not support embedded zero bytes, and assumes that the values
+are printable (for logging).
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
+`NNG_EINVAL`:: Invalid parameters were supplied.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng.7.adoc[nng(7)]

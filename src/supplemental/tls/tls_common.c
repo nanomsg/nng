@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -46,7 +46,7 @@ struct nng_tls_config {
 	const nng_tls_engine     *engine; // store this so we can verify
 	nni_mtx                   lock;
 	int                       ref;
-	int                       busy;
+	bool                      busy;
 	size_t                    size;
 
 	// ... engine config data follows
@@ -843,6 +843,10 @@ tls_alloc(tls_conn **conn_p, nng_tls_config *cfg, nng_aio *user_aio)
 
 	eng = cfg->engine;
 
+	nni_mtx_lock(&cfg->lock);
+	cfg->busy = true;
+	nni_mtx_unlock(&cfg->lock);
+
 	size = NNI_ALIGN_UP(sizeof(*conn)) + eng->conn_ops->size;
 
 	if ((conn = nni_zalloc(size)) == NULL) {
@@ -1325,7 +1329,7 @@ nng_tls_config_version(
 	int rv;
 
 	nni_mtx_lock(&cfg->lock);
-	if (cfg->busy != 0) {
+	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
 		rv = cfg->ops.version((void *) (cfg + 1), min_ver, max_ver);
@@ -1340,7 +1344,7 @@ nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
 	int rv;
 
 	nni_mtx_lock(&cfg->lock);
-	if (cfg->busy != 0) {
+	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
 		rv = cfg->ops.server((void *) (cfg + 1), name);
@@ -1356,7 +1360,7 @@ nng_tls_config_ca_chain(
 	int rv;
 
 	nni_mtx_lock(&cfg->lock);
-	if (cfg->busy != 0) {
+	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
 		rv = cfg->ops.ca_chain((void *) (cfg + 1), certs, crl);
@@ -1371,10 +1375,25 @@ nng_tls_config_own_cert(
 {
 	int rv;
 	nni_mtx_lock(&cfg->lock);
-	if (cfg->busy != 0) {
+	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
 		rv = cfg->ops.own_cert((void *) (cfg + 1), cert, key, pass);
+	}
+	nni_mtx_unlock(&cfg->lock);
+	return (rv);
+}
+
+int
+nng_tls_config_psk(nng_tls_config *cfg, const char *identity,
+    const uint8_t *key, size_t key_len)
+{
+	int rv;
+	nni_mtx_lock(&cfg->lock);
+	if (cfg->busy) {
+		rv = NNG_EBUSY;
+	} else {
+		rv = cfg->ops.psk((void *) (cfg + 1), identity, key, key_len);
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
@@ -1386,7 +1405,7 @@ nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 	int rv;
 
 	nni_mtx_lock(&cfg->lock);
-	if (cfg->busy != 0) {
+	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
 		rv = cfg->ops.auth((void *) (cfg + 1), mode);
@@ -1423,7 +1442,7 @@ nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 	cfg->size   = size;
 	cfg->engine = eng;
 	cfg->ref    = 1;
-	cfg->busy   = 0;
+	cfg->busy   = false;
 	nni_mtx_init(&cfg->lock);
 
 	if ((rv = cfg->ops.init((void *) (cfg + 1), mode)) != 0) {

@@ -17,7 +17,9 @@
 #include "mbedtls/version.h" // Must be first in order to pick up version
 
 #include "mbedtls/error.h"
+
 #include "nng/nng.h"
+#include "nng/supplemental/tls/tls.h"
 
 // mbedTLS renamed this header for 2.4.0.
 #if MBEDTLS_VERSION_MAJOR > 2 || MBEDTLS_VERSION_MINOR >= 4
@@ -38,6 +40,35 @@ typedef struct {
 	nni_list_node      node;
 } pair;
 
+// psk holds an identity and preshared key
+typedef struct {
+	// NB: Technically RFC 4279 requires this be UTF-8 string, although
+	// others suggest making it opaque bytes.  We treat it as a C string,
+	// so we cannot support embedded zero bytes.
+	char         *identity;
+	uint8_t      *key;
+	size_t        keylen;
+	nni_list_node node;
+} psk;
+
+static void
+psk_free(psk *p)
+{
+	if (p != NULL) {
+		NNI_ASSERT(!nni_list_node_active(&p->node));
+		if (p->identity != NULL) {
+			nni_strfree(p->identity);
+			p->identity = NULL;
+		}
+		if (p->key != NULL && p->keylen != 0) {
+			nni_free(p->key, p->keylen);
+			p->key    = NULL;
+			p->keylen = 0;
+		}
+		NNI_FREE_STRUCT(p);
+	}
+}
+
 #ifdef NNG_TLS_USE_CTR_DRBG
 // Use a global RNG if we're going to override the builtin.
 static mbedtls_ctr_drbg_context rng_ctx;
@@ -56,7 +87,9 @@ struct nng_tls_engine_config {
 	mbedtls_x509_crl   crl;
 	int                min_ver;
 	int                max_ver;
+	nng_tls_mode       mode;
 	nni_list           pairs;
+	nni_list           psks;
 };
 
 static void
@@ -371,6 +404,7 @@ static void
 config_fini(nng_tls_engine_config *cfg)
 {
 	pair *p;
+	psk  *psk;
 
 	mbedtls_ssl_config_free(&cfg->cfg_ctx);
 #ifdef NNG_TLS_USE_CTR_DRBG
@@ -381,12 +415,16 @@ config_fini(nng_tls_engine_config *cfg)
 	if (cfg->server_name) {
 		nni_strfree(cfg->server_name);
 	}
-	while ((p = nni_list_first(&cfg->pairs))) {
+	while ((p = nni_list_first(&cfg->pairs)) != NULL) {
 		nni_list_remove(&cfg->pairs, p);
 		mbedtls_x509_crt_free(&p->crt);
 		mbedtls_pk_free(&p->key);
 
 		NNI_FREE_STRUCT(p);
+	}
+	while ((psk = nni_list_first(&cfg->psks)) != NULL) {
+		nni_list_remove(&cfg->psks, psk);
+		psk_free(psk);
 	}
 }
 
@@ -405,7 +443,9 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 		auth_mode = MBEDTLS_SSL_VERIFY_REQUIRED;
 	}
 
+	cfg->mode = mode;
 	NNI_LIST_INIT(&cfg->pairs, pair, node);
+	NNI_LIST_INIT(&cfg->psks, psk, node);
 	mbedtls_ssl_config_init(&cfg->cfg_ctx);
 	mbedtls_x509_crt_init(&cfg->ca_certs);
 	mbedtls_x509_crl_init(&cfg->crl);
@@ -449,6 +489,73 @@ config_server_name(nng_tls_engine_config *cfg, const char *name)
 		nni_strfree(cfg->server_name);
 	}
 	cfg->server_name = dup;
+	return (0);
+}
+
+// callback used on the server side to select the right key
+static int
+config_psk_cb(void *arg, mbedtls_ssl_context *ssl,
+    const unsigned char *identity, size_t id_len)
+{
+	nng_tls_engine_config *cfg = arg;
+	psk                   *psk;
+	NNI_LIST_FOREACH (&cfg->psks, psk) {
+		if (id_len == strlen(psk->identity) &&
+		    (memcmp(identity, psk->identity, id_len) == 0)) {
+			nng_log_debug("NNG-TLS-PSK-IDENTITY",
+			    "TLS client using PSK identity %s", psk->identity);
+			return (mbedtls_ssl_set_hs_psk(
+			    ssl, psk->key, psk->keylen));
+		}
+	}
+	nng_log_warn(
+	    "NNG-TLS-PSK-NO-IDENTITY", "TLS client PSK identity not found");
+	return (MBEDTLS_ERR_SSL_UNKNOWN_IDENTITY);
+}
+
+static int
+config_psk(nng_tls_engine_config *cfg, const char *identity,
+    const uint8_t *key, size_t key_len)
+{
+	int  rv;
+	psk *srch;
+	psk *newpsk;
+
+	if (((newpsk = NNI_ALLOC_STRUCT(newpsk)) == NULL) ||
+	    ((newpsk->identity = nni_strdup(identity)) == NULL) ||
+	    ((newpsk->key = nni_alloc(key_len)) == NULL)) {
+		psk_free(newpsk);
+		return (NNG_ENOMEM);
+	}
+	newpsk->keylen = key_len;
+	memcpy(newpsk->key, key, key_len);
+
+	if (cfg->mode == NNG_TLS_MODE_SERVER) {
+		if (nni_list_empty(&cfg->psks)) {
+			mbedtls_ssl_conf_psk_cb(
+			    &cfg->cfg_ctx, config_psk_cb, cfg);
+		}
+	} else {
+		if ((rv = mbedtls_ssl_conf_psk(&cfg->cfg_ctx, key, key_len,
+		         (const unsigned char *) identity,
+		         strlen(identity))) != 0) {
+			psk_free(newpsk);
+			tls_log_err("NNG-TLS-PSK-FAIL",
+			    "Failed to configure PSK identity", rv);
+			return (tls_mk_err(rv));
+		}
+	}
+
+	// If the identity was previously configured, replace it.
+	// The rule here is that last one wins, so we always append.
+	NNI_LIST_FOREACH (&cfg->psks, srch) {
+		if (strcmp(srch->identity, identity) == 0) {
+			nni_list_remove(&cfg->psks, srch);
+			psk_free(srch);
+			break;
+		}
+	}
+	nni_list_append(&cfg->psks, newpsk);
 	return (0);
 }
 
@@ -630,6 +737,7 @@ static nng_tls_engine_config_ops config_ops = {
 	.ca_chain = config_ca_chain,
 	.own_cert = config_own_cert,
 	.server   = config_server_name,
+	.psk      = config_psk,
 	.version  = config_version,
 };
 
