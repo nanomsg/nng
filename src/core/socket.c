@@ -12,6 +12,7 @@
 #include "core/pipe.h"
 #include "list.h"
 #include "nng/nng.h"
+#include "nng/supplemental/tls/tls.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -337,6 +338,10 @@ static const nni_option sock_options[] = {
 static void
 nni_free_opt(nni_sockopt *opt)
 {
+	if ((strcmp(opt->name, NNG_OPT_TLS_CONFIG) == 0) &&
+	    (opt->sz == sizeof(nng_tls_config *))) {
+		nng_tls_config_free(*(nng_tls_config **) (opt->data));
+	}
 	nni_strfree(opt->name);
 	nni_free(opt->data, opt->sz);
 	NNI_FREE_STRUCT(opt);
@@ -1045,9 +1050,13 @@ nni_sock_setopt(
 		// TLS options may not be supported if TLS is not
 		// compiled in.  Supporting all these is deprecated.
 	} else if (strcmp(name, NNG_OPT_TLS_CONFIG) == 0) {
-		if ((rv = nni_copyin_ptr(NULL, v, sz, t)) != 0) {
+		nng_tls_config *tc;
+		if ((rv = nni_copyin_ptr((void **) &tc, v, sz, t)) != 0) {
 			return (rv);
 		}
+		// place a hold on this configuration object
+		nng_tls_config_hold(tc);
+
 	} else if ((strcmp(name, NNG_OPT_TLS_SERVER_NAME) == 0) ||
 	    (strcmp(name, NNG_OPT_TLS_CA_FILE) == 0) ||
 	    (strcmp(name, NNG_OPT_TLS_CERT_KEY_FILE) == 0)) {
