@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -24,16 +24,18 @@ struct nni_tcp_conn {
 	nni_win_io        conn_io;
 	nni_list          recv_aios;
 	nni_list          send_aios;
-	nni_aio *         conn_aio;
+	nni_aio          *conn_aio;
 	SOCKADDR_STORAGE  sockname;
 	SOCKADDR_STORAGE  peername;
-	nni_tcp_dialer *  dialer;
+	nni_tcp_dialer   *dialer;
 	nni_tcp_listener *listener;
 	int               recv_rv;
 	int               send_rv;
 	int               conn_rv;
 	bool              closed;
 	char              buf[512]; // to hold acceptex results
+	bool              sending;
+	bool              recving;
 	nni_mtx           mtx;
 	nni_cv            cv;
 };

@@ -48,13 +48,15 @@ tcp_recv_start(nni_tcp_conn *c)
 			}
 		}
 
-		flags = 0;
-		rv    = WSARecv(
+		c->recving = true;
+		flags      = 0;
+		rv         = WSARecv(
                     c->s, iov, niov, &nrecv, &flags, &c->recv_io.olpd, NULL);
 
 		if ((rv == SOCKET_ERROR) &&
 		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 			// Synchronous error.
+			c->recving = false;
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, nni_win_error(rv));
 		} else {
@@ -76,7 +78,6 @@ tcp_recv_cb(nni_win_io *io, int rv, size_t num)
 	nni_mtx_lock(&c->mtx);
 	aio = nni_list_first(&c->recv_aios);
 	NNI_ASSERT(aio != NULL);
-	nni_aio_list_remove(aio);
 
 	if (c->recv_rv != 0) {
 		rv         = c->recv_rv;
@@ -86,6 +87,8 @@ tcp_recv_cb(nni_win_io *io, int rv, size_t num)
 		// A zero byte receive is a remote close from the peer.
 		rv = NNG_ECONNSHUT;
 	}
+	c->recving = false;
+	nni_aio_list_remove(aio);
 	tcp_recv_start(c);
 	nni_mtx_unlock(&c->mtx);
 
@@ -164,11 +167,13 @@ tcp_send_start(nni_tcp_conn *c)
 			}
 		}
 
+		c->sending = true;
 		rv = WSASend(c->s, iov, niov, NULL, 0, &c->send_io.olpd, NULL);
 
 		if ((rv == SOCKET_ERROR) &&
 		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 			// Synchronous failure.
+			c->sending = false;
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, nni_win_error(rv));
 		} else {
@@ -208,6 +213,7 @@ tcp_send_cb(nni_win_io *io, int rv, size_t num)
 	aio = nni_list_first(&c->send_aios);
 	NNI_ASSERT(aio != NULL);
 	nni_aio_list_remove(aio); // should always be at head
+	c->sending = false;
 
 	if (c->send_rv != 0) {
 		rv         = c->send_rv;
@@ -246,13 +252,30 @@ tcp_close(void *arg)
 {
 	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
+	nni_time now;
 	if (!c->closed) {
+		SOCKET s = c->s;
+
 		c->closed = true;
-		if (c->s != INVALID_SOCKET) {
-			shutdown(c->s, SD_BOTH);
-			closesocket(c->s);
-			c->s = INVALID_SOCKET;
+		c->s      = INVALID_SOCKET;
+
+		if (s != INVALID_SOCKET) {
+			CancelIoEx(s, &c->send_io.olpd);
+			CancelIoEx(s, &c->recv_io.olpd);
+			shutdown(s, SD_BOTH);
+			closesocket(s);
 		}
+	}
+	now = nni_clock();
+	// wait up to a maximum of 10 seconds before assuming something is
+	// badly amiss. from what we can tell, this doesn't happen, and we do
+	// see the timer expire properly, but this safeguard can prevent a
+	// hang.
+	while ((c->recving || c->sending) &&
+	    ((nni_clock() - now) < (NNI_SECOND * 10))) {
+		nni_mtx_unlock(&c->mtx);
+		nni_msleep(1);
+		nni_mtx_lock(&c->mtx);
 	}
 	nni_mtx_unlock(&c->mtx);
 }

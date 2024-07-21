@@ -30,6 +30,8 @@ typedef struct ipc_conn {
 	int           send_rv;
 	int           conn_rv;
 	bool          closed;
+	bool          sending;
+	bool          recving;
 	nni_mtx       mtx;
 	nni_cv        cv;
 	nni_reap_node reap;
@@ -76,9 +78,11 @@ ipc_recv_start(ipc_conn *c)
 			len = 0x1000000;
 		}
 
+		c->recving = true;
 		if ((!ReadFile(c->f, buf, len, NULL, &c->recv_io.olpd)) &&
 		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 			// Synchronous failure.
+			c->recving = false;
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, nni_win_error(rv));
 		} else {
@@ -104,6 +108,7 @@ ipc_recv_cb(nni_win_io *io, int rv, size_t num)
 		// A zero byte receive is a remote close from the peer.
 		rv = NNG_ECONNSHUT;
 	}
+	c->recving = false;
 	nni_aio_list_remove(aio);
 	ipc_recv_start(c);
 	nni_mtx_unlock(&c->mtx);
@@ -196,9 +201,11 @@ ipc_send_start(ipc_conn *c)
 			len = 0x1000000;
 		}
 
+		c->sending = true;
 		if ((!WriteFile(c->f, buf, len, NULL, &c->send_io.olpd)) &&
 		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 			// Synchronous failure.
+			c->sending = false;
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, nni_win_error(rv));
 		} else {
@@ -217,6 +224,7 @@ ipc_send_cb(nni_win_io *io, int rv, size_t num)
 	aio = nni_list_first(&c->send_aios);
 	NNI_ASSERT(aio != NULL);
 	nni_aio_list_remove(aio);
+	c->sending = false;
 	if (c->send_rv != 0) {
 		rv         = c->send_rv;
 		c->send_rv = 0;
@@ -275,16 +283,31 @@ static void
 ipc_close(void *arg)
 {
 	ipc_conn *c = arg;
+	nni_time  now;
 	nni_mtx_lock(&c->mtx);
 	if (!c->closed) {
 		HANDLE f  = c->f;
 		c->closed = true;
-		c->f      = INVALID_HANDLE_VALUE;
+
+		c->f = INVALID_HANDLE_VALUE;
 
 		if (f != INVALID_HANDLE_VALUE) {
+			CancelIoEx(f, &c->send_io.olpd);
+			CancelIoEx(f, &c->recv_io.olpd);
 			DisconnectNamedPipe(f);
 			CloseHandle(f);
 		}
+	}
+	now = nni_clock();
+	// wait up to a maximum of 10 seconds before assuming something is
+	// badly amiss. from what we can tell, this doesn't happen, and we do
+	// see the timer expire properly, but this safeguard can prevent a
+	// hang.
+	while ((c->recving || c->sending) &&
+	    ((nni_clock() - now) < (NNI_SECOND * 10))) {
+		nni_mtx_unlock(&c->mtx);
+		nni_msleep(1);
+		nni_mtx_lock(&c->mtx);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
