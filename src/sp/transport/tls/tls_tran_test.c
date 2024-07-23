@@ -425,6 +425,8 @@ NUTS_TESTS = {
 	{ "tls no delay option", test_tls_no_delay_option },
 	{ "tls keep alive option", test_tls_keep_alive_option },
 	{ "tls recv max", test_tls_recv_max },
-	{ "tls preshared key", test_tls_psk },
+#ifdef NNG_SUPP_TLS_PSK
+	{ "tls pre-shared key", test_tls_psk },
+#endif
 	{ NULL, NULL },
 };
