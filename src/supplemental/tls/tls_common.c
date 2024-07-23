@@ -1521,6 +1521,7 @@ nng_tls_engine_register(const nng_tls_engine *engine)
 		    NNG_TLS_ENGINE_VERSION);
 		return (NNG_ENOTSUP);
 	}
+	nng_log_info("NNG-TLS-INFO", "TLS Engine: %s", engine->description);
 	nni_atomic_set_ptr(&tls_engine, (void *) engine);
 	return (0);
 }
