@@ -8,7 +8,7 @@
 #
 
 if (NNG_TLS_ENGINE STREQUAL "mbed")
-    message(WARNING "
+    message(NOTICE "
         ************************************************************
         Linking against Mbed TLS may change license terms.
         Consult a lawyer and the license files for details.
@@ -17,6 +17,9 @@ if (NNG_TLS_ENGINE STREQUAL "mbed")
     nng_defines(NNG_TLS_ENGINE_INIT=nng_tls_engine_init_mbed)
     nng_defines(NNG_TLS_ENGINE_FINI=nng_tls_engine_fini_mbed)
     nng_defines(NNG_SUPP_TLS)
+    # For now Mbed TLS has PSK unconditionally
+    nng_defines(NNG_SUPP_TLS_PSK)
+    nng_defines(NNG_TLS_ENGINE_MBEDTLS)
 
     # If Mbed TLS was added by a consuming project, then we should use that
     # instance of it, instead of configuring our own.
