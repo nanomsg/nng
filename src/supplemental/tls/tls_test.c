@@ -417,8 +417,9 @@ test_tls_psk_bad_identity(void)
 	t1 = nuts_stream_send_start(s1, buf1, size);
 	t2 = nuts_stream_recv_start(s2, buf2, size);
 
-	NUTS_FAIL(nuts_stream_wait(t1), NNG_ECRYPTO);
-	NUTS_FAIL(nuts_stream_wait(t2), NNG_ECRYPTO);
+	// These can fail due to ECRYPTO, EPEERAUTH, or ECONNSHUT, for example
+	NUTS_ASSERT(nuts_stream_wait(t1) != 0);
+	NUTS_ASSERT(nuts_stream_wait(t2) != 0);
 
 	nng_free(buf1, size);
 	nng_free(buf2, size);

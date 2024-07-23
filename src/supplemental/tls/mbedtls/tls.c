@@ -17,6 +17,9 @@
 #include "mbedtls/version.h" // Must be first in order to pick up version
 
 #include "mbedtls/error.h"
+#ifdef MBEDTLS_PSA_CRYPTO_C
+#include "psa/crypto.h"
+#endif
 
 #include "nng/nng.h"
 #include "nng/supplemental/tls/tls.h"
@@ -28,6 +31,7 @@
 #include "mbedtls/net.h"
 #endif
 
+#include "mbedtls/debug.h"
 #include "mbedtls/ssl.h"
 
 #include "core/nng_impl.h"
@@ -95,11 +99,13 @@ struct nng_tls_engine_config {
 static void
 tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
 {
-	char buf[128];
 	NNI_ARG_UNUSED(ctx);
 	NNI_ARG_UNUSED(level);
-	snprintf(buf, sizeof(buf), "%s:%04d: %s", file, line, s);
-	nni_plat_println(buf);
+	const char *f;
+	while ((f = strchr(file, '/')) != NULL) {
+		file = f + 1;
+	}
+	nng_log_debug("MBED", "%s: %d: %s", file, line, s);
 }
 
 static int
@@ -465,7 +471,11 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 	// SSL v3.3. As of this writing, Mbed TLS still does not support
 	// version 1.3, and we would want to test it before enabling it here.
 	cfg->min_ver = MBEDTLS_SSL_MINOR_VERSION_3;
+#ifdef MBEDTLS_SSL_PROTO_TLS1_3
+	cfg->max_ver = MBEDTLS_SSL_MINOR_VERSION_4;
+#else
 	cfg->max_ver = MBEDTLS_SSL_MINOR_VERSION_3;
+#endif
 
 	mbedtls_ssl_conf_min_version(
 	    &cfg->cfg_ctx, MBEDTLS_SSL_MAJOR_VERSION_3, cfg->min_ver);
@@ -689,9 +699,16 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		v1 = MBEDTLS_SSL_MINOR_VERSION_2;
 		break;
 #endif
+#ifdef MBEDTLS_SSL_MINOR_VERSION_3
 	case NNG_TLS_1_2:
 		v1 = MBEDTLS_SSL_MINOR_VERSION_3;
 		break;
+#endif
+#ifdef MBEDTLS_SSL_PROTO_TLS1_3
+	case NNG_TLS_1_3:
+		v1 = MBEDTLS_SSL_MINOR_VERSION_4;
+		break;
+#endif
 	default:
 		nng_log_err(
 		    "TLS-CFG-VER", "TLS minimum version not supported");
@@ -709,9 +726,17 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		v2 = MBEDTLS_SSL_MINOR_VERSION_2;
 		break;
 #endif
+#ifdef MBEDTLS_SSL_MINOR_VERSION_3
 	case NNG_TLS_1_2:
-	case NNG_TLS_1_3: // We lack support for 1.3, so treat as 1.2.
 		v2 = MBEDTLS_SSL_MINOR_VERSION_3;
+		break;
+#endif
+	case NNG_TLS_1_3: // We lack support for 1.3, so treat as 1.2.
+#ifdef MBEDTLS_SSL_PROTO_TLS1_3
+		v2 = MBEDTLS_SSL_MINOR_VERSION_4;
+#else
+		v2 = MBEDTLS_SSL_MINOR_VERSION_3;
+#endif
 		break;
 	default:
 		// Note that this means that if we ever TLS 1.4 or 2.0,
@@ -779,9 +804,17 @@ nng_tls_engine_init_mbed(void)
 		return (rv);
 	}
 #endif
+#ifdef MBEDTLS_PSA_CRYPTO_C
+	rv = psa_crypto_init();
+	if (rv != 0) {
+		tls_log_err(
+		    "NNG-TLS-INIT", "Failed initializing PSA crypto", rv);
+		return (rv);
+	}
+#endif
 	// Uncomment the following to have noisy debug from mbedTLS.
 	// This may be useful when trying to debug failures.
-	// mbedtls_debug_set_threshold(3);
+	//	mbedtls_debug_set_threshold(9);
 
 	rv = nng_tls_engine_register(&tls_engine_mbed);
 
@@ -800,5 +833,8 @@ nng_tls_engine_fini_mbed(void)
 #ifdef NNG_TLS_USE_CTR_DRBG
 	mbedtls_ctr_drbg_free(&rng_ctx);
 	nni_mtx_fini(&rng_lock);
+#endif
+#ifdef MBEDTLS_PSA_CRYPTO_C
+	mbedtls_psa_crypto_free();
 #endif
 }
