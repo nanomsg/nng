@@ -207,6 +207,8 @@ test_tls_psk(void)
 	nng_aio_set_timeout(aio1, 5000);
 	nng_aio_set_timeout(aio2, 5000);
 
+	// all PSK implementations also can do TLS 1.3
+
 	// Allocate the listener first.  We use a wild-card port.
 	NUTS_PASS(nng_stream_listener_alloc(&l, "tls+tcp://127.0.0.1:0"));
 	NUTS_PASS(nng_tls_config_alloc(&c1, NNG_TLS_MODE_SERVER));
@@ -417,8 +419,9 @@ test_tls_psk_bad_identity(void)
 	t1 = nuts_stream_send_start(s1, buf1, size);
 	t2 = nuts_stream_recv_start(s2, buf2, size);
 
-	NUTS_FAIL(nuts_stream_wait(t1), NNG_ECRYPTO);
-	NUTS_FAIL(nuts_stream_wait(t2), NNG_ECRYPTO);
+	// These can fail due to ECRYPTO, EPEERAUTH, or ECONNSHUT, for example
+	NUTS_ASSERT(nuts_stream_wait(t1) != 0);
+	NUTS_ASSERT(nuts_stream_wait(t2) != 0);
 
 	nng_free(buf1, size);
 	nng_free(buf2, size);
