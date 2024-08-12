@@ -27,6 +27,7 @@ NNG_DECL void *nng_id_get(nng_id_map *, uint64_t);
 NNG_DECL int   nng_id_set(nng_id_map *, uint64_t, void *);
 NNG_DECL int   nng_id_alloc(nng_id_map *, uint64_t *, void *);
 NNG_DECL int   nng_id_remove(nng_id_map *, uint64_t);
+NNG_DECL bool  nng_id_visit(nng_id_map *, uint64_t *, void **, uint32_t *);
 
 #ifdef __cplusplus
 }

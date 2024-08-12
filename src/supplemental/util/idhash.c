@@ -60,3 +60,9 @@ nng_id_alloc(nng_id_map *map, uint64_t *id, void *val)
 {
 	return (nni_id_alloc(&map->m, id, val));
 }
+
+bool
+nng_id_visit(nng_id_map *map, uint64_t *id, void **valp, uint32_t *cursor)
+{
+	return (nni_id_visit(&map->m, id, valp, cursor));
+}

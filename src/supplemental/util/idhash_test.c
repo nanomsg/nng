@@ -182,6 +182,52 @@ test_id_set_out_of_range(void)
 	nng_id_map_free(m);
 }
 
+void
+test_id_visit(void)
+{
+	nng_id_map *m;
+	int         x, y;
+	uint64_t    id1;
+	uint64_t    id2;
+	int        *v1;
+	int        *v2;
+	uint32_t    cursor = 0;
+
+	NUTS_PASS(nng_id_map_alloc(&m, 10, 13, 0));
+
+	// We can insert outside the range forcibly.
+	NUTS_PASS(nng_id_set(m, 1, &x));
+	NUTS_PASS(nng_id_set(m, 100, &y));
+	NUTS_TRUE(nng_id_visit(m, &id1, (void **) &v1, &cursor));
+	NUTS_ASSERT(id1 == 1 || id1 == 100);
+	NUTS_ASSERT(v1 == &x || v1 == &y);
+	NUTS_TRUE(nng_id_visit(m, &id2, (void **) &v2, &cursor));
+	NUTS_ASSERT(id2 == 1 || id2 == 100);
+	NUTS_ASSERT(v2 == &x || v2 == &y);
+	NUTS_ASSERT(id1 != id2);
+	NUTS_ASSERT(v1 != v2);
+	NUTS_TRUE(!nng_id_visit(m, &id2, (void **) &v2, &cursor));
+	nng_id_map_free(m);
+}
+
+void
+test_id_visit_out_of_range(void)
+{
+	nng_id_map *m;
+	int         x, y;
+	uint64_t    id1;
+	int        *v1;
+	uint32_t    cursor = 1000;
+
+	NUTS_PASS(nng_id_map_alloc(&m, 10, 13, 0));
+
+	// We can insert outside the range forcibly.
+	NUTS_PASS(nng_id_set(m, 1, &x));
+	NUTS_PASS(nng_id_set(m, 100, &y));
+	NUTS_TRUE(!nng_id_visit(m, &id1, (void **) &v1, &cursor));
+	nng_id_map_free(m);
+}
+
 #define STRESS_LOAD 50000
 #define NUM_VALUES 1000
 
@@ -303,6 +349,8 @@ NUTS_TESTS = {
 	{ "id resize", test_id_resize },
 	{ "id dynamic", test_id_dynamic },
 	{ "id set out of range", test_id_set_out_of_range },
+	{ "id visit", test_id_visit },
+	{ "id visit out of range", test_id_visit_out_of_range },
 	{ "id stress", test_id_stress },
 	{ "id alloc long long", test_id_alloc_long_long },
 	{ NULL, NULL },

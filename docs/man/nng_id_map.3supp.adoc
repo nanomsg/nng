@@ -29,6 +29,7 @@ void *nng_id_get(nng_id_map *map, uint64_t id);
 int   nng_id_set(nng_id_map *map, uint64_t, void *value);
 int   nng_id_alloc(nng_id_map *map, uint64_t *id_p, void *value);
 int   nng_id_remove(nng_id_map *map, uint64_t id);
+bool  nng_id_visit(nng_id_map *map, uint64_t *id_p, void **value_p, uint32_t *cursor);
 
 ----
 
@@ -73,6 +74,13 @@ The `nng_id_alloc()` function allocates a new identifier from the range for the 
 the supplied _value_.
 
 The `nng_id_remove()` function removes the identifier and its associated value from the table.
+
+The `nng_id_visit()` function is used to iterate over all items in the table.
+The caller starts the iteration by setting the _cursor_ to 0 before calling it.
+For each call, the associated key and value of the next item will be returned in __id_p__, and __value_p__ and the _cursor_ will be updated.
+When all items have been iterated, the function returns `false`.
+The order of items returned is not guaranteed to be sequential.
+The caller must not attempt to derive any value of the _cursor_ as it refers to internal table indices.
 
 NOTE: These functions are limited to storing at most 2^32^ identifiers, even though the identifers may
 themselves be larger than 2^32^.

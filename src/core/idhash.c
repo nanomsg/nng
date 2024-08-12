@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -366,4 +366,26 @@ nni_id_alloc32(nni_id_map *m, uint32_t *idp, void *val)
 	NNI_ASSERT(id < (1ULL << 32));
 	*idp = (uint32_t) id;
 	return (rv);
+}
+
+bool
+nni_id_visit(nni_id_map *m, uint64_t *keyp, void **valp, uint32_t *cursor)
+{
+	// cursor is just a cursor into the table
+	uint32_t index = *cursor;
+	while (index < m->id_cap) {
+		if (m->id_entries[index].val != NULL) {
+			if (valp != NULL) {
+				*valp = m->id_entries[index].val;
+			}
+			if (keyp != NULL) {
+				*keyp = m->id_entries[index].key;
+			}
+			*cursor = index + 1;
+			return true;
+		}
+		index++;
+	}
+	*cursor = index;
+	return (false);
 }

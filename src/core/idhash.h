@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -54,6 +54,7 @@ extern int   nni_id_alloc(nni_id_map *, uint64_t *, void *);
 extern int   nni_id_alloc32(nni_id_map *, uint32_t *, void *);
 extern int   nni_id_remove(nni_id_map *, uint64_t);
 extern void  nni_id_map_sys_fini(void);
+extern bool  nni_id_visit(nni_id_map *, uint64_t *, void **, uint32_t *);
 
 #define NNI_ID_MAP_INITIALIZER(min, max, flags)            \
 	{                                                  \
