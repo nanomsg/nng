@@ -76,7 +76,7 @@ TIP: To receive all messages, an empty topic (zero length) can be used.
 
 ((`NNG_OPT_SUB_UNSUBSCRIBE`))::
 
-   This option, also read-only, removes a topic from the subscription list.
+   This option, also write-only, removes a topic from the subscription list.
    Note that if the topic was not previously subscribed to with
    `NNG_OPT_SUB_SUBSCRIBE` then an `NNG_ENOENT` error will result.
 
