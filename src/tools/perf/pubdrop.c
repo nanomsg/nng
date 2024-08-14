@@ -275,7 +275,7 @@ do_pubdrop(int argc, char **argv)
 		die("Message size too small.");
 	}
 
-	thrs = calloc(sizeof(nng_thread *), (size_t) pa.count + 1);
+	thrs = calloc((size_t) pa.count + 1, sizeof(nng_thread *));
 	if (((rv = nng_mtx_alloc(&pa.mtx)) != 0) ||
 	    ((nng_cv_alloc(&pa.cv, pa.mtx)) != 0)) {
 		die("Startup: %s\n", nng_strerror(rv));
