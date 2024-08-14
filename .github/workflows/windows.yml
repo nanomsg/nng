@@ -18,7 +18,9 @@ jobs:
           github-binarycache: true
 
       - name: Configure
-        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -D NNG_ENABLE_TLS=ON -B build
+        # TLS on Windows is not good because vcpkg is *old* mbedTLS 2.28, and we don't pass some newer tests.
+        # We should explore testing WolfSSL here instead.
+        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -B build
 
       - name: Build
         run: cmake --build build
