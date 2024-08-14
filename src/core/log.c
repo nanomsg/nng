@@ -11,6 +11,7 @@
 #include "nng_impl.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #ifdef NNG_PLATFORM_WINDOWS
 #include <io.h>
@@ -167,9 +168,11 @@ stderr_logger(nng_log_level level, nng_log_facility facility,
 
 	strftime(when, sizeof(when), "%H:%M:%S", tm);
 	// we print with millisecond resolution
-	(void) fprintf(stderr, "%s[%-6s]: %s.%03d: %s%s%s%s\n", sgr, level_str,
+	bool trailing_nl =
+	    ((strlen(msg) != 0) && msg[strlen(msg) - 1] == '\n');
+	(void) fprintf(stderr, "%s[%-6s]: %s.%03d: %s%s%s%s%s", sgr, level_str,
 	    when, nsec / 1000000, msgid ? msgid : "", msgid ? ": " : "", msg,
-	    sgr0);
+	    sgr0, trailing_nl ? "" : "\n");
 }
 
 void
