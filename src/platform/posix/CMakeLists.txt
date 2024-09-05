@@ -29,7 +29,13 @@ if (NNG_PLATFORM_POSIX)
     nng_check_func(getrandom NNG_HAVE_GETRANDOM)
     nng_check_func(arc4random_buf NNG_HAVE_ARC4RANDOM)
 
-    nng_check_lib(rt clock_gettime NNG_HAVE_CLOCK_GETTIME)
+    if (CMAKE_SYSTEM_NAME MATCHES "Android")
+        # Android's C library, bionic, provides `clock_gettime` in `libc`
+        # https://android.googlesource.com/platform/bionic/+/refs/heads/main/libc/include/time.h
+        nng_check_lib(c clock_gettime NNG_HAVE_CLOCK_GETTIME)
+    else ()
+        nng_check_lib(rt clock_gettime NNG_HAVE_CLOCK_GETTIME)
+    endif ()
     nng_check_lib(pthread sem_wait NNG_HAVE_SEMAPHORE_PTHREAD)
     nng_check_lib(pthread pthread_atfork NNG_HAVE_PTHREAD_ATFORK_PTHREAD)
     nng_check_lib(pthread pthread_set_name_np NNG_HAVE_PTHREAD_SET_NAME_NP)
