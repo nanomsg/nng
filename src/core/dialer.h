@@ -12,6 +12,9 @@
 #ifndef CORE_DIALER_H
 #define CORE_DIALER_H
 
+#include "defs.h"
+#include "stats.h"
+
 extern int       nni_dialer_find(nni_dialer **, uint32_t);
 extern int       nni_dialer_hold(nni_dialer *);
 extern void      nni_dialer_rele(nni_dialer *);

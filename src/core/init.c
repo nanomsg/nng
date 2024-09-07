@@ -8,8 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-#include "nng/nng.h"
+#include "nng_impl.h"
 
 #include <stdbool.h>
 #include <stdio.h>

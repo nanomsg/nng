@@ -11,7 +11,7 @@
 #ifndef CORE_PROTOCOL_H
 #define CORE_PROTOCOL_H
 
-#include "core/options.h"
+#include "options.h"
 
 // Protocol implementation details.  Protocols must implement the
 // interfaces in this file.  Note that implementing new protocols is
@@ -124,7 +124,7 @@ struct nni_proto {
 	uint32_t                  proto_flags;    // Protocol flags
 	const nni_proto_sock_ops *proto_sock_ops; // Per-socket operations
 	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations
-	const nni_proto_ctx_ops * proto_ctx_ops;  // Context operations
+	const nni_proto_ctx_ops  *proto_ctx_ops;  // Context operations
 };
 
 // We quite intentionally use a signature where the upper word is nonzero,

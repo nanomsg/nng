@@ -8,11 +8,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-#include "core/pipe.h"
-#include "list.h"
-#include "nng/nng.h"
-#include "nng/supplemental/tls/tls.h"
+#include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
+
+#include "nng_impl.h"
 #include "sockimpl.h"
 
 #include <stdio.h>

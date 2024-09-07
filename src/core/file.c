@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
 int
 nni_file_put(const char *name, const void *data, size_t sz)
@@ -50,7 +50,7 @@ nni_file_is_dir(const char *name)
 
 struct walkdata {
 	nni_file_walker fn;
-	void *          arg;
+	void           *arg;
 };
 
 static int

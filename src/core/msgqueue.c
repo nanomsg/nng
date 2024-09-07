@@ -359,7 +359,7 @@ nni_msgq_resize(nni_msgq *mq, int cap)
 	}
 
 	nni_mtx_lock(&mq->mq_lock);
-	while (mq->mq_len > ((unsigned)cap + 1)) {
+	while (mq->mq_len > ((unsigned) cap + 1)) {
 		// too many messages -- we allow that one for
 		// the case of pushback or cap == 0.
 		// we delete the oldest messages first

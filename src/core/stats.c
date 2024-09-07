@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
 typedef struct nng_stat nni_stat;
 

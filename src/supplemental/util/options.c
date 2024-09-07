@@ -25,7 +25,7 @@ nng_opts_parse(int argc, char *const *argv, const nng_optspec *opts, int *val,
 	int                matches;
 	bool               shortopt;
 	size_t             l;
-	char *             arg;
+	char              *arg;
 	int                i;
 
 	if ((i = *optidx) >= argc) {

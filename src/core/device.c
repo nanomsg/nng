@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
 typedef struct device_data_s device_data;
 typedef struct device_path_s device_path;

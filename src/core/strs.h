@@ -13,11 +13,13 @@
 
 // Safe string functions, in case the platform misses these.
 
-extern char * nni_strdup(const char *);
+#include "defs.h"
+
+extern char  *nni_strdup(const char *);
 extern void   nni_strfree(char *);
 extern size_t nni_strlcpy(char *, const char *, size_t);
 extern size_t nni_strnlen(const char *, size_t);
-extern char * nni_strcasestr(const char *, const char *);
+extern char  *nni_strcasestr(const char *, const char *);
 extern int    nni_strncasecmp(const char *, const char *, size_t);
 extern int    nni_strcasecmp(const char *, const char *);
 extern int    nni_asprintf(char **, const char *, ...);

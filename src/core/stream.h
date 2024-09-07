@@ -13,7 +13,7 @@
 // This provides an abstraction for byte streams, allowing polymorphic
 // use of them in rather flexible contexts.
 
-#include "core/nng_impl.h"
+#include <nng/nng.h>
 
 // Private property operations (these include the types.)
 extern int nni_stream_get(
