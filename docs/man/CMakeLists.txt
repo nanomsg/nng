@@ -85,13 +85,11 @@ if (NNG_ENABLE_DOC)
             nng_close
             nng_ctx_close
             nng_ctx_get
-            nng_ctx_getopt
             nng_ctx_id
             nng_ctx_open
             nng_ctx_recv
             nng_ctx_send
             nng_ctx_set
-            nng_ctx_setopt
             nng_device
             nng_dial
             nng_dialer_close
