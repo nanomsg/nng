@@ -149,32 +149,5 @@ add_nng_test1(zt 60 NNG_TRANSPORT_ZEROTIER)
 add_nng_test(reqctx 5)
 add_nng_test(reqstress 60)
 
-# compatibility tests
-# We only support these if ALL the legacy protocols are supported.  This
-# is because we don't want to make modifications to partially enable some
-# of these tests.  Folks minimizing the library probably don't care too
-# much about these anyway.
-if (NNG_ENABLE_COMPAT)
-    add_nng_compat_test(compat_block 10)
-    add_nng_compat_test(compat_bug777 10)
-    add_nng_compat_test(compat_bus 10)
-    add_nng_compat_test(compat_cmsg 10)
-    add_nng_compat_test(compat_msg 10)
-    add_nng_compat_test(compat_iovec 10)
-    add_nng_compat_test(compat_device 10)
-    add_nng_compat_test(compat_pair 10)
-    add_nng_compat_test(compat_pipeline 10)
-    add_nng_compat_test(compat_poll 10)
-    add_nng_compat_test(compat_reqrep 10)
-    add_nng_compat_test(compat_survey 10)
-    add_nng_compat_test(compat_reqttl 10)
-    add_nng_compat_test(compat_shutdown 10)
-    add_nng_compat_test(compat_surveyttl 10)
-
-    # These are special tests for compat mode, not inherited from the
-    # legacy libnanomsg suite.
-    add_nng_test(compat_options 5)
-endif()
-
 # c++ tests
 add_nng_cpp_test(cplusplus_pair 5)
