@@ -40,3 +40,11 @@ Applications should use `nng_pipe_get` and related functions instead.
 
 The socket option function families for `nng_getopt` and `nng_setopt` have been removed as well.
 In this case, use the `nng_socket_get` and `nng_socket_set` functions as appropriate.
+
+## Transport Options
+
+A number of transport options can no longer be set on the socket. Instead these
+options must be set on the endpoint (dialer or listener) using the appropriate
+`nng_dialer_set` or `nng_listener_set` option. This likely means that it is necessary
+to allocate and configure the endpoint before attaching it to the socket. This will
+also afford a much more fine-grained level of control over transport options.
