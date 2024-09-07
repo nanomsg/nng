@@ -1300,10 +1300,6 @@ NNG_DECL int nng_udp_multicast_membership(
 // These are legacy APIs that have been deprecated.
 // Their use is strongly discouraged.
 
-// nng_msg_getopt is defunct, and should not be used by programs. It
-// always returns NNG_ENOTSUP.
-NNG_DECL int nng_msg_getopt(nng_msg *, int, void *, size_t *) NNG_DEPRECATED;
-
 // Socket options.  Use nng_socket_get and nng_socket_set instead.
 NNG_DECL int nng_getopt(
     nng_socket, const char *, void *, size_t *) NNG_DEPRECATED;
