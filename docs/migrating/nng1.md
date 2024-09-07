@@ -32,3 +32,8 @@ The `NNG_OPT_WSS_REQUEST_HEADERS` and `NNG_OPT_WSS_RESPONSE_HEADERS` aliases for
 `NNG_OPT_WS_OPT_WS_REQUEST_HEADERS` and `NNG_OPT_WS_RESPONSE_HEADERS` have been removed.
 Just convert any use of them to `NNG_OPT_WS_REQUST_HEADERS` or
 `NNG_OPT_WS_RESPOSNE_HEADERS` as appropriate.
+
+## Option Functions
+
+The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.
+Applications should use `nng_pipe_get` and related functions instead.

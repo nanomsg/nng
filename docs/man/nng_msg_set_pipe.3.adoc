@@ -45,6 +45,6 @@ None.
 [.text-left]
 xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
 xref:nng_msg_get_pipe.3.adoc[nng_msg_get_pipe(3)],
-xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt(3)],
+xref:nng_pipe_get.3.adoc[nng_pipe_get(3)],
 xref:nng_msg.5.adoc[nng_msg(5)],
 xref:nng.7.adoc[nng(7)]
