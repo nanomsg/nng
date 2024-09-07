@@ -153,7 +153,7 @@ The API documentation is provided in Asciidoc format in the
 `docs/man` subdirectory, and also [online](https://nanomsg.github.io/nng).
 
 > [!NOTE]
-> However, an effort to conver the documentation to Markdown using `mdbook`
+> However, an effort to convert the documentation to Markdown using `mdbook`
 > is underway.
 
 The [_nng_(7)](docs/man/nng.7.adoc) page provides a conceptual overview and links to
