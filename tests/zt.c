@@ -13,8 +13,8 @@
 #include <nng/transport/zerotier/zerotier.h>
 
 #include "convey.h"
-#include "trantest.h"
 #include "stubs.h"
+#include "trantest.h"
 
 // zerotier tests.
 
@@ -151,7 +151,7 @@ TestMain("ZeroTier Transport", {
 		Convey("And it can be started...", {
 			mkdir(path1, 0700);
 
-			So(nng_listener_setopt(l, NNG_OPT_ZT_HOME, path1,
+			So(nng_listener_set(l, NNG_OPT_ZT_HOME, path1,
 			       strlen(path1) + 1) == 0);
 
 			So(nng_listener_start(l, 0) == 0);
@@ -171,14 +171,14 @@ TestMain("ZeroTier Transport", {
 				ids[0] = 0x622514484aull;
 				ids[1] = 0x622514484aull;
 
-				So(nng_listener_setopt(l, NNG_OPT_ZT_ORBIT,
-				       ids, sizeof(ids)) == 0);
+				So(nng_listener_set(l, NNG_OPT_ZT_ORBIT, ids,
+				       sizeof(ids)) == 0);
 			});
 			Convey("And we can deorbit anything", {
 				uint64_t id;
 				id = 0x12345678;
-				So(nng_listener_setopt(l, NNG_OPT_ZT_DEORBIT,
-				       &id, sizeof(id)) == 0);
+				So(nng_listener_set(l, NNG_OPT_ZT_DEORBIT, &id,
+				       sizeof(id)) == 0);
 			});
 		});
 	});
@@ -218,16 +218,15 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s, addr) == 0);
 
-		So(nng_listener_get_uint64(l, NNG_OPT_ZT_NODE, &node1) ==
-		    0);
+		So(nng_listener_get_uint64(l, NNG_OPT_ZT_NODE, &node1) == 0);
 		So(node1 != 0);
 
 		Convey("Connection refused works", {
 			snprintf(addr, sizeof(addr), "zt://%llx." NWID ":%u",
 			    (unsigned long long) node1, 42u);
 			So(nng_dialer_create(&d, s, addr) == 0);
-			So(nng_dialer_get_uint64(
-			       d, NNG_OPT_ZT_NODE, &node2) == 0);
+			So(nng_dialer_get_uint64(d, NNG_OPT_ZT_NODE, &node2) ==
+			    0);
 			So(node2 == node1);
 			So(nng_dialer_start(d, 0) == NNG_ECONNREFUSED);
 		});
@@ -257,7 +256,7 @@ TestMain("ZeroTier Transport", {
 		});
 
 		So(nng_listener_create(&l, s1, addr1) == 0);
-		So(nng_listener_setopt(
+		So(nng_listener_set(
 		       l, NNG_OPT_ZT_HOME, path1, strlen(path1) + 1) == 0);
 
 		So(nng_listener_start(l, 0) == 0);

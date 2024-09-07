@@ -43,7 +43,7 @@ but might also have associated listeners.
 It may even have some of each at the same time!
 
 The listener is not started, but may be further configured with
-the xref:nng_listener_setopt.3.adoc[`nng_listener_setopt()`] family of
+the xref:nng_listener_set.3.adoc[`nng_listener_set()`] family of
 functions.
 
 Once it is fully configured, the listener may be started using the
@@ -69,8 +69,8 @@ This function returns 0 on success, and non-zero otherwise.
 xref:nng_dialer_create.3.adoc[nng_dialer_create(3)]
 xref:nng_listen.3.adoc[nng_listen(3)],
 xref:nng_listener_close.3.adoc[nng_listener_close(3)],
-xref:nng_listener_getopt.3.adoc[nng_listener_getopt(3)],
-xref:nng_listener_setopt.3.adoc[nng_listener_setopt(3)],
+xref:nng_listener_get.3.adoc[nng_listener_get(3)],
+xref:nng_listener_set.3.adoc[nng_listener_set(3)],
 xref:nng_listener_start.3.adoc[nng_listener_start(3)],
 xref:nng_strerror.3.adoc[nng_strerror(3)],
 xref:nng_listener.5.adoc[nng_listener(5)],

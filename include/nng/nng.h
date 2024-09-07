@@ -1348,42 +1348,6 @@ NNG_DECL int nng_ctx_setopt_ms(
     nng_ctx, const char *, nng_duration) NNG_DEPRECATED;
 NNG_DECL int nng_ctx_setopt_size(nng_ctx, const char *, size_t) NNG_DEPRECATED;
 
-// Listener options.  Use nng_listener_get and nng_listener_set instead.
-NNG_DECL int nng_listener_getopt(
-    nng_listener, const char *, void *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_bool(
-    nng_listener, const char *, bool *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_int(
-    nng_listener, const char *, int *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_ms(
-    nng_listener, const char *, nng_duration *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_size(
-    nng_listener, const char *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_sockaddr(
-    nng_listener, const char *, nng_sockaddr *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_uint64(
-    nng_listener, const char *, uint64_t *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_ptr(
-    nng_listener, const char *, void **) NNG_DEPRECATED;
-NNG_DECL int nng_listener_getopt_string(
-    nng_listener, const char *, char **) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt(
-    nng_listener, const char *, const void *, size_t) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_bool(
-    nng_listener, const char *, bool) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_int(
-    nng_listener, const char *, int) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_ms(
-    nng_listener, const char *, nng_duration) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_size(
-    nng_listener, const char *, size_t) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_uint64(
-    nng_listener, const char *, uint64_t) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_ptr(
-    nng_listener, const char *, void *) NNG_DEPRECATED;
-NNG_DECL int nng_listener_setopt_string(
-    nng_listener, const char *, const char *) NNG_DEPRECATED;
-
 #endif // NNG_ELIDE_DEPRECATED
 
 // nng_init_parameter is used by applications to change a tunable setting.
