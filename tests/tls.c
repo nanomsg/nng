@@ -1,6 +1,6 @@
 //
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,7 +17,6 @@
 #include <nng/nng.h>
 #include <nng/protocol/pair1/pair.h>
 #include <nng/supplemental/tls/tls.h>
-#include <nng/transport/tls/tls.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -289,14 +288,10 @@ TestMain("TLS Transport", {
 
 	trantest_test(&tt);
 
-	Convey("We can register the TLS transport",
-	    { So(nng_tls_register() == 0); });
-
 	Convey("We cannot connect to wild cards", {
 		nng_socket s;
 		char       addr[NNG_MAXADDRLEN];
 
-		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
 		trantest_next_address(addr, "tls+tcp://*:");
@@ -310,7 +305,6 @@ TestMain("TLS Transport", {
 		nng_listener l;
 		nng_dialer   d;
 
-		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
 		Reset({
@@ -337,7 +331,6 @@ TestMain("TLS Transport", {
 		nng_dialer   d;
 		char        *addr;
 
-		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
 		Reset({
@@ -359,7 +352,6 @@ TestMain("TLS Transport", {
 	Convey("Malformed TLS addresses do not panic", {
 		nng_socket s1;
 
-		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
 		Reset({ nng_close(s1); });
 

@@ -1,6 +1,6 @@
 = nng_tls(7)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -13,15 +13,6 @@
 
 nng_tls - TLS transport
 
-== SYNOPSIS
-
-[source,c]
-----
-#include <nng/transport/tls/tls.h>
-
-int nng_tls_register(void);
-----
-
 == DESCRIPTION
 
 (((TLS)))(((Transport Layer Security)))(((transport, _tls_)))
@@ -33,12 +24,6 @@ Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 
 The protocol details are documented in
 http://nanomsg.org/rfcs/sp-tls-v1.html[TLS Mapping for Scalability Protocols].
-
-=== Registration
-
-Depending upon how the library was built, it may be necessary to
-register the transport by calling
-xref:nng_tls_register.3.adoc[`nng_tls_register()`].
 
 === Availability
 

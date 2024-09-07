@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -14,7 +14,6 @@
 
 #include <nng/nng.h>
 #include <nng/protocol/pair1/pair.h>
-#include <nng/transport/ws/websocket.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -27,7 +26,7 @@ check_props_v4(nng_msg *msg)
 	size_t       z;
 	nng_sockaddr la;
 	nng_sockaddr ra;
-	char *       buf;
+	char        *buf;
 	size_t       len;
 
 	p = nng_msg_get_pipe(msg);
@@ -49,8 +48,7 @@ check_props_v4(nng_msg *msg)
 	// Request Header
 	z   = 0;
 	buf = NULL;
-	So(nng_pipe_get(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
-	    NNG_EINVAL);
+	So(nng_pipe_get(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == NNG_EINVAL);
 	So(z > 0);
 	len = z;
 	So((buf = nng_alloc(len)) != NULL);
@@ -81,6 +79,5 @@ check_props_v4(nng_msg *msg)
 	return (0);
 }
 
-TestMain("WebSocket Transport", {
-	trantest_test_extended("ws://127.0.0.1:", check_props_v4);
-})
+TestMain("WebSocket Transport",
+    { trantest_test_extended("ws://127.0.0.1:", check_props_v4); })

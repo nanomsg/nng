@@ -104,8 +104,6 @@ if (NNG_ENABLE_DOC)
             nng_dialer_start
             nng_free
             nng_getopt
-            nng_inproc_register
-            nng_ipc_register
             nng_listen
             nng_listener_close
             nng_listener_create
@@ -188,15 +186,10 @@ if (NNG_ENABLE_DOC)
             nng_strfree
             nng_sub_open
             nng_surveyor_open
-            nng_tcp_register
-            nng_tls_register
             nng_url_clone
             nng_url_free
             nng_url_parse
             nng_version
-            nng_ws_register
-            nng_wss_register
-            nng_zt_register
             )
 
     set(NNG_MAN3HTTP

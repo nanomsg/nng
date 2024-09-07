@@ -13,15 +13,6 @@
 
 nng_zerotier - ZeroTier transport
 
-== SYNOPSIS
-
-[source,c]
-----
-#include <nng/transport/zerotier/zerotier.h>
-
-int nng_zt_register(void);
-----
-
 == DESCRIPTION
 
 (((ZeroTier)))(((transport, _zt_)))
@@ -55,15 +46,6 @@ network.
 
 NOTE: This document assumes that the reader is familiar with ZeroTier
 concepts and administration.
-
-=== Registration
-
-Depending upon how the library was built, it may be necessary to
-register the transport by calling
-xref:nng_zt_register.3.adoc[`nng_zt_register()`].
-This function
-returns zero on success, or an nng error value if the transport
-cannot be initialized for any reason.
 
 === URI Format
 

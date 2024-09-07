@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -17,8 +17,6 @@
 #include "supplemental/base64/base64.h"
 #include "supplemental/http/http_api.h"
 #include "supplemental/sha1/sha1.h"
-
-#include <nng/transport/ws/websocket.h>
 
 #include "websocket.h"
 
@@ -1327,7 +1325,7 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 
 	// There is a race between the dialer closing and any connections
 	// that were in progress completing.
-	if (d->closed){
+	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto err;
 	}
