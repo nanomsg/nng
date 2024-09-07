@@ -21,10 +21,6 @@ add_subdirectory(supplemental)
 add_subdirectory(tools)
 add_subdirectory(testing)
 
-if (NNG_ENABLE_COMPAT)
-    add_subdirectory(compat)
-endif()
-
 # When building shared libraries we prefer to suppress default symbol
 # visibility, so that only the symbols that should be exposed in the
 # resulting library are.  This is the default with Windows.

@@ -54,12 +54,12 @@ string(REGEX MATCH "NNG_MINOR_VERSION ([0-9]*)" _ ${nng_ver_h})
 set(NNG_MINOR_VERSION ${CMAKE_MATCH_1})
 string(REGEX MATCH "NNG_PATCH_VERSION ([0-9]*)" _ ${nng_ver_h})
 set(NNG_PATCH_VERSION ${CMAKE_MATCH_1})
-string(REGEX MATCH "NNG_RELEASE_SUFFIX \"([a-z0-9]*)\"" _ ${nng_ver_h})
+string(REGEX MATCH "NNG_RELEASE_SUFFIX \"([a-z0-9]+)\"" _ ${nng_ver_h})
 if (NOT ("${CMAKE_MATCH_1}" STREQUAL ""))
     set(NNG_PRERELEASE "-${CMAKE_MATCH_1}")
 endif ()
 
-set(NNG_ABI_SOVERSION 1)
+set(NNG_ABI_SOVERSION 2)
 set(NNG_ABI_VERSION "${NNG_MAJOR_VERSION}.${NNG_MINOR_VERSION}.${NNG_PATCH_VERSION}${NNG_PRERELEASE}")
 set(NNG_PACKAGE_VERSION "${NNG_ABI_VERSION}")
 message(STATUS "Configuring for NNG version ${NNG_ABI_VERSION}")
@@ -96,10 +96,6 @@ target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)
 if (NNG_ELIDE_DEPRECATED)
     target_compile_definitions(nng PRIVATE NNG_ELIDE_DEPRECATED)
 endif()
-if (NNG_ENABLE_COMPAT)
-    target_compile_definitions(nng PRIVATE NNG_ENABLE_COMPAT)
-endif()
-
 
 # We can use rlimit to configure the stack size for systems
 # that have too small defaults.  This is not used for Windows,
