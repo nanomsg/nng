@@ -170,11 +170,10 @@ Purchases of the book help fund continued development of NNG.
 Some demonstration programs have been created to help serve as examples.
 These are located in the `demo` directory.
 
-## Legacy Compatibility
+## Migrating from `libnanomsg`
 
-A legacy `libnanomsg` compatible API is available, and while it offers
-less capability than the modern NNG API, it may serve as a transition aid.
-Please see [_nng_compat_(3compat)](docs/man/nng_compat.3compat.adoc) for details.
+Please see the [migration guide](docs/migrating.md) for converting applications
+from legacy `libnanomsg` to `NNG`.
 
 ## Commercial Support
 
