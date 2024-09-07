@@ -73,10 +73,8 @@ Listeners accept incoming connection requests, and dialers make them.
 |xref:nng_listener_close.3.adoc[nng_listener_close()]|close listener
 |xref:nng_listener_create.3.adoc[nng_listener_create()]|create listener
 |xref:nng_listener_get.3.adoc[nng_listener_get()]|get listener option
-|xref:nng_listener_getopt.3.adoc[nng_listener_getopt()]|get listener option
 |xref:nng_listener_id.3.adoc[nng_listener_id()]|get numeric listener identifier
 |xref:nng_listener_set.3.adoc[nng_listener_set()]|set listener option
-|xref:nng_listener_setopt.3.adoc[nng_listener_setopt()]|set listener option
 |xref:nng_listener_start.3.adoc[nng_listener_start()]|start listener
 |xref:nng_pipe_close.3.adoc[nng_pipe_close()]|close pipe
 |xref:nng_pipe_dialer.3.adoc[nng_pipe_dialer()]|return dialer that created pipe

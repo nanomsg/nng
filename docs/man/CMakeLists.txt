@@ -106,10 +106,8 @@ if (NNG_ENABLE_DOC)
             nng_listener_close
             nng_listener_create
             nng_listener_get
-            nng_listener_getopt
             nng_listener_id
             nng_listener_set
-            nng_listener_setopt
             nng_listener_start
             nng_log
             nng_log_get_level
