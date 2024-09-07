@@ -1,19 +1,20 @@
 # nng - nanomsg-next-gen
 
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
-[![Linux Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/linux.yml?branch=master&logoColor=grey&logo=ubuntu&label=)](https://github.com/nanomsg/nng/actions)
-[![Windows Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/windows.yml?branch=master&logoColor=grey&logo=windows&label=)](https://github.com/nanomsg/nng/actions)
-[![macOS Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/darwin.yml?branch=master&logoColor=grey&logo=apple&label=)](https://github.com/nanomsg/nng/actions)
+[![Linux Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/linux.yml?branch=dev2.0&logoColor=grey&logo=ubuntu&label=)](https://github.com/nanomsg/nng/actions)
+[![Windows Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/windows.yml?branch=dev2.0&logoColor=grey&logo=windows&label=)](https://github.com/nanomsg/nng/actions)
+[![macOS Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/darwin.yml?branch=dev2.0&logoColor=grey&logo=apple&label=)](https://github.com/nanomsg/nng/actions)
 [![Coverage](https://img.shields.io/codecov/c/github/nanomsg/nng?logo=codecov&logoColor=grey&label=)](https://codecov.io/gh/nanomsg/nng)
 [![Discord](https://img.shields.io/discord/639573728212156478?label=&logo=discord)](https://discord.gg/Xnac6b9)
 [![Manual](https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue)](https://nng.nanomsg.org/man)
-[![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/master/LICENSE.txt)
+[![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/dev2.0/LICENSE.txt)
 [![Latest Version](https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=)](https://github.com/nanomsg/nng/releases)
 
 Please see [here](UKRAINE) for an important message for the people of Russia.
 
 NOTE: This is the `dev2.0` branch of NNG, which is a work in progress, and should not be considered stable.
 Please use the `master` branch to get to the latest stable release.
+The badges above reflect the status of the `dev2.0` branch.
 
 This project is a rewrite of the _Scalability Protocols_
 library known as [libnanomsg](https://github.com/nanomsg/nanomsg),
