@@ -142,7 +142,6 @@ if (NNG_ENABLE_DOC)
             nng_pipe_close
             nng_pipe_dialer
             nng_pipe_get
-            nng_pipe_getopt
             nng_pipe_id
             nng_pipe_listener
             nng_pipe_notify

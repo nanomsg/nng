@@ -1420,25 +1420,6 @@ NNG_DECL int nng_listener_setopt_ptr(
 NNG_DECL int nng_listener_setopt_string(
     nng_listener, const char *, const char *) NNG_DEPRECATED;
 
-// Pipe options.  Use nng_pipe_get instead.
-NNG_DECL int nng_pipe_getopt(
-    nng_pipe, const char *, void *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_bool(
-    nng_pipe, const char *, bool *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_int(nng_pipe, const char *, int *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_ms(
-    nng_pipe, const char *, nng_duration *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_size(
-    nng_pipe, const char *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_sockaddr(
-    nng_pipe, const char *, nng_sockaddr *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_uint64(
-    nng_pipe, const char *, uint64_t *) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_ptr(
-    nng_pipe, const char *, void **) NNG_DEPRECATED;
-NNG_DECL int nng_pipe_getopt_string(
-    nng_pipe, const char *, char **) NNG_DEPRECATED;
-
 // nng_closeall closes all open sockets. Do not call this from
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void) NNG_DEPRECATED;

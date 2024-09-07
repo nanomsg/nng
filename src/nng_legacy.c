@@ -63,7 +63,8 @@ nng_getopt_ms(nng_socket id, const char *n, nng_duration *v)
 	return (nng_socket_get_ms(id, n, v));
 }
 
-int nng_getopt_ptr(nng_socket id, const char *n, void **v)
+int
+nng_getopt_ptr(nng_socket id, const char *n, void **v)
 {
 	return (nng_socket_get_ptr(id, n, v));
 }
@@ -241,8 +242,7 @@ nng_dialer_getopt_sockaddr(nng_dialer id, const char *n, nng_sockaddr *v)
 }
 
 int
-nng_dialer_setopt(
-    nng_dialer id, const char *name, const void *v, size_t sz)
+nng_dialer_setopt(nng_dialer id, const char *name, const void *v, size_t sz)
 {
 	return (nng_dialer_set(id, name, v, sz));
 }
@@ -392,62 +392,6 @@ int
 nng_listener_setopt_string(nng_listener id, const char *n, const char *v)
 {
 	return (nng_listener_set_string(id, n, v));
-}
-
-// Pipes
-
-int
-nng_pipe_getopt(nng_pipe id, const char *n, void *v, size_t *sz)
-{
-	return (nng_pipe_get(id, n, v, sz));
-}
-
-int
-nng_pipe_getopt_int(nng_pipe id, const char *n, int *v)
-{
-	return (nng_pipe_get_int(id, n, v));
-}
-
-int
-nng_pipe_getopt_bool(nng_pipe id, const char *n, bool *v)
-{
-	return (nng_pipe_get_bool(id, n, v));
-}
-
-int
-nng_pipe_getopt_size(nng_pipe id, const char *n, size_t *v)
-{
-	return (nng_pipe_get_size(id, n, v));
-}
-
-int
-nng_pipe_getopt_uint64(nng_pipe id, const char *n, uint64_t *v)
-{
-	return (nng_pipe_get_uint64(id, n, v));
-}
-
-int
-nng_pipe_getopt_string(nng_pipe id, const char *n, char **v)
-{
-	return (nng_pipe_get_string(id, n, v));
-}
-
-int
-nng_pipe_getopt_ptr(nng_pipe id, const char *n, void **v)
-{
-	return (nng_pipe_get_ptr(id, n, v));
-}
-
-int
-nng_pipe_getopt_ms(nng_pipe id, const char *n, nng_duration *v)
-{
-	return (nng_pipe_get_ms(id, n, v));
-}
-
-int
-nng_pipe_getopt_sockaddr(nng_pipe id, const char *n, nng_sockaddr *v)
-{
-	return (nng_pipe_get_addr(id, n, v));
 }
 
 void
