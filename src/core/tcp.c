@@ -14,19 +14,20 @@
 
 #include <nng/nng.h>
 
-#include "core/nng_impl.h"
-#include "core/tcp.h"
+#include "core/url.h"
+#include "nng_impl.h"
+#include "tcp.h"
 
 typedef struct {
 	nng_stream_dialer ops;
-	char *            host;
-	char *            port;
+	char             *host;
+	char             *port;
 	int               af; // address family
 	bool              closed;
 	nng_sockaddr      sa;
-	nni_tcp_dialer *  d;      // platform dialer implementation
-	nni_aio *         resaio; // resolver aio
-	nni_aio *         conaio; // platform connection aio
+	nni_tcp_dialer   *d;      // platform dialer implementation
+	nni_aio          *resaio; // resolver aio
+	nni_aio          *conaio; // platform connection aio
 	nni_list          conaios;
 	nni_mtx           mtx;
 } tcp_dialer;
@@ -62,7 +63,7 @@ static void
 tcp_dial_res_cb(void *arg)
 {
 	tcp_dialer *d = arg;
-	nni_aio *   aio;
+	nni_aio    *aio;
 	int         rv;
 
 	nni_mtx_lock(&d->mtx);
@@ -94,7 +95,7 @@ static void
 tcp_dial_con_cb(void *arg)
 {
 	tcp_dialer *d = arg;
-	nng_aio *   aio;
+	nng_aio    *aio;
 	int         rv;
 
 	nni_mtx_lock(&d->mtx);
@@ -124,7 +125,7 @@ static void
 tcp_dialer_close(void *arg)
 {
 	tcp_dialer *d = arg;
-	nni_aio *   aio;
+	nni_aio    *aio;
 	nni_mtx_lock(&d->mtx);
 	d->closed = true;
 	while ((aio = nni_list_first(&d->conaios)) != NULL) {
@@ -186,8 +187,7 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 }
 
 static int
-tcp_dialer_get(
-    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+tcp_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcp_dialer *d = arg;
 	return (nni_tcp_dialer_get(d->d, name, buf, szp, t));
@@ -238,10 +238,6 @@ nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	int         rv;
 	const char *p;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-
 	if ((rv = tcp_dialer_alloc(&d)) != 0) {
 		return (rv);
 	}
@@ -276,7 +272,7 @@ nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 
 typedef struct {
 	nng_stream_listener ops;
-	nni_tcp_listener *  l;
+	nni_tcp_listener   *l;
 	nng_sockaddr        sa;
 } tcp_listener;
 
@@ -317,7 +313,7 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 	nng_sockaddr  sa;
 	size_t        sz;
 	int           port;
-	uint8_t *     paddr;
+	uint8_t      *paddr;
 
 	sz = sizeof(sa);
 	rv = nni_tcp_listener_get(
@@ -373,6 +369,9 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 	tcp_listener *l;
 	int           rv;
 
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -396,41 +395,15 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 int
 nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
-	nni_aio *    aio;
-	int          af;
 	int          rv;
 	nng_sockaddr sa;
-	const char * h;
 
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-	if (strchr(url->u_scheme, '4') != NULL) {
-		af = NNG_AF_INET;
-	} else if (strchr(url->u_scheme, '6') != NULL) {
-		af = NNG_AF_INET6;
-	} else {
-		af = NNG_AF_UNSPEC;
-	}
-
-	if ((rv = nng_aio_alloc(&aio, NULL, NULL)) != 0) {
+	if ((rv = nni_url_to_address(&sa, url)) != 0) {
 		return (rv);
 	}
-
-	h = url->u_hostname;
-
-	// Wildcard special case, which means bind to INADDR_ANY.
-	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strcmp(h, "") == 0))) {
-		h = NULL;
-	}
-	nni_resolv_ip(h, url->u_port, af, true, &sa, aio);
-	nni_aio_wait(aio);
-
-	if ((rv = nni_aio_result(aio)) != 0) {
-		nni_aio_free(aio);
-		return (rv);
-	}
-	nni_aio_free(aio);
 
 	return (tcp_listener_alloc_addr(lp, &sa));
 }

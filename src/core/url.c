@@ -598,3 +598,37 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 }
 
 #undef URL_COPYSTR
+
+// nni_url_to_address resolves a URL into a sockaddr, assuming the URL is for
+// an IP address.
+int
+nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
+{
+	int         af;
+	nni_aio     aio;
+	const char *h;
+	int         rv;
+
+	// This assumes the scheme is one that uses TCP/IP addresses.
+
+	if (strchr(url->u_scheme, '4') != NULL) {
+		af = NNG_AF_INET;
+	} else if (strchr(url->u_scheme, '6') != NULL) {
+		af = NNG_AF_INET6;
+	} else {
+		af = NNG_AF_UNSPEC;
+	}
+
+	nni_aio_init(&aio, NULL, NULL);
+
+	h = url->u_hostname;
+	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strcmp(h, "") == 0))) {
+		h = NULL;
+	}
+
+	nni_resolv_ip(h, url->u_port, af, true, sa, &aio);
+	nni_aio_wait(&aio);
+	rv = nni_aio_result(&aio);
+	nni_aio_fini(&aio);
+	return (rv);
+}
