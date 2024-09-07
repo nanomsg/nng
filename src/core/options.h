@@ -12,6 +12,8 @@
 #ifndef CORE_OPTIONS_H
 #define CORE_OPTIONS_H
 
+#include "defs.h"
+
 // Integer limits.
 #define NNI_MAXINT (2147483647)
 // the -1 trick works around a compiler warning on some compilers (MSVC)

@@ -11,7 +11,9 @@
 #ifndef CORE_STATS_H
 #define CORE_STATS_H
 
-#include "core/defs.h"
+#include "defs.h"
+#include "list.h"
+#include "platform.h"
 
 // Statistics support.  This is inspired in part by the Solaris
 // kernel stats framework, but we've simplified and tuned it for our use.
@@ -42,15 +44,15 @@ struct nni_stat_item {
 	union {
 		uint64_t       sv_number;
 		nni_atomic_u64 sv_atomic;
-		char *         sv_string;
+		char          *sv_string;
 		bool           sv_bool;
 		int            sv_id;
 	} si_u;
 };
 
 struct nni_stat_info {
-	const char *    si_name;       // name of statistic
-	const char *    si_desc;       // description of statistic (English)
+	const char     *si_name;       // name of statistic
+	const char     *si_desc;       // description of statistic (English)
 	nni_stat_type   si_type;       // statistic type, e.g. NNG_STAT_LEVEL
 	nni_stat_unit   si_unit;       // statistic unit, e.g. NNG_UNIT_MILLIS
 	nni_stat_update si_update;     // update function (can be NULL)

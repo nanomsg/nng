@@ -11,13 +11,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
 // Linked list implementation.  We implement a doubly linked list.
 // Using pointer arithmetic, we can operate as a list of "anything".
 
 #define NODE(list, item) \
-	(nni_list_node *) (void *)(((char *) item) + list->ll_offset)
+	(nni_list_node *) (void *) (((char *) item) + list->ll_offset)
 #define ITEM(list, node) (void *) (((char *) node) - list->ll_offset)
 
 void

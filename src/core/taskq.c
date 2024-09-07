@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
 typedef struct nni_taskq_thr nni_taskq_thr;
 struct nni_taskq_thr {

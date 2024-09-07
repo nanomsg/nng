@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,6 +11,7 @@
 #ifndef CORE_DEFS_H
 #define CORE_DEFS_H
 
+#include <nng/nng.h>
 #include <stdint.h>
 
 // C compilers may get unhappy when named arguments are not used.  While
@@ -23,7 +24,7 @@
 	if (!(x))     \
 	nni_panic("%s: %d: assert err: %s", __FILE__, __LINE__, #x)
 #else
-#define NNI_ASSERT(x) ((void)(0))
+#define NNI_ASSERT(x) ((void) (0))
 #endif
 
 // Returns the size of an array in elements. (Convenience.)

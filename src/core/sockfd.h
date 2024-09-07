@@ -10,12 +10,13 @@
 #ifndef CORE_FDC_H
 #define CORE_FDC_H
 
-#include "core/nng_impl.h"
+#include <nng/nng.h>
 
 // the nni_sfd_conn struct is provided by platform code to wrap
 // an arbitrary byte stream file descriptor (UNIX) or handle (Windows)
 // with a nng_stream.
 typedef struct nni_sfd_conn nni_sfd_conn;
+
 extern int nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd);
 extern int nni_sfd_dialer_alloc(nng_stream_dialer **, const nng_url *);
 extern int nni_sfd_listener_alloc(nng_stream_listener **, const nng_url *);

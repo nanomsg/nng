@@ -15,9 +15,12 @@
 // OUTSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 
-#include "core/defs.h"
-#include "core/thread.h"
-#include "nng/nng.h"
+#include <nng/nng.h>
+
+#include "defs.h"
+#include "stats.h"
+#include "thread.h"
+
 #include "sp/transport.h"
 
 // AIO

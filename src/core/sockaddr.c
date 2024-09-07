@@ -7,11 +7,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-#include "nng/nng.h"
-
 #include <stdio.h>
 #include <string.h>
+
+#include "nng_impl.h"
 
 static const char *
 str_sa_inproc(const nng_sockaddr_inproc *sa, char *buf, size_t bufsz)

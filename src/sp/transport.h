@@ -12,7 +12,10 @@
 #ifndef PROTOCOL_SP_TRANSPORT_H
 #define PROTOCOL_SP_TRANSPORT_H
 
+#include "core/defs.h"
+#include "core/list.h"
 #include "core/options.h"
+#include "core/url.h"
 
 // Endpoint operations are called by the socket in a
 // protocol-independent fashion.  The socket makes individual calls,

@@ -12,18 +12,20 @@
 
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
-#include "core/sockfd.h"
-#include "core/tcp.h"
-#include "supplemental/tls/tls_api.h"
-#include "supplemental/websocket/websocket.h"
+#include "nng_impl.h"
+#include "sockfd.h"
+#include "tcp.h"
+
+#include "../supplemental/tls/tls_api.h"
+#include "../supplemental/websocket/websocket.h"
 
 static struct {
 	const char *scheme;
-	int         (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
-	int         (*listener_alloc)(nng_stream_listener **, const nng_url *);
+	int (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
+	int (*listener_alloc)(nng_stream_listener **, const nng_url *);
 
 } stream_drivers[] = {
 	{

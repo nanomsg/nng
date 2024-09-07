@@ -8,13 +8,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
 // We pack the wfd and rfd into a uint64_t so that we can update the pair
 // atomically and use nni_atomic_cas64, to be lock free.
 #define WFD(fds) ((int) ((fds) &0xffffffffu))
 #define RFD(fds) ((int) (((fds) >> 32u) & 0xffffffffu))
-#define FD_JOIN(wfd, rfd) ((uint64_t)(wfd) + ((uint64_t)(rfd) << 32u))
+#define FD_JOIN(wfd, rfd) ((uint64_t) (wfd) + ((uint64_t) (rfd) << 32u))
 
 void
 nni_pollable_init(nni_pollable *p)

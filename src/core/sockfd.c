@@ -12,8 +12,8 @@
 
 #include <nng/nng.h>
 
-#include "core/nng_impl.h"
-#include "core/sockfd.h"
+#include "nng_impl.h"
+#include "sockfd.h"
 
 // We will accept up to this many FDs to be queued up for
 // accept, before we start rejecting with NNG_ENOSPC.  Once
@@ -169,7 +169,7 @@ static int
 sfd_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(arg);
-	nng_sockaddr      sa;
+	nng_sockaddr sa;
 	sa.s_family = NNG_AF_UNSPEC;
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
@@ -181,7 +181,7 @@ static const nni_option sfd_listener_options[] = {
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get = sfd_listener_get_addr,
+	    .o_get  = sfd_listener_get_addr,
 	},
 	{
 	    .o_name = NULL,

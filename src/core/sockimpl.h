@@ -11,6 +11,12 @@
 #ifndef CORE_SOCKIMPL_H
 #define CORE_SOCKIMPL_H
 
+#include "defs.h"
+#include "list.h"
+#include "platform.h"
+#include "reap.h"
+#include "stats.h"
+
 // This file contains stuff shared within the core between sockets, endpoints,
 // and pipes.  This must not be exposed to other subsystems -- these internals
 // are subject to change at any time.

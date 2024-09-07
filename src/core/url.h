@@ -11,7 +11,7 @@
 #ifndef CORE_URL_H
 #define CORE_URL_H
 
-#include "core/defs.h"
+#include "defs.h"
 
 extern int         nni_url_parse(nni_url **, const char *path);
 extern void        nni_url_free(nni_url *);

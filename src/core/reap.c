@@ -8,9 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-
-#include "reap.h"
+#include "nng_impl.h"
 
 #include <stdbool.h>
 
@@ -18,9 +16,9 @@
 static nni_reap_list *reap_list = NULL;
 static nni_thr        reap_thr;
 static bool           reap_exit = false;
-static nni_mtx        reap_mtx = NNI_MTX_INITIALIZER;
+static nni_mtx        reap_mtx  = NNI_MTX_INITIALIZER;
 static bool           reap_empty;
-static nni_cv         reap_work_cv = NNI_CV_INITIALIZER(&reap_mtx);
+static nni_cv         reap_work_cv  = NNI_CV_INITIALIZER(&reap_mtx);
 static nni_cv         reap_empty_cv = NNI_CV_INITIALIZER(&reap_mtx);
 
 static void

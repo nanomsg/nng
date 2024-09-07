@@ -63,7 +63,8 @@ nng_getopt_ms(nng_socket id, const char *n, nng_duration *v)
 	return (nng_socket_get_ms(id, n, v));
 }
 
-int nng_getopt_ptr(nng_socket id, const char *n, void **v)
+int
+nng_getopt_ptr(nng_socket id, const char *n, void **v)
 {
 	return (nng_socket_get_ptr(id, n, v));
 }
@@ -241,8 +242,7 @@ nng_dialer_getopt_sockaddr(nng_dialer id, const char *n, nng_sockaddr *v)
 }
 
 int
-nng_dialer_setopt(
-    nng_dialer id, const char *name, const void *v, size_t sz)
+nng_dialer_setopt(nng_dialer id, const char *name, const void *v, size_t sz)
 {
 	return (nng_dialer_set(id, name, v, sz));
 }
@@ -448,12 +448,6 @@ int
 nng_pipe_getopt_sockaddr(nng_pipe id, const char *n, nng_sockaddr *v)
 {
 	return (nng_pipe_get_addr(id, n, v));
-}
-
-void
-nng_closeall(void)
-{
-	nni_sock_closeall();
 }
 
 #endif // NNG_ELIDE_DEPRECATED
