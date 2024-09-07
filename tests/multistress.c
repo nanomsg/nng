@@ -24,9 +24,6 @@
 #include <nng/protocol/reqrep0/req.h>
 #include <nng/protocol/survey0/respond.h>
 #include <nng/protocol/survey0/survey.h>
-#include <nng/transport/inproc/inproc.h>
-#include <nng/transport/ipc/ipc.h>
-#include <nng/transport/tcp/tcp.h>
 
 #include "convey.h"
 #include "stubs.h"

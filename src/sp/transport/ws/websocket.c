@@ -17,7 +17,6 @@
 #include "supplemental/websocket/websocket.h"
 
 #include <nng/supplemental/tls/tls.h>
-#include <nng/transport/ws/websocket.h>
 
 typedef struct ws_dialer   ws_dialer;
 typedef struct ws_listener ws_listener;

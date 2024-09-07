@@ -1,6 +1,6 @@
 = nng_inproc(7)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -12,15 +12,6 @@
 == NAME
 
 nng_inproc - intra-process transport
-
-== SYNOPSIS
-
-[source,c]
-----
-#include <nng/transport/inproc/inproc.h>
-
-int nng_inproc_register(void);
-----
 
 == DESCRIPTION
 
@@ -34,12 +25,8 @@ to slower transports when data must be moved within the same process.
 This transport tries hard to avoid copying data, and thus is very
 light-weight.
 
-=== Registration
-
-This transport is generally built-in to the core, so
-no extra steps to use it should be necessary.
-
 === URI Format
+
 (((URI, `inproc://`)))
 This transport uses URIs using the scheme `inproc://`, followed by
 an arbitrary string of text, terminated by a `NUL` byte.

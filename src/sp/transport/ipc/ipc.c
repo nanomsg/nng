@@ -13,8 +13,6 @@
 
 #include "core/nng_impl.h"
 
-#include <nng/transport/ipc/ipc.h>
-
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or
 // Windows named pipes.  Other platforms could use other mechanisms,

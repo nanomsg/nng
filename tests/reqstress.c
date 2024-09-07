@@ -16,9 +16,6 @@
 #include <nng/protocol/bus0/bus.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
-#include <nng/transport/inproc/inproc.h>
-#include <nng/transport/ipc/ipc.h>
-#include <nng/transport/tcp/tcp.h>
 
 #include "convey.h"
 #include "stubs.h"
