@@ -199,31 +199,6 @@ if (NNG_ENABLE_DOC)
             nng_zt_register
             )
 
-    set(NNG_MAN3COMPAT
-            nn_allocmsg
-            nn_bind
-            nn_close
-            nn_cmsg
-            nn_connect
-            nn_device
-            nn_errno
-            nn_freemsg
-            nn_get_statistic
-            nn_getsockopt
-            nn_poll
-            nn_reallocmsg
-            nn_recv
-            nn_recvmsg
-            nn_send
-            nn_sendmsg
-            nn_setsockopt
-            nn_shutdown
-            nn_socket
-            nn_strerror
-            nn_term
-            nng_compat
-            )
-
     set(NNG_MAN3HTTP
             nng_http_client_alloc
             nng_http_client_connect
@@ -412,10 +387,6 @@ if (NNG_ENABLE_DOC)
 
     foreach (F ${NNG_MAN3})
         nng_man(${F} 3)
-    endforeach ()
-
-    foreach (F ${NNG_MAN3COMPAT})
-        nng_man(${F} 3compat)
     endforeach ()
 
     foreach (F ${NNG_MAN3HTTP})
