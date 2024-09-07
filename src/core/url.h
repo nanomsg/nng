@@ -20,5 +20,6 @@ extern const char *nni_url_default_port(const char *);
 extern int         nni_url_asprintf(char **, const nni_url *);
 extern int         nni_url_asprintf_port(char **, const nni_url *, int);
 extern size_t      nni_url_decode(uint8_t *, const char *, size_t);
+extern int         nni_url_to_address(nng_sockaddr *, const nni_url *);
 
 #endif // CORE_URL_H

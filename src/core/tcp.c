@@ -14,6 +14,7 @@
 
 #include <nng/nng.h>
 
+#include "core/url.h"
 #include "nng_impl.h"
 #include "tcp.h"
 
@@ -237,10 +238,6 @@ nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	int         rv;
 	const char *p;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-
 	if ((rv = tcp_dialer_alloc(&d)) != 0) {
 		return (rv);
 	}
@@ -395,41 +392,12 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 int
 nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
-	nni_aio     *aio;
-	int          af;
 	int          rv;
 	nng_sockaddr sa;
-	const char  *h;
 
-	if ((rv = nni_init()) != 0) {
+	if ((rv = nni_url_to_address(&sa, url)) != 0) {
 		return (rv);
 	}
-	if (strchr(url->u_scheme, '4') != NULL) {
-		af = NNG_AF_INET;
-	} else if (strchr(url->u_scheme, '6') != NULL) {
-		af = NNG_AF_INET6;
-	} else {
-		af = NNG_AF_UNSPEC;
-	}
-
-	if ((rv = nng_aio_alloc(&aio, NULL, NULL)) != 0) {
-		return (rv);
-	}
-
-	h = url->u_hostname;
-
-	// Wildcard special case, which means bind to INADDR_ANY.
-	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strcmp(h, "") == 0))) {
-		h = NULL;
-	}
-	nni_resolv_ip(h, url->u_port, af, true, &sa, aio);
-	nni_aio_wait(aio);
-
-	if ((rv = nni_aio_result(aio)) != 0) {
-		nni_aio_free(aio);
-		return (rv);
-	}
-	nni_aio_free(aio);
 
 	return (tcp_listener_alloc_addr(lp, &sa));
 }
