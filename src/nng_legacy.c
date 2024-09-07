@@ -14,19 +14,6 @@
 // Eventually they will likely be removed.  For now we have
 // to continue to provide them for compatibility.
 
-// This function is not supported, but we keep it around to
-// satisfy link dependencies in old programs.  It has never done
-// anything useful.
-int
-nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
-{
-	NNI_ARG_UNUSED(msg);
-	NNI_ARG_UNUSED(opt);
-	NNI_ARG_UNUSED(ptr);
-	NNI_ARG_UNUSED(szp);
-	return (NNG_ENOTSUP);
-}
-
 int
 nng_getopt(nng_socket id, const char *n, void *v, size_t *sz)
 {
