@@ -1327,23 +1327,6 @@ NNG_DECL int nng_setopt_string(
     nng_socket, const char *, const char *) NNG_DEPRECATED;
 NNG_DECL int nng_setopt_ptr(nng_socket, const char *, void *) NNG_DEPRECATED;
 
-// Context options.  Use nng_ctx_get and nng_ctx_set instead.
-NNG_DECL int nng_ctx_getopt(
-    nng_ctx, const char *, void *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_getopt_bool(nng_ctx, const char *, bool *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_getopt_int(nng_ctx, const char *, int *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_getopt_ms(
-    nng_ctx, const char *, nng_duration *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_getopt_size(
-    nng_ctx, const char *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_setopt(
-    nng_ctx, const char *, const void *, size_t) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_setopt_bool(nng_ctx, const char *, bool) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_setopt_int(nng_ctx, const char *, int) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_setopt_ms(
-    nng_ctx, const char *, nng_duration) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_setopt_size(nng_ctx, const char *, size_t) NNG_DEPRECATED;
-
 #endif // NNG_ELIDE_DEPRECATED
 
 // nng_init_parameter is used by applications to change a tunable setting.
