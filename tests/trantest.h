@@ -54,13 +54,6 @@ extern void trantest_test(trantest *tt);
 extern void trantest_test_extended(const char *addr, trantest_proptest_t f);
 extern void trantest_test_all(const char *addr);
 
-#ifndef NNG_TRANSPORT_ZEROTIER
-#define nng_zt_register notransport
-#endif
-#ifndef NNG_TRANSPORT_WSS
-#define nng_wss_register notransport
-#endif
-
 int
 notransport(void)
 {

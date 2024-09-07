@@ -146,23 +146,23 @@ enum zt_errors {
 struct zt_node {
 	char            zn_path[NNG_MAXADDRLEN]; // ought to be sufficient
 	nni_file_lockh *zn_flock;
-	ZT_Node *       zn_znode;
+	ZT_Node        *zn_znode;
 	uint64_t        zn_self;
 	nni_list_node   zn_link;
 	bool            zn_closed;
-	nni_plat_udp *  zn_udp4;
-	nni_plat_udp *  zn_udp6;
+	nni_plat_udp   *zn_udp4;
+	nni_plat_udp   *zn_udp6;
 	nni_list        zn_eplist;
 	nni_list        zn_plist;
-	zt_hash *       zn_ports;
-	zt_hash *       zn_eps;
-	zt_hash *       zn_lpipes;
-	zt_hash *       zn_rpipes;
-	nni_aio *       zn_rcv4_aio;
-	uint8_t *       zn_rcv4_buf;
+	zt_hash        *zn_ports;
+	zt_hash        *zn_eps;
+	zt_hash        *zn_lpipes;
+	zt_hash        *zn_rpipes;
+	nni_aio        *zn_rcv4_aio;
+	uint8_t        *zn_rcv4_buf;
 	nng_sockaddr    zn_rcv4_addr;
-	nni_aio *       zn_rcv6_aio;
-	uint8_t *       zn_rcv6_buf;
+	nni_aio        *zn_rcv6_aio;
+	uint8_t        *zn_rcv6_buf;
 	nng_sockaddr    zn_rcv6_addr;
 	nni_thr         zn_bgthr;
 	int64_t         zn_bgtime;
@@ -178,15 +178,15 @@ struct zt_fraglist {
 	int          fl_ready; // we have all messages
 	size_t       fl_fragsz;
 	unsigned int fl_nfrags;
-	uint8_t *    fl_missing;
+	uint8_t     *fl_missing;
 	size_t       fl_missingsz;
-	nni_msg *    fl_msg;
+	nni_msg     *fl_msg;
 };
 
 struct zt_pipe {
 	nni_list_node   zp_link;
-	zt_node *       zp_ztn;
-	nni_pipe *      zp_npipe;
+	zt_node        *zp_ztn;
+	nni_pipe       *zp_npipe;
 	uint64_t        zp_nwid;
 	uint64_t        zp_laddr;
 	uint64_t        zp_raddr;
@@ -195,15 +195,15 @@ struct zt_pipe {
 	uint16_t        zp_next_msgid;
 	size_t          zp_rcvmax;
 	size_t          zp_mtu;
-	nni_aio *       zp_user_rxaio;
+	nni_aio        *zp_user_rxaio;
 	nni_time        zp_last_recv;
 	zt_fraglist     zp_recvq[zt_recvq];
 	int             zp_ping_try;
 	int             zp_ping_tries;
 	bool            zp_closed;
 	nni_duration    zp_ping_time;
-	nni_aio *       zp_ping_aio;
-	uint8_t *       zp_send_buf;
+	nni_aio        *zp_ping_aio;
+	uint8_t        *zp_send_buf;
 	nni_atomic_flag zp_reaped;
 	nni_reap_node   zp_reap;
 };
@@ -218,15 +218,15 @@ struct zt_creq {
 struct zt_ep {
 	nni_list_node ze_link;
 	char          ze_home[NNG_MAXADDRLEN]; // should be enough
-	zt_node *     ze_ztn;
+	zt_node      *ze_ztn;
 	uint64_t      ze_nwid;
 	bool          ze_running;
 	uint64_t      ze_raddr; // remote node address
 	uint64_t      ze_laddr; // local node address
 	uint16_t      ze_proto;
 	size_t        ze_rcvmax;
-	nni_aio *     ze_aio;
-	nni_aio *     ze_creq_aio;
+	nni_aio      *ze_aio;
+	nni_aio      *ze_creq_aio;
 	bool          ze_creq_active;
 	int           ze_creq_try;
 	nni_list      ze_aios;
@@ -244,7 +244,7 @@ struct zt_ep {
 	zt_creq       ze_creqs[zt_listenq];
 	int           ze_creq_head;
 	int           ze_creq_tail;
-	nni_dialer *  ze_ndialer;
+	nni_dialer   *ze_ndialer;
 	nni_listener *ze_nlistener;
 };
 
@@ -332,11 +332,11 @@ zt_node_resched(zt_node *ztn, int64_t msec)
 static void
 zt_node_rcv4_cb(void *arg)
 {
-	zt_node *               ztn = arg;
-	nni_aio *               aio = ztn->zn_rcv4_aio;
+	zt_node                *ztn = arg;
+	nni_aio                *aio = ztn->zn_rcv4_aio;
 	struct sockaddr_storage sa;
-	struct sockaddr_in *    sin;
-	nng_sockaddr_in *       nsin;
+	struct sockaddr_in     *sin;
+	nng_sockaddr_in        *nsin;
 	int64_t                 now;
 
 	if (nni_aio_result(aio) != 0) {
@@ -384,10 +384,10 @@ zt_node_rcv4_cb(void *arg)
 static void
 zt_node_rcv6_cb(void *arg)
 {
-	zt_node *                ztn = arg;
-	nni_aio *                aio = ztn->zn_rcv6_aio;
+	zt_node                 *ztn = arg;
+	nni_aio                 *aio = ztn->zn_rcv6_aio;
 	struct sockaddr_storage  sa;
-	struct sockaddr_in6 *    sin6;
+	struct sockaddr_in6     *sin6;
 	struct nng_sockaddr_in6 *nsin6;
 	int64_t                  now;
 
@@ -502,7 +502,7 @@ zt_virtual_config(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
     const ZT_VirtualNetworkConfig *config)
 {
 	zt_node *ztn = userptr;
-	zt_ep *  ep;
+	zt_ep   *ep;
 
 	NNI_ARG_UNUSED(thr);
 	NNI_ARG_UNUSED(netptr);
@@ -822,7 +822,7 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 	int          i;
 	int          slot;
 	uint8_t      bit;
-	uint8_t *    body;
+	uint8_t     *body;
 
 	if (len < zt_size_data) {
 		// Runt frame.  Drop it and close pipe with a protocol error.
@@ -1033,14 +1033,14 @@ zt_virtual_recv(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
     void **netptr, uint64_t srcmac, uint64_t dstmac, unsigned int ethertype,
     unsigned int vlanid, const void *payload, unsigned int len)
 {
-	zt_node *      ztn = userptr;
+	zt_node       *ztn = userptr;
 	uint8_t        op;
 	const uint8_t *data = payload;
 	uint16_t       version;
 	uint32_t       rport;
 	uint32_t       lport;
-	zt_ep *        ep;
-	zt_pipe *      p;
+	zt_ep         *ep;
+	zt_pipe       *p;
 	uint64_t       raddr;
 	uint64_t       laddr;
 
@@ -1166,7 +1166,7 @@ static const char *zt_files[] = {
 
 static struct {
 	size_t len;
-	void * data;
+	void  *data;
 } zt_ephemeral_state[ZT_STATE_OBJECT_NETWORK_CONFIG + 1];
 
 static void
@@ -1175,7 +1175,7 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
     int len)
 {
 	zt_node *ztn = userptr;
-	char *   path;
+	char    *path;
 	const char *template;
 	char fname[32];
 
@@ -1196,8 +1196,8 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
 	// all in the same place, but it does not matter since we don't
 	// really persist them anyway.
 	if (strlen(ztn->zn_path) == 0) {
-		void * ndata = NULL;
-		void * odata = zt_ephemeral_state[objtype].data;
+		void  *ndata = NULL;
+		void  *odata = zt_ephemeral_state[objtype].data;
 		size_t olen  = zt_ephemeral_state[objtype].len;
 		if ((len >= 0) && ((ndata = nni_alloc(len)) != NULL)) {
 			memcpy(ndata, data, len);
@@ -1232,11 +1232,11 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
     unsigned int len)
 {
 	zt_node *ztn = userptr;
-	char *   path;
+	char    *path;
 	char     fname[32];
 	const char *template;
 	size_t sz;
-	void * buf;
+	void  *buf;
 
 	NNI_ARG_UNUSED(node);
 	NNI_ARG_UNUSED(thr);
@@ -1292,14 +1292,14 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
     const struct sockaddr_storage *remaddr, const void *data, unsigned int len,
     unsigned int ttl)
 {
-	nni_aio *            aio;
+	nni_aio             *aio;
 	nni_sockaddr         addr;
-	struct sockaddr_in * sin  = (void *) remaddr;
+	struct sockaddr_in  *sin  = (void *) remaddr;
 	struct sockaddr_in6 *sin6 = (void *) remaddr;
-	zt_node *            ztn  = userptr;
-	nni_plat_udp *       udp;
-	uint8_t *            buf;
-	zt_send_hdr *        hdr;
+	zt_node             *ztn  = userptr;
+	nni_plat_udp        *udp;
+	uint8_t             *buf;
+	zt_send_hdr         *hdr;
 	nni_iov              iov;
 
 	NNI_ARG_UNUSED(node);
@@ -1418,7 +1418,7 @@ zt_node_destroy(zt_node *ztn)
 static int
 zt_node_create(zt_node **ztnp, const char *path)
 {
-	zt_node *          ztn;
+	zt_node           *ztn;
 	nng_sockaddr       sa4;
 	nng_sockaddr       sa6;
 	int                rv;
@@ -1519,9 +1519,9 @@ zt_node_create(zt_node **ztnp, const char *path)
 static int
 zt_walk_moons(const char *path, void *arg)
 {
-	zt_node *   ztn = arg;
+	zt_node    *ztn = arg;
 	const char *bn  = nni_file_basename(path);
-	char *      end;
+	char       *end;
 	uint64_t    moonid;
 
 	if (strncmp(bn, "moon.", 5) != 0) {
@@ -1537,7 +1537,7 @@ zt_walk_moons(const char *path, void *arg)
 static int
 zt_node_find(zt_ep *ep)
 {
-	zt_node *                ztn;
+	zt_node                 *ztn;
 	int                      rv;
 	ZT_VirtualNetworkConfig *cf;
 
@@ -1958,7 +1958,7 @@ zt_pipe_dorecv(zt_pipe *p)
 
 	for (int i = 0; i < zt_recvq; i++) {
 		zt_fraglist *fl = &p->zp_recvq[i];
-		nni_msg *    msg;
+		nni_msg     *msg;
 
 		if (now > (fl->fl_time + zt_recv_stale)) {
 			// fragment list is stale, clean it.
@@ -2197,7 +2197,7 @@ static int
 zt_ep_init(void **epp, nni_url *url, nni_sock *sock, nni_dialer *ndialer,
     nni_listener *nlistener)
 {
-	zt_ep *     ep;
+	zt_ep      *ep;
 	uint64_t    node;
 	uint64_t    port;
 	int         rv;
@@ -2286,7 +2286,7 @@ zt_listener_init(void **epp, nni_url *url, nni_listener *l)
 static void
 zt_ep_close(void *arg)
 {
-	zt_ep *  ep = arg;
+	zt_ep   *ep = arg;
 	zt_node *ztn;
 	nni_aio *aio;
 
@@ -2488,7 +2488,7 @@ zt_ep_conn_req_cancel(nni_aio *aio, void *arg, int rv)
 static void
 zt_ep_conn_req_cb(void *arg)
 {
-	zt_ep *  ep = arg;
+	zt_ep   *ep = arg;
 	zt_pipe *p;
 	nni_aio *aio = ep->ze_creq_aio;
 	nni_aio *uaio;
@@ -2670,7 +2670,7 @@ static int
 zt_ep_get_url(void *arg, void *data, size_t *szp, nni_type t)
 {
 	char     ustr[64]; // more than plenty
-	zt_ep *  ep = arg;
+	zt_ep   *ep = arg;
 	uint64_t addr;
 
 	nni_mtx_lock(&zt_lk);
@@ -2688,7 +2688,7 @@ zt_ep_set_orbit(void *arg, const void *data, size_t sz, nni_type t)
 {
 	uint64_t           moonid;
 	uint64_t           peerid;
-	zt_ep *            ep = arg;
+	zt_ep             *ep = arg;
 	int                rv;
 	enum ZT_ResultCode zrv;
 
@@ -2721,7 +2721,7 @@ static int
 zt_ep_set_deorbit(void *arg, const void *data, size_t sz, nni_type t)
 {
 	uint64_t moonid;
-	zt_ep *  ep = arg;
+	zt_ep   *ep = arg;
 	int      rv;
 
 	if ((rv = nni_copyin_u64(&moonid, data, sz, t)) == 0) {
@@ -2743,15 +2743,15 @@ static int
 zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 {
 	nng_sockaddr sa;
-	zt_ep *      ep = arg;
+	zt_ep       *ep = arg;
 	int          rv;
 
 	if ((rv = nni_copyin_sockaddr(&sa, data, sz, t)) == 0) {
 		enum ZT_ResultCode      zrv;
-		zt_node *               ztn;
+		zt_node                *ztn;
 		struct sockaddr_storage ss;
-		struct sockaddr_in *    sin;
-		struct sockaddr_in6 *   sin6;
+		struct sockaddr_in     *sin;
+		struct sockaddr_in6    *sin6;
 
 		memset(&ss, 0, sizeof(ss));
 		switch (sa.s_family) {
@@ -2878,7 +2878,7 @@ zt_ep_get_nw_status(void *arg, void *buf, size_t *szp, nni_type t)
 static int
 zt_ep_set_ping_time(void *arg, const void *data, size_t sz, nni_type t)
 {
-	zt_ep *      ep = arg;
+	zt_ep       *ep = arg;
 	nng_duration val;
 	int          rv;
 
@@ -2932,7 +2932,7 @@ zt_ep_get_ping_tries(void *arg, void *data, size_t *szp, nni_type t)
 static int
 zt_ep_set_conn_time(void *arg, const void *data, size_t sz, nni_type t)
 {
-	zt_ep *      ep = arg;
+	zt_ep       *ep = arg;
 	nng_duration val;
 	int          rv;
 
@@ -2986,7 +2986,7 @@ zt_ep_get_conn_tries(void *arg, void *data, size_t *szp, nni_type t)
 static int
 zt_ep_get_locaddr(void *arg, void *data, size_t *szp, nni_type t)
 {
-	zt_ep *      ep = arg;
+	zt_ep       *ep = arg;
 	nng_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
@@ -3002,7 +3002,7 @@ zt_ep_get_locaddr(void *arg, void *data, size_t *szp, nni_type t)
 static int
 zt_pipe_get_locaddr(void *arg, void *data, size_t *szp, nni_type t)
 {
-	zt_pipe *    p = arg;
+	zt_pipe     *p = arg;
 	nng_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
@@ -3016,7 +3016,7 @@ zt_pipe_get_locaddr(void *arg, void *data, size_t *szp, nni_type t)
 static int
 zt_pipe_get_remaddr(void *arg, void *data, size_t *szp, nni_type t)
 {
-	zt_pipe *    p = arg;
+	zt_pipe     *p = arg;
 	nng_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
@@ -3242,14 +3242,6 @@ static struct nni_sp_tran zt_tran = {
 	.tran_init     = zt_tran_init,
 	.tran_fini     = zt_tran_fini,
 };
-
-#ifndef NNG_ELIDE_DEPRECATED
-int
-nng_zt_register(void)
-{
-	return (nni_init());
-}
-#endif
 
 void
 nni_sp_zt_register(void)

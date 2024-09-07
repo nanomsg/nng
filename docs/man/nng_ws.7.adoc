@@ -1,6 +1,6 @@
 = nng_ws(7)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -13,16 +13,6 @@
 
 nng_ws - WebSocket transport
 
-== SYNOPSIS
-
-[source,c]
-----
-#include <nng/transport/websocket/ws.h>
-
-int nng_ws_register(void);
-int nng_wss_register(void);
-----
-
 == DESCRIPTION
 
 (((WebSocket)))(((transport, _ws_ and _wss_)))
@@ -33,15 +23,6 @@ Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 
 The protocol details are documented in
 http://nanomsg.org/rfcs/sp-websocket-v1.html[WebSocket Mapping for Scalability Protocols].
-
-=== Registration
-
-Depending upon how the library was built, it may be necessary to
-register the transport by calling xref:nng_ws_register.3.adoc[`nng_ws_register()`].
-
-If ((TLS)) support is enabled in the library, secure WebSockets (over TLS v1.2)
-can be used as well, but the secure transport may have to be registered using
-the xref:nng_wss_register.3.adoc[`nng_wss_register()`] function.
 
 === URI Format
 

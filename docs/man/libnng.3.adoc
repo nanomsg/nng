@@ -204,20 +204,6 @@ The following functions are used to construct a socket with a specific protocol:
 |xref:nng_surveyor_open.3.adoc[nng_surveyor_open()]|open a surveyor socket
 |===
 
-=== Transports
-
-The following functions are used to register a transport for use.
-
-|===
-| xref:nng_inproc_register.3.adoc[nng_inproc_register()]|register inproc transport
-| xref:nng_ipc_register.3.adoc[nng_ipc_register()]|register IPC transport
-| xref:nng_tcp_register.3.adoc[nng_tcp_register()]|register TCP transport
-| xref:nng_tls_register.3.adoc[nng_tls_register()]|register TLS transport
-| xref:nng_ws_register.3.adoc[nng_ws_register()]|register WebSocket transport
-| xref:nng_wss_register.3.adoc[nng_wss_register()]|register WebSocket Secure transport
-| xref:nng_zt_register.3.adoc[nng_zt_register()]|register ZeroTier transport
-|===
-
 === Protocol Contexts
 
 The following functions are useful to separate the protocol processing
@@ -481,5 +467,4 @@ with TLS support.
 == SEE ALSO
 
 [.text-left]
-xref:nng_compat.3compat.adoc[nng_compat(3compat)],
 xref:nng.7.adoc[nng(7)]

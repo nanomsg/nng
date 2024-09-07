@@ -1,6 +1,6 @@
 = nng_tcp(7)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -13,15 +13,6 @@
 
 nng_tcp - TCP/IP transport
 
-== SYNOPSIS
-
-[source,c]
-----
-#include <nng/transport/tcp/tcp.h>
-
-int nng_tcp_register(void);
-----
-
 == DESCRIPTION
 
 (((transport, _tcp_)))
@@ -30,11 +21,6 @@ sockets across a ((TCP/IP)) network.
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 
 // We need to insert a reference to the nanomsg RFC.
-
-=== Registration
-
-This transport is generally built-in to the core of _NNG_, so
-no extra steps to use it should be necessary.
 
 === URI Format
 

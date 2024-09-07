@@ -1,7 +1,7 @@
-= The MIT License
+# The MIT License
 
-Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> +
-Copyright 2018 Capitar IT Group BV <info@capitar.com>
+Copyright 2024 Staysail Systems, Inc. &lt;[info@staysail.tech](mailto:info@staysail.tech)&gt; \
+Copyright 2018 Capitar IT Group BV &lt;[info@capitar.com](mailto:info@capitar.com)&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"),

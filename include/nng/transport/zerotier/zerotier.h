@@ -150,10 +150,6 @@ enum nng_zt_status {
 	NNG_ZT_STATUS_UNKNOWN,
 };
 
-#ifndef NNG_ELIDE_DEPRECATED
-NNG_DECL int nng_zt_register(void);
-#endif
-
 #ifdef __cplusplus
 }
 #endif
