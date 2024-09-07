@@ -1296,39 +1296,6 @@ NNG_DECL void nng_udp_recv(nng_udp *udp, nng_aio *aio);
 NNG_DECL int nng_udp_multicast_membership(
     nng_udp *udp, nng_sockaddr *sa, bool join);
 
-#ifndef NNG_ELIDE_DEPRECATED
-// These are legacy APIs that have been deprecated.
-// Their use is strongly discouraged.
-
-// Socket options.  Use nng_socket_get and nng_socket_set instead.
-NNG_DECL int nng_getopt(
-    nng_socket, const char *, void *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_bool(nng_socket, const char *, bool *) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_int(nng_socket, const char *, int *) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_ms(
-    nng_socket, const char *, nng_duration *) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_size(
-    nng_socket, const char *, size_t *) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_uint64(
-    nng_socket, const char *, uint64_t *) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **) NNG_DEPRECATED;
-NNG_DECL int nng_getopt_string(
-    nng_socket, const char *, char **) NNG_DEPRECATED;
-NNG_DECL int nng_setopt(
-    nng_socket, const char *, const void *, size_t) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_bool(nng_socket, const char *, bool) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_int(nng_socket, const char *, int) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_ms(
-    nng_socket, const char *, nng_duration) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_size(nng_socket, const char *, size_t) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_uint64(
-    nng_socket, const char *, uint64_t) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_string(
-    nng_socket, const char *, const char *) NNG_DEPRECATED;
-NNG_DECL int nng_setopt_ptr(nng_socket, const char *, void *) NNG_DEPRECATED;
-
-#endif // NNG_ELIDE_DEPRECATED
-
 // nng_init_parameter is used by applications to change a tunable setting.
 // This function must be called before any other NNG function for the setting
 // to have any effect.  This function is also not thread-safe!

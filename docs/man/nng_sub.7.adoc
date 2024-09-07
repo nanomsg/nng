@@ -66,10 +66,10 @@ The following protocol-specific options are available.
    discarded.
 +
 NOTE: This option is a byte array.  Thus if you use
-xref:nng_setopt.3.adoc[`nng_setopt_string()`] the `NUL` terminator byte will
+xref:nng_socket_set.3.adoc[`nng_socket_set_string()`] the `NUL` terminator byte will
 be included in the topic.
 If that isn't desired, consider using
-xref:nng_setopt.3.adoc[`nng_setopt()`] and using `strlen()` of the topic
+xref:nng_socket_set.3.adoc[`nng_socket_set()`] and using `strlen()` of the topic
 as the topic size.
 +
 TIP: To receive all messages, an empty topic (zero length) can be used.

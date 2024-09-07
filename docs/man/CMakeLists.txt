@@ -99,7 +99,6 @@ if (NNG_ENABLE_DOC)
             nng_dialer_set
             nng_dialer_start
             nng_free
-            nng_getopt
             nng_listen
             nng_listener_close
             nng_listener_create
@@ -152,7 +151,7 @@ if (NNG_ENABLE_DOC)
             nng_send
             nng_send_aio
             nng_sendmsg
-            nng_setopt
+            nng_set
             nng_sleep_aio
             nng_socket_id
             nng_socket_get
