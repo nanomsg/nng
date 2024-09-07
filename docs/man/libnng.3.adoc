@@ -46,11 +46,10 @@ The following functions operate on sockets.
 |===
 |xref:nng_close.3.adoc[nng_close()]|close socket
 |xref:nng_dial.3.adoc[nng_dial()]|create and start dialer
-|xref:nng_getopt.3.adoc[nng_getopt()]|get socket option
+|xref:nng_get.3.adoc[nng_get()]|get socket option
 |xref:nng_listen.3.adoc[nng_listen()]|create and start listener
 |xref:nng_recv.3.adoc[nng_recv()]|receive data
 |xref:nng_send.3.adoc[nng_send()]|send data
-|xref:nng_setopt.3.adoc[nng_setopt()]|set socket option
 |xref:nng_socket_get.3.adoc[nng_socket_get()]|get socket option
 |xref:nng_socket_id.3.adoc[nng_socket_id()]|get numeric socket identifier
 |xref:nng_socket_set.3.adoc[nng_socket_set()]|set socket option

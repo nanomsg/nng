@@ -112,11 +112,5 @@ when appropriate for the context:
 == SEE ALSO
 
 [.text-left]
-xref:nng_tcp_dialer_getopt.3tcp.adoc[nng_tcp_dialer_getopt(3tcp)],
-xref:nng_tcp_dialer_setopt.3tcp.adoc[nng_tcp_dialer_setopt(3tcp)],
-xref:nng_tcp_getopt.3tcp.adoc[nng_tcp_getopt(3tcp)],
-xref:nng_tcp_listener_getopt.3tcp.adoc[nng_tcp_listener_getopt(3tcp)],
-xref:nng_tcp_listener_setopt.3tcp.adoc[nng_tcp_listener_setopt(3tcp)],
-xref:nng_tcp_setopt.3tcp.adoc[nng_tcp_setopt(3tcp)],
 xref:nng_options.5.adoc[nng_options(5)]
 xref:nng.7.adoc[nng(7)]

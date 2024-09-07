@@ -37,3 +37,6 @@ Just convert any use of them to `NNG_OPT_WS_REQUST_HEADERS` or
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.
 Applications should use `nng_pipe_get` and related functions instead.
+
+The socket option function families for `nng_getopt` and `nng_setopt` have been removed as well.
+In this case, use the `nng_socket_get` and `nng_socket_set` functions as appropriate.
