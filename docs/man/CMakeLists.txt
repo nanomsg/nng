@@ -97,10 +97,8 @@ if (NNG_ENABLE_DOC)
             nng_dialer_close
             nng_dialer_create
             nng_dialer_get
-            nng_dialer_getopt
             nng_dialer_id
             nng_dialer_set
-            nng_dialer_setopt
             nng_dialer_start
             nng_free
             nng_getopt

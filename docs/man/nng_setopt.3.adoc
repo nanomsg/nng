@@ -119,7 +119,6 @@ These functions return 0 on success, and non-zero otherwise.
 
 [.text-left]
 xref:nng_getopt.3.adoc[nng_getopt(3)],
-xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt(3)],
 xref:nng_listener_setopt.3.adoc[nng_listener_setopt(3)],
 xref:nng_strerror.3.adoc[nng_strerror(3)],
 xref:nng_options.5.adoc[nng_options(5)],

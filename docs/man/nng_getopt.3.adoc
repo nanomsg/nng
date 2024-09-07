@@ -132,7 +132,6 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt(3)],
 xref:nng_listener_getopt.3.adoc[nng_listener_getopt(3)],
 xref:nng_setopt.3.adoc[nng_setopt(3)],
 xref:nng_strdup.3.adoc[nng_strdup(3)],
