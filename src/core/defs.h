@@ -122,6 +122,54 @@ typedef void (*nni_cb)(void *);
 	    (((uint64_t) ((uint8_t) (ptr)[6])) << 8u) +  \
 	    (((uint64_t) (uint8_t) (ptr)[7]))
 
+// Modern CPUs are all little endian.  Let's stop paying the endian tax.
+
+#define NNI_PUT16LE(ptr, u)                                    \
+	do {                                                   \
+		(ptr)[1] = (uint8_t) (((uint16_t) (u)) >> 8u); \
+		(ptr)[0] = (uint8_t) ((uint16_t) (u));         \
+	} while (0)
+
+#define NNI_PUT32LE(ptr, u)                                     \
+	do {                                                    \
+		(ptr)[3] = (uint8_t) (((uint32_t) (u)) >> 24u); \
+		(ptr)[2] = (uint8_t) (((uint32_t) (u)) >> 16u); \
+		(ptr)[1] = (uint8_t) (((uint32_t) (u)) >> 8u);  \
+		(ptr)[0] = (uint8_t) ((uint32_t) (u));          \
+	} while (0)
+
+#define NNI_PUT64LE(ptr, u)                                     \
+	do {                                                    \
+		(ptr)[7] = (uint8_t) (((uint64_t) (u)) >> 56u); \
+		(ptr)[6] = (uint8_t) (((uint64_t) (u)) >> 48u); \
+		(ptr)[5] = (uint8_t) (((uint64_t) (u)) >> 40u); \
+		(ptr)[4] = (uint8_t) (((uint64_t) (u)) >> 32u); \
+		(ptr)[3] = (uint8_t) (((uint64_t) (u)) >> 24u); \
+		(ptr)[2] = (uint8_t) (((uint64_t) (u)) >> 16u); \
+		(ptr)[1] = (uint8_t) (((uint64_t) (u)) >> 8u);  \
+		(ptr)[0] = (uint8_t) ((uint64_t) (u));          \
+	} while (0)
+
+#define NNI_GET16LE(ptr, v)                             \
+	v = (((uint16_t) ((uint8_t) (ptr)[1])) << 8u) + \
+	    (((uint16_t) (uint8_t) (ptr)[0]))
+
+#define NNI_GET32LE(ptr, v)                              \
+	v = (((uint32_t) ((uint8_t) (ptr)[3])) << 24u) + \
+	    (((uint32_t) ((uint8_t) (ptr)[2])) << 16u) + \
+	    (((uint32_t) ((uint8_t) (ptr)[1])) << 8u) +  \
+	    (((uint32_t) (uint8_t) (ptr)[0]))
+
+#define NNI_GET64LE(ptr, v)                              \
+	v = (((uint64_t) ((uint8_t) (ptr)[7])) << 56u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[6])) << 48u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[5])) << 40u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[4])) << 32u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[3])) << 24u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[2])) << 16u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[1])) << 8u) +  \
+	    (((uint64_t) (uint8_t) (ptr)[0]))
+
 // This increments a pointer a fixed number of byte cells.
 #define NNI_INCPTR(ptr, n) ((ptr) = (void *) ((char *) (ptr) + (n)))
 
@@ -178,5 +226,20 @@ typedef nni_type nni_opt_type;
 #define NNI_GCC_VERSION \
 	(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
+
+#if !defined(NNG_BIG_ENDIAN) && !defined(NNG_LITTLE_ENDIAN)
+#if defined(__BYTE_ORDER__)
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define NNG_BIG_ENDIAN 1
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define NNG_LITTLE_ENDIAN 1
+#else // middle-endian? (aka PDP-11)
+#error "Unsupported or unknown endian"
+#endif // __BYTE_ORDER__
+#else  // defined(__BYTE_ORDER__)
+#define NNG_LITTLE_ENDIAN 1
+#error "Unknown endian: specify -DNNG_BIG_ENDIAN=1 or -DNNG_LITTLE_ENDIAN=1"
+#endif // defined(__BYTE_ORDER)
+#endif // defined() endianness
 
 #endif // CORE_DEFS_H
