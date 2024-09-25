@@ -294,6 +294,9 @@ nni_url_default_port(const char *scheme)
 int
 nni_url_parse(nni_url **urlp, const char *raw)
 {
+	if(NULL == raw){
+		return(NNG_EINVAL);
+	}
 	nni_url *   url;
 	size_t      len;
 	const char *s;
