@@ -92,6 +92,7 @@ ipc_accept_start(ipc_listener *l)
 		if (l->closed) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
+			rv = NNG_ECLOSED;
 		} else if (ConnectNamedPipe(l->f, &l->io.olpd)) {
 			rv = 0;
 		} else if ((rv = GetLastError()) == ERROR_IO_PENDING) {
