@@ -47,7 +47,7 @@ Given a sufficiently large range, this is unlikely to be a concern.}}
 
 ### Initialization
 
-An initial table is allocated with `nng_id_map_alloc()`, which takes the lowest legal identifier in _lo_,
+An initial table is allocated with `nng_id_map_alloc`, which takes the lowest legal identifier in _lo_,
 and the largest legal identifier in _hi_.
 The new table is returned in _map_p_, and should be used as the _map_ argument to the rest of these functions.
 
@@ -63,22 +63,22 @@ This is useful to reduce the odds of different instances of an application using
 
 ### Accessors
 
-The `nng_id_get()` function returns the value previously stored with the given identifier.
+The `nng_id_get` function returns the value previously stored with the given identifier.
 If no value is currently associated with the identifer, it returns `NULL`.
 
-The `nng_id_set()` function sets the value with the associated identifier.
+The `nng_id_set` function sets the value with the associated identifier.
 This can be used to replace a previously allocated identifier.
 If the identifier was not previously allocated, then it is allocated as part of the call.
 This function does not necessarily honor the identifier range limits set for the map when it was allocated.
 
-The `nng_id_alloc()` function allocates a new identifier from the range for the map, and associates it with
+The `nng_id_alloc` function allocates a new identifier from the range for the map, and associates it with
 the supplied _value_.
 
-The `nng_id_remove()` function removes the identifier and its associated value from the table.
+The `nng_id_remove` function removes the identifier and its associated value from the table.
 
 ### Iteration
 
-The `nng_id_visit()` function is used to iterate over all items in the table.
+The `nng_id_visit` function is used to iterate over all items in the table.
 The caller starts the iteration by setting the _cursor_ to 0 before calling it.
 For each call, the associated key and value of the next item will be returned in _id_p_,
 and _value_p_ and the _cursor_ will be updated.
@@ -88,14 +88,14 @@ The caller must not attempt to derive any value of the _cursor_ as it refers to 
 
 ## RETURN VALUES
 
-The `nng_id_map_alloc()`, `nng_id_set()`, `nng_id_alloc()`, and `nng_id_remove()` functions
+The `nng_id_map_alloc`, `nng_id_set`, `nng_id_alloc`, and `nng_id_remove` functions
 return 0 on success, or -1 on failure.
 
-The `nng_id_map_get()` function returns the requested data pointer, or `NULL` if the identifier was not found.
+The `nng_id_map_get` function returns the requested data pointer, or `NULL` if the identifier was not found.
 
 ## ERRORS
 
 - `NNG_ENOENT`: The _id_ does not exist in the table.
 - `NNG_ENOMEM`: Insufficient memory is available, or the table is full.
 
-[mutex]: ../thr/mutex.md
+[mutex]: ../thr/nng_mtx.md
