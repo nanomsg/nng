@@ -182,7 +182,7 @@ These are located in the `demo` directory.
 ## Legacy Compatibility
 
 Migration from `libnanomsg` APIs is fairly straight-forward for most applications.
-A [migration guide](docs/migration/nanomsg.md) is available to assist.
+A [migration guide](docs/migrating/nanomsg) is available to assist.
 
 ## Commercial Support
 
