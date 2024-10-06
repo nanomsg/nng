@@ -1,16 +1,40 @@
-ifdef::env-github[]
-:note-caption: :information_source:
-:important-caption: :heavy_exclamation_mark:
-endif::[]
-
-= RELEASE NOTES FOR NNG v1.7.0
+# RELEASE NOTES FOR NNG v1.8.x
 
 This document has the following sections:
 
-* Notable Changes
-* End of Feature Announcements
+- Notable Changes
+- End of Feature Announcements
 
-== Notable Changes (since 1.6.0)
+## Notable Changes (since 1.8.0)
+
+Support is added for WolfSSL and TLS 1.3.
+
+Support is added for TLS PSK.
+
+An undocumented, but public, API for UDP is provided.
+
+Mimimum CMake version is 3.15.
+
+A new nng_id_visit API is provided.
+
+Significant bug fixes, especially race conditions around close/shutdown.
+
+## Notable Changes (since 1.7.0)
+
+A new option, `NNG_ENABVLE_COMPAT` is present to allow removing
+the compatibility layer from the build. (This defaults to `ON`.)
+Note that a future release will likely drop support for the compatibility
+layer altogether!
+
+CMake related improvements should reduce friction when building for TLS.
+
+New `NNG_ENABLE_IPV6` option to conditionally enable IPv6 support.
+It is off by default.
+
+A new logging framework, `nng_log_*` is provided to provide more debuggability,
+especially useful for TLS debugging.
+
+## Notable Changes (since 1.6.0)
 
 A new compile time setting, `NNG_MAX_POLLER_THREADS` is introduced,
 with a default value of 8, and will limit the number of threads
@@ -25,55 +49,55 @@ It also brings back support for 64-bit IDs.
 See bug #1740.
 
 Setting the `NNG_OPT_RECVMAXSZ` setting no longer affects pipes
-that are already established.  The old behavior was undocumented
-and racy.  Please set this setting before starting any listeners
+that are already established. The old behavior was undocumented
+and racy. Please set this setting before starting any listeners
 or dialers.
 
 A new transport (experimental), for `socket://` is available.
 This allows one to create a connection using sockets created
 with `socketpair()` (or the new `nng_socket_pair()` supplemental API),
 which can help use cases where file descriptors are passed between
-processes or inherited via `fork()`.  This API is only available on
-Linux.  It does have somewhat different semantics for establishing
+processes or inherited via `fork()`. This API is only available on
+Linux. It does have somewhat different semantics for establishing
 the connection, so please see the manual page for `nng_socket(5)` for more information.
 
 WebSocket close is fixed to conform to RFC 6455, sending the
 close frame, and waiting to receive the close frame from the
-peer.  This allows websocket based connections to ensure that
+peer. This allows websocket based connections to ensure that
 data messages are fully delivered before shutting down.
 See bugs #1733, #1734 and #1735.
 Thanks @alawn-wang for the inspiration and a first
 draft of the change.
 
 The REQ and SURVEYOR protocols were fixed to improve scalability
-when many clients or many contexts are used.  As part of this change,
+when many clients or many contexts are used. As part of this change,
 a new option, `NNG_OPT_REQ_RESENDTICK` is available to adjust how
 often we check for expired requests.
 
 A new ability to override compile-time settings for thread counts
-is available.  This facility is considered experimental, and is not
+is available. This facility is considered experimental, and is not
 documented in manual pages -- and is subject to change without notice.
-Please see nng_init_set_parameter() in the nng.h header file.  The
+Please see nng_init_set_parameter() in the nng.h header file. The
 values that can be tuned are listed there along with comments
-describing their use.  See bug #1572.
+describing their use. See bug #1572.
 
 As part of the fixes for #1572, tunable values for setting fixed
 values (rather upper limits) for thread counts are now exposed properly
 via CMake variables. These are `NNG_NUM_EXPIRE_THREADS` and `NNG_NUM_TASKQ_THREADS`.
 
 A new API, `nng_aio_set_expire()` is introduced as a complement to
-`nng_aio_set_timeout()`.  This provides absolute expiration times,
+`nng_aio_set_timeout()`. This provides absolute expiration times,
 which may be easier in circumstances involving multiple actions such
 as common state-machine based idioms.
 
 A bug which caused TLS connections to spin on accept, causing high
-CPU usage, is fixed.  (See bug #1673)
+CPU usage, is fixed. (See bug #1673)
 Various minor documentation fixes were made, some contributed by
 Patrik Wenger <patrik.wenger@mindclue.ch>.
 
-== End of Feature Announcements
+## End of Feature Announcements
 
-=== Windows Legacy Support
+### Windows Legacy Support
 
 As announced in 1.6.0,
 NNG no longer officially claims support for Windows Vista, Windows 7, Windows 8, or Windows 8.1.
@@ -81,35 +105,35 @@ We have no ability to build or test these versions, and Microsoft no longer supp
 Continued use of these systems may be possible, but future changes may break
 compatibility with these systems without further notice.
 
-=== Windows Named Pipe Support Changes
+### Windows Named Pipe Support Changes
 
 A future release of NNG may make the ipc:// URL format operate over UNIX domain sockets by default.
 We plan to do this for the other projects we control, such as mangos, as well.
 
 Should this occur, it will be breaking for Windows versions older than Windows 10 17063.
 
-=== macOS Legacy Support
+### macOS Legacy Support
 
 As announced in 1.6.0,
 NNG no longer officially supports macOS versions older than 10.12.
 Future versions of NNG may depend on features not available on versions of macOS older than 10.12.
 
-=== Documentation Restructuring
+### Documentation Restructuring
 
 A future release of NNG may restructure the documentation to make it more
-approachable for more users.  This would break the organization as UNIX manual
+approachable for more users. This would break the organization as UNIX manual
 pages, and would also drop the ability to format them as UNIX nroff source.
 The best way to view this documentation is on the NNG website, or with the PDF or printed manual.
 
-=== ZeroTier Incompatible Changes
+### ZeroTier Incompatible Changes
 
 A future release of NNG may break compatibility for applications built using earlier versions
-of NNG when using the ZeroTier transport.  ZeroTier support is an experimental feature.
+of NNG when using the ZeroTier transport. ZeroTier support is an experimental feature.
 
-=== Pair1 Polyamorous Mode
+### Pair1 Polyamorous Mode
 
-A future release of NNG may remove Pair 1 Polyamorous support, but *only* if a suitable
-replacement is provided.  Pair1 Polyamorous mode is an experimental feature.
+A future release of NNG may remove Pair 1 Polyamorous support, but _only_ if a suitable
+replacement is provided. Pair1 Polyamorous mode is an experimental feature.
 
 Alternatively we may change the Pair1 wire protocol in a way that breaks compatibility with
 earlier versions of Pair1 Polyamorous mode.
