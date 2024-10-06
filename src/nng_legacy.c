@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -392,12 +392,6 @@ int
 nng_listener_setopt_string(nng_listener id, const char *n, const char *v)
 {
 	return (nng_listener_set_string(id, n, v));
-}
-
-void
-nng_closeall(void)
-{
-	nni_sock_closeall();
 }
 
 #endif // NNG_ELIDE_DEPRECATED
