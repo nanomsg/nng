@@ -19,6 +19,10 @@ image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Lat
 
 Please see <<UKRAINE#,here>> for an important message for the people of Russia.
 
+NOTE: THIS IS THE DEVELOPMENT BRANCH FOR NNG.  The content here is
+under development and may not be stable.  Please use the `stable` branch
+for the latest stable release.
+
 NOTE: If you are looking for the legacy version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg[nanomsg] repository.
 
