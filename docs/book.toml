@@ -1,0 +1,17 @@
+[book]
+authors = ["Garrett D'Amore"]
+language = "en"
+multilingual = false
+src = "ref"
+title = "NNG Reference Manual (DRAFT)"
+
+[output.html]
+smart-punctuation = true
+fold.enable = true
+fold.level = 1
+
+[preprocessor.alerts]
+
+[preprocessor.indexing]
+
+[preprocessor.footnote]
