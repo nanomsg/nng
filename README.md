@@ -18,6 +18,10 @@ Please see [here](UKRAINE.md) for an important message for the people of Russia.
 > under development and may not be suitable for production use.
 > Please use the [`stable`](https://github.com/nanomsg/nng/tree/stable) branch
 > for the latest stable release.
+>
+> As a major release, there are some breaking API changes,
+> but a [migration guide](docs/migrating/nng1.md) is
+> available to help with migrating from NNG 1.x.
 
 > [!NOTE]
 > If you are looking for the legacy version of nanomsg, please
