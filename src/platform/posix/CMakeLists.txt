@@ -26,6 +26,7 @@ if (NNG_PLATFORM_POSIX)
 
     nng_check_func(lockf NNG_HAVE_LOCKF)
     nng_check_func(flock NNG_HAVE_FLOCK)
+    nng_check_func(getentropy NNG_HAVE_GETENTROPY)
     nng_check_func(getrandom NNG_HAVE_GETRANDOM)
     nng_check_func(arc4random_buf NNG_HAVE_ARC4RANDOM)
 
@@ -69,6 +70,7 @@ if (NNG_PLATFORM_POSIX)
     nng_check_sym(socketpair sys/socket.h NNG_HAVE_SOCKETPAIR)
     nng_check_sym(AF_INET6 netinet/in.h NNG_HAVE_INET6)
     nng_check_sym(timespec_get time.h NNG_HAVE_TIMESPEC_GET)
+    nng_check_sym(getentropy sys/random.h NNG_HAVE_SYS_RANDOM)
 
     nng_sources(
             posix_impl.h
@@ -111,6 +113,8 @@ if (NNG_PLATFORM_POSIX)
 
     if (NNG_HAVE_ARC4RANDOM)
         nng_sources(posix_rand_arc4random.c)
+    elseif (NNG_HAVE_GETENTROPY)
+        nng_sources(posix_rand_getentropy.c)
     elseif (NNG_HAVE_GETRANDOM)
         nng_sources(posix_rand_getrandom.c)
     else ()
