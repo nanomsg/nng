@@ -29,6 +29,7 @@ struct nng_msg {
 	nni_chunk      m_body;
 	uint32_t       m_pipe; // set on receive
 	nni_atomic_int m_refcnt;
+	nng_sockaddr   m_addr; // set on receive, transport use
 };
 
 #if 0
@@ -655,4 +656,16 @@ uint32_t
 nni_msg_get_pipe(const nni_msg *m)
 {
 	return (m->m_pipe);
+}
+
+const nng_sockaddr *
+nni_msg_address(const nni_msg *msg)
+{
+	return (&msg->m_addr);
+}
+
+void
+nni_msg_set_address(nng_msg *msg, const nng_sockaddr *addr)
+{
+	msg->m_addr = *addr;
 }
