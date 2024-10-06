@@ -181,9 +181,8 @@ These are located in the `demo` directory.
 
 ## Legacy Compatibility
 
-A legacy `libnanomsg` compatible API is available, and while it offers
-less capability than the modern NNG API, it may serve as a transition aid.
-Please see [_nng_compat_(3)](docs/man/nng_compat.3compat.adoc) for details.
+Migration from `libnanomsg` APIs is fairly straight-forward for most applications.
+A [migration guide](docs/migration/nanomsg.md) is available to assist.
 
 ## Commercial Support
 
