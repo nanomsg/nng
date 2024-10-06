@@ -10,7 +10,7 @@
 [![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/dev2.0/LICENSE.txt)
 [![Latest Version](https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=)](https://github.com/nanomsg/nng/releases)
 
-Please see [here](UKRAINE) for an important message for the people of Russia.
+Please see [here](UKRAINE.md) for an important message for the people of Russia.
 
 > [!NOTE]
 > This is the development branch for NNG.
@@ -182,7 +182,7 @@ These are located in the `demo` directory.
 ## Legacy Compatibility
 
 Migration from `libnanomsg` APIs is fairly straight-forward for most applications.
-A [migration guide](docs/migrating/nanomsg) is available to assist.
+A [migration guide](docs/migrating/nanomsg.md) is available to assist.
 
 ## Commercial Support
 
