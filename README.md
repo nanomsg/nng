@@ -12,7 +12,8 @@
 
 Please see [here](UKRAINE) for an important message for the people of Russia.
 
-> [!NOTE] > _THIS IS THE DEVELOPMENT BRANCH FOR NNG._ The content here is
+> [!NOTE] _THIS IS THE DEVELOPMENT BRANCH FOR NNG._
+> The content here is
 > under development and may not be suitable for production use.
 > Please use the [`stable`](https://github.com/nanomsg/nng/tree/stable) branch
 > for the latest stable release.
