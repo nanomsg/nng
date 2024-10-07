@@ -74,10 +74,10 @@ This can be used to replace a previously allocated identifier.
 If the identifier was not previously allocated, then it is allocated as part of the call.
 This function does not necessarily honor the identifier range limits set for the map when it was allocated.
 
-The {{:`nng_id_alloc`}} function allocates a new identifier from the range for the map, and associates it with
+The {{i:`nng_id_alloc`}} function allocates a new identifier from the range for the map, and associates it with
 the supplied _value_.
 
-The {{:`nng_id_remove`}} function removes the identifier and its associated value from the table.
+The {{i:`nng_id_remove`}} function removes the identifier and its associated value from the table.
 
 ### Iteration
 
