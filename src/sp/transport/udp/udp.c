@@ -9,6 +9,7 @@
 #include "core/aio.h"
 #include "core/defs.h"
 #include "core/idhash.h"
+#include "core/message.h"
 #include "core/nng_impl.h"
 #include "core/options.h"
 #include "core/platform.h"
@@ -319,6 +320,7 @@ udp_pipe_destroy(udp_pipe *p)
 		nni_lmq_get(&p->rx_mq, &m);
 		nni_msg_free(m);
 	}
+	nni_lmq_fini(&p->rx_mq);
 	NNI_ASSERT(nni_list_empty(&p->rx_aios));
 
 	NNI_FREE_STRUCT(p);
@@ -1119,6 +1121,12 @@ udp_ep_rele(udp_ep *ep)
 	nni_aio_fini(&ep->resaio);
 	nni_aio_fini(&ep->tx_aio);
 	nni_aio_fini(&ep->rx_aio);
+
+	for (int i = 0; i < ep->tx_ring.size; i++) {
+		nni_msg_free(ep->tx_ring.descs[i].payload);
+		ep->tx_ring.descs[i].payload = NULL;
+	}
+	nni_msg_free(ep->rx_payload); // safe even if msg is null
 	nni_id_map_fini(&ep->pipes);
 	NNI_FREE_STRUCTS(ep->tx_ring.descs, ep->tx_ring.size);
 	NNI_FREE_STRUCT(ep);
@@ -1276,7 +1284,7 @@ udp_ep_init(udp_ep **epp, nng_url *url, nni_sock *sock)
 		ep->af = NNG_AF_INET;
 	} else if (strcmp(url->u_scheme, "udp6") == 0) {
 		ep->af = NNG_AF_INET6;
-        } else {
+	} else {
 		NNI_FREE_STRUCT(ep);
 		return (NNG_EADDRINVAL);
 	}
@@ -1370,22 +1378,21 @@ udp_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 static int
 udp_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 {
-	udp_ep   *ep;
-	int       rv;
-	nni_sock *sock = nni_listener_sock(nlistener);
+	udp_ep      *ep;
+	int          rv;
+	nni_sock    *sock = nni_listener_sock(nlistener);
+	nng_sockaddr sa;
 
 	// Check for invalid URL components.
-	if ((rv = udp_check_url(url, true)) != 0) {
+	if (((rv = udp_check_url(url, true)) != 0) ||
+	    ((rv = nni_url_to_address(&sa, url)) != 0)) {
 		return (rv);
 	}
 
 	if ((rv = udp_ep_init(&ep, url, sock)) != 0) {
 		return (rv);
 	}
-
-	if ((rv = nni_url_to_address(&ep->self_sa, url)) != 0) {
-		return (rv);
-	}
+	ep->self_sa = sa;
 
 #ifdef NNG_ENABLE_STATS
 	nni_listener_add_stat(nlistener, &ep->st_rcv_max);
