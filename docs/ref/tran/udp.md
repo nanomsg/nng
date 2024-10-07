@@ -28,9 +28,9 @@ Other link layers may have different MTUs.
 
 This transport uses URIs using the scheme {{i:`udp://`}}, followed by
 an IP address or hostname, followed by a colon and finally a
-TCP {{i:port number}}.
-For example, to contact port 80 on the localhost either of the following URIs
-could be used: `udp://127.0.0.1:80` or `udp://localhost:80`.
+UDP {{i:port number}}.
+For example, to contact port 8001 on the localhost either of the following URIs
+could be used: `udp://127.0.0.1:8001` or `udp://localhost:8001`.
 
 A URI may be restricted to IPv6 using the scheme `udp6://`, and may
 be restricted to IPv4 using the scheme `udp4://`.
@@ -49,8 +49,8 @@ When specifying IPv6 addresses, the address must be enclosed in
 square brackets (`[]`) to avoid confusion with the final colon
 separating the port.
 
-For example, the same port 80 on the IPv6 loopback address (`::1`) would
-be specified as `udp://[::1]:80`.
+For example, the same port 8001 on the IPv6 loopback address (`::1`) would
+be specified as `udp://[::1]:8001`.
 
 The special value of 0 ({{i:`INADDR_ANY`}})
 can be used for a listener to indicate that it should listen on all
