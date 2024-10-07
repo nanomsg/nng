@@ -279,7 +279,7 @@ network applications with _NNG_, but they are made available
 as a convenience to aid in creating portable applications.
 
 |===
-|xref:nng_clock.3supp.adoc[nng_clock()]|get time
+// |xref:nng_clock.3supp.adoc[nng_clock()]|get time
 |xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc()]|allocate condition variable
 |xref:nng_cv_free.3supp.adoc[nng_cv_free()]|free condition variable
 |xref:nng_cv_until.3supp.adoc[nng_cv_until()]|wait for condition or timeout
@@ -287,7 +287,7 @@ as a convenience to aid in creating portable applications.
 |xref:nng_cv_wake.3supp.adoc[nng_cv_wake()]|wake all waiters
 |xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1()]|wake one waiter
 // |xref:nng_id_map.3supp.adoc[nng_id_map]|identifier based mapping table
-|xref:nng_msleep.3supp.adoc[nng_msleep()]|sleep for milliseconds
+// |xref:nng_msleep.3supp.adoc[nng_msleep()]|sleep for milliseconds
 // |xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc()]|allocate mutex
 // |xref:nng_mtx_free.3supp.adoc[nng_mtx_free()]|free mutex
 // |xref:nng_mtx_lock.3supp.adoc[nng_mtx_lock()]|lock mutex

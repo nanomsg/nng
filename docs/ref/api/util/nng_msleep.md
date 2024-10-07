@@ -16,7 +16,7 @@ void nng_msleep(nng_duration msec);
 
 ## DESCRIPTION
 
-The `nng_msleep()` blocks the caller for at least _msec_ milliseconds.
+The `nng_msleep` blocks the caller for at least _msec_ milliseconds.
 
 > [!NOTE]
 > This function may block for longer than requested.
