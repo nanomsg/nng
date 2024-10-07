@@ -24,7 +24,7 @@ jobs:
         run: cd build && ctest --output-on-failure
 
       - name: Upload report
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           yml: ./.codecov.yml
