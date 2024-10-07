@@ -11,8 +11,10 @@
 #ifndef CORE_DEFS_H
 #define CORE_DEFS_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+
+#include <nng/nng.h>
 
 // C compilers may get unhappy when named arguments are not used.  While
 // there are things like __attribute__((unused)) which are arguably
@@ -24,7 +26,7 @@
 	if (!(x))     \
 	nni_panic("%s: %d: assert err: %s", __FILE__, __LINE__, #x)
 #else
-#define NNI_ASSERT(x) ((void)(0))
+#define NNI_ASSERT(x) ((void) (0))
 #endif
 
 // Returns the size of an array in elements. (Convenience.)

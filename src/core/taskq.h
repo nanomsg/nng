@@ -13,6 +13,7 @@
 
 #include "core/defs.h"
 #include "core/list.h"
+#include "core/platform.h"
 
 typedef struct nni_taskq nni_taskq;
 typedef struct nni_task  nni_task;
@@ -51,7 +52,7 @@ extern bool nni_task_busy(nni_task *);
 // work is scheduled on the task then it will not return until that
 // work (or any other work subsequently scheduled) is complete.
 extern void nni_task_wait(nni_task *);
-extern void  nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
+extern void nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 
 // nni_task_fini destroys the task.  It will reap resources asynchronously
 // if the task is currently executing.  Use nni_task_wait() first if the
@@ -67,9 +68,9 @@ extern void nni_taskq_sys_fini(void);
 // consuming structures.
 struct nni_task {
 	nni_list_node task_node;
-	void *        task_arg;
+	void         *task_arg;
 	nni_cb        task_cb;
-	nni_taskq *   task_tq;
+	nni_taskq    *task_tq;
 	unsigned      task_busy;
 	bool          task_prep;
 	nni_mtx       task_mtx;
