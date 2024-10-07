@@ -1,25 +1,17 @@
 # UDP Transport (Experimental)
 
+## Description
+
 The {{i:_udp_ transport}} supports communication between peers using {{i:UDP}}.
 
 UDP is a very light-weight connection-less, unreliable, unordered delivery mechanism.
 
 Both IPv4 and {{i:IPv6}} are supported when the underlying platform also supports it.
 
-## Maximum Message Size
-
-This transport maps each SP message to a single UDP packet.
-In order to allow room for network headers, we thus limit the maximum
-message size to 65000 bytes, minus the overhead for any SP protocol headers.
-
-However, applications are _strongly_ encouraged to only use this transport for
-very much smaller messages, ideally those that will fit within a single network
-packet without requiring fragmentation and reassembly.
-
-For Ethernet without jumbo frames, this typically means an {{i:MTU}} of a little
-less than 1500 bytes. (Specifically, 1452, which allows 28 bytes for IP and UDP,
-and 20 bytes for the this transport).
-Other link layers may have different MTUs.
+This transport adds an ordering guarantee, so that messages will always be received in
+the correct order. Messages that arrive out of order, or are duplicated, will be
+dropped. There may be gaps in the messages received, so applications should not assume
+that all messages sent will arrive.
 
 > [!NOTE]
 > This transport is _experimental_.
@@ -80,7 +72,37 @@ where supported by the underlying platform.
 - [`NNG_OPT_REMADDR`][NNG_OPT_REMADDR]
 - [`NNG_OPT_URL`][NNG_OPT_URL]
 
-TOOD: Document other options.
+TODO: Document other options.
+
+## Maximum Message Size
+
+This transport maps each SP message to a single UDP packet.
+In order to allow room for network headers, we thus limit the maximum
+message size to 65000 bytes, minus the overhead for any SP protocol headers.
+
+However, applications are _strongly_ encouraged to only use this transport for
+very much smaller messages, ideally those that will fit within a single network
+packet without requiring fragmentation and reassembly.
+
+For Ethernet without jumbo frames, this typically means an {{i:MTU}} of a little
+less than 1500 bytes. (Specifically, 1452, which allows 28 bytes for IP and UDP,
+and 20 bytes for the this transport).
+Other link layers may have different MTUs.
+
+The maximum message size is negotiated as part of establishing a peering relationship,
+and oversize messages will be dropped by the sender before going to the network.
+
+The maximum message size to receive can be configured with the
+[`NNG_OPT_RECVMAXSZ`][NNG_OPT_RECVMAXSZ] option.
+
+## Keep Alive
+
+This transports maintains a logical "connection" with each peer, to provide a rough
+facsimile of a connection based semantic. This requires some resource on each peer.
+In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
+keep-alive mechanism is implemented.
+
+TODO: Document the tunables for this.
 
 [nng_sockaddr]: [TODO.md]
 [nng_sockaddr_in]: [TODO.md]
@@ -88,3 +110,4 @@ TOOD: Document other options.
 [NNG_OPT_LOCADDR]: [TODO.md]
 [NNG_OPT_REMADDR]: [TODO.md]
 [NNG_OPT_URL]: [TODO.md]
+[NNG_OPT_RECVMAXSZ]: [TODO.md]
