@@ -14,10 +14,10 @@ const char *nng_strerror(int err);
 
 ## DESCRIPTION
 
-The `nng_strerror` returns the human-readable description of the
+The {{i:`nng_strerror`}} returns the human-readable description of the
 given error in `err`.
 
-The returned error message is provided in US English, but in the
+The returned {{i:error message}} is provided in US English, but in the
 future locale-specific strings may be presented instead.
 
 > [!NOTE]
