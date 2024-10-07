@@ -63,6 +63,9 @@ extern void nni_sp_tcp_register(void);
 #ifdef NNG_TRANSPORT_TLS
 extern void nni_sp_tls_register(void);
 #endif
+#ifdef NNG_TRANSPORT_UDP
+extern void nni_sp_udp_register(void);
+#endif
 #ifdef NNG_TRANSPORT_WS
 extern void nni_sp_ws_register(void);
 #endif
@@ -90,6 +93,9 @@ nni_sp_tran_sys_init(void)
 #endif
 #ifdef NNG_TRANSPORT_TLS
 	nni_sp_tls_register();
+#endif
+#ifdef NNG_TRANSPORT_UDP
+	nni_sp_udp_register();
 #endif
 #ifdef NNG_TRANSPORT_WS
 	nni_sp_ws_register();
