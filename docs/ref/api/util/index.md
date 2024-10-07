@@ -5,6 +5,7 @@ with application portability. These are not fundamental to NNG
 or Scalability Protocols, but we find them useful for a variety
 of other uses.
 
+- [nng_alloc](nng_alloc.md)
 - [nng_clock](nng_clock.md)
 - [nng_id_map](nng_id_map.md)
 - [nng_msleep](nng_msleep.md)

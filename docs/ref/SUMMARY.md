@@ -8,6 +8,7 @@
 
   - [Utility Functions](./api/util/index.md)
 
+    - [nng_alloc](./api/util/nng_alloc.md)
     - [nng_clock](./api/util/nng_clock.md)
     - [nng_id_map](./api/util/nng_id_map.md)
     - [nng_msleep](./api/util/nng_msleep.md)
