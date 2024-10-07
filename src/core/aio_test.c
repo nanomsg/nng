@@ -101,7 +101,7 @@ test_provider_cancel(void)
 void
 test_consumer_cancel(void)
 {
-	nng_aio *  a;
+	nng_aio   *a;
 	nng_socket s1;
 	int        done = 0;
 
@@ -124,12 +124,12 @@ test_traffic(void)
 {
 	nng_socket s1;
 	nng_socket s2;
-	nng_aio *  tx_aio;
-	nng_aio *  rx_aio;
+	nng_aio   *tx_aio;
+	nng_aio   *rx_aio;
 	int        tx_done = 0;
 	int        rx_done = 0;
-	nng_msg *  m;
-	char *     addr = "inproc://traffic";
+	nng_msg   *m;
+	char      *addr = "inproc://traffic";
 
 	NUTS_PASS(nng_pair1_open(&s1));
 	NUTS_PASS(nng_pair1_open(&s2));
@@ -176,7 +176,7 @@ void
 test_explicit_timeout(void)
 {
 	nng_socket s;
-	nng_aio *  a;
+	nng_aio   *a;
 	int        done = 0;
 
 	NUTS_PASS(nng_pair1_open(&s));
@@ -194,9 +194,9 @@ void
 test_explicit_expiration(void)
 {
 	nng_socket s;
-	nng_aio *  a;
+	nng_aio   *a;
 	int        done = 0;
-	nng_time now;
+	nng_time   now;
 
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
@@ -215,7 +215,7 @@ void
 test_inherited_timeout(void)
 {
 	nng_socket s;
-	nng_aio *  a;
+	nng_aio   *a;
 	int        done = 0;
 
 	NUTS_PASS(nng_pair1_open(&s));
@@ -233,7 +233,7 @@ void
 test_zero_timeout(void)
 {
 	nng_socket s;
-	nng_aio *  a;
+	nng_aio   *a;
 	int        done = 0;
 
 	NUTS_PASS(nng_pair1_open(&s));
@@ -264,14 +264,14 @@ test_aio_reap(void)
 }
 
 typedef struct sleep_loop {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	int          limit;
 	int          count;
 	int          result;
 	bool         done;
 	nng_duration interval;
-	nng_cv *     cv;
-	nng_mtx *    mx;
+	nng_cv      *cv;
+	nng_mtx     *mx;
 } sleep_loop;
 
 static void
@@ -363,7 +363,7 @@ test_sleep_cancel(void)
 	NUTS_PASS(nng_cv_alloc(&sl.cv, sl.mx));
 
 	start = nng_clock();
-	nng_sleep_aio(100, sl.aio);
+	nng_sleep_aio(500, sl.aio);
 	nng_msleep(150);
 	nng_aio_cancel(sl.aio);
 	nng_mtx_lock(sl.mx);
@@ -386,7 +386,7 @@ test_sleep_cancel(void)
 }
 
 void
-    test_aio_busy(void)
+test_aio_busy(void)
 {
 	nng_aio *aio;
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
