@@ -26,18 +26,21 @@ intended to solve common communication problems in distributed applications.
 
 It provides a C language API.
 
+<!--
 === Common Functions
 
 The following common functions exist in _libnng_.
 
 |===
-//|xref:nng_alloc.3.adoc[nng_alloc()]|allocate memory
-//|xref:nng_free.3.adoc[nng_free()]|free memory
-|xref:nng_strdup.3.adoc[nng_strdup()]|duplicate string
-//|xref:nng_strerror.3.adoc[nng_strerror()]|return an error description
-|xref:nng_strfree.3.adoc[nng_strfree()]|free string
+// |xref:nng_alloc.3.adoc[nng_alloc()]|allocate memory
+// |xref:nng_free.3.adoc[nng_free()]|free memory
+// |xref:nng_strdup.3.adoc[nng_strdup()]|duplicate string
+// |xref:nng_strerror.3.adoc[nng_strerror()]|return an error description
+// |xref:nng_strfree.3.adoc[nng_strfree()]|free string
 // |xref:nng_version.3.adoc[nng_version()]|report library version
 |===
+
+-->
 
 === Socket Functions
 
