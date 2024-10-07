@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng_id_map - identifier based mapping table
+nng_id_map --- identifier based mapping table
 
 ## SYNOPSIS
 

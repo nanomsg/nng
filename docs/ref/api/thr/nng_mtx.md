@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng_mutex - mutual exclusion lock
+nng_mutex --- mutual exclusion lock
 
 ## SYNOPSIS
 

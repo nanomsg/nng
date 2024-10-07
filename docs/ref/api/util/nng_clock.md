@@ -2,7 +2,7 @@
 
 ## NAME
 
-nng_clock - get time
+nng_clock --- get time
 
 ## SYNOPSIS
 
