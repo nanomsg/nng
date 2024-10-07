@@ -1,38 +1,37 @@
 name: coverage
 on: [push]
 jobs:
-
   linux-coverage:
     name: linux
-    runs-on: [ ubuntu-latest ]
+    runs-on: [ubuntu-latest]
     steps:
-    - name: Check out code
-      uses: actions/checkout@v1
+      - name: Check out code
+        uses: actions/checkout@v4
 
-    - name: Install mbedTLS
-      run: sudo apt-get install libmbedtls-dev
+      - name: Install mbedTLS
+        run: sudo apt-get install libmbedtls-dev
 
-    - name: Install ninja
-      run: sudo apt-get install ninja-build
+      - name: Install ninja
+        run: sudo apt-get install ninja-build
 
-    - name: Configure
-      run:  mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
+      - name: Configure
+        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
 
-    - name: build
-      run: cd build && ninja
+      - name: build
+        run: cd build && ninja
 
-    - name: Test
-      run: cd build && ctest --output-on-failure
+      - name: Test
+        run: cd build && ctest --output-on-failure
 
-    - name: Upload report
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        yml: ./.codecov.yml
+      - name: Upload report
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          yml: ./.codecov.yml
 
   darwin-coverage:
     name: darwin
-    runs-on: [ macos-latest ]
+    runs-on: [macos-latest]
     steps:
       - name: Check out code
         uses: actions/checkout@v1
@@ -47,7 +46,7 @@ jobs:
         run: brew install lcov
 
       - name: Configure
-        run:  mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
+        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
 
       - name: build
         run: cd build && ninja

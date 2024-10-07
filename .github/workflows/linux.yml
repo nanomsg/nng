@@ -1,25 +1,24 @@
 name: linux
 on: [push, pull_request]
 jobs:
-
   build:
     name: build
-    runs-on: [ ubuntu-latest ]
+    runs-on: [ubuntu-latest]
     steps:
-    - name: Check out code
-      uses: actions/checkout@v1
+      - name: Check out code
+        uses: actions/checkout@v4
 
-    - name: Install mbedTLS
-      run: sudo apt-get install libmbedtls-dev
+      - name: Install mbedTLS
+        run: sudo apt-get install libmbedtls-dev
 
-    - name: Install ninja
-      run: sudo apt-get install ninja-build
+      - name: Install ninja
+        run: sudo apt-get install ninja-build
 
-    - name: Configure
-      run: mkdir build && cd build && cmake -G Ninja -D NNG_ENABLE_TLS=ON ..
+      - name: Configure
+        run: mkdir build && cd build && cmake -G Ninja -D NNG_ENABLE_TLS=ON ..
 
-    - name: Build
-      run: cd build && ninja
+      - name: Build
+        run: cd build && ninja
 
-    - name: Test
-      run: cd build && ctest --output-on-failure
+      - name: Test
+        run: cd build && ctest --output-on-failure
