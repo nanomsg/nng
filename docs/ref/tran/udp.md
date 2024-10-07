@@ -6,7 +6,7 @@ The {{i:_udp_ transport}} supports communication between peers using {{i:UDP}}.
 
 UDP is a very light-weight connection-less, unreliable, unordered delivery mechanism.
 
-Both IPv4 and {{i:IPv6}} are supported when the underlying platform also supports it.
+Both {{i:IPv4}} and {{i:IPv6}} are supported when the underlying platform also supports it.
 
 This transport adds an ordering guarantee, so that messages will always be received in
 the correct order. Messages that arrive out of order, or are duplicated, will be

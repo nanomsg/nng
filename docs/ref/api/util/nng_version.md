@@ -14,7 +14,7 @@ const char * nng_version(void);
 
 ## DESCRIPTION
 
-The `nng_version` function returns a human readable {{i:version number}}
+The {{i:`nng_version`}} function returns a human readable {{i:version number}}
 for _NNG_.
 
 Additionally, compile time version information is available

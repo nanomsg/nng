@@ -16,7 +16,7 @@ void nng_msleep(nng_duration msec);
 
 ## DESCRIPTION
 
-The `nng_msleep` blocks the caller for at least _msec_ milliseconds.
+The {{i:`nng_msleep`}}{{hi:sleep}} blocks the caller for at least _msec_ milliseconds.
 
 > [!NOTE]
 > This function may block for longer than requested.

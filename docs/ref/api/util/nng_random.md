@@ -14,7 +14,7 @@ uint32_t nng_random(void);
 
 ## DESCRIPTION
 
-The `nng_random` returns a random number.
+The {{i:`nng_random`}} returns a {{i:random number}}.
 The value returned is suitable for use with cryptographic functions such as
 key generation.
 The value is obtained using platform-specific cryptographically strong random

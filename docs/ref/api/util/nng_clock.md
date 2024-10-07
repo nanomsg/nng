@@ -16,10 +16,9 @@ nng_time nng_clock(void);
 
 ## DESCRIPTION
 
-The `nng_clock` function returns the number of elapsed milliseconds since some
-arbitrary time in the past.
-The resolution of the clock depends on the underlying timing facilities
-of the system.
+The {{i:`nng_clock`}}{{hi:clock}} function returns the number of elapsed
+milliseconds since some arbitrary time in the past.
+The resolution of the clock depends on the underlying timing facilities of the system.
 This function may be used for timing, but applications should not expect
 very fine-grained values.
 

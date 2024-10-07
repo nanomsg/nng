@@ -19,21 +19,21 @@ void nng_mtx_unlock(nng_mtx *mtx);
 
 ## DESCRIPTION
 
-The {{i:`nng_mutex`}}{{hi:mutex}} structure provides a {{i:mutual-exclusion}} {{i:lock}}, such
+The {{i:`nng_mtx`}}{{hi:mutex}} structure provides a {{i:mutual-exclusion}} {{i:lock}}, such
 that only one thread at a time can have the lock (taken using `nng_mtx_lock`).
 This is critical for solving certain problems that arise in concurrent programming.
 
 ### Initialization and Teardown
 
-The `nng_mtx` structure is created dynamically, by the application using `nng_mtx_alloc`.
+The `nng_mtx` structure is created dynamically, by the application using {{i:`nng_mtx_alloc`}}.
 This function will store a pointer to the allocate mutex at the location signified by _mtxp_.
 
 When the application has no further need of the mutex, it can deallocate the resources
-associated using the `nng_mtx_free` function.
+associated using the {{i:`nng_mtx_free`}} function.
 
 ### Locking and Unlocking
 
-The `nng_mtx` lock can be acquired by a calling thread using the `nng_mtx_lock` function.
+The `nng_mtx` lock can be acquired by a calling thread using the {{i:`nng_mtx_lock`}} function.
 
 The caller will block until the lock is acquired.
 If multiple threads are contending for ownership of the lock, the order of
@@ -45,7 +45,7 @@ acquisition is not specified, and applications must not depend on it.
 > It is a programming error for the owner of a mutex to attempt to
 > reacquire it.
 
-The lock can be released by the thread that has ownership using the `nng_mtx_unlock` function.
+The lock can be released by the thread that has ownership using the {{i:`nng_mtx_unlock`}} function.
 
 > [!NOTE]
 > A mutex can _only_ be unlocked by the thread that locked it.
