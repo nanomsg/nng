@@ -1485,8 +1485,8 @@ dialer_timer_start_locked(nni_dialer *d)
 	// This algorithm may lead to slight biases because we don't
 	// have a statistically perfect distribution with the modulo of
 	// the random number, but this really doesn't matter.
-	nni_sleep_aio(
-	    back_off ? (int) nni_random() % back_off : 0, &d->d_tmo_aio);
+	nni_sleep_aio(back_off ? (nng_duration) (nni_random() % back_off) : 0,
+	    &d->d_tmo_aio);
 }
 
 void
