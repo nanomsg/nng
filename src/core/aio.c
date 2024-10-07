@@ -755,12 +755,13 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 	default:
 		// If the timeout on the aio is shorter than our sleep time,
 		// then let it still wake up early, but with NNG_ETIMEDOUT.
-		if (ms > aio->a_timeout) {
+		if ((ms == NNG_DURATION_INFINITE) || (ms > aio->a_timeout)) {
 			aio->a_expire_ok = false;
 			ms               = aio->a_timeout;
 		}
 	}
-	aio->a_expire = nni_clock() + ms;
+	aio->a_expire =
+	    ms == NNG_DURATION_INFINITE ? NNI_TIME_NEVER : nni_clock() + ms;
 
 	if ((rv = nni_aio_schedule(aio, nni_sleep_cancel, NULL)) != 0) {
 		nni_aio_finish_error(aio, rv);
