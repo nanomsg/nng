@@ -10,4 +10,5 @@ of other uses.
 - [nng_id_map](nng_id_map.md)
 - [nng_msleep](nng_msleep.md)
 - [nng_random](nng_random.md)
+- [nng_strerror](nng_strerror.md)
 - [nng_version](nng_version.md)
