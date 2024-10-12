@@ -4,6 +4,7 @@
 
   - [Threading Functions](./api/thr/index.md)
 
+    - [nng_cv](./api/thr/nng_cv.md)
     - [nng_mtx](./api/thr/nng_mtx.md)
 
   - [Utility Functions](./api/util/index.md)
