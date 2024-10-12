@@ -9,6 +9,7 @@ of other uses.
 - [nng_clock](nng_clock.md) --- get time
 - [nng_id_map](nng_id_map.md) --- identifier based mapping table
 - [nng_msleep](nng_msleep.md) --- sleep milliseconds
+- [nng_opts_parse](nng_opts_parse.md) --- parse command line options
 - [nng_random](nng_random.md) --- get random number
 - [nng_socket_pair](nng_socket_pair.md) --- create a connected pair of BSD sockets
 - [nng_strdup](nng_strdup.md) --- duplicate string
