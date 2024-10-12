@@ -5,6 +5,7 @@
   - [Messages](./api/msg/index.md)
 
     - [nng_msg](./api/msg/nng_msg.md)
+    - [nng_msg_body](./api/msg/nng_msg_body.md)
 
   - [Threading and Synchronization](./api/thr/index.md)
 

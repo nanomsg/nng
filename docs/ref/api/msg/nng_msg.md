@@ -87,7 +87,7 @@ by making use of scratch areas at the beginning and end of the message.
 These scratch areas, the "{{i:headroom}}" and "{{i:tailroom}}", are automatically
 included when allocating a message.
 
-Using `nng_msg_reserve` to ensure that adequate buffer space is availabe
+Using `nng_msg_reserve` to ensure that adequate buffer space is available
 in advance can reduce repeated allocations and data copies when modifying messages.
 
 ## RETURN VALUES
