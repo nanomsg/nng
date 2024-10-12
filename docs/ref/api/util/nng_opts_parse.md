@@ -1,22 +1,12 @@
-= nng_opts_parse(3supp)
-//
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
-//
-// This document is supplied under the terms of the MIT License, a
-// copy of which should be located in the distribution where this
-// file was obtained (LICENSE.txt).  A copy of the license may also be
-// found online at https://opensource.org/licenses/MIT.
-//
+# nng_opts_parse
 
-== NAME
+## NAME
 
-nng_opts_parse - parse command line options
+nng_opts_parse --- parse command line options
 
-== SYNOPSIS
+## SYNOPSIS
 
-[source, c]
-----
+```c
 #include <nng/nng.h>
 #include <nng/supplemental/util/options.h>
 
@@ -27,18 +17,19 @@ typedef struct nng_optspec {
     bool        o_arg;   // Option takes an argument if true
 } nng_optspec;
 
-int nng_opts_parse(int argc, char *const *argv, const nng_optspec *spec, int *val, char **arg, int *idx);
-----
+int nng_opts_parse(int argc, char *const *argv,
+                   const nng_optspec *spec, int *val, char **arg, int *idx);
+```
 
-== DESCRIPTION
+## DESCRIPTION
 
-The `nng_opts_parse()` is function is a supplemental function intended to
-facilitate parsing command line arguments.
-This function exists largely to stand in for `getopt()` from POSIX
-systems, but it is available everywhere that _NNG_ is, and it includes
-some capabilities missing from `getopt()`.
+The {{i:`nng_opts_parse`}} function is a intended to facilitate parsing
+{{i:command-line arguments}}.
+This function exists largely to stand in for {{i:`getopt`}} from POSIX systems,
+but it is available everywhere that _NNG_ is, and it includes
+some capabilities missing from `getopt`.
 
-The function parses arguments from `main()` (using _argc_ and _argv_),
+The function parses arguments from `main` (using _argc_ and _argv_),
 starting at the index referenced by _idx_.
 (New invocations typically set the value pointed to by _idx_ to 1.)
 
@@ -47,9 +38,9 @@ The value of the parsed option will be stored at the address indicated by
 _val_, and the value of _idx_ will be incremented to reflect the next
 option to parse.
 
-TIP: For using this to parse command-line like strings that do not include
-the command name itself, set the value referenced by _idx_ to zero
-instead of one.
+> [!TIP]
+> For using this to parse command-line like strings that do not include
+> the command name itself, set the value referenced by _idx_ to zero instead of one.
 
 If the option had an argument, a pointer to that is returned at the address
 referenced by _arg_.
@@ -58,40 +49,39 @@ This function should be called repeatedly, until it returns either -1
 (indicating the end of options is reached) or a non-zero error code is
 returned.
 
-=== Option Specification
+### Option Specification
 
-The calling program must first create an array of `nng_optspec` structures
+The calling program must first create an array of {{i:`nng_optspec`}} structures
 describing the options to be supported.
 This structure has the following members:
 
-`o_name`::
+- `o_name`:
 
   The long style name for the option, such as "verbose".
   This will be parsed on the command line when it is prefixed with two dashes.
   It may be `NULL` if only a short option is to be supported.
 
-`o_short`::
+- `o_short`:
 
   This is a single letter (at present only ASCII letters are supported).
   These options appear as just a single letter, and are prefixed with a single dash on the command line.
   The use of a slash in lieu of the dash is _not_ supported, in order to avoid confusion with path name arguments.
   This value may be set to 0 if no short option is needed.
 
-`o_val`::
+- `o_val`:
 
   This is a numeric value that is unique to this option.
-  This value is assigned by the application program, and must be non-zero
-  for a valid option.
+  This value is assigned by the application program, and must be non-zero for a valid option.
   If this is zero, then it indicates the end of the specifications, and the
   rest of this structure is ignored.
-  The value will be returned to the caller in _val_ by `nng_opts_parse()` when
+  The value will be returned to the caller in _val_ by `nng_opts_parse` when
   this option is parsed from the command line.
 
-`o_arg`::
+- `o_arg`:
 
   This value should be set to `true` if the option should take an argument.
 
-=== Long Options
+### Long Options
 
 Long options are parsed from the _argv_ array, and are indicated when
 the element being scanned starts with two dashes.
@@ -102,28 +92,27 @@ the option as the next element in _argv_, or it can be appended to
 the option, separated from the option by an equals sign (`=`) or a
 colon (`:`).
 
-=== Short Options
+### Short Options
 
-Short options appear by themselves in an _argv_ element, prefixed by a
-dash (`-`).
+Short options appear by themselves in an _argv_ element, prefixed by a dash (`-`).
 If the short option takes an argument, it can either be appended in the
 same element of _argv_, or may appear in the next _argv_ element.
 
-NOTE: Option clustering, where multiple options can be crammed together in
-a single _argv_ element, is not supported by this function (yet).
+> [!NOTE]
+> Option clustering, where multiple options can be crammed together in
+> a single _argv_ element, is not supported by this function (yet).
 
-=== Prefix Matching
+### Prefix Matching
 
 When using long options, the parser will match if it is equal to a prefix
 of the `o_name` member of a option specification, provided that it do so
 unambiguously (meaning it must not match any other option specification.)
 
-== EXAMPLE
+## EXAMPLE
 
 The following program fragment demonstrates this function.
 
-[source, c]
-----
+```c
     enum { OPT_LOGFILE, OPT_VERBOSE };
     char *logfile; // options to be set
     bool verbose;
@@ -164,22 +153,15 @@ The following program fragment demonstrates this function.
         printf("Options error: %s\n", nng_strerror(rv));
         exit(1);
     }
-----
+```
 
-== RETURN VALUES
+## RETURN VALUES
 
 This function returns 0 if an option parsed correctly, -1 if
 no more options are available to be parsed, or an error number otherwise.
 
-== ERRORS
+## ERRORS
 
-[horizontal]
-`NNG_EAMBIGUOUS`:: Parsed option matches more than one specification.
-`NNG_ENOARG`:: Option requires an argument, but one is not present.
-`NNG_EINVAL`:: An invalid (unknown) argument is present.
-
-== SEE ALSO
-
-[.text-left]
-xref:nng_strerror.3.adoc[nng_strerror(3)],
-xref:nng.7.adoc[nng(7)]
+- `NNG_EAMBIGUOUS`: Parsed option matches more than one specification.
+- `NNG_ENOARG`: Option requires an argument, but one is not present.
+- `NNG_EINVAL`: An invalid (unknown) argument is present.

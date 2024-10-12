@@ -14,6 +14,7 @@
     - [nng_clock](./api/util/nng_clock.md)
     - [nng_id_map](./api/util/nng_id_map.md)
     - [nng_msleep](./api/util/nng_msleep.md)
+    - [nng_opts_parse](./api/util/nng_opts_parse.md)
     - [nng_random](./api/util/nng_random.md)
     - [nng_socket_pair](./api/util/nng_socket_pair.md)
     - [nng_strdup](./api/util/nng_strdup.md)

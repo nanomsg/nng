@@ -277,11 +277,13 @@ Common functionality for message logging.
 
 === Supplemental API
 
-These supplemental functions are not intrinsic to building
-network applications with _NNG_, but they are made available
-as a convenience to aid in creating portable applications.
+NOTE: All these functions have been moved to new mdbook docs.
 
-|===
+// These supplemental functions are not intrinsic to building
+// network applications with _NNG_, but they are made available
+// as a convenience to aid in creating portable applications.
+//
+// |===
 // |xref:nng_clock.3supp.adoc[nng_clock()]|get time
 // |xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc()]|allocate condition variable
 // |xref:nng_cv_free.3supp.adoc[nng_cv_free()]|free condition variable
@@ -295,13 +297,13 @@ as a convenience to aid in creating portable applications.
 // |xref:nng_mtx_free.3supp.adoc[nng_mtx_free()]|free mutex
 // |xref:nng_mtx_lock.3supp.adoc[nng_mtx_lock()]|lock mutex
 // |xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock()]|unlock mutex
-|xref:nng_opts_parse.3supp.adoc[nng_opts_parse()]|parse command line options
+// |xref:nng_opts_parse.3supp.adoc[nng_opts_parse()]|parse command line options
 // |xref:nng_random.3supp.adoc[nng_random()]|get random number
 // |xref:nng_socket_pair.3supp.adoc[nng_socket_pair()]|create connected pair of BSD sockets
 // |xref:nng_thread_create.3supp.adoc[nng_thread_create()]|create thread
 // |xref:nng_thread_destroy.3supp.adoc[nng_thread_destroy()]|reap thread
 // |xref:nng_thread_set_name.3supp.adoc[nng_thread_set_name()]|set thread name
-|===
+// |===
 
 === Byte Streams
 
