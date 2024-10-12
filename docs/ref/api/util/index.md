@@ -7,6 +7,7 @@ of other uses.
 
 - [nng_alloc](nng_alloc.md) --- allocate memory
 - [nng_clock](nng_clock.md) --- get time
+- [nng_duration](nng_duration.md) -- relative time in milliseconds
 - [nng_id_map](nng_id_map.md) --- identifier based mapping table
 - [nng_msleep](nng_msleep.md) --- sleep milliseconds
 - [nng_opts_parse](nng_opts_parse.md) --- parse command line options

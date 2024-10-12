@@ -12,6 +12,7 @@
 
     - [nng_alloc](./api/util/nng_alloc.md)
     - [nng_clock](./api/util/nng_clock.md)
+    - [nng_duration](./api/util/nng_duration.md)
     - [nng_id_map](./api/util/nng_id_map.md)
     - [nng_msleep](./api/util/nng_msleep.md)
     - [nng_opts_parse](./api/util/nng_opts_parse.md)
