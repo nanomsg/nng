@@ -40,7 +40,7 @@ should be considered overhead in the protocols where they appear.
 
 > [!TIP]
 > Most applications should not need to access the message header content
-> directly, unless they ar working with [raw mode][raw] sockets.
+> directly, unless they are working with [raw mode][raw] sockets.
 
 The `nng_msg_header` function returns a pointer to the start of the header
 content of the message _msg_.

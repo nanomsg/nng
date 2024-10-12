@@ -2,7 +2,7 @@
 
 ## Description
 
-The {{i:_udp_ transport}} supports communication between peers using {{i:UDP}}.
+The {{i:*udp* transport}} supports communication between peers using {{i:UDP}}.
 
 UDP is a very light-weight connection-less, unreliable, unordered delivery mechanism.
 

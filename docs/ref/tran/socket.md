@@ -2,7 +2,7 @@
 
 ## Description
 
-The {{i:_socket_ transport}} supports communication between
+The {{i:*socket* transport}} supports communication between
 peers across arbitrary BSD sockets, such as those that are
 created with [`nng_socket_pair`][nng_socket_pair].
 
