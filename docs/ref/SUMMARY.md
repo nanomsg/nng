@@ -1,6 +1,6 @@
 # Summary
 
-- [API](./api/index.md)
+- [API Reference](./api/index.md)
 
   - [Threading and Synchronization](./api/thr/index.md)
 
