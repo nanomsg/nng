@@ -1,8 +1,8 @@
 # Summary
 
-- [API](./api.md)
+- [API](./api/index.md)
 
-  - [Threading Functions](./api/thr/index.md)
+  - [Threading and Synchronization](./api/thr/index.md)
 
     - [nng_cv](./api/thr/nng_cv.md)
     - [nng_mtx](./api/thr/nng_mtx.md)
@@ -14,6 +14,7 @@
     - [nng_id_map](./api/util/nng_id_map.md)
     - [nng_msleep](./api/util/nng_msleep.md)
     - [nng_random](./api/util/nng_random.md)
+    - [nng_socket_pair](./api/util/nng_socket_pair.md)
     - [nng_strdup](./api/util/nng_strdup.md)
     - [nng_strerror](./api/util/nng_strerror.md)
     - [nng_version](./api/util/nng_version.md)

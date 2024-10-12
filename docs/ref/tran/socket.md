@@ -4,10 +4,10 @@
 
 The {{i:_socket_ transport}} supports communication between
 peers across arbitrary BSD sockets, such as those that are
-created with [`nng_socket_pair()`][nng_socket_pair].
+created with [`nng_socket_pair`][nng_socket_pair].
 
 This transport only supports [listeners][listener],
-using [`nng_listener_create()`][nng_listener_create].
+using [`nng_listener_create`][nng_listener_create].
 
 > [!NOTE]
 > Attempts to create [dialers][dialer] using this transport will result in `NNG_ENOTSUP`.
@@ -63,7 +63,7 @@ Additionally, the following options may be supported on pipes when the platform 
 [dialer]: [TODO.md]
 [nng_sockaddr]: [TODO.md]
 [nng_listener_create]: [TODO.md]
-[nng_socket_pair]: [TODO.md]
+[nng_socket_pair]: ../../api/util/nng_socket_pair.md
 [NNG_OPT_LOCADDR]: [TODO.md]
 [NNG_OPT_REMADDR]: [TODO.md]
 [NNG_OPT_URL]: [TODO.md]
