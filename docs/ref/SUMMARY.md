@@ -6,6 +6,7 @@
 
     - [nng_cv](./api/thr/nng_cv.md)
     - [nng_mtx](./api/thr/nng_mtx.md)
+    - [nng_thread](./api/thr/nng_thread.md)
 
   - [Utility Functions](./api/util/index.md)
 
