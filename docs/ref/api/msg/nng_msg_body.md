@@ -94,7 +94,7 @@ end of the message body.
 ## RETURN VALUES
 
 The `nng_msg_body` function returns a pointer to the start of the message body.
-The `nng_msg_len` function returns the length of the message in bytes.
+The `nng_msg_len` function returns the length of the message body in bytes.
 The `nng_msg_clear` function does not return anything.
 The remaining functions return zero on success, or a non-zero error value on failure.
 
