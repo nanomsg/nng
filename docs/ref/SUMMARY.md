@@ -2,6 +2,10 @@
 
 - [API Reference](./api/index.md)
 
+  - [Messages](./api/msg/index.md)
+
+    - [nng_msg](./api/msg/nng_msg.md)
+
   - [Threading and Synchronization](./api/thr/index.md)
 
     - [nng_cv](./api/thr/nng_cv.md)
