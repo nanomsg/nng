@@ -33,7 +33,7 @@ The function parses arguments from `main` (using _argc_ and _argv_),
 starting at the index referenced by _idx_.
 (New invocations typically set the value pointed to by _idx_ to 1.)
 
-Options are parsed as specified by _spec_ (see <<Option Specification>>.)
+Options are parsed as specified by _spec_ (see [Option Specification](#option-specification).)
 The value of the parsed option will be stored at the address indicated by
 _val_, and the value of _idx_ will be incremented to reflect the next
 option to parse.
