@@ -268,15 +268,20 @@ test_udp_multi_small_burst(void)
 	NUTS_PASS(nng_dialer_start(d, 0));
 	nng_msleep(100);
 
-	float actual = 0;
-	float expect = 0;
-	int   burst  = 4;
-	int   count  = 20;
+	float actual  = 0;
+	float expect  = 0;
+	float require = 0.50;
+	int   burst   = 4;
+	int   count   = 20;
 
-#ifdef NNG_PLATFORM_WINDOWS
+#if defined(NNG_SANITIZER) || defined(NNG_COVERAGE)
+	// sanitizers may drop a lot, so can coverage
+	require = 0.0;
+#elif defined(NNG_PLATFORM_WINDOWS)
 	// Windows seems to drop a lot - maybe because of virtualization
-	burst = 2;
-	count = 10;
+	burst   = 2;
+	count   = 10;
+	require = 0.10;
 #endif
 
 	// Experimentally at least on Darwin, we see some packet losses
@@ -297,13 +302,9 @@ test_udp_multi_small_burst(void)
 		NUTS_TRUE(sz == 95);
 	}
 	NUTS_TRUE(actual <= expect);
-#if !defined(NNG_SANITIZER) && !defined(NNG_COVERAGE)
-	// Under sanitizer runs we lose a lot, maybe even majority, of packets
-	NUTS_TRUE(
-	    actual / expect > 0.50); // maximum reasonable packet loss of 20%
+	NUTS_TRUE(actual / expect > require);
 	NUTS_MSG("Packet loss: %.02f (got %.f of %.f)", 1.0 - actual / expect,
 	    actual, expect);
-#endif
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 }
