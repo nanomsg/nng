@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,6 +12,8 @@
 #define CORE_STATS_H
 
 #include "core/defs.h"
+#include "core/list.h"
+#include "core/platform.h"
 
 // Statistics support.  This is inspired in part by the Solaris
 // kernel stats framework, but we've simplified and tuned it for our use.
@@ -59,6 +61,20 @@ struct nni_stat_info {
 	bool            si_atomic : 1; // stat is atomic
 	bool            si_alloc : 1;  // stat string is allocated
 };
+
+#ifdef NNG_ENABLE_STATS
+#define NNI_STAT_FIELDS(var, ...) \
+	static const nni_stat_info var = { __VA_ARGS__ }
+#else
+#define NNI_STAT_FIELDS(var, ...) static const nni_stat_info var
+#endif
+
+#define NNI_STAT_INFO(var, name, desc, type, unit)             \
+	NNI_STAT_FIELDS(var, .si_name = name, .si_desc = desc, \
+	    .si_type = type, .si_unit = unit)
+#define NNI_STAT_ATOMIC(var, name, desc, type, unit)           \
+	NNI_STAT_FIELDS(var, .si_name = name, .si_desc = desc, \
+	    .si_type = type, .si_unit = unit, .si_atomic = true)
 
 // nni_stat_add adds a statistic, but the operation is unlocked, and the
 // add is to an unregistered stats tree.

@@ -1347,83 +1347,37 @@ udp_ep_init(udp_ep **epp, nng_url *url, nni_sock *sock, nni_dialer *dialer,
 	nni_aio_init(&ep->resaio, udp_resolv_cb, ep);
 	nni_aio_completions_init(&ep->complq);
 
-	static const nni_stat_info rcv_max_info = {
-		.si_name   = "rcv_max",
-		.si_desc   = "maximum receive size",
-		.si_type   = NNG_STAT_LEVEL,
-		.si_unit   = NNG_UNIT_BYTES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info rcv_reorder_info = {
-		.si_name   = "rcv_reorder",
-		.si_desc   = "messages received out of order",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info rcv_toobig_info = {
-		.si_name   = "rcv_toobig",
-		.si_desc   = "received messages rejected because too big",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info rcv_nomatch_info = {
-		.si_name   = "rcv_nomatch",
-		.si_desc   = "received messages without a matching connection",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info rcv_copy_info = {
-		.si_name   = "rcv_copy",
-		.si_desc   = "received messages copied (small)",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info rcv_nocopy_info = {
-		.si_name   = "rcv_nocopy",
-		.si_desc   = "received messages zero copy (large)",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info rcv_nobuf_info = {
-		.si_name   = "rcv_nobuf",
-		.si_desc   = "received messages dropped no buffer",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info snd_toobig_info = {
-		.si_name   = "snd_toobig",
-		.si_desc   = "sent messages rejected because too big",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info snd_nobuf_info = {
-		.si_name   = "snd_nobuf",
-		.si_desc   = "sent messages dropped no buffer",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_MESSAGES,
-		.si_atomic = true,
-	};
-	static const nni_stat_info peer_inactive_info = {
-		.si_name   = "peer_inactive",
-		.si_desc   = "connections closed due to inactive peer",
-		.si_type   = NNG_STAT_COUNTER,
-		.si_unit   = NNG_UNIT_EVENTS,
-		.si_atomic = true,
-	};
-	static const nni_stat_info copy_max_info = {
-		.si_name   = "rcv_copy_max",
-		.si_desc   = "threshold to copy instead of loan-up",
-		.si_type   = NNG_STAT_LEVEL,
-		.si_unit   = NNG_UNIT_BYTES,
-		.si_atomic = true,
-	};
+	NNI_STAT_ATOMIC(rcv_max_info, "rcv_max", "maximum receive size",
+	    NNG_STAT_LEVEL, NNG_UNIT_BYTES);
+	NNI_STAT_ATOMIC(copy_max_info, "copy_max",
+	    "threshold to switch to loan-up", NNG_STAT_LEVEL, NNG_UNIT_BYTES);
+	NNI_STAT_ATOMIC(rcv_reorder_info, "rcv_reorder",
+	    "messages received out of order", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(rcv_nomatch_info, "rcv_nomatch",
+	    "messages without a matching connection", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(rcv_toobig_info, "rcv_toobig",
+	    "received messages rejected because too big", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(rcv_copy_info, "rcv_copy",
+	    "received messages copied (small)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(rcv_nocopy_info, "rcv_nocopy",
+	    "received messages zero copy (large)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(rcv_nobuf_info, "rcv_nobuf",
+	    "received messages dropped no buffer", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(snd_toobig_info, "snd_toobig",
+	    "sent messages rejected because too big", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(snd_nobuf_info, "snd_nobuf",
+	    "sent messages dropped no buffer", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	NNI_STAT_ATOMIC(peer_inactive_info, "peer_inactive",
+	    "connections closed due to inactive peer", NNG_STAT_COUNTER,
+	    NNG_UNIT_EVENTS);
 
 	nni_stat_init(&ep->st_rcv_max, &rcv_max_info);
 	nni_stat_init(&ep->st_copy_max, &copy_max_info);
