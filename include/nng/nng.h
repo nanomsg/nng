@@ -818,8 +818,17 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // low order 16 bits will be set.  This is provided in native byte order,
 // which makes it more convenient than using the NNG_OPT_LOCADDR option.
 #define NNG_OPT_TCP_BOUND_PORT "tcp-bound-port"
+
+// UDP options.
+
 // UDP alias for convenience uses the same value
 #define NNG_OPT_UDP_BOUND_PORT NNG_OPT_TCP_BOUND_PORT
+
+// UDP short message size.  Messages smaller than (or equal to) this
+// will be copied, instead of loan up.  This can allow for a faster
+// pass up as we can allocate smaller message buffers instead of having
+// to replace a full message buffer.
+#define NNG_OPT_UDP_COPY_MAX "udp:copy-max"
 
 // IPC options.  These will largely vary depending on the platform,
 // as POSIX systems have very different options than Windows.
