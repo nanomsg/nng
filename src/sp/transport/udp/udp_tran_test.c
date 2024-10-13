@@ -1,8 +1,5 @@
 //
 // Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
-// Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -195,6 +192,113 @@ test_udp_recv_copy(void)
 	NUTS_CLOSE(s1);
 }
 
+void
+test_udp_multi_send_recv(void)
+{
+	char         msg[256];
+	char         buf[256];
+	nng_socket   s0;
+	nng_socket   s1;
+	nng_listener l;
+	nng_dialer   d;
+	size_t       sz;
+	char        *addr;
+
+	NUTS_ADDR(addr, "udp");
+
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_UDP_COPY_MAX, 100));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_UDP_COPY_MAX, &sz));
+	NUTS_TRUE(sz == 100);
+	NUTS_PASS(nng_listener_start(l, 0));
+
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_dialer_create(&d, s1, addr));
+	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_UDP_COPY_MAX, 100));
+	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_UDP_COPY_MAX, &sz));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	nng_msleep(100);
+
+	for (int i = 0; i < 1000; i++) {
+		NUTS_PASS(nng_send(s1, msg, 95, 0));
+		NUTS_PASS(nng_recv(s0, buf, &sz, 0));
+		NUTS_TRUE(sz == 95);
+		NUTS_PASS(nng_send(s0, msg, 95, 0));
+		NUTS_PASS(nng_recv(s1, buf, &sz, 0));
+		NUTS_TRUE(sz == 95);
+	}
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+}
+
+void
+test_udp_multi_small_burst(void)
+{
+	char         msg[256];
+	char         buf[256];
+	nng_socket   s0;
+	nng_socket   s1;
+	nng_listener l;
+	nng_dialer   d;
+	size_t       sz;
+	char        *addr;
+
+	NUTS_ADDR(addr, "udp");
+
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 10));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_UDP_COPY_MAX, 100));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_UDP_COPY_MAX, &sz));
+	NUTS_TRUE(sz == 100);
+	NUTS_PASS(nng_listener_start(l, 0));
+
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 10));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_dialer_create(&d, s1, addr));
+	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_UDP_COPY_MAX, 100));
+	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_UDP_COPY_MAX, &sz));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	nng_msleep(100);
+
+	float actual = 0;
+	float expect = 0;
+	int   burst  = 4;
+	int   count  = 20;
+
+	// Experimentally at least on Darwin, we see some packet losses
+	// even for loopback.  Loss rates appear depressingly high.
+	for (int i = 0; i < count; i++) {
+		for (int j = 0; j < burst; j++) {
+			NUTS_PASS(nng_send(s1, msg, 95, 0));
+			expect++;
+		}
+		for (int j = 0; j < burst; j++) {
+			if (nng_recv(s0, buf, &sz, 0) == 0) {
+				NUTS_TRUE(sz == 95);
+				actual++;
+			}
+		}
+		NUTS_PASS(nng_send(s0, msg, 95, 0));
+		NUTS_PASS(nng_recv(s1, buf, &sz, 0));
+		NUTS_TRUE(sz == 95);
+	}
+	NUTS_TRUE(actual <= expect);
+	NUTS_TRUE(
+	    actual / expect > 0.80); // maximum reasonable packet loss of 20%
+	NUTS_MSG("Packet loss: %.02f (got %.f of %.f)", 1.0 - actual / expect,
+	    actual, expect);
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+}
+
 NUTS_TESTS = {
 
 	{ "udp wild card connect fail", test_udp_wild_card_connect_fail },
@@ -205,5 +309,7 @@ NUTS_TESTS = {
 	{ "udp malformed address", test_udp_malformed_address },
 	{ "udp recv max", test_udp_recv_max },
 	{ "udp recv copy", test_udp_recv_copy },
+	{ "udp multi send recv", test_udp_multi_send_recv },
+	{ "udp multi small burst", test_udp_multi_small_burst },
 	{ NULL, NULL },
 };

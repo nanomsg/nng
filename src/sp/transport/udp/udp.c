@@ -1289,7 +1289,8 @@ udp_timer_cb(void *arg)
 }
 
 static int
-udp_ep_init(udp_ep **epp, nng_url *url, nni_sock *sock)
+udp_ep_init(udp_ep **epp, nng_url *url, nni_sock *sock, nni_dialer *dialer,
+    nni_listener *listener)
 {
 	udp_ep *ep;
 	int     rv;
@@ -1432,7 +1433,29 @@ udp_ep_init(udp_ep **epp, nng_url *url, nni_sock *sock)
 	nni_stat_init(&ep->st_snd_nobuf, &snd_nobuf_info);
 	nni_stat_init(&ep->st_peer_inactive, &peer_inactive_info);
 
-	nni_stat_set_value(&ep->st_rcv_max, ep->rcvmax);
+	if (listener) {
+		nni_listener_add_stat(listener, &ep->st_rcv_max);
+		nni_listener_add_stat(listener, &ep->st_copy_max);
+		nni_listener_add_stat(listener, &ep->st_rcv_copy);
+		nni_listener_add_stat(listener, &ep->st_rcv_nocopy);
+		nni_listener_add_stat(listener, &ep->st_rcv_reorder);
+		nni_listener_add_stat(listener, &ep->st_rcv_toobig);
+		nni_listener_add_stat(listener, &ep->st_rcv_nomatch);
+		nni_listener_add_stat(listener, &ep->st_rcv_nobuf);
+		nni_listener_add_stat(listener, &ep->st_snd_toobig);
+		nni_listener_add_stat(listener, &ep->st_snd_nobuf);
+	} else {
+		nni_dialer_add_stat(dialer, &ep->st_rcv_max);
+		nni_dialer_add_stat(dialer, &ep->st_copy_max);
+		nni_dialer_add_stat(dialer, &ep->st_rcv_copy);
+		nni_dialer_add_stat(dialer, &ep->st_rcv_nocopy);
+		nni_dialer_add_stat(dialer, &ep->st_rcv_reorder);
+		nni_dialer_add_stat(dialer, &ep->st_rcv_toobig);
+		nni_dialer_add_stat(dialer, &ep->st_rcv_nomatch);
+		nni_dialer_add_stat(dialer, &ep->st_rcv_nobuf);
+		nni_dialer_add_stat(dialer, &ep->st_snd_toobig);
+		nni_dialer_add_stat(dialer, &ep->st_snd_nobuf);
+	}
 
 	// schedule our timer callback - forever for now
 	// adjusted automatically as we add pipes or other
@@ -1474,11 +1497,10 @@ udp_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 		return (rv);
 	}
 
-	if ((rv = udp_ep_init(&ep, url, sock)) != 0) {
+	if ((rv = udp_ep_init(&ep, url, sock, ndialer, NULL)) != 0) {
 		return (rv);
 	}
 
-	nni_dialer_add_stat(ndialer, &ep->st_rcv_max);
 	*dp = ep;
 	return (0);
 }
@@ -1497,12 +1519,10 @@ udp_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 		return (rv);
 	}
 
-	if ((rv = udp_ep_init(&ep, url, sock)) != 0) {
+	if ((rv = udp_ep_init(&ep, url, sock, NULL, nlistener)) != 0) {
 		return (rv);
 	}
 	ep->self_sa = sa;
-
-	nni_listener_add_stat(nlistener, &ep->st_rcv_max);
 
 	*lp = ep;
 	return (0);
