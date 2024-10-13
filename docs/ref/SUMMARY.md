@@ -1,5 +1,9 @@
 # Summary
 
+[Copyright](./copyright.md)
+[Dedication](./dedication.md)
+[Preface](./preface.md)
+
 - [API Reference](./api/index.md)
 
   - [Messages](./api/msg/index.md)
