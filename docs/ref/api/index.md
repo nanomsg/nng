@@ -2,5 +2,6 @@
 
 This section is a reference guide for the NNG programming interfaces.
 
-- [Threading and Synchronization](api/thr/)
-- [Utility Functions](api/util/)
+- [Messages](msg/)
+- [Threading and Synchronization](thr/)
+- [Utility Functions](util/)
