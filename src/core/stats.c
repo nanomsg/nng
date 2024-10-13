@@ -11,7 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 
 typedef struct nng_stat nni_stat;
 
@@ -377,72 +379,123 @@ nng_stat_parent(nng_stat *stat)
 nng_stat *
 nng_stat_next(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	if (stat->s_parent == NULL) {
 		return (NULL); // Root node, no siblings.
 	}
 	return (nni_list_next(&stat->s_parent->s_children, stat));
+#else
+	NNI_ARG_UNUSED(stat);
+	return (NULL);
+#endif
 }
 
 nng_stat *
 nng_stat_child(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (nni_list_first(&stat->s_children));
+#else
+	NNI_ARG_UNUSED(stat);
+	return (NULL);
+#endif
 }
 
 const char *
 nng_stat_name(nni_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (stat->s_info->si_name);
+#else
+	NNI_ARG_UNUSED(stat);
+	return (NULL);
+#endif
 }
 
 uint64_t
 nng_stat_value(nni_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (stat->s_val.sv_value);
+#else
+	NNI_ARG_UNUSED(stat);
+	return (0);
+#endif
 }
 
 bool
 nng_stat_bool(nni_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (stat->s_val.sv_bool);
+#else
+	NNI_ARG_UNUSED(stat);
+	return (false);
+#endif
 }
 
 const char *
 nng_stat_string(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	if (stat->s_info->si_type != NNG_STAT_STRING) {
 		return ("");
 	}
 	return (stat->s_val.sv_string);
+#else
+	NNI_ARG_UNUSED(stat);
+	return ("");
+#endif
 }
 
 uint64_t
 nng_stat_timestamp(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return ((uint64_t) stat->s_timestamp);
+#else
+	NNI_ARG_UNUSED(stat);
+	return (0);
+#endif
 }
 
 int
 nng_stat_type(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (stat->s_info->si_type);
+#else
+	NNI_ARG_UNUSED(stat);
+	return (NNG_STAT_ID);
+#endif
 }
 
 int
 nng_stat_unit(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (stat->s_info->si_unit);
+#else
+	NNI_ARG_UNUSED(stat);
+	return (NNG_UNIT_NONE);
+#endif
 }
 
 const char *
 nng_stat_desc(nng_stat *stat)
 {
+#if NNG_ENABLE_STATS
 	return (stat->s_info->si_desc);
+#else
+	NNI_ARG_UNUSED(stat);
+	return ("");
+#endif
 }
 
 nng_stat *
 nng_stat_find(nng_stat *stat, const char *name)
 {
+#if NNG_ENABLE_STATS
 	nng_stat *child;
 	if (stat == NULL) {
 		return (NULL);
@@ -456,12 +509,17 @@ nng_stat_find(nng_stat *stat, const char *name)
 			return (result);
 		}
 	}
+#else
+	NNI_ARG_UNUSED(stat);
+	NNI_ARG_UNUSED(name);
+#endif
 	return (NULL);
 }
 
 nng_stat *
 nng_stat_find_scope(nng_stat *stat, const char *name, int id)
 {
+#if NNG_ENABLE_STATS
 	nng_stat *child;
 	if (stat == NULL || stat->s_info->si_type != NNG_STAT_SCOPE) {
 		return (NULL);
@@ -477,6 +535,11 @@ nng_stat_find_scope(nng_stat *stat, const char *name, int id)
 			return (result);
 		}
 	}
+#else
+	NNI_ARG_UNUSED(stat);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(id);
+#endif
 	return (NULL);
 }
 

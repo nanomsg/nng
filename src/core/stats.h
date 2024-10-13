@@ -36,21 +36,23 @@ typedef enum nng_unit_enum      nni_stat_unit;
 // avoid having to spend dereference costs or (worse) to have to include
 // extra conditionals on hot code paths.
 struct nni_stat_item {
+#ifdef NNG_ENABLE_STATS
 	nni_list_node        si_node;     // list node, framework use only
 	nni_list             si_children; // children, framework use only
 	const nni_stat_info *si_info;     // statistic description
 	union {
 		uint64_t       sv_number;
 		nni_atomic_u64 sv_atomic;
-		char *         sv_string;
+		char          *sv_string;
 		bool           sv_bool;
 		int            sv_id;
 	} si_u;
+#endif
 };
 
 struct nni_stat_info {
-	const char *    si_name;       // name of statistic
-	const char *    si_desc;       // description of statistic (English)
+	const char     *si_name;       // name of statistic
+	const char     *si_desc;       // description of statistic (English)
 	nni_stat_type   si_type;       // statistic type, e.g. NNG_STAT_LEVEL
 	nni_stat_unit   si_unit;       // statistic unit, e.g. NNG_UNIT_MILLIS
 	nni_stat_update si_update;     // update function (can be NULL)
