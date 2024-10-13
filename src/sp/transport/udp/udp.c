@@ -1347,49 +1347,50 @@ udp_ep_init(udp_ep **epp, nng_url *url, nni_sock *sock, nni_dialer *dialer,
 	nni_aio_init(&ep->resaio, udp_resolv_cb, ep);
 	nni_aio_completions_init(&ep->complq);
 
-	NNI_STAT_ATOMIC(rcv_max_info, "rcv_max", "maximum receive size",
+	NNI_STAT_LOCK(rcv_max_info, "rcv_max", "maximum receive size",
 	    NNG_STAT_LEVEL, NNG_UNIT_BYTES);
-	NNI_STAT_ATOMIC(copy_max_info, "copy_max",
+	NNI_STAT_LOCK(copy_max_info, "copy_max",
 	    "threshold to switch to loan-up", NNG_STAT_LEVEL, NNG_UNIT_BYTES);
-	NNI_STAT_ATOMIC(rcv_reorder_info, "rcv_reorder",
+	NNI_STAT_LOCK(rcv_reorder_info, "rcv_reorder",
 	    "messages received out of order", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(rcv_nomatch_info, "rcv_nomatch",
+	NNI_STAT_LOCK(rcv_nomatch_info, "rcv_nomatch",
 	    "messages without a matching connection", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(rcv_toobig_info, "rcv_toobig",
+	NNI_STAT_LOCK(rcv_toobig_info, "rcv_toobig",
 	    "received messages rejected because too big", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(rcv_copy_info, "rcv_copy",
+	NNI_STAT_LOCK(rcv_copy_info, "rcv_copy",
 	    "received messages copied (small)", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(rcv_nocopy_info, "rcv_nocopy",
+	NNI_STAT_LOCK(rcv_nocopy_info, "rcv_nocopy",
 	    "received messages zero copy (large)", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(rcv_nobuf_info, "rcv_nobuf",
+	NNI_STAT_LOCK(rcv_nobuf_info, "rcv_nobuf",
 	    "received messages dropped no buffer", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(snd_toobig_info, "snd_toobig",
+	NNI_STAT_LOCK(snd_toobig_info, "snd_toobig",
 	    "sent messages rejected because too big", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(snd_nobuf_info, "snd_nobuf",
+	NNI_STAT_LOCK(snd_nobuf_info, "snd_nobuf",
 	    "sent messages dropped no buffer", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
-	NNI_STAT_ATOMIC(peer_inactive_info, "peer_inactive",
+	NNI_STAT_LOCK(peer_inactive_info, "peer_inactive",
 	    "connections closed due to inactive peer", NNG_STAT_COUNTER,
 	    NNG_UNIT_EVENTS);
 
-	nni_stat_init(&ep->st_rcv_max, &rcv_max_info);
-	nni_stat_init(&ep->st_copy_max, &copy_max_info);
-	nni_stat_init(&ep->st_rcv_copy, &rcv_copy_info);
-	nni_stat_init(&ep->st_rcv_nocopy, &rcv_nocopy_info);
-	nni_stat_init(&ep->st_rcv_reorder, &rcv_reorder_info);
-	nni_stat_init(&ep->st_rcv_toobig, &rcv_toobig_info);
-	nni_stat_init(&ep->st_rcv_nomatch, &rcv_nomatch_info);
-	nni_stat_init(&ep->st_rcv_nobuf, &rcv_nobuf_info);
-	nni_stat_init(&ep->st_snd_toobig, &snd_toobig_info);
-	nni_stat_init(&ep->st_snd_nobuf, &snd_nobuf_info);
-	nni_stat_init(&ep->st_peer_inactive, &peer_inactive_info);
+	nni_stat_init_lock(&ep->st_rcv_max, &rcv_max_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_copy_max, &copy_max_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_rcv_copy, &rcv_copy_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_rcv_nocopy, &rcv_nocopy_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_rcv_reorder, &rcv_reorder_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_rcv_toobig, &rcv_toobig_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_rcv_nomatch, &rcv_nomatch_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_rcv_nobuf, &rcv_nobuf_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_snd_toobig, &snd_toobig_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_snd_nobuf, &snd_nobuf_info, &ep->mtx);
+	nni_stat_init_lock(
+	    &ep->st_peer_inactive, &peer_inactive_info, &ep->mtx);
 
 	if (listener) {
 		nni_listener_add_stat(listener, &ep->st_rcv_max);

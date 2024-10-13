@@ -111,16 +111,25 @@ nni_stat_unregister(nni_stat_item *item)
 }
 
 void
-nni_stat_init(nni_stat_item *item, const nni_stat_info *info)
+nni_stat_init_lock(
+    nni_stat_item *item, const nni_stat_info *info, nni_mtx *mtx)
 {
 #ifdef NNG_ENABLE_STATS
 	memset(item, 0, sizeof(*item));
 	NNI_LIST_INIT(&item->si_children, nni_stat_item, si_node);
 	item->si_info = info;
+	item->si_mtx  = mtx;
 #else
 	NNI_ARG_UNUSED(item);
 	NNI_ARG_UNUSED(info);
+	NNI_ARG_UNUSED(mtx);
 #endif
+}
+
+void
+nni_stat_init(nni_stat_item *item, const nni_stat_info *info)
+{
+	nni_stat_init_lock(item, info, NULL);
 }
 
 void
@@ -274,13 +283,26 @@ stat_make_tree(nni_stat_item *item, nni_stat **sp)
 }
 
 static void
-stat_update(nni_stat *stat)
+stat_update(nni_stat *stat, nni_mtx **mtxp)
 {
 	const nni_stat_item *item = stat->s_item;
 	const nni_stat_info *info = item->si_info;
 	char                *old;
 	char                *str;
 
+	if (info->si_lock) {
+		NNI_ASSERT(item->si_mtx != NULL);
+		if (*mtxp != item->si_mtx) {
+			if (*mtxp) {
+				nni_mtx_unlock(*mtxp);
+			}
+			nni_mtx_lock(item->si_mtx);
+			*mtxp = item->si_mtx;
+		}
+	} else if (*mtxp) {
+		nni_mtx_unlock(*mtxp);
+		*mtxp = NULL;
+	}
 	switch (info->si_type) {
 	case NNG_STAT_SCOPE:
 	case NNG_STAT_ID:
@@ -325,12 +347,12 @@ stat_update(nni_stat *stat)
 }
 
 static void
-stat_update_tree(nni_stat *stat)
+stat_update_tree(nni_stat *stat, nni_mtx **mtxp)
 {
 	nni_stat *child;
-	stat_update(stat);
+	stat_update(stat, mtxp);
 	NNI_LIST_FOREACH (&stat->s_children, child) {
-		stat_update_tree(child);
+		stat_update_tree(child, mtxp);
 	}
 }
 
@@ -339,6 +361,7 @@ nni_stat_snapshot(nni_stat **statp, nni_stat_item *item)
 {
 	int       rv;
 	nni_stat *stat;
+	nni_mtx  *mtx = NULL;
 
 	if (item == NULL) {
 		item = &stats_root;
@@ -348,7 +371,10 @@ nni_stat_snapshot(nni_stat **statp, nni_stat_item *item)
 		nni_mtx_unlock(&stats_lock);
 		return (rv);
 	}
-	stat_update_tree(stat);
+	stat_update_tree(stat, &mtx);
+	if (mtx != NULL) {
+		nni_mtx_unlock(mtx);
+	}
 	nni_mtx_unlock(&stats_lock);
 	*statp = stat;
 	return (0);

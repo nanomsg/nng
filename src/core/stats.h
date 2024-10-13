@@ -42,6 +42,7 @@ struct nni_stat_item {
 	nni_list_node        si_node;     // list node, framework use only
 	nni_list             si_children; // children, framework use only
 	const nni_stat_info *si_info;     // statistic description
+	nni_mtx             *si_mtx;      // protects, if flag in info
 	union {
 		uint64_t       sv_number;
 		nni_atomic_u64 sv_atomic;
@@ -53,13 +54,13 @@ struct nni_stat_item {
 };
 
 struct nni_stat_info {
-	const char     *si_name;       // name of statistic
-	const char     *si_desc;       // description of statistic (English)
-	nni_stat_type   si_type;       // statistic type, e.g. NNG_STAT_LEVEL
-	nni_stat_unit   si_unit;       // statistic unit, e.g. NNG_UNIT_MILLIS
-	nni_stat_update si_update;     // update function (can be NULL)
-	bool            si_atomic : 1; // stat is atomic
-	bool            si_alloc : 1;  // stat string is allocated
+	const char   *si_name;       // name of statistic
+	const char   *si_desc;       // description of statistic (English)
+	nni_stat_type si_type;       // statistic type, e.g. NNG_STAT_LEVEL
+	nni_stat_unit si_unit;       // statistic unit, e.g. NNG_UNIT_MILLIS
+	bool          si_atomic : 1; // stat is atomic
+	bool          si_alloc : 1;  // stat string is allocated
+	bool          si_lock : 1;   // stat protected by lock (si_mtx)
 };
 
 #ifdef NNG_ENABLE_STATS
@@ -75,6 +76,9 @@ struct nni_stat_info {
 #define NNI_STAT_ATOMIC(var, name, desc, type, unit)           \
 	NNI_STAT_FIELDS(var, .si_name = name, .si_desc = desc, \
 	    .si_type = type, .si_unit = unit, .si_atomic = true)
+#define NNI_STAT_LOCK(var, name, desc, type, unit)             \
+	NNI_STAT_FIELDS(var, .si_name = name, .si_desc = desc, \
+	    .si_type = type, .si_unit = unit, .si_lock = true)
 
 // nni_stat_add adds a statistic, but the operation is unlocked, and the
 // add is to an unregistered stats tree.
@@ -92,6 +96,7 @@ void nni_stat_set_id(nni_stat_item *, int);
 void nni_stat_set_bool(nni_stat_item *, bool);
 void nni_stat_set_string(nni_stat_item *, const char *);
 void nni_stat_init(nni_stat_item *, const nni_stat_info *);
+void nni_stat_init_lock(nni_stat_item *, const nni_stat_info *, nni_mtx *);
 void nni_stat_inc(nni_stat_item *, uint64_t);
 void nni_stat_dec(nni_stat_item *, uint64_t);
 
