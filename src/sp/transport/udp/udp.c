@@ -969,6 +969,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 	udp_ep     *ep;
 	udp_sp_data dreq;
 	nng_msg    *msg;
+	size_t      count = 0;
 
 	if (nni_aio_begin(aio) != 0) {
 		// No way to give the message back to the  protocol,
@@ -980,6 +981,10 @@ udp_pipe_send(void *arg, nni_aio *aio)
 
 	msg = nni_aio_get_msg(aio);
 	ep  = p->ep;
+
+	if (msg != NULL) {
+		count = nni_msg_len(msg) + nni_msg_header_len(msg);
+	}
 
 	nni_mtx_lock(&ep->mtx);
 	if ((nni_msg_len(msg) + nni_msg_header_len(msg)) > p->sndmax) {
@@ -999,14 +1004,13 @@ udp_pipe_send(void *arg, nni_aio *aio)
 	dreq.us_sender_id = p->self_id;
 	dreq.us_peer_id   = p->peer_id;
 	dreq.us_sequence  = p->self_seq++;
-	dreq.us_length =
-	    msg != NULL ? nni_msg_len(msg) + nni_msg_header_len(msg) : 0;
+	dreq.us_length    = (uint16_t) count;
 
 	// Just queue it, or fail it.
 	udp_queue_tx(ep, &p->peer_addr, (void *) &dreq, msg);
 	nni_mtx_unlock(&ep->mtx);
-	nni_aio_finish(
-	    aio, 0, msg ? nni_msg_len(msg) + nni_msg_header_len(msg) : 0);
+
+	nni_aio_finish(aio, 0, count);
 }
 
 static void

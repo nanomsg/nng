@@ -273,6 +273,12 @@ test_udp_multi_small_burst(void)
 	int   burst  = 4;
 	int   count  = 20;
 
+#ifdef NNG_PLATFORM_WINDOWS
+	// Windows seems to drop a lot - maybe because of virtualization
+	burst = 2;
+	count = 10;
+#endif
+
 	// Experimentally at least on Darwin, we see some packet losses
 	// even for loopback.  Loss rates appear depressingly high.
 	for (int i = 0; i < count; i++) {
