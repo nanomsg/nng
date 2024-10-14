@@ -11,6 +11,7 @@
     - [nng_msg](./api/msg/nng_msg.md)
     - [nng_msg_body](./api/msg/nng_msg_body.md)
     - [nng_msg_header](./api/msg/nng_msg_header.md)
+    - [nng_msg_pipe](./api/msg/nng_msg_pipe.md)
 
   - [Threading and Synchronization](./api/thr/index.md)
 
