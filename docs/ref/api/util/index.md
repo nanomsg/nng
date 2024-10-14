@@ -15,4 +15,5 @@ of other uses.
 - [nng_socket_pair](nng_socket_pair.md) --- create a connected pair of BSD sockets
 - [nng_strdup](nng_strdup.md) --- duplicate string
 - [nng_strerror](nng_strerror.md) --- return an error description
+- [nng_url](nng_url.md) --- Universal Resource Locator object
 - [nng_version](nng_version.md) --- report library version

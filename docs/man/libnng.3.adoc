@@ -253,16 +253,16 @@ to observe program behaviors and as an aid in troubleshooting.
 |xref:nng_stats_get.3.adoc[nng_stats_get()]|get statistics
 |===
 
-=== URL Object
+// === URL Object
 
-Common functionality is supplied for parsing and handling
-universal resource locators (URLS).
+// Common functionality is supplied for parsing and handling
+// universal resource locators (URLS).
 
-|===
-|xref:nng_url_clone.3.adoc[nng_url_clone()]|clone URL structure
-|xref:nng_url_free.3.adoc[nng_url_free()]|free URL structure
-|xref:nng_url_parse.3.adoc[nng_url_parse()]|create URL structure from string
-|===
+// |===
+// |xref:nng_url_clone.3.adoc[nng_url_clone()]|clone URL structure
+// |xref:nng_url_free.3.adoc[nng_url_free()]|free URL structure
+// |xref:nng_url_parse.3.adoc[nng_url_parse()]|create URL structure from string
+// |===
 
 === Logging Support
 

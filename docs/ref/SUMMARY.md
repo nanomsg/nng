@@ -31,6 +31,7 @@
     - [nng_socket_pair](./api/util/nng_socket_pair.md)
     - [nng_strdup](./api/util/nng_strdup.md)
     - [nng_strerror](./api/util/nng_strerror.md)
+    - [nng_url](./api/util/nng_url.md)
     - [nng_version](./api/util/nng_version.md)
 
 - [Transports](./tran/index.md)
