@@ -14,7 +14,7 @@ typedef struct nng_msg nng_msg;
 int nng_msg_alloc(nng_msg **msgp, size_t size);
 void nng_msg_free(nng_msg *msg);
 int nng_msg_dup(nng_msg **dup, nng_msg *msg);
-int nng_msg_realloc(nng_msg **msgp, size_t size);
+int nng_msg_realloc(nng_msg *msg, size_t size);
 int nng_msg_reserve(nng_msg *msg, size_t capacity);
 size_t nng_msg_capacity(nng_msg *msg);
 ```
@@ -57,11 +57,10 @@ space may be different as well.
 ### Message Size and Capacity
 
 The message size may be changed by use of the {{i:`nng_msg_realloc`}} function. This
-function will reallocate the underlying memory for the message referenced by _msgp_,
-preserving contents, to provide the new buffer, and return the new message in _msgp_.
+function will reallocate the underlying memory for the message _msg_,
+preserving contents while doing so.
 If the new size is smaller than the original message, it will
 truncate the message, but not perform any allocations.
-If the new message is different, then the original is freed.
 If reallocation fails due to insufficient memory, then the original is left intact.
 
 If message growth is anticipated, the {{i:`nng_msg_reserve`}} function can be used
