@@ -50,19 +50,19 @@ application developer to use the new-style API.
 _NNG_ is implemented in pure C; if you need bindings for
 other languages please check the http://nanomsg.org/[website].
 
-=== Protocols
+// === Protocols
 
-[horizontal]
-xref:nng_bus.7.adoc[nng_bus(7)]:: Bus protocol
-xref:nng_pair.7.adoc[nng_pair(7)]:: Pair protocol
-xref:nng_pub.7.adoc[nng_pub(7)]:: Publisher side of publish/subscribe protocol
-xref:nng_pull.7.adoc[nng_pull(7)]:: Pull side of pipeline protocol
-xref:nng_push.7.adoc[nng_push(7)]:: Push side of pipeline protocol
-xref:nng_sub.7.adoc[nng_sub(7)]:: Subscriber side of publish/subscribe protocol
-xref:nng_rep.7.adoc[nng_rep(7)]:: Reply side of request/reply protocol
-xref:nng_req.7.adoc[nng_req(7)]:: Request side of request/reply protocol
-xref:nng_respondent.7.adoc[nng_respondent(7)]:: Respondent side of survey protocol
-xref:nng_surveyor.7.adoc[nng_surveyor(7)]:: Surveyor side of survey protocol
+// [horizontal]
+// xref:nng_bus.7.adoc[nng_bus(7)]:: Bus protocol
+// xref:nng_pair.7.adoc[nng_pair(7)]:: Pair protocol
+// xref:nng_pub.7.adoc[nng_pub(7)]:: Publisher side of publish/subscribe protocol
+// xref:nng_pull.7.adoc[nng_pull(7)]:: Pull side of pipeline protocol
+// xref:nng_push.7.adoc[nng_push(7)]:: Push side of pipeline protocol
+// xref:nng_sub.7.adoc[nng_sub(7)]:: Subscriber side of publish/subscribe protocol
+// xref:nng_rep.7.adoc[nng_rep(7)]:: Reply side of request/reply protocol
+// xref:nng_req.7.adoc[nng_req(7)]:: Request side of request/reply protocol
+// xref:nng_respondent.7.adoc[nng_respondent(7)]:: Respondent side of survey protocol
+// xref:nng_surveyor.7.adoc[nng_surveyor(7)]:: Surveyor side of survey protocol
 
 === Transports
 
@@ -174,7 +174,7 @@ https://tools.ietf.org/html/rfc3986#section-6.2.2[RFC 3986 6.2.2]:
     slash (`/`) separators are removed from the path.
 
 Note that steps 4, 5, and 7 are not specified by RFC 3986, but performing
-them is believed to improve both the usability and security of 
+them is believed to improve both the usability and security of
 applications, without violating RFC 3986 itself.
 
 TIP: Port numbers may be service names in some instances, but it is recommended

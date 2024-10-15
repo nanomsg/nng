@@ -34,6 +34,19 @@
     - [nng_url](./api/util/nng_url.md)
     - [nng_version](./api/util/nng_version.md)
 
+- [Protocols](./proto/index.md)
+
+  - [BUS Protocol](./proto/bus.md)
+  - [PAIR Protocol](./proto/pair.md)
+  - [PUB Protocol](./proto/pub.md)
+  - [PULL Protocol](./proto/pull.md)
+  - [PUSH Protocol](./proto/push.md)
+  - [REP Protocol](./proto/rep.md)
+  - [REQ Protocol](./proto/req.md)
+  - [RESPONDENT Protocol](./proto/respondent.md)
+  - [SUB Protocol](./proto/sub.md)
+  - [SURVEYOR Protocol](./proto/surveyor.md)
+
 - [Transports](./tran/index.md)
 
   - [BSD Socket](./tran/socket.md)
