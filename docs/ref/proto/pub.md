@@ -22,7 +22,7 @@ Applications should construct their messages accordingly.
 
 ## Socket Operations
 
-The [`nng_pub0_open()`][nng_pub_open] functions create a publisher socket.
+The [`nng_pub0_open`][nng_pub_open] functions create a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 

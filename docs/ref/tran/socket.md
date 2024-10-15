@@ -23,7 +23,7 @@ for the [_tcp_][tcp] transport, but this is an implementation detail and subject
 
 > [!NOTE]
 > This transport is _experimental_, and at present is only supported on POSIX platforms.
-> {{footnote: Windows lacks a suitable `socketpair()` equivalent function we could use.}}
+> {{footnote: Windows lacks a suitable `socketpair` equivalent function we could use.}}
 
 ## Registration
 
