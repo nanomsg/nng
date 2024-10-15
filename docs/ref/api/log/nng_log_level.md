@@ -36,6 +36,10 @@ Use `NNG_LOG_DEBUG` to receive all log messages.
 The `nng_log_get_level` function returns the current log level, which can be useful
 to elide processing to create log content that will simply be discarded anyway.
 
+## RETURN VALUES
+
+The `nng_log_get_level` functions returns the current log level.
+
 ## SEE ALSO
 
 [nng_log](./nng_log.md),
