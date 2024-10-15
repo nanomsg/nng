@@ -19,6 +19,13 @@
     - [nng_mtx](./api/thr/nng_mtx.md)
     - [nng_thread](./api/thr/nng_thread.md)
 
+  - [Logging](./api/log/index.md)
+
+    - [nng_log](./api/log/nng_log.md)
+    - [nng_log_facility](./api/log/nng_log_facility.md)
+    - [nng_log_level](./api/log/nng_log_level.md)
+    - [nng_log_logger](./api/log/nng_log_logger.md)
+
   - [Utility Functions](./api/util/index.md)
 
     - [nng_alloc](./api/util/nng_alloc.md)
