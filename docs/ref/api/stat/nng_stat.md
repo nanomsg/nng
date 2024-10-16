@@ -48,7 +48,7 @@ descriptions (retrievable with {{i:`nng_stat_desc`}}), and a
 type (retrievable with {{i:`nng_stat_type`}}).
 
 Statistics also have a timestamp indicating when the value was sampled,
-obtained via {{i:`nng_stat_timestamp}}`. The timestamp is given in
+obtained via {{i:`nng_stat_timestamp`}}. The timestamp is given in
 in milliseconds since a reference time, and the reference time used
 here is the same reference time used for [`nng_clock`][nng_clock].
 
