@@ -26,6 +26,11 @@
     - [nng_log_level](./api/log/nng_log_level.md)
     - [nng_log_logger](./api/log/nng_log_logger.md)
 
+  - [Statistics](./api/stat/index.md)
+
+    - [nng_stat](./api/stat/nng_stat.md)
+    - [nng_stats](./api/stat/nng_stats.md)
+
   - [Utility Functions](./api/util/index.md)
 
     - [nng_alloc](./api/util/nng_alloc.md)

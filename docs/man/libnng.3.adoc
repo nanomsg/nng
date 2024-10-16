@@ -229,29 +229,29 @@ that route messages from one socket to another.
 |xref:nng_device.3.adoc[nng_device()]|message forwarding device
 |===
 
-=== Statistics
+// === Statistics
 
-The following functions provide access to statistics which can be used
-to observe program behaviors and as an aid in troubleshooting.
+// The following functions provide access to statistics which can be used
+// to observe program behaviors and as an aid in troubleshooting.
 
-|===
-|xref:nng_stat_bool.3.adoc[nng_stat_bool()]|get statistic Boolean value
-|xref:nng_stat_child.3.adoc[nng_stat_child()]|get child statistic
-|xref:nng_stat_desc.3.adoc[nng_stat_name()]|get statistic description
-|xref:nng_stat_find.3.adoc[nng_stat_find()]|find statistic by name
-|xref:nng_stat_find_dialer.3.adoc[nng_stat_find_dialer()]|find dialer statistics
-|xref:nng_stat_find_listener.3.adoc[nng_stat_find_listener()]|find listener statistics
-|xref:nng_stat_find_socket.3.adoc[nng_stat_find_socket()]|find socket statistics
-|xref:nng_stat_name.3.adoc[nng_stat_name()]|get statistic name
-|xref:nng_stat_next.3.adoc[nng_stat_next()]|get next statistic
-|xref:nng_stat_string.3.adoc[nng_stat_string()]|get statistic string value
-|xref:nng_stat_timestamp.3.adoc[nng_stat_timestamp()]|get statistic timestamp
-|xref:nng_stat_type.3.adoc[nng_stat_type()]|get statistic type
-|xref:nng_stat_unit.3.adoc[nng_stat_unit()]|get statistic unit
-|xref:nng_stat_value.3.adoc[nng_stat_value()]|get statistic numeric value
-|xref:nng_stats_free.3.adoc[nng_stats_free()]|free statistics
-|xref:nng_stats_get.3.adoc[nng_stats_get()]|get statistics
-|===
+// |===
+// |xref:nng_stat_bool.3.adoc[nng_stat_bool()]|get statistic Boolean value
+// |xref:nng_stat_child.3.adoc[nng_stat_child()]|get child statistic
+// |xref:nng_stat_desc.3.adoc[nng_stat_name()]|get statistic description
+// |xref:nng_stat_find.3.adoc[nng_stat_find()]|find statistic by name
+// |xref:nng_stat_find_dialer.3.adoc[nng_stat_find_dialer()]|find dialer statistics
+// |xref:nng_stat_find_listener.3.adoc[nng_stat_find_listener()]|find listener statistics
+// |xref:nng_stat_find_socket.3.adoc[nng_stat_find_socket()]|find socket statistics
+// |xref:nng_stat_name.3.adoc[nng_stat_name()]|get statistic name
+// |xref:nng_stat_next.3.adoc[nng_stat_next()]|get next statistic
+// |xref:nng_stat_string.3.adoc[nng_stat_string()]|get statistic string value
+// |xref:nng_stat_timestamp.3.adoc[nng_stat_timestamp()]|get statistic timestamp
+// |xref:nng_stat_type.3.adoc[nng_stat_type()]|get statistic type
+// |xref:nng_stat_unit.3.adoc[nng_stat_unit()]|get statistic unit
+// |xref:nng_stat_value.3.adoc[nng_stat_value()]|get statistic numeric value
+// |xref:nng_stats_free.3.adoc[nng_stats_free()]|free statistics
+// |xref:nng_stats_get.3.adoc[nng_stats_get()]|get statistics
+// |===
 
 // === URL Object
 
@@ -275,9 +275,9 @@ to observe program behaviors and as an aid in troubleshooting.
 // |xref:nng_log_logger.3.adoc[nng_log_set_logger()]|set logging handler
 // |===
 
-=== Supplemental API
+// === Supplemental API
 
-NOTE: All these functions have been moved to new mdbook docs.
+// NOTE: All these functions have been moved to new mdbook docs.
 
 // These supplemental functions are not intrinsic to building
 // network applications with _NNG_, but they are made available
