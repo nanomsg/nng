@@ -61,8 +61,9 @@
 
 - [Transports](./tran/index.md)
 
-  - [BSD Socket](./tran/socket.md)
   - [Intra-Process Transport](./tran/inproc.md)
-  - [UDP](./tran/udp.md)
+  - [Inter-Process Transport](./tran/ipc.md)
+  - [BSD Socket (Experimental)](./tran/socket.md)
+  - [UDP Transport (Experimental)](./tran/udp.md)
 
 [Index](./indexing.md)
