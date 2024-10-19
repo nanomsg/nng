@@ -26,10 +26,7 @@
 
   - [Logging](./api/logging.md)
 
-  - [Statistics](./api/stat/index.md)
-
-    - [nng_stat](./api/stat/nng_stat.md)
-    - [nng_stats](./api/stat/nng_stats.md)
+  - [Statistics](./api/stats.md)
 
   - [Utility Functions](./api/util/index.md)
 
