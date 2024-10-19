@@ -13,6 +13,11 @@
     - [nng_msg_header](./api/msg/nng_msg_header.md)
     - [nng_msg_pipe](./api/msg/nng_msg_pipe.md)
 
+  - [Asynchronous I/O Operations](./api/aio/index.md)
+
+    - [nng_aio](./api/aio/nng_aio.md)
+    - [aio_cancel](./api/aio/aio_cancel.md)
+
   - [Threading and Synchronization](./api/thr/index.md)
 
     - [nng_cv](./api/thr/nng_cv.md)
