@@ -8,10 +8,17 @@ title = "NNG Reference Manual (DRAFT)"
 [output.html]
 smart-punctuation = true
 fold.enable = true
-fold.level = 1
+fold.level = 2
+additional-css = ["theme/pagetoc.css"]
+additional-js = ["theme/pagetoc.js"]
 
 [preprocessor.alerts]
 
 [preprocessor.indexing]
 
 [preprocessor.footnote]
+
+# [preprocessor.inline-highlighting]
+# default-language = "c"
+
+[preprocessor.pagetoc]
