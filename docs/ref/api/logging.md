@@ -170,6 +170,16 @@ The {{i:`nng_system_logger`}} attempts to use an appropriate system facility to 
 For POSIX systems, this means using `syslog` to process the messages.
 For other systems the defauilt behavior may be the same as `nng_stderr_logger`.
 
+## See Also
+
+The Syslog Protocol upon which this is based is documented in the following two IETF
+RFCS,
+
+- R. Gerhards, [RFC 5424](https://datatracker.ietf.org/doc/html/rfc5424), _The Syslog Protocol_,
+  March 2009
+- C. Lonvick, [RFC 3164](https://datatracker.ietf.org/doc/html/rfc3164), _The BSD syslog Protocol_,
+  August 2001
+
 [log_level]: #log-levels
 [log_facility]: #log-facilities
 [log_logger]: #log-handlers
