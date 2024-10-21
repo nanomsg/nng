@@ -18,11 +18,9 @@
     - [nng_aio](./api/aio/nng_aio.md)
     - [aio_cancel](./api/aio/aio_cancel.md)
 
-  - [Synchronization Primitves](./api/synch.md)
+  - [Synchronization](./api/synch.md)
 
-  - [Threading and Synchronization](./api/thr/index.md)
-
-    - [nng_thread](./api/thr/nng_thread.md)
+  - [Threads](./api/thread.md)
 
   - [Logging](./api/logging.md)
 
