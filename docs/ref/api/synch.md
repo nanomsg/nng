@@ -132,19 +132,9 @@ The difference between these functions is that
 one thread (which may be chosen randomly).
 
 > [!TIP]
-> Use of `nng_cv_wake1` may be used to reduce the "thundering herd" syndrom of waking
+> Use of `nng_cv_wake1` may be used to reduce the "{{i:thundering herd}}" syndrom of waking
 > all threads concurrently, but should only be used in circumstances where the application
 > does not depend on _which_ thread will be woken. When in doubt, `nng_cv_wake` is safer.
-
-[aio]: aio.md
-[thread]: thread.md
-[nng_mtx]: #mutual-exclusion-lock
-[nng_mtx_lock]: #acquiring-a-mutex
-[nng_mtx_unlock]: #releasing-a-mutex
-[nng_cv]: #condition-variable
-[nng_cv_wait]: #waiting-for-the-condition
-[nng_cv_wake]: #signaling-the-condition
-[nng_clock]: ../util/nng_clock.md
 
 ## Examples
 
@@ -180,3 +170,13 @@ one thread (which may be chosen randomly).
     nng_cv_wake(cv);
     nng_mtx_unlock(m);
 ```
+
+[aio]: aio.md
+[thread]: thread.md
+[nng_mtx]: #mutual-exclusion-lock
+[nng_mtx_lock]: #acquiring-a-mutex
+[nng_mtx_unlock]: #releasing-a-mutex
+[nng_cv]: #condition-variable
+[nng_cv_wait]: #waiting-for-the-condition
+[nng_cv_wake]: #signaling-the-condition
+[nng_clock]: ./time.md#getting-the-current-time

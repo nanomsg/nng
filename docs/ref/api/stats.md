@@ -199,7 +199,7 @@ here is the same reference time used for [`nng_clock`][nng_clock].
 
 ## See Also
 
-[nng_clock][nng_clock]
+[`nng_clock`][nng_clock]
 
 [nng_stat_type]: #statistic-type
 [nng_stats_free]: #freeing-a-snapshot
@@ -213,7 +213,7 @@ here is the same reference time used for [`nng_clock`][nng_clock].
 [NNG_STAT_SCOPE]: #NNG_STAT_SCOPE
 [NNG_STAT_STRING]: #NNG_STAT_STRING
 [NNG_STAT_BOOLEAN]: #NNG_STAT_BOOLEAN
-[nng_clock]: ../util/nng_clock.md
+[nng_clock]: ./time.md#getting-the-current-time
 [nng_socket]: TODO.md
 [nng_dialer]: TODO.md
 [nng_listener]: TODO.md
