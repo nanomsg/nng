@@ -26,6 +26,8 @@
 
   - [Statistics](./api/stats.md)
 
+  - [Time](./api/time.md)
+
   - [Utility Functions](./api/util/index.md)
 
     - [nng_alloc](./api/util/nng_alloc.md)
