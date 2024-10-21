@@ -144,10 +144,6 @@ test_tcp_no_delay_option(void)
 	NUTS_ADDR(addr, "tcp");
 
 	NUTS_OPEN(s);
-#ifndef NNG_ELIDE_DEPRECATED
-	NUTS_PASS(nng_socket_get_bool(s, NNG_OPT_TCP_NODELAY, &v));
-	NUTS_TRUE(v);
-#endif
 	NUTS_PASS(nng_dialer_create(&d, s, addr));
 	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v));
 	NUTS_TRUE(v);
@@ -178,17 +174,6 @@ test_tcp_no_delay_option(void)
 	NUTS_PASS(nng_dialer_close(d));
 	NUTS_PASS(nng_listener_close(l));
 
-	// Make sure socket wide defaults apply.
-#ifndef NNG_ELIDE_DEPRECATED
-	NUTS_PASS(nng_socket_set_bool(s, NNG_OPT_TCP_NODELAY, true));
-	v = false;
-	NUTS_PASS(nng_socket_get_bool(s, NNG_OPT_TCP_NODELAY, &v));
-	NUTS_TRUE(v);
-	NUTS_PASS(nng_socket_set_bool(s, NNG_OPT_TCP_NODELAY, false));
-	NUTS_PASS(nng_dialer_create(&d, s, addr));
-	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v));
-	NUTS_TRUE(v == false);
-#endif
 	NUTS_CLOSE(s);
 }
 
@@ -204,10 +189,6 @@ test_tcp_keep_alive_option(void)
 
 	NUTS_ADDR(addr, "tcp");
 	NUTS_OPEN(s);
-#ifndef NNG_ELIDE_DEPRECATED
-	NUTS_PASS(nng_socket_get_bool(s, NNG_OPT_TCP_KEEPALIVE, &v));
-	NUTS_TRUE(v == false);
-#endif
 	NUTS_PASS(nng_dialer_create(&d, s, addr));
 	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v));
 	NUTS_TRUE(v == false);
@@ -230,17 +211,6 @@ test_tcp_keep_alive_option(void)
 	NUTS_PASS(nng_dialer_close(d));
 	NUTS_PASS(nng_listener_close(l));
 
-	// Make sure socket wide defaults apply.
-#ifndef NNG_ELIDE_DEPRECATED
-	NUTS_PASS(nng_socket_set_bool(s, NNG_OPT_TCP_KEEPALIVE, false));
-	v = true;
-	NUTS_PASS(nng_socket_get_bool(s, NNG_OPT_TCP_KEEPALIVE, &v));
-	NUTS_TRUE(v == false);
-	NUTS_PASS(nng_socket_set_bool(s, NNG_OPT_TCP_KEEPALIVE, true));
-	NUTS_PASS(nng_dialer_create(&d, s, addr));
-	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v));
-	NUTS_TRUE(v);
-#endif
 	NUTS_CLOSE(s);
 }
 

@@ -15,7 +15,7 @@ test_recv_timeout(void)
 {
 	nng_socket s1;
 	uint64_t   now;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 10));
@@ -32,7 +32,7 @@ test_recv_nonblock(void)
 {
 	nng_socket s1;
 	uint64_t   now;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 10));
@@ -48,7 +48,7 @@ test_send_timeout(void)
 {
 	nng_socket s1;
 	uint64_t   now;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
@@ -66,7 +66,7 @@ test_send_nonblock(void)
 {
 	nng_socket s1;
 	uint64_t   now;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
@@ -108,9 +108,9 @@ test_socket_name(void)
 {
 	nng_socket s1;
 	char       name[128]; // 64 is max
-	char *     str;
+	char      *str;
 	long       id;
-	char *     end;
+	char      *end;
 	size_t     sz;
 
 	sz = sizeof(name);
@@ -175,8 +175,8 @@ test_send_recv(void)
 	int          len;
 	size_t       sz;
 	nng_duration to = 3000; // 3 seconds
-	char *       buf;
-	char *       a = "inproc://t1";
+	char        *buf;
+	char        *a = "inproc://t1";
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -215,8 +215,8 @@ test_send_recv_zero_length(void)
 	int          len;
 	size_t       sz;
 	nng_duration to = 3000; // 3 seconds
-	char *       buf;
-	char *       a = "inproc://send-recv-zero-length";
+	char        *buf;
+	char        *a = "inproc://send-recv-zero-length";
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -259,11 +259,11 @@ test_connection_refused(void)
 void
 test_late_connection(void)
 {
-	char *     buf;
+	char      *buf;
 	size_t     sz;
 	nng_socket s1;
 	nng_socket s2;
-	char *     a = "inproc://asy";
+	char      *a = "inproc://asy";
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -287,7 +287,7 @@ test_late_connection(void)
 void
 test_address_busy(void)
 {
-	char *       a = "inproc://eaddrinuse";
+	char        *a = "inproc://eaddrinuse";
 	nng_listener l = NNG_LISTENER_INITIALIZER;
 	nng_dialer   d = NNG_DIALER_INITIALIZER;
 	nng_socket   s1;
@@ -323,7 +323,7 @@ test_endpoint_types(void)
 	nng_listener l = NNG_LISTENER_INITIALIZER;
 	nng_dialer   d2;
 	nng_listener l2;
-	char *       a = "inproc://mumble...";
+	char        *a = "inproc://mumble...";
 	bool         b;
 
 	NUTS_OPEN(s1);
@@ -400,30 +400,10 @@ test_listener_options(void)
 
 	NUTS_OPEN(s1);
 
-#ifndef NNG_ELIDE_DEPRECATED
-	// Create a listener with the specified options
-	NUTS_PASS(nng_socket_set_size(s1, NNG_OPT_RECVMAXSZ, 543));
-	NUTS_PASS(nng_listener_create(&l, s1, "inproc://listener_opts"));
-	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 543);
-
-	// Verify endpoint overrides
-	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 678));
-	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 678);
-	NUTS_PASS(nng_socket_get_size(s1, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 543);
-
-	// And socket overrides again
-	NUTS_PASS(nng_socket_set_size(s1, NNG_OPT_RECVMAXSZ, 911));
-	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 911);
-#else
 	NUTS_PASS(nng_listener_create(&l, s1, "inproc://listener_opts"));
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 678));
 	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 678);
-#endif
 
 	// Cannot set invalid options
 	NUTS_FAIL(nng_listener_set_size(l, "BAD_OPT", 1), NNG_ENOTSUP);
@@ -456,31 +436,10 @@ test_dialer_options(void)
 
 	NUTS_OPEN(s1);
 
-#ifndef NNG_ELIDE_DEPRECATED
-	// NOTE: This test will fail if eliding deprecated behavior.
-	// Create a dialer with the specified options
-	NUTS_PASS(nng_socket_set_size(s1, NNG_OPT_RECVMAXSZ, 543));
-	NUTS_PASS(nng_dialer_create(&d, s1, "inproc://dialer_opts"));
-	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 543);
-
-	// Verify endpoint overrides
-	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 678));
-	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 678);
-	NUTS_PASS(nng_socket_get_size(s1, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 543);
-
-	// And socket overrides again
-	NUTS_PASS(nng_socket_set_size(s1, NNG_OPT_RECVMAXSZ, 911));
-	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &sz));
-	NUTS_TRUE(sz == 911);
-#else
 	NUTS_PASS(nng_dialer_create(&d, s1, "inproc://dialer_opts"));
 	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 678));
 	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 678);
-#endif
 
 	// Cannot set invalid options
 	NUTS_FAIL(nng_dialer_set_size(d, "BAD_OPT", 1), NNG_ENOTSUP);
@@ -588,7 +547,7 @@ test_size_options(void)
 	nng_socket s1;
 	size_t     val;
 	size_t     sz;
-	char *     opt;
+	char      *opt;
 
 	char *cases[] = {
 		NNG_OPT_RECVMAXSZ,

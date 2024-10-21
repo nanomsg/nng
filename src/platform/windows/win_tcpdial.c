@@ -43,6 +43,7 @@ nni_tcp_dialer_init(nni_tcp_dialer **dp)
 	ZeroMemory(d, sizeof(*d));
 	nni_mtx_init(&d->mtx);
 	nni_aio_list_init(&d->aios);
+	d->nodelay = true;
 
 	// Create a scratch socket for use with ioctl.
 	s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);

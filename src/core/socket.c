@@ -1036,57 +1036,6 @@ nni_sock_setopt(
 		    0) {
 			return (rv);
 		}
-
-#if !defined(NNG_ELIDE_DEPRECATED)
-		// TCP options, set via socket is deprecated.
-	} else if ((strcmp(name, NNG_OPT_TCP_KEEPALIVE) == 0) ||
-	    (strcmp(name, NNG_OPT_TCP_NODELAY)) == 0) {
-		if ((rv = nni_copyin_bool(NULL, v, sz, t)) != 0) {
-			return (rv);
-		}
-#endif
-
-#if defined(NNG_SUPP_TLS) && !defined(NNG_ELIDE_DEPRECATED)
-		// TLS options may not be supported if TLS is not
-		// compiled in.  Supporting all these is deprecated.
-	} else if (strcmp(name, NNG_OPT_TLS_CONFIG) == 0) {
-		nng_tls_config *tc;
-		if ((rv = nni_copyin_ptr((void **) &tc, v, sz, t)) != 0) {
-			return (rv);
-		}
-		// place a hold on this configuration object
-		nng_tls_config_hold(tc);
-
-	} else if ((strcmp(name, NNG_OPT_TLS_SERVER_NAME) == 0) ||
-	    (strcmp(name, NNG_OPT_TLS_CA_FILE) == 0) ||
-	    (strcmp(name, NNG_OPT_TLS_CERT_KEY_FILE) == 0)) {
-		if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
-			return (NNG_EBADTYPE);
-		}
-		if (nni_strnlen(v, sz) >= sz) {
-			return (NNG_EINVAL);
-		}
-	} else if ((strcmp(name, NNG_OPT_TLS_AUTH_MODE) == 0)) {
-		// 0, 1, or 2 (none, optional, required)
-		if ((rv = nni_copyin_int(NULL, v, sz, 0, 2, t)) != 0) {
-			return (rv);
-		}
-#endif
-
-#if defined(NNG_PLATFORM_POSIX) && !defined(NNG_ELIDE_DEPRECATED)
-	} else if (strcmp(name, NNG_OPT_IPC_PERMISSIONS) == 0) {
-		// UNIX mode bits are 0777, but allow set id and sticky bits
-		if ((rv = nni_copyin_int(NULL, v, sz, 0, 07777, t)) != 0) {
-			return (rv);
-		}
-#endif
-
-#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_ELIDE_DEPRECATED)
-	} else if (strcmp(name, NNG_OPT_IPC_SECURITY_DESCRIPTOR) == 0) {
-		if ((rv = nni_copyin_ptr(NULL, v, sz, t)) == 0) {
-			return (rv);
-		}
-#endif
 	}
 
 	// Prepare a copy of the socket option.
@@ -1121,38 +1070,6 @@ nni_sock_setopt(
 			return (0);
 		}
 	}
-
-#ifndef NNG_ELIDE_DEPRECATED
-	nni_dialer   *d;
-	nni_listener *l;
-
-	// Apply the options.  Failure to set any option on any
-	// transport (other than ENOTSUP) stops the operation
-	// altogether.  Its important that transport wide checks
-	// properly pre-validate.
-	NNI_LIST_FOREACH (&s->s_listeners, l) {
-		int x;
-		x = nni_listener_setopt(l, optv->name, optv->data, sz, t);
-		if (x != NNG_ENOTSUP) {
-			if ((rv = x) != 0) {
-				nni_mtx_unlock(&s->s_mx);
-				nni_free_opt(optv);
-				return (rv);
-			}
-		}
-	}
-	NNI_LIST_FOREACH (&s->s_dialers, d) {
-		int x;
-		x = nni_dialer_setopt(d, optv->name, optv->data, sz, t);
-		if (x != NNG_ENOTSUP) {
-			if ((rv = x) != 0) {
-				nni_mtx_unlock(&s->s_mx);
-				nni_free_opt(optv);
-				return (rv);
-			}
-		}
-	}
-#endif
 
 	if (rv == 0) {
 		// Remove and toss the old value; we are using a new one.

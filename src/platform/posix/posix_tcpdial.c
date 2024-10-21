@@ -37,7 +37,8 @@ nni_tcp_dialer_init(nni_tcp_dialer **dp)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&d->mtx);
-	d->closed = false;
+	d->closed  = false;
+	d->nodelay = true;
 	nni_aio_list_init(&d->connq);
 	nni_atomic_init_bool(&d->fini);
 	nni_atomic_init64(&d->ref);

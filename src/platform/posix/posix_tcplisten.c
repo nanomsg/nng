@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -56,6 +56,7 @@ nni_tcp_listener_init(nni_tcp_listener **lp)
 	l->pfd     = NULL;
 	l->closed  = false;
 	l->started = false;
+	l->nodelay = true;
 
 	nni_aio_list_init(&l->acceptq);
 	*lp = l;

@@ -94,32 +94,6 @@ test_bad_addresses(void)
 }
 
 void
-test_no_delay(void)
-{
-	int    s;
-	int    opt;
-	size_t sz;
-	NUTS_TRUE((s = nn_socket(AF_SP, NN_PAIR)) >= 0);
-
-	sz = sizeof(opt);
-	NUTS_NN_PASS(nn_getsockopt(s, NN_TCP, NN_TCP_NODELAY, &opt, &sz));
-	NUTS_TRUE(sz == sizeof(opt));
-	NUTS_TRUE(opt == 0);
-	opt = 2;
-	NUTS_NN_FAIL(
-	    nn_setsockopt(s, NN_TCP, NN_TCP_NODELAY, &opt, sz), EINVAL);
-
-	opt = 1;
-	NUTS_NN_PASS(nn_setsockopt(s, NN_TCP, NN_TCP_NODELAY, &opt, sz));
-
-	opt = 3;
-	NUTS_NN_PASS(nn_getsockopt(s, NN_TCP, NN_TCP_NODELAY, &opt, &sz));
-	NUTS_TRUE(sz == sizeof(opt));
-	NUTS_TRUE(opt == 1);
-	NUTS_NN_PASS(nn_close(s));
-}
-
-void
 test_ping_pong(void)
 {
 	int   sb, sc, p1, p2;
@@ -201,7 +175,7 @@ test_max_recv_size(void)
 	int    n;
 	size_t sz;
 	char   buf[64];
-	char *addr;
+	char  *addr;
 
 	NUTS_ADDR(addr, "tcp");
 
@@ -251,7 +225,6 @@ TEST_LIST = {
 	{ "compat tcp connect and close ", test_connect_and_close },
 	{ "compat tcp bind and connect ", test_bind_and_connect },
 	{ "compat tcp invalid addresses", test_bad_addresses },
-	{ "compat tcp no delay option", test_no_delay },
 	{ "compat tcp ping pong", test_ping_pong },
 	{ "compat tcp pair reject", test_pair_reject },
 	{ "compat tcp addr in use", test_addr_in_use },
