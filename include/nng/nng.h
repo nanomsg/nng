@@ -966,41 +966,42 @@ NNG_DECL void nng_stats_free(nng_stat *);
 
 // nng_stats_dump is a debugging function that dumps the entire set of
 // statistics to stdout.
-NNG_DECL void nng_stats_dump(nng_stat *);
+NNG_DECL void nng_stats_dump(const nng_stat *);
 
 // nng_stat_next finds the next sibling for the current stat.  If there
 // are no more siblings, it returns NULL.
-NNG_DECL nng_stat *nng_stat_next(nng_stat *);
+NNG_DECL const nng_stat *nng_stat_next(const nng_stat *);
 
 // nng_stat_child finds the first child of the current stat.  If no children
 // exist, then NULL is returned.
-NNG_DECL nng_stat *nng_stat_child(nng_stat *);
+NNG_DECL const nng_stat *nng_stat_child(const nng_stat *);
 
 // nng_stat_name is used to determine the name of the statistic.
 // This is a human-readable name.  Statistic names, as well as the presence
 // or absence or semantic of any particular statistic are not part of any
 // stable API, and may be changed without notice in future updates.
-NNG_DECL const char *nng_stat_name(nng_stat *);
+NNG_DECL const char *nng_stat_name(const nng_stat *);
 
 // nng_stat_type is used to determine the type of the statistic.
 // Counters generally increment, and therefore changes in the value over
 // time are likely more interesting than the actual level.  Level
 // values reflect some absolute state however, and should be presented to the
 // user as is.
-NNG_DECL int nng_stat_type(nng_stat *);
+NNG_DECL int nng_stat_type(const nng_stat *);
 
 // nng_stat_find is used to find a specific named statistic within
 // a statistic tree.  NULL is returned if no such statistic exists.
-NNG_DECL nng_stat *nng_stat_find(nng_stat *, const char *);
+NNG_DECL const nng_stat *nng_stat_find(const nng_stat *, const char *);
 
 // nng_stat_find_socket is used to find the stats for the given socket.
-NNG_DECL nng_stat *nng_stat_find_socket(nng_stat *, nng_socket);
+NNG_DECL const nng_stat *nng_stat_find_socket(const nng_stat *, nng_socket);
 
 // nng_stat_find_dialer is used to find the stats for the given dialer.
-NNG_DECL nng_stat *nng_stat_find_dialer(nng_stat *, nng_dialer);
+NNG_DECL const nng_stat *nng_stat_find_dialer(const nng_stat *, nng_dialer);
 
 // nng_stat_find_listener is used to find the stats for the given listener.
-NNG_DECL nng_stat *nng_stat_find_listener(nng_stat *, nng_listener);
+NNG_DECL const nng_stat *nng_stat_find_listener(
+    const nng_stat *, nng_listener);
 
 enum nng_stat_type_enum {
 	NNG_STAT_SCOPE   = 0, // Stat is for scoping, and carries no value
@@ -1014,7 +1015,7 @@ enum nng_stat_type_enum {
 // nng_stat_unit provides information about the unit for the statistic,
 // such as NNG_UNIT_BYTES or NNG_UNIT_BYTES.  If no specific unit is
 // applicable, such as a relative priority, then NN_UNIT_NONE is returned.
-NNG_DECL int nng_stat_unit(nng_stat *);
+NNG_DECL int nng_stat_unit(const nng_stat *);
 
 enum nng_unit_enum {
 	NNG_UNIT_NONE     = 0, // No special units
@@ -1027,24 +1028,24 @@ enum nng_unit_enum {
 // nng_stat_value returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
 // snapshot was updated, and are undefined until an update is performed.
-NNG_DECL uint64_t nng_stat_value(nng_stat *);
+NNG_DECL uint64_t nng_stat_value(const nng_stat *);
 
 // nng_stat_bool returns the boolean value of the statistic.
-NNG_DECL bool nng_stat_bool(nng_stat *);
+NNG_DECL bool nng_stat_bool(const nng_stat *);
 
 // nng_stat_string returns the string associated with a string statistic,
 // or NULL if the statistic is not part of the string.  The value returned
 // is valid until the associated statistic is freed.
-NNG_DECL const char *nng_stat_string(nng_stat *);
+NNG_DECL const char *nng_stat_string(const nng_stat *);
 
 // nng_stat_desc returns a human-readable description of the statistic.
 // This may be useful for display in diagnostic interfaces, etc.
-NNG_DECL const char *nng_stat_desc(nng_stat *);
+NNG_DECL const char *nng_stat_desc(const nng_stat *);
 
 // nng_stat_timestamp returns a timestamp (milliseconds) when the statistic
 // was captured.  The base offset is the same as used by nng_clock().
 // We don't use nng_time though, because that's in the supplemental header.
-NNG_DECL uint64_t nng_stat_timestamp(nng_stat *);
+NNG_DECL uint64_t nng_stat_timestamp(const nng_stat *);
 
 // Device functionality.  This connects two sockets together in a device,
 // which means that messages from one side are forwarded to the other.

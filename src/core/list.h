@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2024 Garrett D'Amore <garrett@damore.org>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -58,7 +58,8 @@ extern int   nni_list_empty(nni_list *);
 extern int   nni_list_node_active(nni_list_node *);
 extern void  nni_list_node_remove(nni_list_node *);
 
-#define NNI_LIST_FOREACH(l, it) \
-	for (it = nni_list_first(l); it != NULL; it = nni_list_next(l, it))
+#define NNI_LIST_FOREACH(l, it)                  \
+	for (it = nni_list_first(l); it != NULL; \
+	     it = nni_list_next(l, (void *) it))
 
 #endif // CORE_LIST_H

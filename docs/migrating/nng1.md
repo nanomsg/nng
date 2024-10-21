@@ -48,3 +48,9 @@ options must be set on the endpoint (dialer or listener) using the appropriate
 `nng_dialer_set` or `nng_listener_set` option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.
+
+## Statistics Use Constified Pointers
+
+A number of the statistics functions take, or return, `const nng_stat *` instead
+of plain `nng_stat *`. The ABI has not changed, but it may be necessary to declare
+certain methods variables `const` to avoid warnings about misuse of `const`.

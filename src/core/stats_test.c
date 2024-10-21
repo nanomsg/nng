@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,12 +16,12 @@ void
 test_stats_socket(void)
 {
 #ifdef NNG_ENABLE_STATS
-	nng_socket s1;
-	nng_socket s2;
-	nng_stat  *st1;
-	nng_stat  *st2;
-	nng_stat *item;
-	nng_stat  *stats;
+	nng_socket      s1;
+	nng_socket      s2;
+	const nng_stat *st1;
+	const nng_stat *st2;
+	const nng_stat *item;
+	nng_stat       *stats;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -63,11 +63,11 @@ void
 test_stats_dump(void)
 {
 #ifdef NNG_ENABLE_STATS
-	nng_socket s1;
-	nng_socket s2;
-	nng_stat  *st1;
-	nng_stat  *st2;
-	nng_stat  *stats;
+	nng_socket      s1;
+	nng_socket      s2;
+	const nng_stat *st1;
+	const nng_stat *st2;
+	nng_stat       *stats;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);

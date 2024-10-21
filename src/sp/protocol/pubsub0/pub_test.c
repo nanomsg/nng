@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,7 +14,7 @@ test_pub_identity(void)
 {
 	nng_socket s;
 	int        p;
-	char *     n;
+	char      *n;
 
 	NUTS_PASS(nng_pub0_open(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
@@ -103,10 +103,10 @@ test_pub_send_no_pipes(void)
 void
 test_pub_validate_peer(void)
 {
-	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char       *addr;
+	nng_socket      s1, s2;
+	nng_stat       *stats;
+	const nng_stat *reject;
+	char           *addr;
 
 	NUTS_ADDR(addr, "inproc");
 
@@ -166,7 +166,7 @@ test_sub_recv_ctx_closed(void)
 {
 	nng_socket sub;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_ctx_open(&ctx, sub));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -183,7 +183,7 @@ test_sub_ctx_recv_aio_stopped(void)
 {
 	nng_socket sub;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -203,7 +203,7 @@ test_sub_close_context_recv(void)
 {
 	nng_socket sub;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_ctx_open(&ctx, sub));
@@ -223,7 +223,7 @@ test_sub_ctx_recv_nonblock(void)
 {
 	nng_socket sub;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_ctx_open(&ctx, sub));
@@ -243,7 +243,7 @@ test_sub_ctx_recv_cancel(void)
 {
 	nng_socket sub;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_ctx_open(&ctx, sub));

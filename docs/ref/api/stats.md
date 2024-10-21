@@ -54,8 +54,8 @@ The {{i:`nng_stats_free`}} function deallocates the snapshot referenced by _stat
 ## Traversing the Tree
 
 ```c
-nng_stat *nng_stat_child(nng_stat *stat);
-nng_stat *nng_stat_next(nng_stat *stat);
+const nng_stat *nng_stat_child(const nng_stat *stat);
+const nng_stat *nng_stat_next(const nng_stat *stat);
 ```
 
 Traversing the tree of statistics is done using the {{i:`nng_stat_child`}} and
@@ -70,10 +70,10 @@ or `NULL` if _stat_ has no more siblings to the right.
 ## Finding a Statistic
 
 ```c
-nng_stat *nng_stat_find(nng_stat *stat, const char *name);
-nng_stat *nng_stat_find_dialer(nng_stat *stat, nng_dialer dialer);
-nng_stat *nng_stat_find_listener(nng_stat *stat, nng_dialer listener);
-nng_stat *nng_stat_find_socket(nng_stat *stat, nng_dialer socket);
+const nng_stat *nng_stat_find(const nng_stat *stat, const char *name);
+const nng_stat *nng_stat_find_dialer(const nng_stat *stat, nng_dialer dialer);
+const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener);
+const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 ```
 
 Sometimes it is easiest to search for a specific statistic, matching by name,
@@ -95,8 +95,8 @@ that they can find the desired object.
 ## Statistic Identification
 
 ```c
-const char *nng_stat_name(nng_stat *stat);
-const char *nng_stat_desc(nng_stat *stat);
+const char *nng_stat_name(const nng_stat *stat);
+const char *nng_stat_desc(const nng_stat *stat);
 ```
 
 Every statistic has a name, returned by {{i:`nng_stat_name`}}, and a description, returned by
@@ -105,7 +105,7 @@ Every statistic has a name, returned by {{i:`nng_stat_name`}}, and a description
 ## Statistic Type
 
 ```c
-int nng_stat_type(nng_stat *stat);
+int nng_stat_type(const nng_stat *stat);
 ```
 
 The function {{i:`nng_stat_type`}} returns the type of the statistic.
@@ -151,9 +151,9 @@ function can be used to obtain that value.
 ## Statistic Value
 
 ```c
-uint64_t nng_stat_value(nng_stat *stat);
-const char *nng_stat_string(nng_stat *stat);
-bool nng_stat_bool(nng_stat *stat);
+uint64_t nng_stat_value(const nng_stat *stat);
+const char *nng_stat_string(const nng_stat *stat);
+bool nng_stat_bool(const nng_stat *stat);
 ```
 
 These functions return the value associated with the statistic.
@@ -173,7 +173,7 @@ is not of type `NNG_STAT_STRING`, then `NULL` is returned.
 ## Statistic Units
 
 ```c
-int nng_stat_unit(nng_stat *stat);
+int nng_stat_unit(const nng_stat *stat);
 ```
 
 For statistics of type [`NNG_STAT_COUNTER`][NNG_STAT_COUNTER] or [`NNG_STAT_LEVEL`][NNG_STAT_LEVEL],
@@ -189,7 +189,7 @@ The following units may be returned from {{i:`nng_stat_unit`}} for such a statis
 ## Statistic Timestamp
 
 ```c
-uint64_t nng_stat_timestamp(nng_stat *stat);
+uint64_t nng_stat_timestamp(const nng_stat *stat);
 ```
 
 Statistics have a timestamp indicating when the value was sampled,

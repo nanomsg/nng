@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,7 +14,7 @@ test_push_identity(void)
 {
 	nng_socket s;
 	int        p;
-	char *     n;
+	char      *n;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
@@ -34,7 +34,7 @@ static void
 test_push_cannot_recv(void)
 {
 	nng_socket s;
-	nng_msg *  m = NULL;
+	nng_msg   *m = NULL;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_FAIL(nng_recvmsg(s, &m, 0), NNG_ENOTSUP);
@@ -210,10 +210,10 @@ test_push_poll_truncate(void)
 void
 test_push_validate_peer(void)
 {
-	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char *     addr;
+	nng_socket      s1, s2;
+	nng_stat       *stats;
+	const nng_stat *reject;
+	char           *addr;
 
 	NUTS_ADDR(addr, "inproc");
 
@@ -242,8 +242,8 @@ static void
 test_push_send_aio_stopped(void)
 {
 	nng_socket s;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -263,8 +263,8 @@ static void
 test_push_close_send(void)
 {
 	nng_socket s;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -284,8 +284,8 @@ static void
 test_push_send_nonblock(void)
 {
 	nng_socket s;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -306,8 +306,8 @@ static void
 test_push_send_timeout(void)
 {
 	nng_socket s;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -328,8 +328,8 @@ static void
 test_push_send_cancel(void)
 {
 	nng_socket s;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -352,8 +352,8 @@ test_push_send_late_unbuffered(void)
 {
 	nng_socket s;
 	nng_socket pull;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_pull0_open(&pull));
@@ -375,14 +375,13 @@ test_push_send_late_unbuffered(void)
 	nng_aio_free(aio);
 }
 
-
 static void
 test_push_send_late_buffered(void)
 {
 	nng_socket s;
 	nng_socket pull;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_push0_open(&s));
 	NUTS_PASS(nng_pull0_open(&pull));
@@ -493,7 +492,8 @@ test_push_send_buffer(void)
 	NUTS_FAIL(nng_socket_get(s, NNG_OPT_SENDBUF, &b, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_int(s, NNG_OPT_SENDBUF, -1), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_int(s, NNG_OPT_SENDBUF, 100000), NNG_EINVAL);
-	NUTS_FAIL(nng_socket_set_bool(s, NNG_OPT_SENDBUF, false), NNG_EBADTYPE);
+	NUTS_FAIL(
+	    nng_socket_set_bool(s, NNG_OPT_SENDBUF, false), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_set(s, NNG_OPT_SENDBUF, &b, 1), NNG_EINVAL);
 	NUTS_PASS(nng_socket_set_int(s, NNG_OPT_SENDBUF, 100));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_SENDBUF, &v));

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,8 +14,8 @@ test_xreq_identity(void)
 {
 	nng_socket s;
 	int        p1, p2;
-	char *     n1;
-	char *     n2;
+	char      *n1;
+	char      *n2;
 
 	NUTS_PASS(nng_req0_open_raw(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p1));
@@ -84,7 +84,7 @@ test_xreq_poll_readable(void)
 	int        fd;
 	nng_socket req;
 	nng_socket rep;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_req0_open_raw(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
@@ -129,10 +129,10 @@ test_xreq_poll_readable(void)
 static void
 test_xreq_validate_peer(void)
 {
-	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char *     addr;
+	nng_socket      s1, s2;
+	nng_stat       *stats;
+	const nng_stat *reject;
+	char           *addr;
 
 	NUTS_ADDR(addr, "inproc");
 
@@ -161,7 +161,7 @@ static void
 test_xreq_recv_aio_stopped(void)
 {
 	nng_socket req;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_req0_open_raw(&req));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -179,7 +179,7 @@ test_xreq_recv_garbage(void)
 {
 	nng_socket rep;
 	nng_socket req;
-	nng_msg *  m;
+	nng_msg   *m;
 	uint32_t   req_id;
 
 	NUTS_PASS(nng_rep0_open_raw(&rep));
@@ -216,7 +216,7 @@ test_xreq_recv_header(void)
 {
 	nng_socket rep;
 	nng_socket req;
-	nng_msg *  m;
+	nng_msg   *m;
 	nng_pipe   p1, p2;
 	uint32_t   id;
 
@@ -258,7 +258,7 @@ test_xreq_close_during_recv(void)
 {
 	nng_socket rep;
 	nng_socket req;
-	nng_msg *  m;
+	nng_msg   *m;
 	nng_pipe   p1;
 	nng_pipe   p2;
 
@@ -289,7 +289,7 @@ test_xreq_close_pipe_during_send(void)
 {
 	nng_socket rep;
 	nng_socket req;
-	nng_msg *  m;
+	nng_msg   *m;
 	nng_pipe   p1;
 	nng_pipe   p2;
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,8 +14,8 @@ test_xresp_identity(void)
 {
 	nng_socket s;
 	int        p1, p2;
-	char *     n1;
-	char *     n2;
+	char      *n1;
+	char      *n2;
 
 	NUTS_PASS(nng_respondent0_open_raw(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p1));
@@ -87,7 +87,7 @@ test_xresp_poll_readable(void)
 	int        fd;
 	nng_socket surv;
 	nng_socket resp;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
@@ -120,10 +120,10 @@ test_xresp_poll_readable(void)
 static void
 test_xresp_validate_peer(void)
 {
-	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char *     addr;
+	nng_socket      s1, s2;
+	nng_stat       *stats;
+	const nng_stat *reject;
+	char           *addr;
 
 	NUTS_ADDR(addr, "inproc");
 
@@ -154,8 +154,8 @@ test_xresp_close_pipe_before_send(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_pipe   p;
-	nng_aio *  aio1;
-	nng_msg *  m;
+	nng_aio   *aio1;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open(&surv));
@@ -186,7 +186,7 @@ test_xresp_close_pipe_during_send(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_pipe   p;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
@@ -226,7 +226,7 @@ test_xresp_close_during_recv(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
@@ -255,7 +255,7 @@ static void
 test_xresp_recv_aio_stopped(void)
 {
 	nng_socket resp;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -273,7 +273,7 @@ test_xresp_send_no_header(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
@@ -297,7 +297,7 @@ test_xresp_recv_garbage(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
@@ -355,7 +355,7 @@ test_xresp_ttl_drop(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));

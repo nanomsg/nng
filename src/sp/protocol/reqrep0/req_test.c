@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -233,7 +233,7 @@ test_req_resend_reconnect(void)
 	// the retry from loss of our original peer.
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 60 * SECOND));
 	// And make sure the tick runs faster than our timeout!
-	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND/10));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND / 10));
 
 	NUTS_MARRY(rep1, req);
 
@@ -272,7 +272,7 @@ test_req_resend_disconnect(void)
 	// the retry from loss of our original peer.
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 60 * SECOND));
 	// And make sure the tick runs faster than our timeout!
-	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND/10));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTICK, SECOND / 10));
 
 	NUTS_MARRY(rep1, req);
 	NUTS_SEND(req, "ping");
@@ -974,10 +974,10 @@ test_req_ctx_recv_close_socket(void)
 static void
 test_req_validate_peer(void)
 {
-	nng_socket s1, s2;
-	nng_stat  *stats;
-	nng_stat  *reject;
-	char      *addr;
+	nng_socket      s1, s2;
+	nng_stat       *stats;
+	const nng_stat *reject;
+	char           *addr;
 
 	NUTS_ADDR(addr, "inproc");
 

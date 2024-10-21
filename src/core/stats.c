@@ -1,5 +1,5 @@
 //
-// Copyright 2022 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -396,28 +396,28 @@ nng_stats_get(nng_stat **statp)
 #endif
 }
 
-nng_stat *
-nng_stat_parent(nng_stat *stat)
+const nng_stat *
+nng_stat_parent(const nng_stat *stat)
 {
 	return (stat->s_parent);
 }
 
-nng_stat *
-nng_stat_next(nng_stat *stat)
+const nng_stat *
+nng_stat_next(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	if (stat->s_parent == NULL) {
 		return (NULL); // Root node, no siblings.
 	}
-	return (nni_list_next(&stat->s_parent->s_children, stat));
+	return (nni_list_next(&stat->s_parent->s_children, (void *) stat));
 #else
 	NNI_ARG_UNUSED(stat);
 	return (NULL);
 #endif
 }
 
-nng_stat *
-nng_stat_child(nng_stat *stat)
+const nng_stat *
+nng_stat_child(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (nni_list_first(&stat->s_children));
@@ -428,7 +428,7 @@ nng_stat_child(nng_stat *stat)
 }
 
 const char *
-nng_stat_name(nni_stat *stat)
+nng_stat_name(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (stat->s_info->si_name);
@@ -439,7 +439,7 @@ nng_stat_name(nni_stat *stat)
 }
 
 uint64_t
-nng_stat_value(nni_stat *stat)
+nng_stat_value(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (stat->s_val.sv_value);
@@ -450,7 +450,7 @@ nng_stat_value(nni_stat *stat)
 }
 
 bool
-nng_stat_bool(nni_stat *stat)
+nng_stat_bool(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (stat->s_val.sv_bool);
@@ -461,7 +461,7 @@ nng_stat_bool(nni_stat *stat)
 }
 
 const char *
-nng_stat_string(nng_stat *stat)
+nng_stat_string(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	if (stat->s_info->si_type != NNG_STAT_STRING) {
@@ -475,7 +475,7 @@ nng_stat_string(nng_stat *stat)
 }
 
 uint64_t
-nng_stat_timestamp(nng_stat *stat)
+nng_stat_timestamp(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return ((uint64_t) stat->s_timestamp);
@@ -486,7 +486,7 @@ nng_stat_timestamp(nng_stat *stat)
 }
 
 int
-nng_stat_type(nng_stat *stat)
+nng_stat_type(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (stat->s_info->si_type);
@@ -497,7 +497,7 @@ nng_stat_type(nng_stat *stat)
 }
 
 int
-nng_stat_unit(nng_stat *stat)
+nng_stat_unit(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (stat->s_info->si_unit);
@@ -508,7 +508,7 @@ nng_stat_unit(nng_stat *stat)
 }
 
 const char *
-nng_stat_desc(nng_stat *stat)
+nng_stat_desc(const nng_stat *stat)
 {
 #if NNG_ENABLE_STATS
 	return (stat->s_info->si_desc);
@@ -518,11 +518,11 @@ nng_stat_desc(nng_stat *stat)
 #endif
 }
 
-nng_stat *
-nng_stat_find(nng_stat *stat, const char *name)
+const nng_stat *
+nng_stat_find(const nng_stat *stat, const char *name)
 {
 #if NNG_ENABLE_STATS
-	nng_stat *child;
+	const nng_stat *child;
 	if (stat == NULL) {
 		return (NULL);
 	}
@@ -530,7 +530,7 @@ nng_stat_find(nng_stat *stat, const char *name)
 		return (stat);
 	}
 	NNI_LIST_FOREACH (&stat->s_children, child) {
-		nng_stat *result;
+		const nng_stat *result;
 		if ((result = nng_stat_find(child, name)) != NULL) {
 			return (result);
 		}
@@ -542,8 +542,8 @@ nng_stat_find(nng_stat *stat, const char *name)
 	return (NULL);
 }
 
-nng_stat *
-nng_stat_find_scope(nng_stat *stat, const char *name, int id)
+const nng_stat *
+nng_stat_find_scope(const nng_stat *stat, const char *name, int id)
 {
 #if NNG_ENABLE_STATS
 	nng_stat *child;
@@ -556,7 +556,7 @@ nng_stat_find_scope(nng_stat *stat, const char *name, int id)
 		return (stat);
 	}
 	NNI_LIST_FOREACH (&stat->s_children, child) {
-		nng_stat *result;
+		const nng_stat *result;
 		if ((result = nng_stat_find_scope(child, name, id)) != NULL) {
 			return (result);
 		}
@@ -569,27 +569,27 @@ nng_stat_find_scope(nng_stat *stat, const char *name, int id)
 	return (NULL);
 }
 
-nng_stat *
-nng_stat_find_socket(nng_stat *stat, nng_socket s)
+const nng_stat *
+nng_stat_find_socket(const nng_stat *stat, nng_socket s)
 {
 	return (nng_stat_find_scope(stat, "socket", nng_socket_id(s)));
 }
 
-nng_stat *
-nng_stat_find_dialer(nng_stat *stat, nng_dialer d)
+const nng_stat *
+nng_stat_find_dialer(const nng_stat *stat, nng_dialer d)
 {
 	return (nng_stat_find_scope(stat, "dialer", nng_dialer_id(d)));
 }
 
-nng_stat *
-nng_stat_find_listener(nng_stat *stat, nng_listener l)
+const nng_stat *
+nng_stat_find_listener(const nng_stat *stat, nng_listener l)
 {
 	return (nng_stat_find_scope(stat, "listener", nng_listener_id(l)));
 }
 
 #ifdef NNG_ENABLE_STATS
 void
-stat_sprint_scope(nni_stat *stat, char **scope, int *lenp)
+stat_sprint_scope(const nni_stat *stat, char **scope, int *lenp)
 {
 	if (stat->s_parent != NULL) {
 		stat_sprint_scope(stat->s_parent, scope, lenp);
@@ -606,7 +606,7 @@ stat_sprint_scope(nni_stat *stat, char **scope, int *lenp)
 #endif
 
 void
-nng_stats_dump(nng_stat *stat)
+nng_stats_dump(const nng_stat *stat)
 {
 #ifdef NNG_ENABLE_STATS
 	static char        buf[128]; // to minimize recursion, not thread safe

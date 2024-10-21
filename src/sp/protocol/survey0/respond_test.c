@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,7 +14,7 @@ test_resp_identity(void)
 {
 	nng_socket s;
 	int        p;
-	char *     n;
+	char      *n;
 
 	NUTS_PASS(nng_respondent0_open(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
@@ -34,7 +34,7 @@ void
 test_resp_send_bad_state(void)
 {
 	nng_socket resp;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
@@ -85,7 +85,7 @@ test_resp_poll_readable(void)
 	int        fd;
 	nng_socket surv;
 	nng_socket resp;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -135,10 +135,10 @@ test_resp_context_no_poll(void)
 void
 test_resp_validate_peer(void)
 {
-	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char *     addr;
+	nng_socket      s1, s2;
+	nng_stat       *stats;
+	const nng_stat *reject;
+	char           *addr;
 
 	NUTS_ADDR(addr, "inproc");
 
@@ -167,8 +167,8 @@ void
 test_resp_double_recv(void)
 {
 	nng_socket s1;
-	nng_aio *  aio1;
-	nng_aio *  aio2;
+	nng_aio   *aio1;
+	nng_aio   *aio2;
 
 	NUTS_PASS(nng_respondent0_open(&s1));
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
@@ -191,8 +191,8 @@ test_resp_close_pipe_before_send(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_pipe   p;
-	nng_aio *  aio1;
-	nng_msg *  m;
+	nng_aio   *aio1;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_surveyor0_open(&surv));
@@ -223,7 +223,7 @@ test_resp_close_pipe_during_send(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_pipe   p = NNG_PIPE_INITIALIZER;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
@@ -263,7 +263,7 @@ test_resp_ctx_recv_aio_stopped(void)
 {
 	nng_socket resp;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
@@ -284,9 +284,9 @@ test_resp_close_pipe_context_send(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_pipe   p = NNG_PIPE_INITIALIZER;
-	nng_msg *  m;
+	nng_msg   *m;
 	nng_ctx    ctx[10];
-	nng_aio *  aio[10];
+	nng_aio   *aio[10];
 	int        i;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -343,9 +343,9 @@ test_resp_close_context_send(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 	nng_ctx    ctx[10];
-	nng_aio *  aio[10];
+	nng_aio   *aio[10];
 	int        i;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -399,7 +399,7 @@ test_resp_ctx_recv_nonblock(void)
 {
 	nng_socket resp;
 	nng_ctx    ctx;
-	nng_aio *  aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_ctx_open(&ctx, resp));
@@ -420,8 +420,8 @@ test_resp_ctx_send_nonblock(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  msg;
+	nng_aio   *aio;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -455,7 +455,7 @@ test_resp_recv_garbage(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
@@ -513,7 +513,7 @@ test_resp_ttl_drop(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
