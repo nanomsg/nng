@@ -20,7 +20,7 @@ Please see [here](UKRAINE.md) for an important message for the people of Russia.
 > for the latest stable release.
 >
 > As a major release, there are some breaking API changes,
-> but a [migration guide](docs/migrating/nng1.md) is
+> but a [migration guide](docs/ref/migrate/nng1.md) is
 > available to help with migrating from NNG 1.x.
 
 > [!NOTE]
@@ -186,7 +186,7 @@ These are located in the `demo` directory.
 ## Legacy Compatibility
 
 Migration from `libnanomsg` APIs is fairly straight-forward for most applications.
-A [migration guide](docs/migrating/nanomsg.md) is available to assist.
+A [migration guide](docs/ref/migrate/nanomsg.md) is available to assist.
 
 ## Commercial Support
 

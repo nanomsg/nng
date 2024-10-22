@@ -55,4 +55,9 @@
   - [BSD Socket (Experimental)](./tran/socket.md)
   - [UDP Transport (Experimental)](./tran/udp.md)
 
+- [Migration Guides](./migrate/index.md)
+
+  - [Migrating from NNG 1.x](./migrate/nng1.md)
+  - [Migrating from libnanomsg](./migrate/nanomsg.md)
+
 [Index](./indexing.md)
