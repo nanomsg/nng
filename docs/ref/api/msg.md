@@ -3,8 +3,8 @@
 Messages {{hi:messages}} in Scalability Protocols are the fundamental unit of
 transmission and reception, as these protocols are fundamentally message-oriented.
 
-Messages have a [body][nng_msg_body]{{hi:message body}}, containing the application-supplied
-payload, and a [header][nng_msg_header]{{hi:message header}}, containing protocol specific routing and similar
+Messages have a [body][nng_msg_body]{{hi:body}}, containing the application-supplied
+payload, and a [header][nng_msg_header]{{hi:header}}, containing protocol specific routing and similar
 related information.
 
 > [!TIP]
@@ -100,7 +100,7 @@ void *nng_msg_body(nng_msg *msg);
 size_t nng_msg_len(nng_msg *msg);
 ```
 
-The body and body length of _msg_ are returned by {{i:`nng_msg_body}}` and
+The body and body length of _msg_ are returned by {{i:`nng_msg_body`}} and
 {{i:`nng_msg_len`}}, respectively.
 
 ### Clear the Body
@@ -182,7 +182,7 @@ void *nng_msg_header(nng_msg *msg);
 size_t nng_msg_header_len(nng_msg *msg);
 ```
 
-The header and header length of _msg_ are returned by {{i:`nng_msg_header}}` and
+The header and header length of _msg_ are returned by {{i:`nng_msg_header`}} and
 {{i:`nng_msg_header_len`}}, respectively.
 
 The message headers are generally intended for limited use, to store protocol headers.
