@@ -16,9 +16,10 @@ additional-js = ["theme/pagetoc.js"]
 
 [preprocessor.indexing]
 
-[preprocessor.footnote]
 
-[preprocessor.inline-highlighting]
+# [preprocessor.inline-highlighting]
 # default-language = "c"
+
+[preprocessor.footnote]
 
 [preprocessor.pagetoc]

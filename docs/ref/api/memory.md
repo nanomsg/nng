@@ -48,7 +48,7 @@ char *nng_strdup(const char *src);
 The {{i:`nng_strdup`}} duplicates the string _src_ and returns it.
 
 This is logically equivalent to using [`nng_alloc`][nng_alloc]
-to allocate a region of memory of `[c] strlen(s) + 1` bytes, and then
+to allocate a region of memory of `strlen(s) + 1` bytes, and then
 using `strcpy` to copy the string into the destination before
 returning it.
 
@@ -66,7 +66,7 @@ void nng_strfree(char *str);
 The {{i:`nng_strfree`}} function is a convenience function that
 can be used to deallocate strings allocated with [`nng_strdup`][nng_strdup].
 
-It is effectively the same as `[c] nng_free(strlen(str) + 1)`.
+It is effectively the same as `nng_free(strlen(str) + 1)`.
 
 [nng_alloc]: #allocate-memory
 [nng_free]: #deallocate-memory

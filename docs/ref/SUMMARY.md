@@ -25,15 +25,14 @@
 
   - [Statistics](./api/stats.md)
 
+  - [Miscellaneous](./api/misc.md)
+
   - [Utility Functions](./api/util/index.md)
 
     - [nng_id_map](./api/util/nng_id_map.md)
     - [nng_opts_parse](./api/util/nng_opts_parse.md)
-    - [nng_random](./api/util/nng_random.md)
-    - [nng_socket_pair](./api/util/nng_socket_pair.md)
     - [nng_strerror](./api/util/nng_strerror.md)
     - [nng_url](./api/util/nng_url.md)
-    - [nng_version](./api/util/nng_version.md)
 
 - [Protocols](./proto/index.md)
 

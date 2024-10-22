@@ -1,4 +1,4 @@
-# BSD Socket Transport (Experimental)
+# Socket Transport (Experimental)
 
 ## Description
 
@@ -63,7 +63,7 @@ Additionally, the following options may be supported on pipes when the platform 
 [dialer]: [TODO.md]
 [nng_sockaddr]: [TODO.md]
 [nng_listener_create]: [TODO.md]
-[nng_socket_pair]: ../../api/util/nng_socket_pair.md
+[nng_socket_pair]: ../../api/misc.md#create-socket-pair
 [NNG_OPT_LOCADDR]: [TODO.md]
 [NNG_OPT_REMADDR]: [TODO.md]
 [NNG_OPT_URL]: [TODO.md]
