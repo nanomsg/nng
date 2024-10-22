@@ -6,14 +6,11 @@
 
 - [API Reference](./api/index.md)
 
-  - [Messages](./api/msg/index.md)
+  - [Messages](./api/msg.md)
 
-    - [nng_msg](./api/msg/nng_msg.md)
-    - [nng_msg_body](./api/msg/nng_msg_body.md)
-    - [nng_msg_header](./api/msg/nng_msg_header.md)
-    - [nng_msg_pipe](./api/msg/nng_msg_pipe.md)
+  - [Time](./api/time.md)
 
-  - [Asynchronous I/O Operations](./api/aio/index.md)
+  - [Asynchronous Operations](./api/aio/index.md)
 
     - [nng_aio](./api/aio/nng_aio.md)
     - [aio_cancel](./api/aio/aio_cancel.md)
@@ -25,8 +22,6 @@
   - [Logging](./api/logging.md)
 
   - [Statistics](./api/stats.md)
-
-  - [Time](./api/time.md)
 
   - [Utility Functions](./api/util/index.md)
 
