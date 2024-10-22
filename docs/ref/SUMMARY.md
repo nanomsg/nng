@@ -8,6 +8,8 @@
 
   - [Messages](./api/msg.md)
 
+  - [Memory](./api/memory.md)
+
   - [Time](./api/time.md)
 
   - [Asynchronous Operations](./api/aio/index.md)
@@ -25,12 +27,10 @@
 
   - [Utility Functions](./api/util/index.md)
 
-    - [nng_alloc](./api/util/nng_alloc.md)
     - [nng_id_map](./api/util/nng_id_map.md)
     - [nng_opts_parse](./api/util/nng_opts_parse.md)
     - [nng_random](./api/util/nng_random.md)
     - [nng_socket_pair](./api/util/nng_socket_pair.md)
-    - [nng_strdup](./api/util/nng_strdup.md)
     - [nng_strerror](./api/util/nng_strerror.md)
     - [nng_url](./api/util/nng_url.md)
     - [nng_version](./api/util/nng_version.md)
