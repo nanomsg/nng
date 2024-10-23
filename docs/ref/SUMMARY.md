@@ -12,6 +12,8 @@
 
   - [Time](./api/time.md)
 
+  - [URLs](./api/url.md)
+
   - [Asynchronous Operations](./api/aio/index.md)
 
     - [nng_aio](./api/aio/nng_aio.md)
@@ -33,7 +35,6 @@
 
     - [nng_opts_parse](./api/util/nng_opts_parse.md)
     - [nng_strerror](./api/util/nng_strerror.md)
-    - [nng_url](./api/util/nng_url.md)
 
 - [Protocols](./proto/index.md)
 

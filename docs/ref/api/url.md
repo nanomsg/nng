@@ -1,14 +1,16 @@
-# nng_url
+# URLs
 
-## NAME
+{{i:Universal Resource Locator}}s, or {{i:URL}}s for short, are a standardized
+way of representing a network resource,
+defined in [RFC 1738](https://datatracker.ietf.org/doc/html/rfc1738),
+and [RFC 3968](https://datatracker.ietf.org/doc/html/rfc3986).
 
-nng_url --- Universal Resource Locator object
+In Scalability Protocols, this concept is extended, although it includes schemes
+that are not part of the IETF standards.
 
-## SYNOPSIS
+## URL Structure
 
 ```c
-#include <nng/nng.h>
-
 typedef struct nng_url {
     char *u_rawurl;
     char *u_scheme;
@@ -21,24 +23,7 @@ typedef struct nng_url {
     char *u_fragment;
     char *u_requri;
 } nng_url;
-
-int nng_url_parse(nng_url **urlp, const char *str);
-int nng_url_clone(nng_url **dup, nng_url *url);
-void nng_url_free(nng_url *url);
 ```
-
-## DESCRIPTION
-
-An {{i:`nng_url`}}{{hi:URL}}{{hi:Universal Resource Locator}} is a structure used for representing URLs.
-These structures are created by parsing string formatted URLs with {{i:`nng_url_parse`}}.
-
-An `nng_url` may be cloned using the {{i:`nng_url_clone`}} function.
-The original _url_ is duplicated into the location specified by _dup_.
-
-When no longer needed, `nng_url` objects may be freed using {{i:`nng_url_free`}}.
-
-> [!IMPORTANT]
-> Only `nng_url_free` should be used to deallocate `nng_url` objects.
 
 ### URL Fields
 
@@ -61,16 +46,42 @@ The fields of an `nng_url` object are as follows:
 > [!NOTE]
 > Other fields may also be present, but only those documented here are safe for application use.
 
-> [!TIP]
-> More information about Universal Resource Locators can be found in
-> [RFC 3986](https://tools.ietf.org/html/rfc3986).
+## Parse a URL
 
-## RETURN VALUES
+```c
+int nng_url_parse(nng_url **urlp, const char *str);
+```
 
-The `nng_url_parse` and `nng_url_clone` functions return zero on success, or a non-zero
-error value.
+The {{i:`nng_url_parse`}} function parses a URL string (in _str_),
+and creates a dynamically allocated `nng_url`, returning it in _urlp_.
 
-## ERRORS
+> [!IMPORTANT]
+> Only [`nng_url_free`] should be used to deallocate `nng_url` objects.
 
-- `NNG_ENOMEM`: Insufficient free memory exists.
-- `NNG_EINVAL`: The supplied string does not represent a valid URL.
+## Clone a URL
+
+```c
+int nng_url_clone(nng_url **dup, nng_url *url);
+```
+
+The {{i:`nng_url_clone`}} function creates a copy of _url_, and returns it in _dup_.
+
+## Destroy a URL
+
+```c
+void nng_url_free(nng_url *url);
+```
+
+The {{i:`nng_url_free`}} function destroy an `nng_url` object created with
+either [`nng_url_parse`] or [`nng_url_free`].
+
+This is the only correct way to destroy an [`nng_url`] object.
+
+## See Also
+
+More information about Universal Resource Locators can be found in
+[RFC 3986](https://tools.ietf.org/html/rfc3986).
+
+[`nng_url`]: #url-structure
+[`nng_url_parse`]: #parse-a-url
+[`nng_url_free`]: #destroy-a-url
