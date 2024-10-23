@@ -22,7 +22,7 @@ int nng_socket_pair(int fds[2]);
 
 The `nng_socket_pair` function creates a pair of connected file descriptors.
 These file descriptors, which are returned in the _fds_ array, are suitable for
-use with the [Socket transport][socket].
+use with the [Socket transport][socktran].
 
 On POSIX platforms, this is a thin wrapper around the standard `socketpair` function,
 using the {{i:`AF_UNIX`}} family and the `SOCK_STREAM` socket type.
@@ -58,4 +58,4 @@ the version numbers reported refer to both the API and the library itself.
 library and the application is controlled in a similar, but different
 manner depending upon the link options and how the library is built.)
 
-[socket]: ../tran/socket.md
+{{#include ../xref.md}}

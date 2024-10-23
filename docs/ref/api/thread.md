@@ -24,7 +24,7 @@ applications.
 > The system may impose limits on the number of threads that can be created.
 > Typically applications should not create more than a dozen of these.
 > If greater concurrency or scalability is needed, consider instead using
-> an asynchronous model using [`nng_aio`][aio] structures.
+> an asynchronous model using [`nng_aio`] structures.
 
 ## Thread Structure
 
@@ -84,5 +84,4 @@ in debuggers. Not all platforms support setting the thread name.
 [Synchronization][synchronization],
 [Asynchronous Operations][aio]
 
-[synchronization]: ../api/synch.md
-[aio]: TODO.md
+{{#include ../xref.md}}

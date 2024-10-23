@@ -16,9 +16,9 @@ typedef struct nng_mtx nng_mtx;
 ```
 
 Mutual exclusion locks, or {{i:mutex}} locks, represented by the {{i:`nng_mtx`}} structure,
-allow only a single thread to lock "own" the lock, acquired by [`nng_mtx_lock`][nng_mtx_lock].
+allow only a single [thread] to lock "own" the lock, acquired by [`nng_mtx_lock`].
 Any other thread trying to acquire the same mutex will wait until the owner has released the mutex
-by calling [`nng_mtx_unlock`][nng_mtx_unlock].
+by calling [`nng_mtx_unlock`].
 
 ### Creating a Mutex
 
@@ -29,7 +29,7 @@ int nng_mutx_alloc(nng_mt **mtxp);
 A mutex can be created by allocating one with {{i:`nng_mtx_lock`}}.
 On success, a pointer to the mutex is returned through _mtxp_.
 This function can fail due to insufficient memory or resources, in which
-case it will return `NNG_ENOMEM`. Otherwise it will succceed and return zero.
+case it will return [`NNG_ENOMEM`]. Otherwise it will succceed and return zero.
 
 ### Destroying a Mutex
 
@@ -39,7 +39,7 @@ void nng_mtx_free(nng_mtx *mtx);
 
 When no longer needed, a mutex can be deallocated and its resources returned
 to the caller, by calling {{i:`nng_mtx_free`}}. The mutex must not be locked
-by any thread when calling this function.
+by any [thread] when calling this function.
 
 ### Acquiring a Mutex
 
@@ -61,7 +61,7 @@ void nng_mtx_unlock(nng_mtx *mtx);
 ```
 
 The {{i:`nng_mtx_unlock`}} function releases a mutex that the calling thread has previously
-acquired with [`nng_mtx_lock`][nng_mtx_lock].
+acquired with [`nng_mtx_lock`].
 
 > [!IMPORTANT]
 > A thread must not attempt to release (unlock) a mutex if it was not the thread
@@ -74,7 +74,7 @@ typedef struct nng_cv nng_cv;
 ```
 
 The {{i:`nng_cv`}} structure implements a {{i:condition variable}}, associated with the
-the [mutex][nng_mtx] _mtx_ which was supplied when it was created.
+the [mutex] _mtx_ which was supplied when it was created.
 
 Condition variables provide for a way to wait on an arbitrary condition, and to be woken
 when the condition is signaled.
@@ -112,11 +112,11 @@ void nng_cv_wait(nng_cv *cv);
 
 The {{i:`nng_cv_until`}} and {{i:`nng_cv_wait`}} functions put the caller to sleep until the condition
 variable _cv_ is signaled, or (in the case of `nng_cv_until`), the specified time _when_
-(as determined by [`nng_clock`][nng_clock] is reached.
+(as determined by [`nng_clock`] is reached.
 
 While `nng_cv_wait` never fails and so has no return value, the `nng_cv_until` function can
-return `NNG_ETIMEDOUT` if the time is reached before condition _cv_ is signaled by
-either [`nng_cv_wake`][nng_cv_wake] or [`nng_cv_wake1`][nng_cv_wake].
+return [`NNG_ETIMEDOUT`] if the time is reached before condition _cv_ is signaled by
+either [`nng_cv_wake`] or [`nng_cv_wake1`].
 
 ### Signaling the Condition
 
@@ -126,7 +126,7 @@ void nng_cv_wake1(nng_cv *cv);
 ```
 
 The {{i:`nng_cv_wake`}} and {{i:`nng_cv_wake1`}} functions wake threads waiting in
-[`nng_cv_until`][nng_cv_wait] or [`nng_cv_wait`][nng_cv_wait].
+[`nng_cv_until`] or [`nng_cv_wait`].
 The difference between these functions is that
 `nng_cv_wake` will wake _every_ thread, whereas `nng_cv_wake1` will wake up exactly
 one thread (which may be chosen randomly).
@@ -171,12 +171,4 @@ one thread (which may be chosen randomly).
     nng_mtx_unlock(m);
 ```
 
-[aio]: aio.md
-[thread]: thread.md
-[nng_mtx]: #mutual-exclusion-lock
-[nng_mtx_lock]: #acquiring-a-mutex
-[nng_mtx_unlock]: #releasing-a-mutex
-[nng_cv]: #condition-variable
-[nng_cv_wait]: #waiting-for-the-condition
-[nng_cv_wake]: #signaling-the-condition
-[nng_clock]: ./time.md#getting-the-current-time
+{{#include ../xref.md}}

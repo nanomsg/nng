@@ -71,8 +71,7 @@ number of milliseconds.
 
 ## See Also
 
-[`nng_cv_until`][nng_cv_until],
-[`nng_sleep_aio`][nng_sleep_aio]
+[`nng_cv_until`],
+[`nng_sleep_aio`]
 
-[nng_cv_until]: ./synch.md#waiting-for-the-condition
-[nng_sleep_aio]: TODO.md
+{{#include ../xref.md}}

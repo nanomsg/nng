@@ -36,7 +36,7 @@ int nng_stats_get(nng_stat **statsp);
 
 The {{i:`nng_stats_get`}} function takes a snapshot of the statistics for
 the system and returns it through the pointer _statsp_.
-This function may return `NNG_ENOMEM` if memory is exhausted, or `NNG_ENOTSUP` if the statistics
+This function may return [`NNG_ENOMEM`] if memory is exhausted, or [`NNG_ENOTSUP`] if the statistics
 support is not enabled in the build, but is otherwise expected to return zero.
 
 ## Freeing a Snapshot
@@ -77,8 +77,8 @@ const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 ```
 
 Sometimes it is easiest to search for a specific statistic, matching by name,
-or possibly to find the tree of statistics associated iwth a specific [socket][nng_socket],
-[dialer][nng_dialer], or [listener][nng_listener].
+or possibly to find the tree of statistics associated iwth a specific [socket],
+[dialer], or [listener].
 
 The `nng_stat_find` functions are provided for this purpose.
 
@@ -121,8 +121,8 @@ function can be used to obtain that value.
   The statistic is a counter that only increments.
   Usually the change in the value of the statistic is more interesting
   (as a rate) than the absolute value at any given time. The value should
-  be obtained using [`nng_stat_value`][nng_stat_value].
-  The units will be given by the value returned from [`nng_stat_unit`][nng_stat_unit].
+  be obtained using [`nng_stat_value`].
+  The units will be given by the value returned from [`nng_stat_unit`].
 
 - {{i:`NNG_STAT_LEVEL`}}: <a name="NNG_STAT_LEVEL"></a>
   The statistic represnts a measured value which corresponds
@@ -130,22 +130,22 @@ function can be used to obtain that value.
   number of messages currently queued for some operation, or the link speed
   of a network interface. Most often the absolute value is more interesting
   than the change in the value over time. Again the value can be obtained with
-  [`nng_stat_value`][nng_stat_value], and any appropriate unit of measurement
-  with [`nng_stat_unit`][nng_stat_unit].
+  [`nng_stat_value`], and any appropriate unit of measurement
+  with [`nng_stat_unit`].
 
 - {{i:`NNG_STAT_STRING`}}: <a name="NNG_STAT_STRING"></a>
   The statistic is a string, such as a name. The value
-  of the string can be obtained with [`nng_stat_string`][nng_stat_string].
+  of the string can be obtained with [`nng_stat_string`].
   The value of this string
-  will remain valid until the snapshot is deallocated with [`nng_stats_free`][nng_stats_free].
+  will remain valid until the snapshot is deallocated with [`nng_stats_free`].
 
 - {{i:`NNG_STAT_BOOLEAN`}}: <a name="NNG_STAT_BOOLEAN"></a>
   The value of the statistic is a truth value (either `true`
-  or `false`) and can be obtained with [`nng_stat_bool`][nng_stat_bool].
+  or `false`) and can be obtained with [`nng_stat_bool`].
 
 - {{i:`NNG_STAT_ID`}}: <a name="NNG_STAT_ID"></a>
   The value of the statistic is a numeric identifier, such as a socket
-  identifier. The value can be obtained with [`nng_stat_value`][nng_stat_value],
+  identifier. The value can be obtained with [`nng_stat_value`],
   and will be fixed for the life of the statistic.
 
 ## Statistic Value
@@ -159,15 +159,15 @@ bool nng_stat_bool(const nng_stat *stat);
 These functions return the value associated with the statistic.
 
 The {{i:`nng_stat_value`}} function returns the the numeric value for the statistic _stat_
-of type [`NNG_STAT_COUNTER`][NNG_STAT_COUNTER], [`NNG_STAT_LEVEL`][NNG_STAT_LEVEL], or [`NNG_STAT_ID`][NNG_STAT_ID].
+of type [`NNG_STAT_COUNTER`], [`NNG_STAT_LEVEL`], or [`NNG_STAT_ID`].
 If _stat_ is not one of these types, then it returns zero.
 
 The {{i:`nng_stat_bool`}} function returns the Boolean value (either `true` or `false`) for the statistic _stat_ of
-type [`NNG_STAT_BOOLEAN`][NNG_STAT_BOOLEAN]. If the statistics is not of this type, then it returns `false`.
+type [`NNG_STAT_BOOLEAN`]. If the statistics is not of this type, then it returns `false`.
 
 The {{i:`nng_stat_string`}} function returns a pointer to a string value for the statistic _stat_,
-of type [`NNG_STAT_STRING`][NNG_STAT_STRING]. This string will remain valud until the snapshot that
-_stat_ was collected with is deallocated with [`nng_stats_free`][nng_stats_free]. If the statistic
+of type [`NNG_STAT_STRING`]. This string will remain valud until the snapshot that
+_stat_ was collected with is deallocated with [`nng_stats_free`]. If the statistic
 is not of type `NNG_STAT_STRING`, then `NULL` is returned.
 
 ## Statistic Units
@@ -176,7 +176,7 @@ is not of type `NNG_STAT_STRING`, then `NULL` is returned.
 int nng_stat_unit(const nng_stat *stat);
 ```
 
-For statistics of type [`NNG_STAT_COUNTER`][NNG_STAT_COUNTER] or [`NNG_STAT_LEVEL`][NNG_STAT_LEVEL],
+For statistics of type [`NNG_STAT_COUNTER`] or [`NNG_STAT_LEVEL`],
 it is often useful to know what that quantity being reported measures.
 The following units may be returned from {{i:`nng_stat_unit`}} for such a statistic:
 
@@ -195,25 +195,10 @@ uint64_t nng_stat_timestamp(const nng_stat *stat);
 Statistics have a timestamp indicating when the value was sampled,
 obtained via {{i:`nng_stat_timestamp`}}. The timestamp is given in
 in milliseconds since a reference time, and the reference time used
-here is the same reference time used for [`nng_clock`][nng_clock].
+here is the same reference time used for [`nng_clock`].
 
 ## See Also
 
-[`nng_clock`][nng_clock]
+[`nng_clock`]
 
-[nng_stat_type]: #statistic-type
-[nng_stats_free]: #freeing-a-snapshot
-[nng_stat_value]: #statistic-value
-[nng_stat_bool]: #statistic-value
-[nng_stat_string]: #statistic-value
-[nng_stat_unit]: #statistic-units
-[NNG_STAT_ID]: #NNG_STAT_ID
-[NNG_STAT_COUNTER]: #NNG_STAT_COUNTER
-[NNG_STAT_LEVEL]: #NNG_STAT_LEVEL
-[NNG_STAT_SCOPE]: #NNG_STAT_SCOPE
-[NNG_STAT_STRING]: #NNG_STAT_STRING
-[NNG_STAT_BOOLEAN]: #NNG_STAT_BOOLEAN
-[nng_clock]: ./time.md#getting-the-current-time
-[nng_socket]: TODO.md
-[nng_dialer]: TODO.md
-[nng_listener]: TODO.md
+{{#include ../xref.md}}

@@ -30,7 +30,7 @@ The {{i:`nng_msg_alloc`}} function allocates a new message.
 It takes a _size_ argument, and returns a message
 with a preallocated body of that size in the _msgp_ parameter.
 
-If it succeeds, it returns zero, otherwise this function may return `NNG_ENOMEM`,
+If it succeeds, it returns zero, otherwise this function may return [`NNG_ENOMEM`],
 indicating that insufficient memory is available to allocate a new message.
 
 ### Destroy a Message
@@ -48,7 +48,7 @@ int nng_msg_dup(nng_msg **dup, nng_msg *msg);
 ```
 
 The {{i:`nng_msg_dup`}} function duplicates the message _msg_, storing a pointer
-to the new duplicate in _dup_. This function also returns zero on succes, or `NNG_ENOMEM`
+to the new duplicate in _dup_. This function also returns zero on succes, or [`NNG_ENOMEM`]
 if memory is exhausted.
 
 ## Message Size and Capacity
@@ -79,14 +79,13 @@ preserving contents while doing so.
 If the new size is smaller than the original message, it will
 truncate the message, but not perform any allocations.
 If reallocation fails due to insufficient memory, then the original is left intact.
-This function returns either zero, or `NNG_ENOMEM`.
 
 The {{i:`nng_msg_reserve`}} function ensures that the total message capacity
 is at least _capacity_ bytes. Use of this function to ensure the total anticipated
 capacity is present in the message may help prevent many small allocations.
 
 Both `nng_msg_realloc` and `nng_msg_reserve` return zero on success, or may return
-`NNG_ENOMEM` if insufficient memory exists to preform allocation.
+[`NNG_ENOMEM`] if insufficient memory exists to preform allocation.
 
 > [!IMPORTANT]
 > Any pointers to message content obtained before a call to `nng_msg_realloc` or
@@ -205,16 +204,16 @@ The {{i:`nng_msg_header_clear`}} simply resets the total message header length t
 Appending data to a message header is done by using the {{i:`nng_msg_header_append`}} functions,
 and inserting data in the header is done using the {{i:`nng_msg_header_insert`}} functions.
 
-These functions act just like the [`nng_msg_append`][nng_msg_append] and [`nng_msg_insert`][nng_msg_insert]
-functions, except that they operate on the message header rather than the message body.
+These functions act just like the [`nng_msg_append`] and [`nng_msg_insert`] functions,
+except that they operate on the message header rather than the message body.
 
 ### Consume from Header
 
 The {{i:`nng_msg_header_trim`}} functions remove data from the beginning of the message header,
 and the {{i:`nng_msg_header_chop`}} functions remove data from the end of the message header.
 
-These functions act just like the [`nng_msg_trim`][nng_msg_trim] and [`nng_msg_chop`][nng_msg_chop]
-functions, except that they operate the message header rather than the message body.
+These functions act just like the [`nng_msg_trim`] and [`nng_msg_chop`] functions,
+except that they operate the message header rather than the message body.
 
 ## Message Pipe
 
@@ -223,7 +222,7 @@ nng_pipe nng_msg_get_pipe(nng_msg *msg);
 void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
 ```
 
-The {{i:`nng_msg_set_pipe`}} function sets the [pipe][pipe] associated with _msg_ to _p_.
+The {{i:`nng_msg_set_pipe`}} function sets the [pipe] associated with _msg_ to _p_.
 This is most often useful when used with protocols that support directing
 a message to a specific peer.
 For example the [_PAIR_][pair] version 1 protocol can do
@@ -262,13 +261,4 @@ either directly by the application, or when the message was received by the prot
     }
 ```
 
-[nng_msg_body]: #message-body
-[nng_msg_header]: #message-header
-[nng_msg_append]: #add-to-body
-[nng_msg_insert]: #add-to-body
-[nng_msg_trim]: #consume-from-body
-[nng_msg_chop]: #consume-from-body
-[nng_msg_header_append]: #append-or-insert-header
-[raw]: TODO.md
-[pair]: ../proto/pair.md
-[pipe]: TODO.md
+{{#include ../xref.md}}

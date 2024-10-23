@@ -31,7 +31,7 @@ themselves be much larger than this.}}
 
 > [!IMPORTANT]
 > The function available for `nng_id_map` are _not_ thread-safe.
-> Callers should use a [mutex][nng_mutex] or similar approach when thread-safety is needed.
+> Callers should use a [mutex] or similar approach when thread-safety is needed.
 
 ## Create ID Map
 
@@ -55,7 +55,7 @@ the same identifiers at the same time.
 If both _lo_ and _hi_ are zero, then the values `0` and `0xffffffff` are substituted
 in their place, giving a full range of 32-bit identifiers.
 
-This function can return `NNG_ENOMEM` if it is unable to allocate resources, otherwise
+This function can return [`NNG_ENOMEM`] if it is unable to allocate resources, otherwise
 it returns zero on success.
 
 ## Destroy Map
@@ -87,7 +87,7 @@ _value_.
 > The _value_ must not be `NULL`.
 
 If the table has to grow to accommodate this value, it may fail if insufficient
-memory is available, returning `NNG_ENOMEM`. OtherwiseG it returns zero.
+memory is available, returning [`NNG_ENOMEM`]. Otherwise it returns zero.
 
 ## Lookup a Value
 
@@ -115,11 +115,11 @@ when they were freed.{{footnote: The concern about possibly reusing a
 recently released identifier comes into consideration after the range has wrapped.
 Given a sufficiently large range, this is unlikely to be a concern.}}
 
-As with [`nng_id_set`][nng_id_set], this may need to allocate memory and can thus
-fail with `NNG_ENOMEM`.
+As with [`nng_id_set`], this may need to allocate memory and can thus
+fail with [`NNG_ENOMEM`].
 
 Additionally, if there are no more free identifiers within the range specified
-when _map_ was created, then it will return `NNG_ENOSPC`.
+when _map_ was created, then it will return [`NNG_ENOSPC`].
 
 Otherwise it returns zero, indicating success.
 
@@ -131,7 +131,7 @@ int nng_id_remove(nng_id_map *map, uint64_t id);
 
 The {{i:`nng_id_remove`}} removes the entry at index _id_ from _map_.
 
-If no such entry exist, it will return `NNG_ENOENT`. Otherwise it returns zero.
+If no such entry exist, it will return [`NNG_ENOENT`]. Otherwise it returns zero.
 
 ## Iterating IDs
 
@@ -155,5 +155,4 @@ iteration is undefined; entries may be repeated or omitted during such an iterat
 The caller must not attempt to derive any value of the _cursor_ as it refers to internal
 table indices.
 
-[nng_id_set]: #store-a-value
-[nng_mutex]: synch.md#mutual-exclusion-lock
+{{#include ../xref.md}}

@@ -82,6 +82,4 @@ This is the only correct way to destroy an [`nng_url`] object.
 More information about Universal Resource Locators can be found in
 [RFC 3986](https://tools.ietf.org/html/rfc3986).
 
-[`nng_url`]: #url-structure
-[`nng_url_parse`]: #parse-a-url
-[`nng_url_free`]: #destroy-a-url
+{{#include ../xref.md}}
