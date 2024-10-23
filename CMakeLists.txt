@@ -98,10 +98,6 @@ target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)
 if (NNG_ELIDE_DEPRECATED)
     target_compile_definitions(nng PRIVATE NNG_ELIDE_DEPRECATED)
 endif()
-if (NNG_ENABLE_COMPAT)
-    target_compile_definitions(nng PRIVATE NNG_ENABLE_COMPAT)
-endif()
-
 
 # We can use rlimit to configure the stack size for systems
 # that have too small defaults.  This is not used for Windows,
