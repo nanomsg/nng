@@ -27,6 +27,8 @@
 
   - [Statistics](./api/stats.md)
 
+  - [Errors](./api/errors.md)
+
   - [Miscellaneous](./api/misc.md)
 
   - [ID Map](./api/id_map.md)
@@ -34,7 +36,6 @@
   - [Utility Functions](./api/util/index.md)
 
     - [nng_opts_parse](./api/util/nng_opts_parse.md)
-    - [nng_strerror](./api/util/nng_strerror.md)
 
 - [Protocols](./proto/index.md)
 
