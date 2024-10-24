@@ -1,15 +1,15 @@
-# nng_opts_parse
+# Command Options
 
-## NAME
+Some _NNG_ utilities need to parse command line options,
+and the supplementary function here allows applications that
+need the same support to benefit from this.
 
-nng_opts_parse --- parse command line options
+To make use of this, the supplemental header `<nng/supplemental/util/options.h>`
+must be included.
 
-## SYNOPSIS
+## Parse Command Line Options
 
 ```c
-#include <nng/nng.h>
-#include <nng/supplemental/util/options.h>
-
 typedef struct nng_optspec {
     const char *o_name;  // Long style name (may be NULL for short only)
     int         o_short; // Short option (no clustering!)
@@ -21,15 +21,16 @@ int nng_opts_parse(int argc, char *const *argv,
                    const nng_optspec *spec, int *val, char **arg, int *idx);
 ```
 
-## DESCRIPTION
-
 The {{i:`nng_opts_parse`}} function is a intended to facilitate parsing
 {{i:command-line arguments}}.
 This function exists largely to stand in for {{i:`getopt`}} from POSIX systems,
 but it is available everywhere that _NNG_ is, and it includes
 some capabilities missing from `getopt`.
 
-The function parses arguments from `main` (using _argc_ and _argv_),
+The function parses arguments from
+`main`{{footnote: Parsing argument strings from other sources can be done as well,
+although usually then _idx_ will be initialized to zero.}}
+(using _argc_ and _argv_),
 starting at the index referenced by _idx_.
 (New invocations typically set the value pointed to by _idx_ to 1.)
 
@@ -49,6 +50,12 @@ This function should be called repeatedly, until it returns either -1
 (indicating the end of options is reached) or a non-zero error code is
 returned.
 
+This function may return the following errors:
+
+- [`NNG_EAMBIGUOUS`]: Parsed option matches more than one specification.
+- [`NNG_ENOARG`]: Option requires an argument, but one is not present.
+- [`NNG_EINVAL`]: An invalid (unknown) argument is present.
+
 ### Option Specification
 
 The calling program must first create an array of {{i:`nng_optspec`}} structures
@@ -58,15 +65,15 @@ This structure has the following members:
 - `o_name`:
 
   The long style name for the option, such as "verbose".
-  This will be parsed on the command line when it is prefixed with two dashes.
-  It may be `NULL` if only a short option is to be supported.
+  This will be parsed as a [long option](#long-options) on the command line when it is prefixed with two dashes.
+  It may be `NULL` if only a [short option](#short-options) is to be supported.
 
 - `o_short`:
 
   This is a single letter (at present only ASCII letters are supported).
   These options appear as just a single letter, and are prefixed with a single dash on the command line.
   The use of a slash in lieu of the dash is _not_ supported, in order to avoid confusion with path name arguments.
-  This value may be set to 0 if no short option is needed.
+  This value may be set to 0 if no [short option](#short-options) is needed.
 
 - `o_val`:
 
@@ -108,7 +115,7 @@ When using long options, the parser will match if it is equal to a prefix
 of the `o_name` member of a option specification, provided that it do so
 unambiguously (meaning it must not match any other option specification.)
 
-## EXAMPLE
+## Example
 
 The following program fragment demonstrates this function.
 
@@ -155,13 +162,4 @@ The following program fragment demonstrates this function.
     }
 ```
 
-## RETURN VALUES
-
-This function returns 0 if an option parsed correctly, -1 if
-no more options are available to be parsed, or an error number otherwise.
-
-## ERRORS
-
-- `NNG_EAMBIGUOUS`: Parsed option matches more than one specification.
-- `NNG_ENOARG`: Option requires an argument, but one is not present.
-- `NNG_EINVAL`: An invalid (unknown) argument is present.
+{{#include ../xref.md}}

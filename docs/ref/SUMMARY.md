@@ -33,9 +33,7 @@
 
   - [ID Map](./api/id_map.md)
 
-  - [Utility Functions](./api/util/index.md)
-
-    - [nng_opts_parse](./api/util/nng_opts_parse.md)
+  - [Command Options](./api/cmd_opts.md)
 
 - [Protocols](./proto/index.md)
 
