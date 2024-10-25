@@ -14,10 +14,7 @@
 
   - [URLs](./api/url.md)
 
-  - [Asynchronous Operations](./api/aio/index.md)
-
-    - [nng_aio](./api/aio/nng_aio.md)
-    - [aio_cancel](./api/aio/aio_cancel.md)
+  - [Asynchronous I/O](./api/aio.md)
 
   - [Synchronization](./api/synch.md)
 

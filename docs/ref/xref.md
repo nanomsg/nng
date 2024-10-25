@@ -56,8 +56,20 @@
 [`nng_send`]: /TODO.md
 [`nng_recv`]: /TODO.md
 [`nng_aio`]: /TODO.md
+[`nng_aio_alloc`]: /api/aio.md#create-handle
+[`nng_aio_free`]: /api/aio.md#destroy-handle
 [`nng_sleep_aio`]: /TODO.md
-[`nng_aio_cancel`]: /TODO.md
+[`nng_aio`]: /api/aio.md#asynchronous-i-o-handle
+[`nng_aio_cancel`]: /api/aio.md#cancellation
+[`nng_aio_abort`]: /api/aio.md#cancellation
+[`nng_aio_stop`]: /api/aio.md#cancellation
+[`nng_aio_wait`]: /api/api.md#wait-for-completion
+[`nng_aio_busy`]: /api/api.md#test-for-completion
+[`nng_aio_result`]: /api/api.md#result-of-operation
+[`nng_aio_count`]: /api/api.md#result-of-operation
+[`nng_aio_begin`]: /TODO.md
+[`nng_aio_finish`]: /TODO.md
+[`nng_aio_set_timeout`]: /TODO.md
 [`nng_opts_parse`]: /TODO.md
 
 <!-- Macros -->
@@ -131,12 +143,13 @@
 
 <!-- Concept index -->
 
-[aio]: /TODO.md
+[aio]: /api/aio.md
 [raw]: /TODO.md
 [pipe]: /TODO.md
 [socket]: /TODO.md
 [dialer]: /TODO.md
 [listener]: /TODO.md
+[message]: /api/msg.md
 [message-body]: /api/msg.md#message-body
 [message-header]: /api/msg.md#message-header
 [synchronization]: /api/synch.md
@@ -144,3 +157,6 @@
 [condvar]: /api/synch.md#condition-variable
 [thread]: /api/thread.md
 [statistic]: /api/stats.md
+[time]: /api/time.md
+[error]: /api/errors.md
+[duration]: /api/time.md#duration-type
