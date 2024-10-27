@@ -53,9 +53,7 @@
 [`nng_stat_unit`]: /api/stats.md#statistic-units
 [`nng_id_set`]: /api/id_map.md#store-a-value
 [`nng_strerror`]: /api/errors.md#human-readable-error-message
-[`nng_send`]: /TODO.md
-[`nng_recv`]: /TODO.md
-[`nng_aio`]: /TODO.md
+[`nng_aio`]: /api/aio.md#asynchronous-io-handle
 [`nng_aio_alloc`]: /api/aio.md#create-handle
 [`nng_aio_free`]: /api/aio.md#destroy-handle
 [`nng_sleep_aio`]: /api/time.md@wait-asynchronously
@@ -63,14 +61,18 @@
 [`nng_aio_cancel`]: /api/aio.md#cancellation
 [`nng_aio_abort`]: /api/aio.md#cancellation
 [`nng_aio_stop`]: /api/aio.md#cancellation
-[`nng_aio_wait`]: /api/api.md#wait-for-completion
-[`nng_aio_busy`]: /api/api.md#test-for-completion
-[`nng_aio_result`]: /api/api.md#result-of-operation
-[`nng_aio_count`]: /api/api.md#result-of-operation
+[`nng_aio_wait`]: /api/aio.md#wait-for-completion
+[`nng_aio_busy`]: /api/aio.md#test-for-completion
+[`nng_aio_result`]: /api/aio.md#result-of-operation
+[`nng_aio_count`]: /api/aio.md#result-of-operation
+[`nng_aio_set_timeout`]: /api/aio.md#set-timeout
+[`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
 [`nng_aio_begin`]: /TODO.md
+[`nng_aio_defer`]: /TODO.md
 [`nng_aio_finish`]: /TODO.md
-[`nng_aio_set_timeout`]: /TODO.md
-[`nng_opts_parse`]: /TODO.md
+[`nng_aio_set_output`]: /TODO.md
+[`nng_send`]: /TODO.md
+[`nng_recv`]: /TODO.md
 
 <!-- Macros -->
 

@@ -11,6 +11,7 @@ fold.enable = true
 fold.level = 2
 additional-css = ["theme/pagetoc.css"]
 additional-js = ["theme/pagetoc.js"]
+site-url = "/ref/"
 
 [preprocessor.alerts]
 
