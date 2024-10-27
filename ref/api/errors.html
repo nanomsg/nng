@@ -298,8 +298,8 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_EWRITEONLY</code><a name="NNG_EWRITEONLY"></a></td><td>25</td><td>Write only resource. A read operation failed because the object only supports writes.</td></tr>
 <tr><td><code>NNG_ECRYPTO</code><a name="NNG_ECRYPTO"></a></td><td>26</td><td>Cryptographic error. Usually indicates an invalid key was used for TLS.</td></tr>
 <tr><td><code>NNG_EPEERAUTH</code><a name="NNG_EPEERAUTH"></a></td><td>27</td><td>Peer could not be authenticated.</td></tr>
-<tr><td><code>NNG_ENOARG</code><a name="NNG_ENOARG"></a></td><td>28</td><td>Option requires argument. A command-line option was supplied without an argument. Only used with <a href="/TODO.html"><code>nng_opts_parse</code></a>.</td></tr>
-<tr><td><code>NNG_EAMBIGUOUS</code><a name="NNG_EAMBIGUOUS"></a></td><td>29</td><td>Ambiguous option. The command line option could not be unambiguously resolved. Only used with <a href="/TODO.html"><code>nng_opts_parse</code></a>.</td></tr>
+<tr><td><code>NNG_ENOARG</code><a name="NNG_ENOARG"></a></td><td>28</td><td>Option requires argument. A command-line option was supplied without an argument. Only used with <a href="/api/cmd_opts.html#parse-command-line-options"><code>nng_opts_parse</code></a>.</td></tr>
+<tr><td><code>NNG_EAMBIGUOUS</code><a name="NNG_EAMBIGUOUS"></a></td><td>29</td><td>Ambiguous option. The command line option could not be unambiguously resolved. Only used with <a href="/api/cmd_opts.html#parse-command-line-options"><code>nng_opts_parse</code></a>.</td></tr>
 <tr><td><code>NNG_EBADTYPE</code><a name="NNG_EBADTYPE"></a></td><td>30</td><td>Incorrect type. A type-specific function was used for an object of the wrong type.</td></tr>
 <tr><td><code>NNG_ECONNSHUT</code><a name="NNG_ECONNSHUT"></a></td><td>31</td><td>Connection shutdown. The connection was shut down and cannot be used.</td></tr>
 <tr><td><code>NNG_EINTERNAL</code><a name="NNG_EINTERNAL"></a></td><td>1000</td><td>An unidentifier internal error occurred.</td></tr>

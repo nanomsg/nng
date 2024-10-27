@@ -277,7 +277,7 @@ Blocking <em>NNG</em> library calls can however be made safely from <em>NNG</em>
 <p>The system may impose limits on the number of threads that can be created.
 Typically applications should not create more than a dozen of these.
 If greater concurrency or scalability is needed, consider instead using
-an asynchronous model using <a href="/TODO.html"><code>nng_aio</code></a> structures.</p>
+an asynchronous model using <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> structures.</p>
 </div>
 <h2 id="thread-structure"><a class="header" href="#thread-structure">Thread Structure</a></h2>
 <pre><code class="language-c">typedef struct nng_thread nng_thread;
