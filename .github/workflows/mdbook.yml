@@ -1,4 +1,4 @@
-name: mdbook publish
+name: mdbook
 
 on:
   push:
@@ -33,3 +33,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/book
           destination_dir: ./ref
+          enable_jekyll: true
