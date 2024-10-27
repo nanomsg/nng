@@ -43,7 +43,7 @@ Normally durations are positive, but some specific negative values are reserved.
 - {{i:`NNG_DURATION_ZERO`}}: A zero length duration is used to performan an immediate
   poll.
 
-## Getting the Current Time
+## Get the Current Time
 
 ```c
 nng_time nng_clock(void);
@@ -55,7 +55,7 @@ The resolution of the clock depends on the underlying timing facilities of the s
 This function may be used for timing, but applications should not expect
 very fine-grained values.
 
-## Waiting for Duration
+## Wait for Duration
 
 ```c
 void nng_msleep(nng_duration msec);
@@ -69,9 +69,27 @@ number of milliseconds.
 > The actual wait time is determined by the capabilities of the
 > underlying system.
 
+## Wait Asynchronously
+
+```c
+void nng_sleep_aio(nng_duration msec, nng_aio *aio);
+```
+
+It is possible to wait as the action on an [`nng_aio`], which in effect
+acts like {{i:scheduling}} a callback to run after a specified period of time.
+
+The {{i:`nng_sleep_aio`}} function provides this capability.
+After _msec_ milliseconds have passed, then _aio_'s callback will be executed.
+If this sleep waits without interruption, and then completes, the result from
+[`nng_aio_result`] will be zero.
+
+> [!NOTE]
+> If a timeout shorter than _msec_ is set on _aio_ using [`nng_aio_set_timeout`],
+> then the sleep will wake up early, with a result code of [`NNG_ETIMEDOUT`].
+
 ## See Also
 
-[`nng_cv_until`],
-[`nng_sleep_aio`]
+[Asynchronous Operations][aio],
+[Synchronization][synchronization]
 
 {{#include ../xref.md}}

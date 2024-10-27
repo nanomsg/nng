@@ -6,8 +6,8 @@
 [`nng_strfree`]: /api/memory.md#free-string
 [`nng_time`]: /api/time.md#time-type
 [`nng_duration`]: /api/time.md#duration-type
-[`nng_clock`]: /api/time.md#getting-the-current-time
-[`nng_msleep`]: /api/time.md#waiting-for-duration
+[`nng_clock`]: /api/time.md#get-the-current-time
+[`nng_msleep`]: /api/time.md#wait-for-duration
 [`nng_msg`]: /api/msg.md#message-structure
 [`nng_msg_alloc`]: /api/msg.md#create-a-message
 [`nng_msg_free`]: /api/msg.md#destroy-a-message
@@ -58,7 +58,7 @@
 [`nng_aio`]: /TODO.md
 [`nng_aio_alloc`]: /api/aio.md#create-handle
 [`nng_aio_free`]: /api/aio.md#destroy-handle
-[`nng_sleep_aio`]: /TODO.md
+[`nng_sleep_aio`]: /api/time.md@wait-asynchronously
 [`nng_aio`]: /api/aio.md#asynchronous-i-o-handle
 [`nng_aio_cancel`]: /api/aio.md#cancellation
 [`nng_aio_abort`]: /api/aio.md#cancellation
