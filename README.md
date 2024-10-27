@@ -163,11 +163,11 @@ $ ninja install
 
 The API documentation is provided in Asciidoc format in the
 `docs/man` subdirectory, and also
-[online](https://nanomsg.github.io/nng).
+[online](https://nng.nanomsg.org/man).
 
 > [!NOTE]
 > However, an effort to convert the documentation to Markdown using `mdbook`
-> is underway.
+> is underway. You can see a preview it [here](https://nng.nanomsg.org/ref).
 
 The [_nng_(7)](docs/man/nng.7.adoc) page provides a conceptual overview and links to
 manuals for various patterns.
