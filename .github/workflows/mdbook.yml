@@ -20,6 +20,10 @@ jobs:
           # mdbook-version: '0.4.10'
           mdbook-version: "latest"
 
+      - run: cargo install mdbook-alerts
+      - run: cargo install mdbook-indexing
+      - run: cargo install mdbook-footnote
+      - run: cargo install mdbook-pagetoc
       - run: mdbook build -d ./book docs
 
       - name: Deploy
