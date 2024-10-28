@@ -281,7 +281,6 @@ if (NNG_ENABLE_DOC)
             nng_stream_get
             nng_stream_recv
             nng_stream_send
-            nng_stream_set
             nng_stream_dialer_alloc
             nng_stream_dialer_close
             nng_stream_dialer_dial

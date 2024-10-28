@@ -42,7 +42,7 @@ int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
 
 == DESCRIPTION
 
-The `nng_stream_get()` functions are used to retrieve option values for the 
+The `nng_stream_get()` functions are used to retrieve option values for the
 xref:nng_stream.5.adoc[byte stream] _conn_.
 
 The actual options that may be retrieved in this way vary.
@@ -138,7 +138,6 @@ This function returns 0 on success, and non-zero otherwise.
 
 [.text-left]
 xref:nng_strerror.3.adoc[nng_strerror(3)],
-xref:nng_stream_set.3str.adoc[nng_stream_set(3str)],
 xref:nng_options.5.adoc[nng_options(5)],
 xref:nng_ipc_options.5.adoc[nng_ipc_options(5)],
 xref:nng_tcp_options.5.adoc[nng_tcp_options(5)],

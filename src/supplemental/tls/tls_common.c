@@ -640,21 +640,6 @@ static const nni_option tls_options[] = {
 };
 
 static int
-tls_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
-{
-	tls_conn   *conn = arg;
-	int         rv;
-	nng_stream *tcp;
-
-	tcp = (conn != NULL) ? conn->tcp : NULL;
-
-	if ((rv = nni_stream_set(tcp, name, buf, sz, t)) != NNG_ENOTSUP) {
-		return (rv);
-	}
-	return (nni_setopt(tls_options, name, conn, buf, sz, t));
-}
-
-static int
 tls_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_conn *conn = arg;
@@ -713,7 +698,6 @@ tls_alloc(tls_conn **conn_p, nng_tls_config *cfg, nng_aio *user_aio)
 	conn->stream.s_send  = tls_send;
 	conn->stream.s_recv  = tls_recv;
 	conn->stream.s_get   = tls_get;
-	conn->stream.s_set   = tls_set;
 
 	nng_tls_config_hold(cfg);
 	*conn_p = conn;

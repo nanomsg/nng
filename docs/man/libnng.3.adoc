@@ -337,7 +337,6 @@ xref:nng_stream_listener.5.adoc[`nng_stream_listener`] objects.
 |xref:nng_stream_listener_set.3str.adoc[nng_stream_listener_set()]|set option on byte stream listener
 |xref:nng_stream_recv.3str.adoc[nng_stream_recv()]|receive from byte stream
 |xref:nng_stream_send.3str.adoc[nng_stream_send()]|send to byte stream
-|xref:nng_stream_set.3str.adoc[nng_stream_set()]|set option on byte stream
 |===
 
 === HTTP Support

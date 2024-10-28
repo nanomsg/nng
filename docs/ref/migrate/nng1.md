@@ -40,6 +40,8 @@ and similar has been removed. Instead configuration must be performed by allocat
 a `nng_tls_config` object, and then setting fields on it using the appropriate functions,
 after which it may be configured on a listener or dialer using the `NNG_OPT_TLS_CONFIG` option.
 
+Note that TLS configuration is now available in `<nng/nng.h>`, rather than the supplemental header.
+
 ## Option Functions
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.
@@ -47,6 +49,17 @@ Applications should use `nng_pipe_get` and related functions instead.
 
 The socket option function families for `nng_getopt` and `nng_setopt` have been removed as well.
 In this case, use the `nng_socket_get` and `nng_socket_set` functions as appropriate.
+
+The `_getopt` and `_setopt` functions for contexts, listeners, and dialers are no longer
+present. Simply changing `_getopt` to `_get` or `_setopt` to `_set` in the function name
+should be sufficient in most cases.
+
+## Stream Options
+
+The ability to set options on streams after they have been created is no longer present.
+(It turns out that this was not very useful.) All functions `nng_stream_set_xxx` are removed.
+For tuning the `NNG_OPT_TCP_NODELAY` or similar properties, set the option on the listener
+or dialer that creates the stream instead.
 
 ## Transport Options
 

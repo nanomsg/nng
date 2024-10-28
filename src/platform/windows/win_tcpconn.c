@@ -305,43 +305,6 @@ tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-tcp_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	bool          val;
-	BOOL          b;
-	int           rv;
-	if ((rv = nni_copyin_bool(&val, buf, sz, t)) != 0) {
-		return (rv);
-	}
-	b = val ? TRUE : FALSE;
-	if (setsockopt(
-	        c->s, IPPROTO_TCP, TCP_NODELAY, (void *) &b, sizeof(b)) != 0) {
-		return (nni_win_error(WSAGetLastError()));
-	}
-	return (0);
-}
-
-static int
-tcp_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	bool          val;
-	BOOL          b;
-	int           rv;
-
-	if ((rv = nni_copyin_bool(&val, buf, sz, t)) != 0) {
-		return (rv);
-	}
-	b = val ? TRUE : FALSE;
-	if (setsockopt(
-	        c->s, SOL_SOCKET, SO_KEEPALIVE, (void *) &b, sizeof(b)) != 0) {
-		return (nni_win_error(WSAGetLastError()));
-	}
-	return (0);
-}
-
-static int
 tcp_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c   = arg;
@@ -381,12 +344,10 @@ static const nni_option tcp_options[] = {
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_get  = tcp_get_nodelay,
-	    .o_set  = tcp_set_nodelay,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
 	    .o_get  = tcp_get_keepalive,
-	    .o_set  = tcp_set_keepalive,
 	},
 	{
 	    .o_name = NULL,

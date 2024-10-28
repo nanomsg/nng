@@ -57,12 +57,10 @@ using
 xref:nng_stream_close.3str.adoc[`nng_stream_close()`].
 
 Byte streams may, depending on the underlying technology,
-support various
+support various read-only
 xref:nng_options.5.adoc[options], which
 can be accessed using the
-xref:nng_stream_get.3str.adoc[`nng_stream_get()`] and
-xref:nng_stream_set.3str.adoc[`nng_stream_set()`] family of
-functions.
+xref:nng_stream_get.3str.adoc[`nng_stream_get()`].
 
 == SEE ALSO
 
@@ -75,6 +73,5 @@ xref:nng_stream_get.3str.adoc[nng_stream_get(3str)],
 xref:nng_stream_listener_accept.3str.adoc[nng_stream_listener_accept(3str)],
 xref:nng_stream_recv.3str.adoc[nng_stream_recv(3str)],
 xref:nng_stream_send.3str.adoc[nng_stream_send(3str)],
-xref:nng_stream_set.3str.adoc[nng_stream_set(3str)],
 xref:nng_options.5.adoc[nng_options(5)],
 xref:nng.7.adoc[nng(7)],

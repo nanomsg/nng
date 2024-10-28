@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -42,7 +42,7 @@ tcp_dowrite(nni_tcp_conn *c)
 		int           n;
 		int           niov;
 		unsigned      naiov;
-		nni_iov *     aiov;
+		nni_iov      *aiov;
 		struct msghdr hdr;
 		struct iovec  iovec[16];
 
@@ -111,7 +111,7 @@ tcp_doread(nni_tcp_conn *c)
 		int          n;
 		int          niov;
 		unsigned     naiov;
-		nni_iov *    aiov;
+		nni_iov     *aiov;
 		struct iovec iovec[16];
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
@@ -165,7 +165,7 @@ static void
 tcp_error(void *arg, int err)
 {
 	nni_tcp_conn *c = arg;
-	nni_aio *     aio;
+	nni_aio      *aio;
 
 	nni_mtx_lock(&c->mtx);
 	while (((aio = nni_list_first(&c->readq)) != NULL) ||
@@ -337,7 +337,7 @@ tcp_recv(void *arg, nni_aio *aio)
 static int
 tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_tcp_conn *          c = arg;
+	nni_tcp_conn           *c = arg;
 	struct sockaddr_storage ss;
 	socklen_t               len = sizeof(ss);
 	int                     fd  = nni_posix_pfd_fd(c->pfd);
@@ -356,7 +356,7 @@ tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
 static int
 tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_tcp_conn *          c = arg;
+	nni_tcp_conn           *c = arg;
 	struct sockaddr_storage ss;
 	socklen_t               len = sizeof(ss);
 	int                     fd  = nni_posix_pfd_fd(c->pfd);
@@ -370,46 +370,6 @@ tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
 	}
 	return (rv);
-}
-
-static int
-tcp_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	int           fd;
-	bool          b;
-	int           val;
-	int           rv;
-
-	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (c == NULL)) {
-		return (rv);
-	}
-	val = b ? 1 : 0;
-	fd  = nni_posix_pfd_fd(c->pfd);
-	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	return (0);
-}
-
-static int
-tcp_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	int           fd;
-	bool          b;
-	int           val;
-	int           rv;
-
-	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (c == NULL)) {
-		return (rv);
-	}
-	val = b ? 1 : 0;
-	fd  = nni_posix_pfd_fd(c->pfd);
-	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	return (0);
 }
 
 static int
@@ -454,12 +414,10 @@ static const nni_option tcp_options[] = {
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_get  = tcp_get_nodelay,
-	    .o_set  = tcp_set_nodelay,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
 	    .o_get  = tcp_get_keepalive,
-	    .o_set  = tcp_set_keepalive,
 	},
 	{
 	    .o_name = NULL,

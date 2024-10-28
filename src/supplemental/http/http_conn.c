@@ -647,21 +647,6 @@ nni_http_conn_getopt(
 	return (rv);
 }
 
-int
-nni_http_conn_setopt(nni_http_conn *conn, const char *name, const void *buf,
-    size_t sz, nni_type t)
-{
-	int rv;
-	nni_mtx_lock(&conn->mtx);
-	if (conn->closed) {
-		rv = NNG_ECLOSED;
-	} else {
-		rv = nni_stream_set(conn->sock, name, buf, sz, t);
-	}
-	nni_mtx_unlock(&conn->mtx);
-	return (rv);
-}
-
 void
 nni_http_conn_fini(nni_http_conn *conn)
 {

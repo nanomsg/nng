@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,7 +17,7 @@
 
 TestMain("Supplemental TCP", {
 	Convey("We can create a dialer and listener", {
-		nng_stream_dialer *  d = NULL;
+		nng_stream_dialer   *d = NULL;
 		nng_stream_listener *l = NULL;
 		Reset({
 			nng_stream_listener_free(l);
@@ -46,9 +46,9 @@ TestMain("Supplemental TCP", {
 			So(memcmp(&sa.s_in.sa_addr, ip, 4) == 0);
 
 			Convey("We can dial it", {
-				nng_aio *   daio = NULL;
-				nng_aio *   laio = NULL;
-				nng_aio *   maio = NULL;
+				nng_aio    *daio = NULL;
+				nng_aio    *laio = NULL;
+				nng_aio    *maio = NULL;
 				nng_stream *c1   = NULL;
 				nng_stream *c2   = NULL;
 
@@ -93,8 +93,8 @@ TestMain("Supplemental TCP", {
 				So(c2 != NULL);
 
 				Convey("They exchange messages", {
-					nng_aio *    aio1;
-					nng_aio *    aio2;
+					nng_aio     *aio1;
+					nng_aio     *aio2;
 					nng_iov      iov;
 					nng_sockaddr sa2;
 					char         buf1[5];
@@ -112,18 +112,6 @@ TestMain("Supplemental TCP", {
 						nng_aio_free(aio2);
 					});
 
-					on = true;
-					So(nng_stream_set(c1,
-					       NNG_OPT_TCP_NODELAY, &on,
-					       sizeof(on)) == 0);
-					So(nng_stream_set(c2,
-					       NNG_OPT_TCP_NODELAY, &on,
-					       sizeof(on)) == 0);
-
-					So(nng_stream_set(c1,
-					       NNG_OPT_TCP_KEEPALIVE, &on,
-					       sizeof(on)) == 0);
-
 					on = false;
 					sz = sizeof(on);
 					So(nng_stream_get(c1,
@@ -138,7 +126,6 @@ TestMain("Supplemental TCP", {
 					       NNG_OPT_TCP_KEEPALIVE, &on,
 					       &sz) == 0);
 					So(sz == sizeof(on));
-					So(on == true);
 
 					// This relies on send completing for
 					// for just 5 bytes, and on recv doing

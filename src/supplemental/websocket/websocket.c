@@ -179,7 +179,6 @@ static void ws_str_close(void *);
 static void ws_str_send(void *, nng_aio *);
 static void ws_str_recv(void *, nng_aio *);
 static int  ws_str_get(void *, const char *, void *, size_t *, nni_type);
-static int  ws_str_set(void *, const char *, const void *, size_t, nni_type);
 
 static void ws_listener_close(void *);
 static void ws_listener_free(void *);
@@ -1461,7 +1460,6 @@ ws_init(nni_ws **wsp)
 	ws->ops.s_send  = ws_str_send;
 	ws->ops.s_recv  = ws_str_recv;
 	ws->ops.s_get   = ws_str_get;
-	ws->ops.s_set   = ws_str_set;
 
 	ws->fragsize = 1 << 20; // we won't send a frame larger than this
 	*wsp         = ws;
@@ -2867,33 +2865,6 @@ static const nni_option ws_options[] = {
 	    .o_name = NULL,
 	},
 };
-
-static int
-ws_str_set(void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
-{
-	nni_ws *ws = arg;
-	int     rv;
-
-	// Headers can only be set.
-	nni_mtx_lock(&ws->mtx);
-	if (ws->closed) {
-		nni_mtx_unlock(&ws->mtx);
-		return (NNG_ECLOSED);
-	}
-	nni_mtx_unlock(&ws->mtx);
-	rv = nni_http_conn_setopt(ws->http, nm, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_setopt(ws_options, nm, ws, buf, sz, t);
-	}
-	if (rv == NNG_ENOTSUP) {
-		if (startswith(nm, NNG_OPT_WS_REQUEST_HEADER) ||
-		    startswith(nm, NNG_OPT_WS_RESPONSE_HEADER)) {
-			return (NNG_EREADONLY);
-		}
-	}
-
-	return (rv);
-}
 
 static int
 ws_get_req_header(

@@ -146,13 +146,6 @@ nni_stream_get(
 	return (s->s_get(s, nm, data, szp, t));
 }
 
-int
-nni_stream_set(
-    nng_stream *s, const char *nm, const void *data, size_t sz, nni_type t)
-{
-	return (s->s_set(s, nm, data, sz, t));
-}
-
 void
 nng_stream_dialer_close(nng_stream_dialer *d)
 {
@@ -462,55 +455,6 @@ nng_stream_listener_get_addr(
     nng_stream_listener *l, const char *n, nng_sockaddr *v)
 {
 	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_SOCKADDR));
-}
-
-int
-nng_stream_set(nng_stream *s, const char *n, const void *v, size_t sz)
-{
-	return (nni_stream_set(s, n, v, sz, NNI_TYPE_OPAQUE));
-}
-
-int
-nng_stream_set_int(nng_stream *s, const char *n, int v)
-{
-	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_INT32));
-}
-
-int
-nng_stream_set_bool(nng_stream *s, const char *n, bool v)
-{
-	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_BOOL));
-}
-
-int
-nng_stream_set_size(nng_stream *s, const char *n, size_t v)
-{
-	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_SIZE));
-}
-
-int
-nng_stream_set_uint64(nng_stream *s, const char *n, uint64_t v)
-{
-	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_UINT64));
-}
-
-int
-nng_stream_set_ms(nng_stream *s, const char *n, nng_duration v)
-{
-	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_DURATION));
-}
-
-int
-nng_stream_set_ptr(nng_stream *s, const char *n, void *v)
-{
-	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_POINTER));
-}
-
-int
-nng_stream_set_string(nng_stream *s, const char *n, const char *v)
-{
-	return (nni_stream_set(
-	    s, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
 }
 
 int
