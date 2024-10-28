@@ -5330,6 +5330,11 @@ can be simply removed from your application:</p>
 <code>NNG_OPT_WS_OPT_WS_REQUEST_HEADERS</code> and <code>NNG_OPT_WS_RESPONSE_HEADERS</code> have been removed.
 Just convert any use of them to <code>NNG_OPT_WS_REQUEST_HEADERS</code> or
 <code>NNG_OPT_WS_RESPONSE_HEADERS</code> as appropriate.</p>
+<h2 id="tls-options"><a class="header" href="#tls-options">TLS Options</a></h2>
+<p>The support for configuring TLS via <code>NNG_TLS_AUTH_MODE</code>, <code>NNG_OPT_TLS_CA_FILE</code>, <code>NNG_OPT_TLS_SERVER_NAME</code>,
+and similar has been removed. Instead configuration must be performed by allocating
+a <code>nng_tls_config</code> object, and then setting fields on it using the appropriate functions,
+after which it may be configured on a listener or dialer using the <code>NNG_OPT_TLS_CONFIG</code> option.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
 Applications should use <code>nng_pipe_get</code> and related functions instead.</p>
