@@ -1159,8 +1159,6 @@ NNG_DECL int  nng_stream_set_size(nng_stream *, const char *, size_t);
 NNG_DECL int  nng_stream_set_uint64(nng_stream *, const char *, uint64_t);
 NNG_DECL int  nng_stream_set_string(nng_stream *, const char *, const char *);
 NNG_DECL int  nng_stream_set_ptr(nng_stream *, const char *, void *);
-NNG_DECL int  nng_stream_set_addr(
-     nng_stream *, const char *, const nng_sockaddr *);
 
 NNG_DECL int nng_stream_dialer_alloc(nng_stream_dialer **, const char *);
 NNG_DECL int nng_stream_dialer_alloc_url(
