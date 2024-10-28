@@ -61,7 +61,6 @@ struct tlstran_ep {
 	bool                 closed;
 	bool                 fini;
 	int                  refcnt;
-	int                  authmode;
 	nni_url             *url;
 	nni_list             pipes;
 	nni_reap_node        reap;
@@ -911,7 +910,6 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	    ((rv = nni_aio_alloc(&ep->connaio, tlstran_dial_cb, ep)) != 0)) {
 		return (rv);
 	}
-	ep->authmode = NNG_TLS_AUTH_MODE_REQUIRED;
 
 	if ((rv != 0) ||
 	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, &myurl)) != 0)) {
@@ -967,8 +965,6 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 		return (rv);
 	}
 
-	ep->authmode = NNG_TLS_AUTH_MODE_NONE;
-
 	if (strlen(host) == 0) {
 		host = NULL;
 	}
@@ -989,10 +985,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 	nni_aio_free(aio);
 
 	if ((rv != 0) ||
-	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) ||
-	    ((rv = nni_stream_listener_set(ep->listener, NNG_OPT_TLS_AUTH_MODE,
-	          &ep->authmode, sizeof(ep->authmode), NNI_TYPE_INT32)) !=
-	        0)) {
+	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0)) {
 		tlstran_ep_fini(ep);
 		return (rv);
 	}

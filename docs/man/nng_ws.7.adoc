@@ -157,24 +157,6 @@ longer needs the TLS configuration.
 
 TIP: Use this option when advanced TLS configuration is required.
 
-((`NNG_OPT_TLS_CA_FILE`))::
-(string) Write-only option naming a file containing certificates to
-use for peer validation.
-See xref:nng_tls_config_ca_file.3tls.adoc[`nng_tls_config_ca_file()`] for more
-information.
-
-((`NNG_OPT_TLS_CERT_KEY_FILE`))::
-(string) Write-only option naming a file containing the local certificate and
-associated private key.
-The private key used must be unencrypted.
-See xref:nng_tls_config_own_cert.3tls.adoc[`nng_tls_config_own_cert()`] for more
-information.
-
-((`NNG_OPT_TLS_AUTH_MODE`))::
-(`int`) Write-only option used to configure the authentication mode used.
-See xref:nng_tls_config_auth_mode.3tls.adoc[`nng_tls_config_auth_mode()`] for
-more details.
-
 `NNG_OPT_TLS_VERIFIED`::
 (`bool`) Whether the remote peer has been properly verified using TLS
 authentication.

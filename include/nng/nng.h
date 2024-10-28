@@ -741,37 +741,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // after the endpoint it is associated with is closed.
 #define NNG_OPT_TLS_CONFIG "tls-config"
 
-// NNG_OPT_TLS_AUTH_MODE is a write-only integer (int) option that specifies
-// whether peer authentication is needed.  The option can take one of the
-// values of NNG_TLS_AUTH_MODE_NONE, NNG_TLS_AUTH_MODE_OPTIONAL, or
-// NNG_TLS_AUTH_MODE_REQUIRED.  The default is typically NNG_TLS_AUTH_MODE_NONE
-// for listeners, and NNG_TLS_AUTH_MODE_REQUIRED for dialers. If set to
-// REQUIRED, then connections will be rejected if the peer cannot be verified.
-// If set to OPTIONAL, then a verification step takes place, but the connection
-// is still permitted.  (The result can be checked with NNG_OPT_TLS_VERIFIED).
-#define NNG_OPT_TLS_AUTH_MODE "tls-authmode"
-
-// NNG_OPT_TLS_CERT_KEY_FILE names a single file that contains a certificate
-// and key identifying the endpoint.  This is a write-only value.  This can be
-// set multiple times for different keys/certs corresponding to
-// different algorithms on listeners, whereas dialers only support one.  The
-// file must contain both cert and key as PEM blocks, and the key must
-// not be encrypted.  (If more flexibility is needed, use the TLS configuration
-// directly, via NNG_OPT_TLS_CONFIG.)
-#define NNG_OPT_TLS_CERT_KEY_FILE "tls-cert-key-file"
-
-// NNG_OPT_TLS_CA_FILE names a single file that contains certificate(s) for a
-// CA, and optionally CRLs, which are used to validate the peer's certificate.
-// This is a write-only value, but multiple CAs can be loaded by setting this
-// multiple times.
-#define NNG_OPT_TLS_CA_FILE "tls-ca-file"
-
-// NNG_OPT_TLS_SERVER_NAME is a write-only string that can typically be
-// set on dialers to check the CN of the server for a match.  This
-// can also affect SNI (server name indication).  It usually has no effect
-// on listeners.
-#define NNG_OPT_TLS_SERVER_NAME "tls-server-name"
-
 // NNG_OPT_TLS_VERIFIED returns a boolean indicating whether the peer has
 // been verified (true) or not (false). Typically, this is read-only, and
 // only available for pipes. This option may return incorrect results if

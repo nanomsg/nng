@@ -20,11 +20,7 @@ nng_tls_options - TLS-specific options
 ----
 #include <nng/nng.h>
 
-#define NNG_OPT_TLS_AUTH_MODE      "tls-authmode"
-#define NNG_OPT_TLS_CA_FILE        "tls-ca-file"
-#define NNG_OPT_TLS_CERT_KEY_FILE  "tls-cert-key-file"
 #define NNG_OPT_TLS_CONFIG         "tls-config"
-#define NNG_OPT_TLS_SERVER_NAME    "tls-server-name"
 #define NNG_OPT_TLS_VERIFIED       "tls-verified"
 #define NNG_OPT_TLS_PEER_CN        "tls-peer-cn"
 #define NNG_OPT_TLS_PEER_ALT_NAMES "tls-peer-alt-names"
@@ -47,25 +43,6 @@ description of the option.
 
 === TLS Options
 
-[[NNG_OPT_TLS_AUTH_MODE]]((`NNG_OPT_TLS_AUTH_MODE`))::
-(`int`)
-Write-only option used to configure the authentication mode used.
-See xref:nng_tls_config_auth_mode.3tls.adoc[`nng_tls_config_auth_mode()`] for
-more details.
-
-[[NNG_OPT_TLS_CA_FILE]]((`NNG_OPT_TLS_CA_FILE`))::
-(string) Write-only option naming a file containing certificates to
-use for peer validation.
-See xref:nng_tls_config_ca_file.3tls.adoc[`nng_tls_config_ca_file()`] for more
-information.
-
-[[NNG_OPT_TLS_CERT_KEY_FILE]]((`NNG_OPT_TLS_CERT_KEY_FILE`))::
-(string) Write-only option naming a file containing the local certificate and
-associated private key.
-The private key used must be unencrypted.
-See xref:nng_tls_config_own_cert.3tls.adoc[`nng_tls_config_own_cert()`] for more
-information.
-
 [[NNG_OPT_TLS_CONFIG]]((`NNG_OPT_TLS_CONFIG`))::
 (`nng_tls_config *`)
 This option references the underlying
@@ -78,14 +55,6 @@ xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
 longer needs the TLS configuration object.
 +
 TIP: Use this option when more advanced TLS configuration is required.
-
-[[NNG_OPT_TLS_SERVER_NAME]]((`NNG_OPT_TLS_SERVER_NAME`))::
-(string)
-This write-only option is used to specify the name of the server.
-When used with a dialer, this potentially configures SNI (server name
-indication, which is used as a hint by a multihosting server to choose the
-appropriate certificate to provide) and also is used to validate the
-name presented in the server's x509 certificate.
 
 [[NNG_OPT_TLS_VERIFIED]]((`NNG_OPT_TLS_VERIFIED`))::
 (`bool`)

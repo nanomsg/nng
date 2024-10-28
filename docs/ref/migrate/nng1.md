@@ -33,6 +33,13 @@ The `NNG_OPT_WSS_REQUEST_HEADERS` and `NNG_OPT_WSS_RESPONSE_HEADERS` aliases for
 Just convert any use of them to `NNG_OPT_WS_REQUEST_HEADERS` or
 `NNG_OPT_WS_RESPONSE_HEADERS` as appropriate.
 
+## TLS Options
+
+The support for configuring TLS via `NNG_TLS_AUTH_MODE`, `NNG_OPT_TLS_CA_FILE`, `NNG_OPT_TLS_SERVER_NAME`,
+and similar has been removed. Instead configuration must be performed by allocating
+a `nng_tls_config` object, and then setting fields on it using the appropriate functions,
+after which it may be configured on a listener or dialer using the `NNG_OPT_TLS_CONFIG` option.
+
 ## Option Functions
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.
