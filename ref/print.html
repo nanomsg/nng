@@ -5335,11 +5335,20 @@ Just convert any use of them to <code>NNG_OPT_WS_REQUEST_HEADERS</code> or
 and similar has been removed. Instead configuration must be performed by allocating
 a <code>nng_tls_config</code> object, and then setting fields on it using the appropriate functions,
 after which it may be configured on a listener or dialer using the <code>NNG_OPT_TLS_CONFIG</code> option.</p>
+<p>Note that TLS configuration is now available in <code>&lt;nng/nng.h&gt;</code>, rather than the supplemental header.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
 Applications should use <code>nng_pipe_get</code> and related functions instead.</p>
 <p>The socket option function families for <code>nng_getopt</code> and <code>nng_setopt</code> have been removed as well.
 In this case, use the <code>nng_socket_get</code> and <code>nng_socket_set</code> functions as appropriate.</p>
+<p>The <code>_getopt</code> and <code>_setopt</code> functions for contexts, listeners, and dialers are no longer
+present. Simply changing <code>_getopt</code> to <code>_get</code> or <code>_setopt</code> to <code>_set</code> in the function name
+should be sufficient in most cases.</p>
+<h2 id="stream-options"><a class="header" href="#stream-options">Stream Options</a></h2>
+<p>The ability to set options on streams after they have been created is no longer present.
+(It turns out that this was not very useful.) All functions <code>nng_stream_set_xxx</code> are removed.
+For tuning the <code>NNG_OPT_TCP_NODELAY</code> or similar properties, set the option on the listener
+or dialer that creates the stream instead.</p>
 <h2 id="transport-options-4"><a class="header" href="#transport-options-4">Transport Options</a></h2>
 <p>A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
