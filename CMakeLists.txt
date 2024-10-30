@@ -88,6 +88,7 @@ endif ()
 # to obtain details about how the public library was built, so that we can
 # include or not include code based on what's actually present.
 add_library(nng)
+add_library(nng::nng ALIAS nng)
 
 add_library(nng_testing STATIC EXCLUDE_FROM_ALL)
 target_compile_definitions(nng_testing PUBLIC NNG_STATIC_LIB NNG_TEST_LIB NNG_PRIVATE)
