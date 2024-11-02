@@ -104,25 +104,25 @@ typedef void (*nni_cb)(void *);
 		(ptr)[7] = (uint8_t) ((uint64_t) (u));          \
 	} while (0)
 
-#define NNI_GET16(ptr, v)                               \
-	v = (((uint16_t) ((uint8_t) (ptr)[0])) << 8u) + \
-	    (((uint16_t) (uint8_t) (ptr)[1]))
+#define NNI_GET16(ptr, v)                                   \
+	v = (((uint16_t) (((uint8_t *) (ptr))[0])) << 8u) + \
+	    ((uint16_t) ((uint8_t *) (ptr))[1])
 
-#define NNI_GET32(ptr, v)                                \
-	v = (((uint32_t) ((uint8_t) (ptr)[0])) << 24u) + \
-	    (((uint32_t) ((uint8_t) (ptr)[1])) << 16u) + \
-	    (((uint32_t) ((uint8_t) (ptr)[2])) << 8u) +  \
-	    (((uint32_t) (uint8_t) (ptr)[3]))
+#define NNI_GET32(ptr, v)                                  \
+	v = (((uint32_t) ((uint8_t *) (ptr))[0]) << 24u) + \
+	    (((uint32_t) ((uint8_t *) (ptr))[1]) << 16u) + \
+	    (((uint32_t) ((uint8_t *) (ptr))[2]) << 8u) +  \
+	    ((uint32_t) ((uint8_t *) (ptr))[3])
 
-#define NNI_GET64(ptr, v)                                \
-	v = (((uint64_t) ((uint8_t) (ptr)[0])) << 56u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[1])) << 48u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[2])) << 40u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[3])) << 32u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[4])) << 24u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[5])) << 16u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[6])) << 8u) +  \
-	    (((uint64_t) (uint8_t) (ptr)[7]))
+#define NNI_GET64(ptr, v)                                  \
+	v = (((uint64_t) ((uint8_t *) (ptr))[0]) << 56u) + \
+	    (((uint64_t) ((uint8_t *) (ptr))[1]) << 48u) + \
+	    (((uint64_t) ((uint8_t *) (ptr))[2]) << 40u) + \
+	    (((uint64_t) ((uint8_t *) (ptr))[3]) << 32u) + \
+	    (((uint64_t) ((uint8_t *) (ptr))[4]) << 24u) + \
+	    (((uint64_t) ((uint8_t *) (ptr))[5]) << 16u) + \
+	    (((uint64_t) ((uint8_t *) (ptr))[6]) << 8u) +  \
+	    ((uint64_t) ((uint8_t *) (ptr))[7])
 
 // Modern CPUs are all little endian.  Let's stop paying the endian tax.
 
