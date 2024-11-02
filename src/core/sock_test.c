@@ -79,16 +79,6 @@ test_send_nonblock(void)
 }
 
 void
-test_readonly_options(void)
-{
-	nng_socket s1;
-	NUTS_OPEN(s1);
-	NUTS_FAIL(nng_socket_set_int(s1, NNG_OPT_RECVFD, 0), NNG_EREADONLY);
-	NUTS_FAIL(nng_socket_set_int(s1, NNG_OPT_SENDFD, 0), NNG_EREADONLY);
-	NUTS_CLOSE(s1);
-}
-
-void
 test_socket_base(void)
 {
 	nng_socket s1 = NNG_SOCKET_INITIALIZER;
@@ -596,7 +586,6 @@ NUTS_TESTS = {
 	{ "recv non-block", test_recv_nonblock },
 	{ "send timeout", test_send_timeout },
 	{ "send non-block", test_send_nonblock },
-	{ "read only options", test_readonly_options },
 	{ "socket base", test_socket_base },
 	{ "socket name", test_socket_name },
 	{ "socket name oversize", test_socket_name_oversize },

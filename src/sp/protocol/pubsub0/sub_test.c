@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -70,7 +71,7 @@ test_sub_not_writeable(void)
 	nng_socket sub;
 
 	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_FAIL(nng_socket_get_int(sub, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
+	NUTS_FAIL(nng_socket_get_send_poll_fd(sub, &fd), NNG_ENOTSUP);
 	NUTS_CLOSE(sub);
 }
 
@@ -86,7 +87,7 @@ test_sub_poll_readable(void)
 	NUTS_PASS(nng_socket_set(sub, NNG_OPT_SUB_SUBSCRIBE, "a", 1));
 	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(sub, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(sub, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -130,7 +131,7 @@ test_sub_recv_late(void)
 	NUTS_PASS(nng_socket_set(sub, NNG_OPT_SUB_SUBSCRIBE, "", 0));
 	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(sub, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(sub, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -158,21 +159,6 @@ test_sub_recv_late(void)
 	nng_aio_free(aio);
 
 	NUTS_CLOSE(pub);
-	NUTS_CLOSE(sub);
-}
-
-void
-test_sub_context_no_poll(void)
-{
-	int        fd;
-	nng_socket sub;
-	nng_ctx    ctx;
-
-	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_ctx_open(&ctx, sub));
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
-	NUTS_PASS(nng_ctx_close(ctx));
 	NUTS_CLOSE(sub);
 }
 
@@ -603,7 +589,6 @@ TEST_LIST = {
 	{ "sub context cannot send", test_sub_context_cannot_send },
 	{ "sub not writeable", test_sub_not_writeable },
 	{ "sub poll readable", test_sub_poll_readable },
-	{ "sub context does not poll", test_sub_context_no_poll },
 	{ "sub validate peer", test_sub_validate_peer },
 	{ "sub recv late", test_sub_recv_late },
 	{ "sub recv ctx closed", test_sub_recv_ctx_closed },

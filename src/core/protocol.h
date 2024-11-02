@@ -108,6 +108,12 @@ struct nni_proto_sock_ops {
 	// Receive a message.
 	void (*sock_recv)(void *, nni_aio *);
 
+	// Return the receive poll FD.
+	int (*sock_recv_poll_fd)(void *, int *);
+
+	// Return the send poll FD.
+	int (*sock_send_poll_fd)(void *, int *);
+
 	// Options. Must not be NULL. Final entry should have NULL name.
 	nni_option *sock_options;
 };
@@ -124,7 +130,7 @@ struct nni_proto {
 	uint32_t                  proto_flags;    // Protocol flags
 	const nni_proto_sock_ops *proto_sock_ops; // Per-socket operations
 	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations
-	const nni_proto_ctx_ops * proto_ctx_ops;  // Context operations
+	const nni_proto_ctx_ops  *proto_ctx_ops;  // Context operations
 };
 
 // We quite intentionally use a signature where the upper word is nonzero,

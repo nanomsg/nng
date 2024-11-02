@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -62,7 +63,7 @@ test_xsurvey_poll_writeable(void)
 
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_socket_get_int(surv, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(surv, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Survey is broadcast, so we can always write.
@@ -87,7 +88,7 @@ test_xsurvey_poll_readable(void)
 
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_socket_get_int(surv, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(surv, &fd));
 	NUTS_PASS(nng_socket_set_ms(resp, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(surv, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(resp, NNG_OPT_SENDTIMEO, 1000));

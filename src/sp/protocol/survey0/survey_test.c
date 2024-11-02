@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -313,7 +314,7 @@ test_surv_poll_writeable(void)
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_socket_get_int(surv, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(surv, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Survey is broadcast, so we can always write.
@@ -338,7 +339,7 @@ test_surv_poll_readable(void)
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_socket_get_int(surv, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(surv, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -369,21 +370,6 @@ test_surv_poll_readable(void)
 
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
-}
-
-static void
-test_surv_ctx_no_poll(void)
-{
-	int        fd;
-	nng_socket surv;
-	nng_ctx    ctx;
-
-	NUTS_PASS(nng_surveyor0_open(&surv));
-	NUTS_PASS(nng_ctx_open(&ctx, surv));
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
-	NUTS_PASS(nng_ctx_close(ctx));
-	NUTS_CLOSE(surv);
 }
 
 static void
@@ -639,7 +625,6 @@ TEST_LIST = {
 	{ "survey cancel post recv", test_surv_cancel_post_recv },
 	{ "survey poll writable", test_surv_poll_writeable },
 	{ "survey poll readable", test_surv_poll_readable },
-	{ "survey context does not poll", test_surv_ctx_no_poll },
 	{ "survey context recv close socket",
 	    test_surv_ctx_recv_close_socket },
 	{ "survey context recv nonblock", test_surv_ctx_recv_nonblock },

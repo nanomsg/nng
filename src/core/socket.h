@@ -34,6 +34,8 @@ extern int nni_sock_getopt(
 extern void     nni_sock_send(nni_sock *, nni_aio *);
 extern void     nni_sock_recv(nni_sock *, nni_aio *);
 extern uint32_t nni_sock_id(nni_sock *);
+extern int      nni_sock_get_send_fd(nni_sock *s, int *fdp);
+extern int      nni_sock_get_recv_fd(nni_sock *s, int *fdp);
 
 // These are socket methods that protocol operations can expect to call.
 // Note that each of these should be called without any locks held, since

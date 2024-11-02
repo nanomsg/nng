@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -517,7 +518,7 @@ test_req_poll_writeable(void)
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
-	NUTS_PASS(nng_socket_get_int(req, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(req, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not writable before connect.
@@ -570,7 +571,7 @@ test_req_poll_contention(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 
-	NUTS_PASS(nng_socket_get_int(req, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(req, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not writable before connect.
@@ -627,7 +628,7 @@ test_req_poll_multi_pipe(void)
 	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_SENDBUF, 1));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
 
-	NUTS_PASS(nng_socket_get_int(req, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(req, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not writable before connect.
@@ -655,7 +656,7 @@ test_req_poll_readable(void)
 
 	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_rep0_open(&rep));
-	NUTS_PASS(nng_socket_get_int(req, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(req, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -686,21 +687,6 @@ test_req_poll_readable(void)
 
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
-}
-
-static void
-test_req_ctx_no_poll(void)
-{
-	int        fd;
-	nng_socket req;
-	nng_ctx    ctx;
-
-	NUTS_PASS(nng_req0_open(&req));
-	NUTS_PASS(nng_ctx_open(&ctx, req));
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
-	NUTS_PASS(nng_ctx_close(ctx));
-	NUTS_CLOSE(req);
 }
 
 static void
@@ -1027,7 +1013,6 @@ NUTS_TESTS = {
 	{ "req context send abort", test_req_ctx_send_abort },
 	{ "req context send twice", test_req_ctx_send_twice },
 	{ "req context send recv abort", test_req_ctx_send_recv_abort },
-	{ "req context does not poll", test_req_ctx_no_poll },
 	{ "req context recv close socket", test_req_ctx_recv_close_socket },
 	{ "req context recv nonblock", test_req_ctx_recv_nonblock },
 	{ "req context send nonblock", test_req_ctx_send_nonblock },

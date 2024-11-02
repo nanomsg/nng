@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 void
@@ -52,7 +53,7 @@ test_resp_poll_writeable(void)
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_socket_get_int(resp, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(resp, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not writable before connect.
@@ -89,7 +90,7 @@ test_resp_poll_readable(void)
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_socket_get_int(resp, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(resp, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -114,21 +115,6 @@ test_resp_poll_readable(void)
 	// TODO verify unsolicited response
 
 	NUTS_CLOSE(surv);
-	NUTS_CLOSE(resp);
-}
-
-void
-test_resp_context_no_poll(void)
-{
-	int        fd;
-	nng_socket resp;
-	nng_ctx    ctx;
-
-	NUTS_PASS(nng_respondent0_open(&resp));
-	NUTS_PASS(nng_ctx_open(&ctx, resp));
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
-	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
-	NUTS_PASS(nng_ctx_close(ctx));
 	NUTS_CLOSE(resp);
 }
 
@@ -568,7 +554,6 @@ TEST_LIST = {
 	{ "respond send bad state", test_resp_send_bad_state },
 	{ "respond poll readable", test_resp_poll_readable },
 	{ "respond poll writable", test_resp_poll_writeable },
-	{ "respond context does not poll", test_resp_context_no_poll },
 	{ "respond validate peer", test_resp_validate_peer },
 	{ "respond double recv", test_resp_double_recv },
 	{ "respond close pipe before send", test_resp_close_pipe_before_send },

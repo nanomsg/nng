@@ -53,18 +53,14 @@ TestMain("Poll FDs", {
 		nng_msleep(50);
 
 		Convey("We can get a recv FD", {
-			int    fd;
-			size_t sz;
+			int fd;
 
-			sz = sizeof(fd);
-			So(nng_socket_get(s1, NNG_OPT_RECVFD, &fd, &sz) == 0);
+			So(nng_socket_get_recv_poll_fd(s1, &fd) == 0);
 			So(fd != (int) INVALID_SOCKET);
 
 			Convey("And it is always the same fd", {
 				int fd2;
-				sz = sizeof(fd2);
-				So(nng_socket_get(
-				       s1, NNG_OPT_RECVFD, &fd2, &sz) == 0);
+				So(nng_socket_get_recv_poll_fd(s1, &fd2) == 0);
 				So(fd2 == fd);
 			});
 
@@ -91,24 +87,11 @@ TestMain("Poll FDs", {
 		});
 
 		Convey("We can get a send FD", {
-			int    fd;
-			size_t sz;
+			int fd;
 
-			sz = sizeof(fd);
-			So(nng_socket_get(s1, NNG_OPT_SENDFD, &fd, &sz) == 0);
+			So(nng_socket_get_send_poll_fd(s1, &fd) == 0);
 			So(fd != (int) INVALID_SOCKET);
 			So(nng_send(s1, "oops", 4, 0) == 0);
-		});
-
-		Convey("Must have a big enough size", {
-			int    fd;
-			size_t sz;
-			sz = 1;
-			So(nng_socket_get(s1, NNG_OPT_RECVFD, &fd, &sz) ==
-			    NNG_EINVAL);
-			sz = 128;
-			So(nng_socket_get(s1, NNG_OPT_RECVFD, &fd, &sz) == 0);
-			So(sz == sizeof(fd));
 		});
 	});
 
@@ -117,7 +100,7 @@ TestMain("Poll FDs", {
 		int        fd;
 		So(nng_pull0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
-		So(nng_socket_get_int(s3, NNG_OPT_SENDFD, &fd) == NNG_ENOTSUP);
+		So(nng_socket_get_send_poll_fd(s3, &fd) == NNG_ENOTSUP);
 	});
 
 	Convey("We cannot get a recv FD for PUSH", {
@@ -125,6 +108,6 @@ TestMain("Poll FDs", {
 		int        fd;
 		So(nng_push0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
-		So(nng_socket_get_int(s3, NNG_OPT_RECVFD, &fd) == NNG_ENOTSUP);
+		So(nng_socket_get_recv_poll_fd(s3, &fd) == NNG_ENOTSUP);
 	});
 })

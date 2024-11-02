@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -58,7 +59,7 @@ test_pub_not_readable(void)
 	nng_socket pub;
 
 	NUTS_PASS(nng_pub0_open(&pub));
-	NUTS_FAIL(nng_socket_get_int(pub, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
+	NUTS_FAIL(nng_socket_get_recv_poll_fd(pub, &fd), NNG_ENOTSUP);
 	NUTS_CLOSE(pub);
 }
 
@@ -71,7 +72,7 @@ test_pub_poll_writeable(void)
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_pub0_open(&pub));
-	NUTS_PASS(nng_socket_get_int(pub, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(pub, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Pub is *always* writeable

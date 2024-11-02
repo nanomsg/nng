@@ -838,30 +838,19 @@ req0_sock_get_resend_tick(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-req0_sock_get_send_fd(void *arg, void *buf, size_t *szp, nni_opt_type t)
+req0_sock_get_send_fd(void *arg, int *fdp)
 {
 	req0_sock *s = arg;
-	int        rv;
-	int        fd;
 
-	if ((rv = nni_pollable_getfd(&s->writable, &fd)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_int(fd, buf, szp, t));
+	return (nni_pollable_getfd(&s->writable, fdp));
 }
 
 static int
-req0_sock_get_recv_fd(void *arg, void *buf, size_t *szp, nni_opt_type t)
+req0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	req0_sock *s = arg;
-	int        rv;
-	int        fd;
 
-	if ((rv = nni_pollable_getfd(&s->readable, &fd)) != 0) {
-		return (rv);
-	}
-
-	return (nni_copyout_int(fd, buf, szp, t));
+	return (nni_pollable_getfd(&s->readable, fdp));
 }
 
 static nni_proto_pipe_ops req0_pipe_ops = {
@@ -905,14 +894,6 @@ static nni_option req0_sock_options[] = {
 	    .o_set  = req0_sock_set_resend_time,
 	},
 	{
-	    .o_name = NNG_OPT_RECVFD,
-	    .o_get  = req0_sock_get_recv_fd,
-	},
-	{
-	    .o_name = NNG_OPT_SENDFD,
-	    .o_get  = req0_sock_get_send_fd,
-	},
-	{
 	    .o_name = NNG_OPT_REQ_RESENDTICK,
 	    .o_get  = req0_sock_get_resend_tick,
 	    .o_set  = req0_sock_set_resend_tick,
@@ -925,14 +906,16 @@ static nni_option req0_sock_options[] = {
 };
 
 static nni_proto_sock_ops req0_sock_ops = {
-	.sock_size    = sizeof(req0_sock),
-	.sock_init    = req0_sock_init,
-	.sock_fini    = req0_sock_fini,
-	.sock_open    = req0_sock_open,
-	.sock_close   = req0_sock_close,
-	.sock_options = req0_sock_options,
-	.sock_send    = req0_sock_send,
-	.sock_recv    = req0_sock_recv,
+	.sock_size         = sizeof(req0_sock),
+	.sock_init         = req0_sock_init,
+	.sock_fini         = req0_sock_fini,
+	.sock_open         = req0_sock_open,
+	.sock_close        = req0_sock_close,
+	.sock_send         = req0_sock_send,
+	.sock_recv         = req0_sock_recv,
+	.sock_recv_poll_fd = req0_sock_get_recv_fd,
+	.sock_send_poll_fd = req0_sock_get_send_fd,
+	.sock_options      = req0_sock_options,
 };
 
 static nni_proto req0_proto = {

@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -59,7 +60,7 @@ test_push_not_readable(void)
 	nng_socket s;
 
 	NUTS_PASS(nng_push0_open(&s));
-	NUTS_FAIL(nng_socket_get_int(s, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
+	NUTS_FAIL(nng_socket_get_recv_poll_fd(s, &fd), NNG_ENOTSUP);
 	NUTS_CLOSE(s);
 }
 
@@ -74,7 +75,7 @@ test_push_poll_writable(void)
 	NUTS_PASS(nng_push0_open(&push));
 	NUTS_PASS(nng_socket_set_ms(pull, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(push, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(push, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(push, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// This tests unbuffered sockets for now.
@@ -118,7 +119,7 @@ test_push_poll_buffered(void)
 	NUTS_PASS(nng_socket_set_ms(pull, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(push, NNG_OPT_SENDTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_int(push, NNG_OPT_SENDBUF, 2));
-	NUTS_PASS(nng_socket_get_int(push, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(push, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// We can write two message while unbuffered.
@@ -168,7 +169,7 @@ test_push_poll_truncate(void)
 	NUTS_PASS(nng_socket_set_ms(pull, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(push, NNG_OPT_SENDTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_int(push, NNG_OPT_SENDBUF, 3));
-	NUTS_PASS(nng_socket_get_int(push, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(push, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// We can write two message while unbuffered.

@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 #include <nng/protocol/bus0/bus.h>
@@ -244,7 +245,7 @@ test_bus_poll_readable(void)
 	NUTS_PASS(nng_bus0_open(&s2));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(s1, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(s1, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -277,10 +278,10 @@ test_bus_poll_writeable(void)
 	NUTS_PASS(nng_bus0_open(&s1));
 	NUTS_PASS(nng_bus0_open(&s2));
 	NUTS_PASS(nng_socket_set_int(s2, NNG_OPT_SENDBUF, 1));
-	NUTS_PASS(nng_socket_get_int(s2, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(s2, &fd));
 	NUTS_TRUE(fd >= 0);
 
-	// Pub is *always* writeable
+	// Bus is *always* writeable
 	NUTS_TRUE(nuts_poll_fd(fd));
 
 	// Even after connect (no message yet)

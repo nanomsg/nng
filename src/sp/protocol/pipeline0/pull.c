@@ -253,23 +253,14 @@ pull0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static int
-pull0_sock_get_recv_fd(void *arg, void *buf, size_t *szp, nni_opt_type t)
+pull0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	pull0_sock *s = arg;
-	int         rv;
-	int         fd;
 
-	if ((rv = nni_pollable_getfd(&s->readable, &fd)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_int(fd, buf, szp, t));
+	return (nni_pollable_getfd(&s->readable, fdp));
 }
 
 static nni_option pull0_sock_options[] = {
-	{
-	    .o_name = NNG_OPT_RECVFD,
-	    .o_get  = pull0_sock_get_recv_fd,
-	},
 	// terminate list
 	{
 	    .o_name = NULL,
@@ -286,14 +277,15 @@ static nni_proto_pipe_ops pull0_pipe_ops = {
 };
 
 static nni_proto_sock_ops pull0_sock_ops = {
-	.sock_size    = sizeof(pull0_sock),
-	.sock_init    = pull0_sock_init,
-	.sock_fini    = pull0_sock_fini,
-	.sock_open    = pull0_sock_open,
-	.sock_close   = pull0_sock_close,
-	.sock_send    = pull0_sock_send,
-	.sock_recv    = pull0_sock_recv,
-	.sock_options = pull0_sock_options,
+	.sock_size         = sizeof(pull0_sock),
+	.sock_init         = pull0_sock_init,
+	.sock_fini         = pull0_sock_fini,
+	.sock_open         = pull0_sock_open,
+	.sock_close        = pull0_sock_close,
+	.sock_send         = pull0_sock_send,
+	.sock_recv         = pull0_sock_recv,
+	.sock_recv_poll_fd = pull0_sock_get_recv_fd,
+	.sock_options      = pull0_sock_options,
 };
 
 static nni_proto pull0_proto = {

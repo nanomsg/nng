@@ -11,6 +11,7 @@
 #include "nng/nng.h"
 #include "core/nng_impl.h"
 #include "core/platform.h"
+#include "core/socket.h"
 
 // This file provides the "public" API.  This is a thin wrapper around
 // internal API functions.  We use the public prefix instead of internal,
@@ -1139,6 +1140,38 @@ int
 nng_socket_get_addr(nng_socket id, const char *n, nng_sockaddr *v)
 {
 	return (socket_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_socket_get_recv_poll_fd(nng_socket id, int *fdp)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+
+	rv = nni_sock_get_recv_fd(sock, fdp);
+	nni_sock_rele(sock);
+	return (rv);
+}
+
+int
+nng_socket_get_send_poll_fd(nng_socket id, int *fdp)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+
+	rv = nni_sock_get_send_fd(sock, fdp);
+	nni_sock_rele(sock);
+	return (rv);
 }
 
 int

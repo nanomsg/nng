@@ -114,19 +114,19 @@ static void nni_ctx_destroy(nni_ctx *);
 #define SOCK(s) ((nni_sock *) (s))
 
 static int
-sock_get_fd(void *s, unsigned flag, int *fdp)
+sock_get_fd(nni_sock *s, unsigned flag, int *fdp)
 {
 	int           rv;
 	nni_pollable *p;
 
-	if ((flag & nni_sock_flags(SOCK(s))) == 0) {
+	if ((flag & nni_sock_flags(s)) == 0) {
 		return (NNG_ENOTSUP);
 	}
 
 	if (flag == NNI_PROTO_FLAG_SND) {
-		rv = nni_msgq_get_sendable(SOCK(s)->s_uwq, &p);
+		rv = nni_msgq_get_sendable(s->s_uwq, &p);
 	} else {
-		rv = nni_msgq_get_recvable(SOCK(s)->s_urq, &p);
+		rv = nni_msgq_get_recvable(s->s_urq, &p);
 	}
 
 	if (rv == 0) {
@@ -134,30 +134,6 @@ sock_get_fd(void *s, unsigned flag, int *fdp)
 	}
 
 	return (rv);
-}
-
-static int
-sock_get_sendfd(void *s, void *buf, size_t *szp, nni_type t)
-{
-	int fd;
-	int rv;
-
-	if ((rv = sock_get_fd(SOCK(s), NNI_PROTO_FLAG_SND, &fd)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_int(fd, buf, szp, t));
-}
-
-static int
-sock_get_recvfd(void *s, void *buf, size_t *szp, nni_type t)
-{
-	int fd;
-	int rv;
-
-	if ((rv = sock_get_fd(SOCK(s), NNI_PROTO_FLAG_RCV, &fd)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_int(fd, buf, szp, t));
 }
 
 static int
@@ -287,14 +263,6 @@ static const nni_option sock_options[] = {
 	    .o_set  = sock_set_sendtimeo,
 	},
 	{
-	    .o_name = NNG_OPT_RECVFD,
-	    .o_get  = sock_get_recvfd,
-	},
-	{
-	    .o_name = NNG_OPT_SENDFD,
-	    .o_get  = sock_get_sendfd,
-	},
-	{
 	    .o_name = NNG_OPT_RECVBUF,
 	    .o_get  = sock_get_recvbuf,
 	    .o_set  = sock_set_recvbuf,
@@ -351,6 +319,24 @@ uint32_t
 nni_sock_id(nni_sock *s)
 {
 	return (s->s_id);
+}
+
+int
+nni_sock_get_send_fd(nni_sock *s, int *fdp)
+{
+	if (s->s_sock_ops.sock_send_poll_fd != NULL) {
+		return (s->s_sock_ops.sock_send_poll_fd(s->s_data, fdp));
+	}
+	return (sock_get_fd(s, NNI_PROTO_FLAG_SND, fdp));
+}
+
+int
+nni_sock_get_recv_fd(nni_sock *s, int *fdp)
+{
+	if (s->s_sock_ops.sock_recv_poll_fd != NULL) {
+		return (s->s_sock_ops.sock_recv_poll_fd(s->s_data, fdp));
+	}
+	return (sock_get_fd(s, NNI_PROTO_FLAG_RCV, fdp));
 }
 
 // nni_sock_sendq and nni_sock_recvq are called by the protocol to obtain

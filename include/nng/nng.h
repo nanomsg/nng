@@ -255,6 +255,18 @@ NNG_DECL int nng_socket_get_ptr(nng_socket, const char *, void **);
 NNG_DECL int nng_socket_get_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_socket_get_addr(nng_socket, const char *, nng_sockaddr *);
 
+// These functions are used to obtain a file descriptor that will poll
+// as readable if the socket can receive or send. Applications must never
+// read or write to the file descriptor directly, but simply check it
+// with poll, epoll, kqueue, or similar functions.  This is intended to
+// aid in integration NNG with external event loops based on polling I/O.
+// Note that using these functions will force NNG to make extra system calls,
+// and thus impact performance.  The file descriptor pollability is
+// level-triggered.  These file descriptors will be closed when the socket
+// is closed.
+NNG_DECL int nng_socket_get_recv_poll_fd(nng_socket id, int *fdp);
+NNG_DECL int nng_socket_get_send_poll_fd(nng_socket id, int *fdp);
+
 // Utility function for getting a printable form of the socket address
 // for display in logs, etc.  It is not intended to be parsed, and the
 // display format may change without notice.  Generally you should alow
@@ -722,8 +734,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_PEERNAME "peer-name"
 #define NNG_OPT_RECVBUF "recv-buffer"
 #define NNG_OPT_SENDBUF "send-buffer"
-#define NNG_OPT_RECVFD "recv-fd"
-#define NNG_OPT_SENDFD "send-fd"
 #define NNG_OPT_RECVTIMEO "recv-timeout"
 #define NNG_OPT_SENDTIMEO "send-timeout"
 #define NNG_OPT_LOCADDR "local-address"

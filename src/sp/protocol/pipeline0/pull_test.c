@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -58,7 +59,7 @@ test_pull_not_writeable(void)
 	nng_socket s;
 
 	NUTS_PASS(nng_pull0_open(&s));
-	NUTS_FAIL(nng_socket_get_int(s, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
+	NUTS_FAIL(nng_socket_get_send_poll_fd(s, &fd), NNG_ENOTSUP);
 	NUTS_CLOSE(s);
 }
 
@@ -73,7 +74,7 @@ test_pull_poll_readable(void)
 	NUTS_PASS(nng_push0_open(&push));
 	NUTS_PASS(nng_socket_set_ms(pull, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(push, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(pull, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(pull, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -110,7 +111,7 @@ test_pull_close_pending(void)
 
 	NUTS_PASS(nng_pull0_open(&pull));
 	NUTS_PASS(nng_push0_open(&push));
-	NUTS_PASS(nng_socket_get_int(pull, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(pull, &fd));
 	NUTS_TRUE(fd >= 0);
 	NUTS_MARRY_EX(pull, push, addr, &p1, &p2);
 

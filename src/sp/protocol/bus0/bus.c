@@ -363,34 +363,20 @@ again:
 }
 
 static int
-bus0_sock_get_send_fd(void *arg, void *buf, size_t *szp, nni_type t)
+bus0_sock_get_send_fd(void *arg, int *fdp)
 {
 	bus0_sock *sock = arg;
-	int        fd;
-	int        rv;
-	nni_mtx_lock(&sock->mtx);
 	// BUS sockets are *always* writable (best effort)
 	nni_pollable_raise(&sock->can_send);
-	rv = nni_pollable_getfd(&sock->can_send, &fd);
-	nni_mtx_unlock(&sock->mtx);
-
-	if (rv == 0) {
-		rv = nni_copyout_int(fd, buf, szp, t);
-	}
-	return (rv);
+	return (nni_pollable_getfd(&sock->can_send, fdp));
 }
 
 static int
-bus0_sock_get_recv_fd(void *arg, void *buf, size_t *szp, nni_opt_type t)
+bus0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	bus0_sock *s = arg;
-	int        rv;
-	int        fd;
 
-	if ((rv = nni_pollable_getfd(&s->can_recv, &fd)) == 0) {
-		rv = nni_copyout_int(fd, buf, szp, t);
-	}
-	return (rv);
+	return (nni_pollable_getfd(&s->can_recv, fdp));
 }
 
 static int
@@ -475,14 +461,6 @@ static nni_proto_pipe_ops bus0_pipe_ops = {
 
 static nni_option bus0_sock_options[] = {
 	{
-	    .o_name = NNG_OPT_SENDFD,
-	    .o_get  = bus0_sock_get_send_fd,
-	},
-	{
-	    .o_name = NNG_OPT_RECVFD,
-	    .o_get  = bus0_sock_get_recv_fd,
-	},
-	{
 	    .o_name = NNG_OPT_RECVBUF,
 	    .o_get  = bus0_sock_get_recv_buf_len,
 	    .o_set  = bus0_sock_set_recv_buf_len,
@@ -499,25 +477,29 @@ static nni_option bus0_sock_options[] = {
 };
 
 static nni_proto_sock_ops bus0_sock_ops = {
-	.sock_size    = sizeof(bus0_sock),
-	.sock_init    = bus0_sock_init,
-	.sock_fini    = bus0_sock_fini,
-	.sock_open    = bus0_sock_open,
-	.sock_close   = bus0_sock_close,
-	.sock_send    = bus0_sock_send,
-	.sock_recv    = bus0_sock_recv,
-	.sock_options = bus0_sock_options,
+	.sock_size         = sizeof(bus0_sock),
+	.sock_init         = bus0_sock_init,
+	.sock_fini         = bus0_sock_fini,
+	.sock_open         = bus0_sock_open,
+	.sock_close        = bus0_sock_close,
+	.sock_send         = bus0_sock_send,
+	.sock_recv         = bus0_sock_recv,
+	.sock_send_poll_fd = bus0_sock_get_send_fd,
+	.sock_recv_poll_fd = bus0_sock_get_recv_fd,
+	.sock_options      = bus0_sock_options,
 };
 
 static nni_proto_sock_ops bus0_sock_ops_raw = {
-	.sock_size    = sizeof(bus0_sock),
-	.sock_init    = bus0_sock_init_raw,
-	.sock_fini    = bus0_sock_fini,
-	.sock_open    = bus0_sock_open,
-	.sock_close   = bus0_sock_close,
-	.sock_send    = bus0_sock_send,
-	.sock_recv    = bus0_sock_recv,
-	.sock_options = bus0_sock_options,
+	.sock_size         = sizeof(bus0_sock),
+	.sock_init         = bus0_sock_init_raw,
+	.sock_fini         = bus0_sock_fini,
+	.sock_open         = bus0_sock_open,
+	.sock_close        = bus0_sock_close,
+	.sock_send         = bus0_sock_send,
+	.sock_recv         = bus0_sock_recv,
+	.sock_send_poll_fd = bus0_sock_get_send_fd,
+	.sock_recv_poll_fd = bus0_sock_get_recv_fd,
+	.sock_options      = bus0_sock_options,
 };
 
 static nni_proto bus0_proto = {

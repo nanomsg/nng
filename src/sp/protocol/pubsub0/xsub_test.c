@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -47,7 +48,7 @@ test_xsub_not_writeable(void)
 	nng_socket sub;
 
 	NUTS_PASS(nng_sub0_open_raw(&sub));
-	NUTS_FAIL(nng_socket_get_int(sub, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
+	NUTS_FAIL(nng_socket_get_send_poll_fd(sub, &fd), NNG_ENOTSUP);
 	NUTS_CLOSE(sub);
 }
 
@@ -62,7 +63,7 @@ test_xsub_poll_readable(void)
 	NUTS_PASS(nng_pub0_open(&pub));
 	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(sub, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(sub, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
@@ -101,7 +102,7 @@ test_xsub_recv_late(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_get_int(sub, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(sub, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!

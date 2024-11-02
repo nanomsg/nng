@@ -7,6 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -63,7 +64,7 @@ test_xresp_poll_writeable(void)
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open(&surv));
-	NUTS_PASS(nng_socket_get_int(resp, NNG_OPT_SENDFD, &fd));
+	NUTS_PASS(nng_socket_get_send_poll_fd(resp, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// We are always writeable, even before connect.  This is so that
@@ -91,7 +92,7 @@ test_xresp_poll_readable(void)
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
-	NUTS_PASS(nng_socket_get_int(resp, NNG_OPT_RECVFD, &fd));
+	NUTS_PASS(nng_socket_get_recv_poll_fd(resp, &fd));
 	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!

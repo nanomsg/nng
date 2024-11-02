@@ -585,29 +585,19 @@ resp0_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-resp0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
+resp0_sock_get_sendfd(void *arg, int *fdp)
 {
 	resp0_sock *s = arg;
-	int         rv;
-	int         fd;
 
-	if ((rv = nni_pollable_getfd(&s->writable, &fd)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_int(fd, buf, szp, t));
+	return (nni_pollable_getfd(&s->writable, fdp));
 }
 
 static int
-resp0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
+resp0_sock_get_recvfd(void *arg, int *fdp)
 {
 	resp0_sock *s = arg;
-	int         rv;
-	int         fd;
 
-	if ((rv = nni_pollable_getfd(&s->readable, &fd)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_int(fd, buf, szp, t));
+	return (nni_pollable_getfd(&s->readable, fdp));
 }
 
 static void
@@ -649,16 +639,6 @@ static nni_option resp0_sock_options[] = {
 	    .o_get  = resp0_sock_get_max_ttl,
 	    .o_set  = resp0_sock_set_max_ttl,
 	},
-	{
-	    .o_name = NNG_OPT_RECVFD,
-	    .o_get  = resp0_sock_get_recvfd,
-	    .o_set  = NULL,
-	},
-	{
-	    .o_name = NNG_OPT_SENDFD,
-	    .o_get  = resp0_sock_get_sendfd,
-	    .o_set  = NULL,
-	},
 	// terminate list
 	{
 	    .o_name = NULL,
@@ -666,14 +646,16 @@ static nni_option resp0_sock_options[] = {
 };
 
 static nni_proto_sock_ops resp0_sock_ops = {
-	.sock_size    = sizeof(resp0_sock),
-	.sock_init    = resp0_sock_init,
-	.sock_fini    = resp0_sock_fini,
-	.sock_open    = resp0_sock_open,
-	.sock_close   = resp0_sock_close,
-	.sock_send    = resp0_sock_send,
-	.sock_recv    = resp0_sock_recv,
-	.sock_options = resp0_sock_options,
+	.sock_size         = sizeof(resp0_sock),
+	.sock_init         = resp0_sock_init,
+	.sock_fini         = resp0_sock_fini,
+	.sock_open         = resp0_sock_open,
+	.sock_close        = resp0_sock_close,
+	.sock_send         = resp0_sock_send,
+	.sock_recv         = resp0_sock_recv,
+	.sock_send_poll_fd = resp0_sock_get_sendfd,
+	.sock_recv_poll_fd = resp0_sock_get_recvfd,
+	.sock_options      = resp0_sock_options,
 };
 
 static nni_proto resp0_proto = {
