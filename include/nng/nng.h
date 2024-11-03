@@ -708,7 +708,6 @@ NNG_DECL nng_pipe nng_msg_get_pipe(const nng_msg *);
 // we do permit an application to close a pipe. This can be useful, for
 // example during a connection notification, to disconnect a pipe that
 // is associated with an invalid or untrusted remote peer.
-NNG_DECL int nng_pipe_get(nng_pipe, const char *, void *, size_t *);
 NNG_DECL int nng_pipe_get_bool(nng_pipe, const char *, bool *);
 NNG_DECL int nng_pipe_get_int(nng_pipe, const char *, int *);
 NNG_DECL int nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
@@ -1166,12 +1165,8 @@ NNG_DECL int nng_stream_dialer_alloc_url(
 NNG_DECL void nng_stream_dialer_free(nng_stream_dialer *);
 NNG_DECL void nng_stream_dialer_close(nng_stream_dialer *);
 NNG_DECL void nng_stream_dialer_dial(nng_stream_dialer *, nng_aio *);
-NNG_DECL int  nng_stream_dialer_set(
-     nng_stream_dialer *, const char *, const void *, size_t);
-NNG_DECL int nng_stream_dialer_get(
-    nng_stream_dialer *, const char *, void *, size_t *);
-NNG_DECL int nng_stream_dialer_get_bool(
-    nng_stream_dialer *, const char *, bool *);
+NNG_DECL int  nng_stream_dialer_get_bool(
+     nng_stream_dialer *, const char *, bool *);
 NNG_DECL int nng_stream_dialer_get_int(
     nng_stream_dialer *, const char *, int *);
 NNG_DECL int nng_stream_dialer_get_ms(
@@ -1209,12 +1204,8 @@ NNG_DECL void nng_stream_listener_free(nng_stream_listener *);
 NNG_DECL void nng_stream_listener_close(nng_stream_listener *);
 NNG_DECL int  nng_stream_listener_listen(nng_stream_listener *);
 NNG_DECL void nng_stream_listener_accept(nng_stream_listener *, nng_aio *);
-NNG_DECL int  nng_stream_listener_set(
-     nng_stream_listener *, const char *, const void *, size_t);
-NNG_DECL int nng_stream_listener_get(
-    nng_stream_listener *, const char *, void *, size_t *);
-NNG_DECL int nng_stream_listener_get_bool(
-    nng_stream_listener *, const char *, bool *);
+NNG_DECL int  nng_stream_listener_get_bool(
+     nng_stream_listener *, const char *, bool *);
 NNG_DECL int nng_stream_listener_get_int(
     nng_stream_listener *, const char *, int *);
 NNG_DECL int nng_stream_listener_get_ms(

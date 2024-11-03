@@ -97,7 +97,6 @@ TestMain("Supplemental TCP", {
 					char         buf1[5];
 					char         buf2[5];
 					bool         on;
-					size_t       sz;
 
 					So(nng_aio_alloc(&aio1, NULL, NULL) ==
 					    0);
@@ -110,19 +109,14 @@ TestMain("Supplemental TCP", {
 					});
 
 					on = false;
-					sz = sizeof(on);
-					So(nng_stream_get(c1,
-					       NNG_OPT_TCP_NODELAY, &on,
-					       &sz) == 0);
-					So(sz == sizeof(on));
+					So(nng_stream_get_bool(c1,
+					       NNG_OPT_TCP_NODELAY, &on) == 0);
 					So(on == true);
 
 					on = false;
-					sz = sizeof(on);
-					So(nng_stream_get(c1,
-					       NNG_OPT_TCP_KEEPALIVE, &on,
-					       &sz) == 0);
-					So(sz == sizeof(on));
+					So(nng_stream_get_bool(c1,
+					       NNG_OPT_TCP_KEEPALIVE,
+					       &on) == 0);
 
 					// This relies on send completing for
 					// for just 5 bytes, and on recv doing
@@ -153,11 +147,9 @@ TestMain("Supplemental TCP", {
 					So(memcmp(buf1, buf2, 5) == 0);
 
 					Convey("Socket name matches", {
-						sz = sizeof(sa2);
-						So(nng_stream_get(c2,
-						       NNG_OPT_LOCADDR, &sa2,
-						       &sz) == 0);
-						So(sz == sizeof(sa2));
+						So(nng_stream_get_addr(c2,
+						       NNG_OPT_LOCADDR,
+						       &sa2) == 0);
 						So(sa2.s_in.sa_family ==
 						    NNG_AF_INET);
 
@@ -168,11 +160,9 @@ TestMain("Supplemental TCP", {
 					});
 
 					Convey("Peer name matches", {
-						sz = sizeof(sa2);
-						So(nng_stream_get(c1,
-						       NNG_OPT_REMADDR, &sa2,
-						       &sz) == 0);
-						So(sz == sizeof(sa2));
+						So(nng_stream_get_addr(c1,
+						       NNG_OPT_REMADDR,
+						       &sa2) == 0);
 						So(sa2.s_in.sa_family ==
 						    NNG_AF_INET);
 						So(sa2.s_in.sa_addr ==

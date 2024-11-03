@@ -172,15 +172,10 @@ test_websocket_conn_props(void)
 	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
 	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
 
-	on = false;
-	sz = sizeof(on);
-	NUTS_PASS(nng_stream_get(c1, NNG_OPT_TCP_NODELAY, &on, &sz));
-	NUTS_TRUE(sz == sizeof(on));
+	NUTS_PASS(nng_stream_get_bool(c1, NNG_OPT_TCP_NODELAY, &on));
 	NUTS_TRUE(on == true);
 
-	sz = sizeof(on);
-	NUTS_PASS(nng_stream_get(c2, NNG_OPT_TCP_KEEPALIVE, &on, &sz));
-	NUTS_TRUE(sz == sizeof(on));
+	NUTS_PASS(nng_stream_get_bool(c2, NNG_OPT_TCP_KEEPALIVE, &on));
 
 	NUTS_FAIL(
 	    nng_stream_get_size(c1, NNG_OPT_TCP_NODELAY, &sz), NNG_EBADTYPE);

@@ -1,6 +1,6 @@
 = nng_stream_get(3str)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -20,8 +20,6 @@ nng_stream_get - get option from byte stream
 ----
 #include <nng/nng.h>
 
-int nng_stream_get(nng_stream *s, const char *opt, void *val, size_t *sizep);
-
 int nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
 
 int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
@@ -37,12 +35,11 @@ int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
 int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
 
 int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
-
 ----
 
 == DESCRIPTION
 
-The `nng_stream_get()` functions are used to retrieve option values for the
+The `nng_stream_get` functions are used to retrieve option values for the
 xref:nng_stream.5.adoc[byte stream] _conn_.
 
 The actual options that may be retrieved in this way vary.
@@ -57,26 +54,6 @@ The forms vary based on the type of the option they take.
 
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
-
-`nng_stream_get()`::
-This function is untyped and can be used to retrieve the value of any option.
-The caller must store a pointer to a buffer to receive the value in _val_,
-and the size of the buffer shall be stored at the location referenced by
-_sizep_.
-+
-When the function returns, the actual size of the data copied (or that
-would have been copied if sufficient space were present) is stored at
-the location referenced by _sizep_.
-If the caller's buffer is not large enough to hold the entire object,
-then the copy is truncated.
-Therefore the caller should check for truncation by verifying that the
-returned size in _sizep_ does not exceed the original buffer size.
-+
-It is acceptable to pass `NULL` for _val_ if the value in _sizep_ is zero.
-This can be used to determine the size of the buffer needed to receive
-the object.
-+
-TIP: It may be easier to use one of the typed forms of this function.
 
 `nng_stream_get_bool()`::
 This function is for options which take a Boolean (`bool`).

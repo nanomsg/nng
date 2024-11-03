@@ -54,6 +54,19 @@ The `_getopt` and `_setopt` functions for contexts, listeners, and dialers are n
 present. Simply changing `_getopt` to `_get` or `_setopt` to `_set` in the function name
 should be sufficient in most cases.
 
+## Untyped Option Functions Removed
+
+The following functions are removed. To access options, use a proper typed access function,
+such as one ending in a suffix like `_bool` (to access a `bool` typed option).
+
+- `nng_pipe_get`
+- `nng_stream_get`
+- `nng_stream_set`
+- `nng_stream_dialer_get`
+- `nng_stream_dialer_set`
+- `nng_stream_listener_get`
+- `nng_stream_listener_set`
+
 ## Stream Options
 
 The ability to set options on streams after they have been created is no longer present.

@@ -290,12 +290,6 @@ nng_stream_listener_alloc(nng_stream_listener **lp, const char *uri)
 // Public stream options.
 
 int
-nng_stream_get(nng_stream *s, const char *n, void *v, size_t *szp)
-{
-	return (nni_stream_get(s, n, v, szp, NNI_TYPE_OPAQUE));
-}
-
-int
 nng_stream_get_int(nng_stream *s, const char *n, int *v)
 {
 	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_INT32));
@@ -341,13 +335,6 @@ int
 nng_stream_get_addr(nng_stream *s, const char *n, nng_sockaddr *v)
 {
 	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_SOCKADDR));
-}
-
-int
-nng_stream_dialer_get(
-    nng_stream_dialer *d, const char *n, void *v, size_t *szp)
-{
-	return (nni_stream_dialer_get(d, n, v, szp, NNI_TYPE_OPAQUE));
 }
 
 int
@@ -397,13 +384,6 @@ nng_stream_dialer_get_addr(
     nng_stream_dialer *d, const char *n, nng_sockaddr *v)
 {
 	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_SOCKADDR));
-}
-
-int
-nng_stream_listener_get(
-    nng_stream_listener *l, const char *n, void *v, size_t *szp)
-{
-	return (nni_stream_listener_get(l, n, v, szp, NNI_TYPE_OPAQUE));
 }
 
 int
@@ -458,13 +438,6 @@ nng_stream_listener_get_addr(
 }
 
 int
-nng_stream_dialer_set(
-    nng_stream_dialer *d, const char *n, const void *v, size_t sz)
-{
-	return (nni_stream_dialer_set(d, n, v, sz, NNI_TYPE_OPAQUE));
-}
-
-int
 nng_stream_dialer_set_int(nng_stream_dialer *d, const char *n, int v)
 {
 	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_INT32));
@@ -513,13 +486,6 @@ nng_stream_dialer_set_addr(
     nng_stream_dialer *d, const char *n, const nng_sockaddr *v)
 {
 	return (nni_stream_dialer_set(d, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
-}
-
-int
-nng_stream_listener_set(
-    nng_stream_listener *l, const char *n, const void *v, size_t sz)
-{
-	return (nni_stream_listener_set(l, n, v, sz, NNI_TYPE_OPAQUE));
 }
 
 int
