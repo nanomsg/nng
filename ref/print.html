@@ -5355,6 +5355,14 @@ options must be set on the endpoint (dialer or listener) using the appropriate
 <code>nng_dialer_set</code> or <code>nng_listener_set</code> option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.</p>
+<h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
+<p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
+have been replaced by functions instead of options.
+Use <code>nng_socket_proto_id</code>, <code>nng_socket_peer_id</code>, <code>nng_socket_proto_name</code>, and <code>nng_socket_peer_name</code> instead.
+Note that the new functions provide a reference to a static string, and thus do not require
+allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
+matching the actual wire protocol values, instead of <code>int</code>.</p>
+<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <code>nng_socket_raw</code>.</p>
 <h2 id="statistics-use-constified-pointers"><a class="header" href="#statistics-use-constified-pointers">Statistics Use Constified Pointers</a></h2>
 <p>A number of the statistics functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
@@ -5490,10 +5498,10 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><code>NNG_OPT_RECONNMAXT</code></td><td></td></tr>
 <tr><td><code>NN_SNDPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
 <tr><td><code>NN_RCVPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
-<tr><td><code>NN_RCVFD</code></td><td><code>+nng_socket_get_recv_poll_fd</code></td><td>No longer an option, use a function call.</td></tr>
-<tr><td><code>NN_SNDFD</code></td><td><code>+nng_socket_get_send_poll_fd</code></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_RCVFD</code></td><td><code>nng_socket_get_recv_poll_fd</code></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_SNDFD</code></td><td><code>nng_socket_get_send_poll_fd</code></td><td>No longer an option, use a function call.</td></tr>
 <tr><td><code>NN_DOMAIN</code></td><td>None</td><td>NNG options are not divided by domain or protocol.</td></tr>
-<tr><td><code>NN_PROTOCOL</code></td><td><code>NNG_OPT_PROTO</code></td><td>See also <code>NNG_OPT_PROTONAME</code>.</td></tr>
+<tr><td><code>NN_PROTOCOL</code></td><td><code>nng_socket_proto_id</code></td><td>No longer an option. See also <code>nng_socket_proto_name</code>.</td></tr>
 <tr><td><code>NN_IPV4ONLY</code></td><td>None</td><td>Use URL such as <code>tcp4://</code> to obtain this functionality.</td></tr>
 <tr><td><code>NN_SOCKET_NAME</code></td><td><code>NNG_OPT_SOCKNAME</code></td><td></td></tr>
 <tr><td><code>NN_MAXTTL</code></td><td><code>NNG_OPT_MAXTTL</code></td><td></td></tr>
