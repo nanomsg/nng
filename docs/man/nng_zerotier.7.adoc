@@ -64,7 +64,7 @@ the node's own node number.
 Listeners may use port 0 to indicate that a suitable port
 number be selected automatically.
 Applications using this must determine the selected port number using the
-xref:nng_listener_get.3.adoc[`nng_listener_get()`] function.
+xref:nng_listener_get.3.adoc[`nng_listener_get_int()`] function.
 
 === Socket Address
 

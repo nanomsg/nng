@@ -1,6 +1,6 @@
 = nng_listener_get(3)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -18,8 +18,6 @@ nng_listener_get - get listener option
 [source, c]
 ----
 #include <nng/nng.h>
-
-int nng_listener_get(nng_listener l, const char *opt, void *val, size_t *valszp);
 
 int nng_listener_get_bool(nng_listener l, const char *opt, bool *bvalp);
 
@@ -42,7 +40,7 @@ int nng_listener_get_uint64(nng_listener l, const char *opt, uint64_t *u64p);
 == DESCRIPTION
 
 (((options, listener)))
-The `nng_listener_get()` functions are used to retrieve option values for
+The `nng_listener_get` functions are used to retrieve option values for
 the xref:nng_listener.5.adoc[listener] _l_.
 The actual options that may be retrieved in this way
 vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
@@ -56,26 +54,6 @@ The forms vary based on the type of the option they take.
 
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
-
-`nng_listener_get()`::
-This function is untyped and can be used to retrieve the value of any option.
-The caller must store a pointer to a buffer to receive the value in _val_,
-and the size of the buffer shall be stored at the location referenced
-by _valszp_. +
- +
-When the function returns, the actual size of the data copied (or that
-would have been copied if sufficient space were present) is stored at
-the location referenced by _valszp_.
-If the caller's buffer is not large
-enough to hold the entire object, then the copy is truncated.  Therefore
-the caller should validate that the returned size in _valszp_ does not
-exceed the original buffer size to check for truncation. +
- +
-It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
-This can be used to determine the size of the buffer needed to receive
-the object.
-
-TIP: It may be easier to use one of the typed forms of this function.
 
 `nng_listener_get_bool()`::
 This function is for options which take a Boolean (`bool`).

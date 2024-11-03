@@ -61,6 +61,10 @@ such as one ending in a suffix like `_bool` (to access a `bool` typed option).
 
 - `nng_ctx_get`
 - `nng_ctx_set`
+- `nng_dialer_get`
+- `nng_dialer_set`
+- `nng_listener_get`
+- `nng_listener_set`
 - `nng_pipe_get`
 - `nng_stream_get`
 - `nng_stream_set`

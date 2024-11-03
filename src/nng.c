@@ -674,12 +674,6 @@ dialer_set(nng_dialer id, const char *n, const void *v, size_t sz, nni_type t)
 }
 
 int
-nng_dialer_set(nng_dialer id, const char *n, const void *v, size_t sz)
-{
-	return (dialer_set(id, n, v, sz, NNI_TYPE_OPAQUE));
-}
-
-int
 nng_dialer_set_int(nng_dialer id, const char *n, int v)
 {
 	return (dialer_set(id, n, &v, sizeof(v), NNI_TYPE_INT32));
@@ -743,12 +737,6 @@ dialer_get(nng_dialer id, const char *n, void *v, size_t *szp, nni_type t)
 	rv = nni_dialer_getopt(d, n, v, szp, t);
 	nni_dialer_rele(d);
 	return (rv);
-}
-
-int
-nng_dialer_get(nng_dialer id, const char *n, void *v, size_t *szp)
-{
-	return (dialer_get(id, n, v, szp, NNI_TYPE_OPAQUE));
 }
 
 int
@@ -818,12 +806,6 @@ listener_set(
 }
 
 int
-nng_listener_set(nng_listener id, const char *n, const void *v, size_t sz)
-{
-	return (listener_set(id, n, v, sz, NNI_TYPE_OPAQUE));
-}
-
-int
 nng_listener_set_int(nng_listener id, const char *n, int v)
 {
 	return (listener_set(id, n, &v, sizeof(v), NNI_TYPE_INT32));
@@ -888,12 +870,6 @@ listener_get(
 	rv = nni_listener_getopt(l, name, v, szp, t);
 	nni_listener_rele(l);
 	return (rv);
-}
-
-int
-nng_listener_get(nng_listener id, const char *n, void *v, size_t *szp)
-{
-	return (listener_get(id, n, v, szp, NNI_TYPE_OPAQUE));
 }
 
 int

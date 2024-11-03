@@ -19,9 +19,6 @@ nng_dialer_set - set dialer option
 ----
 #include <nng/nng.h>
 
-int nng_dialer_set(nng_dialer d, const char *opt, const void *val, 
-    size_t valsz);
-
 int nng_dialer_set_bool(nng_dialer d, const char *opt, bool bval);
 
 int nng_dialer_set_int(nng_dialer d, const char *opt, int ival);
@@ -35,13 +32,12 @@ int nng_dialer_set_size(nng_dialer d, const char *opt, size_t z);
 int nng_dialer_set_string(nng_dialer d, const char *opt, const char *str);
 
 int nng_dialer_set_uint64(nng_dialer d, const char *opt, uint64_t u64);
-
 ----
 
 == DESCRIPTION
 
 (((options, dialer)))
-The `nng_dialer_set()` functions are used to configure options for
+The `nng_dialer_set` functions are used to configure options for
 the xref:nng_dialer.5.adoc[dialer] _d_.
 The actual options that may be configured in this way
 vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
@@ -57,13 +53,6 @@ In all of these forms, the option _opt_ is configured on the dialer _d_.
 
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
-
-`nng_dialer_set()`::
-This function is untyped, and can be used to configure any arbitrary data.
-The _val_ pointer addresses the data to copy, and _valsz_ is the
-size of the objected located at _val_.
-
-TIP: It may be easier to use one of the typed forms of this function.
 
 `nng_dialer_set_bool()`::
 This function is for options which take a Boolean (`bool`).

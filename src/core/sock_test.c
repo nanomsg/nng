@@ -353,27 +353,24 @@ void
 test_url_option(void)
 {
 	nng_socket   s1;
-	char         url[NNG_MAXADDRLEN];
+	char        *url;
 	nng_listener l;
 	nng_dialer   d;
-	size_t       sz;
 
 	NUTS_OPEN(s1);
 
 	// Listener
 	NUTS_PASS(nng_listener_create(&l, s1, "inproc://url1"));
-	memset(url, 0, sizeof(url));
-	sz = sizeof(url);
-	NUTS_PASS(nng_listener_get(l, NNG_OPT_URL, url, &sz));
+	NUTS_PASS(nng_listener_get_string(l, NNG_OPT_URL, &url));
 	NUTS_MATCH(url, "inproc://url1");
-	NUTS_FAIL(nng_listener_set(l, NNG_OPT_URL, url, sz), NNG_EREADONLY);
-	sz = sizeof(url);
+	NUTS_FAIL(nng_listener_set_string(l, NNG_OPT_URL, url), NNG_EREADONLY);
+	nng_strfree(url);
 
 	// Dialer
 	NUTS_PASS(nng_dialer_create(&d, s1, "inproc://url2"));
-	NUTS_PASS(nng_dialer_get(d, NNG_OPT_URL, url, &sz));
+	NUTS_PASS(nng_dialer_get_string(d, NNG_OPT_URL, &url));
 	NUTS_MATCH(url, "inproc://url2");
-	NUTS_FAIL(nng_dialer_set(d, NNG_OPT_URL, url, sz), NNG_EREADONLY);
+	NUTS_FAIL(nng_dialer_set_string(d, NNG_OPT_URL, url), NNG_EREADONLY);
 
 	NUTS_CLOSE(s1);
 }
@@ -396,7 +393,6 @@ test_listener_options(void)
 	NUTS_FAIL(nng_listener_set_size(l, "BAD_OPT", 1), NNG_ENOTSUP);
 	NUTS_FAIL(
 	    nng_listener_set_bool(l, NNG_OPT_RECVMAXSZ, true), NNG_EBADTYPE);
-	NUTS_FAIL(nng_listener_set(l, NNG_OPT_RECVMAXSZ, &sz, 1), NNG_EINVAL);
 
 	// Cannot set inappropriate options
 	NUTS_FAIL(
@@ -431,7 +427,6 @@ test_dialer_options(void)
 	NUTS_FAIL(nng_dialer_set_size(d, "BAD_OPT", 1), NNG_ENOTSUP);
 	NUTS_FAIL(
 	    nng_dialer_set_bool(d, NNG_OPT_RECVMAXSZ, true), NNG_EBADTYPE);
-	NUTS_FAIL(nng_dialer_set(d, NNG_OPT_RECVMAXSZ, &sz, 1), NNG_EINVAL);
 
 	// Cannot set inappropriate options
 	NUTS_FAIL(

@@ -1,6 +1,6 @@
 = nng_listener_set(3)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -18,9 +18,6 @@ nng_listener_set - set listener option
 [source, c]
 ----
 #include <nng/nng.h>
-
-int nng_listener_set(nng_listener l, const char *opt, const void *val, 
-    size_t valsz);
 
 int nng_listener_set_bool(nng_listener l, const char *opt, bool bval);
 
@@ -41,7 +38,7 @@ int nng_listener_set_uint64(nng_listener l, const char *opt, uint64_t u64);
 == DESCRIPTION
 
 (((options, listener)))
-The `nng_listener_set()` functions are used to configure options for
+The `nng_listener_set` functions are used to configure options for
 the xref:nng_listener.5.adoc[listener] _l_.
 The actual options that may be configured in this way
 vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
@@ -57,13 +54,6 @@ In all of these forms, the option _opt_ is configured on the listener _l_.
 
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
-
-TIP: It may be easier to use one of the typed forms of this function.
-
-`nng_listener_set()`::
-This function is untyped, and can be used to configure any arbitrary data.
-The _val_ pointer addresses the data to copy, and _valsz_ is the
-size of the objected located at _val_.
 
 `nng_listener_set_bool()`::
 This function is for options which take a Boolean (`bool`).

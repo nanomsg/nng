@@ -131,15 +131,10 @@ TestMain("ZeroTier Transport", {
 
 	port = 5555;
 
-	Convey("We can register the zero tier transport",
-	    { So(nng_zt_register() == 0); });
-
 	Convey("We can create a zt listener", {
 		nng_listener l;
 		nng_socket   s;
 		char         addr[NNG_MAXADDRLEN];
-
-		So(nng_zt_register() == 0);
 
 		snprintf(addr, sizeof(addr), "zt://*." NWID ":%u", port);
 
@@ -151,8 +146,8 @@ TestMain("ZeroTier Transport", {
 		Convey("And it can be started...", {
 			mkdir(path1, 0700);
 
-			So(nng_listener_set(l, NNG_OPT_ZT_HOME, path1,
-			       strlen(path1) + 1) == 0);
+			So(nng_listener_set_string(
+			       l, NNG_OPT_ZT_HOME, path1) == 0);
 
 			So(nng_listener_start(l, 0) == 0);
 
@@ -166,19 +161,18 @@ TestMain("ZeroTier Transport", {
 				So(sa.s_zt.sa_nodeid != 0);
 			});
 			Convey("And we can orbit a moon", {
-				uint64_t ids[2];
+				uint64_t id;
 				// Provided by Janjaap...
-				ids[0] = 0x622514484aull;
-				ids[1] = 0x622514484aull;
+				id = 0x622514484aull;
 
-				So(nng_listener_set(l, NNG_OPT_ZT_ORBIT, ids,
-				       sizeof(ids)) == 0);
+				So(nng_listener_set_uint64(
+				       l, NNG_OPT_ZT_ORBIT, id) == 0);
 			});
 			Convey("And we can deorbit anything", {
 				uint64_t id;
 				id = 0x12345678;
-				So(nng_listener_set(l, NNG_OPT_ZT_DEORBIT, &id,
-				       sizeof(id)) == 0);
+				So(nng_listener_set_uint64(
+				       l, NNG_OPT_ZT_DEORBIT, id) == 0);
 			});
 		});
 	});
@@ -189,8 +183,6 @@ TestMain("ZeroTier Transport", {
 		char       addr[NNG_MAXADDRLEN];
 		// uint64_t   node = 0xb000072fa6ull; // my personal host
 		uint64_t node = 0x2d2f619cccull; // my personal host
-
-		So(nng_zt_register() == 0);
 
 		snprintf(addr, sizeof(addr), "zt://%llx." NWID ":%u",
 		    (unsigned long long) node, port);
@@ -208,8 +200,6 @@ TestMain("ZeroTier Transport", {
 		char         addr[NNG_MAXADDRLEN];
 		uint64_t     node1 = 0;
 		uint64_t     node2 = 0;
-
-		So(nng_zt_register() == 0);
 
 		snprintf(addr, sizeof(addr), "zt://*." NWID ":%u", port);
 
@@ -242,7 +232,6 @@ TestMain("ZeroTier Transport", {
 		uint64_t     node;
 
 		port = 9944;
-		So(nng_zt_register() == 0);
 
 		snprintf(addr1, sizeof(addr1), "zt://*." NWID ":%u", port);
 
@@ -256,8 +245,7 @@ TestMain("ZeroTier Transport", {
 		});
 
 		So(nng_listener_create(&l, s1, addr1) == 0);
-		So(nng_listener_set(
-		       l, NNG_OPT_ZT_HOME, path1, strlen(path1) + 1) == 0);
+		So(nng_listener_set_string(l, NNG_OPT_ZT_HOME, path1) == 0);
 
 		So(nng_listener_start(l, 0) == 0);
 		node = 0;
@@ -268,8 +256,7 @@ TestMain("ZeroTier Transport", {
 		    (unsigned long long) node, port);
 		So(nng_dialer_create(&d, s2, addr2) == 0);
 		mkdir(path2, 0700);
-		So(nng_dialer_setopt(
-		       d, NNG_OPT_ZT_HOME, path2, strlen(path2) + 1) == 0);
+		So(nng_dialer_set_string(d, NNG_OPT_ZT_HOME, path2) == 0);
 		So(nng_dialer_start(d, 0) == 0);
 		nng_msleep(2000); // to give dialer time to start up
 	});

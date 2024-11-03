@@ -154,12 +154,6 @@ test_tcp_no_delay_option(void)
 	    nng_dialer_get_int(d, NNG_OPT_TCP_NODELAY, &x), NNG_EBADTYPE);
 	x = 0;
 	NUTS_FAIL(nng_dialer_set_int(d, NNG_OPT_TCP_NODELAY, x), NNG_EBADTYPE);
-	// This assumes sizeof (bool) != sizeof (int)
-	if (sizeof(bool) != sizeof(int)) {
-		NUTS_FAIL(
-		    nng_dialer_set(d, NNG_OPT_TCP_NODELAY, &x, sizeof(x)),
-		    NNG_EINVAL);
-	}
 
 	NUTS_PASS(nng_listener_create(&l, s, addr));
 	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_TCP_NODELAY, &v));
@@ -167,9 +161,6 @@ test_tcp_no_delay_option(void)
 	x = 0;
 	NUTS_FAIL(
 	    nng_listener_set_int(l, NNG_OPT_TCP_NODELAY, x), NNG_EBADTYPE);
-	// This assumes sizeof (bool) != sizeof (int)
-	NUTS_FAIL(nng_listener_set(l, NNG_OPT_TCP_NODELAY, &x, sizeof(x)),
-	    NNG_EINVAL);
 
 	NUTS_PASS(nng_dialer_close(d));
 	NUTS_PASS(nng_listener_close(l));

@@ -1112,8 +1112,8 @@ main(int ac, char **av)
 				    nng_strerror(rv));
 			}
 			if (zthome != NULL) {
-				rv = nng_dialer_set(d, NNG_OPT_ZT_HOME, zthome,
-				    strlen(zthome) + 1);
+				rv = nng_dialer_set_string(
+				    d, NNG_OPT_ZT_HOME, zthome);
 				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 					fatal("Unable to set ZT home: %s",
 					    nng_strerror(rv));
@@ -1122,12 +1122,11 @@ main(int ac, char **av)
 			rv  = nng_dialer_start(d, async);
 			act = "dial";
 			if ((rv == 0) && (verbose == OPT_VERBOSE)) {
-				char   ustr[256];
-				size_t sz;
-				sz = sizeof(ustr);
-				if (nng_dialer_get(
-				        d, NNG_OPT_URL, ustr, &sz) == 0) {
+				char *ustr;
+				if (nng_dialer_get_string(
+				        d, NNG_OPT_URL, &ustr) == 0) {
 					printf("Connected to: %s\n", ustr);
+					nng_strfree(ustr);
 				}
 			}
 			break;
@@ -1148,8 +1147,8 @@ main(int ac, char **av)
 				    nng_strerror(rv));
 			}
 			if (zthome != NULL) {
-				rv = nng_listener_set(l, NNG_OPT_ZT_HOME,
-				    zthome, strlen(zthome) + 1);
+				rv = nng_listener_set_string(
+				    l, NNG_OPT_ZT_HOME, zthome);
 				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 					fatal("Unable to set ZT home: %s",
 					    nng_strerror(rv));
@@ -1158,12 +1157,11 @@ main(int ac, char **av)
 			rv  = nng_listener_start(l, async);
 			act = "listen";
 			if ((rv == 0) && (verbose == OPT_VERBOSE)) {
-				char   ustr[256];
-				size_t sz;
-				sz = sizeof(ustr);
-				if (nng_listener_get(
-				        l, NNG_OPT_URL, ustr, &sz) == 0) {
+				char *ustr;
+				if (nng_listener_get_string(
+				        l, NNG_OPT_URL, &ustr) == 0) {
 					printf("Listening at: %s\n", ustr);
+					nng_strfree(ustr);
 				}
 			}
 			break;
