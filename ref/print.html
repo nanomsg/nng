@@ -5375,6 +5375,19 @@ options must be set on the endpoint (dialer or listener) using the appropriate
 <code>nng_dialer_set</code> or <code>nng_listener_set</code> option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.</p>
+<p>The following options are copied from the socket when creating a dialer or listener,
+but afterwards will not be changed on the dialer or listener if the socket
+changes. It is recommended to set them properly on the socket before
+creating dialers or listeners, or set them explicitly on the dialer or listener
+directly:</p>
+<ul>
+<li><code>NNG_OPT_RECONNMINT</code></li>
+<li><code>NNG_OPT_RECONNMAXT</code></li>
+<li><code>NNG_OPT_RECVMAXSZ</code></li>
+</ul>
+<p>The latter option is a hint for transports and intended to facilitate early
+detection (and possibly avoidance of extra allocations) of oversize messages,
+before bringing them into the socket itself.</p>
 <h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
 <p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
 have been replaced by functions instead of options.
