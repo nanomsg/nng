@@ -13,21 +13,19 @@
 static void
 test_xsurveyor_identity(void)
 {
-	nng_socket s;
-	int        p;
-	char      *n;
+	nng_socket  s;
+	uint16_t    p;
+	const char *n;
 
 	NUTS_PASS(nng_surveyor0_open_raw(&s));
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
+	NUTS_PASS(nng_socket_proto_id(s, &p));
 	NUTS_TRUE(p == NNG_SURVEYOR0_SELF); // 0x62
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PEER, &p));
+	NUTS_PASS(nng_socket_peer_id(s, &p));
 	NUTS_TRUE(p == NNG_SURVEYOR0_PEER); // 0x62
-	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PROTONAME, &n));
+	NUTS_PASS(nng_socket_proto_name(s, &n));
 	NUTS_MATCH(n, NNG_SURVEYOR0_SELF_NAME);
-	nng_strfree(n);
-	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PEERNAME, &n));
+	NUTS_PASS(nng_socket_peer_name(s, &n));
 	NUTS_MATCH(n, NNG_SURVEYOR0_PEER_NAME);
-	nng_strfree(n);
 	NUTS_CLOSE(s);
 }
 

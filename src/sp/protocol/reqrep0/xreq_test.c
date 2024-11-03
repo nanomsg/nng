@@ -13,23 +13,21 @@
 static void
 test_xreq_identity(void)
 {
-	nng_socket s;
-	int        p1, p2;
-	char      *n1;
-	char      *n2;
+	nng_socket  s;
+	uint16_t    p1, p2;
+	const char *n1;
+	const char *n2;
 
 	NUTS_PASS(nng_req0_open_raw(&s));
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p1));
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PEER, &p2));
-	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PROTONAME, &n1));
-	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PEERNAME, &n2));
+	NUTS_PASS(nng_socket_proto_id(s, &p1));
+	NUTS_PASS(nng_socket_peer_id(s, &p2));
+	NUTS_PASS(nng_socket_proto_name(s, &n1));
+	NUTS_PASS(nng_socket_peer_name(s, &n2));
 	NUTS_CLOSE(s);
 	NUTS_TRUE(p1 == NNG_REQ0_SELF);
 	NUTS_TRUE(p2 == NNG_REQ0_PEER);
 	NUTS_MATCH(n1, NNG_REQ0_SELF_NAME);
 	NUTS_MATCH(n2, NNG_REQ0_PEER_NAME);
-	nng_strfree(n1);
-	nng_strfree(n2);
 }
 
 static void

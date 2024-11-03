@@ -66,24 +66,24 @@ NNG approach to messages. Likewise there is no `struct nn_cmsghdr` equivalent.
 
 The following options are changed.
 
-| Nanomsg Option         | NNG Eqvaivalent                | Notes                                                   |
-| ---------------------- | ------------------------------ | ------------------------------------------------------- |
-| `NN_LINGER`            | None                           | NNG does not support tuning this.                       |
-| `NN_SNDBUF`            | `NNG_OPT_SENDBUF`              | NNG value is given in messages, not bytes.              |
-| `NN_RCVBUF`            | `NNG_OPT_RECVBUF`              | NNG value is given in messages, not bytes.              |
-| `NN_SNDTIMEO`          | `NNG_OPT_SENDTIMEO`            |
-| `NN_RCVTIMEO`          | `NNG_OPT_RECVTIMEO`            |
-| `NN_RECONNECT_IVL`     | `NNG_OPT_RECONNMINT`           |
-| `NN_RECONNECT_IVL_MAX` | `NNG_OPT_RECONNMAXT`           |
-| `NN_SNDPRIO`           | None                           | Not supported in NNG yet.                               |
-| `NN_RCVPRIO`           | None                           | Not supported in NNG yet.                               |
-| `NN_RCVFD`             | `+nng_socket_get_recv_poll_fd` | No longer an option, use a function call.               |
-| `NN_SNDFD`             | `+nng_socket_get_send_poll_fd` | No longer an option, use a function call.               |
-| `NN_DOMAIN`            | None                           | NNG options are not divided by domain or protocol.      |
-| `NN_PROTOCOL`          | `NNG_OPT_PROTO`                | See also `NNG_OPT_PROTONAME`.                           |
-| `NN_IPV4ONLY`          | None                           | Use URL such as `tcp4://` to obtain this functionality. |
-| `NN_SOCKET_NAME`       | `NNG_OPT_SOCKNAME`             |
-| `NN_MAXTTL`            | `NNG_OPT_MAXTTL`               |
+| Nanomsg Option         | NNG Eqvaivalent               | Notes                                                   |
+| ---------------------- | ----------------------------- | ------------------------------------------------------- |
+| `NN_LINGER`            | None                          | NNG does not support tuning this.                       |
+| `NN_SNDBUF`            | `NNG_OPT_SENDBUF`             | NNG value is given in messages, not bytes.              |
+| `NN_RCVBUF`            | `NNG_OPT_RECVBUF`             | NNG value is given in messages, not bytes.              |
+| `NN_SNDTIMEO`          | `NNG_OPT_SENDTIMEO`           |
+| `NN_RCVTIMEO`          | `NNG_OPT_RECVTIMEO`           |
+| `NN_RECONNECT_IVL`     | `NNG_OPT_RECONNMINT`          |
+| `NN_RECONNECT_IVL_MAX` | `NNG_OPT_RECONNMAXT`          |
+| `NN_SNDPRIO`           | None                          | Not supported in NNG yet.                               |
+| `NN_RCVPRIO`           | None                          | Not supported in NNG yet.                               |
+| `NN_RCVFD`             | `nng_socket_get_recv_poll_fd` | No longer an option, use a function call.               |
+| `NN_SNDFD`             | `nng_socket_get_send_poll_fd` | No longer an option, use a function call.               |
+| `NN_DOMAIN`            | None                          | NNG options are not divided by domain or protocol.      |
+| `NN_PROTOCOL`          | `nng_socket_proto_id`         | No longer an option. See also `nng_socket_proto_name`.  |
+| `NN_IPV4ONLY`          | None                          | Use URL such as `tcp4://` to obtain this functionality. |
+| `NN_SOCKET_NAME`       | `NNG_OPT_SOCKNAME`            |
+| `NN_MAXTTL`            | `NNG_OPT_MAXTTL`              |
 
 ## Error Codes
 

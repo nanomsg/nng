@@ -69,6 +69,15 @@ options must be set on the endpoint (dialer or listener) using the appropriate
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.
 
+## Socket Options
+
+The `NNG_OPT_PROTO`, `NNG_OPT_PROTONAME`, `NNG_OPT_PEER`, and `NNG_OPT_PEERNAME` options
+have been replaced by functions instead of options.
+Use `nng_socket_proto_id`, `nng_socket_peer_id`, `nng_socket_proto_name`, and `nng_socket_peer_name` instead.
+Note that the new functions provide a reference to a static string, and thus do not require
+allocation, and the returned strings should not be freed. Also the IDs are provided as `uint16_t`,
+matching the actual wire protocol values, instead of `int`.
+
 ## Statistics Use Constified Pointers
 
 A number of the statistics functions take, or return, `const nng_stat *` instead

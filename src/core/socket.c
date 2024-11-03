@@ -227,30 +227,6 @@ sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
 	return (rv);
 }
 
-static int
-sock_get_proto(void *s, void *buf, size_t *szp, nni_type t)
-{
-	return (nni_copyout_int(nni_sock_proto_id(SOCK(s)), buf, szp, t));
-}
-
-static int
-sock_get_peer(void *s, void *buf, size_t *szp, nni_type t)
-{
-	return (nni_copyout_int(nni_sock_peer_id(SOCK(s)), buf, szp, t));
-}
-
-static int
-sock_get_protoname(void *s, void *buf, size_t *szp, nni_type t)
-{
-	return (nni_copyout_str(nni_sock_proto_name(SOCK(s)), buf, szp, t));
-}
-
-static int
-sock_get_peername(void *s, void *buf, size_t *szp, nni_type t)
-{
-	return (nni_copyout_str(nni_sock_peer_name(SOCK(s)), buf, szp, t));
-}
-
 static const nni_option sock_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVTIMEO,
@@ -280,22 +256,6 @@ static const nni_option sock_options[] = {
 	{
 	    .o_name = NNG_OPT_RAW,
 	    .o_get  = sock_get_raw,
-	},
-	{
-	    .o_name = NNG_OPT_PROTO,
-	    .o_get  = sock_get_proto,
-	},
-	{
-	    .o_name = NNG_OPT_PEER,
-	    .o_get  = sock_get_peer,
-	},
-	{
-	    .o_name = NNG_OPT_PROTONAME,
-	    .o_get  = sock_get_protoname,
-	},
-	{
-	    .o_name = NNG_OPT_PEERNAME,
-	    .o_get  = sock_get_peername,
 	},
 	// terminate list
 	{

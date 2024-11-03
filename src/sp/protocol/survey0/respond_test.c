@@ -13,21 +13,19 @@
 void
 test_resp_identity(void)
 {
-	nng_socket s;
-	int        p;
-	char      *n;
+	nng_socket  s;
+	uint16_t    p;
+	const char *n;
 
 	NUTS_PASS(nng_respondent0_open(&s));
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
+	NUTS_PASS(nng_socket_proto_id(s, &p));
 	NUTS_TRUE(p == NNG_RESPONDENT0_SELF);
-	NUTS_TRUE(nng_socket_get_int(s, NNG_OPT_PEER, &p) == 0);
+	NUTS_TRUE(nng_socket_peer_id(s, &p) == 0);
 	NUTS_TRUE(p == NNG_RESPONDENT0_PEER);
-	NUTS_TRUE(nng_socket_get_string(s, NNG_OPT_PROTONAME, &n) == 0);
+	NUTS_TRUE(nng_socket_proto_name(s, &n) == 0);
 	NUTS_MATCH(n, NNG_RESPONDENT0_SELF_NAME);
-	nng_strfree(n);
-	NUTS_TRUE(nng_socket_get_string(s, NNG_OPT_PEERNAME, &n) == 0);
+	NUTS_TRUE(nng_socket_peer_name(s, &n) == 0);
 	NUTS_MATCH(n, NNG_RESPONDENT0_PEER_NAME);
-	nng_strfree(n);
 	NUTS_CLOSE(s);
 }
 

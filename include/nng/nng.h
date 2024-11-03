@@ -264,6 +264,13 @@ NNG_DECL int nng_socket_get_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_socket_get_recv_poll_fd(nng_socket id, int *fdp);
 NNG_DECL int nng_socket_get_send_poll_fd(nng_socket id, int *fdp);
 
+// These functions are used on a socket to get information about it's
+// identity, and the identity of the peer.  Few applications need these.
+NNG_DECL int nng_socket_proto_id(nng_socket id, uint16_t *idp);
+NNG_DECL int nng_socket_peer_id(nng_socket id, uint16_t *idp);
+NNG_DECL int nng_socket_proto_name(nng_socket id, const char **namep);
+NNG_DECL int nng_socket_peer_name(nng_socket id, const char **namep);
+
 // Utility function for getting a printable form of the socket address
 // for display in logs, etc.  It is not intended to be parsed, and the
 // display format may change without notice.  Generally you should alow
@@ -723,10 +730,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // Options.
 #define NNG_OPT_SOCKNAME "socket-name"
 #define NNG_OPT_RAW "raw"
-#define NNG_OPT_PROTO "protocol"
-#define NNG_OPT_PROTONAME "protocol-name"
-#define NNG_OPT_PEER "peer"
-#define NNG_OPT_PEERNAME "peer-name"
 #define NNG_OPT_RECVBUF "recv-buffer"
 #define NNG_OPT_SENDBUF "send-buffer"
 #define NNG_OPT_RECVTIMEO "recv-timeout"
