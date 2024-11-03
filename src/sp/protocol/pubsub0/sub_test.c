@@ -8,6 +8,7 @@
 //
 
 #include "nng/nng.h"
+#include "nng/protocol/pubsub0/sub.h"
 #include <nuts.h>
 
 static void
@@ -546,6 +547,10 @@ test_sub_multi_context(void)
 	nng_aio_wait(aio2);
 	NUTS_FAIL(nng_aio_result(aio1), NNG_ETIMEDOUT);
 	NUTS_FAIL(nng_aio_result(aio2), NNG_ETIMEDOUT);
+
+	NUTS_PASS(nng_sub0_ctx_unsubscribe(c2, "two", 3));
+	NUTS_PASS(nng_sub0_ctx_unsubscribe(c2, "all", 3));
+
 	NUTS_CLOSE(sub);
 	NUTS_CLOSE(pub);
 	nng_aio_free(aio1);
@@ -562,6 +567,38 @@ test_sub_cooked(void)
 	NUTS_PASS(nng_socket_raw(s, &b));
 	NUTS_TRUE(!b);
 	NUTS_CLOSE(s);
+}
+
+static void
+test_sub_wrong_protocol(void)
+{
+#ifdef NNG_HAVE_REQ0
+	nng_socket s;
+	nng_ctx    c;
+
+	NUTS_PASS(nng_req0_open(&s));
+	NUTS_PASS(nng_ctx_open(&c, s));
+	NUTS_FAIL(nng_sub0_socket_subscribe(s, NULL, 0), NNG_ENOTSUP);
+	NUTS_FAIL(nng_sub0_socket_unsubscribe(s, NULL, 0), NNG_ENOTSUP);
+	NUTS_FAIL(nng_sub0_ctx_subscribe(c, NULL, 0), NNG_ENOTSUP);
+	NUTS_FAIL(nng_sub0_ctx_unsubscribe(c, NULL, 0), NNG_ENOTSUP);
+	NUTS_CLOSE(s);
+#endif
+}
+
+static void
+test_sub_closed_socket(void)
+{
+	nng_socket s;
+	nng_ctx    c;
+
+	NUTS_PASS(nng_sub0_open(&s));
+	NUTS_PASS(nng_ctx_open(&c, s));
+	NUTS_CLOSE(s);
+	NUTS_FAIL(nng_sub0_socket_subscribe(s, NULL, 0), NNG_ECLOSED);
+	NUTS_FAIL(nng_sub0_socket_unsubscribe(s, NULL, 0), NNG_ECLOSED);
+	NUTS_FAIL(nng_sub0_ctx_subscribe(c, NULL, 0), NNG_ECLOSED);
+	NUTS_FAIL(nng_sub0_ctx_unsubscribe(c, NULL, 0), NNG_ECLOSED);
 }
 
 TEST_LIST = {
@@ -586,5 +623,7 @@ TEST_LIST = {
 	{ "sub filter", test_sub_filter },
 	{ "sub multi context", test_sub_multi_context },
 	{ "sub cooked", test_sub_cooked },
+	{ "sub wrong protocol", test_sub_wrong_protocol },
+	{ "sub closed socket", test_sub_closed_socket },
 	{ NULL, NULL },
 };
