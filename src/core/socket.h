@@ -26,7 +26,9 @@ extern bool        nni_sock_raw(nni_sock *);
 extern void       *nni_sock_proto_data(nni_sock *);
 extern void        nni_sock_add_stat(nni_sock *, nni_stat_item *);
 
+extern struct nni_proto_sock_ops *nni_sock_proto_ops(nni_sock *);
 extern struct nni_proto_pipe_ops *nni_sock_proto_pipe_ops(nni_sock *);
+extern struct nni_proto_ctx_ops  *nni_ctx_proto_ops(nni_ctx *);
 
 extern int nni_sock_setopt(
     nni_sock *, const char *, const void *, size_t, nni_opt_type);
@@ -76,6 +78,8 @@ extern int nni_ctx_open(nni_ctx **, nni_sock *);
 // (If the socket for the context is being closed, then this will return
 // NNG_ECLOSED unless the final argument is true.)
 extern int nni_ctx_find(nni_ctx **, uint32_t, bool);
+
+extern void *nni_ctx_proto_data(nni_ctx *);
 
 // nni_ctx_rele is called to release a hold on the context.  These holds
 // are acquired by either nni_ctx_open or nni_ctx_find.  If the context

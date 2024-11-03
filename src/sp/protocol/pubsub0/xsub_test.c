@@ -7,7 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
+#include <nng/nng.h>
+#include <nng/protocol/pubsub0/sub.h>
 #include <nuts.h>
 
 static void
@@ -257,22 +258,20 @@ test_xsub_recv_buf_option(void)
 static void
 test_xsub_subscribe_option(void)
 {
-	nng_socket  sub;
-	const char *opt = NNG_OPT_SUB_SUBSCRIBE;
+	nng_socket sub;
 
 	NUTS_PASS(nng_sub0_open_raw(&sub));
-	NUTS_FAIL(nng_socket_set(sub, opt, "abc", 3), NNG_ENOTSUP);
+	NUTS_FAIL(nng_sub0_socket_subscribe(sub, "abc", 3), NNG_ENOTSUP);
 	NUTS_CLOSE(sub);
 }
 
 static void
 test_xsub_unsubscribe_option(void)
 {
-	nng_socket  sub;
-	const char *opt = NNG_OPT_SUB_UNSUBSCRIBE;
+	nng_socket sub;
 
 	NUTS_PASS(nng_sub0_open_raw(&sub));
-	NUTS_FAIL(nng_socket_set(sub, opt, "abc", 3), NNG_ENOTSUP);
+	NUTS_FAIL(nng_sub0_socket_unsubscribe(sub, "abc", 3), NNG_ENOTSUP);
 	NUTS_CLOSE(sub);
 }
 

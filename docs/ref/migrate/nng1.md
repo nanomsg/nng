@@ -80,6 +80,13 @@ matching the actual wire protocol values, instead of `int`.
 
 The `NNG_OPT_RAW` option has aso been replaced by a function, `nng_socket_raw`.
 
+## Subscriptions
+
+The `NNG_OPT_SUB_SUBSCRIBE` and `NNG_OPT_SUB_UNSUBCRIBE` options have been replaced by
+the following functions: `nng_sub0_socket_subscribe`, `nng_sub0_socket_unsubscribe`,
+`nng_sub0_ctx_subscribe` and `nng_sub0_ctx_unsubscribe`. These functions, like the options
+they replace, are only applicable to SUB sockets.
+
 ## Statistics Use Constified Pointers
 
 A number of the statistics functions take, or return, `const nng_stat *` instead

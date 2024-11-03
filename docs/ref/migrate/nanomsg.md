@@ -84,6 +84,8 @@ The following options are changed.
 | `NN_IPV4ONLY`          | None                          | Use URL such as `tcp4://` to obtain this functionality. |
 | `NN_SOCKET_NAME`       | `NNG_OPT_SOCKNAME`            |
 | `NN_MAXTTL`            | `NNG_OPT_MAXTTL`              |
+| `NN_SUB_SUBSCRIBE`     | `nng_sub0_socket_subscribe`   | No longer an option, use a function call.               |
+| `NN_SUB_UNSUBSCRIBE`   | `nng_sub0_socket_unsubscribe` | No longer an option, use a function call.               |
 
 ## Error Codes
 

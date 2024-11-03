@@ -824,6 +824,18 @@ nni_sock_proto_pipe_ops(nni_sock *sock)
 	return (&sock->s_pipe_ops);
 }
 
+struct nni_proto_sock_ops *
+nni_sock_proto_ops(nni_sock *sock)
+{
+	return (&sock->s_sock_ops);
+}
+
+struct nni_proto_ctx_ops *
+nni_ctx_proto_ops(nni_ctx *ctx)
+{
+	return (&ctx->c_ops);
+}
+
 void *
 nni_sock_proto_data(nni_sock *sock)
 {
@@ -1140,6 +1152,12 @@ nni_ctx_find(nni_ctx **cp, uint32_t id, bool closing)
 	nni_mtx_unlock(&sock_lk);
 
 	return (rv);
+}
+
+void *
+nni_ctx_proto_data(nni_ctx *ctx)
+{
+	return (ctx->c_data);
 }
 
 static void

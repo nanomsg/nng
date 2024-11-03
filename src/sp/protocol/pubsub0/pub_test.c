@@ -141,7 +141,7 @@ test_pub_send_queued(void)
 	// test to be really meaningful.
 	NUTS_PASS(nng_pub0_open(&pub));
 	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_socket_set(sub, NNG_OPT_SUB_SUBSCRIBE, "", 0));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "", 0));
 	NUTS_PASS(nng_socket_set_int(pub, NNG_OPT_SENDBUF, 10));
 	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 10));
 	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));

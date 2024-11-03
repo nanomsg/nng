@@ -1065,8 +1065,7 @@ main(int ac, char **av)
 	}
 
 	for (struct topic *t = topics; t != NULL; t = t->next) {
-		rv = nng_socket_set(
-		    sock, NNG_OPT_SUB_SUBSCRIBE, t->val, strlen(t->val));
+		rv = nng_sub0_socket_subscribe(sock, t->val, strlen(t->val));
 		if (rv != 0) {
 			fatal("Unable to subscribe to topic %s: %s", t->val,
 			    nng_strerror(rv));
