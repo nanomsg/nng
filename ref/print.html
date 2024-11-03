@@ -5490,8 +5490,8 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><code>NNG_OPT_RECONNMAXT</code></td><td></td></tr>
 <tr><td><code>NN_SNDPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
 <tr><td><code>NN_RCVPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
-<tr><td><code>NN_RCVFD</code></td><td><code>NNG_OPT_RECVFD</code></td><td></td></tr>
-<tr><td><code>NN_SNDFD</code></td><td><code>NNG_OPT_SENDFD</code></td><td></td></tr>
+<tr><td><code>NN_RCVFD</code></td><td><code>+nng_socket_get_recv_poll_fd</code></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_SNDFD</code></td><td><code>+nng_socket_get_send_poll_fd</code></td><td>No longer an option, use a function call.</td></tr>
 <tr><td><code>NN_DOMAIN</code></td><td>None</td><td>NNG options are not divided by domain or protocol.</td></tr>
 <tr><td><code>NN_PROTOCOL</code></td><td><code>NNG_OPT_PROTO</code></td><td>See also <code>NNG_OPT_PROTONAME</code>.</td></tr>
 <tr><td><code>NN_IPV4ONLY</code></td><td>None</td><td>Use URL such as <code>tcp4://</code> to obtain this functionality.</td></tr>
