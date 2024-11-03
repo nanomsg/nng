@@ -482,7 +482,6 @@ NNG_DECL void nng_ctx_send(nng_ctx, nng_aio *);
 // on a context instead of a socket.
 NNG_DECL int nng_ctx_sendmsg(nng_ctx, nng_msg *, int);
 
-NNG_DECL int nng_ctx_get(nng_ctx, const char *, void *, size_t *);
 NNG_DECL int nng_ctx_get_bool(nng_ctx, const char *, bool *);
 NNG_DECL int nng_ctx_get_int(nng_ctx, const char *, int *);
 NNG_DECL int nng_ctx_get_size(nng_ctx, const char *, size_t *);
@@ -1149,7 +1148,6 @@ NNG_DECL void nng_stream_free(nng_stream *);
 NNG_DECL void nng_stream_close(nng_stream *);
 NNG_DECL void nng_stream_send(nng_stream *, nng_aio *);
 NNG_DECL void nng_stream_recv(nng_stream *, nng_aio *);
-NNG_DECL int  nng_stream_get(nng_stream *, const char *, void *, size_t *);
 NNG_DECL int  nng_stream_get_bool(nng_stream *, const char *, bool *);
 NNG_DECL int  nng_stream_get_int(nng_stream *, const char *, int *);
 NNG_DECL int  nng_stream_get_ms(nng_stream *, const char *, nng_duration *);

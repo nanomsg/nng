@@ -410,21 +410,13 @@ ctx_get(nng_ctx id, const char *n, void *v, size_t *szp, nni_type t)
 	nni_ctx *ctx;
 	int      rv;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-	if ((rv = nni_ctx_find(&ctx, id.id, false)) != 0) {
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_ctx_find(&ctx, id.id, false)) != 0)) {
 		return (rv);
 	}
 	rv = nni_ctx_getopt(ctx, n, v, szp, t);
 	nni_ctx_rele(ctx);
 	return (rv);
-}
-
-int
-nng_ctx_get(nng_ctx id, const char *n, void *v, size_t *szp)
-{
-	return (ctx_get(id, n, v, szp, NNI_TYPE_OPAQUE));
 }
 
 int
@@ -475,21 +467,13 @@ ctx_set(nng_ctx id, const char *n, const void *v, size_t sz, nni_type t)
 	nni_ctx *ctx;
 	int      rv;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-	if ((rv = nni_ctx_find(&ctx, id.id, false)) != 0) {
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_ctx_find(&ctx, id.id, false)) != 0)) {
 		return (rv);
 	}
 	rv = nni_ctx_setopt(ctx, n, v, sz, t);
 	nni_ctx_rele(ctx);
 	return (rv);
-}
-
-int
-nng_ctx_set(nng_ctx id, const char *n, const void *v, size_t sz)
-{
-	return (ctx_set(id, n, v, sz, NNI_TYPE_OPAQUE));
 }
 
 int

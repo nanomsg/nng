@@ -59,6 +59,8 @@ should be sufficient in most cases.
 The following functions are removed. To access options, use a proper typed access function,
 such as one ending in a suffix like `_bool` (to access a `bool` typed option).
 
+- `nng_ctx_get`
+- `nng_ctx_set`
 - `nng_pipe_get`
 - `nng_stream_get`
 - `nng_stream_set`
