@@ -314,7 +314,6 @@ test_endpoint_types(void)
 	nng_dialer   d2;
 	nng_listener l2;
 	char        *a = "inproc://mumble...";
-	bool         b;
 
 	NUTS_OPEN(s1);
 
@@ -324,7 +323,6 @@ test_endpoint_types(void)
 
 	// Forge a listener
 	l2.id = nng_dialer_id(d);
-	NUTS_FAIL(nng_listener_get_bool(l2, NNG_OPT_RAW, &b), NNG_ENOENT);
 	NUTS_FAIL(nng_listener_close(l2), NNG_ENOENT);
 	NUTS_PASS(nng_dialer_close(d));
 
@@ -334,7 +332,6 @@ test_endpoint_types(void)
 
 	// Forge a dialer
 	d2.id = nng_listener_id(l);
-	NUTS_FAIL(nng_dialer_get_bool(d2, NNG_OPT_RAW, &b), NNG_ENOENT);
 	NUTS_FAIL(nng_dialer_close(d2), NNG_ENOENT);
 	NUTS_PASS(nng_listener_close(l));
 
@@ -405,7 +402,6 @@ test_listener_options(void)
 	NUTS_FAIL(
 	    nng_listener_set_string(l, NNG_OPT_SOCKNAME, "1"), NNG_ENOTSUP);
 
-	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	NUTS_FAIL(nng_listener_set_ms(l, NNG_OPT_RECONNMINT, 1), NNG_ENOTSUP);
 	NUTS_FAIL(nng_listener_set_string(l, NNG_OPT_SOCKNAME, "bogus"),
 	    NNG_ENOTSUP);
@@ -440,7 +436,6 @@ test_dialer_options(void)
 	// Cannot set inappropriate options
 	NUTS_FAIL(
 	    nng_dialer_set_string(d, NNG_OPT_SOCKNAME, "1"), NNG_ENOTSUP);
-	NUTS_FAIL(nng_dialer_set_bool(d, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	NUTS_FAIL(nng_dialer_set_ms(d, NNG_OPT_SENDTIMEO, 1), NNG_ENOTSUP);
 	NUTS_FAIL(
 	    nng_dialer_set_string(d, NNG_OPT_SOCKNAME, "bogus"), NNG_ENOTSUP);
@@ -456,9 +451,7 @@ void
 test_endpoint_absent_options(void)
 {
 	size_t       s;
-	int          i;
 	nng_duration t;
-	bool         b;
 	nng_dialer   d;
 	nng_listener l;
 	d.id = 1999;
@@ -467,14 +460,8 @@ test_endpoint_absent_options(void)
 	NUTS_FAIL(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 10), NNG_ENOENT);
 	NUTS_FAIL(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 10), NNG_ENOENT);
 
-	NUTS_FAIL(nng_dialer_get_bool(d, NNG_OPT_RAW, &b), NNG_ENOENT);
-	NUTS_FAIL(nng_listener_get_bool(l, NNG_OPT_RAW, &b), NNG_ENOENT);
-
 	NUTS_FAIL(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &s), NNG_ENOENT);
 	NUTS_FAIL(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &s), NNG_ENOENT);
-
-	NUTS_FAIL(nng_dialer_get_int(d, NNG_OPT_RAW, &i), NNG_ENOENT);
-	NUTS_FAIL(nng_listener_get_int(l, NNG_OPT_RAW, &i), NNG_ENOENT);
 
 	NUTS_FAIL(nng_dialer_get_ms(d, NNG_OPT_RECVTIMEO, &t), NNG_ENOENT);
 	NUTS_FAIL(nng_listener_get_ms(l, NNG_OPT_SENDTIMEO, &t), NNG_ENOENT);

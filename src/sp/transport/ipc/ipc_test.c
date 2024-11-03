@@ -75,7 +75,6 @@ test_ipc_dialer_properties(void)
 	z = 0;
 	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &z));
 	NUTS_TRUE(z == 8192);
-	NUTS_FAIL(nng_dialer_set_bool(d, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	NUTS_CLOSE(s);
 }
 
@@ -141,7 +140,6 @@ test_ipc_listener_properties(void)
 	z = 0;
 	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &z));
 	NUTS_TRUE(z == 8192);
-	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	NUTS_CLOSE(s);
 }
 

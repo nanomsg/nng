@@ -137,13 +137,6 @@ sock_get_fd(nni_sock *s, unsigned flag, int *fdp)
 }
 
 static int
-sock_get_raw(void *s, void *buf, size_t *szp, nni_type t)
-{
-	bool raw = ((nni_sock_flags(SOCK(s)) & NNI_PROTO_FLAG_RAW) != 0);
-	return (nni_copyout_bool(raw, buf, szp, t));
-}
-
-static int
 sock_set_recvtimeo(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_rcvtimeo, buf, sz, t));
@@ -252,10 +245,6 @@ static const nni_option sock_options[] = {
 	    .o_name = NNG_OPT_SOCKNAME,
 	    .o_get  = sock_get_sockname,
 	    .o_set  = sock_set_sockname,
-	},
-	{
-	    .o_name = NNG_OPT_RAW,
-	    .o_get  = sock_get_raw,
 	},
 	// terminate list
 	{
@@ -821,6 +810,12 @@ const char *
 nni_sock_peer_name(nni_sock *sock)
 {
 	return (sock->s_peer_id.p_name);
+}
+
+bool
+nni_sock_raw(nni_sock *sock)
+{
+	return ((nni_sock_flags(sock) & NNI_PROTO_FLAG_RAW) != 0);
 }
 
 struct nni_proto_pipe_ops *

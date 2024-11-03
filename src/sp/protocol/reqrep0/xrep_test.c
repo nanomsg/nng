@@ -37,7 +37,7 @@ test_xrep_raw(void)
 	bool       b;
 
 	NUTS_PASS(nng_rep0_open_raw(&s));
-	NUTS_PASS(nng_socket_get_bool(s, NNG_OPT_RAW, &b));
+	NUTS_PASS(nng_socket_raw(s, &b));
 	NUTS_TRUE(b);
 	NUTS_CLOSE(s);
 }

@@ -78,6 +78,8 @@ Note that the new functions provide a reference to a static string, and thus do 
 allocation, and the returned strings should not be freed. Also the IDs are provided as `uint16_t`,
 matching the actual wire protocol values, instead of `int`.
 
+The `NNG_OPT_RAW` option has aso been replaced by a function, `nng_socket_raw`.
+
 ## Statistics Use Constified Pointers
 
 A number of the statistics functions take, or return, `const nng_stat *` instead

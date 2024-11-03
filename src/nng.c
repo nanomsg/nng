@@ -1215,6 +1215,21 @@ nng_socket_peer_name(nng_socket id, const char **name)
 }
 
 int
+nng_socket_raw(nng_socket id, bool *rawp)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+	*rawp = nni_sock_raw(sock);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
 nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg)
 {
 	int       rv;

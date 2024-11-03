@@ -225,15 +225,13 @@ test_pair0_raw(void)
 	bool       raw;
 
 	NUTS_PASS(nng_pair0_open(&s1));
-	NUTS_PASS(nng_socket_get_bool(s1, NNG_OPT_RAW, &raw));
+	NUTS_PASS(nng_socket_raw(s1, &raw));
 	NUTS_TRUE(raw == false);
-	NUTS_FAIL(nng_socket_set_bool(s1, NNG_OPT_RAW, true), NNG_EREADONLY);
 	NUTS_PASS(nng_close(s1));
 
 	NUTS_PASS(nng_pair0_open_raw(&s1));
-	NUTS_PASS(nng_socket_get_bool(s1, NNG_OPT_RAW, &raw));
+	NUTS_PASS(nng_socket_raw(s1, &raw));
 	NUTS_TRUE(raw == true);
-	NUTS_FAIL(nng_socket_set_bool(s1, NNG_OPT_RAW, false), NNG_EREADONLY);
 	NUTS_PASS(nng_close(s1));
 }
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.com>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.com>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -128,8 +128,6 @@ device_init(device_data **dp, nni_sock *s1, nni_sock *s2)
 {
 	int          num_paths = 2;
 	int          i;
-	bool         raw;
-	size_t       rsz;
 	device_data *d;
 
 	// Specifying either of these as null turns the device into
@@ -149,18 +147,11 @@ device_init(device_data **dp, nni_sock *s1, nni_sock *s2)
 		return (NNG_EINVAL);
 	}
 
-	raw = false;
-	rsz = sizeof(raw);
-	if (((nni_sock_getopt(s1, NNG_OPT_RAW, &raw, &rsz, NNI_TYPE_BOOL) !=
-	        0)) ||
-	    (!raw)) {
+	if (!nni_sock_raw(s1)) {
 		return (NNG_EINVAL);
 	}
 
-	rsz = sizeof(raw);
-	if (((nni_sock_getopt(s2, NNG_OPT_RAW, &raw, &rsz, NNI_TYPE_BOOL) !=
-	        0)) ||
-	    (!raw)) {
+	if (!nni_sock_raw(s2)) {
 		return (NNG_EINVAL);
 	}
 
