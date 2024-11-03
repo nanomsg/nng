@@ -5344,6 +5344,18 @@ In this case, use the <code>nng_socket_get</code> and <code>nng_socket_set</code
 <p>The <code>_getopt</code> and <code>_setopt</code> functions for contexts, listeners, and dialers are no longer
 present. Simply changing <code>_getopt</code> to <code>_get</code> or <code>_setopt</code> to <code>_set</code> in the function name
 should be sufficient in most cases.</p>
+<h2 id="untyped-option-functions-removed"><a class="header" href="#untyped-option-functions-removed">Untyped Option Functions Removed</a></h2>
+<p>The following functions are removed. To access options, use a proper typed access function,
+such as one ending in a suffix like <code>_bool</code> (to access a <code>bool</code> typed option).</p>
+<ul>
+<li><code>nng_pipe_get</code></li>
+<li><code>nng_stream_get</code></li>
+<li><code>nng_stream_set</code></li>
+<li><code>nng_stream_dialer_get</code></li>
+<li><code>nng_stream_dialer_set</code></li>
+<li><code>nng_stream_listener_get</code></li>
+<li><code>nng_stream_listener_set</code></li>
+</ul>
 <h2 id="stream-options"><a class="header" href="#stream-options">Stream Options</a></h2>
 <p>The ability to set options on streams after they have been created is no longer present.
 (It turns out that this was not very useful.) All functions <code>nng_stream_set_xxx</code> are removed.
