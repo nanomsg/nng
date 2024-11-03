@@ -132,49 +132,30 @@ static int
 check_props(nng_msg *msg)
 {
 	nng_pipe     p;
-	size_t       z;
 	nng_sockaddr la;
 	nng_sockaddr ra;
 	char        *buf;
-	size_t       len;
 
 	p = nng_msg_get_pipe(msg);
 	So(nng_pipe_id(p) > 0);
 
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_get(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-	So(z == sizeof(la));
+	So(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(validloopback(&la));
 
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-	So(z == sizeof(ra));
+	So(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra) == 0);
 	So(validloopback(&ra));
 
 	// Request header
-	z   = 0;
 	buf = NULL;
-	So(nng_pipe_get(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == NNG_EINVAL);
-	So(z > 0);
-	len = z;
-	So((buf = nng_alloc(len)) != NULL);
-	So(nng_pipe_get(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
+	So(nng_pipe_get_string(p, NNG_OPT_WS_REQUEST_HEADERS, &buf) == 0);
 	So(strstr(buf, "Sec-WebSocket-Key") != NULL);
-	So(z == len);
-	nng_free(buf, len);
+	nng_strfree(buf);
 
 	// Response header
-	z   = 0;
 	buf = NULL;
-	So(nng_pipe_get(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
-	    NNG_EINVAL);
-	So(z > 0);
-	len = z;
-	So((buf = nng_alloc(len)) != NULL);
-	So(nng_pipe_get(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
+	So(nng_pipe_get_string(p, NNG_OPT_WS_RESPONSE_HEADERS, &buf) == 0);
 	So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
-	So(z == len);
-	nng_free(buf, len);
+	nng_strfree(buf);
 
 	return (0);
 }

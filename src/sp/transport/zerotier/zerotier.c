@@ -2745,8 +2745,9 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 	nng_sockaddr sa;
 	zt_ep       *ep = arg;
 	int          rv;
+	NNI_ARG_UNUSED(sz);
 
-	if ((rv = nni_copyin_sockaddr(&sa, data, sz, t)) == 0) {
+	if ((rv = nni_copyin_sockaddr(&sa, data, t)) == 0) {
 		enum ZT_ResultCode      zrv;
 		zt_node                *ztn;
 		struct sockaddr_storage ss;

@@ -34,7 +34,7 @@ extern int nni_copyin_size(
 extern int nni_copyin_str(char *, const void *, size_t, size_t, nni_type);
 extern int nni_copyin_ptr(void **, const void *, size_t, nni_type);
 extern int nni_copyin_u64(uint64_t *, const void *, size_t, nni_type);
-extern int nni_copyin_sockaddr(nng_sockaddr *, const void *, size_t, nni_type);
+extern int nni_copyin_sockaddr(nng_sockaddr *, const void *, nni_type);
 
 // nni_copyout_xxx copies out a type of the named value.  It assumes that
 // the type is aligned and the size correct, unless NNI_TYPE_OPAQUE is passed.

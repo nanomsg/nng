@@ -1384,12 +1384,6 @@ pipe_get(nng_pipe p, const char *name, void *val, size_t *szp, nni_type t)
 }
 
 int
-nng_pipe_get(nng_pipe id, const char *n, void *v, size_t *szp)
-{
-	return (pipe_get(id, n, v, szp, NNI_TYPE_OPAQUE));
-}
-
-int
 nng_pipe_get_int(nng_pipe id, const char *n, int *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_INT32));

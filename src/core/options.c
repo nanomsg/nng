@@ -204,26 +204,12 @@ nni_copyin_u64(uint64_t *up, const void *v, size_t sz, nni_type t)
 }
 
 int
-nni_copyin_sockaddr(nng_sockaddr *ap, const void *v, size_t sz, nni_type t)
+nni_copyin_sockaddr(nng_sockaddr *ap, const void *v, nni_type t)
 {
-	nng_sockaddr a;
-
-	switch (t) {
-	case NNI_TYPE_SOCKADDR:
-		a = *(nng_sockaddr *) v;
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(nng_sockaddr)) {
-			return (NNG_EINVAL);
-		}
-		memcpy(&a, v, sz);
-		break;
-	default:
+	if (t != NNI_TYPE_SOCKADDR) {
 		return (NNG_EBADTYPE);
 	}
-	if (ap != NULL) {
-		*ap = a;
-	}
+	*ap = *(nng_sockaddr *) v;
 	return (0);
 }
 

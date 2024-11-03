@@ -67,8 +67,7 @@ test_ipc_dialer_properties(void)
 	// Dialers don't have local addresses.
 	NUTS_FAIL(nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
 
-	NUTS_FAIL(
-	    nng_dialer_set(d, NNG_OPT_LOCADDR, &sa, sizeof(sa)), NNG_ENOTSUP);
+	NUTS_FAIL(nng_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
 
 	z = 8192;
 	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));
@@ -133,8 +132,8 @@ test_ipc_listener_properties(void)
 	NUTS_TRUE(sa.s_ipc.sa_family == NNG_AF_IPC);
 	NUTS_MATCH(sa.s_ipc.sa_path, addr + strlen("ipc://"));
 
-	NUTS_FAIL(nng_listener_set(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
-	    NNG_EREADONLY);
+	NUTS_FAIL(
+	    nng_listener_set_addr(l, NNG_OPT_LOCADDR, &sa), NNG_EREADONLY);
 	z = 8192;
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, z));
 	z = 0;

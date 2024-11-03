@@ -20,7 +20,6 @@ test_websocket_wildcard(void)
 	nng_stream_listener *l = NULL;
 	nng_sockaddr         sa1;
 	nng_sockaddr         sa2;
-	size_t               sz;
 	nng_aio             *daio = NULL;
 	nng_aio             *laio = NULL;
 	nng_aio             *aio1 = NULL;
@@ -38,9 +37,7 @@ test_websocket_wildcard(void)
 
 	// Let's get the address we're going to use to dial -- also check
 	// that it is correct.
-	sz = sizeof(sa1);
-	NUTS_PASS(nng_stream_listener_get(l, NNG_OPT_LOCADDR, &sa1, &sz));
-	NUTS_TRUE(sz == sizeof(sa1));
+	NUTS_PASS(nng_stream_listener_get_addr(l, NNG_OPT_LOCADDR, &sa1));
 	NUTS_TRUE(sa1.s_in.sa_port != 0);
 	NUTS_TRUE(sa1.s_family == NNG_AF_INET);
 	NUTS_TRUE(nuts_be32(sa1.s_in.sa_addr) == 0x7F000001u);

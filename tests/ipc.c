@@ -38,14 +38,10 @@ check_props(nng_msg *msg)
 	So(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_IPC);
 	// untyped
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-	So(z == sizeof(ra));
+	So(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra) == 0);
 	So(ra.s_family == NNG_AF_IPC);
 
 	So(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z) == NNG_EBADTYPE);
-	z = 1;
-	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == NNG_EINVAL);
 
 #ifdef _WIN32
 	So(nng_pipe_get_uint64(p, NNG_OPT_IPC_PEER_UID, &id) == NNG_ENOTSUP);

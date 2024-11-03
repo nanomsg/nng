@@ -42,7 +42,6 @@ static int
 check_props_v6(nng_msg *msg)
 {
 	nng_pipe p;
-	size_t   z;
 	uint8_t  loopback[16];
 
 	memset(loopback, 0, sizeof(loopback));
@@ -50,11 +49,9 @@ check_props_v6(nng_msg *msg)
 
 	// IPv6 Local address property works
 	nng_sockaddr la;
-	z = sizeof(nng_sockaddr);
 	p = nng_msg_get_pipe(msg);
 	So(nng_pipe_id(p) > 0);
-	So(nng_pipe_get(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-	So(z == sizeof(la));
+	So(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_INET6);
 	// So(la.s_in.sa_port == (trantest_port - 1));
 	So(la.s_in6.sa_port != 0);
@@ -62,11 +59,9 @@ check_props_v6(nng_msg *msg)
 
 	// IPv6 Remote address property works
 	nng_sockaddr ra;
-	z = sizeof(nng_sockaddr);
 	p = nng_msg_get_pipe(msg);
 	So(nng_pipe_id(p) > 0);
-	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-	So(z == sizeof(ra));
+	So(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra) == 0);
 	So(ra.s_family == NNG_AF_INET6);
 	So(ra.s_in6.sa_port != 0);
 	So(memcmp(ra.s_in6.sa_addr, loopback, 16) == 0);

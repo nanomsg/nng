@@ -27,21 +27,18 @@ TestMain("Supplemental TCP", {
 		});
 		Convey("Listener listens (wildcard)", {
 			nng_sockaddr sa;
-			size_t       sz;
 			uint8_t      ip[4];
 
 			So(nng_stream_listener_alloc(&l, "tcp://127.0.0.1") ==
 			    0);
 			So(nng_stream_listener_listen(l) == 0);
 
-			sz    = sizeof(sa);
 			ip[0] = 127;
 			ip[1] = 0;
 			ip[2] = 0;
 			ip[3] = 1;
-			So(nng_stream_listener_get(
-			       l, NNG_OPT_LOCADDR, &sa, &sz) == 0);
-			So(sz == sizeof(sa));
+			So(nng_stream_listener_get_addr(
+			       l, NNG_OPT_LOCADDR, &sa) == 0);
 			So(sa.s_in.sa_port != 0);
 			So(memcmp(&sa.s_in.sa_addr, ip, 4) == 0);
 

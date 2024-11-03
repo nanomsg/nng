@@ -40,16 +40,12 @@ check_props_v4(nng_msg *msg)
 	So(la.s_in.sa_addr == htonl(0x7f000001));
 
 	// untyped
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-	So(z == sizeof(ra));
+	So(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra) == 0);
 	So(ra.s_family == NNG_AF_INET);
 	So(ra.s_in.sa_port != 0);
 	So(ra.s_in.sa_addr == htonl(0x7f000001));
 
 	So(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z) == NNG_EBADTYPE);
-	z = 1;
-	So(nng_pipe_get(p, NNG_OPT_REMADDR, &ra, &z) == NNG_EINVAL);
 
 	So(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b) == 0);
 	So(b == false); // default
@@ -60,6 +56,5 @@ check_props_v4(nng_msg *msg)
 	return (0);
 }
 
-TestMain("TCP Transport", {
-	trantest_test_extended("tcp://127.0.0.1:", check_props_v4);
-})
+TestMain("TCP Transport",
+    { trantest_test_extended("tcp://127.0.0.1:", check_props_v4); })
