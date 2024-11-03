@@ -464,7 +464,6 @@ test_resp_ttl_option(void)
 	nng_socket  resp;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_MAXTTL;
 
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -477,15 +476,6 @@ test_resp_ttl_option(void)
 	NUTS_PASS(nng_socket_set_int(resp, opt, 3));
 	NUTS_PASS(nng_socket_get_int(resp, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(resp, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(resp, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(resp, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(resp, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(resp, opt, &b), NNG_EBADTYPE);
 

@@ -300,7 +300,6 @@ test_bus_recv_buf_option(void)
 	nng_socket  s;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_RECVBUF;
 
 	NUTS_PASS(nng_bus0_open(&s));
@@ -312,15 +311,6 @@ test_bus_recv_buf_option(void)
 	NUTS_PASS(nng_socket_set_int(s, opt, 3));
 	NUTS_PASS(nng_socket_get_int(s, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(s, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(s, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(s, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(s, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(s, opt, &b), NNG_EBADTYPE);
 
@@ -334,7 +324,6 @@ test_bus_send_buf_option(void)
 	nng_socket  s2;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_SENDBUF;
 
 	NUTS_PASS(nng_bus0_open(&s1));
@@ -348,15 +337,6 @@ test_bus_send_buf_option(void)
 	NUTS_PASS(nng_socket_set_int(s1, opt, 3));
 	NUTS_PASS(nng_socket_get_int(s1, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(s1, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(s1, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(s1, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(s1, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(s1, opt, &b), NNG_EBADTYPE);
 

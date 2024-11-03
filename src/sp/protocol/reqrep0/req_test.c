@@ -36,7 +36,6 @@ test_req_ttl_option(void)
 	nng_socket  req;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_MAXTTL;
 
 	NUTS_PASS(nng_req0_open(&req));
@@ -51,15 +50,6 @@ test_req_ttl_option(void)
 	NUTS_PASS(nng_socket_set_int(req, opt, 3));
 	NUTS_PASS(nng_socket_get_int(req, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(req, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(req, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(req, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(req, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(req, opt, &b), NNG_EBADTYPE);
 
@@ -72,14 +62,11 @@ test_req_resend_option(void)
 	nng_socket   req;
 	nng_duration d;
 	bool         b;
-	size_t       sz  = sizeof(b);
 	const char  *opt = NNG_OPT_REQ_RESENDTIME;
 
 	NUTS_PASS(nng_req0_open(&req));
 
 	NUTS_TRUE(nng_socket_set_ms(req, opt, 10) == 0);
-	NUTS_FAIL(nng_socket_set(req, opt, "", 1), NNG_EINVAL);
-	NUTS_FAIL(nng_socket_get(req, opt, &b, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(req, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(req, opt, &b), NNG_EBADTYPE);
 
@@ -94,14 +81,11 @@ test_req_resend_tick_option(void)
 	nng_socket   req;
 	nng_duration d;
 	bool         b;
-	size_t       sz  = sizeof(b);
 	const char  *opt = NNG_OPT_REQ_RESENDTICK;
 
 	NUTS_PASS(nng_req0_open(&req));
 
 	NUTS_TRUE(nng_socket_set_ms(req, opt, 10) == 0);
-	NUTS_FAIL(nng_socket_set(req, opt, "", 1), NNG_EINVAL);
-	NUTS_FAIL(nng_socket_get(req, opt, &b, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(req, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(req, opt, &b), NNG_EBADTYPE);
 

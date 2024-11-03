@@ -229,7 +229,6 @@ test_xsub_recv_buf_option(void)
 	nng_socket  sub;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_RECVBUF;
 
 	NUTS_PASS(nng_sub0_open_raw(&sub));
@@ -240,15 +239,6 @@ test_xsub_recv_buf_option(void)
 	NUTS_PASS(nng_socket_set_int(sub, opt, 3));
 	NUTS_PASS(nng_socket_get_int(sub, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(sub, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(sub, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(sub, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(sub, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(sub, opt, &b), NNG_EBADTYPE);
 

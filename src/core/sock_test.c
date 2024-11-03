@@ -97,32 +97,32 @@ void
 test_socket_name(void)
 {
 	nng_socket s1;
-	char       name[128]; // 64 is max
 	char      *str;
 	long       id;
 	char      *end;
-	size_t     sz;
+	char      *name;
 
-	sz = sizeof(name);
 	NUTS_OPEN(s1);
-	NUTS_PASS(nng_socket_get(s1, NNG_OPT_SOCKNAME, name, &sz));
-	NUTS_TRUE(sz > 0 && sz < 64);
-	NUTS_TRUE(sz == strlen(name) + 1);
+	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &name));
+	NUTS_TRUE(strlen(name) > 0);
+	NUTS_TRUE(strlen(name) < 64);
 	id = strtol(name, &end, 10);
 	NUTS_TRUE(id == (long) s1.id);
 	NUTS_TRUE(end != NULL && *end == '\0');
+	nng_strfree(name);
 
-	NUTS_PASS(nng_socket_set(s1, NNG_OPT_SOCKNAME, "hello", 6));
-	sz = sizeof(name);
-	NUTS_PASS(nng_socket_get(s1, NNG_OPT_SOCKNAME, name, &sz));
-	NUTS_TRUE(sz == 6);
+	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, "hello"));
+	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &name));
 	NUTS_MATCH(name, "hello");
+	nng_strfree(name);
 
-	memset(name, 'A', 64);
-	name[64] = '\0';
+	char buf[128];
+	memset(buf, 'A', 128);
+	buf[127] = 0;
 
-	// strings must be NULL terminated
-	NUTS_FAIL(nng_socket_set(s1, NNG_OPT_SOCKNAME, name, 5), NNG_EINVAL);
+	// strings must not be too long
+	NUTS_FAIL(
+	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
 
 	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &str));
 	NUTS_ASSERT(str != NULL);
@@ -137,23 +137,22 @@ void
 test_socket_name_oversize(void)
 {
 	nng_socket s1;
-	char       name[256]; // 64 is max
-	size_t     sz = sizeof(name);
+	char       buf[256]; // 64 is max
+	size_t     sz = sizeof(buf);
+	char      *name;
 
-	memset(name, 'A', sz);
+	memset(buf, 'A', sz);
 	NUTS_OPEN(s1);
 
-	NUTS_FAIL(nng_socket_set(s1, NNG_OPT_SOCKNAME, name, sz), NNG_EINVAL);
-	name[sz - 1] = '\0';
-	NUTS_FAIL(nng_socket_set(s1, NNG_OPT_SOCKNAME, name, sz), NNG_EINVAL);
+	buf[sz - 1] = '\0';
+	NUTS_FAIL(
+	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
 
-	strcpy(name, "hello");
-	NUTS_PASS(nng_socket_set(s1, NNG_OPT_SOCKNAME, name, sz));
-	sz = sizeof(name);
-	memset(name, 'B', sz);
-	NUTS_PASS(nng_socket_get(s1, NNG_OPT_SOCKNAME, name, &sz));
-	NUTS_TRUE(sz == 6);
+	strcpy(buf, "hello");
+	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf));
+	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &name));
 	NUTS_MATCH(name, "hello");
+	nng_strfree(name);
 	NUTS_CLOSE(s1);
 }
 
@@ -371,6 +370,7 @@ test_url_option(void)
 	NUTS_PASS(nng_dialer_get_string(d, NNG_OPT_URL, &url));
 	NUTS_MATCH(url, "inproc://url2");
 	NUTS_FAIL(nng_dialer_set_string(d, NNG_OPT_URL, url), NNG_EREADONLY);
+	nng_strfree(url);
 
 	NUTS_CLOSE(s1);
 }
@@ -467,7 +467,6 @@ test_timeout_options(void)
 {
 	nng_socket   s1;
 	nng_duration to;
-	size_t       sz;
 
 	char *cases[] = {
 		NNG_OPT_RECVTIMEO,
@@ -482,33 +481,16 @@ test_timeout_options(void)
 		bool b;
 		TEST_CASE(cases[i]);
 
-		// Can't receive a duration into zero bytes.
-		sz = 0;
-		NUTS_FAIL(nng_socket_get(s1, cases[i], &to, &sz), NNG_EINVAL);
-
 		// Type mismatches
 		NUTS_FAIL(nng_socket_get_bool(s1, cases[i], &b), NNG_EBADTYPE);
-		sz = 1;
-		NUTS_FAIL(nng_socket_get(s1, cases[i], &b, &sz), NNG_EINVAL);
 
 		// Can set a valid duration
 		NUTS_PASS(nng_socket_set_ms(s1, cases[i], 1234));
 		NUTS_PASS(nng_socket_get_ms(s1, cases[i], &to));
 		NUTS_TRUE(to == 1234);
 
-		to = 0;
-		sz = sizeof(to);
-		NUTS_PASS(nng_socket_get(s1, cases[i], &to, &sz));
-		NUTS_TRUE(to == 1234);
-		NUTS_TRUE(sz == sizeof(to));
-
 		// Can't set a negative duration
 		NUTS_FAIL(nng_socket_set_ms(s1, cases[i], -5), NNG_EINVAL);
-
-		// Can't pass a buf too small for duration
-		sz = sizeof(to) - 1;
-		to = 1;
-		NUTS_FAIL(nng_socket_set(s1, cases[i], &to, sz), NNG_EINVAL);
 	}
 	NUTS_CLOSE(s1);
 }
@@ -518,7 +500,6 @@ test_size_options(void)
 {
 	nng_socket s1;
 	size_t     val;
-	size_t     sz;
 	char      *opt;
 
 	char *cases[] = {
@@ -530,25 +511,10 @@ test_size_options(void)
 	for (int i = 0; (opt = cases[i]) != NULL; i++) {
 		TEST_CASE(opt);
 
-		// Can't receive a size into zero bytes.
-		sz = 0;
-		NUTS_FAIL(nng_socket_get(s1, opt, &val, &sz), NNG_EINVAL);
-
 		// Can set a valid duration
 		NUTS_PASS(nng_socket_set_size(s1, opt, 1234));
 		NUTS_PASS(nng_socket_get_size(s1, opt, &val));
 		NUTS_TRUE(val == 1234);
-
-		val = 0;
-		sz  = sizeof(val);
-		NUTS_PASS(nng_socket_get(s1, opt, &val, &sz));
-		NUTS_TRUE(val == 1234);
-		NUTS_TRUE(sz == sizeof(val));
-
-		// Can't pass a buf too small for size
-		sz  = sizeof(val) - 1;
-		val = 1;
-		NUTS_FAIL(nng_socket_set(s1, opt, &val, sz), NNG_EINVAL);
 
 		// We limit the limit to 4GB. Clear it if you want to
 		// ship more than 4GB at a time.

@@ -36,7 +36,6 @@ test_surv_ttl_option(void)
 	nng_socket  surv;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_MAXTTL;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
@@ -51,15 +50,6 @@ test_surv_ttl_option(void)
 	NUTS_PASS(nng_socket_set_int(surv, opt, 3));
 	NUTS_PASS(nng_socket_get_int(surv, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(surv, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(surv, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(surv, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(surv, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(surv, opt, &b), NNG_EBADTYPE);
 
@@ -72,14 +62,11 @@ test_surv_survey_time_option(void)
 	nng_socket   surv;
 	nng_duration d;
 	bool         b;
-	size_t       sz  = sizeof(b);
 	const char  *opt = NNG_OPT_SURVEYOR_SURVEYTIME;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 
 	NUTS_PASS(nng_socket_set_ms(surv, opt, 10));
-	NUTS_FAIL(nng_socket_set(surv, opt, "", 1), NNG_EINVAL);
-	NUTS_FAIL(nng_socket_get(surv, opt, &b, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(surv, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(surv, opt, &b), NNG_EBADTYPE);
 

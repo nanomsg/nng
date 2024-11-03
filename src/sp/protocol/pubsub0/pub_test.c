@@ -264,7 +264,6 @@ test_pub_send_buf_option(void)
 	nng_socket  pub;
 	int         v;
 	bool        b;
-	size_t      sz;
 	const char *opt = NNG_OPT_SENDBUF;
 
 	NUTS_PASS(nng_pub0_open(&pub));
@@ -276,15 +275,6 @@ test_pub_send_buf_option(void)
 	NUTS_PASS(nng_socket_set_int(pub, opt, 3));
 	NUTS_PASS(nng_socket_get_int(pub, opt, &v));
 	NUTS_TRUE(v == 3);
-	v  = 0;
-	sz = sizeof(v);
-	NUTS_PASS(nng_socket_get(pub, opt, &v, &sz));
-	NUTS_TRUE(v == 3);
-	NUTS_TRUE(sz == sizeof(v));
-
-	NUTS_FAIL(nng_socket_set(pub, opt, "", 1), NNG_EINVAL);
-	sz = 1;
-	NUTS_FAIL(nng_socket_get(pub, opt, &v, &sz), NNG_EINVAL);
 	NUTS_FAIL(nng_socket_set_bool(pub, opt, true), NNG_EBADTYPE);
 	NUTS_FAIL(nng_socket_get_bool(pub, opt, &b), NNG_EBADTYPE);
 

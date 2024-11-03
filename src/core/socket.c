@@ -210,6 +210,9 @@ static int
 sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
+	if (sz >= 64) {
+		return (NNG_EINVAL);
+	}
 	rv = (nni_copyin_str(
 	    SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), sz, t));
 #ifdef NNG_ENABLE_STATS

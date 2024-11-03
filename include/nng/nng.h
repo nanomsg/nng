@@ -234,7 +234,6 @@ NNG_DECL int nng_close(nng_socket);
 // if the socket is not valid.
 NNG_DECL int nng_socket_id(nng_socket);
 
-NNG_DECL int nng_socket_set(nng_socket, const char *, const void *, size_t);
 NNG_DECL int nng_socket_set_bool(nng_socket, const char *, bool);
 NNG_DECL int nng_socket_set_int(nng_socket, const char *, int);
 NNG_DECL int nng_socket_set_size(nng_socket, const char *, size_t);
