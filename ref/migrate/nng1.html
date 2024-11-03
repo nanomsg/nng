@@ -301,6 +301,11 @@ Note that the new functions provide a reference to a static string, and thus do 
 allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
 matching the actual wire protocol values, instead of <code>int</code>.</p>
 <p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <code>nng_socket_raw</code>.</p>
+<h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
+<p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBCRIBE</code> options have been replaced by
+the following functions: <code>nng_sub0_socket_subscribe</code>, <code>nng_sub0_socket_unsubscribe</code>,
+<code>nng_sub0_ctx_subscribe</code> and <code>nng_sub0_ctx_unsubscribe</code>. These functions, like the options
+they replace, are only applicable to SUB sockets.</p>
 <h2 id="statistics-use-constified-pointers"><a class="header" href="#statistics-use-constified-pointers">Statistics Use Constified Pointers</a></h2>
 <p>A number of the statistics functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
