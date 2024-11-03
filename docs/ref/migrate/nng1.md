@@ -90,6 +90,20 @@ options must be set on the endpoint (dialer or listener) using the appropriate
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.
 
+The following options are copied from the socket when creating a dialer or listener,
+but afterwards will not be changed on the dialer or listener if the socket
+changes. It is recommended to set them properly on the socket before
+creating dialers or listeners, or set them explicitly on the dialer or listener
+directly:
+
+- `NNG_OPT_RECONNMINT`
+- `NNG_OPT_RECONNMAXT`
+- `NNG_OPT_RECVMAXSZ`
+
+The latter option is a hint for transports and intended to facilitate early
+detection (and possibly avoidance of extra allocations) of oversize messages,
+before bringing them into the socket itself.
+
 ## Socket Options
 
 The `NNG_OPT_PROTO`, `NNG_OPT_PROTONAME`, `NNG_OPT_PEER`, and `NNG_OPT_PEERNAME` options

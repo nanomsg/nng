@@ -8,11 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
+#include "core/options.h"
 #include "core/pipe.h"
 #include "list.h"
 #include "nng/nng.h"
-#include "nng/supplemental/tls/tls.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -33,18 +34,36 @@ struct nni_ctx {
 	nng_duration      c_rcvtimeo;
 };
 
-typedef struct nni_sockopt {
-	nni_list_node node;
-	char         *name;
-	nni_type      typ;
-	size_t        sz;
-	void         *data;
-} nni_sockopt;
-
 typedef struct nni_sock_pipe_cb {
 	nng_pipe_cb cb_fn;
 	void       *cb_arg;
 } nni_sock_pipe_cb;
+
+// This struct is used in array form for options
+// that we pass down to endpoints when they get added.
+// The list is fixed, and so we have to set it up.
+typedef struct {
+	const char *eo_name;
+	nni_type    eo_type;
+} nni_ep_option;
+
+static const nni_ep_option ep_options[] = {
+	{
+	    .eo_name = NNG_OPT_RECONNMINT,
+	    .eo_type = NNI_TYPE_DURATION,
+	},
+	{
+	    .eo_name = NNG_OPT_RECONNMAXT,
+	    .eo_type = NNI_TYPE_DURATION,
+	},
+	{
+	    .eo_name = NNG_OPT_RECVMAXSZ,
+	    .eo_type = NNI_TYPE_SIZE,
+	},
+	{
+	    .eo_name = NULL,
+	},
+};
 
 struct nni_socket {
 	nni_list_node s_node;
@@ -74,7 +93,6 @@ struct nni_socket {
 	nni_duration s_reconn;    // reconnect time
 	nni_duration s_reconnmax; // max reconnect time
 	size_t       s_rcvmaxsz;  // max receive size
-	nni_list     s_options;   // opts not handled by sock/proto
 	char         s_name[64];  // socket name (legacy compat)
 
 	nni_list s_listeners; // active listeners
@@ -158,6 +176,43 @@ static int
 sock_get_sendtimeo(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_sndtimeo, buf, szp, t));
+}
+
+static int
+sock_set_reconnmint(void *s, const void *buf, size_t sz, nni_type t)
+{
+	return (nni_copyin_ms(&SOCK(s)->s_reconn, buf, sz, t));
+}
+
+static int
+sock_get_reconnmint(void *s, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_copyout_ms(SOCK(s)->s_reconn, buf, szp, t));
+}
+
+static int
+sock_set_reconnmaxt(void *s, const void *buf, size_t sz, nni_type t)
+{
+	return (nni_copyin_ms(&SOCK(s)->s_reconnmax, buf, sz, t));
+}
+
+static int
+sock_get_reconnmaxt(void *s, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_copyout_ms(SOCK(s)->s_reconnmax, buf, szp, t));
+}
+
+static int
+sock_set_recvmaxsz(void *s, const void *buf, size_t sz, nni_type t)
+{
+	return (
+	    nni_copyin_size(&SOCK(s)->s_rcvmaxsz, buf, sz, 0, NNI_MAXSZ, t));
+}
+
+static int
+sock_get_recvmaxsz(void *s, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_copyout_size(SOCK(s)->s_rcvmaxsz, buf, szp, t));
 }
 
 static int
@@ -247,23 +302,26 @@ static const nni_option sock_options[] = {
 	    .o_get  = sock_get_sockname,
 	    .o_set  = sock_set_sockname,
 	},
+	{
+	    .o_name = NNG_OPT_RECONNMINT,
+	    .o_get  = sock_get_reconnmint,
+	    .o_set  = sock_set_reconnmint,
+	},
+	{
+	    .o_name = NNG_OPT_RECONNMAXT,
+	    .o_get  = sock_get_reconnmaxt,
+	    .o_set  = sock_set_reconnmaxt,
+	},
+	{
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_get  = sock_get_recvmaxsz,
+	    .o_set  = sock_set_recvmaxsz,
+	},
 	// terminate list
 	{
 	    .o_name = NULL,
 	},
 };
-
-static void
-nni_free_opt(nni_sockopt *opt)
-{
-	if ((strcmp(opt->name, NNG_OPT_TLS_CONFIG) == 0) &&
-	    (opt->sz == sizeof(nng_tls_config *))) {
-		nng_tls_config_free(*(nng_tls_config **) (opt->data));
-	}
-	nni_strfree(opt->name);
-	nni_free(opt->data, opt->sz);
-	NNI_FREE_STRUCT(opt);
-}
 
 uint32_t
 nni_sock_id(nni_sock *s)
@@ -457,8 +515,6 @@ sock_stats_init(nni_sock *s)
 static void
 sock_destroy(nni_sock *s)
 {
-	nni_sockopt *sopt;
-
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&s->st_root);
 #endif
@@ -467,13 +523,6 @@ sock_destroy(nni_sock *s)
 	if (s->s_data != NULL) {
 		s->s_sock_ops.sock_fini(s->s_data);
 	}
-
-	nni_mtx_lock(&s->s_mx);
-	while ((sopt = nni_list_first(&s->s_options)) != NULL) {
-		nni_list_remove(&s->s_options, sopt);
-		nni_free_opt(sopt);
-	}
-	nni_mtx_unlock(&s->s_mx);
 
 	nni_msgq_fini(s->s_urq);
 	nni_msgq_fini(s->s_uwq);
@@ -520,7 +569,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	NNI_ASSERT(s->s_sock_ops.sock_close != NULL);
 
 	NNI_LIST_NODE_INIT(&s->s_node);
-	NNI_LIST_INIT(&s->s_options, nni_sockopt, node);
 	NNI_LIST_INIT(&s->s_ctxs, nni_ctx, c_node);
 	NNI_LIST_INIT(&s->s_pipes, nni_pipe, p_sock_node);
 	NNI_LIST_INIT(&s->s_listeners, nni_listener, l_node);
@@ -547,10 +595,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	(void) nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
 	    sizeof(nni_duration), NNI_TYPE_DURATION);
 	(void) nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
-	    sizeof(nni_duration), NNI_TYPE_DURATION);
-	(void) nni_sock_setopt(s, NNG_OPT_RECONNMINT, &s->s_reconn,
-	    sizeof(nni_duration), NNI_TYPE_DURATION);
-	(void) nni_sock_setopt(s, NNG_OPT_RECONNMAXT, &s->s_reconnmax,
 	    sizeof(nni_duration), NNI_TYPE_DURATION);
 	(void) nni_sock_setopt(s, NNG_OPT_RECVMAXSZ, &s->s_rcvmaxsz,
 	    sizeof(size_t), NNI_TYPE_SIZE);
@@ -846,12 +890,26 @@ nni_sock_proto_data(nni_sock *sock)
 int
 nni_sock_add_listener(nni_sock *s, nni_listener *l)
 {
-	nni_sockopt *sopt;
-	int          rv;
+	int rv;
 
 	// grab a hold on the listener for the socket
 	if ((rv = nni_listener_hold(l)) != 0) {
 		return (rv);
+	}
+
+	// copy initial values for some options from socket
+	for (int i = 0; ep_options[i].eo_name != NULL; i++) {
+		uint64_t             val; // big enough
+		const nni_ep_option *o = &ep_options[i];
+		rv = nni_sock_getopt(s, o->eo_name, &val, NULL, o->eo_type);
+		if (rv == 0) {
+			rv = nni_listener_setopt(
+			    l, o->eo_name, &val, 0, o->eo_type);
+		}
+		if (rv != 0 && rv != NNG_ENOTSUP) {
+			nni_listener_rele(l);
+			return (rv);
+		}
 	}
 
 	nni_mtx_lock(&s->s_mx);
@@ -859,16 +917,6 @@ nni_sock_add_listener(nni_sock *s, nni_listener *l)
 		nni_mtx_unlock(&s->s_mx);
 		nni_listener_rele(l);
 		return (NNG_ECLOSED);
-	}
-
-	NNI_LIST_FOREACH (&s->s_options, sopt) {
-		int rv;
-		rv = nni_listener_setopt(
-		    l, sopt->name, sopt->data, sopt->sz, sopt->typ);
-		if ((rv != 0) && (rv != NNG_ENOTSUP)) {
-			nni_mtx_unlock(&s->s_mx);
-			return (rv);
-		}
 	}
 
 	nni_list_append(&s->s_listeners, l);
@@ -897,12 +945,25 @@ nni_sock_remove_listener(nni_listener *l)
 int
 nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 {
-	nni_sockopt *sopt;
-	int          rv;
+	int rv;
 
 	// grab a hold on the dialer for the socket
 	if ((rv = nni_dialer_hold(d)) != 0) {
 		return (rv);
+	}
+	// copy initial values for some options from socket
+	for (int i = 0; ep_options[i].eo_name != NULL; i++) {
+		uint64_t             val; // big enough
+		const nni_ep_option *o = &ep_options[i];
+		rv = nni_sock_getopt(s, o->eo_name, &val, NULL, o->eo_type);
+		if (rv == 0) {
+			rv = nni_dialer_setopt(
+			    d, o->eo_name, &val, 0, o->eo_type);
+		}
+		if (rv != 0 && rv != NNG_ENOTSUP) {
+			nni_dialer_rele(d);
+			return (rv);
+		}
 	}
 
 	nni_mtx_lock(&s->s_mx);
@@ -910,16 +971,6 @@ nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 		nni_mtx_unlock(&s->s_mx);
 		nni_dialer_rele(d);
 		return (NNG_ECLOSED);
-	}
-
-	NNI_LIST_FOREACH (&s->s_options, sopt) {
-		int rv;
-		rv = nni_dialer_setopt(
-		    d, sopt->name, sopt->data, sopt->sz, sopt->typ);
-		if ((rv != 0) && (rv != NNG_ENOTSUP)) {
-			nni_mtx_unlock(&s->s_mx);
-			return (rv);
-		}
 	}
 
 	nni_list_append(&s->s_dialers, d);
@@ -949,9 +1000,7 @@ int
 nni_sock_setopt(
     nni_sock *s, const char *name, const void *v, size_t sz, nni_type t)
 {
-	int          rv;
-	nni_sockopt *optv;
-	nni_sockopt *oldv = NULL;
+	int rv;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
@@ -968,80 +1017,9 @@ nni_sock_setopt(
 		return (rv);
 	}
 
-	// Some options do not go down to transports.  Handle them directly.
 	rv = nni_setopt(sock_options, name, s, v, sz, t);
-	if (rv != NNG_ENOTSUP) {
-		nni_mtx_unlock(&s->s_mx);
-		return (rv);
-	}
 	nni_mtx_unlock(&s->s_mx);
 
-	// Validation of generic and transport options.
-	// NOTE: Setting transport options via socket is deprecated.
-	// These options should be set on the endpoint to which they apply.
-	if ((strcmp(name, NNG_OPT_RECONNMINT) == 0) ||
-	    (strcmp(name, NNG_OPT_RECONNMAXT) == 0)) {
-		if ((rv = nni_copyin_ms(NULL, v, sz, t)) != 0) {
-			return (rv);
-		}
-
-	} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
-		size_t scratch;
-		if ((rv = nni_copyin_size(&scratch, v, sz, 0, NNI_MAXSZ, t)) !=
-		    0) {
-			return (rv);
-		}
-	}
-
-	// Prepare a copy of the socket option.
-	if ((optv = NNI_ALLOC_STRUCT(optv)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if ((optv->data = nni_alloc(sz)) == NULL) {
-		NNI_FREE_STRUCT(optv);
-		return (NNG_ENOMEM);
-	}
-	if ((optv->name = nni_strdup(name)) == NULL) {
-		nni_free(optv->data, sz);
-		NNI_FREE_STRUCT(optv);
-		return (NNG_ENOMEM);
-	}
-	memcpy(optv->data, v, sz);
-	optv->sz  = sz;
-	optv->typ = t;
-	NNI_LIST_NODE_INIT(&optv->node);
-
-	nni_mtx_lock(&s->s_mx);
-	NNI_LIST_FOREACH (&s->s_options, oldv) {
-		if (strcmp(oldv->name, name) == 0) {
-			if ((oldv->sz != sz) ||
-			    (memcmp(oldv->data, v, sz) != 0)) {
-				break;
-			}
-
-			// The values are the same.  This is a no-op.
-			nni_mtx_unlock(&s->s_mx);
-			nni_free_opt(optv);
-			return (0);
-		}
-	}
-
-	if (rv == 0) {
-		// Remove and toss the old value; we are using a new one.
-		if (oldv != NULL) {
-			nni_list_remove(&s->s_options, oldv);
-			nni_free_opt(oldv);
-		}
-
-		// Insert our new value.  This permits it to be
-		// compared against later, and for new endpoints to
-		// automatically receive these values,
-		nni_list_append(&s->s_options, optv);
-	} else {
-		nni_free_opt(optv);
-	}
-
-	nni_mtx_unlock(&s->s_mx);
 	return (rv);
 }
 
@@ -1049,8 +1027,7 @@ int
 nni_sock_getopt(
     nni_sock *s, const char *name, void *val, size_t *szp, nni_type t)
 {
-	int          rv;
-	nni_sockopt *sopt;
+	int rv;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
@@ -1073,27 +1050,6 @@ nni_sock_getopt(
 	if (rv != NNG_ENOTSUP) {
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
-	}
-
-	NNI_LIST_FOREACH (&s->s_options, sopt) {
-		if (strcmp(sopt->name, name) == 0) {
-			size_t sz = sopt->sz;
-
-			if (t != sopt->typ) {
-				nni_mtx_unlock(&s->s_mx);
-				return (NNG_EBADTYPE);
-			}
-
-			if (szp != NULL) {
-				if (sopt->sz > *szp) {
-					sz = *szp;
-				}
-				*szp = sopt->sz;
-			}
-			memcpy(val, sopt->data, sz);
-			rv = 0;
-			break;
-		}
 	}
 
 	nni_mtx_unlock(&s->s_mx);
