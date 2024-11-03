@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -123,6 +123,13 @@ test_socket_name(void)
 	// strings must not be too long
 	NUTS_FAIL(
 	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
+	memset(buf, 'A', 64);
+	buf[64] = 0;
+	NUTS_FAIL(
+	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
+	buf[63] = 0;
+	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf));
+	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, "hello"));
 
 	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &str));
 	NUTS_ASSERT(str != NULL);

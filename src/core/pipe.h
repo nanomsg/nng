@@ -34,8 +34,7 @@ extern void nni_pipe_close(nni_pipe *);
 
 extern uint16_t nni_pipe_peer(nni_pipe *);
 
-// nni_pipe_getopt looks up the option.  The last argument is the type,
-// which.  If the type is NNI_TYPE_OPAQUE, then no format check is performed.
+// nni_pipe_getopt looks up the option.
 extern int nni_pipe_getopt(
     nni_pipe *, const char *, void *, size_t *, nni_opt_type);
 

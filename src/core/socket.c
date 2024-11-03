@@ -210,11 +210,9 @@ static int
 sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	if (sz >= 64) {
-		return (NNG_EINVAL);
-	}
-	rv = (nni_copyin_str(
-	    SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), sz, t));
+	NNI_ARG_UNUSED(sz);
+	rv =
+	    (nni_copyin_str(SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), t));
 #ifdef NNG_ENABLE_STATS
 	if (rv == 0) {
 		nni_stat_set_string(&SOCK(s)->st_name, SOCK(s)->s_name);
@@ -988,7 +986,8 @@ nni_sock_setopt(
 		}
 
 	} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
-		if ((rv = nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t)) !=
+		size_t scratch;
+		if ((rv = nni_copyin_size(&scratch, v, sz, 0, NNI_MAXSZ, t)) !=
 		    0) {
 			return (rv);
 		}
@@ -1080,17 +1079,9 @@ nni_sock_getopt(
 		if (strcmp(sopt->name, name) == 0) {
 			size_t sz = sopt->sz;
 
-			if ((sopt->typ != NNI_TYPE_OPAQUE) &&
-			    (t != sopt->typ)) {
-
-				if (t != NNI_TYPE_OPAQUE) {
-					nni_mtx_unlock(&s->s_mx);
-					return (NNG_EBADTYPE);
-				}
-				if (*szp != sopt->sz) {
-					nni_mtx_unlock(&s->s_mx);
-					return (NNG_EINVAL);
-				}
+			if (t != sopt->typ) {
+				nni_mtx_unlock(&s->s_mx);
+				return (NNG_EBADTYPE);
 			}
 
 			if (szp != NULL) {

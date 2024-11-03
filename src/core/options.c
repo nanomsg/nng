@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -9,7 +9,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -18,20 +20,12 @@ int
 nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, nni_type t)
 {
 	nni_duration dur;
+	NNI_ARG_UNUSED(sz);
 
-	switch (t) {
-	case NNI_TYPE_DURATION:
-		dur = *(nng_duration *) v;
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(dur)) {
-			return (NNG_EINVAL);
-		}
-		memcpy(&dur, v, sz);
-		break;
-	default:
+	if (t != NNI_TYPE_DURATION) {
 		return (NNG_EBADTYPE);
 	}
+	dur = *(nng_duration *) v;
 
 	if (dur < -1) {
 		return (NNG_EINVAL);
@@ -45,25 +39,12 @@ nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, nni_type t)
 int
 nni_copyin_bool(bool *bp, const void *v, size_t sz, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_BOOL:
-		if (bp != NULL) {
-			*bp = *(bool *) v;
-		}
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(bool)) {
-			return (NNG_EINVAL);
-		}
-		// NB: C99 does not require that sizeof (bool) == 1.
-		if (bp != NULL) {
-			memcpy(bp, v, sz);
-		}
-		break;
-	default:
+	NNI_ARG_UNUSED(sz);
+
+	if (t != NNI_TYPE_BOOL) {
 		return (NNG_EBADTYPE);
 	}
-
+	*bp = *(bool *) v;
 	return (0);
 }
 
@@ -72,29 +53,19 @@ nni_copyin_int(
     int *ip, const void *v, size_t sz, int minv, int maxv, nni_type t)
 {
 	int i;
+	NNI_ARG_UNUSED(sz);
 
-	switch (t) {
-	case NNI_TYPE_INT32:
-		i = *(int *) v;
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(i)) {
-			return (NNG_EINVAL);
-		}
-		memcpy(&i, v, sz);
-		break;
-	default:
+	if (t != NNI_TYPE_INT32) {
 		return (NNG_EBADTYPE);
 	}
+	i = *(int *) v;
 	if (i > maxv) {
 		return (NNG_EINVAL);
 	}
 	if (i < minv) {
 		return (NNG_EINVAL);
 	}
-	if (ip != NULL) {
-		*ip = i;
-	}
+	*ip = i;
 	return (0);
 }
 
@@ -103,18 +74,9 @@ nni_copyin_size(
     size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv, nni_type t)
 {
 	size_t val;
+	NNI_ARG_UNUSED(sz);
 
-	switch (t) {
-	case NNI_TYPE_SIZE:
-		val = *(size_t *) v;
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(val)) {
-			return (NNG_EINVAL);
-		}
-		memcpy(&val, v, sz);
-		break;
-	default:
+	if (t != NNI_TYPE_SIZE) {
 		return (NNG_EBADTYPE);
 	}
 
@@ -122,84 +84,49 @@ nni_copyin_size(
 	if ((val > maxv) || (val < minv)) {
 		return (NNG_EINVAL);
 	}
-	if (sp != NULL) {
-		*sp = val;
-	}
+	*sp = val;
 	return (0);
 }
 
 int
 nni_copyin_ptr(void **pp, const void *v, size_t sz, nni_type t)
 {
-	void *p;
+	NNI_ARG_UNUSED(sz);
 
-	switch (t) {
-	case NNI_TYPE_POINTER:
-		p = *(void **) v;
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(p)) {
-			return (NNG_EINVAL);
-		}
-		memcpy(&p, v, sz);
-		break;
-	default:
+	if (t != NNI_TYPE_POINTER) {
 		return (NNG_EBADTYPE);
 	}
-	if (pp != NULL) {
-		*pp = p;
-	}
+
+	*pp = *(void **) v;
 	return (0);
 }
 
 int
-nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, nni_type t)
+nni_copyin_str(char *s, const void *v, size_t maxsz, nni_type t)
 {
 	size_t z;
 
-	switch (t) {
-	case NNI_TYPE_STRING:
-		z = v == NULL ? 0 : strlen(v);
-		break;
-	case NNI_TYPE_OPAQUE:
-		z = v == NULL ? 0 : nni_strnlen(v, sz);
-		if (z >= sz) {
-			return (NNG_EINVAL); // missing terminator
-		}
-		break;
-	default:
+	if (t != NNI_TYPE_STRING) {
 		return (NNG_EBADTYPE);
 	}
-	if (z >= maxsz) {
+	z = nni_strnlen(v, maxsz);
+	if (z == maxsz && ((char *) v)[maxsz - 1] != 0) {
 		return (NNG_EINVAL); // too long
 	}
-	if (s != NULL) {
-		memcpy(s, v, z);
-	}
+	memcpy(s, v, z);
+	s[z] = 0;
 	return (0);
 }
 
 int
 nni_copyin_u64(uint64_t *up, const void *v, size_t sz, nni_type t)
 {
-	uint64_t u;
+	NNI_ARG_UNUSED(sz);
 
-	switch (t) {
-	case NNI_TYPE_UINT64:
-		u = *(uint64_t *) v;
-		break;
-	case NNI_TYPE_OPAQUE:
-		if (sz != sizeof(u)) {
-			return (NNG_EINVAL);
-		}
-		memcpy(&u, v, sz);
-		break;
-	default:
+	if (t != NNI_TYPE_UINT64) {
 		return (NNG_EBADTYPE);
 	}
-	if (up != NULL) {
-		*up = u;
-	}
+	*up = *(uint64_t *) v;
 	return (0);
 }
 
@@ -214,140 +141,97 @@ nni_copyin_sockaddr(nng_sockaddr *ap, const void *v, nni_type t)
 }
 
 int
-nni_copyout(const void *src, size_t srcsz, void *dst, size_t *dstszp)
-{
-	int    rv     = 0;
-	size_t copysz = *dstszp;
-	// Assumption is that this is type NNI_TYPE_OPAQUE.
-	if (copysz > srcsz) {
-		copysz = srcsz;
-	} else if (srcsz > copysz) {
-		// destination too small.
-		rv = NNG_EINVAL;
-	}
-	*dstszp = srcsz;
-	memcpy(dst, src, copysz);
-	return (rv);
-}
-
-int
 nni_copyout_bool(bool b, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_BOOL:
-		*(bool *) dst = b;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(&b, sizeof(b), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_BOOL) {
 		return (NNG_EBADTYPE);
 	}
+	*(bool *) dst = b;
+	return (0);
 }
 
 int
 nni_copyout_int(int i, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_INT32:
-		*(int *) dst = i;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(&i, sizeof(i), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_INT32) {
 		return (NNG_EBADTYPE);
 	}
+	*(int *) dst = i;
+	return (0);
 }
 
 int
 nni_copyout_ms(nng_duration d, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_DURATION:
-		*(nng_duration *) dst = d;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(&d, sizeof(d), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_DURATION) {
 		return (NNG_EBADTYPE);
 	}
+	*(nng_duration *) dst = d;
+	return (0);
 }
 
 int
 nni_copyout_ptr(void *p, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_POINTER:
-		*(void **) dst = p;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(&p, sizeof(p), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_POINTER) {
 		return (NNG_EBADTYPE);
 	}
+	*(void **) dst = p;
+	return (0);
 }
 
 int
 nni_copyout_size(size_t s, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_SIZE:
-		*(size_t *) dst = s;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(&s, sizeof(s), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_SIZE) {
 		return (NNG_EBADTYPE);
 	}
+	*(size_t *) dst = s;
+	return (0);
 }
 
 int
 nni_copyout_sockaddr(
     const nng_sockaddr *sap, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_SOCKADDR:
-		*(nng_sockaddr *) dst = *sap;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(sap, sizeof(*sap), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_SOCKADDR) {
 		return (NNG_EBADTYPE);
 	}
+	*(nng_sockaddr *) dst = *sap;
+	return (0);
 }
 
 int
 nni_copyout_u64(uint64_t u, void *dst, size_t *szp, nni_type t)
 {
-	switch (t) {
-	case NNI_TYPE_UINT64:
-		*(uint64_t *) dst = u;
-		return (0);
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(&u, sizeof(u), dst, szp));
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_UINT64) {
 		return (NNG_EBADTYPE);
 	}
+	*(uint64_t *) dst = u;
+	return (0);
 }
 
 int
 nni_copyout_str(const char *str, void *dst, size_t *szp, nni_type t)
 {
 	char *s;
-
-	switch (t) {
-	case NNI_TYPE_STRING:
-		if ((s = nni_strdup(str)) == NULL) {
-			return (NNG_ENOMEM);
-		}
-		*(char **) dst = s;
-		return (0);
-
-	case NNI_TYPE_OPAQUE:
-		return (nni_copyout(str, strlen(str) + 1, dst, szp));
-
-	default:
+	NNI_ARG_UNUSED(szp);
+	if (t != NNI_TYPE_STRING) {
 		return (NNG_EBADTYPE);
 	}
+
+	if ((s = nni_strdup(str)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	*(char **) dst = s;
+	return (0);
 }
 
 int

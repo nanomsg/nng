@@ -186,7 +186,7 @@ static void ws_listener_free(void *);
 static int
 ws_check_string(const void *v, size_t sz, nni_opt_type t)
 {
-	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+	if (t != NNI_TYPE_STRING) {
 		return (NNG_EBADTYPE);
 	}
 	if (nni_strnlen(v, sz) >= sz) {

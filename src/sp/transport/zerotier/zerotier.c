@@ -1614,36 +1614,11 @@ zt_tran_fini(void)
 }
 
 static int
-zt_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static int
-zt_check_orbit(const void *v, size_t sz, nni_type t)
-{
-	NNI_ARG_UNUSED(v);
-	if ((t != NNI_TYPE_UINT64) && (t != NNI_TYPE_OPAQUE)) {
-		return (NNG_EBADTYPE);
-	}
-	if (sz != sizeof(uint64_t) && sz != sizeof(uint64_t) * 2) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-static int
-zt_check_deorbit(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_u64(NULL, v, sz, t));
-}
-
-static int
 zt_check_string(const void *v, size_t sz, nni_type t)
 {
 	size_t len;
 
-	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+	if (t != NNI_TYPE_STRING) {
 		return (NNG_EBADTYPE);
 	}
 	len = nni_strnlen(v, sz);
@@ -1651,18 +1626,6 @@ zt_check_string(const void *v, size_t sz, nni_type t)
 		return (NNG_EINVAL);
 	}
 	return (0);
-}
-
-static int
-zt_check_time(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_ms(NULL, v, sz, t));
-}
-
-static int
-zt_check_tries(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_int(NULL, v, sz, 0, 1000000, t));
 }
 
 static void
@@ -2692,19 +2655,11 @@ zt_ep_set_orbit(void *arg, const void *data, size_t sz, nni_type t)
 	int                rv;
 	enum ZT_ResultCode zrv;
 
-	if ((t != NNI_TYPE_UINT64) && (t != NNI_TYPE_OPAQUE)) {
+	if (t != NNI_TYPE_UINT64) {
 		return (NNG_EBADTYPE);
 	}
-	if (sz == sizeof(uint64_t)) {
-		memcpy(&moonid, data, sizeof(moonid));
-		peerid = 0;
-	} else if (sz == sizeof(uint64_t) * 2) {
-		memcpy(&moonid, data, sizeof(moonid));
-		memcpy(&peerid, ((char *) data) + sizeof(uint64_t),
-		    sizeof(peerid));
-	} else {
-		return (NNG_EINVAL);
-	}
+	memcpy(&moonid, data, sizeof(moonid));
+	peerid = 0;
 
 	nni_mtx_lock(&zt_lk);
 	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
