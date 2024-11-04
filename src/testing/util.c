@@ -204,5 +204,5 @@ nuts_logger(nng_log_level level, nng_log_facility fac, const char *msgid,
 		color = NUTS_COLOR_DEFAULT_;
 		break;
 	}
-	test_message_color_(color, "%s: %s: %s", lstr, msgid, msg);
+	acutest_message_color_(color, "%s: %s: %s", lstr, msgid, msg);
 }
