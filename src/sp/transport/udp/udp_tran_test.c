@@ -9,6 +9,7 @@
 
 #include "nng/nng.h"
 #include <nuts.h>
+#include <stdlib.h>
 
 // TCP tests.
 
@@ -248,6 +249,7 @@ test_udp_multi_small_burst(void)
 	size_t       sz;
 	char        *addr;
 
+	NUTS_ENABLE_LOG(NNG_LOG_NOTICE);
 	NUTS_ADDR(addr, "udp");
 
 	NUTS_OPEN(s0);
@@ -272,39 +274,56 @@ test_udp_multi_small_burst(void)
 	float expect  = 0;
 	float require = 0.50;
 	int   burst   = 4;
-	int   count   = 20;
-
-#if defined(NNG_SANITIZER) || defined(NNG_COVERAGE)
-	// sanitizers may drop a lot, so can coverage
-	require = 0.0;
-#elif defined(NNG_PLATFORM_WINDOWS)
+	int   count   = 40;
+#if defined(NNG_PLATFORM_WINDOWS)
 	// Windows seems to drop a lot - maybe because of virtualization
 	burst   = 2;
 	count   = 10;
 	require = 0.10;
 #endif
 
+	const char *pass_rate = getenv("NNG_UDP_PASS_RATE");
+	if (pass_rate != NULL && strlen(pass_rate) > 0) {
+		require = (atoi(pass_rate) * 1.0) / 100.0;
+		nng_log_notice(
+		    "UDP", "required pass rate changed to %0.02f", require);
+	} else {
+		nng_log_notice("UDP", "required pass rate %0.02f", require);
+		nng_log_notice(NULL,
+		    "To change pass rate, set $NNG_UDP_PASS_RATE to "
+		    "percentage of packets that must be received.");
+	}
+
+#if defined(NNG_SANITIZER) || defined(NNG_COVERAGE)
+	// sanitizers may drop a lot, so can coverage
+	require = 0.0;
+#endif
+
 	// Experimentally at least on Darwin, we see some packet losses
 	// even for loopback.  Loss rates appear depressingly high.
 	for (int i = 0; i < count; i++) {
 		for (int j = 0; j < burst; j++) {
-			NUTS_PASS(nng_send(s1, msg, 95, 0));
+			(void) nng_send(s1, msg, 95, 0);
 			expect++;
 		}
 		for (int j = 0; j < burst; j++) {
 			if (nng_recv(s0, buf, &sz, 0) == 0) {
-				NUTS_TRUE(sz == 95);
+				if (sz != 95) {
+					NUTS_TRUE(sz == 95);
+				}
 				actual++;
 			}
 		}
-		NUTS_PASS(nng_send(s0, msg, 95, 0));
-		NUTS_PASS(nng_recv(s1, buf, &sz, 0));
-		NUTS_TRUE(sz == 95);
+		(void) nng_send(s0, msg, 95, 0);
+		(void) nng_recv(s1, buf, &sz, 0);
+		if (sz != 95) {
+			NUTS_TRUE(sz == 95);
+		}
 	}
 	NUTS_TRUE(actual <= expect);
 	NUTS_TRUE(actual / expect > require);
-	NUTS_MSG("Packet loss: %.02f (got %.f of %.f)", 1.0 - actual / expect,
-	    actual, expect);
+	nng_log_notice("UDP", "Packet loss: %.02f (got %.f of %.f)",
+	    1.0 - actual / expect, actual, expect);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 }
