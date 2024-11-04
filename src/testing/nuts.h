@@ -18,16 +18,17 @@
 #define NNG_TESTING_NUTS_H
 
 #include <nng/nng.h>
+extern void nuts_set_logger(int);
 extern void nuts_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Call nng_fini during test finalization -- this avoids leak warnings.
 extern void nng_fini(void);
 #define TEST_FINI nng_fini()
-#define TEST_INIT                                 \
-	do {                                      \
-		nng_log_set_logger(nuts_logger);  \
-		nng_log_set_level(NNG_LOG_DEBUG); \
+#define TEST_INIT                                \
+	do {                                     \
+		nng_log_set_logger(nuts_logger); \
+		nng_log_set_level(NNG_LOG_NONE); \
 	} while (0)
 #include "acutest.h"
 
@@ -211,11 +212,7 @@ extern const char *nuts_garbled_crt;
 
 #define NUTS_PROTO(x, y) (((x) << 4u) | (y))
 
-#define NUTS_ENABLE_LOG(level)                         \
-	do {                                           \
-		nng_log_set_logger(nng_stderr_logger); \
-		nng_log_set_level(level);              \
-	} while (0)
+#define NUTS_ENABLE_LOG(level) nuts_set_logger(level)
 
 #define NUTS_LOGGING()                            \
 	do {                                      \

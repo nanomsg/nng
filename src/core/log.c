@@ -154,7 +154,7 @@ stderr_logger(nng_log_level level, nng_log_facility facility,
 		sgr0 = "";
 	}
 
-	if (timechk &&
+	if (timechk && (log_level >= NNG_LOG_DEBUG) &&
 	    ((last_log.tm_mday != tm->tm_mday) ||
 	        (last_log.tm_mon != tm->tm_mon) ||
 	        (last_log.tm_year != tm->tm_year))) {

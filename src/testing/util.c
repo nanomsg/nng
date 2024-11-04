@@ -172,6 +172,14 @@ nuts_sleep(int msec)
 #define NUTS_COLOR_RED_INTENSIVE_ 5
 
 void
+nuts_set_logger(int level)
+{
+	printf("\n"); // force a new line
+	nng_log_set_logger(nng_stderr_logger);
+	nng_log_set_level(level);
+}
+
+void
 nuts_logger(nng_log_level level, nng_log_facility fac, const char *msgid,
     const char *msg)
 {
