@@ -242,7 +242,6 @@ NNG_DECL int nng_socket_set_string(nng_socket, const char *, const char *);
 NNG_DECL int nng_socket_set_ptr(nng_socket, const char *, void *);
 NNG_DECL int nng_socket_set_ms(nng_socket, const char *, nng_duration);
 
-NNG_DECL int nng_socket_get(nng_socket, const char *, void *, size_t *);
 NNG_DECL int nng_socket_get_bool(nng_socket, const char *, bool *);
 NNG_DECL int nng_socket_get_int(nng_socket, const char *, int *);
 NNG_DECL int nng_socket_get_size(nng_socket, const char *, size_t *);
