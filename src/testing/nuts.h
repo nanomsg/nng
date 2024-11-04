@@ -205,6 +205,7 @@ extern const char *nuts_garbled_crt;
 #define NUTS_ASSERT TEST_ASSERT
 #define NUTS_CASE TEST_CASE
 #define NUTS_MSG TEST_MSG
+#define NUTS_SKIP TEST_SKIP
 
 #define NUTS_TESTS TEST_LIST
 

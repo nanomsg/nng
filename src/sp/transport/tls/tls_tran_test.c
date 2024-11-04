@@ -312,6 +312,7 @@ test_tls_recv_max(void)
 void
 test_tls_psk(void)
 {
+#ifdef NNG_SUPP_TLS_PSK
 	char            msg[256];
 	char            buf[256];
 	nng_socket      s0;
@@ -348,6 +349,9 @@ test_tls_psk(void)
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c0);
 	nng_tls_config_free(c1);
+#else
+	NUTS_SKIP("no PSK support");
+#endif
 }
 
 NUTS_TESTS = {
@@ -360,8 +364,6 @@ NUTS_TESTS = {
 	{ "tls no delay option", test_tls_no_delay_option },
 	{ "tls keep alive option", test_tls_keep_alive_option },
 	{ "tls recv max", test_tls_recv_max },
-#ifdef NNG_SUPP_TLS_PSK
 	{ "tls pre-shared key", test_tls_psk },
-#endif
 	{ NULL, NULL },
 };

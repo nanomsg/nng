@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
@@ -60,6 +60,7 @@ test_sfd_listen(void)
 void
 test_sfd_accept(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	nng_socket   s1, s2;
 	nng_listener l;
 	int          fds[2];
@@ -74,11 +75,15 @@ test_sfd_accept(void)
 	NUTS_SLEEP(10);
 	NUTS_CLOSE(s1);
 	close(fds[1]);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sfd_exchange(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	nng_socket   s1, s2;
 	nng_listener l1, l2;
 	int          fds[2];
@@ -101,11 +106,15 @@ test_sfd_exchange(void)
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
 	close(fds[1]);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sfd_exchange_late(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	nng_socket   s1, s2;
 	nng_listener l1, l2;
 	int          fds[2];
@@ -128,11 +137,15 @@ test_sfd_exchange_late(void)
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
 	close(fds[1]);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sfd_recv_max(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	char         msg[256];
 	char         buf[256];
 	nng_socket   s0;
@@ -169,11 +182,15 @@ test_sfd_recv_max(void)
 	NUTS_FAIL(nng_recv(s0, buf, &sz, 0), NNG_ETIMEDOUT);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sfd_large(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	char        *buf;
 	nng_socket   s0;
 	nng_socket   s1;
@@ -230,11 +247,15 @@ test_sfd_large(void)
 	NUTS_CLOSE(s1);
 	nng_msg_free(msg);
 	nng_free(buf, sz);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sockfd_close_pending(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	// this test verifies that closing a socket pair that has not
 	// started negotiation with the other side still works.
 	int          fds[2];
@@ -248,11 +269,15 @@ test_sockfd_close_pending(void)
 	nng_msleep(10);
 	NUTS_CLOSE(s0);
 	close(fds[1]);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sockfd_close_peer(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	// this test verifies that closing a socket peer
 	// during negotiation is ok.
 	int          fds[2];
@@ -266,11 +291,15 @@ test_sockfd_close_peer(void)
 	close(fds[1]);
 	nng_msleep(100);
 	NUTS_CLOSE(s0);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sockfd_listener_sockaddr(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	// this test verifies that closing a socket peer
 	// during negotiation is ok.
 	int          fds[2];
@@ -286,11 +315,15 @@ test_sockfd_listener_sockaddr(void)
 	NUTS_ASSERT(sa.s_family == NNG_AF_UNSPEC);
 	close(fds[1]);
 	NUTS_CLOSE(s0);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sockfd_pipe_sockaddr(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	// this test verifies that closing a socket peer
 	// during negotiation is ok.
 	int          fds[2];
@@ -322,11 +355,15 @@ test_sockfd_pipe_sockaddr(void)
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 	nng_msg_free(msg);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sockfd_pipe_peer(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	// this test verifies that closing a socket peer
 	// during negotiation is ok.
 	int          fds[2];
@@ -375,6 +412,9 @@ test_sockfd_pipe_peer(void)
 	nng_msg_free(msg);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
@@ -384,6 +424,7 @@ test_sfd_listen_full(void)
 #define NNG_SFD_LISTEN_QUEUE 16
 #endif
 
+#ifdef NNG_HAVE_SOCKETPAIR
 	int          fds[NNG_SFD_LISTEN_QUEUE * 2];
 	nng_socket   s;
 	int          i;
@@ -410,11 +451,15 @@ test_sfd_listen_full(void)
 		close(fds[i]);
 	}
 	NUTS_CLOSE(s);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sfd_fd_option_type(void)
 {
+#ifdef NNG_HAVE_SOCKETPAIR
 	nng_socket   s;
 	nng_listener l;
 
@@ -423,12 +468,15 @@ test_sfd_fd_option_type(void)
 	NUTS_FAIL(
 	    nng_listener_set_bool(l, NNG_OPT_SOCKET_FD, false), NNG_EBADTYPE);
 	NUTS_CLOSE(s);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
 }
 
 void
 test_sfd_fd_dev_zero(void)
 {
-#ifdef NNG_PLATFORM_POSIX
+#ifdef NNG_HAVE_SOCKETPAIR
 	nng_socket   s;
 	nng_listener l;
 	int          fd;
@@ -441,13 +489,14 @@ test_sfd_fd_dev_zero(void)
 	NUTS_PASS(nng_listener_set_int(l, NNG_OPT_SOCKET_FD, fd));
 	nng_msleep(100);
 	NUTS_CLOSE(s);
+#else
+	NUTS_SKIP("no socketpair");
 #endif
 }
 
 NUTS_TESTS = {
 	{ "socket connect fail", test_sfd_connect_fail },
 	{ "socket malformed address", test_sfd_malformed_address },
-#ifdef NNG_HAVE_SOCKETPAIR
 	{ "socket listen", test_sfd_listen },
 	{ "socket accept", test_sfd_accept },
 	{ "socket exchange", test_sfd_exchange },
@@ -462,7 +511,5 @@ NUTS_TESTS = {
 	{ "socket listen full", test_sfd_listen_full },
 	{ "socket bad fd type", test_sfd_fd_option_type },
 	{ "socket dev zero", test_sfd_fd_dev_zero },
-#endif
-
 	{ NULL, NULL },
 };

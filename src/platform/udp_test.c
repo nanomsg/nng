@@ -366,10 +366,10 @@ test_udp_multicast_send_recv(void)
 	nng_aio_free(aio2);
 }
 
-#ifdef NNG_ENABLE_IPV6
 void
 test_udp_send_v6_from_v4(void)
 {
+#ifdef NNG_ENABLE_IPV6
 	int           rv;
 	nng_udp      *u1;
 	nng_sockaddr  sa = { 0 };
@@ -403,8 +403,10 @@ test_udp_send_v6_from_v4(void)
 
 	nng_aio_free(aio1);
 	nng_udp_close(u1);
+#else
+	NUTS_SKIP("IPv6 not enabled");
+#endif
 }
-#endif // NNG_ENABLE_IPV6
 
 NUTS_TESTS = {
 	{ "udp pair", test_udp_pair },
@@ -415,8 +417,6 @@ NUTS_TESTS = {
 	{ "udp duplicate bind", test_udp_duplicate_bind },
 	{ "udp multicast membership", test_udp_multicast_membership },
 	{ "udp multicast send recv", test_udp_multicast_send_recv },
-#ifdef NNG_ENABLE_IPV6
 	{ "udp send v6 from v4", test_udp_send_v6_from_v4 },
-#endif
 	{ NULL, NULL },
 };
