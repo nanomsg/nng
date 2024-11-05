@@ -237,20 +237,71 @@ test_udp_multi_send_recv(void)
 	NUTS_CLOSE(s1);
 }
 
+typedef struct {
+	nng_aio    *aio;
+	int         pass;
+	int         fail;
+	const char *expect;
+	size_t      len;
+	nng_socket  sock;
+} udp_recv_count;
+
+void
+udp_recv_count_cb(void *arg)
+{
+	udp_recv_count *c = arg;
+	nng_msg        *m;
+	int             rv;
+
+	rv = nng_aio_result(c->aio);
+	switch (rv) {
+	case NNG_ECLOSED:
+	case NNG_ECANCELED:
+		c->fail++;
+		return;
+	case NNG_ETIMEDOUT:
+		c->fail++;
+		break;
+	case 0:
+		m = nng_aio_get_msg(c->aio);
+		nng_aio_set_msg(c->aio, NULL);
+		if (nng_msg_len(m) != c->len) {
+			c->fail++;
+		} else {
+			c->pass++;
+		}
+		nng_msg_free(m);
+		break;
+	default:
+		c->fail++;
+		nng_log_warn(
+		    NULL, "Unexpected recv error %s", nng_strerror(rv));
+		break;
+	}
+
+	nng_aio_set_timeout(c->aio, 1000);
+	nng_recv_aio(c->sock, c->aio);
+}
+
+// This test uses callbacks above to ensure we
+// receive as quickly as possible, reducing the likelihood
+// of dropped messages.
 void
 test_udp_multi_small_burst(void)
 {
-	char         msg[256];
-	char         buf[256];
-	nng_socket   s0;
-	nng_socket   s1;
-	nng_listener l;
-	nng_dialer   d;
-	size_t       sz;
-	char        *addr;
+	char           msg[256];
+	nng_socket     s0;
+	nng_socket     s1;
+	nng_listener   l;
+	nng_dialer     d;
+	size_t         sz;
+	char          *addr;
+	udp_recv_count rc = { 0 };
 
 	NUTS_ENABLE_LOG(NNG_LOG_NOTICE);
 	NUTS_ADDR(addr, "udp");
+
+	NUTS_PASS(nng_aio_alloc(&rc.aio, udp_recv_count_cb, &rc));
 
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 10));
@@ -273,7 +324,7 @@ test_udp_multi_small_burst(void)
 	float actual  = 0;
 	float expect  = 0;
 	float require = 0.50;
-	int   burst   = 4;
+	int   burst   = 20;
 	int   count   = 40;
 #if defined(NNG_PLATFORM_WINDOWS)
 	// Windows seems to drop a lot - maybe because of virtualization
@@ -299,6 +350,12 @@ test_udp_multi_small_burst(void)
 	require = 0.0;
 #endif
 
+	rc.sock   = s0;
+	rc.len    = 95;
+	rc.expect = msg;
+
+	nng_recv_aio(rc.sock, rc.aio);
+
 	// Experimentally at least on Darwin, we see some packet losses
 	// even for loopback.  Loss rates appear depressingly high.
 	for (int i = 0; i < count; i++) {
@@ -306,20 +363,12 @@ test_udp_multi_small_burst(void)
 			(void) nng_send(s1, msg, 95, 0);
 			expect++;
 		}
-		for (int j = 0; j < burst; j++) {
-			if (nng_recv(s0, buf, &sz, 0) == 0) {
-				if (sz != 95) {
-					NUTS_TRUE(sz == 95);
-				}
-				actual++;
-			}
-		}
-		(void) nng_send(s0, msg, 95, 0);
-		(void) nng_recv(s1, buf, &sz, 0);
-		if (sz != 95) {
-			NUTS_TRUE(sz == 95);
-		}
+		nng_msleep(20);
 	}
+	nng_msleep(10);
+	nng_aio_stop(rc.aio);
+	nng_aio_free(rc.aio);
+	actual = rc.pass;
 	NUTS_TRUE(actual <= expect);
 	NUTS_TRUE(actual / expect > require);
 	nng_log_notice("UDP", "Packet loss: %.02f (got %.f of %.f)",
