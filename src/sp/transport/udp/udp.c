@@ -676,9 +676,15 @@ udp_recv_data(udp_ep *ep, udp_sp_data *dreq, size_t len, nng_sockaddr *sa)
 		return;
 	}
 
+	// We have a choice to make.  Drop this message (easiest), or
+	// drop the oldest.  We drop the oldest because generally we
+	// find that applications prefer to have more recent data rather
+	// than keeping stale data.
 	if (nni_lmq_full(&p->rx_mq)) {
+		nni_msg *old;
+		(void) nni_lmq_get(&p->rx_mq, &old);
+		nni_msg_free(old);
 		nni_stat_inc(&ep->st_rcv_nobuf, 1);
-		return;
 	}
 
 	// Short message, just alloc and copy
