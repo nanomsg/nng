@@ -686,14 +686,6 @@ struct nni_sp_tran nni_inproc_tran = {
 	.tran_fini     = inproc_fini,
 };
 
-#ifndef NNG_ELIDE_DEPRECATED
-int
-nng_inproc_register(void)
-{
-	return (nni_init());
-}
-#endif
-
 void
 nni_sp_inproc_register(void)
 {

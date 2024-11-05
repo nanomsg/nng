@@ -670,20 +670,6 @@ static nni_sp_tran ws6_tran = {
 	.tran_fini     = wstran_fini,
 };
 
-#ifndef NNG_ELIDE_DEPRECATED
-int
-nng_ws_register(void)
-{
-	return (nni_init());
-}
-
-int
-nng_wss_register(void)
-{
-	return (nni_init());
-}
-#endif
-
 void
 nni_sp_ws_register(void)
 {

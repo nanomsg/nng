@@ -1272,14 +1272,6 @@ static nni_sp_tran tcp6_tran = {
 };
 #endif
 
-#ifndef NNG_ELIDE_DEPRECATED
-int
-nng_tcp_register(void)
-{
-	return (nni_init());
-}
-#endif
-
 void
 nni_sp_tcp_register(void)
 {
