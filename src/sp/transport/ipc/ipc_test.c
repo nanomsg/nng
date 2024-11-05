@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <nng/nng.h>
 #include <nuts.h>
 
 #ifdef NNG_PLATFORM_POSIX
@@ -174,6 +175,92 @@ test_ipc_recv_max(void)
 	NUTS_FAIL(nng_recv(s0, rcvbuf, &sz, 0), NNG_ETIMEDOUT);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+}
+
+void
+test_ipc_connect_blocking(void)
+{
+	nng_socket           s0;
+	nng_stream_listener *l;
+	char                *addr;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_PASS(nng_stream_listener_listen(l));
+
+	NUTS_PASS(nng_dial(s0, addr, NULL, NNG_FLAG_NONBLOCK));
+	nng_msleep(100);
+	NUTS_CLOSE(s0);
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+}
+
+void
+test_ipc_connect_blocking_accept(void)
+{
+	nng_socket           s0;
+	nng_stream_listener *l;
+	char                *addr;
+	nng_aio             *aio;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_PASS(nng_stream_listener_listen(l));
+
+	NUTS_PASS(nng_dial(s0, addr, NULL, NNG_FLAG_NONBLOCK));
+	nng_msleep(100);
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_stream_listener_accept(l, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_stream_close(nng_aio_get_output(aio, 0));
+	nng_stream_free(nng_aio_get_output(aio, 0));
+	nng_aio_free(aio);
+	NUTS_CLOSE(s0);
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+}
+
+void
+test_ipc_listener_clean_stale(void)
+{
+#ifdef NNG_PLATFORM_POSIX
+	nng_socket           s0;
+	nng_stream_listener *l;
+	char                *addr;
+	char                *path;
+	char                 renamed[256];
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	path = addr + strlen("ipc://");
+	snprintf(renamed, sizeof(renamed), "%s.renamed", path);
+	NUTS_ASSERT(rename(path, renamed) == 0);
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+	nng_msleep(100);
+	// put it back
+	NUTS_ASSERT(rename(renamed, path) == 0);
+
+	NUTS_PASS(nng_listen(s0, addr, NULL, 0));
+	nng_msleep(50);
+	NUTS_CLOSE(s0);
+#else
+	NUTS_SKIP("Not POSIX.");
+#endif
 }
 
 void
@@ -438,7 +525,7 @@ test_ipc_pipe_peer(void)
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 #else
-	NUTS_SKIP("Not POSIX.")
+	NUTS_SKIP("Not POSIX.");
 #endif // NNG_PLATFORM_POSIX
 }
 
@@ -449,6 +536,9 @@ TEST_LIST = {
 	{ "ipc listener perms", test_ipc_listener_perms },
 	{ "ipc listener props", test_ipc_listener_properties },
 	{ "ipc recv max", test_ipc_recv_max },
+	{ "ipc connect blocking", test_ipc_connect_blocking },
+	{ "ipc connect blocking accept", test_ipc_connect_blocking_accept },
+	{ "ipc listen cleanup stale", test_ipc_listener_clean_stale },
 	{ "ipc abstract sockets", test_abstract_sockets },
 	{ "ipc abstract auto bind", test_abstract_auto_bind },
 	{ "ipc abstract name too long", test_abstract_too_long },
