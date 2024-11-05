@@ -323,4 +323,7 @@ do_pubdrop(int argc, char **argv)
 	printf("Drop rate %.2f%%\n", expect ? 100.0 * missing / expect : 0);
 
 	nng_mtx_unlock(pa.mtx);
+	nng_cv_free(pa.cv);
+	nng_mtx_free(pa.mtx);
+	free(thrs);
 }
