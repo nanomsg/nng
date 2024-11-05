@@ -1,5 +1,5 @@
 #
-# Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -30,6 +30,7 @@ if (NNG_TESTS)
     add_test (NAME nng.inproc_thr COMMAND inproc_thr 1400 10000)
     set_tests_properties (nng.inproc_thr PROPERTIES TIMEOUT 30)
 
+    add_test (NAME nng.pubdrop COMMAND pubdrop inproc://junk 64 1000 2 1)
     add_executable (pubdrop pubdrop.c)
     target_link_libraries(pubdrop nng nng_private)
 endif ()
