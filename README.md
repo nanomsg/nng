@@ -4,7 +4,7 @@
 [![Linux Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/linux.yml?branch=main&logoColor=grey&logo=ubuntu&label=)](https://github.com/nanomsg/nng/actions)
 [![Windows Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/windows.yml?branch=main&logoColor=grey&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0ODc1IDQ4NzUiPjxwYXRoIGZpbGw9ImdyZXkiIGQ9Ik0wIDBoMjMxMXYyMzEwSDB6bTI1NjQgMGgyMzExdjIzMTBIMjU2NHpNMCAyNTY0aDIzMTF2MjMxMUgwem0yNTY0IDBoMjMxMXYyMzExSDI1NjQiLz48L3N2Zz4=&label=)](https://github.com/nanomsg/nng/actions)
 [![macOS Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/darwin.yml?branch=main&logoColor=grey&logo=apple&label=)](https://github.com/nanomsg/nng/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/nanomsg/nng/main?logo=codecov&logoColor=grey&label=)](https://codecov.io/gh/nanomsg/nng/tree/main)
+[![Coverage](https://img.shields.io/codecov/c/github/nanomsg/nng/branch/main?logo=codecov&logoColor=grey&label=)](https://codecov.io/gh/nanomsg/nng/tree/main)
 [![Discord](https://img.shields.io/discord/639573728212156478?label=&logo=discord)](https://discord.gg/Xnac6b9)
 [![Manual](https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue)](https://nng.nanomsg.org/man)
 [![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/main/LICENSE.txt)
