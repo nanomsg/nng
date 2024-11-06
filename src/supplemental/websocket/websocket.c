@@ -2126,6 +2126,7 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 
 	NNI_LIST_INIT(&l->pend, nni_ws, node);
 	NNI_LIST_INIT(&l->reply, nni_ws, node);
+	NNI_LIST_INIT(&l->headers, ws_header, node);
 
 	// make a private copy of the url structure.
 	if ((rv = nng_url_clone(&l->url, url)) != 0) {
@@ -2651,6 +2652,7 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	}
 	NNI_LIST_INIT(&d->headers, ws_header, node);
 	NNI_LIST_INIT(&d->wspend, nni_ws, node);
+	NNI_LIST_INIT(&d->headers, ws_header, node);
 	nni_mtx_init(&d->mtx);
 	nni_cv_init(&d->cv, &d->mtx);
 
