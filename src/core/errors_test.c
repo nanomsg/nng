@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,6 +15,7 @@
 static void
 test_known_errors(void)
 {
+	NUTS_MATCH(nng_strerror(0), "Hunky dory");
 	NUTS_MATCH(nng_strerror(NNG_ECLOSED), "Object closed");
 	NUTS_MATCH(nng_strerror(NNG_ETIMEDOUT), "Timed out");
 }
