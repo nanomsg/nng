@@ -80,7 +80,7 @@ static void
 ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 {
 	nni_ipc_dialer *d = arg;
-	nni_ipc_conn *  c;
+	nni_ipc_conn   *c;
 
 	nni_mtx_lock(&d->mtx);
 	if ((!nni_aio_list_active(aio)) ||
@@ -100,9 +100,9 @@ ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 static void
 ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 {
-	nni_ipc_conn *  c = arg;
+	nni_ipc_conn   *c = arg;
 	nni_ipc_dialer *d = c->dialer;
-	nni_aio *       aio;
+	nni_aio        *aio;
 	int             rv;
 
 	nni_mtx_lock(&d->mtx);
@@ -153,9 +153,9 @@ ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 void
 ipc_dialer_dial(void *arg, nni_aio *aio)
 {
-	ipc_dialer *            d = arg;
-	nni_ipc_conn *          c;
-	nni_posix_pfd *         pfd = NULL;
+	ipc_dialer             *d = arg;
+	nni_ipc_conn           *c;
+	nni_posix_pfd          *pfd = NULL;
 	struct sockaddr_storage ss;
 	size_t                  len;
 	int                     fd;
@@ -205,7 +205,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		goto error;
 	}
 	if (connect(fd, (void *) &ss, len) != 0) {
-		if (errno != EINPROGRESS) {
+		if (errno != EINPROGRESS && errno != EAGAIN) {
 			if (errno == ENOENT) {
 				// No socket present means nobody listening.
 				rv = NNG_ECONNREFUSED;

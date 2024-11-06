@@ -230,6 +230,27 @@ test_ipc_connect_blocking_accept(void)
 }
 
 void
+test_ipc_listen_accept_cancel(void)
+{
+	nng_stream_listener *l;
+	char                *addr;
+	nng_aio             *aio;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	nng_stream_listener_accept(l, aio);
+	nng_msleep(100);
+	nng_aio_free(aio);
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+}
+
+void
 test_ipc_listener_clean_stale(void)
 {
 #ifdef NNG_PLATFORM_POSIX
@@ -539,6 +560,7 @@ TEST_LIST = {
 	{ "ipc connect blocking", test_ipc_connect_blocking },
 	{ "ipc connect blocking accept", test_ipc_connect_blocking_accept },
 	{ "ipc listen cleanup stale", test_ipc_listener_clean_stale },
+	{ "ipc listen accept cancel", test_ipc_listen_accept_cancel },
 	{ "ipc abstract sockets", test_abstract_sockets },
 	{ "ipc abstract auto bind", test_abstract_auto_bind },
 	{ "ipc abstract name too long", test_abstract_too_long },

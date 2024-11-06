@@ -27,7 +27,7 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          yml: ./.codecov.yml
+          codecov_yml_path: ./.codecov.yml
 
   darwin-coverage:
     name: darwin

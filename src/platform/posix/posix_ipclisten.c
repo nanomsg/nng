@@ -31,12 +31,12 @@
 
 typedef struct {
 	nng_stream_listener sl;
-	nni_posix_pfd *     pfd;
+	nni_posix_pfd      *pfd;
 	nng_sockaddr        sa;
 	nni_list            acceptq;
 	bool                started;
 	bool                closed;
-	char *              path;
+	char               *path;
 	mode_t              perms;
 	nni_mtx             mtx;
 } ipc_listener;
@@ -45,7 +45,7 @@ static void
 ipc_listener_doclose(ipc_listener *l)
 {
 	nni_aio *aio;
-	char *   path;
+	char    *path;
 
 	l->closed = true;
 	while ((aio = nni_list_first(&l->acceptq)) != NULL) {
@@ -82,7 +82,7 @@ ipc_listener_doaccept(ipc_listener *l)
 		int            fd;
 		int            rv;
 		nni_posix_pfd *pfd;
-		nni_ipc_conn * c;
+		nni_ipc_conn  *c;
 
 		fd = nni_posix_pfd_fd(l->pfd);
 
@@ -302,13 +302,13 @@ ipc_listener_chmod(ipc_listener *l, const char *path)
 int
 ipc_listener_listen(void *arg)
 {
-	ipc_listener *          l = arg;
+	ipc_listener           *l = arg;
 	socklen_t               len;
 	struct sockaddr_storage ss;
 	int                     rv;
 	int                     fd;
-	nni_posix_pfd *         pfd;
-	char *                  path;
+	nni_posix_pfd          *pfd;
+	char                   *path;
 
 	if ((len = nni_posix_nn2sockaddr(&ss, &l->sa)) < sizeof(sa_family_t)) {
 		return (NNG_EADDRINVAL);
@@ -358,8 +358,7 @@ ipc_listener_listen(void *arg)
 		}
 	}
 
-	if ((rv != 0) ||
-	    (ipc_listener_chmod(l, path) != 0) ||
+	if ((rv != 0) || (ipc_listener_chmod(l, path) != 0) ||
 	    (listen(fd, 128) != 0)) {
 		rv = nni_plat_errno(errno);
 	}
@@ -407,7 +406,7 @@ ipc_listener_listen(void *arg)
 static void
 ipc_listener_free(void *arg)
 {
-	ipc_listener * l = arg;
+	ipc_listener  *l = arg;
 	nni_posix_pfd *pfd;
 
 	nni_mtx_lock(&l->mtx);
