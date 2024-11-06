@@ -32,13 +32,6 @@ nni_plat_printf(const char *fmt, ...)
 	va_end(ap);
 }
 
-void
-nni_plat_println(const char *message)
-{
-	fputs(message, stderr);
-	fputc('\n', stderr);
-}
-
 const char *
 nni_plat_strerror(int errnum)
 {
