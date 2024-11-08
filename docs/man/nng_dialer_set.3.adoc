@@ -19,7 +19,7 @@ nng_dialer_set - set dialer option
 ----
 #include <nng/nng.h>
 
-int nng_dialer_set(nng_dialer d, const char *opt, const void *val, 
+int nng_dialer_set(nng_dialer d, const char *opt, const void *val,
     size_t valsz);
 
 int nng_dialer_set_bool(nng_dialer d, const char *opt, bool bval);
@@ -63,7 +63,7 @@ This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _valsz_ is the
 size of the objected located at _val_.
 
-TIP: It may be easier to use one of the typed forms of this function.
+NOTE: This function is deprecated.  Use of the typed functions below instead.
 
 `nng_dialer_set_bool()`::
 This function is for options which take a Boolean (`bool`).

@@ -1,6 +1,6 @@
 = nng_tls_options(5)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -47,6 +47,13 @@ description of the option.
 
 === TLS Options
 
+NOTE: Options for configuring TLS are deprecated and may
+not be present in a future release.  These options are
+`NNG_OPT_TLS_AUTH_MODE`, `NNG_OPT_TLS_CA_FILE`, `NNG_OPT_TLS_CERT_KEY_FILE`,
+and `NNG_OPT_TLS_SERVER_NAME`.  Applications should switch to using the
+`NNG_OPT_TLS_CONFIG` option and working with `nng_tls_config` objects.
+
+
 [[NNG_OPT_TLS_AUTH_MODE]]((`NNG_OPT_TLS_AUTH_MODE`))::
 (`int`)
 Write-only option used to configure the authentication mode used.
@@ -76,8 +83,6 @@ configuration object before returning it.
 NOTE: The caller should release the hold with
 xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
 longer needs the TLS configuration object.
-+
-TIP: Use this option when more advanced TLS configuration is required.
 
 [[NNG_OPT_TLS_SERVER_NAME]]((`NNG_OPT_TLS_SERVER_NAME`))::
 (string)

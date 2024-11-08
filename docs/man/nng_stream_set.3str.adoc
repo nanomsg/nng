@@ -1,6 +1,6 @@
 = nng_stream_set(3str)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -62,7 +62,7 @@ This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _size_ is the
 size of the objected located at _val_.
 +
-TIP: It may be easier to use one of the typed forms of this function.
+NOTE: This function is deprecated. Callers should use one of the typed functions instead.
 
 `nng_stream_set_bool()`::
 This function is for options which take a Boolean (`bool`).
@@ -104,10 +104,8 @@ This is typically used for identifiers, network numbers,
 and similar options.
 
 `nng_stream_set_addr()`::
-This function is used to configure a
-xref:nng_sockaddr.5.adoc[socket address].
-The value is copied, and thus the caller may discard the supplied
-value immediately after this function returns.
+This function performs no useful function, and will be removed in
+in a future release.
 
 == RETURN VALUES
 

@@ -62,7 +62,8 @@ This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _size_ is the
 size of the objected located at _val_.
 +
-TIP: It may be easier to use one of the typed forms of this function.
+NOTE: This function is deprecated and will be removed in a future release.
+Use one of the typed functions below instead.
 
 `nng_stream_dialer_set_bool()`::
 This function is for options which take a Boolean (`bool`).

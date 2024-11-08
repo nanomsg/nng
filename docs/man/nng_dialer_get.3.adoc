@@ -75,7 +75,7 @@ It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
 This can be used to determine the size of the buffer needed to receive
 the object.
 
-TIP: It may be easier to use one of the typed forms of this function.
+NOTE: This function is deprecated.  Use one of the typed functions listed below instead.
 
 `nng_dialer_get_bool()`::
 This function is for options which take a Boolean (`bool`).

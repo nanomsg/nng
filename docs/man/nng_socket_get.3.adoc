@@ -35,8 +35,6 @@ int nng_socket_get_ptr(nng_socket s, const char *opt, void **ptr);
 
 int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *durp);
 
-int nng_socket_get_addr(nng_socket s, const char *opt, nng_sockaddr *addrp);
-
 ----
 
 == DESCRIPTION

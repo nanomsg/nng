@@ -1,6 +1,6 @@
 = nng_stream_dialer_get(3str)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -42,7 +42,7 @@ int nng_stream_dialer_get_uint64(nng_stream_dialer *d, const char *opt, uint64_t
 == DESCRIPTION
 
 
-The `nng_stream_dialer_get()` functions are used to retrieve option values for the 
+The `nng_stream_dialer_get()` functions are used to retrieve option values for the
 xref:nng_stream_dialer.5.adoc[byte stream dialer] _d_.
 
 The actual options that may be retrieved in this way vary.
@@ -76,7 +76,7 @@ It is acceptable to pass `NULL` for _val_ if the value in _sizep_ is zero.
 This can be used to determine the size of the buffer needed to receive
 the object.
 +
-TIP: It may be easier to use one of the typed forms of this function.
+NOTE: This function is deprecated. Use one of the typed functions instead.
 
 `nng_stream_dialer_get_bool()`::
 This function is for options which take a Boolean (`bool`).

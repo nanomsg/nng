@@ -1,6 +1,6 @@
 = nng_stream_listener_set(3str)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -62,7 +62,7 @@ This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _size_ is the
 size of the objected located at _val_.
 +
-TIP: It may be easier to use one of the typed forms of this function.
+NOTE: This function is deprecated.  Use one of the typed forms instead.
 
 `nng_stream_listener_set_bool()`::
 This function is for options which take a Boolean (`bool`).
