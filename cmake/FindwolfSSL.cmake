@@ -55,10 +55,10 @@ file(STRINGS ${WOLFSSL_INCLUDE_DIR}/wolfssl/version.h _WOLFSSL_VERLINE
     REGEX "^#define[ \t]+LIBWOLFSSL_VERSION_STRING[\t ].*")
 string(REGEX REPLACE ".*WOLFSSL_VERSION_STRING[\t ]+\"(.*)\"" "\\1" WOLFSSL_VERSION ${_WOLFSSL_VERLINE})
 
-add_library(wolfSSL::wolfssl UNKNOWN IMPORTED)
+add_library(wolfssl::wolfssl UNKNOWN IMPORTED)
 
-set_target_properties(wolfSSL::wolfssl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WOLFSSL_INCLUDE_DIR}")
-set_target_properties(wolfSSL::wolfssl PROPERTIES IMPORTED_LOCATION "${WOLFSSL_LIBRARY}")
+set_target_properties(wolfssl::wolfssl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${WOLFSSL_INCLUDE_DIR}")
+set_target_properties(wolfssl::wolfssl PROPERTIES IMPORTED_LOCATION "${WOLFSSL_LIBRARY}")
 
 set(wolfSSL_TARGET wolfssl::wolfssl)
 
