@@ -468,11 +468,13 @@ nng_ctx_get_ms(nng_ctx id, const char *n, nng_duration *v)
 	return (ctx_get(id, n, v, NULL, NNI_TYPE_DURATION));
 }
 
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_ctx_get_addr(nng_ctx id, const char *n, nng_sockaddr *v)
 {
 	return (ctx_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
 }
+#endif
 
 static int
 ctx_set(nng_ctx id, const char *n, const void *v, size_t sz, nni_type t)
@@ -540,11 +542,13 @@ nng_ctx_set_string(nng_ctx id, const char *n, const char *v)
 	    ctx_set(id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
 }
 
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_ctx_set_addr(nng_ctx id, const char *n, const nng_sockaddr *v)
 {
 	return (ctx_set(id, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
 }
+#endif
 
 int
 nng_dial(nng_socket sid, const char *addr, nng_dialer *dp, int flags)

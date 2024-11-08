@@ -468,7 +468,6 @@ NNG_DECL int nng_ctx_get_uint64(nng_ctx, const char *, uint64_t *);
 NNG_DECL int nng_ctx_get_string(nng_ctx, const char *, char **);
 NNG_DECL int nng_ctx_get_ptr(nng_ctx, const char *, void **);
 NNG_DECL int nng_ctx_get_ms(nng_ctx, const char *, nng_duration *);
-NNG_DECL int nng_ctx_get_addr(nng_ctx, const char *, nng_sockaddr *);
 
 NNG_DECL int nng_ctx_set(nng_ctx, const char *, const void *, size_t);
 NNG_DECL int nng_ctx_set_bool(nng_ctx, const char *, bool);
@@ -478,7 +477,6 @@ NNG_DECL int nng_ctx_set_uint64(nng_ctx, const char *, uint64_t);
 NNG_DECL int nng_ctx_set_string(nng_ctx, const char *, const char *);
 NNG_DECL int nng_ctx_set_ptr(nng_ctx, const char *, void *);
 NNG_DECL int nng_ctx_set_ms(nng_ctx, const char *, nng_duration);
-NNG_DECL int nng_ctx_set_addr(nng_ctx, const char *, const nng_sockaddr *);
 
 // nng_alloc is used to allocate memory.  It's intended purpose is for
 // allocating memory suitable for message buffers with nng_send().
@@ -1173,8 +1171,6 @@ NNG_DECL int  nng_stream_set_size(nng_stream *, const char *, size_t);
 NNG_DECL int  nng_stream_set_uint64(nng_stream *, const char *, uint64_t);
 NNG_DECL int  nng_stream_set_string(nng_stream *, const char *, const char *);
 NNG_DECL int  nng_stream_set_ptr(nng_stream *, const char *, void *);
-NNG_DECL int  nng_stream_set_addr(
-     nng_stream *, const char *, const nng_sockaddr *);
 
 NNG_DECL int nng_stream_dialer_alloc(nng_stream_dialer **, const char *);
 NNG_DECL int nng_stream_dialer_alloc_url(
@@ -1441,6 +1437,12 @@ NNG_DECL int nng_pipe_getopt_string(
 // nng_closeall closes all open sockets. Do not call this from
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void) NNG_DEPRECATED;
+
+// THese functions are deprecated, but they really serve no useful purpose.
+NNG_DECL int  nng_stream_set_addr(
+     nng_stream *, const char *, const nng_sockaddr *) NNG_DEPRECATED;
+NNG_DECL int nng_ctx_get_addr(nng_ctx, const char *, nng_sockaddr *) NNG_DEPRECATED;
+NNG_DECL int nng_ctx_set_addr(nng_ctx, const char *, const nng_sockaddr *) NNG_DEPRECATED;
 
 #endif // NNG_ELIDE_DEPRECATED
 
