@@ -66,6 +66,12 @@
 [`nng_aio_result`]: /api/aio.md#result-of-operation
 [`nng_aio_count`]: /api/aio.md#result-of-operation
 [`nng_aio_set_timeout`]: /api/aio.md#set-timeout
+[`nng_socket_id`]: /api/sock.md#socket-identity
+[`nng_socket_raw`]: /api/sock.md#socket-identity
+[`nng_socket_proto_id`]: /api/sock.md#socket-identity
+[`nng_socket_proto_name`]: /api/sock.md#socket-identity
+[`nng_socket_peer_id`]: /api/sock.md#socket-identity
+[`nng_socket_peer_name`]: /api/sock.md#socket-identity
 [`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
 [`nng_aio_begin`]: /TODO.md
 [`nng_aio_defer`]: /TODO.md

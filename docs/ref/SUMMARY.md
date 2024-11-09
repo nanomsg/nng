@@ -8,6 +8,8 @@
 
   - [Messages](./api/msg.md)
 
+  - [Sockets](./api/sock.md)
+
   - [Memory](./api/memory.md)
 
   - [Time](./api/time.md)
