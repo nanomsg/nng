@@ -948,6 +948,118 @@ either directly by the application, or when the message was received by the prot
 }
 
 </style>
+<h1 id="sockets"><a class="header" href="#sockets">Sockets</a></h1>
+<p>Sockets <a name="a001"></a> in Scalability Protocols provide the handle for communication
+between peers. Sockets also encapsulate protocol specific semantics, such as
+filtering subscriptions, or automatically retrying requests.</p>
+<h2 id="socket-structure"><a class="header" href="#socket-structure">Socket Structure</a></h2>
+<pre><code class="language-c">#define NNG_SOCKET_INITIALIZER // opaque value
+
+typedef struct nng_socket_s nng_socket;
+</code></pre>
+<p>The <a name="a002"></a><code>nng_socket</code> structure represents socket. This is a handle, and
+the members of it are opaque. However, unlike a pointer, it is usually
+passed by value.</p>
+<p>A socket may be initialized statically with the <code>NNG_SOCKET_INITIALIZER</code> macro,
+to ensure that it cannot be confused with a valid open socket.</p>
+<h2 id="socket-identity"><a class="header" href="#socket-identity">Socket Identity</a></h2>
+<pre><code class="language-c">int nng_socket_id(nng_socket s);
+int nng_socket_raw(nng_socket s, bool *raw);
+int nng_socket_proto_id(nng_socket s, uint16_t *proto);
+int nng_socket_peer_id(nng_socket s, uint16_t *proto);
+int nng_socket_proto_name(nng_socket s, const char **name);
+int nng_socket_peer_name(nng_socket s, const char **name);
+</code></pre>
+<p>These functions are used to provide fundamental information about the socket <em>s</em>.
+Most applications will not need to use these functions.</p>
+<p>The <a name="a003"></a><code>nng_socket_id</code> function returns the numeric id, which will be a non-negative
+value, associated with the socket. If the socket is uninitialized (has never been opened),
+then the return value may be <code>-1</code>.</p>
+<p>The <a name="a004"></a><code>nng_socket_proto_id</code> and <a name="a005"></a><code>nng_socket_peer_id</code> functions provide the 16-bit
+protocol identifier for the socket’s protocol, and of the protocol peers will use when
+communicating with the socket.</p>
+<p>The <a name="a006"></a><code>nng_socket_proto_name</code> and <a name="a007"></a><code>nng_socket_peer_name</code> functions provide the ASCII
+names of the socket’s protocol, and of the protocol peers of the socket use.
+The value stored in <em>name</em> is a fixed string located in program text, and must not be freed
+or altered. It is guaranteed to remain valid while this library is present.</p>
+<p>The <a name="a008"></a><code>nng_socket_raw</code> function determines whether the socket is in
+<a href="api//TODO.html">raw mode</a> or not, storing <code>true</code> in <em>raw</em> if it is, or <code>false</code> if it is not.</p>
+<h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
+<h3 id="example-1-initializing-a-socket"><a class="header" href="#example-1-initializing-a-socket">Example 1: Initializing a Socket</a></h3>
+<pre><code class="language-c">nng_socket s = NNG_SOCKET_INITIALIZER;
+</code></pre>
+<!-- Symbol cross reference -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div><style>
+.mdbook-alerts {
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  border-left: 0.25em solid var(--mdbook-alerts-color);
+}
+
+.mdbook-alerts > *:first-child {
+  margin-top: 0;
+}
+
+.mdbook-alerts > *:last-child {
+  margin-bottom: 0;
+}
+
+.mdbook-alerts-title {
+  display: flex;
+  font-weight: 600;
+  align-items: center;
+  line-height: 1;
+  color: var(--mdbook-alerts-color);
+  text-transform: capitalize;
+}
+
+.mdbook-alerts-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.2em;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / 100%;
+  mask: no-repeat center / 100%;
+  -webkit-mask-image: var(--mdbook-alerts-icon);
+  mask-image: var(--mdbook-alerts-icon);
+}
+
+.mdbook-alerts-note {
+  --mdbook-alerts-color: rgb(9, 105, 218);
+  /* https://icon-sets.iconify.design/material-symbols/info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11q-.425 0-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8q0 .425.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12q0-3.35-2.325-5.675T12 4Q8.65 4 6.325 6.325T4 12q0 3.35 2.325 5.675T12 20m0-8"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-tip {
+  --mdbook-alerts-color: rgb(26, 127, 55);
+  /* https://icon-sets.iconify.design/material-symbols/lightbulb-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 22q-.825 0-1.412-.587T10 20h4q0 .825-.587 1.413T12 22m-3-3q-.425 0-.712-.288T8 18q0-.425.288-.712T9 17h6q.425 0 .713.288T16 18q0 .425-.288.713T15 19zm-.75-3q-1.725-1.025-2.738-2.75T4.5 9.5q0-3.125 2.188-5.312T12 2q3.125 0 5.313 2.188T19.5 9.5q0 2.025-1.012 3.75T15.75 16zm.6-2h6.3q1.125-.8 1.738-1.975T17.5 9.5q0-2.3-1.6-3.9T12 4Q9.7 4 8.1 5.6T6.5 9.5q0 1.35.613 2.525T8.85 14M12 14"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-important {
+  --mdbook-alerts-color: rgb(130, 80, 223);
+  /* https://icon-sets.iconify.design/material-symbols/chat-info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 7q.425 0 .713-.288T13 6q0-.425-.288-.712T12 5q-.425 0-.712.288T11 6q0 .425.288.713T12 7m0 8q.425 0 .713-.288T13 14v-4q0-.425-.288-.712T12 9q-.425 0-.712.288T11 10v4q0 .425.288.713T12 15m-6 3l-2.3 2.3q-.475.475-1.088.213T2 19.575V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-.85-2H20V4H4v13.125zM4 16V4z"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-warning {
+  --mdbook-alerts-color: rgb(154, 103, 0);
+  /* https://icon-sets.iconify.design/material-symbols/warning-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M2.725 21q-.275 0-.5-.137t-.35-.363q-.125-.225-.137-.488t.137-.512l9.25-16q.15-.25.388-.375T12 3q.25 0 .488.125t.387.375l9.25 16q.15.25.138.513t-.138.487q-.125.225-.35.363t-.5.137zm1.725-2h15.1L12 6zM12 18q.425 0 .713-.288T13 17q0-.425-.288-.712T12 16q-.425 0-.712.288T11 17q0 .425.288.713T12 18m0-3q.425 0 .713-.288T13 14v-3q0-.425-.288-.712T12 10q-.425 0-.712.288T11 11v3q0 .425.288.713T12 15m0-2.5"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-caution {
+  --mdbook-alerts-color: rgb(207, 34, 46);
+  /* https://icon-sets.iconify.design/material-symbols/brightness-alert-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16q0-.425-.288-.712T12 15q-.425 0-.712.288T11 16q0 .425.288.713T12 17m0-4q.425 0 .713-.288T13 12V8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8v4q0 .425.288.713T12 13m-3.35 7H6q-.825 0-1.412-.587T4 18v-2.65L2.075 13.4q-.275-.3-.425-.662T1.5 12q0-.375.15-.737t.425-.663L4 8.65V6q0-.825.588-1.412T6 4h2.65l1.95-1.925q.3-.275.663-.425T12 1.5q.375 0 .738.15t.662.425L15.35 4H18q.825 0 1.413.588T20 6v2.65l1.925 1.95q.275.3.425.663t.15.737q0 .375-.15.738t-.425.662L20 15.35V18q0 .825-.587 1.413T18 20h-2.65l-1.95 1.925q-.3.275-.662.425T12 22.5q-.375 0-.737-.15t-.663-.425zm.85-2l2.5 2.5l2.5-2.5H18v-3.5l2.5-2.5L18 9.5V6h-3.5L12 3.5L9.5 6H6v3.5L3.5 12L6 14.5V18zm2.5-6"%2F%3E%3C%2Fsvg%3E');
+}
+
+</style>
 <h1 id="memory"><a class="header" href="#memory">Memory</a></h1>
 <p>Managing <a name="a001"></a>memory and <a name="a002"></a>allocations is something that every C program has to deal with.
 In the case of <em>NNG</em>, it can be more complicated because the underlying platform
@@ -1800,7 +1912,7 @@ one thread (which may be chosen randomly).</p>
 all threads concurrently, but should only be used in circumstances where the application
 does not depend on <em>which</em> thread will be woken. When in doubt, <code>nng_cv_wake</code> is safer.</p>
 </div>
-<h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
+<h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
 <h3 id="example-1-allocating-the-condition-variable"><a class="header" href="#example-1-allocating-the-condition-variable">Example 1: Allocating the condition variable</a></h3>
 <pre><code class="language-c">	nng_mtx *m;
 	nng_cv *cv;
@@ -5691,6 +5803,13 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_PATCH_VERSION</code>, <a href="api/misc.html#a008">1</a><br/>
 <code>nng_random</code>, <a href="api/misc.html#a001">1</a><br/>
 <code>nng_sleep_aio</code>, <a href="api/time.html#a011">1</a><br/>
+<code>nng_socket</code>, <a href="api/sock.html#a002">1</a><br/>
+<code>nng_socket_id</code>, <a href="api/sock.html#a003">1</a><br/>
+<code>nng_socket_peer_id</code>, <a href="api/sock.html#a005">1</a><br/>
+<code>nng_socket_peer_name</code>, <a href="api/sock.html#a007">1</a><br/>
+<code>nng_socket_proto_id</code>, <a href="api/sock.html#a004">1</a><br/>
+<code>nng_socket_proto_name</code>, <a href="api/sock.html#a006">1</a><br/>
+<code>nng_socket_raw</code>, <a href="api/sock.html#a008">1</a><br/>
 <code>nng_stat</code>, <a href="api/stats.html#a002">1</a><br/>
 <code>nng_stat_bool</code>, <a href="api/stats.html#a021">1</a><br/>
 <code>NNG_STAT_BOOLEAN</code>, <a href="api/stats.html#a018">1</a><br/>
@@ -5756,6 +5875,7 @@ request/reply pattern, <a href="proto/rep.html#a003">1</a>, <a href="proto/req.h
 <em>RESPONDENT</em> protocol, <a href="proto/respondent.html#a001">1</a><br/>
 scheduling, <a href="api/time.html#a010">1</a><br/>
 service discovery, <a href="proto/surveyor.html#a006">1</a><br/>
+socket, <a href="api/sock.html#a001">1</a><br/>
 <em>socket</em> transport, <a href="tran/socket.html#a001">1</a><br/>
 <code>socket://</code>, <a href="tran/socket.html#a003">1</a><br/>
 statistics, <a href="api/stats.html#a001">1</a><br/>
