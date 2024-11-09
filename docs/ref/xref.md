@@ -72,6 +72,10 @@
 [`nng_socket_proto_name`]: /api/sock.md#socket-identity
 [`nng_socket_peer_id`]: /api/sock.md#socket-identity
 [`nng_socket_peer_name`]: /api/sock.md#socket-identity
+[`nng_sub0_ctx_subscribe`]: /TODO.md
+[`nng_sub0_ctx_unsubscribe`]: /TODO.md
+[`nng_sub0_socket_subscribe`]: /TODO.md
+[`nng_sub0_socket_unsubscribe`]: /TODO.md
 [`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
 [`nng_aio_begin`]: /TODO.md
 [`nng_aio_defer`]: /TODO.md

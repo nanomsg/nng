@@ -108,22 +108,24 @@ before bringing them into the socket itself.
 
 The `NNG_OPT_PROTO`, `NNG_OPT_PROTONAME`, `NNG_OPT_PEER`, and `NNG_OPT_PEERNAME` options
 have been replaced by functions instead of options.
-Use `nng_socket_proto_id`, `nng_socket_peer_id`, `nng_socket_proto_name`, and `nng_socket_peer_name` instead.
+Use [`nng_socket_proto_id`], [`nng_socket_peer_id`], [`nng_socket_proto_name`], and [`nng_socket_peer_name`] instead.
 Note that the new functions provide a reference to a static string, and thus do not require
 allocation, and the returned strings should not be freed. Also the IDs are provided as `uint16_t`,
 matching the actual wire protocol values, instead of `int`.
 
-The `NNG_OPT_RAW` option has aso been replaced by a function, `nng_socket_raw`.
+The `NNG_OPT_RAW` option has aso been replaced by a function, [`nng_socket_raw`].
 
 ## Subscriptions
 
 The `NNG_OPT_SUB_SUBSCRIBE` and `NNG_OPT_SUB_UNSUBCRIBE` options have been replaced by
-the following functions: `nng_sub0_socket_subscribe`, `nng_sub0_socket_unsubscribe`,
-`nng_sub0_ctx_subscribe` and `nng_sub0_ctx_unsubscribe`. These functions, like the options
+the following functions: [`nng_sub0_socket_subscribe`], [`nng_sub0_socket_unsubscribe`],
+[`nng_sub0_ctx_subscribe`] and [`nng_sub0_ctx_unsubscribe`]. These functions, like the options
 they replace, are only applicable to SUB sockets.
 
 ## Statistics Use Constified Pointers
 
-A number of the statistics functions take, or return, `const nng_stat *` instead
+A number of the [statistics][statistic] functions take, or return, `const nng_stat *` instead
 of plain `nng_stat *`. The ABI has not changed, but it may be necessary to declare
 certain methods variables `const` to avoid warnings about misuse of `const`.
+
+{{#include ../xref.md}}
