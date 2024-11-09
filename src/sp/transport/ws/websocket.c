@@ -597,6 +597,20 @@ wstran_dialer_setopt(
 }
 
 static int
+wstran_dialer_get_tls(void *arg, nng_tls_config **tls)
+{
+	ws_dialer *d = arg;
+	return (nni_stream_dialer_get_tls(d->dialer, tls));
+}
+
+static int
+wstran_dialer_set_tls(void *arg, nng_tls_config *tls)
+{
+	ws_dialer *d = arg;
+	return (nni_stream_dialer_set_tls(d->dialer, tls));
+}
+
+static int
 wstran_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -624,6 +638,20 @@ wstran_listener_set(
 	return (rv);
 }
 
+static int
+wstran_listener_get_tls(void *arg, nng_tls_config **tls)
+{
+	ws_listener *l = arg;
+	return (nni_stream_listener_get_tls(l->listener, tls));
+}
+
+static int
+wstran_listener_set_tls(void *arg, nng_tls_config *tls)
+{
+	ws_listener *l = arg;
+	return (nni_stream_listener_set_tls(l->listener, tls));
+}
+
 static nni_sp_dialer_ops ws_dialer_ops = {
 	.d_init    = wstran_dialer_init,
 	.d_fini    = wstran_dialer_fini,
@@ -631,16 +659,20 @@ static nni_sp_dialer_ops ws_dialer_ops = {
 	.d_close   = wstran_dialer_close,
 	.d_setopt  = wstran_dialer_setopt,
 	.d_getopt  = wstran_dialer_getopt,
+	.d_get_tls = wstran_dialer_get_tls,
+	.d_set_tls = wstran_dialer_set_tls,
 };
 
 static nni_sp_listener_ops ws_listener_ops = {
-	.l_init   = wstran_listener_init,
-	.l_fini   = wstran_listener_fini,
-	.l_bind   = ws_listener_bind,
-	.l_accept = wstran_listener_accept,
-	.l_close  = wstran_listener_close,
-	.l_setopt = wstran_listener_set,
-	.l_getopt = wstran_listener_get,
+	.l_init    = wstran_listener_init,
+	.l_fini    = wstran_listener_fini,
+	.l_bind    = ws_listener_bind,
+	.l_accept  = wstran_listener_accept,
+	.l_close   = wstran_listener_close,
+	.l_setopt  = wstran_listener_set,
+	.l_getopt  = wstran_listener_get,
+	.l_get_tls = wstran_listener_get_tls,
+	.l_set_tls = wstran_listener_set_tls,
 };
 
 static nni_sp_tran ws_tran = {

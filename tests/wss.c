@@ -179,7 +179,7 @@ init_dialer_wss(nng_dialer d)
 	    0) {
 		goto out;
 	}
-	rv = nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, cfg);
+	rv = nng_dialer_set_tls(d, cfg);
 
 out:
 	nng_tls_config_free(cfg);
@@ -199,7 +199,7 @@ init_listener_wss(nng_listener l)
 		goto out;
 	}
 
-	if ((rv = nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, cfg)) != 0) {
+	if ((rv = nng_listener_set_tls(l, cfg)) != 0) {
 		// We can wind up with EBUSY from the server already running.
 		if (rv == NNG_EBUSY) {
 			rv = 0;

@@ -9,6 +9,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 #include "core/strs.h"
 #include "nng/nng.h"
@@ -505,6 +506,24 @@ nni_listener_getopt(
 	}
 
 	return (nni_sock_getopt(l->l_sock, name, val, szp, t));
+}
+
+int
+nni_listener_get_tls(nni_listener *l, nng_tls_config **cfgp)
+{
+	if (l->l_ops.l_get_tls == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (l->l_ops.l_get_tls(l->l_data, cfgp));
+}
+
+int
+nni_listener_set_tls(nni_listener *l, nng_tls_config *cfg)
+{
+	if (l->l_ops.l_set_tls == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (l->l_ops.l_set_tls(l->l_data, cfg));
 }
 
 void

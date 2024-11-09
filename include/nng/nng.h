@@ -357,6 +357,7 @@ NNG_DECL int nng_dialer_set_ptr(nng_dialer, const char *, void *);
 NNG_DECL int nng_dialer_set_ms(nng_dialer, const char *, nng_duration);
 NNG_DECL int nng_dialer_set_addr(
     nng_dialer, const char *, const nng_sockaddr *);
+NNG_DECL int nng_dialer_set_tls(nng_dialer, nng_tls_config *);
 
 NNG_DECL int nng_dialer_get_bool(nng_dialer, const char *, bool *);
 NNG_DECL int nng_dialer_get_int(nng_dialer, const char *, int *);
@@ -366,6 +367,7 @@ NNG_DECL int nng_dialer_get_string(nng_dialer, const char *, char **);
 NNG_DECL int nng_dialer_get_ptr(nng_dialer, const char *, void **);
 NNG_DECL int nng_dialer_get_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_get_addr(nng_dialer, const char *, nng_sockaddr *);
+NNG_DECL int nng_dialer_get_tls(nng_dialer, nng_tls_config **);
 
 NNG_DECL int nng_listener_set_bool(nng_listener, const char *, bool);
 NNG_DECL int nng_listener_set_int(nng_listener, const char *, int);
@@ -376,6 +378,7 @@ NNG_DECL int nng_listener_set_ptr(nng_listener, const char *, void *);
 NNG_DECL int nng_listener_set_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_set_addr(
     nng_listener, const char *, const nng_sockaddr *);
+NNG_DECL int nng_listener_set_tls(nng_listener, nng_tls_config *);
 
 NNG_DECL int nng_listener_get_bool(nng_listener, const char *, bool *);
 NNG_DECL int nng_listener_get_int(nng_listener, const char *, int *);
@@ -385,6 +388,7 @@ NNG_DECL int nng_listener_get_string(nng_listener, const char *, char **);
 NNG_DECL int nng_listener_get_ptr(nng_listener, const char *, void **);
 NNG_DECL int nng_listener_get_ms(nng_listener, const char *, nng_duration *);
 NNG_DECL int nng_listener_get_addr(nng_listener, const char *, nng_sockaddr *);
+NNG_DECL int nng_listener_get_tls(nng_listener, nng_tls_config **);
 
 // nng_strerror returns a human-readable string associated with the error
 // code supplied.
@@ -734,15 +738,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
 
 // TLS options are only used when the underlying transport supports TLS.
-
-// NNG_OPT_TLS_CONFIG is a pointer to a nng_tls_config object.  Generally
-// this can be used with endpoints, although once an endpoint is started, or
-// once a configuration is used, the value becomes read-only. Note that
-// when configuring the object, a hold is placed on the TLS configuration,
-// using a reference count.  When retrieving the object, no such hold is
-// placed, and so the caller must take care not to use the associated object
-// after the endpoint it is associated with is closed.
-#define NNG_OPT_TLS_CONFIG "tls-config"
 
 // NNG_OPT_TLS_VERIFIED returns a boolean indicating whether the peer has
 // been verified (true) or not (false). Typically, this is read-only, and
@@ -1188,6 +1183,13 @@ NNG_DECL int nng_stream_dialer_set_ptr(
 NNG_DECL int nng_stream_dialer_set_addr(
     nng_stream_dialer *, const char *, const nng_sockaddr *);
 
+// Note that when configuring the object, a hold is placed on the TLS
+// configuration, using a reference count.  When retrieving the object, no such
+// hold is placed, and so the caller must take care not to use the associated
+// object after the endpoint it is associated with is closed.
+NNG_DECL int nng_stream_dialer_get_tls(nng_stream_dialer *, nng_tls_config **);
+NNG_DECL int nng_stream_dialer_set_tls(nng_stream_dialer *, nng_tls_config *);
+
 NNG_DECL int nng_stream_listener_alloc(nng_stream_listener **, const char *);
 NNG_DECL int nng_stream_listener_alloc_url(
     nng_stream_listener **, const nng_url *);
@@ -1227,6 +1229,11 @@ NNG_DECL int nng_stream_listener_set_ptr(
     nng_stream_listener *, const char *, void *);
 NNG_DECL int nng_stream_listener_set_addr(
     nng_stream_listener *, const char *, const nng_sockaddr *);
+
+NNG_DECL int nng_stream_listener_get_tls(
+    nng_stream_listener *, nng_tls_config **);
+NNG_DECL int nng_stream_listener_set_tls(
+    nng_stream_listener *, nng_tls_config *);
 
 // UDP operations.  These are provided for convenience,
 // and should be considered somewhat experimental.

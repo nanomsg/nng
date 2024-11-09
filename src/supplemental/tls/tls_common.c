@@ -191,16 +191,10 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 }
 
 static int
-tls_dialer_set_config(void *arg, const void *buf, size_t sz, nni_type t)
+tls_dialer_set_tls(void *arg, nng_tls_config *cfg)
 {
-	int             rv;
-	nng_tls_config *cfg;
 	tls_dialer     *d = arg;
 	nng_tls_config *old;
-
-	if ((rv = nni_copyin_ptr((void **) &cfg, buf, sz, t)) != 0) {
-		return (rv);
-	}
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
 	}
@@ -216,44 +210,21 @@ tls_dialer_set_config(void *arg, const void *buf, size_t sz, nni_type t)
 }
 
 static int
-tls_dialer_get_config(void *arg, void *buf, size_t *szp, nni_type t)
+tls_dialer_get_tls(void *arg, nng_tls_config **cfg)
 {
-	tls_dialer     *d = arg;
-	nng_tls_config *cfg;
-	int             rv;
+	tls_dialer *d = arg;
 	nni_mtx_lock(&d->lk);
-	if ((cfg = d->cfg) != NULL) {
-		nng_tls_config_hold(cfg);
-	}
-	if ((rv = nni_copyout_ptr(cfg, buf, szp, t)) != 0) {
-		nng_tls_config_free(cfg);
-	}
+	*cfg = d->cfg;
 	nni_mtx_unlock(&d->lk);
-	return (rv);
+	return (0);
 }
-
-static const nni_option tls_dialer_opts[] = {
-	{
-	    .o_name = NNG_OPT_TLS_CONFIG,
-	    .o_get  = tls_dialer_get_config,
-	    .o_set  = tls_dialer_set_config,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
 
 static int
 tls_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_dialer *d = arg;
-	int         rv;
 
-	rv = nni_stream_dialer_get(d->d, name, buf, szp, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_getopt(tls_dialer_opts, name, d, buf, szp, t);
-	}
-	return (rv);
+	return (nni_stream_dialer_get(d->d, name, buf, szp, t));
 }
 
 static int
@@ -261,13 +232,8 @@ tls_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tls_dialer *d = arg;
-	int         rv;
 
-	rv = nni_stream_dialer_set(d->d, name, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_setopt(tls_dialer_opts, name, d, buf, sz, t);
-	}
-	return (rv);
+	return (nni_stream_dialer_set(d->d, name, buf, sz, t));
 }
 
 int
@@ -305,12 +271,15 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	// Set the expected outbound hostname
 	nng_tls_config_server_name(d->cfg, url->u_hostname);
 
-	d->ops.sd_close = tls_dialer_close;
-	d->ops.sd_free  = tls_dialer_free;
-	d->ops.sd_dial  = tls_dialer_dial;
-	d->ops.sd_get   = tls_dialer_get;
-	d->ops.sd_set   = tls_dialer_set;
-	*dp             = (void *) d;
+	d->ops.sd_close   = tls_dialer_close;
+	d->ops.sd_free    = tls_dialer_free;
+	d->ops.sd_dial    = tls_dialer_dial;
+	d->ops.sd_get     = tls_dialer_get;
+	d->ops.sd_set     = tls_dialer_set;
+	d->ops.sd_get_tls = tls_dialer_get_tls;
+	d->ops.sd_set_tls = tls_dialer_set_tls;
+
+	*dp = (void *) d;
 	return (rv);
 }
 
@@ -373,20 +342,13 @@ tls_listener_accept(void *arg, nng_aio *aio)
 }
 
 static int
-tls_listener_set_config(void *arg, const void *buf, size_t sz, nni_type t)
+tls_listener_set_tls(void *arg, nng_tls_config *cfg)
 {
-	int             rv;
-	nng_tls_config *cfg;
 	tls_listener   *l = arg;
 	nng_tls_config *old;
-
-	if ((rv = nni_copyin_ptr((void **) &cfg, buf, sz, t)) != 0) {
-		return (rv);
-	}
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
 	}
-
 	nng_tls_config_hold(cfg);
 
 	nni_mtx_lock(&l->lk);
@@ -395,64 +357,35 @@ tls_listener_set_config(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_mtx_unlock(&l->lk);
 
 	nng_tls_config_free(old);
-
 	return (0);
 }
 
 static int
-tls_listener_get_config(void *arg, void *buf, size_t *szp, nni_type t)
+tls_listener_get_tls(void *arg, nng_tls_config **cfg)
 {
-	tls_listener   *l = arg;
-	nng_tls_config *cfg;
-	int             rv;
+	tls_listener *l = arg;
 	nni_mtx_lock(&l->lk);
-	if ((cfg = l->cfg) != NULL) {
-		nng_tls_config_hold(cfg);
-	}
-	if ((rv = nni_copyout_ptr(cfg, buf, szp, t)) != 0) {
-		nng_tls_config_free(cfg);
-	}
+	*cfg = l->cfg;
 	nni_mtx_unlock(&l->lk);
-	return (rv);
+	return (0);
 }
-
-static const nni_option tls_listener_opts[] = {
-	{
-	    .o_name = NNG_OPT_TLS_CONFIG,
-	    .o_get  = tls_listener_get_config,
-	    .o_set  = tls_listener_set_config,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
 
 static int
 tls_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	int           rv;
 	tls_listener *l = arg;
 
-	rv = nni_stream_listener_get(l->l, name, buf, szp, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_getopt(tls_listener_opts, name, l, buf, szp, t);
-	}
-	return (rv);
+	return (nni_stream_listener_get(l->l, name, buf, szp, t));
 }
 
 static int
 tls_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
-	int           rv;
 	tls_listener *l = arg;
 
-	rv = nni_stream_listener_set(l->l, name, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_setopt(tls_listener_opts, name, l, buf, sz, t);
-	}
-	return (rv);
+	return (nni_stream_listener_set(l->l, name, buf, sz, t));
 }
 
 int
@@ -487,13 +420,15 @@ nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 		NNI_FREE_STRUCT(l);
 		return (rv);
 	}
-	l->ops.sl_free   = tls_listener_free;
-	l->ops.sl_close  = tls_listener_close;
-	l->ops.sl_accept = tls_listener_accept;
-	l->ops.sl_listen = tls_listener_listen;
-	l->ops.sl_get    = tls_listener_get;
-	l->ops.sl_set    = tls_listener_set;
-	*lp              = (void *) l;
+	l->ops.sl_free    = tls_listener_free;
+	l->ops.sl_close   = tls_listener_close;
+	l->ops.sl_accept  = tls_listener_accept;
+	l->ops.sl_listen  = tls_listener_listen;
+	l->ops.sl_get     = tls_listener_get;
+	l->ops.sl_set     = tls_listener_set;
+	l->ops.sl_get_tls = tls_listener_get_tls;
+	l->ops.sl_set_tls = tls_listener_set_tls;
+	*lp               = (void *) l;
 	return (0);
 }
 

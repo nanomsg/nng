@@ -71,6 +71,7 @@ test_tls_wild_card_bind(void)
 	uint16_t        port;
 	nng_tls_config *cc;
 	nng_tls_config *sc;
+	nng_tls_config *other;
 
 	port = nuts_next_port();
 
@@ -81,11 +82,15 @@ test_tls_wild_card_bind(void)
 	NUTS_OPEN(s2);
 	(void) snprintf(addr, sizeof(addr), "tls+tcp4://*:%u", port);
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, sc));
+	NUTS_PASS(nng_listener_set_tls(l, sc));
+	NUTS_PASS(nng_listener_get_tls(l, &other));
+	NUTS_TRUE(sc == other);
 	NUTS_PASS(nng_listener_start(l, 0));
 	(void) snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%u", port);
 	NUTS_PASS(nng_dialer_create(&d, s2, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, cc));
+	NUTS_PASS(nng_dialer_set_tls(d, cc));
+	NUTS_PASS(nng_dialer_get_tls(d, &other));
+	NUTS_TRUE(cc == other);
 	NUTS_PASS(nng_dialer_start(d, 0));
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
@@ -109,7 +114,7 @@ test_tls_port_zero_bind(void)
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0"));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, c1));
+	NUTS_PASS(nng_listener_set_tls(l, c1));
 	NUTS_PASS(nng_listener_start(l, 0));
 	NUTS_PASS(nng_listener_get_string(l, NNG_OPT_URL, &addr));
 	NUTS_TRUE(memcmp(addr, "tls+tcp://", 6) == 0);
@@ -118,7 +123,7 @@ test_tls_port_zero_bind(void)
 	NUTS_TRUE(sa.s_in.sa_port != 0);
 	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
 	NUTS_PASS(nng_dialer_create(&d, s2, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, c2));
+	NUTS_PASS(nng_dialer_set_tls(d, c2));
 	NUTS_PASS(nng_dialer_start(d, 0));
 	nng_strfree(addr);
 	NUTS_CLOSE(s2);
@@ -146,12 +151,12 @@ test_tls_local_address_connect(void)
 	port = nuts_next_port();
 	(void) snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%u", port);
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, c1));
+	NUTS_PASS(nng_listener_set_tls(l, c1));
 	NUTS_PASS(nng_listener_start(l, 0));
 	(void) snprintf(
 	    addr, sizeof(addr), "tls+tcp://127.0.0.1;127.0.0.1:%u", port);
 	NUTS_PASS(nng_dialer_create(&d, s2, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, c2));
+	NUTS_PASS(nng_dialer_set_tls(d, c2));
 	NUTS_PASS(nng_dialer_start(d, 0));
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
@@ -195,7 +200,7 @@ test_tls_no_delay_option(void)
 
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dialer_create(&d, s, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, dc));
+	NUTS_PASS(nng_dialer_set_tls(d, dc));
 	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v));
 	NUTS_TRUE(v);
 	NUTS_PASS(nng_dialer_set_bool(d, NNG_OPT_TCP_NODELAY, false));
@@ -207,7 +212,7 @@ test_tls_no_delay_option(void)
 	NUTS_FAIL(nng_dialer_set_int(d, NNG_OPT_TCP_NODELAY, x), NNG_EBADTYPE);
 
 	NUTS_PASS(nng_listener_create(&l, s, addr));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, lc));
+	NUTS_PASS(nng_listener_set_tls(l, lc));
 	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_TCP_NODELAY, &v));
 	NUTS_TRUE(v == true);
 	x = 0;
@@ -238,7 +243,7 @@ test_tls_keep_alive_option(void)
 	NUTS_ADDR(addr, "tls+tcp");
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dialer_create(&d, s, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, dc));
+	NUTS_PASS(nng_dialer_set_tls(d, dc));
 	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v));
 	NUTS_TRUE(v == false);
 	NUTS_PASS(nng_dialer_set_bool(d, NNG_OPT_TCP_KEEPALIVE, true));
@@ -251,7 +256,7 @@ test_tls_keep_alive_option(void)
 	    nng_dialer_set_int(d, NNG_OPT_TCP_KEEPALIVE, x), NNG_EBADTYPE);
 
 	NUTS_PASS(nng_listener_create(&l, s, addr));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, lc));
+	NUTS_PASS(nng_listener_set_tls(l, lc));
 	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_TCP_KEEPALIVE, &v));
 	NUTS_TRUE(v == false);
 	x = 1;
@@ -287,7 +292,7 @@ test_tls_recv_max(void)
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
 	NUTS_PASS(nng_listener_create(&l, s0, addr));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, c0));
+	NUTS_PASS(nng_listener_set_tls(l, c0));
 	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 200);
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
@@ -295,7 +300,7 @@ test_tls_recv_max(void)
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_dialer_create(&d, s1, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, c1));
+	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
 	NUTS_PASS(nng_send(s1, msg, 95, 0));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
@@ -335,12 +340,12 @@ test_tls_psk(void)
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_listener_create(&l, s0, addr));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, c0));
+	NUTS_PASS(nng_listener_set_tls(l, c0));
 	NUTS_PASS(nng_listener_start(l, 0));
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_dialer_create(&d, s1, addr));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, c1));
+	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
 	NUTS_PASS(nng_send(s1, msg, 95, 0));
 	NUTS_PASS(nng_recv(s0, buf, &sz, 0));

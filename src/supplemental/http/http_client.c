@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -25,7 +25,7 @@ struct nng_http_client {
 	nni_list           aios;
 	nni_mtx            mtx;
 	bool               closed;
-	nni_aio *          aio;
+	nni_aio           *aio;
 	nng_stream_dialer *dialer;
 };
 
@@ -42,10 +42,10 @@ static void
 http_dial_cb(void *arg)
 {
 	nni_http_client *c = arg;
-	nni_aio *        aio;
+	nni_aio         *aio;
 	int              rv;
-	nng_stream *     stream;
-	nni_http_conn *  conn;
+	nng_stream      *stream;
+	nni_http_conn   *conn;
 
 	nni_mtx_lock(&c->mtx);
 	rv = nni_aio_result(c->aio);
@@ -101,7 +101,7 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 	int              rv;
 	nni_http_client *c;
 	nng_url          my_url;
-	const char *     scheme;
+	const char      *scheme;
 
 	if ((scheme = nni_http_stream_scheme(url->u_scheme)) == NULL) {
 		return (NNG_EADDRINVAL);
@@ -138,14 +138,13 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 int
 nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 {
-	return (nng_stream_dialer_set_ptr(c->dialer, NNG_OPT_TLS_CONFIG, tls));
+	return (nng_stream_dialer_set_tls(c->dialer, tls));
 }
 
 int
 nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
 {
-	return (nng_stream_dialer_get_ptr(
-	    c->dialer, NNG_OPT_TLS_CONFIG, (void **) tlsp));
+	return (nng_stream_dialer_get_tls(c->dialer, tlsp));
 }
 
 int
@@ -207,12 +206,12 @@ typedef enum http_txn_state {
 } http_txn_state;
 
 typedef struct http_txn {
-	nni_aio *        aio;  // lower level aio
+	nni_aio         *aio;  // lower level aio
 	nni_list         aios; // upper level aio(s) -- maximum one
 	nni_http_client *client;
-	nni_http_conn *  conn;
-	nni_http_req *   req;
-	nni_http_res *   res;
+	nni_http_conn   *conn;
+	nni_http_req    *req;
+	nni_http_res    *res;
 	nni_http_chunks *chunks;
 	http_txn_state   state;
 } http_txn;
@@ -246,13 +245,13 @@ http_txn_finish_aios(http_txn *txn, int rv)
 static void
 http_txn_cb(void *arg)
 {
-	http_txn *      txn = arg;
-	const char *    str;
-	char *          end;
+	http_txn       *txn = arg;
+	const char     *str;
+	char           *end;
 	int             rv;
 	uint64_t        len;
 	nni_iov         iov;
-	char *          dst;
+	char           *dst;
 	size_t          sz;
 	nni_http_chunk *chunk = NULL;
 

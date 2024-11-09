@@ -25,11 +25,15 @@ extern int nni_stream_dialer_get(
     nng_stream_dialer *, const char *, void *, size_t *, nni_type);
 extern int nni_stream_dialer_set(
     nng_stream_dialer *, const char *, const void *, size_t, nni_type);
+extern int nni_stream_dialer_set_tls(nng_stream_dialer *, nng_tls_config *);
+extern int nni_stream_dialer_get_tls(nng_stream_dialer *, nng_tls_config **);
 
 extern int nni_stream_listener_get(
     nng_stream_listener *, const char *, void *, size_t *, nni_type);
 extern int nni_stream_listener_set(
     nng_stream_listener *, const char *, const void *, size_t, nni_type);
+extern int nni_stream_listener_set_tls(nng_stream_listener *, nng_tls_config *);
+extern int nni_stream_listener_get_tls(nng_stream_listener *, nng_tls_config **);
 
 // This is the common implementation of a connected byte stream.  It should be
 // the first element of any implementation.  Applications are not permitted to
@@ -50,6 +54,8 @@ struct nng_stream_dialer {
 	void (*sd_dial)(void *, nng_aio *);
 	int (*sd_get)(void *, const char *, void *, size_t *, nni_type);
 	int (*sd_set)(void *, const char *, const void *, size_t, nni_type);
+	int (*sd_get_tls)(void *, nng_tls_config **);
+	int (*sd_set_tls)(void *, nng_tls_config *);
 };
 
 // Listener implementation.  Stream listeners accept connections and create
@@ -61,6 +67,8 @@ struct nng_stream_listener {
 	void (*sl_accept)(void *, nng_aio *);
 	int (*sl_get)(void *, const char *, void *, size_t *, nni_type);
 	int (*sl_set)(void *, const char *, const void *, size_t, nni_type);
+	int (*sl_get_tls)(void *, nng_tls_config **);
+	int (*sl_set_tls)(void *, nng_tls_config *);
 };
 
 #endif // CORE_STREAM_H

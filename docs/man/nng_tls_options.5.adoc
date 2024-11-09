@@ -20,7 +20,6 @@ nng_tls_options - TLS-specific options
 ----
 #include <nng/nng.h>
 
-#define NNG_OPT_TLS_CONFIG         "tls-config"
 #define NNG_OPT_TLS_VERIFIED       "tls-verified"
 #define NNG_OPT_TLS_PEER_CN        "tls-peer-cn"
 #define NNG_OPT_TLS_PEER_ALT_NAMES "tls-peer-alt-names"
@@ -43,18 +42,18 @@ description of the option.
 
 === TLS Options
 
-[[NNG_OPT_TLS_CONFIG]]((`NNG_OPT_TLS_CONFIG`))::
-(`nng_tls_config *`)
-This option references the underlying
-xref:nng_tls_config.5.adoc[TLS configuration object].
-A hold is placed on the underlying
-configuration object before returning it.
-+
-NOTE: The caller should release the hold with
-xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
-longer needs the TLS configuration object.
-+
-TIP: Use this option when more advanced TLS configuration is required.
+// [[NNG_OPT_TLS_CONFIG]]((`NNG_OPT_TLS_CONFIG`))::
+// (`nng_tls_config *`)
+// This option references the underlying
+// xref:nng_tls_config.5.adoc[TLS configuration object].
+// A hold is placed on the underlying
+// configuration object before returning it.
+// +
+// NOTE: The caller should release the hold with
+// xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
+// longer needs the TLS configuration object.
+// +
+// TIP: Use this option when more advanced TLS configuration is required.
 
 [[NNG_OPT_TLS_VERIFIED]]((`NNG_OPT_TLS_VERIFIED`))::
 (`bool`)

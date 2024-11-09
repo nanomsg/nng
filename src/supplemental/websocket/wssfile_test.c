@@ -32,7 +32,7 @@ init_dialer_wss_file(nng_dialer d)
 	NUTS_PASS(nng_tls_config_alloc(&c, NNG_TLS_MODE_CLIENT));
 	NUTS_PASS(nng_tls_config_ca_file(c, pth));
 	NUTS_PASS(nng_tls_config_server_name(c, "localhost"));
-	NUTS_PASS(nng_dialer_set_ptr(d, NNG_OPT_TLS_CONFIG, c));
+	NUTS_PASS(nng_dialer_set_tls(d, c));
 	nni_file_delete(pth);
 	nng_strfree(pth);
 	nng_tls_config_free(c);
@@ -57,7 +57,7 @@ init_listener_wss_file(nng_listener l)
 	nng_strfree(cert_key);
 	NUTS_PASS(nng_tls_config_alloc(&c, NNG_TLS_MODE_SERVER));
 	NUTS_PASS(nng_tls_config_cert_key_file(c, pth, pth));
-	NUTS_PASS(nng_listener_set_ptr(l, NNG_OPT_TLS_CONFIG, c));
+	NUTS_PASS(nng_listener_set_tls(l, c));
 
 	nni_file_delete(pth);
 	nng_strfree(pth);

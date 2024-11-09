@@ -2110,6 +2110,20 @@ ws_listener_get(
 	return (rv);
 }
 
+static int
+ws_listener_get_tls(void *arg, nng_tls_config **cfgp)
+{
+	nni_ws_listener *l = arg;
+	return (nni_http_server_get_tls(l->server, cfgp));
+}
+
+static int
+ws_listener_set_tls(void *arg, nng_tls_config *cfg)
+{
+	nni_ws_listener *l = arg;
+	return (nni_http_server_set_tls(l->server, cfg));
+}
+
 int
 nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 {
@@ -2151,17 +2165,19 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 		return (rv);
 	}
 
-	l->fragsize      = WS_DEF_MAXTXFRAME;
-	l->maxframe      = WS_DEF_MAXRXFRAME;
-	l->recvmax       = WS_DEF_RECVMAX;
-	l->isstream      = true;
-	l->ops.sl_free   = ws_listener_free;
-	l->ops.sl_close  = ws_listener_close;
-	l->ops.sl_accept = ws_listener_accept;
-	l->ops.sl_listen = ws_listener_listen;
-	l->ops.sl_set    = ws_listener_set;
-	l->ops.sl_get    = ws_listener_get;
-	*wslp            = (void *) l;
+	l->fragsize       = WS_DEF_MAXTXFRAME;
+	l->maxframe       = WS_DEF_MAXRXFRAME;
+	l->recvmax        = WS_DEF_RECVMAX;
+	l->isstream       = true;
+	l->ops.sl_free    = ws_listener_free;
+	l->ops.sl_close   = ws_listener_close;
+	l->ops.sl_accept  = ws_listener_accept;
+	l->ops.sl_listen  = ws_listener_listen;
+	l->ops.sl_set     = ws_listener_set;
+	l->ops.sl_get     = ws_listener_get;
+	l->ops.sl_get_tls = ws_listener_get_tls;
+	l->ops.sl_set_tls = ws_listener_set_tls;
+	*wslp             = (void *) l;
 	return (0);
 }
 
@@ -2641,6 +2657,20 @@ ws_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (rv);
 }
 
+static int
+ws_dialer_get_tls(void *arg, nng_tls_config **cfgp)
+{
+	nni_ws_dialer *d = arg;
+	return (nni_http_client_get_tls(d->client, cfgp));
+}
+
+static int
+ws_dialer_set_tls(void *arg, nng_tls_config *cfg)
+{
+	nni_ws_dialer *d = arg;
+	return (nni_http_client_set_tls(d->client, cfg));
+}
+
 int
 nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
@@ -2670,12 +2700,14 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->maxframe = WS_DEF_MAXRXFRAME;
 	d->fragsize = WS_DEF_MAXTXFRAME;
 
-	d->ops.sd_free  = ws_dialer_free;
-	d->ops.sd_close = ws_dialer_close;
-	d->ops.sd_dial  = ws_dialer_dial;
-	d->ops.sd_set   = ws_dialer_set;
-	d->ops.sd_get   = ws_dialer_get;
-	*dp             = (void *) d;
+	d->ops.sd_free    = ws_dialer_free;
+	d->ops.sd_close   = ws_dialer_close;
+	d->ops.sd_dial    = ws_dialer_dial;
+	d->ops.sd_set     = ws_dialer_set;
+	d->ops.sd_get     = ws_dialer_get;
+	d->ops.sd_set_tls = ws_dialer_set_tls;
+	d->ops.sd_get_tls = ws_dialer_get_tls;
+	*dp               = (void *) d;
 	return (0);
 }
 

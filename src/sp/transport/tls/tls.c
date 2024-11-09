@@ -1240,6 +1240,34 @@ tlstran_listener_set(
 	return (rv);
 }
 
+static int
+tlstran_listener_set_tls(void *arg, nng_tls_config *cfg)
+{
+	tlstran_ep *ep = arg;
+	return (nni_stream_listener_set_tls(ep->listener, cfg));
+}
+
+static int
+tlstran_listener_get_tls(void *arg, nng_tls_config **cfgp)
+{
+	tlstran_ep *ep = arg;
+	return (nni_stream_listener_get_tls(ep->listener, cfgp));
+}
+
+static int
+tlstran_dialer_set_tls(void *arg, nng_tls_config *cfg)
+{
+	tlstran_ep *ep = arg;
+	return (nni_stream_dialer_set_tls(ep->dialer, cfg));
+}
+
+static int
+tlstran_dialer_get_tls(void *arg, nng_tls_config **cfgp)
+{
+	tlstran_ep *ep = arg;
+	return (nni_stream_dialer_get_tls(ep->dialer, cfgp));
+}
+
 static nni_sp_dialer_ops tlstran_dialer_ops = {
 	.d_init    = tlstran_ep_init_dialer,
 	.d_fini    = tlstran_ep_fini,
@@ -1247,16 +1275,20 @@ static nni_sp_dialer_ops tlstran_dialer_ops = {
 	.d_close   = tlstran_ep_close,
 	.d_getopt  = tlstran_dialer_getopt,
 	.d_setopt  = tlstran_dialer_setopt,
+	.d_get_tls = tlstran_dialer_get_tls,
+	.d_set_tls = tlstran_dialer_set_tls,
 };
 
 static nni_sp_listener_ops tlstran_listener_ops = {
-	.l_init   = tlstran_ep_init_listener,
-	.l_fini   = tlstran_ep_fini,
-	.l_bind   = tlstran_ep_bind,
-	.l_accept = tlstran_ep_accept,
-	.l_close  = tlstran_ep_close,
-	.l_getopt = tlstran_listener_get,
-	.l_setopt = tlstran_listener_set,
+	.l_init    = tlstran_ep_init_listener,
+	.l_fini    = tlstran_ep_fini,
+	.l_bind    = tlstran_ep_bind,
+	.l_accept  = tlstran_ep_accept,
+	.l_close   = tlstran_ep_close,
+	.l_getopt  = tlstran_listener_get,
+	.l_setopt  = tlstran_listener_set,
+	.l_set_tls = tlstran_listener_set_tls,
+	.l_get_tls = tlstran_listener_get_tls,
 };
 
 static nni_sp_tran tls_tran = {

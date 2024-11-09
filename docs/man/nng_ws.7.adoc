@@ -145,17 +145,17 @@ When set, the stream will send TEXT frames instead of BINARY frames.
 NOTE: NNG does not check the frame data, and will attempt to send whatever the client requests.
 Peers that are compliant with RFC 6455 will discard TEXT frames (and break the connection) if they do not contain valid UTF-8.
 
-((`NNG_OPT_TLS_CONFIG`))::
+// ((`NNG_OPT_TLS_CONFIG`))::
 
-(`nng_tls_config *`) The underlying TLS
-configuration object for `wss://` endpoints.
-A hold is placed on the underlying
-configuration object before returning it.
-The caller should release the object with
-xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
-longer needs the TLS configuration.
+// (`nng_tls_config *`) The underlying TLS
+// configuration object for `wss://` endpoints.
+// A hold is placed on the underlying
+// configuration object before returning it.
+// The caller should release the object with
+// xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
+// longer needs the TLS configuration.
 
-TIP: Use this option when advanced TLS configuration is required.
+// TIP: Use this option when advanced TLS configuration is required.
 
 `NNG_OPT_TLS_VERIFIED`::
 (`bool`) Whether the remote peer has been properly verified using TLS

@@ -78,6 +78,14 @@
 [`nng_sub0_ctx_unsubscribe`]: /TODO.md
 [`nng_sub0_socket_subscribe`]: /TODO.md
 [`nng_sub0_socket_unsubscribe`]: /TODO.md
+[`nng_dialer_set_tls`]: /TODO.md
+[`nng_dialer_get_tls`]: /TODO.md
+[`nng_listener_set_tls`]: /TODO.md
+[`nng_listener_get_tls`]: /TODO.md
+[`nng_stream_dialer_set_tls`]: /TODO.md
+[`nng_stream_dialer_get_tls`]: /TODO.md
+[`nng_stream_listener_set_tls`]: /TODO.md
+[`nng_stream_listener_get_tls`]: /TODO.md
 [`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
 [`nng_aio_begin`]: /TODO.md
 [`nng_aio_defer`]: /TODO.md
