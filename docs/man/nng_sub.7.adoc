@@ -65,6 +65,10 @@ The following protocol-specific options are available.
    message is accepted.  If no topic matches, then the message is
    discarded.
 +
+NOTE: This option is deprecated.  New applications should use
+xref:nng_sub_subscribe.3.adoc[`nng_sub0_socket_subscribe`] or `nng_sub0_ctx_subscribe`
+functions.
++
 NOTE: This option is a byte array.  Thus if you use
 xref:nng_setopt.3.adoc[`nng_setopt_string()`] the `NUL` terminator byte will
 be included in the topic.
@@ -79,6 +83,10 @@ TIP: To receive all messages, an empty topic (zero length) can be used.
    This option, also write-only, removes a topic from the subscription list.
    Note that if the topic was not previously subscribed to with
    `NNG_OPT_SUB_SUBSCRIBE` then an `NNG_ENOENT` error will result.
+   +
+   NOTE: This option is deprecated.  New applications should use
+   xref:nng_sub_subscribe.3.adoc[`nng_sub0_socket_unsubscribe`] or `nng_sub0_ctx_unsubscribe`
+   functions.
 
 ((`NNG_OPT_SUB_PREFNEW`))::
 
@@ -95,5 +103,6 @@ The _sub_ protocol has no protocol-specific headers.
 
 [.text-left]
 xref:nng_sub_open.3.adoc[nng_sub_open(3)],
+xref:nng_sub_subscribe.3.adoc[nng_sub_subscribe(3)],
 xref:nng_pub.7.adoc[nng_pub(7)],
 xref:nng.7.adoc[nng(7)]

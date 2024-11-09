@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -26,7 +26,9 @@ extern bool        nni_sock_raw(nni_sock *);
 extern void       *nni_sock_proto_data(nni_sock *);
 extern void        nni_sock_add_stat(nni_sock *, nni_stat_item *);
 
+extern struct nni_proto_sock_ops *nni_sock_proto_ops(nni_sock *);
 extern struct nni_proto_pipe_ops *nni_sock_proto_pipe_ops(nni_sock *);
+extern struct nni_proto_ctx_ops  *nni_ctx_proto_ops(nni_ctx *);
 
 extern int nni_sock_setopt(
     nni_sock *, const char *, const void *, size_t, nni_opt_type);
@@ -88,6 +90,8 @@ extern void nni_ctx_close(nni_ctx *);
 
 // nni_ctx_id returns the context ID, which can be used with nni_ctx_find.
 extern uint32_t nni_ctx_id(nni_ctx *);
+
+extern void *nni_ctx_proto_data(nni_ctx *);
 
 // nni_ctx_recv receives asynchronously.
 extern void nni_ctx_recv(nni_ctx *, nni_aio *);

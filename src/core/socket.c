@@ -889,10 +889,28 @@ nni_sock_proto_pipe_ops(nni_sock *sock)
 	return (&sock->s_pipe_ops);
 }
 
+struct nni_proto_sock_ops *
+nni_sock_proto_ops(nni_sock *sock)
+{
+	return (&sock->s_sock_ops);
+}
+
+struct nni_proto_ctx_ops *
+nni_ctx_proto_ops(nni_ctx *ctx)
+{
+	return (&ctx->c_ops);
+}
+
 void *
 nni_sock_proto_data(nni_sock *sock)
 {
 	return (sock->s_data);
+}
+
+void *
+nni_ctx_proto_data(nni_ctx *ctx)
+{
+	return (ctx->c_data);
 }
 
 int
