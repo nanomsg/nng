@@ -718,6 +718,94 @@ static nni_option sub0_sock_options[] = {
 	},
 };
 
+int
+nng_sub0_socket_subscribe(nng_socket id, const void *buf, size_t sz)
+{
+	int        rv;
+	nni_sock  *s;
+	sub0_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&s, id.id)) != 0)) {
+		return (rv);
+	}
+	// validate the socket type
+	if (nni_sock_proto_ops(s)->sock_init != sub0_sock_init) {
+		nni_sock_rele(s);
+		return (NNG_ENOTSUP);
+	}
+	sock = nni_sock_proto_data(s);
+	rv   = sub0_ctx_subscribe(&sock->master, buf, sz, NNI_TYPE_OPAQUE);
+	nni_sock_rele(s);
+	return (rv);
+}
+
+int
+nng_sub0_socket_unsubscribe(nng_socket id, const void *buf, size_t sz)
+{
+	int        rv;
+	nni_sock  *s;
+	sub0_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&s, id.id)) != 0)) {
+		return (rv);
+	}
+	// validate the socket type
+	if (nni_sock_proto_ops(s)->sock_init != sub0_sock_init) {
+		nni_sock_rele(s);
+		return (NNG_ENOTSUP);
+	}
+	sock = nni_sock_proto_data(s);
+	rv   = sub0_ctx_unsubscribe(&sock->master, buf, sz, NNI_TYPE_OPAQUE);
+	nni_sock_rele(s);
+	return (rv);
+}
+
+int
+nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz)
+{
+	int       rv;
+	nni_ctx  *c;
+	sub0_ctx *ctx;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_ctx_find(&c, id.id, false)) != 0)) {
+		return (rv);
+	}
+	// validate the socket type
+	if (nni_ctx_proto_ops(c)->ctx_init != sub0_ctx_init) {
+		nni_ctx_rele(c);
+		return (NNG_ENOTSUP);
+	}
+	ctx = nni_ctx_proto_data(c);
+	rv  = sub0_ctx_subscribe(ctx, buf, sz, NNI_TYPE_OPAQUE);
+	nni_ctx_rele(c);
+	return (rv);
+}
+
+int
+nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz)
+{
+	int       rv;
+	nni_ctx  *c;
+	sub0_ctx *ctx;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_ctx_find(&c, id.id, false)) != 0)) {
+		return (rv);
+	}
+	// validate the socket type
+	if (nni_ctx_proto_ops(c)->ctx_init != sub0_ctx_init) {
+		nni_ctx_rele(c);
+		return (NNG_ENOTSUP);
+	}
+	ctx = nni_ctx_proto_data(c);
+	rv  = sub0_ctx_unsubscribe(ctx, buf, sz, NNI_TYPE_OPAQUE);
+	nni_ctx_rele(c);
+	return (rv);
+}
+
 static nni_proto_sock_ops sub0_sock_ops = {
 	.sock_size    = sizeof(sub0_sock),
 	.sock_init    = sub0_sock_init,

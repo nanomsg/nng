@@ -19,6 +19,13 @@ NNG_DECL int nng_sub0_open(nng_socket *);
 
 NNG_DECL int nng_sub0_open_raw(nng_socket *);
 
+NNG_DECL int nng_sub0_socket_subscribe(
+    nng_socket id, const void *buf, size_t sz);
+NNG_DECL int nng_sub0_socket_unsubscribe(
+    nng_socket id, const void *buf, size_t sz);
+NNG_DECL int nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz);
+NNG_DECL int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
+
 #ifndef nng_sub_open
 #define nng_sub_open nng_sub0_open
 #endif

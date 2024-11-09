@@ -1,0 +1,67 @@
+= nng_sub_subscribe(3)
+//
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_sub_subscribe - manage SUB subscriptions
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/nng.h>
+#include <nng/protocol/pubsub0/sub.h>
+
+int nng_sub0_socket_subscribe(nng_socket s, const void *buf, size_t sz);
+
+int nng_sub0_socket_unsubscribe(nng_socket s, const void *buf, size_t sz);
+
+int nng_sub0_ctx_subscribe(nng_ctx c, const void *buf, size_t sz);
+
+int nng_sub0_ctx_unsubscribe(nng_ctx c, const void *buf, size_t sz);
+----
+
+== DESCRIPTION
+
+These functions are used to subscribe, or unsubscribe, message topics
+on either the xref:nng_sub.7.adoc[_sub_] version 0 socket _s_,
+or the _sub_ version 0 context _c_.
+
+Message topics are used to filter messages.  The first _sz_ bytes of an
+incoming message is compared against _buf_, and if equal the message
+is accepted and will be available for receiving.
+
+Multiple topics may be registered for the same socket or context, and
+incoming messages will be forwarded to the application if any of the topics match.
+
+TIP: To disable filtering altogether, the _buf_ may be `NULL` if _sz_ is zero.
+In this case, all messages will be forwarded to the application.
+
+TIP: These functions should be used instead of the `NNG_OPT_SUB_SUBSCRIBE` and
+`NNG_OPT_SUB_UNSUBSCRIBE` options.
+
+== RETURN VALUES
+
+These functions return 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+`NNG_ENOENT`:: The topic is not subscribed.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng_pub.7.adoc[nng_pub(7)],
+xref:nng_sub.7.adoc[nng_sub(7)],
+xref:nng.7.adoc[nng(7)]
