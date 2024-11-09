@@ -984,6 +984,49 @@ The value stored in <em>name</em> is a fixed string located in program text, and
 or altered. It is guaranteed to remain valid while this library is present.</p>
 <p>The <a name="a008"></a><code>nng_socket_raw</code> function determines whether the socket is in
 <a href="api//TODO.html">raw mode</a> or not, storing <code>true</code> in <em>raw</em> if it is, or <code>false</code> if it is not.</p>
+<h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
+<pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
+int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
+</code></pre>
+<p>Sometimes it is necessary to integrate a socket into a <code>poll</code> or <code>select</code> driven
+<a name="a009"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
+<p>For these occasions, a suitable file descriptor for polling is provided
+by these two functions.</p>
+<p>The <a name="a010"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
+that will poll as readable when a message is ready for receiving for the socket.</p>
+<p>The <a name="a011"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
+that will poll as readable when the socket can accept a message for sending.</p>
+<p>These file descriptors should only be polled for readability, and no
+other operation performed on them. The socket will read from, or write to,
+these file descriptors to provide a level-signaled behavior automatically.</p>
+<p>Additionally the socket will close these file descriptors when the socket itself is closed.</p>
+<p>These functions replace the <code>NNG_OPT_SENDFD</code> and <code>NNG_OPT_RECVFD</code> socket options that
+were available in previous versions of NNG.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>These functions are not compatible with <a href="api//TODO.html">contexts</a>.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The file descriptors supplied by these functions is not used for transporting message data.
+The only valid use of these file descriptors is for polling for the ability to send or receive
+messages on the socket.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Using these functions will force the socket to perform extra system calls, and thus
+have a negative impact on performance and latency. It is preferable to use <a href="api//api/aio.html">asynchronous I/O</a>
+when possible.</p>
+</div>
 <h2 id="examples-1"><a class="header" href="#examples-1">Examples</a></h2>
 <h3 id="example-1-initializing-a-socket"><a class="header" href="#example-1-initializing-a-socket">Example 1: Initializing a Socket</a></h3>
 <pre><code class="language-c">nng_socket s = NNG_SOCKET_INITIALIZER;
@@ -1914,28 +1957,28 @@ does not depend on <em>which</em> thread will be woken. When in doubt, <code>nng
 </div>
 <h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
 <h3 id="example-1-allocating-the-condition-variable"><a class="header" href="#example-1-allocating-the-condition-variable">Example 1: Allocating the condition variable</a></h3>
-<pre><code class="language-c">	nng_mtx *m;
-	nng_cv *cv;
-	nng_mtx_alloc(&amp;m); // error checks elided
-	nng_cv_alloc(&amp;cv, m);
+<pre><code class="language-c">nng_mtx *m;
+nng_cv *cv;
+nng_mtx_alloc(&amp;m); // error checks elided
+nng_cv_alloc(&amp;cv, m);
 </code></pre>
 <h3 id="example-2-waiting-for-the-condition"><a class="header" href="#example-2-waiting-for-the-condition">Example 2: Waiting for the condition</a></h3>
-<pre><code class="language-c">    expire = nng_clock() + 1000; // 1 second in the future
-    nng_mtx_lock(m);  // assume cv was allocated using m
-    while (!condition_true) {
-        if (nng_cv_until(cv, expire) == NNG_ETIMEDOUT) {
-            printf("Time out reached!\n");
-            break;
-        }
-    }
-    // condition_true is true
-    nng_mtx_unlock(m);
+<pre><code class="language-c">expire = nng_clock() + 1000; // 1 second in the future
+nng_mtx_lock(m);  // assume cv was allocated using m
+while (!condition_true) {
+  if (nng_cv_until(cv, expire) == NNG_ETIMEDOUT) {
+    printf("Time out reached!\n");
+    break;
+  }
+}
+// condition_true is true
+nng_mtx_unlock(m);
 </code></pre>
 <h3 id="example-3-signaling-the-condition"><a class="header" href="#example-3-signaling-the-condition">Example 3: Signaling the condition</a></h3>
-<pre><code class="language-c">    nng_mtx_lock(m);
-    condition_true = true;
-    nng_cv_wake(cv);
-    nng_mtx_unlock(m);
+<pre><code class="language-c">nng_mtx_lock(m);
+condition_true = true;
+nng_cv_wake(cv);
+nng_mtx_unlock(m);
 </code></pre>
 <!-- Symbol cross reference -->
 <!-- Macros -->
@@ -2225,12 +2268,12 @@ set by <code>nng_log_set_level</code> or the default
 if that function has not been called.</p>
 <p>The log levels are defined as follows:</p>
 <pre><code class="language-c">typedef enum nng_log_level {
-	NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
-	NNG_LOG_ERR    = 3,
-	NNG_LOG_WARN   = 4,
-	NNG_LOG_NOTICE = 5,
-	NNG_LOG_INFO   = 6,
-	NNG_LOG_DEBUG  = 7
+    NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
+    NNG_LOG_ERR    = 3,
+    NNG_LOG_WARN   = 4,
+    NNG_LOG_NOTICE = 5,
+    NNG_LOG_INFO   = 6,
+    NNG_LOG_DEBUG  = 7
 } nng_log_level;
 </code></pre>
 <p>The value <code>NNG_LOG_NONE</code> may be useful to suppress message logs altogether.</p>
@@ -2247,17 +2290,17 @@ Traditionally these are used with the UNIX <code>syslog</code> system, and
 the values here represent some (but not all) of the values found there.</p>
 <p>The following values are defined:</p>
 <pre><code class="language-c">typedef enum nng_log_facility {
-	NNG_LOG_USER   = 1,
-	NNG_LOG_DAEMON = 3,
-	NNG_LOG_AUTH   = 10,
-	NNG_LOG_LOCAL0 = 16,
-	NNG_LOG_LOCAL1 = 17,
-	NNG_LOG_LOCAL2 = 18,
-	NNG_LOG_LOCAL3 = 19,
-	NNG_LOG_LOCAL4 = 20,
-	NNG_LOG_LOCAL5 = 21,
-	NNG_LOG_LOCAL6 = 22,
-	NNG_LOG_LOCAL7 = 23,
+    NNG_LOG_USER   = 1,
+    NNG_LOG_DAEMON = 3,
+    NNG_LOG_AUTH   = 10,
+    NNG_LOG_LOCAL0 = 16,
+    NNG_LOG_LOCAL1 = 17,
+    NNG_LOG_LOCAL2 = 18,
+    NNG_LOG_LOCAL3 = 19,
+    NNG_LOG_LOCAL4 = 20,
+    NNG_LOG_LOCAL5 = 21,
+    NNG_LOG_LOCAL6 = 22,
+    NNG_LOG_LOCAL7 = 23,
 } nng_log_facility;
 </code></pre>
 <p>The <a name="a006"></a><code>nng_log_set_facility</code> function can be used to
@@ -4421,42 +4464,14 @@ Attempts to send messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
 <h3 id="protocol-options-8"><a class="header" href="#protocol-options-8">Protocol Options</a></h3>
-<p>The following protocol-specific options are available.</p>
+<p>The following protocol-specific option is available.</p>
 <ul>
-<li>
-<p><a name="a004"></a><code>NNG_OPT_SUB_SUBSCRIBE</code><a name="a005"></a>: <br />
-<br />
-This option registers a topic that the subscriber is interested in.
-The option is write-only, and takes an array of bytes, of arbitrary size.
-Each incoming message is checked against the list of subscribed topics.
-If the body begins with the entire set of bytes in the topic, then the
-message is accepted. If no topic matches, then the message is
-discarded. <br />
-<br />
-This option is a byte array. Thus if you use
-<a href="proto/TODO.html"><code>nng_socket_set_string</code></a> the <code>NUL</code> terminator byte will
-be included in the topic.
-If that isn’t desired, consider using
-<a href="proto/TODO.html"><code>nng_socket_set</code></a> and using <code>strlen</code> of the topic
-as the topic size. <br />
-<br />
-To receive all messages, an empty topic (zero length) can be used.</p>
-</li>
-<li>
-<p><a name="a006"></a><code>NNG_OPT_SUB_UNSUBSCRIBE</code>: <br />
-<br />
-This option, also read-only, removes a topic from the subscription list.
-Note that if the topic was not previously subscribed to with
-<code>NNG_OPT_SUB_SUBSCRIBE</code> then an <code>NNG_ENOENT</code> error will result.</p>
-</li>
-<li>
-<p><a name="a007"></a><code>NNG_OPT_SUB_PREFNEW</code>: <br />
+<li><a name="a004"></a><code>NNG_OPT_SUB_PREFNEW</code>: <br />
 (<code>bool</code>) <br />
 <br />
 This read/write option specifies the behavior of the subscriber when the queue is full.
 When <code>true</code> (the default), the subscriber will make room in the queue by removing the oldest message.
-When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</p>
-</li>
+When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</li>
 </ul>
 <h3 id="protocol-headers-8"><a class="header" href="#protocol-headers-8">Protocol Headers</a></h3>
 <p>The <em>SUB</em> protocol has no protocol-specific headers.</p>
@@ -5482,20 +5497,27 @@ before bringing them into the socket itself.</p>
 <h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
 <p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
 have been replaced by functions instead of options.
-Use <code>nng_socket_proto_id</code>, <code>nng_socket_peer_id</code>, <code>nng_socket_proto_name</code>, and <code>nng_socket_peer_name</code> instead.
+Use <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a>, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_peer_id</code></a>, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_proto_name</code></a>, and <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_peer_name</code></a> instead.
 Note that the new functions provide a reference to a static string, and thus do not require
 allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
 matching the actual wire protocol values, instead of <code>int</code>.</p>
-<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <code>nng_socket_raw</code>.</p>
+<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
+<p>The <code>NNG_OPT_SENDFD</code> and <code>NNG_OPT_RECVFD</code> options have been replaced by
+<a href="migrate//api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a> and <a href="migrate//api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> respectively.</p>
 <h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
 <p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBCRIBE</code> options have been replaced by
-the following functions: <code>nng_sub0_socket_subscribe</code>, <code>nng_sub0_socket_unsubscribe</code>,
-<code>nng_sub0_ctx_subscribe</code> and <code>nng_sub0_ctx_unsubscribe</code>. These functions, like the options
+the following functions: <a href="migrate//TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="migrate//TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
+<a href="migrate//TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="migrate//TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
 they replace, are only applicable to SUB sockets.</p>
 <h2 id="statistics-use-constified-pointers"><a class="header" href="#statistics-use-constified-pointers">Statistics Use Constified Pointers</a></h2>
-<p>A number of the statistics functions take, or return, <code>const nng_stat *</code> instead
+<p>A number of the <a href="migrate//api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
 certain methods variables <code>const</code> to avoid warnings about misuse of <code>const</code>.</p>
+<!-- Symbol cross reference -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -5687,6 +5709,7 @@ condition variable, <a href="api/synch.html#a009">1</a><br/>
 CPU-bound, <a href="api/thread.html#a003">1</a><br/>
 duration, <a href="api/time.html#a003">1</a><br/>
 error message, <a href="api/errors.html#a002">1</a><br/>
+event loop, <a href="api/sock.html#a009">1</a><br/>
 flow control, <a href="proto/index.html#a006">1</a><br/>
 <code>getopt</code>, <a href="api/cmd_opts.html#a003">1</a><br/>
 half-duplex, <a href="proto/index.html#a004">1</a><br/>
@@ -5794,9 +5817,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_OPT_REQ_RESENDTICK</code>, <a href="proto/req.html#a007">1</a><br/>
 <code>NNG_OPT_REQ_RESENDTIME</code>, <a href="proto/req.html#a006">1</a><br/>
 <code>NNG_OPT_SOCKET_FD</code>, <a href="tran/socket.html#a002">1</a>, <a href="tran/socket.html#a005">2</a><br/>
-<code>NNG_OPT_SUB_PREFNEW</code>, <a href="proto/sub.html#a007">1</a><br/>
-<code>NNG_OPT_SUB_SUBSCRIBE</code>, <a href="proto/sub.html#a004">1</a><br/>
-<code>NNG_OPT_SUB_UNSUBSCRIBE</code>, <a href="proto/sub.html#a006">1</a><br/>
+<code>NNG_OPT_SUB_PREFNEW</code>, <a href="proto/sub.html#a004">1</a><br/>
 <code>NNG_OPT_SURVEYOR_SURVEYTIME</code>, <a href="proto/surveyor.html#a007">1</a><br/>
 <code>nng_opts_parse</code>, <a href="api/cmd_opts.html#a001">1</a><br/>
 <code>nng_optspec</code>, <a href="api/cmd_opts.html#a004">1</a><br/>
@@ -5804,6 +5825,8 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_random</code>, <a href="api/misc.html#a001">1</a><br/>
 <code>nng_sleep_aio</code>, <a href="api/time.html#a011">1</a><br/>
 <code>nng_socket</code>, <a href="api/sock.html#a002">1</a><br/>
+<code>nng_socket_get_recv_poll_fd</code>, <a href="api/sock.html#a010">1</a><br/>
+<code>nng_socket_get_send_poll_fd</code>, <a href="api/sock.html#a011">1</a><br/>
 <code>nng_socket_id</code>, <a href="api/sock.html#a003">1</a><br/>
 <code>nng_socket_peer_id</code>, <a href="api/sock.html#a005">1</a><br/>
 <code>nng_socket_peer_name</code>, <a href="api/sock.html#a007">1</a><br/>
@@ -5881,7 +5904,6 @@ socket, <a href="api/sock.html#a001">1</a><br/>
 statistics, <a href="api/stats.html#a001">1</a><br/>
 <em>SUB</em>, <a href="proto/sub.html#a002">1</a><br/>
 <em>SUB</em> protocol, <a href="proto/sub.html#a001">1</a><br/>
-subscribe, <a href="proto/sub.html#a005">1</a><br/>
 subscriber, <a href="proto/sub.html#a003">1</a><br/>
 survey pattern, <a href="proto/respondent.html#a003">1</a>, <a href="proto/surveyor.html#a003">2</a><br/>
 <em>SURVEYOR</em>, <a href="proto/surveyor.html#a002">1</a><br/>

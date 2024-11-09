@@ -247,42 +247,14 @@ Attempts to send messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
 <h3 id="protocol-options"><a class="header" href="#protocol-options">Protocol Options</a></h3>
-<p>The following protocol-specific options are available.</p>
+<p>The following protocol-specific option is available.</p>
 <ul>
-<li>
-<p><a name="a004"></a><code>NNG_OPT_SUB_SUBSCRIBE</code><a name="a005"></a>: <br />
-<br />
-This option registers a topic that the subscriber is interested in.
-The option is write-only, and takes an array of bytes, of arbitrary size.
-Each incoming message is checked against the list of subscribed topics.
-If the body begins with the entire set of bytes in the topic, then the
-message is accepted. If no topic matches, then the message is
-discarded. <br />
-<br />
-This option is a byte array. Thus if you use
-<a href="TODO.html"><code>nng_socket_set_string</code></a> the <code>NUL</code> terminator byte will
-be included in the topic.
-If that isn’t desired, consider using
-<a href="TODO.html"><code>nng_socket_set</code></a> and using <code>strlen</code> of the topic
-as the topic size. <br />
-<br />
-To receive all messages, an empty topic (zero length) can be used.</p>
-</li>
-<li>
-<p><a name="a006"></a><code>NNG_OPT_SUB_UNSUBSCRIBE</code>: <br />
-<br />
-This option, also read-only, removes a topic from the subscription list.
-Note that if the topic was not previously subscribed to with
-<code>NNG_OPT_SUB_SUBSCRIBE</code> then an <code>NNG_ENOENT</code> error will result.</p>
-</li>
-<li>
-<p><a name="a007"></a><code>NNG_OPT_SUB_PREFNEW</code>: <br />
+<li><a name="a004"></a><code>NNG_OPT_SUB_PREFNEW</code>: <br />
 (<code>bool</code>) <br />
 <br />
 This read/write option specifies the behavior of the subscriber when the queue is full.
 When <code>true</code> (the default), the subscriber will make room in the queue by removing the oldest message.
-When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</p>
-</li>
+When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</li>
 </ul>
 <h3 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h3>
 <p>The <em>SUB</em> protocol has no protocol-specific headers.</p>

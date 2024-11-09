@@ -308,20 +308,27 @@ before bringing them into the socket itself.</p>
 <h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
 <p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
 have been replaced by functions instead of options.
-Use <code>nng_socket_proto_id</code>, <code>nng_socket_peer_id</code>, <code>nng_socket_proto_name</code>, and <code>nng_socket_peer_name</code> instead.
+Use <a href="/api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a>, <a href="/api/sock.html#socket-identity"><code>nng_socket_peer_id</code></a>, <a href="/api/sock.html#socket-identity"><code>nng_socket_proto_name</code></a>, and <a href="/api/sock.html#socket-identity"><code>nng_socket_peer_name</code></a> instead.
 Note that the new functions provide a reference to a static string, and thus do not require
 allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
 matching the actual wire protocol values, instead of <code>int</code>.</p>
-<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <code>nng_socket_raw</code>.</p>
+<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <a href="/api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
+<p>The <code>NNG_OPT_SENDFD</code> and <code>NNG_OPT_RECVFD</code> options have been replaced by
+<a href="/api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a> and <a href="/api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> respectively.</p>
 <h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
 <p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBCRIBE</code> options have been replaced by
-the following functions: <code>nng_sub0_socket_subscribe</code>, <code>nng_sub0_socket_unsubscribe</code>,
-<code>nng_sub0_ctx_subscribe</code> and <code>nng_sub0_ctx_unsubscribe</code>. These functions, like the options
+the following functions: <a href="/TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="/TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
+<a href="/TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="/TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
 they replace, are only applicable to SUB sockets.</p>
 <h2 id="statistics-use-constified-pointers"><a class="header" href="#statistics-use-constified-pointers">Statistics Use Constified Pointers</a></h2>
-<p>A number of the statistics functions take, or return, <code>const nng_stat *</code> instead
+<p>A number of the <a href="/api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
 certain methods variables <code>const</code> to avoid warnings about misuse of <code>const</code>.</p>
+<!-- Symbol cross reference -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 
