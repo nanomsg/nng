@@ -115,6 +115,9 @@ matching the actual wire protocol values, instead of `int`.
 
 The `NNG_OPT_RAW` option has aso been replaced by a function, [`nng_socket_raw`].
 
+The `NNG_OPT_SENDFD` and `NNG_OPT_RECVFD` options have been replaced by
+[`nng_socket_get_send_poll_fd`] and [`nng_socket_get_recv_poll_fd`] respectively.
+
 ## Subscriptions
 
 The `NNG_OPT_SUB_SUBSCRIBE` and `NNG_OPT_SUB_UNSUBCRIBE` options have been replaced by

@@ -72,6 +72,8 @@
 [`nng_socket_proto_name`]: /api/sock.md#socket-identity
 [`nng_socket_peer_id`]: /api/sock.md#socket-identity
 [`nng_socket_peer_name`]: /api/sock.md#socket-identity
+[`nng_socket_get_recv_poll_fd`]: /api/sock.md#polling-socket-events
+[`nng_socket_get_send_poll_fd`]: /api/sock.md#polling-socket-events
 [`nng_sub0_ctx_subscribe`]: /TODO.md
 [`nng_sub0_ctx_unsubscribe`]: /TODO.md
 [`nng_sub0_socket_subscribe`]: /TODO.md
@@ -159,6 +161,7 @@
 [raw]: /TODO.md
 [pipe]: /TODO.md
 [socket]: /TODO.md
+[context]: /TODO.md
 [dialer]: /TODO.md
 [listener]: /TODO.md
 [message]: /api/msg.md

@@ -49,6 +49,47 @@ or altered. It is guaranteed to remain valid while this library is present.
 The {{i:`nng_socket_raw`}} function determines whether the socket is in
 [raw mode][raw] or not, storing `true` in _raw_ if it is, or `false` if it is not.
 
+## Polling Socket Events
+
+```c
+int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
+int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
+```
+
+Sometimes it is necessary to integrate a socket into a `poll` or `select` driven
+{{i:event loop}}. (Or, on Linux, `epoll`, or on BSD derived systems like macOS `kqueue`).
+
+For these occasions, a suitable file descriptor for polling is provided
+by these two functions.
+
+The {{i:`nng_socket_get_recv_poll_fd`}} function obtains a file descriptor
+that will poll as readable when a message is ready for receiving for the socket.
+
+The {{i:`nng_socket_get_send_poll_fd`}} function obtains a file descriptor
+that will poll as readable when the socket can accept a message for sending.
+
+These file descriptors should only be polled for readability, and no
+other operation performed on them. The socket will read from, or write to,
+these file descriptors to provide a level-signaled behavior automatically.
+
+Additionally the socket will close these file descriptors when the socket itself is closed.
+
+These functions replace the `NNG_OPT_SENDFD` and `NNG_OPT_RECVFD` socket options that
+were available in previous versions of NNG.
+
+> [!NOTE]
+> These functions are not compatible with [contexts][context].
+
+> [!NOTE]
+> The file descriptors supplied by these functions is not used for transporting message data.
+> The only valid use of these file descriptors is for polling for the ability to send or receive
+> messages on the socket.
+
+> [!TIP]
+> Using these functions will force the socket to perform extra system calls, and thus
+> have a negative impact on performance and latency. It is preferable to use [asynchronous I/O][aio]
+> when possible.
+
 ## Examples
 
 ### Example 1: Initializing a Socket
