@@ -877,6 +877,12 @@ nni_sock_peer_name(nni_sock *sock)
 	return (sock->s_peer_id.p_name);
 }
 
+bool
+nni_sock_raw(nni_sock *sock)
+{
+	return ((nni_sock_flags(sock) & NNI_PROTO_FLAG_RAW) != 0);
+}
+
 struct nni_proto_pipe_ops *
 nni_sock_proto_pipe_ops(nni_sock *sock)
 {

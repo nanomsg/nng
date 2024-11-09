@@ -250,6 +250,14 @@ NNG_DECL int nng_socket_get_ptr(nng_socket, const char *, void **);
 NNG_DECL int nng_socket_get_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_socket_get_addr(nng_socket, const char *, nng_sockaddr *);
 
+// These functions are used on a socket to get information about it's
+// identity, and the identity of the peer.  Few applications need these.
+NNG_DECL int nng_socket_proto_id(nng_socket id, uint16_t *);
+NNG_DECL int nng_socket_peer_id(nng_socket id, uint16_t *);
+NNG_DECL int nng_socket_proto_name(nng_socket id, const char **);
+NNG_DECL int nng_socket_peer_name(nng_socket id, const char **);
+NNG_DECL int nng_socket_raw(nng_socket, bool *);
+
 // Utility function for getting a printable form of the socket address
 // for display in logs, etc.  It is not intended to be parsed, and the
 // display format may change without notice.  Generally you should alow
@@ -1439,10 +1447,12 @@ NNG_DECL int nng_pipe_getopt_string(
 NNG_DECL void nng_closeall(void) NNG_DEPRECATED;
 
 // THese functions are deprecated, but they really serve no useful purpose.
-NNG_DECL int  nng_stream_set_addr(
-     nng_stream *, const char *, const nng_sockaddr *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_get_addr(nng_ctx, const char *, nng_sockaddr *) NNG_DEPRECATED;
-NNG_DECL int nng_ctx_set_addr(nng_ctx, const char *, const nng_sockaddr *) NNG_DEPRECATED;
+NNG_DECL int nng_stream_set_addr(
+    nng_stream *, const char *, const nng_sockaddr *) NNG_DEPRECATED;
+NNG_DECL int nng_ctx_get_addr(
+    nng_ctx, const char *, nng_sockaddr *) NNG_DEPRECATED;
+NNG_DECL int nng_ctx_set_addr(
+    nng_ctx, const char *, const nng_sockaddr *) NNG_DEPRECATED;
 
 #endif // NNG_ELIDE_DEPRECATED
 

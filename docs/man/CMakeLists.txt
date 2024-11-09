@@ -165,6 +165,9 @@ if (NNG_ENABLE_DOC)
             nng_sleep_aio
             nng_socket_id
             nng_socket_get
+            nng_socket_proto_id
+            nng_socket_proto_name
+            nng_socket_raw
             nng_socket_set
             nng_stats_free
             nng_stats_get

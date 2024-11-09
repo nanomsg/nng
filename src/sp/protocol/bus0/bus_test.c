@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -16,21 +16,19 @@
 void
 test_bus_identity(void)
 {
-	nng_socket s;
-	int        p;
-	char      *n;
+	nng_socket  s;
+	uint16_t    p;
+	const char *n;
 
 	NUTS_PASS(nng_bus0_open(&s));
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
+	NUTS_PASS(nng_socket_proto_id(s, &p));
 	NUTS_TRUE(p == NNG_BUS0_SELF);
-	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PEER, &p));
+	NUTS_PASS(nng_socket_peer_id(s, &p));
 	NUTS_TRUE(p == NNG_BUS0_PEER); // 49
-	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PROTONAME, &n));
+	NUTS_PASS(nng_socket_proto_name(s, &n));
 	NUTS_MATCH(n, NNG_BUS0_SELF_NAME);
-	nng_strfree(n);
-	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PEERNAME, &n));
+	NUTS_PASS(nng_socket_peer_name(s, &n));
 	NUTS_MATCH(n, NNG_BUS0_PEER_NAME);
-	nng_strfree(n);
 	NUTS_CLOSE(s);
 }
 
@@ -70,7 +68,7 @@ test_bus_device(void)
 {
 	nng_socket s1, s2, s3;
 	nng_socket none = NNG_SOCKET_INITIALIZER;
-	nng_aio *aio;
+	nng_aio   *aio;
 
 	NUTS_PASS(nng_bus0_open_raw(&s1));
 	NUTS_PASS(nng_bus0_open(&s2));
@@ -372,6 +370,8 @@ test_bus_cooked(void)
 	bool       b;
 
 	NUTS_PASS(nng_bus0_open(&s));
+	NUTS_PASS(nng_socket_raw(s, &b));
+	NUTS_TRUE(!b);
 	NUTS_PASS(nng_socket_get_bool(s, NNG_OPT_RAW, &b));
 	NUTS_TRUE(!b);
 	NUTS_FAIL(nng_socket_set_bool(s, NNG_OPT_RAW, true), NNG_EREADONLY);
