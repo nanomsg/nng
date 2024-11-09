@@ -141,34 +141,34 @@ one thread (which may be chosen randomly).
 ### Example 1: Allocating the condition variable
 
 ```c
-	nng_mtx *m;
-	nng_cv *cv;
-	nng_mtx_alloc(&m); // error checks elided
-	nng_cv_alloc(&cv, m);
+nng_mtx *m;
+nng_cv *cv;
+nng_mtx_alloc(&m); // error checks elided
+nng_cv_alloc(&cv, m);
 ```
 
 ### Example 2: Waiting for the condition
 
 ```c
-    expire = nng_clock() + 1000; // 1 second in the future
-    nng_mtx_lock(m);  // assume cv was allocated using m
-    while (!condition_true) {
-        if (nng_cv_until(cv, expire) == NNG_ETIMEDOUT) {
-            printf("Time out reached!\n");
-            break;
-        }
-    }
-    // condition_true is true
-    nng_mtx_unlock(m);
+expire = nng_clock() + 1000; // 1 second in the future
+nng_mtx_lock(m);  // assume cv was allocated using m
+while (!condition_true) {
+  if (nng_cv_until(cv, expire) == NNG_ETIMEDOUT) {
+    printf("Time out reached!\n");
+    break;
+  }
+}
+// condition_true is true
+nng_mtx_unlock(m);
 ```
 
 ### Example 3: Signaling the condition
 
 ```c
-    nng_mtx_lock(m);
-    condition_true = true;
-    nng_cv_wake(cv);
-    nng_mtx_unlock(m);
+nng_mtx_lock(m);
+condition_true = true;
+nng_cv_wake(cv);
+nng_mtx_unlock(m);
 ```
 
 {{#include ../xref.md}}

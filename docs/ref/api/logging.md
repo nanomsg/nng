@@ -84,12 +84,12 @@ The log levels are defined as follows:
 
 ```c
 typedef enum nng_log_level {
-	NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
-	NNG_LOG_ERR    = 3,
-	NNG_LOG_WARN   = 4,
-	NNG_LOG_NOTICE = 5,
-	NNG_LOG_INFO   = 6,
-	NNG_LOG_DEBUG  = 7
+    NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
+    NNG_LOG_ERR    = 3,
+    NNG_LOG_WARN   = 4,
+    NNG_LOG_NOTICE = 5,
+    NNG_LOG_INFO   = 6,
+    NNG_LOG_DEBUG  = 7
 } nng_log_level;
 ```
 
@@ -115,17 +115,17 @@ The following values are defined:
 
 ```c
 typedef enum nng_log_facility {
-	NNG_LOG_USER   = 1,
-	NNG_LOG_DAEMON = 3,
-	NNG_LOG_AUTH   = 10,
-	NNG_LOG_LOCAL0 = 16,
-	NNG_LOG_LOCAL1 = 17,
-	NNG_LOG_LOCAL2 = 18,
-	NNG_LOG_LOCAL3 = 19,
-	NNG_LOG_LOCAL4 = 20,
-	NNG_LOG_LOCAL5 = 21,
-	NNG_LOG_LOCAL6 = 22,
-	NNG_LOG_LOCAL7 = 23,
+    NNG_LOG_USER   = 1,
+    NNG_LOG_DAEMON = 3,
+    NNG_LOG_AUTH   = 10,
+    NNG_LOG_LOCAL0 = 16,
+    NNG_LOG_LOCAL1 = 17,
+    NNG_LOG_LOCAL2 = 18,
+    NNG_LOG_LOCAL3 = 19,
+    NNG_LOG_LOCAL4 = 20,
+    NNG_LOG_LOCAL5 = 21,
+    NNG_LOG_LOCAL6 = 22,
+    NNG_LOG_LOCAL7 = 23,
 } nng_log_facility;
 ```
 
