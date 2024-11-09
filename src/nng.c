@@ -1146,6 +1146,85 @@ nng_socket_get_addr(nng_socket id, const char *n, nng_sockaddr *v)
 }
 
 int
+nng_socket_proto_id(nng_socket id, uint16_t *idp)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+
+	*idp = nni_sock_proto_id(sock);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
+nng_socket_peer_id(nng_socket id, uint16_t *idp)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+
+	*idp = nni_sock_peer_id(sock);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
+nng_socket_proto_name(nng_socket id, const char **name)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+
+	*name = nni_sock_proto_name(sock);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
+nng_socket_peer_name(nng_socket id, const char **name)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+
+	*name = nni_sock_peer_name(sock);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
+nng_socket_raw(nng_socket id, bool *rawp)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if (((rv = nni_init()) != 0) ||
+	    ((rv = nni_sock_find(&sock, id.id)) != 0)) {
+		return (rv);
+	}
+	*rawp = nni_sock_raw(sock);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
 nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg)
 {
 	int       rv;

@@ -22,6 +22,7 @@ extern uint16_t    nni_sock_proto_id(nni_sock *);
 extern uint16_t    nni_sock_peer_id(nni_sock *);
 extern const char *nni_sock_proto_name(nni_sock *);
 extern const char *nni_sock_peer_name(nni_sock *);
+extern bool        nni_sock_raw(nni_sock *);
 extern void       *nni_sock_proto_data(nni_sock *);
 extern void        nni_sock_add_stat(nni_sock *, nni_stat_item *);
 

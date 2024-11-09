@@ -1,0 +1,46 @@
+= nng_socket_proto_id(3)
+//
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_socket_proto_id - obtain the socket protocol id
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_socket_proto_id(nng_socket s, uint16_t *id);
+int nng_socket_peer_id(nng_socket s, uint16_t *id);
+----
+
+== DESCRIPTION
+
+These functions store the 16-bit protocol identifier of either the socket _s_,
+or its natural peer, in _id_.
+
+TIP: These functions should be used in place of the `NNG_OPT_PROTO` and `NNG_OPT_PEER`
+options in new code.
+
+== RETURN VALUES
+
+These functions return zero on success, or an error if the socket is invalid.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECLOSED`:: Parameter _s_ does not refer to an open socket.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

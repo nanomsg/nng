@@ -53,6 +53,9 @@ The following functions operate on sockets.
 |xref:nng_setopt.3.adoc[nng_setopt()]|set socket option
 |xref:nng_socket_get.3.adoc[nng_socket_get()]|get socket option
 |xref:nng_socket_id.3.adoc[nng_socket_id()]|get numeric socket identifier
+|xref:nng_socket_raw.3.adoc[nng_socket_raw()]|is the socket raw
+|xref:nng_socket_proto_id.3.adoc[nng_socket_raw()]|get the socket protocol identifier
+|xref:nng_socket_proto_name.3.adoc[nng_socket_raw()]|get the socket protocol name
 |xref:nng_socket_set.3.adoc[nng_socket_set()]|set socket option
 |===
 

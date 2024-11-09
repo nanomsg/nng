@@ -113,6 +113,8 @@ automatically copy message headers from a received message to the corresponding
 reply, whereas in raw mode this is not done.)
 See xref:nng.7.adoc#raw_mode[Raw Mode] for more details.
 
+NOTE: This option is deprecated.  Use the xref:nng_socket_raw.3.adoc[`nng_socket_raw`] function instead.
+
 [[NNG_OPT_RECONNMINT]]
 ((`NNG_OPT_RECONNMINT`))::
 (((reconnect time, minimum)))
@@ -326,11 +328,15 @@ application.
 (`int`)
 This read-only option is used to obtain the 16-bit number for the socket's protocol.
 
+NOTE: This option is deprecated.  Use the xref:nng_socket_proto_id.3.adoc[`nng_socket_proto_id`] function instead.
+
 [[NNG_OPT_PEER]]
 ((`NNG_OPT_PEER`))::
 (`int`)
 This read-only option is used to obtain the 16-bit number of the
 peer protocol for the socket.
+
+NOTE: This option is deprecated.  Use the xref:nng_socket_proto_id.3.adoc[`nng_socket_peer_id`] function instead.
 
 [[NNG_OPT_PEER_GID]]
 ((`NNG_OPT_PEER_GID`))::
@@ -370,10 +376,14 @@ Zones (and this option) are only supported on Solaris and illumos systems, on se
 (string)
 This read-only option is used to obtain the name of the peer protocol for the socket.
 
+NOTE: This option is deprecated.  Use the xref:nng_socket_proto_name.3.adoc[`nng_socket_peer_name`] function instead.
+
 [[NNG_OPT_PROTONAME]]
 ((`NNG_OPT_PROTONAME`))::
 (string)
 This read-only option is used to obtain the name of the socket's protocol.
+
+NOTE: This option is deprecated.  Use the xref:nng_socket_proto_name.3.adoc[`nng_socket_proto_name`] function instead.
 
 == SEE ALSO
 
