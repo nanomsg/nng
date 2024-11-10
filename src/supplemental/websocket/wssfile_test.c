@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 #include "nng/supplemental/tls/tls.h"
 
 #include <nuts.h>
@@ -214,6 +215,62 @@ test_cert_file_not_present(void)
 	nng_tls_config_free(c);
 }
 
+static void
+test_tls_config(void)
+{
+	uint16_t        port = nuts_next_port();
+	nng_socket      s1;
+	nng_socket      s2;
+	nng_listener    l;
+	nng_dialer      d;
+	char            addr[40];
+	nng_tls_config *cfg;
+
+	(void) snprintf(addr, sizeof(addr), "wss4://:%u/test", port);
+
+	NUTS_PASS(nng_pair_open(&s1));
+	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_listener_create(&l, s1, addr));
+	NUTS_PASS(nng_listener_get_tls(l, &cfg));
+	nng_tls_config_hold(cfg);
+	NUTS_TRUE(cfg != NULL);
+
+	init_listener_wss_file(l);
+	NUTS_PASS(nng_listener_start(l, 0));
+
+	// make sure we cannot change the auth mode while running
+
+	NUTS_FAIL(nng_listener_set_tls(l, cfg), NNG_EBUSY);
+	nng_tls_config_free(cfg);
+
+	NUTS_PASS(nng_listener_get_tls(l, &cfg));
+
+	NUTS_FAIL(
+	    nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_NONE), NNG_EBUSY);
+
+	nng_msleep(100);
+
+	snprintf(addr, sizeof(addr), "wss://127.0.0.1:%u/test", port);
+
+	// We find that sometimes this fails due to NNG_EPEERAUTH, but it
+	// can also fail due to NNG_ECLOSED.  This seems to be timing
+	// dependent, based on receive vs. send timing most likely.
+	// Applications shouldn't really depend that much on this.
+	int rv;
+
+	NUTS_PASS(nng_dialer_create(&d, s2, addr));
+	rv = nng_dialer_start(d, 0);
+	NUTS_PASS(nng_dialer_get_tls(d, &cfg));
+	NUTS_FAIL(nng_dialer_set_tls(d, cfg), NNG_EBUSY);
+
+	NUTS_TRUE(rv != 0);
+	NUTS_TRUE((rv == NNG_EPEERAUTH) || (rv == NNG_ECLOSED) ||
+	    (rv == NNG_ECRYPTO));
+
+	NUTS_PASS(nng_close(s1));
+	NUTS_PASS(nng_close(s2));
+}
+
 #endif
 
 NUTS_TESTS = {
@@ -222,6 +279,7 @@ NUTS_TESTS = {
 	{ "wss file no verify", test_no_verify },
 	{ "wss file verify works", test_verify_works },
 	{ "wss file ca cert missing", test_cert_file_not_present },
+	{ "wss tls config", test_tls_config },
 #endif
 	{ NULL, NULL },
 };

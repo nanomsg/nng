@@ -102,6 +102,7 @@ typedef struct {
 	nng_stream_dialer  ops;
 	nng_stream_dialer *d; // underlying TCP dialer
 	nng_tls_config    *cfg;
+	bool               started;
 	nni_mtx            lk; // protects the config
 } tls_dialer;
 
@@ -186,6 +187,9 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 		tls_free(conn);
 		return;
 	}
+	nni_mtx_lock(&d->lk);
+	d->started = true;
+	nni_mtx_unlock(&d->lk);
 
 	nng_stream_dialer_dial(d->d, &conn->conn_aio);
 }
@@ -198,9 +202,15 @@ tls_dialer_set_tls(void *arg, nng_tls_config *cfg)
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
 	}
+
 	nng_tls_config_hold(cfg);
 
 	nni_mtx_lock(&d->lk);
+	if (d->started) {
+		nni_mtx_unlock(&d->lk);
+		nng_tls_config_free(cfg);
+		return (NNG_EBUSY);
+	}
 	old    = d->cfg;
 	d->cfg = cfg;
 	nni_mtx_unlock(&d->lk);
@@ -287,6 +297,7 @@ typedef struct {
 	nng_stream_listener  ops;
 	nng_stream_listener *l;
 	nng_tls_config      *cfg;
+	bool                 started;
 	nni_mtx              lk;
 } tls_listener;
 
@@ -314,6 +325,9 @@ static int
 tls_listener_listen(void *arg)
 {
 	tls_listener *l = arg;
+	nni_mtx_lock(&l->lk);
+	l->started = true;
+	nni_mtx_unlock(&l->lk);
 	return (nng_stream_listener_listen(l->l));
 }
 
@@ -352,6 +366,11 @@ tls_listener_set_tls(void *arg, nng_tls_config *cfg)
 	nng_tls_config_hold(cfg);
 
 	nni_mtx_lock(&l->lk);
+	if (l->started) {
+		nni_mtx_unlock(&l->lk);
+		nng_tls_config_free(cfg);
+		return (NNG_EBUSY);
+	}
 	old    = l->cfg;
 	l->cfg = cfg;
 	nni_mtx_unlock(&l->lk);

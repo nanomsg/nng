@@ -170,11 +170,31 @@ test_ws_recv_max(void)
 	NUTS_CLOSE(s1);
 }
 
+void
+test_ws_no_tls(void)
+{
+	nng_socket      s0;
+	nng_listener    l;
+	nng_dialer      d;
+	char           *addr;
+	nng_tls_config *tls;
+
+	NUTS_ADDR(addr, "ws");
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_FAIL(nng_listener_get_tls(l, &tls), NNG_ENOTSUP);
+
+	NUTS_PASS(nng_dialer_create(&d, s0, addr));
+	NUTS_FAIL(nng_dialer_get_tls(d, &tls), NNG_ENOTSUP);
+	NUTS_CLOSE(s0);
+}
+
 TEST_LIST = {
 	{ "ws url path filters", test_ws_url_path_filters },
 	{ "ws wild card port", test_wild_card_port },
 	{ "ws wild card host", test_wild_card_host },
 	{ "ws empty host", test_empty_host },
 	{ "ws recv max", test_ws_recv_max },
+	{ "ws no tls", test_ws_no_tls },
 	{ NULL, NULL },
 };
