@@ -27,7 +27,7 @@ static nni_cv   resolv_cv   = NNI_CV_INITIALIZER(&resolv_mtx);
 static bool     resolv_fini = false;
 static nni_list resolv_aios;
 static nni_thr *resolv_thrs;
-static int      resolv_num_thr;
+static int16_t  resolv_num_thr;
 
 typedef struct resolv_item resolv_item;
 struct resolv_item {
@@ -432,28 +432,24 @@ nni_parse_ip_port(const char *addr, nni_sockaddr *sa)
 }
 
 int
-nni_win_resolv_sysinit(void)
+nni_win_resolv_sysinit(nng_init_params *params)
 {
 	nni_aio_list_init(&resolv_aios);
 	resolv_fini = false;
 
-#ifndef NNG_RESOLV_CONCURRENCY
-#define NNG_RESOLV_CONCURRENCY 4
-#endif
-
-	resolv_num_thr = (int) nni_init_get_param(
-	    NNG_INIT_NUM_RESOLVER_THREADS, NNG_RESOLV_CONCURRENCY);
+	resolv_num_thr = params->num_resolver_threads;
 	if (resolv_num_thr < 1) {
 		resolv_num_thr = 1;
 	}
+	params->num_resolver_threads = resolv_num_thr;
+
 	// no limit on the maximum for now
-	nni_init_set_effective(NNG_INIT_NUM_RESOLVER_THREADS, resolv_num_thr);
 	resolv_thrs = NNI_ALLOC_STRUCTS(resolv_thrs, resolv_num_thr);
 	if (resolv_thrs == NULL) {
 		return (NNG_ENOMEM);
 	}
 
-	for (int i = 0; i < resolv_num_thr; i++) {
+	for (int16_t i = 0; i < resolv_num_thr; i++) {
 		int rv = nni_thr_init(&resolv_thrs[i], resolv_worker, NULL);
 		if (rv != 0) {
 			nni_win_resolv_sysfini();

@@ -75,6 +75,9 @@ main(int argc, char **argv)
 	argc--;
 	argv++;
 
+	nng_init(NULL);
+	atexit(nng_fini);
+
 	// We calculate a delay factor to roughly delay 1 usec.  We don't
 	// need this to be perfect, just reproducible on the same host.
 	unsigned long cnt = 1000000;

@@ -369,9 +369,6 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 	tcp_listener *l;
 	int           rv;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -398,9 +395,6 @@ nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	int          rv;
 	nng_sockaddr sa;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	if ((rv = nni_url_to_address(&sa, url)) != 0) {
 		return (rv);
 	}

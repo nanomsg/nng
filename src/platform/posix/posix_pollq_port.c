@@ -42,7 +42,7 @@ struct nni_posix_pfd {
 	bool             closed;
 	bool             closing;
 	nni_posix_pfd_cb cb;
-	void *           data;
+	void            *data;
 };
 
 // single global instance for now
@@ -52,7 +52,7 @@ int
 nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
 	nni_posix_pollq *pq;
-	nni_posix_pfd *  pfd;
+	nni_posix_pfd   *pfd;
 
 	pq = &nni_posix_global_pollq;
 
@@ -153,10 +153,10 @@ nni_posix_poll_thr(void *arg)
 	for (;;) {
 		nni_posix_pollq *pq = arg;
 		port_event_t     ev[NNI_MAX_PORTEV];
-		nni_posix_pfd *  pfd;
+		nni_posix_pfd   *pfd;
 		unsigned         events;
 		nni_posix_pfd_cb cb;
-		void *           arg;
+		void            *arg;
 		unsigned         n;
 
 		n = 1; // wake us even on just one event
@@ -246,8 +246,9 @@ nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
 }
 
 int
-nni_posix_pollq_sysinit(void)
+nni_posix_pollq_sysinit(nng_init_params *params)
 {
+	NNI_ARG_UNUSED(params);
 	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 

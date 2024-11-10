@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 
 typedef struct nni_taskq_thr nni_taskq_thr;
 struct nni_taskq_thr {
@@ -243,24 +244,13 @@ nni_task_fini(nni_task *task)
 }
 
 int
-nni_taskq_sys_init(void)
+nni_taskq_sys_init(nng_init_params *params)
 {
-	int num_thr;
-	int max_thr;
+	int16_t num_thr;
+	int16_t max_thr;
 
-#ifndef NNG_NUM_TASKQ_THREADS
-#define NNG_NUM_TASKQ_THREADS (nni_plat_ncpu() * 2)
-#endif
-
-#ifndef NNG_MAX_TASKQ_THREADS
-#define NNG_MAX_TASKQ_THREADS 16
-#endif
-
-	max_thr = (int) nni_init_get_param(
-	    NNG_INIT_MAX_TASK_THREADS, NNG_MAX_TASKQ_THREADS);
-
-	num_thr = (int) nni_init_get_param(
-	    NNG_INIT_NUM_TASK_THREADS, NNG_NUM_TASKQ_THREADS);
+	max_thr = params->max_task_threads;
+	num_thr = params->num_task_threads;
 
 	if ((max_thr > 0) && (num_thr > max_thr)) {
 		num_thr = max_thr;
@@ -268,9 +258,9 @@ nni_taskq_sys_init(void)
 	if (num_thr < 2) {
 		num_thr = 2;
 	}
-	nni_init_set_effective(NNG_INIT_NUM_TASK_THREADS, num_thr);
+	params->num_task_threads = num_thr;
 
-	return (nni_taskq_init(&nni_taskq_systq, num_thr));
+	return (nni_taskq_init(&nni_taskq_systq, (int) num_thr));
 }
 
 void

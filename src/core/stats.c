@@ -385,10 +385,6 @@ int
 nng_stats_get(nng_stat **statp)
 {
 #ifdef NNG_ENABLE_STATS
-	int rv;
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	return (nni_stat_snapshot(statp, &stats_root));
 #else
 	NNI_ARG_UNUSED(statp);

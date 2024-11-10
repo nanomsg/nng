@@ -71,25 +71,16 @@ nni_win_io_init(nni_win_io *io, nni_win_io_cb cb, void *ptr)
 }
 
 int
-nni_win_io_sysinit(void)
+nni_win_io_sysinit(nng_init_params *params)
 {
-	HANDLE h;
-	int    i;
-	int    rv;
-	int    num_thr;
-	int    max_thr;
+	HANDLE  h;
+	int     i;
+	int     rv;
+	int16_t num_thr;
+	int16_t max_thr;
 
-#ifndef NNG_MAX_POLLER_THREADS
-#define NNG_MAX_POLLER_THREADS 8
-#endif
-#ifndef NNG_NUM_POLLER_THREADS
-#define NNG_NUM_POLLER_THREADS (nni_plat_ncpu())
-#endif
-	max_thr = (int) nni_init_get_param(
-	    NNG_INIT_MAX_POLLER_THREADS, NNG_MAX_POLLER_THREADS);
-
-	num_thr = (int) nni_init_get_param(
-	    NNG_INIT_NUM_POLLER_THREADS, NNG_NUM_POLLER_THREADS);
+	max_thr = params->max_poller_threads;
+	num_thr = params->num_poller_threads;
 
 	if ((max_thr > 0) && (num_thr > max_thr)) {
 		num_thr = max_thr;
@@ -97,7 +88,7 @@ nni_win_io_sysinit(void)
 	if (num_thr < 1) {
 		num_thr = 1;
 	}
-	nni_init_set_effective(NNG_INIT_NUM_POLLER_THREADS, num_thr);
+	params->num_poller_threads = num_thr;
 	if ((win_io_thrs = NNI_ALLOC_STRUCTS(win_io_thrs, num_thr)) == NULL) {
 		return (NNG_ENOMEM);
 	}

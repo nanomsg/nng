@@ -823,24 +823,13 @@ nni_aio_sys_fini(void)
 }
 
 int
-nni_aio_sys_init(void)
+nni_aio_sys_init(nng_init_params *params)
 {
-	int num_thr;
-	int max_thr;
+	int16_t num_thr;
+	int16_t max_thr;
 
-#ifndef NNG_MAX_EXPIRE_THREADS
-#define NNG_MAX_EXPIRE_THREADS 8
-#endif
-
-#ifndef NNG_NUM_EXPIRE_THREADS
-#define NNG_NUM_EXPIRE_THREADS (nni_plat_ncpu())
-#endif
-
-	max_thr = (int) nni_init_get_param(
-	    NNG_INIT_MAX_EXPIRE_THREADS, NNG_MAX_EXPIRE_THREADS);
-
-	num_thr = (int) nni_init_get_param(
-	    NNG_INIT_NUM_EXPIRE_THREADS, NNG_NUM_EXPIRE_THREADS);
+	max_thr = params->max_expire_threads;
+	num_thr = params->num_expire_threads;
 
 	if ((max_thr > 0) && (num_thr > max_thr)) {
 		num_thr = max_thr;
@@ -848,7 +837,7 @@ nni_aio_sys_init(void)
 	if (num_thr < 1) {
 		num_thr = 1;
 	}
-	nni_init_set_effective(NNG_INIT_NUM_EXPIRE_THREADS, num_thr);
+	params->num_expire_threads = num_thr;
 	nni_aio_expire_q_list =
 	    nni_zalloc(sizeof(nni_aio_expire_q *) * num_thr);
 	nni_aio_expire_q_cnt = num_thr;

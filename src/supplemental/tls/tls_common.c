@@ -258,9 +258,6 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 		my_url.u_scheme += 4;
 	}
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -420,9 +417,6 @@ nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 		my_url.u_scheme += 4;
 	}
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -1193,10 +1187,6 @@ nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 	size_t                size;
 	int                   rv;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-
 	eng = nni_atomic_get_ptr(&tls_engine);
 
 	if (eng == NULL) {
@@ -1252,8 +1242,6 @@ nng_tls_engine_name(void)
 {
 	const nng_tls_engine *eng;
 
-	nni_init();
-
 	eng = nni_atomic_get_ptr(&tls_engine);
 
 	return (eng == NULL ? "none" : eng->name);
@@ -1264,8 +1252,6 @@ nng_tls_engine_description(void)
 {
 	const nng_tls_engine *eng;
 
-	nni_init();
-
 	eng = nni_atomic_get_ptr(&tls_engine);
 
 	return (eng == NULL ? "" : eng->description);
@@ -1275,8 +1261,6 @@ bool
 nng_tls_engine_fips_mode(void)
 {
 	const nng_tls_engine *eng;
-
-	nni_init();
 
 	eng = nni_atomic_get_ptr(&tls_engine);
 

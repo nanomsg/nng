@@ -23,13 +23,18 @@ extern void nuts_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Call nng_fini during test finalization -- this avoids leak warnings.
-extern void nng_fini(void);
+#ifndef TEST_FINI
 #define TEST_FINI nng_fini()
+#endif
+
+#ifndef TEST_INIT
 #define TEST_INIT                                \
 	do {                                     \
+		nng_init(NULL);                  \
 		nng_log_set_logger(nuts_logger); \
 		nng_log_set_level(NNG_LOG_NONE); \
 	} while (0)
+#endif
 #include "acutest.h"
 
 #include <stdbool.h>

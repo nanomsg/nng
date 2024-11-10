@@ -723,6 +723,9 @@ main(int ac, char **av)
 	addrend  = &addrs;
 	topicend = &topics;
 
+	nng_init(NULL);
+	atexit(nng_fini);
+
 	while ((rv = nng_opts_parse(ac, av, opts, &val, &arg, &idx)) == 0) {
 		switch (val) {
 		case OPT_HELP:

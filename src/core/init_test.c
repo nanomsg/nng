@@ -7,93 +7,97 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
-uint64_t nni_init_get_param(
-    nng_init_parameter parameter, uint64_t default_value);
-uint64_t nni_init_get_effective(nng_init_parameter p);
-void     nni_init_set_effective(nng_init_parameter p, uint64_t);
+nng_init_params *nng_init_get_params(void);
 
 void
 test_init_param(void)
 {
-	NUTS_ASSERT(nni_init_get_param(NNG_INIT_PARAMETER_NONE, 456) == 456);
-	nng_init_set_parameter(NNG_INIT_PARAMETER_NONE, 123);
-	NUTS_ASSERT(nni_init_get_param(NNG_INIT_PARAMETER_NONE, 567) == 123);
-	nni_init_set_effective(NNG_INIT_PARAMETER_NONE, 124);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_PARAMETER_NONE) == 124);
-	NUTS_ASSERT(nni_init_get_param(NNG_INIT_PARAMETER_NONE, 567) == 123);
-	nng_fini();
-	NUTS_ASSERT(nni_init_get_param(NNG_INIT_PARAMETER_NONE, 567) == 567);
-}
-
-void
-test_set_effective(void)
-{
-	nni_init_set_effective(NNG_INIT_PARAMETER_NONE, 999);
-	NUTS_ASSERT(nni_init_get_param(NNG_INIT_PARAMETER_NONE, 0) == 0);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_PARAMETER_NONE) == 999);
-	nng_fini();
+	nng_init_params *p;
+	p = nng_init_get_params();
+	NUTS_ASSERT(p != NULL);
 }
 
 void
 test_init_zero_resolvers(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_RESOLVER_THREADS, 0);
-	NUTS_OPEN(s);
-	NUTS_CLOSE(s);
-	NUTS_ASSERT(
-	    nni_init_get_effective(NNG_INIT_NUM_RESOLVER_THREADS) == 1);
+	nng_init_params *pp;
+	nng_init_params  p     = { 0 };
+	p.num_resolver_threads = 0;
+	nng_fini();
+	NUTS_PASS(nng_init(&p));
+	pp = nng_init_get_params();
+	NUTS_ASSERT(pp->num_resolver_threads > 0);
 	nng_fini();
 }
 
 void
 test_init_one_task_thread(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_TASK_THREADS, 0);
-	nng_init_set_parameter(NNG_INIT_MAX_TASK_THREADS, 1);
-	NUTS_OPEN(s);
-	NUTS_CLOSE(s);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_NUM_TASK_THREADS) == 2);
+	nng_init_params *pp;
+	nng_init_params  p = { 0 };
+
 	nng_fini();
+	p.max_task_threads = 1;
+	NUTS_PASS(nng_init(&p));
+	pp = nng_init_get_params();
+	NUTS_ASSERT(pp->max_task_threads == 1);
 }
 
 void
 test_init_too_many_task_threads(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_TASK_THREADS, 256);
-	nng_init_set_parameter(NNG_INIT_MAX_TASK_THREADS, 4);
+	nng_socket       s;
+	nng_init_params *pp;
+	nng_init_params  p = { 0 };
+
+	p.num_task_threads = 256;
+	p.max_task_threads = 4;
+
+	nng_fini();
+	NUTS_PASS(nng_init(&p));
 	NUTS_OPEN(s);
 	NUTS_CLOSE(s);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_NUM_TASK_THREADS) == 4);
-	nng_fini();
+	pp = nng_init_get_params();
+	NUTS_TRUE(pp->num_task_threads == 4);
 }
 
 void
 test_init_no_expire_thread(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_EXPIRE_THREADS, 0);
-	nng_init_set_parameter(NNG_INIT_MAX_EXPIRE_THREADS, 0);
+	nng_socket       s;
+	nng_init_params *pp;
+	nng_init_params  p = { 0 };
+
+	nng_fini();
+	p.num_expire_threads = 0;
+	p.max_expire_threads = 0;
+	NUTS_PASS(nng_init(&p));
 	NUTS_OPEN(s);
 	NUTS_CLOSE(s);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_NUM_EXPIRE_THREADS) == 1);
-	nng_fini();
+	pp = nng_init_get_params();
+	NUTS_TRUE(pp->num_expire_threads > 0);
+	NUTS_MSG("Got %d expire threads", pp->num_expire_threads);
 }
 
 void
 test_init_too_many_expire_threads(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_EXPIRE_THREADS, 256);
-	nng_init_set_parameter(NNG_INIT_MAX_EXPIRE_THREADS, 2);
+	nng_socket       s;
+	nng_init_params *pp;
+	nng_init_params  p = { 0 };
+
+	nng_fini();
+	p.num_expire_threads = 256;
+	p.max_expire_threads = 2;
+	NUTS_PASS(nng_init(&p));
 	NUTS_OPEN(s);
 	NUTS_CLOSE(s);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_NUM_EXPIRE_THREADS) == 2);
-	nng_fini();
+	pp = nng_init_get_params();
+	NUTS_TRUE(pp->num_expire_threads == 2);
+	NUTS_MSG("Got %d expire threads", pp->num_expire_threads);
 }
 
 // poller tuning only supported on Windows right now
@@ -101,31 +105,42 @@ test_init_too_many_expire_threads(void)
 void
 test_init_poller_no_threads(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_POLLER_THREADS, 0);
-	nng_init_set_parameter(NNG_INIT_MAX_POLLER_THREADS, 0);
+	nng_socket       s;
+	nng_init_params *pp;
+	nng_init_params  p = { 0 };
+
+	nng_fini();
+	p.num_poller_threads = 0;
+	p.max_poller_threads = 0;
+	NUTS_PASS(nng_init(&p));
 	NUTS_OPEN(s);
 	NUTS_CLOSE(s);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_NUM_POLLER_THREADS) == 1);
-	nng_fini();
+	pp = nng_init_get_params();
+	NUTS_TRUE(pp->num_poller_threads > 0);
+	NUTS_MSG("Got %d poller threads", pp->num_expire_threads);
 }
 
 void
 test_init_too_many_poller_threads(void)
 {
-	nng_socket s;
-	nng_init_set_parameter(NNG_INIT_NUM_POLLER_THREADS, 256);
-	nng_init_set_parameter(NNG_INIT_MAX_POLLER_THREADS, 2);
+	nng_socket       s;
+	nng_init_params *pp;
+	nng_init_params  p = { 0 };
+
+	nng_fini();
+	p.num_poller_threads = 256;
+	p.max_poller_threads = 2;
+	NUTS_PASS(nng_init(&p));
 	NUTS_OPEN(s);
 	NUTS_CLOSE(s);
-	NUTS_ASSERT(nni_init_get_effective(NNG_INIT_NUM_POLLER_THREADS) == 2);
-	nng_fini();
+	pp = nng_init_get_params();
+	NUTS_TRUE(pp->num_poller_threads == 2);
+	NUTS_MSG("Got %d poller threads", pp->num_expire_threads);
 }
 #endif
 
 NUTS_TESTS = {
 	{ "init parameter", test_init_param },
-	{ "init set effective", test_set_effective },
 	{ "init zero resolvers", test_init_zero_resolvers },
 	{ "init one task thread", test_init_one_task_thread },
 	{ "init too many task threads", test_init_too_many_task_threads },

@@ -70,8 +70,6 @@ check_props_v6(nng_msg *msg)
 }
 
 TestMain("TCP (IPv6) Transport", {
-	nni_init();
-
 	if (has_v6()) {
 		trantest_test_extended("tcp://[::1]:", check_props_v6);
 	} else {

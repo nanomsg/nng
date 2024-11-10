@@ -272,12 +272,7 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 int
 nni_listener_find(nni_listener **lp, uint32_t id)
 {
-	int           rv;
 	nni_listener *l;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 
 	nni_mtx_lock(&listeners_lk);
 	if ((l = nni_id_get(&listeners, id)) != NULL) {

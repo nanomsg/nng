@@ -169,12 +169,6 @@ nng_stream_dialer_dial(nng_stream_dialer *d, nng_aio *aio)
 int
 nng_stream_dialer_alloc_url(nng_stream_dialer **dp, const nng_url *url)
 {
-	int rv;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-
 	for (int i = 0; stream_drivers[i].scheme != NULL; i++) {
 		if (strcmp(stream_drivers[i].scheme, url->u_scheme) == 0) {
 			return (stream_drivers[i].dialer_alloc(dp, url));
@@ -189,9 +183,6 @@ nng_stream_dialer_alloc(nng_stream_dialer **dp, const char *uri)
 	nng_url *url;
 	int      rv;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	if ((rv = nng_url_parse(&url, uri)) != 0) {
 		return (rv);
 	}
@@ -291,12 +282,6 @@ nni_stream_listener_set_tls(nng_stream_listener *l, nng_tls_config *cfg)
 int
 nng_stream_listener_alloc_url(nng_stream_listener **lp, const nng_url *url)
 {
-	int rv;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-
 	for (int i = 0; stream_drivers[i].scheme != NULL; i++) {
 		if (strcmp(stream_drivers[i].scheme, url->u_scheme) == 0) {
 			return (stream_drivers[i].listener_alloc(lp, url));
@@ -310,10 +295,6 @@ nng_stream_listener_alloc(nng_stream_listener **lp, const char *uri)
 {
 	nng_url *url;
 	int      rv;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 
 	if ((rv = nng_url_parse(&url, uri)) != 0) {
 		return (rv);

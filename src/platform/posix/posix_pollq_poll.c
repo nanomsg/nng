@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
 
@@ -63,7 +64,7 @@ struct nni_posix_pfd {
 	nni_mtx          mtx;
 	unsigned         events;
 	nni_posix_pfd_cb cb;
-	void *           arg;
+	void            *arg;
 };
 
 static nni_posix_pollq nni_posix_global_pollq;
@@ -71,7 +72,7 @@ static nni_posix_pollq nni_posix_global_pollq;
 int
 nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
-	nni_posix_pfd *  pfd;
+	nni_posix_pfd   *pfd;
 	nni_posix_pollq *pq = &nni_posix_global_pollq;
 
 	// Set this is as soon as possible (narrow the close-exec race as
@@ -186,8 +187,8 @@ nni_posix_poll_thr(void *arg)
 {
 	nni_posix_pollq *pq     = arg;
 	int              nalloc = 0;
-	struct pollfd *  fds    = NULL;
-	nni_posix_pfd ** pfds   = NULL;
+	struct pollfd   *fds    = NULL;
+	nni_posix_pfd  **pfds   = NULL;
 
 	for (;;) {
 		int            nfds;
@@ -277,7 +278,7 @@ nni_posix_poll_thr(void *arg)
 		for (int i = 1; i < nfds; i++) {
 			if ((events = fds[i].revents) != 0) {
 				nni_posix_pfd_cb cb;
-				void *           arg;
+				void            *arg;
 
 				pfd = pfds[i];
 
@@ -336,8 +337,9 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 }
 
 int
-nni_posix_pollq_sysinit(void)
+nni_posix_pollq_sysinit(nng_init_params *params)
 {
+	NNI_ARG_UNUSED(params);
 	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 

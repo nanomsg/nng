@@ -285,12 +285,7 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 int
 nni_dialer_find(nni_dialer **dp, uint32_t id)
 {
-	int         rv;
 	nni_dialer *d;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 
 	nni_mtx_lock(&dialers_lk);
 	if ((d = nni_id_get(&dialers, id)) != NULL) {

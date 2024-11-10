@@ -47,11 +47,6 @@
 // for abnormal programs on the platform, such as calling abort().
 extern void nni_plat_abort(void);
 
-// nni_plat_println is used to emit debug messages.  Typically this is used
-// during core debugging, or to emit panic messages.  Message content will
-// not contain newlines, but the output will add them.
-extern void nni_plat_println(const char *);
-
 // nni_plat_printf is like printf.  It should conform to C99 standard printf,
 // but is a function to allow platform ports to redirect.  It should go to
 // the same place that nni_plat_println does.
@@ -263,18 +258,10 @@ extern void nni_msleep(nni_duration);
 uint32_t nni_random(void);
 
 // nni_plat_init is called to allow the platform the chance to
-// do any necessary initialization.  This routine MUST be idempotent,
-// and thread-safe, and will be called before any other API calls, and
-// may be called at any point thereafter.  It is permitted to return
-// an error if some critical failure initializing the platform occurs,
-// but once this succeeds, all future calls must succeed as well, unless
-// nni_plat_fini has been called.
-//
-// The function argument should be called if the platform has not initialized
-// (i.e. exactly once), and its result passed back to the caller.  If it
-// does not return 0 (success), then it may be called again to try to
-// initialize the platform again at a later date.
-extern int nni_plat_init(int (*)(void));
+// do any necessary initialization.  This will be called before any other API
+// calls. It is permitted to return an error if some critical failure
+// initializing the platform occurs.
+extern int nni_plat_init(nng_init_params *);
 
 // nni_plat_fini is called to clean up resources.  It is intended to
 // be called as the last thing executed in the library, and no other functions

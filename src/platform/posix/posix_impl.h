@@ -147,9 +147,9 @@ struct nni_atomic_ptr {
 
 #endif
 
-extern int  nni_posix_pollq_sysinit(void);
+extern int  nni_posix_pollq_sysinit(nng_init_params *);
 extern void nni_posix_pollq_sysfini(void);
-extern int  nni_posix_resolv_sysinit(void);
+extern int  nni_posix_resolv_sysinit(nng_init_params *);
 extern void nni_posix_resolv_sysfini(void);
 
 #endif // PLATFORM_POSIX_IMPL_H

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
@@ -9,6 +9,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #ifdef NNG_HAVE_KQUEUE
 
 #include <errno.h>
@@ -41,7 +42,7 @@ struct nni_posix_pfd {
 	nni_list_node    node; // linkage into the reap list
 	nni_posix_pollq *pq;   // associated pollq
 	int              fd;   // file descriptor to poll
-	void *           arg;  // user data
+	void            *arg;  // user data
 	nni_posix_pfd_cb cb;   // user callback on event
 	bool             closed;
 	unsigned         events;
@@ -57,7 +58,7 @@ static nni_posix_pollq nni_posix_global_pollq;
 int
 nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
-	nni_posix_pfd *  pf;
+	nni_posix_pfd   *pf;
 	nni_posix_pollq *pq;
 	struct kevent    ev[2];
 	unsigned         flags = EV_ADD | EV_DISABLE | EV_CLEAR;
@@ -234,9 +235,9 @@ nni_posix_poll_thr(void *arg)
 	for (;;) {
 		int              n;
 		struct kevent    evs[NNI_MAX_KQUEUE_EVENTS];
-		nni_posix_pfd *  pf;
+		nni_posix_pfd   *pf;
 		nni_posix_pfd_cb cb;
-		void *           cbarg;
+		void            *cbarg;
 		unsigned         revents;
 
 		nni_mtx_lock(&pq->mtx);
@@ -335,8 +336,9 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 }
 
 int
-nni_posix_pollq_sysinit(void)
+nni_posix_pollq_sysinit(nng_init_params *params)
 {
+	NNI_ARG_UNUSED(params);
 	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 

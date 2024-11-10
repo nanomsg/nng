@@ -1320,12 +1320,6 @@ static nni_sp_tran tls6_tran = {
 };
 #endif
 
-int
-nng_tls_register(void)
-{
-	return (nni_init());
-}
-
 void
 nni_sp_tls_register(void)
 {

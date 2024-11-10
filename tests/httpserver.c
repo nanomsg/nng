@@ -35,12 +35,12 @@ httpdo(nng_url *url, nng_http_req *req, nng_http_res *res, void **datap,
     size_t *sizep)
 {
 	int              rv;
-	nng_aio *        aio  = NULL;
+	nng_aio         *aio  = NULL;
 	nng_http_client *cli  = NULL;
-	nng_http_conn *  h    = NULL;
+	nng_http_conn   *h    = NULL;
 	size_t           clen = 0;
-	void *           data = NULL;
-	const char *     ptr;
+	void            *data = NULL;
+	const char      *ptr;
 
 	if (((rv = nng_aio_alloc(&aio, NULL, NULL)) != 0) ||
 	    ((rv = nng_http_client_alloc(&cli, url)) != 0)) {
@@ -107,11 +107,11 @@ httpget(const char *addr, void **datap, size_t *sizep, uint16_t *statp,
 	int           rv;
 	nng_http_req *req   = NULL;
 	nng_http_res *res   = NULL;
-	nng_url *     url   = NULL;
+	nng_url      *url   = NULL;
 	size_t        clen  = 0;
-	void *        data  = NULL;
-	char *        ctype = NULL;
-	const char *  ptr;
+	void         *data  = NULL;
+	char         *ctype = NULL;
+	const char   *ptr;
 
 	if (((rv = nng_url_parse(&url, addr)) != 0) ||
 	    ((rv = nng_http_req_alloc(&req, url)) != 0) ||
@@ -161,7 +161,7 @@ httpecho(nng_aio *aio)
 	nng_http_req *req = nng_aio_get_input(aio, 0);
 	nng_http_res *res;
 	int           rv;
-	void *        body;
+	void         *body;
 	size_t        len;
 
 	nng_http_req_get_data(req, &body, &len);
@@ -180,10 +180,8 @@ httpecho(nng_aio *aio)
 }
 
 TestMain("HTTP Server", {
-	nng_http_server * s;
+	nng_http_server  *s;
 	nng_http_handler *h;
-
-	nni_init();
 
 	Convey("We can start an HTTP server", {
 		nng_aio *aio;
@@ -214,9 +212,9 @@ TestMain("HTTP Server", {
 
 		Convey("We can connect a client to it", {
 			nng_http_client *cli;
-			nng_http_conn *  h;
-			nng_http_req *   req;
-			nng_http_res *   res;
+			nng_http_conn   *h;
+			nng_http_req    *req;
+			nng_http_res    *res;
 
 			So(nng_http_client_alloc(&cli, url) == 0);
 			nng_http_client_connect(cli, aio);
@@ -287,13 +285,13 @@ TestMain("HTTP Server", {
 	Convey("Directory serving works (root)", {
 		char     urlstr[32];
 		nng_url *url;
-		char *   tmpdir;
-		char *   workdir;
-		char *   file1;
-		char *   file2;
-		char *   file3;
-		char *   subdir1;
-		char *   subdir2;
+		char    *tmpdir;
+		char    *workdir;
+		char    *file1;
+		char    *file2;
+		char    *file3;
+		char    *subdir1;
+		char    *subdir2;
 
 		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
@@ -335,10 +333,10 @@ TestMain("HTTP Server", {
 
 		Convey("Index.html works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl),
 			    "%s/subdir1/index.html", urlstr);
@@ -353,10 +351,10 @@ TestMain("HTTP Server", {
 
 		Convey("Index.htm works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(
 			    fullurl, sizeof(fullurl), "%s/subdir2", urlstr);
@@ -371,10 +369,10 @@ TestMain("HTTP Server", {
 
 		Convey("Named file works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(
 			    fullurl, sizeof(fullurl), "%s/file.txt", urlstr);
@@ -389,13 +387,13 @@ TestMain("HTTP Server", {
 
 		Convey("Named file with URI parameters works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
-			snprintf(
-			    fullurl, sizeof(fullurl), "%s/file.txt?param=123456", urlstr);
+			snprintf(fullurl, sizeof(fullurl),
+			    "%s/file.txt?param=123456", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNG_HTTP_STATUS_OK);
 			So(size == strlen(doc2));
@@ -407,10 +405,10 @@ TestMain("HTTP Server", {
 
 		Convey("Missing index gives 404", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
@@ -421,10 +419,10 @@ TestMain("HTTP Server", {
 
 		Convey("Custom error page works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			So(nng_http_server_set_error_page(s, 404, doc4) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
@@ -438,11 +436,11 @@ TestMain("HTTP Server", {
 
 		Convey("Bad method gives 405", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
@@ -461,11 +459,11 @@ TestMain("HTTP Server", {
 
 		Convey("Version 0.9 gives 505", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
@@ -484,11 +482,11 @@ TestMain("HTTP Server", {
 
 		Convey("Missing Host gives 400", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
@@ -509,13 +507,13 @@ TestMain("HTTP Server", {
 	Convey("Directory serving works", {
 		char     urlstr[32];
 		nng_url *url;
-		char *   tmpdir;
-		char *   workdir;
-		char *   file1;
-		char *   file2;
-		char *   file3;
-		char *   subdir1;
-		char *   subdir2;
+		char    *tmpdir;
+		char    *workdir;
+		char    *file1;
+		char    *file2;
+		char    *file3;
+		char    *subdir1;
+		char    *subdir2;
 
 		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
@@ -558,10 +556,10 @@ TestMain("HTTP Server", {
 
 		Convey("Index.html works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl),
 			    "%s/docs/subdir1/index.html", urlstr);
@@ -576,10 +574,10 @@ TestMain("HTTP Server", {
 
 		Convey("Index.htm works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/subdir2",
 			    urlstr);
@@ -594,10 +592,10 @@ TestMain("HTTP Server", {
 
 		Convey("Named file works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/file.txt",
 			    urlstr);
@@ -612,10 +610,10 @@ TestMain("HTTP Server", {
 
 		Convey("Missing index gives 404", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
@@ -626,10 +624,10 @@ TestMain("HTTP Server", {
 
 		Convey("Custom error page works", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			So(nng_http_server_set_error_page(s, 404, doc4) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
@@ -643,11 +641,11 @@ TestMain("HTTP Server", {
 
 		Convey("Bad method gives 405", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
@@ -666,11 +664,11 @@ TestMain("HTTP Server", {
 
 		Convey("Version 0.9 gives 505", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
@@ -689,11 +687,11 @@ TestMain("HTTP Server", {
 
 		Convey("Missing Host gives 400", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
@@ -714,11 +712,11 @@ TestMain("HTTP Server", {
 	Convey("Multiple tree handlers works", {
 		char     urlstr[32];
 		nng_url *url;
-		char *   tmpdir;
-		char *   workdir;
-		char *   workdir2;
-		char *   file1;
-		char *   file2;
+		char    *tmpdir;
+		char    *workdir;
+		char    *workdir2;
+		char    *file1;
+		char    *file2;
 
 		trantest_next_address(urlstr, "http://127.0.0.1:");
 		So(nng_url_parse(&url, urlstr) == 0);
@@ -771,10 +769,10 @@ TestMain("HTTP Server", {
 
 		Convey("Named file works (1)", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(
 			    fullurl, sizeof(fullurl), "%s/file1.txt", urlstr);
@@ -789,10 +787,10 @@ TestMain("HTTP Server", {
 
 		Convey("Named file works (2)", {
 			char     fullurl[256];
-			void *   data;
+			void    *data;
 			size_t   size;
 			uint16_t stat;
-			char *   ctype;
+			char    *ctype;
 
 			snprintf(fullurl, sizeof(fullurl),
 			    "%s/subdir/file2.txt", urlstr);
@@ -831,9 +829,9 @@ TestMain("HTTP Server", {
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 			char          txdata[5];
-			char *        rxdata;
+			char         *rxdata;
 
 			snprintf(txdata, sizeof(txdata), "1234");
 			So(nng_http_res_alloc(&res) == 0);
@@ -855,11 +853,11 @@ TestMain("HTTP Server", {
 
 		Convey("Get method gives 405", {
 			char          fullurl[256];
-			void *        data;
+			void         *data;
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 
 			So(nng_http_res_alloc(&res) == 0);
 			snprintf(fullurl, sizeof(fullurl), "%s/post", urlstr);
@@ -894,9 +892,9 @@ TestMain("HTTP Server", {
 			char          fullurl[256];
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
-			const char *  dest;
-			void *        data;
+			nng_url      *curl;
+			const char   *dest;
+			void         *data;
 			size_t        size;
 
 			So(nng_http_handler_alloc_redirect(&h, "/here", 301,
@@ -928,9 +926,9 @@ TestMain("HTTP Server", {
 			char          fullurl[256];
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
-			const char *  dest;
-			void *        data;
+			nng_url      *curl;
+			const char   *dest;
+			void         *data;
 			size_t        size;
 
 			// We'll use a 303 to ensure codes carry thru
@@ -965,10 +963,10 @@ TestMain("HTTP Server", {
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 			char          txdata[5];
-			const char *  dest;
-			void *        data;
+			const char   *dest;
+			void         *data;
 
 			So(nng_http_handler_alloc_redirect(&h, "/here", 301,
 			       "http://127.0.0.1/there") == 0);
@@ -1020,9 +1018,9 @@ TestMain("HTTP Server", {
 			size_t        size;
 			nng_http_req *req;
 			nng_http_res *res;
-			nng_url *     curl;
+			nng_url      *curl;
 			char          txdata[5];
-			char *        rxdata;
+			char         *rxdata;
 
 			snprintf(txdata, sizeof(txdata), "1234");
 			So(nng_http_res_alloc(&res) == 0);

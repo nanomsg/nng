@@ -107,7 +107,7 @@ extern int nni_win_error(int);
 
 extern int nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
 
-extern int  nni_win_io_sysinit(void);
+extern int  nni_win_io_sysinit(nng_init_params *params);
 extern void nni_win_io_sysfini(void);
 
 extern int  nni_win_ipc_sysinit(void);
@@ -119,7 +119,7 @@ extern void nni_win_tcp_sysfini(void);
 extern int  nni_win_udp_sysinit(void);
 extern void nni_win_udp_sysfini(void);
 
-extern int  nni_win_resolv_sysinit(void);
+extern int  nni_win_resolv_sysinit(nng_init_params *);
 extern void nni_win_resolv_sysfini(void);
 
 extern void nni_win_io_init(nni_win_io *, nni_win_io_cb, void *);

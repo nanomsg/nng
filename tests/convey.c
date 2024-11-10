@@ -59,6 +59,9 @@
 
 #include "convey.h"
 
+extern int  nng_init(void *);
+extern void nng_fini(void);
+
 /*
  * About symbol naming.  We use Go-like conventions to help set expectations,
  * even though we cannot necessarily count on the linker to prevent
@@ -111,28 +114,28 @@ struct convey_timer {
 };
 
 struct convey_log {
-	char * log_buf;
+	char  *log_buf;
 	size_t log_size;
 	size_t log_length;
 };
 
 struct convey_ctx {
 	char                ctx_name[256];
-	struct convey_ctx * ctx_parent;
-	struct convey_ctx * ctx_root; /* the root node on the list */
-	struct convey_ctx * ctx_next; /* root list only, cleanup */
+	struct convey_ctx  *ctx_parent;
+	struct convey_ctx  *ctx_root; /* the root node on the list */
+	struct convey_ctx  *ctx_next; /* root list only, cleanup */
 	int                 ctx_level;
 	int                 ctx_done;
 	int                 ctx_started;
-	jmp_buf *           ctx_jmp;
+	jmp_buf            *ctx_jmp;
 	int                 ctx_fatal;
 	int                 ctx_fail;
 	int                 ctx_skip;
 	int                 ctx_printed;
 	struct convey_timer ctx_timer;
-	struct convey_log * ctx_errlog;
-	struct convey_log * ctx_faillog;
-	struct convey_log * ctx_dbglog;
+	struct convey_log  *ctx_errlog;
+	struct convey_log  *ctx_faillog;
+	struct convey_log  *ctx_dbglog;
 };
 
 static void  convey_print_result(struct convey_ctx *);
@@ -150,7 +153,7 @@ static void convey_logf(struct convey_log *, const char *, ...);
 static void convey_log_emit(struct convey_log *, const char *, const char *);
 static void convey_log_free(struct convey_log *);
 static struct convey_log *convey_log_alloc(void);
-static char *             convey_nextline(char **);
+static char              *convey_nextline(char **);
 static void               convey_emit_color(const char *);
 
 /*
@@ -212,10 +215,10 @@ convey_print_result(struct convey_ctx *t)
 		convey_read_timer(&t->ctx_timer, &secs, &usecs);
 
 		(void) convey_logf(t->ctx_dbglog, "Test %s: %s (%d.%02ds)\n",
-		    t->ctx_fatal ? "FATAL"
-		                 : t->ctx_fail
-		            ? "FAIL"
-		            : t->ctx_skip ? "PASS (with SKIPs)" : "PASS",
+		    t->ctx_fatal      ? "FATAL"
+		        : t->ctx_fail ? "FAIL"
+		        : t->ctx_skip ? "PASS (with SKIPs)"
+		                      : "PASS",
 		    t->ctx_name, secs, usecs / 10000);
 
 		if (convey_verbose) {
@@ -242,8 +245,9 @@ convey_print_result(struct convey_ctx *t)
 				convey_emit_color(convey_nocolor);
 			}
 			(void) printf("\n\n--- %s: %s (%d.%02ds)\n",
-			    t->ctx_fatal ? "FATAL"
-			                 : t->ctx_fail ? "FAIL" : "PASS",
+			    t->ctx_fatal      ? "FATAL"
+			        : t->ctx_fail ? "FAIL"
+			                      : "PASS",
 			    t->ctx_name, secs, usecs / 10000);
 		}
 
@@ -687,7 +691,7 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 	/* Grow the log buffer if we need to */
 	while ((log->log_size - log->log_length) < 256) {
 		size_t newsz = log->log_size + 2000;
-		char * ptr   = malloc(newsz);
+		char  *ptr   = malloc(newsz);
 		if (ptr == NULL) {
 			return;
 		}
@@ -893,9 +897,9 @@ convey_init_term(void)
 		// Values probably don't matter, just need to be
 		// different!
 		convey_nocolor = "\033[0m";
-		convey_green = "\033[32m";
-		convey_yellow = "\033[33m";
-		convey_red = "\033[31m";
+		convey_green   = "\033[32m";
+		convey_yellow  = "\033[33m";
+		convey_red     = "\033[31m";
 	}
 	term = getenv("TERM");
 #endif
@@ -950,9 +954,9 @@ convey_nextline(char **next)
 
 static struct convey_env {
 	struct convey_env *next;
-	const char *       name;
-	char *             value;
-} * convey_environment;
+	const char        *name;
+	char              *value;
+} *convey_environment;
 
 static struct convey_env *
 conveyFindEnv(const char *name)
@@ -999,11 +1003,14 @@ int
 conveyMain(int argc, char **argv)
 {
 	int                 i;
-	const char *        status;
-	const char *        prog = "<unknown>";
+	const char         *status;
+	const char         *prog = "<unknown>";
 	struct convey_timer pc;
 	int                 secs, usecs;
-	struct convey_env * env;
+	struct convey_env  *env;
+
+	nng_init(NULL);
+	atexit(nng_fini);
 
 	if ((argc > 0) && (argv[0] != NULL)) {
 		prog = argv[0];

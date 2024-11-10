@@ -29,6 +29,7 @@ main(int argc, char **argv)
 	(void) argc;
 	(void) argv;
 
+	nng_init(NULL);
 	if ((rv = nng_pair1_open(&s1)) != 0) {
 		throw nng_strerror(rv);
 	}
@@ -69,6 +70,7 @@ main(int argc, char **argv)
 	}
 
 	printf("Pass.\n");
+	nng_fini();
 #else
 	(void) argc;
 	(void) argv;

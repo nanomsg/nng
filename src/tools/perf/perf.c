@@ -189,6 +189,9 @@ main(int argc, char **argv)
 	open_client = nng_pair0_open;
 #endif
 
+	nng_init(NULL);
+	atexit(nng_fini);
+
 	// Allow -m <remote_lat> or whatever to override argv[0].
 	if ((argc >= 3) && (strcmp(argv[1], "-m") == 0)) {
 		prog = argv[2];

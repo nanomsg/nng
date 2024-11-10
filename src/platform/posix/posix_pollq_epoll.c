@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
@@ -65,7 +65,7 @@ struct nni_posix_pfd {
 	nni_posix_pollq *pq;
 	int              fd;
 	nni_posix_pfd_cb cb;
-	void *           arg;
+	void            *arg;
 	bool             closed;
 	bool             closing;
 	bool             reap;
@@ -80,8 +80,8 @@ static nni_posix_pollq nni_posix_global_pollq;
 int
 nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
-	nni_posix_pfd *    pfd;
-	nni_posix_pollq *  pq;
+	nni_posix_pfd     *pfd;
+	nni_posix_pollq   *pq;
 	struct epoll_event ev;
 	int                rv;
 
@@ -173,7 +173,7 @@ nni_posix_pfd_close(nni_posix_pfd *pfd)
 {
 	nni_mtx_lock(&pfd->mtx);
 	if (!pfd->closing) {
-		nni_posix_pollq *  pq = pfd->pq;
+		nni_posix_pollq   *pq = pfd->pq;
 		struct epoll_event ev; // Not actually used.
 		pfd->closing = true;
 
@@ -243,7 +243,7 @@ nni_posix_pollq_reap(nni_posix_pollq *pq)
 static void
 nni_posix_poll_thr(void *arg)
 {
-	nni_posix_pollq *  pq = arg;
+	nni_posix_pollq   *pq = arg;
 	struct epoll_event events[NNI_MAX_EPOLL_EVENTS];
 
 	for (;;) {
@@ -271,9 +271,9 @@ nni_posix_poll_thr(void *arg)
 				}
 				reap = true;
 			} else {
-				nni_posix_pfd *  pfd = ev->data.ptr;
+				nni_posix_pfd   *pfd = ev->data.ptr;
 				nni_posix_pfd_cb cb;
-				void *           cbarg;
+				void            *cbarg;
 				unsigned         mask;
 
 				mask = ev->events &
@@ -395,8 +395,9 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 }
 
 int
-nni_posix_pollq_sysinit(void)
+nni_posix_pollq_sysinit(nng_init_params *params)
 {
+	NNI_ARG_UNUSED(params);
 	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 

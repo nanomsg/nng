@@ -364,12 +364,9 @@ nni_sock_recvq(nni_sock *s)
 int
 nni_sock_find(nni_sock **sockp, uint32_t id)
 {
-	int       rv;
+	int       rv = 0;
 	nni_sock *s;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	nni_mtx_lock(&sock_lk);
 	if ((s = nni_id_get(&sock_ids, id)) != NULL) {
 		if (s->s_closed) {
@@ -621,8 +618,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 		return (NNG_ENOTSUP);
 	}
 
-	if (((rv = nni_init()) != 0) ||
-	    ((rv = nni_sock_create(&s, proto)) != 0)) {
+	if ((rv = nni_sock_create(&s, proto)) != 0) {
 		return (rv);
 	}
 
@@ -1076,12 +1072,9 @@ nni_sock_set_pipe_cb(nni_sock *s, int ev, nng_pipe_cb cb, void *arg)
 int
 nni_ctx_find(nni_ctx **cp, uint32_t id, bool closing)
 {
-	int      rv;
+	int      rv = 0;
 	nni_ctx *ctx;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
 	nni_mtx_lock(&sock_lk);
 	if ((ctx = nni_id_get(&ctx_ids, id)) != NULL) {
 		// We refuse a reference if either the socket is

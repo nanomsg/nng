@@ -22,7 +22,6 @@ has_v6(void)
 	nni_plat_udp *u;
 	int           rv;
 
-	nni_init(); // ensure that platform poller is up
 	sa.s_in6.sa_family = NNG_AF_INET6;
 	sa.s_in6.sa_port   = 0;
 	memcpy(sa.s_in6.sa_addr, v6loop, 16);

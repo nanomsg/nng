@@ -416,8 +416,6 @@ nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
 	}
 }
 
-static LONG plat_inited = 0;
-
 int
 nni_plat_ncpu(void)
 {
@@ -428,36 +426,26 @@ nni_plat_ncpu(void)
 }
 
 int
-nni_plat_init(int (*helper)(void))
+nni_plat_init(nng_init_params *params)
 {
 	int            rv   = 0;
 	static SRWLOCK lock = SRWLOCK_INIT;
 
-	if (plat_inited) {
-		return (0); // fast path
-	}
-
 	AcquireSRWLockExclusive(&lock);
 
-	if (!plat_inited) {
-		// Let's look up the function to set thread descriptions.
-		hKernel32 = LoadLibrary(TEXT("kernel32.dll"));
-		if (hKernel32 != NULL) {
-			set_thread_desc =
-			    (pfnSetThreadDescription) GetProcAddress(
-			        hKernel32, "SetThreadDescription");
-		}
+	// Let's look up the function to set thread descriptions.
+	hKernel32 = LoadLibrary(TEXT("kernel32.dll"));
+	if (hKernel32 != NULL) {
+		set_thread_desc = (pfnSetThreadDescription) GetProcAddress(
+		    hKernel32, "SetThreadDescription");
+	}
 
-		if (((rv = nni_win_io_sysinit()) != 0) ||
-		    ((rv = nni_win_ipc_sysinit()) != 0) ||
-		    ((rv = nni_win_tcp_sysinit()) != 0) ||
-		    ((rv = nni_win_udp_sysinit()) != 0) ||
-		    ((rv = nni_win_resolv_sysinit()) != 0)) {
-			goto out;
-		}
-
-		helper();
-		plat_inited = 1;
+	if (((rv = nni_win_io_sysinit(params)) != 0) ||
+	    ((rv = nni_win_ipc_sysinit()) != 0) ||
+	    ((rv = nni_win_tcp_sysinit()) != 0) ||
+	    ((rv = nni_win_udp_sysinit()) != 0) ||
+	    ((rv = nni_win_resolv_sysinit(params)) != 0)) {
+		goto out;
 	}
 
 out:
@@ -478,7 +466,6 @@ nni_plat_fini(void)
 	if (hKernel32 != NULL) {
 		FreeLibrary(hKernel32);
 	}
-	plat_inited = 0;
 }
 
 #endif
