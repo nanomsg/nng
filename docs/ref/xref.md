@@ -93,6 +93,8 @@
 [`nng_aio_set_output`]: /TODO.md
 [`nng_send`]: /TODO.md
 [`nng_recv`]: /TODO.md
+[`nng_init`]: /TODO.md
+[`nng_fini`]: /TODO.md
 
 <!-- Macros -->
 
@@ -103,6 +105,7 @@
 [`NNG_ETIMEDOUT`]: /api/errors.md#NNG_ETIMEDOUT
 [`NNG_ECONNREFUSED`]: /api/errors.md#NNG_ECONNREFUSED
 [`NNG_ECLOSED`]: /api/errors.md#NNG_ECLOSED
+[`NNG_EPROTO`]: /api/errors.md#NNG_EPROTO
 [`NNG_EAGAIN`]: /api/errors.md#NNG_EAGAIN
 [`NNG_ENOTSUP`]: /api/errors.md#NNG_ENOTSUP
 [`NNG_EADDRINUSE`]: /api/errors.md#NNG_EADDRINUSE

@@ -8,6 +8,11 @@ This guide should help in migrating applications to use NNG 2.0.
 Applications using the legacy `libnanomsg` API will have to be updated to native _NNG_ interfaces.
 See the [Migrating From libnanomsg](nanomsg.md) chapter for details.
 
+## Library Initialization
+
+It is now required for applications to initialize the library explicitly before using it.
+This is done using the [`nng_init`] function.
+
 ## Transport Specific Functions
 
 Transports have not needed to be registered for a long time now,
