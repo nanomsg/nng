@@ -226,6 +226,9 @@ This guide should help in migrating applications to use NNG 2.0.</p>
 <h2 id="nanomsg-compatibility"><a class="header" href="#nanomsg-compatibility">Nanomsg Compatibility</a></h2>
 <p>Applications using the legacy <code>libnanomsg</code> API will have to be updated to native <em>NNG</em> interfaces.
 See the <a href="nanomsg.html">Migrating From libnanomsg</a> chapter for details.</p>
+<h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
+<p>It is now required for applications to initialize the library explicitly before using it.
+This is done using the <a href="/TODO.html"><code>nng_init</code></a> function.</p>
 <h2 id="transport-specific-functions"><a class="header" href="#transport-specific-functions">Transport Specific Functions</a></h2>
 <p>Transports have not needed to be registered for a long time now,
 and the functions for doing so have been removed. These functions
