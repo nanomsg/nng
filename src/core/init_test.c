@@ -101,7 +101,6 @@ test_init_too_many_expire_threads(void)
 }
 
 // poller tuning only supported on Windows right now
-#ifdef NNG_PLATFORM_WINDOWS
 void
 test_init_poller_no_threads(void)
 {
@@ -134,10 +133,64 @@ test_init_too_many_poller_threads(void)
 	NUTS_OPEN(s);
 	NUTS_CLOSE(s);
 	pp = nng_init_get_params();
+#ifdef NNG_PLATFORM_WINDOWS
 	NUTS_TRUE(pp->num_poller_threads == 2);
+#else
+	NUTS_TRUE(pp->num_poller_threads > 0);
+#endif
 	NUTS_MSG("Got %d poller threads", pp->num_expire_threads);
 }
-#endif
+
+void
+test_init_repeated()
+{
+	nng_init_params p = { 0 };
+	NUTS_PASS(nng_init(NULL));
+	NUTS_FAIL(nng_init(&p), NNG_EBUSY);
+	NUTS_PASS(nng_init(NULL));
+	nng_fini();
+	nng_fini();
+}
+
+static void
+concurrent_init(void *arg)
+{
+	nng_mtx *mtx = arg;
+
+	// so everyone starts as close to the same time as we can.
+	nng_mtx_lock(mtx);
+	nng_mtx_unlock(mtx);
+	for (int i = 0; i < 1000000; i++) {
+		nng_init(NULL);
+		nng_fini();
+	}
+}
+
+void
+test_init_concurrent()
+{
+	nng_thread *threads[4];
+	nng_mtx    *m = NULL;
+
+	NUTS_PASS(nng_init(NULL));
+	NUTS_PASS(nng_mtx_alloc(&m));
+	NUTS_ASSERT(m != NULL);
+	nng_mtx_lock(m);
+
+	for (int i = 0; i < 4; i++) {
+		nng_thread_create(&threads[i], concurrent_init, m);
+	}
+
+	nng_mtx_unlock(m);
+
+	for (int i = 0; i < 4; i++) {
+		nng_thread_destroy(threads[i]);
+	}
+
+	nng_mtx_free(m);
+
+	nng_fini();
+}
 
 NUTS_TESTS = {
 	{ "init parameter", test_init_param },
@@ -146,10 +199,10 @@ NUTS_TESTS = {
 	{ "init too many task threads", test_init_too_many_task_threads },
 	{ "init no expire thread", test_init_no_expire_thread },
 	{ "init too many expire threads", test_init_too_many_expire_threads },
-#ifdef NNG_PLATFORM_WINDOWS
 	{ "init no poller thread", test_init_poller_no_threads },
 	{ "init too many poller threads", test_init_too_many_poller_threads },
-#endif
+	{ "init repeated", test_init_repeated },
+	{ "init concurrent", test_init_concurrent },
 
 	{ NULL, NULL },
 };
