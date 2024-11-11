@@ -666,6 +666,150 @@ include the <code>nng/nng.h</code> header file like so:</p>
 }
 
 </style>
+<h1 id="initialization--finalization"><a class="header" href="#initialization--finalization">Initialization &amp; Finalization</a></h1>
+<p>This chapter details the function used to initialize
+the library before first use, and the funtion used to
+finalize the library and deallocate any resources used by the library.</p>
+<h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
+<pre><code class="language-c">typedef struct {
+    int16_t num_task_threads;
+    int16_t max_task_threads;
+    int16_t num_expire_threads;
+    int16_t max_expire_threads;
+    int16_t num_poller_threads;
+    int16_t max_poller_threads;
+    int16_t num_resolver_threads;
+} nng_init_params;
+
+extern int nng_init(nng_init_parms *params);
+</code></pre>
+<p>Before using other interfaces in this library, it is necessary to initialize
+the library. The <a name="a001"></a><code>nng_init</code> function performs this initialization.</p>
+<p>The function is idempotent, although on tear down, every call to <code>nng_init</code> must
+be paired with a call to <a href="api//api/init.html#finalization"><code>nng_fini</code></a> or no resources will be released.
+This allows for libraries consuming these interfaces to safely initialize and finalize
+the library without disrupting other consumers in the same process.</p>
+<p>Further, only the first call to this function may have a value of <em>params</em> other than <code>NULL</code>.
+If <em>params</em> is not <code>NULL</code>, and the library has already been intiazed, then <code>nng_init</code> will
+return <a href="api//api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
+<p>In some cases it is desirable to tune certain runtime parameters for the library, which
+can be done by supplying a non-<code>NULL</code> <em>params</em> argument.</p>
+<h3 id="parameters"><a class="header" href="#parameters">Parameters</a></h3>
+<p>The individual fields of the <code>nng_init_params</code> structure can be used to adjust certain
+runtime tunables for the library. There is no guarantee that these tunables are implemented,
+and applications should not depend upon them for correct operation.</p>
+<p>Any member of <code>nng_init_params</code> that is set to zero will be ignored, and any built in default
+will be used instead for that value.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Applications should make sure that structure is zero initialized before calling <code>nng_init</code>.</p>
+</div>
+<p>The following parameters are present:</p>
+<ul>
+<li>
+<p><code>num_task_threads</code> and <code>max_task_threads</code> <br />
+Configures the number of threads to use for tasks, which are used principally for completion
+callbacks. The maximum value can be used to provide an upper limit while still allowing
+for a dynamically calculated value to be used, as long as it does not exceeed the maximum.</p>
+</li>
+<li>
+<p><code>num_expire_threads</code> and <code>max_expire_threads</code> <br />
+Configures the number of threads used for expiring operations. Using a larger value will
+reduce contention on some common locks, and may improve performance.</p>
+</li>
+<li>
+<p><code>num_poller_threads</code> and <code>max_poller_threads</code> <br />
+Configures the number of threads to be used for performing I/O. Not all configurations support
+changing these values.</p>
+</li>
+<li>
+<p><code>num_resolver_threads</code> <br />
+Changes the number of threads used for asynchronous DNS look ups.</p>
+</li>
+</ul>
+<h2 id="finalization"><a class="header" href="#finalization">Finalization</a></h2>
+<pre><code class="language-c">extern void nng_init(nng_init_parms *params);
+</code></pre>
+<p>When the consumer is ready to deallocate any resoures allocated by the library, it should call
+the <a name="a002"></a><code>nng_fini</code> function. Each call to <code>nng_fini</code> should be paired with an earlier call to
+<a href="api//api/init.html#initialization"><code>nng_init</code></a>.</p>
+<p>After calling <code>nng_fini</code>, the consuming application must not make any other calls to NNG functions,
+except that it may use <code>nng_init</code> to initialize the application for further use.</p>
+<!-- Symbol cross reference -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div><style>
+.mdbook-alerts {
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  border-left: 0.25em solid var(--mdbook-alerts-color);
+}
+
+.mdbook-alerts > *:first-child {
+  margin-top: 0;
+}
+
+.mdbook-alerts > *:last-child {
+  margin-bottom: 0;
+}
+
+.mdbook-alerts-title {
+  display: flex;
+  font-weight: 600;
+  align-items: center;
+  line-height: 1;
+  color: var(--mdbook-alerts-color);
+  text-transform: capitalize;
+}
+
+.mdbook-alerts-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.2em;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / 100%;
+  mask: no-repeat center / 100%;
+  -webkit-mask-image: var(--mdbook-alerts-icon);
+  mask-image: var(--mdbook-alerts-icon);
+}
+
+.mdbook-alerts-note {
+  --mdbook-alerts-color: rgb(9, 105, 218);
+  /* https://icon-sets.iconify.design/material-symbols/info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11q-.425 0-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8q0 .425.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12q0-3.35-2.325-5.675T12 4Q8.65 4 6.325 6.325T4 12q0 3.35 2.325 5.675T12 20m0-8"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-tip {
+  --mdbook-alerts-color: rgb(26, 127, 55);
+  /* https://icon-sets.iconify.design/material-symbols/lightbulb-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 22q-.825 0-1.412-.587T10 20h4q0 .825-.587 1.413T12 22m-3-3q-.425 0-.712-.288T8 18q0-.425.288-.712T9 17h6q.425 0 .713.288T16 18q0 .425-.288.713T15 19zm-.75-3q-1.725-1.025-2.738-2.75T4.5 9.5q0-3.125 2.188-5.312T12 2q3.125 0 5.313 2.188T19.5 9.5q0 2.025-1.012 3.75T15.75 16zm.6-2h6.3q1.125-.8 1.738-1.975T17.5 9.5q0-2.3-1.6-3.9T12 4Q9.7 4 8.1 5.6T6.5 9.5q0 1.35.613 2.525T8.85 14M12 14"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-important {
+  --mdbook-alerts-color: rgb(130, 80, 223);
+  /* https://icon-sets.iconify.design/material-symbols/chat-info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 7q.425 0 .713-.288T13 6q0-.425-.288-.712T12 5q-.425 0-.712.288T11 6q0 .425.288.713T12 7m0 8q.425 0 .713-.288T13 14v-4q0-.425-.288-.712T12 9q-.425 0-.712.288T11 10v4q0 .425.288.713T12 15m-6 3l-2.3 2.3q-.475.475-1.088.213T2 19.575V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-.85-2H20V4H4v13.125zM4 16V4z"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-warning {
+  --mdbook-alerts-color: rgb(154, 103, 0);
+  /* https://icon-sets.iconify.design/material-symbols/warning-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M2.725 21q-.275 0-.5-.137t-.35-.363q-.125-.225-.137-.488t.137-.512l9.25-16q.15-.25.388-.375T12 3q.25 0 .488.125t.387.375l9.25 16q.15.25.138.513t-.138.487q-.125.225-.35.363t-.5.137zm1.725-2h15.1L12 6zM12 18q.425 0 .713-.288T13 17q0-.425-.288-.712T12 16q-.425 0-.712.288T11 17q0 .425.288.713T12 18m0-3q.425 0 .713-.288T13 14v-3q0-.425-.288-.712T12 10q-.425 0-.712.288T11 11v3q0 .425.288.713T12 15m0-2.5"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-caution {
+  --mdbook-alerts-color: rgb(207, 34, 46);
+  /* https://icon-sets.iconify.design/material-symbols/brightness-alert-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16q0-.425-.288-.712T12 15q-.425 0-.712.288T11 16q0 .425.288.713T12 17m0-4q.425 0 .713-.288T13 12V8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8v4q0 .425.288.713T12 13m-3.35 7H6q-.825 0-1.412-.587T4 18v-2.65L2.075 13.4q-.275-.3-.425-.662T1.5 12q0-.375.15-.737t.425-.663L4 8.65V6q0-.825.588-1.412T6 4h2.65l1.95-1.925q.3-.275.663-.425T12 1.5q.375 0 .738.15t.662.425L15.35 4H18q.825 0 1.413.588T20 6v2.65l1.925 1.95q.275.3.425.663t.15.737q0 .375-.15.738t-.425.662L20 15.35V18q0 .825-.587 1.413T18 20h-2.65l-1.95 1.925q-.3.275-.662.425T12 22.5q-.375 0-.737-.15t-.663-.425zm.85-2l2.5 2.5l2.5-2.5H18v-3.5l2.5-2.5L18 9.5V6h-3.5L12 3.5L9.5 6H6v3.5L3.5 12L6 14.5V18zm2.5-6"%2F%3E%3C%2Fsvg%3E');
+}
+
+</style>
 <h1 id="messages"><a class="header" href="#messages">Messages</a></h1>
 <p>Messages <a name="a001"></a> in Scalability Protocols are the fundamental unit of
 transmission and reception, as these protocols are fundamentally message-oriented.</p>
@@ -5417,7 +5561,7 @@ This guide should help in migrating applications to use NNG 2.0.</p>
 See the <a href="migrate/nanomsg.html">Migrating From libnanomsg</a> chapter for details.</p>
 <h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
 <p>It is now required for applications to initialize the library explicitly before using it.
-This is done using the <a href="migrate//TODO.html"><code>nng_init</code></a> function.</p>
+This is done using the <a href="migrate//api/init.html#initialization"><code>nng_init</code></a> function.</p>
 <h2 id="transport-specific-functions"><a class="header" href="#transport-specific-functions">Transport Specific Functions</a></h2>
 <p>Transports have not needed to be registered for a long time now,
 and the functions for doing so have been removed. These functions
@@ -5603,8 +5747,8 @@ update it for this version of NNG.</p>
 <h2 id="link-libraries"><a class="header" href="#link-libraries">Link Libraries</a></h2>
 <p>Replace <code>-lnanomsg</code> with <code>-lnng</code>.
 It may be necessary to include additional system libraries, such as <code>-lpthread</code>, depending on your system.</p>
-<h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
-<p>It is necessary to explicitly initialize the library, using the <a href="migrate//TODO.html"><code>nng_init</code></a> function.
+<h2 id="initialization-1"><a class="header" href="#initialization-1">Initialization</a></h2>
+<p>It is necessary to explicitly initialize the library, using the <a href="migrate//api/init.html#initialization"><code>nng_init</code></a> function.
 This must be called before any other function.</p>
 <h2 id="types"><a class="header" href="#types">Types</a></h2>
 <p>Sockets, dialers, and listeners in <em>libnanomsg</em> are simple integers.
@@ -5779,6 +5923,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_DURATION_INFINITE</code>, <a href="api/time.html#a004">1</a><br/>
 <code>NNG_DURATION_ZERO</code>, <a href="api/time.html#a006">1</a><br/>
 <code>NNG_ECANCELED</code>, <a href="api/aio.html#a010">1</a><br/>
+<code>nng_fini</code>, <a href="api/init.html#a002">1</a><br/>
 <code>nng_free</code>, <a href="api/memory.html#a004">1</a><br/>
 <code>nng_id_alloc</code>, <a href="api/id_map.html#a006">1</a><br/>
 <code>nng_id_get</code>, <a href="api/id_map.html#a005">1</a><br/>
@@ -5788,6 +5933,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_id_map_set</code>, <a href="api/id_map.html#a004">1</a><br/>
 <code>nng_id_remove</code>, <a href="api/id_map.html#a007">1</a><br/>
 <code>nng_id_visit</code>, <a href="api/id_map.html#a008">1</a><br/>
+<code>nng_init</code>, <a href="api/init.html#a001">1</a><br/>
 <code>nng_iov</code>, <a href="api/aio.html#a020">1</a><br/>
 <code>nng_log</code>, <a href="api/logging.html#a001">1</a><br/>
 <code>nng_log_auth</code>, <a href="api/logging.html#a002">1</a><br/>
