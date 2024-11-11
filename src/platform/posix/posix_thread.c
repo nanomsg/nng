@@ -34,8 +34,8 @@
 #include <sys/resource.h>
 #endif
 
-static bool nni_plat_inited = 0;
-static bool nni_plat_forked = 0;
+static bool nni_plat_inited = false;
+static bool nni_plat_forked = false;
 
 pthread_condattr_t  nni_cvattr;
 pthread_mutexattr_t nni_mxattr;
@@ -356,9 +356,7 @@ nni_plat_init(nng_init_params *params)
 
 #if !defined(NNG_USE_GETTIMEOFDAY) && NNG_USE_CLOCKID != CLOCK_REALTIME
 	if (pthread_condattr_setclock(&nni_cvattr, NNG_USE_CLOCKID) != 0) {
-		pthread_mutexattr_destroy(&nni_mxattr);
-		pthread_condattr_destroy(&nni_cvattr);
-		pthread_attr_destroy(&nni_thrattr);
+		nni_plat_fini();
 		return (NNG_ENOMEM);
 	}
 #endif
@@ -369,9 +367,7 @@ nni_plat_init(nng_init_params *params)
 	    (rl.rlim_cur != RLIM_INFINITY) &&
 	    (rl.rlim_cur >= PTHREAD_STACK_MIN) &&
 	    (pthread_attr_setstacksize(&nni_thrattr, rl.rlim_cur) != 0)) {
-		pthread_mutexattr_destroy(&nni_mxattr);
-		pthread_condattr_destroy(&nni_cvattr);
-		pthread_attr_destroy(&nni_thrattr);
+		nni_plat_fini();
 		return (NNG_ENOMEM);
 	}
 #endif
@@ -381,29 +377,24 @@ nni_plat_init(nng_init_params *params)
 	    &nni_mxattr, PTHREAD_MUTEX_ERRORCHECK);
 
 	if ((rv = nni_posix_pollq_sysinit(params)) != 0) {
-		pthread_mutexattr_destroy(&nni_mxattr);
-		pthread_condattr_destroy(&nni_cvattr);
-		pthread_attr_destroy(&nni_thrattr);
+		nni_plat_fini();
 		return (rv);
 	}
 
 	if ((rv = nni_posix_resolv_sysinit(params)) != 0) {
 		nni_posix_pollq_sysfini();
-		pthread_mutexattr_destroy(&nni_mxattr);
-		pthread_condattr_destroy(&nni_cvattr);
-		pthread_attr_destroy(&nni_thrattr);
+		nni_plat_fini();
 		return (rv);
 	}
 
-	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
-		nni_posix_resolv_sysfini();
-		nni_posix_pollq_sysfini();
-		pthread_mutexattr_destroy(&nni_mxattr);
-		pthread_condattr_destroy(&nni_cvattr);
-		pthread_attr_destroy(&nni_thrattr);
-		return (NNG_ENOMEM);
-	}
-	nni_plat_inited = 1;
+	nni_plat_inited = true;
+
+	// if this fails, its not critical, but it means the user won't get the
+	// benefit of checking for incorrect use-after-fork-in-child behavior.
+	// Since that only can occur if the application developer has made a
+	// gross mistake, and the consequence of that will be a panic anyway,
+	// we just ignore this error.
+	(void) pthread_atfork(NULL, NULL, nni_atfork_child);
 
 	return (rv);
 }
@@ -414,10 +405,11 @@ nni_plat_fini(void)
 	if (nni_plat_inited) {
 		nni_posix_resolv_sysfini();
 		nni_posix_pollq_sysfini();
-		pthread_mutexattr_destroy(&nni_mxattr);
-		pthread_condattr_destroy(&nni_cvattr);
-		nni_plat_inited = 0;
 	}
+	pthread_mutexattr_destroy(&nni_mxattr);
+	pthread_condattr_destroy(&nni_cvattr);
+	pthread_attr_destroy(&nni_thrattr);
+	nni_plat_inited = false;
 }
 
 int
