@@ -261,6 +261,10 @@ or <a href="/TODO.html"><code>nng_dialer_set_tls</code></a> functions.</p>
 <a href="/TODO.html"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
 <p>Note that the declarations needed for TLS configuration are now available in <code>&lt;nng/nng.h&gt;</code>,
 rather than the supplemental header.</p>
+<h2 id="old-tls-versions-removed"><a class="header" href="#old-tls-versions-removed">Old TLS Versions Removed</a></h2>
+<p>Support for very old TLS versions 1.0 and 1.1 is removed.
+Further, the <code>NNG_TLS_1_0</code> and <code>NNG_TLS_1_1</code> constants are also removed.
+Applications should use <code>NNG_TLS_1_2</code> or even <code>NNG_TLS_1_3</code> instead.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
 Applications should use <code>nng_pipe_get</code> and related functions instead.</p>
