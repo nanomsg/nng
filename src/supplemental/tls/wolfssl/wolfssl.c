@@ -602,12 +602,6 @@ wolf_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		return (NNG_ENOTSUP);
 	}
 	switch (min_ver) {
-	case NNG_TLS_1_0:
-		rv = wolfSSL_CTX_SetMinVersion(cfg->ctx, WOLFSSL_TLSV1);
-		break;
-	case NNG_TLS_1_1:
-		rv = wolfSSL_CTX_SetMinVersion(cfg->ctx, WOLFSSL_TLSV1_1);
-		break;
 	case NNG_TLS_1_2:
 		rv = wolfSSL_CTX_SetMinVersion(cfg->ctx, WOLFSSL_TLSV1_2);
 		break;

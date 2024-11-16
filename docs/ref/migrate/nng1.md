@@ -54,6 +54,12 @@ Likewise, when using the streams API, use the [`nng_stream_listener_set_tls`] or
 Note that the declarations needed for TLS configuration are now available in `<nng/nng.h>`,
 rather than the supplemental header.
 
+## Old TLS Versions Removed
+
+Support for very old TLS versions 1.0 and 1.1 is removed.
+Further, the `NNG_TLS_1_0` and `NNG_TLS_1_1` constants are also removed.
+Applications should use `NNG_TLS_1_2` or even `NNG_TLS_1_3` instead.
+
 ## Option Functions
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.

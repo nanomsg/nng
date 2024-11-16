@@ -467,9 +467,8 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 
 	mbedtls_ssl_conf_authmode(&cfg->cfg_ctx, auth_mode);
 
-	// Default: we *require* TLS v1.2 or newer, which is also known as
-	// SSL v3.3. As of this writing, Mbed TLS still does not support
-	// version 1.3, and we would want to test it before enabling it here.
+	// We *require* TLS v1.2 or newer, which is also known as SSL
+	// v3.3.
 	cfg->min_ver = MBEDTLS_SSL_MINOR_VERSION_3;
 #ifdef MBEDTLS_SSL_PROTO_TLS1_3
 	cfg->max_ver = MBEDTLS_SSL_MINOR_VERSION_4;
@@ -689,16 +688,6 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		return (NNG_ENOTSUP);
 	}
 	switch (min_ver) {
-#ifdef MBEDTLS_SSL_MINOR_VERSION_1
-	case NNG_TLS_1_0:
-		v1 = MBEDTLS_SSL_MINOR_VERSION_1;
-		break;
-#endif
-#ifdef MBEDTLS_SSL_MINOR_VERSION_2
-	case NNG_TLS_1_1:
-		v1 = MBEDTLS_SSL_MINOR_VERSION_2;
-		break;
-#endif
 #ifdef MBEDTLS_SSL_MINOR_VERSION_3
 	case NNG_TLS_1_2:
 		v1 = MBEDTLS_SSL_MINOR_VERSION_3;
@@ -716,16 +705,6 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	}
 
 	switch (max_ver) {
-#ifdef MBEDTLS_SSL_MINOR_VERSION_1
-	case NNG_TLS_1_0:
-		v2 = MBEDTLS_SSL_MINOR_VERSION_1;
-		break;
-#endif
-#ifdef MBEDTLS_SSL_MINOR_VERSION_2
-	case NNG_TLS_1_1:
-		v2 = MBEDTLS_SSL_MINOR_VERSION_2;
-		break;
-#endif
 #ifdef MBEDTLS_SSL_MINOR_VERSION_3
 	case NNG_TLS_1_2:
 		v2 = MBEDTLS_SSL_MINOR_VERSION_3;

@@ -1499,12 +1499,9 @@ typedef enum nng_tls_auth_mode {
 } nng_tls_auth_mode;
 
 // TLS version numbers.  We encode the major number and minor number
-// as separate byte fields.  No support for SSL 3.0 or earlier -- older
+// as separate byte fields.  No support for TLS 1.1 or earlier -- older
 // versions are known to be insecure and should not be used.
-// When possible applications should restrict themselves to TLS 1.2 or better.
 typedef enum nng_tls_version {
-	NNG_TLS_1_0 = 0x301,
-	NNG_TLS_1_1 = 0x302,
 	NNG_TLS_1_2 = 0x303,
 	NNG_TLS_1_3 = 0x304
 } nng_tls_version;

@@ -1,6 +1,6 @@
 = nng_tls_config_version(3tls)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -20,8 +20,6 @@ nng_tls_config_version - configure TLS version
 #include <nng/supplemental/tls/tls.h>
 
 typedef enum nng_tls_version {
-    NNG_TLS_1_0 = 0x301,
-    NNG_TLS_1_1 = 0x302,
     NNG_TLS_1_2 = 0x303,
     NNG_TLS_1_3 = 0x304
 } nng_tls_version;
@@ -41,21 +39,9 @@ By default (if this function is not called), NNG will attempt to use both TLS v1
 
 Clients and servers will generally negotiate for the highest mutually supported TLS version.
 
-TIP: As of this writing, we recommend setting the minimum to
-`NNG_TLS_1_2` (TLS v1.2) and the maximum to `NNG_TLS_1_3` (TLS v1.3).
-This gives the best security, while ensuring good interoperability.
-Nearly all modern TLS implementations support TLS v1.2.
-
-TIP: Support for TLS v1.3 is available via external TLS engines.
-
-NOTE: The cipher-suites supported by TLS v1.3 are different from earlier versions.
-Therefore it may be necessary to generate different certificates.
-
 == CAVEATS
 
-* SSL v2.0 and v3.0 are insecure, and not supported in NNG.
-
-* TLS v1.3 is not supported by the default _Mbed TLS_ engine at this time.
+* SSL v2.0, SSL v3.0, TLS v1.0 and TLS v1.1 are insecure, and not supported in NNG.
 
 * Some TLS engines may not support limiting the maximum version.
 
@@ -63,7 +49,7 @@ Therefore it may be necessary to generate different certificates.
 
 * Session resumption is not supported in NNG (for any TLS version).
 
-* TLS PSK support is not supported in NNG. (This is a limitation planned to be addressed.)
+* TLS PSK support is dependent upon the engine.
 
 == RETURN VALUES
 
