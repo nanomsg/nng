@@ -20,16 +20,8 @@ nng_options - socket, dialer, listener, and pipe options
 ----
 #include <nng/nng.h>
 
-#define NNG_OPT_SOCKNAME      "socket-name"
-#define NNG_OPT_RAW           "raw"
-#define NNG_OPT_PROTO         "protocol"
-#define NNG_OPT_PROTONAME     "protocol-name"
-#define NNG_OPT_PEER          "peer"
-#define NNG_OPT_PEERNAME      "peer-name"
 #define NNG_OPT_RECVBUF       "recv-buffer"
 #define NNG_OPT_SENDBUF       "send-buffer"
-#define NNG_OPT_RECVFD        "recv-fd"
-#define NNG_OPT_SENDFD        "send-fd"
 #define NNG_OPT_RECVTIMEO     "recv-timeout"
 #define NNG_OPT_SENDTIMEO     "send-timeout"
 #define NNG_OPT_LOCADDR       "local-address"
@@ -153,36 +145,6 @@ This value must be an integer between 0 and 8192, inclusive.
 NOTE: Not all protocols support buffering received messages.
 For example xref:nng_req.7.adoc[_req_] can only deal with a single reply at a time.
 
-[[NNG_OPT_RECVFD]]
-((`NNG_OPT_RECVFD`))::
-(((poll)))
-(((select)))
-(((receive, polling)))
-(`int`)
-This read-only option is used to obtain an integer file descriptor suitable
-for use with
-http://pubs.opengroup.org/onlinepubs/7908799/xsh/poll.html[`poll()`],
-http://pubs.opengroup.org/onlinepubs/7908799/xsh/select.html[`select()`],
-(or on Windows systems
-https://msdn.microsoft.com/en-us/library/windows/desktop/ms741669(v=vs.85).aspx[`WSAPoll()`])
-and similar functions.
-This descriptor will be *readable* when a message is available for receiving
-on the socket.
-When no message is ready for receiving, then this file descriptor will *not*
-be readable.
-+
-IMPORTANT: Applications should never attempt to read or write to the
-returned file descriptor.
-+
-IMPORTANT: This option is incompatible with
-xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should not be used on a socket
-where they are in use.
-+
-TIP: While this option may help applications integrate into existing polling
-loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.
-See xref:nng_aio_alloc.3.adoc[`nng_aio_alloc()`].
-
 [[NNG_OPT_RECVMAXSZ]]
 ((`NNG_OPT_RECVMAXSZ`))::
 (((receive, maximum size)))
@@ -240,37 +202,6 @@ NOTE: Not all protocols support buffering sent messages.
 For example, xref:nng_req.7.adoc[_req_] can only have a single request
 outstanding at a time (per context).
 
-[[NNG_OPT_SENDFD]]
-((`NNG_OPT_SENDFD`))::
-(((poll)))
-(((select)))
-(((send, polling)))
-(`int`)
-This read-only option is used to obtain an integer file descriptor suitable
-for use with
-http://pubs.opengroup.org/onlinepubs/7908799/xsh/poll.html[`poll()`],
-http://pubs.opengroup.org/onlinepubs/7908799/xsh/select.html[`select()`],
-(or on Windows systems
-https://msdn.microsoft.com/en-us/library/windows/desktop/ms741669(v=vs.85).aspx[`WSAPoll()`])
-and similar functions.
-+
-This descriptor will be *readable* when the socket is able to accept a
-message for sending without blocking.
-When the socket is no longer able to accept such messages without blocking,
-the descriptor will *not* be readable.
-+
-IMPORTANT: Applications should never attempt to read or write to the
-returned file descriptor; use should be limited to polling system calls only.
-+
-IMPORTANT: This option is incompatible with
-xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should not be used on a socket
-where they are in use.
-+
-TIP: While this option may help applications integrate into existing polling
-loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.
-See xref:nng_aio_alloc.3.adoc[`nng_aio_alloc()`].
-
 [[NNG_OPT_SENDTIMEO]]
 ((`NNG_OPT_SENDTIMEO`))::
 (((send, timeout)))
@@ -280,17 +211,6 @@ This is the socket send timeout in milliseconds.
 When a message cannot be queued for delivery by the socket for this period of
 time (such as if send buffers are full), the operation will fail with a
 return value of `NNG_ETIMEDOUT`.
-
-[[NNG_OPT_SOCKNAME]]
-((`NNG_OPT_SOCKNAME`))::
-(((name, socket)))
-(string)
-This the socket name.
-By default, this is a string corresponding to the value of the socket.
-The string must fit within 64-bytes, including the terminating
-`NUL` byte.
-The value is intended for application use, and is not used for anything
-in the library itself.
 
 [[NNG_OPT_MAXTTL]]
 ((`NNG_OPT_MAXTTL`))::
@@ -320,17 +240,6 @@ Accordingly it can only be used with dialers, listeners, and pipes.
 +
 NOTE: Some transports will canonify URLs before returning them to the
 application.
-
-[[NNG_OPT_PROTO]]
-((`NNG_OPT_PROTO`))::
-(`int`)
-This read-only option is used to obtain the 16-bit number for the socket's protocol.
-
-[[NNG_OPT_PEER]]
-((`NNG_OPT_PEER`))::
-(`int`)
-This read-only option is used to obtain the 16-bit number of the
-peer protocol for the socket.
 
 [[NNG_OPT_PEER_GID]]
 ((`NNG_OPT_PEER_GID`))::
@@ -364,16 +273,6 @@ This option is generally only available on POSIX systems, on certain transports.
 (`uint64_t`)
 This read-only option provides a connected peer's the zone id.
 Zones (and this option) are only supported on Solaris and illumos systems, on select transports.
-
-[[NNG_OPT_PEERNAME]]
-((`NNG_OPT_PEERNAME`))::
-(string)
-This read-only option is used to obtain the name of the peer protocol for the socket.
-
-[[NNG_OPT_PROTONAME]]
-((`NNG_OPT_PROTONAME`))::
-(string)
-This read-only option is used to obtain the name of the socket's protocol.
 
 == SEE ALSO
 

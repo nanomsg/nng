@@ -93,7 +93,6 @@ struct nni_socket {
 	nni_duration s_reconn;    // reconnect time
 	nni_duration s_reconnmax; // max reconnect time
 	size_t       s_rcvmaxsz;  // max receive size
-	char         s_name[64];  // socket name (legacy compat)
 
 	nni_list s_listeners; // active listeners
 	nni_list s_dialers;   // active dialers
@@ -109,7 +108,6 @@ struct nni_socket {
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;      // socket scope
 	nni_stat_item st_id;        // socket id
-	nni_stat_item st_name;      // socket name
 	nni_stat_item st_protocol;  // socket protocol
 	nni_stat_item st_dialers;   // number of dialers
 	nni_stat_item st_listeners; // number of listeners
@@ -255,27 +253,6 @@ sock_get_sendbuf(void *s, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(len, buf, szp, t));
 }
 
-static int
-sock_get_sockname(void *s, void *buf, size_t *szp, nni_type t)
-{
-	return (nni_copyout_str(SOCK(s)->s_name, buf, szp, t));
-}
-
-static int
-sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
-{
-	int rv;
-	NNI_ARG_UNUSED(sz);
-	rv =
-	    (nni_copyin_str(SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), t));
-#ifdef NNG_ENABLE_STATS
-	if (rv == 0) {
-		nni_stat_set_string(&SOCK(s)->st_name, SOCK(s)->s_name);
-	}
-#endif
-	return (rv);
-}
-
 static const nni_option sock_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVTIMEO,
@@ -296,11 +273,6 @@ static const nni_option sock_options[] = {
 	    .o_name = NNG_OPT_SENDBUF,
 	    .o_get  = sock_get_sendbuf,
 	    .o_set  = sock_set_sendbuf,
-	},
-	{
-	    .o_name = NNG_OPT_SOCKNAME,
-	    .o_get  = sock_get_sockname,
-	    .o_set  = sock_set_sockname,
 	},
 	{
 	    .o_name = NNG_OPT_RECONNMINT,
@@ -423,12 +395,6 @@ sock_stats_init(nni_sock *s)
 		.si_desc = "socket identifier",
 		.si_type = NNG_STAT_ID,
 	};
-	static const nni_stat_info name_info = {
-		.si_name  = "name",
-		.si_desc  = "socket name",
-		.si_type  = NNG_STAT_STRING,
-		.si_alloc = true,
-	};
 	static const nni_stat_info protocol_info = {
 		.si_name = "protocol",
 		.si_desc = "socket protocol",
@@ -492,7 +458,6 @@ sock_stats_init(nni_sock *s)
 
 	nni_stat_init(&s->st_root, &root_info);
 	sock_stat_init(s, &s->st_id, &id_info);
-	sock_stat_init(s, &s->st_name, &name_info);
 	sock_stat_init(s, &s->st_protocol, &protocol_info);
 	sock_stat_init(s, &s->st_dialers, &dialers_info);
 	sock_stat_init(s, &s->st_listeners, &listeners_info);
@@ -504,7 +469,6 @@ sock_stats_init(nni_sock *s)
 	sock_stat_init(s, &s->st_rx_bytes, &rx_bytes_info);
 
 	nni_stat_set_id(&s->st_id, (int) s->s_id);
-	nni_stat_set_string(&s->st_name, s->s_name);
 	nni_stat_set_string(&s->st_protocol, nni_sock_proto_name(s));
 }
 #endif
@@ -634,15 +598,11 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	}
 	nni_mtx_unlock(&sock_lk);
 
-	// Set the socket name.
-	(void) snprintf(s->s_name, sizeof(s->s_name), "%u", s->s_id);
-
 #ifdef NNG_ENABLE_STATS
 	// Set up basic stat values.  The socket id wasn't
 	// known at stat creation time, so we set it now.
 	nni_stat_set_id(&s->st_id, (int) s->s_id);
 	nni_stat_set_id(&s->st_root, (int) s->s_id);
-	nni_stat_set_string(&s->st_name, s->s_name);
 
 	// Add our stats chain.
 	nni_stat_register(&s->st_root);

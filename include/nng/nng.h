@@ -713,7 +713,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_FLAG_NONBLOCK 2u // Non-blocking operations
 
 // Options.
-#define NNG_OPT_SOCKNAME "socket-name"
 #define NNG_OPT_RECVBUF "recv-buffer"
 #define NNG_OPT_SENDBUF "send-buffer"
 #define NNG_OPT_RECVTIMEO "recv-timeout"

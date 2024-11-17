@@ -94,76 +94,6 @@ test_socket_base(void)
 }
 
 void
-test_socket_name(void)
-{
-	nng_socket s1;
-	char      *str;
-	long       id;
-	char      *end;
-	char      *name;
-
-	NUTS_OPEN(s1);
-	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &name));
-	NUTS_TRUE(strlen(name) > 0);
-	NUTS_TRUE(strlen(name) < 64);
-	id = strtol(name, &end, 10);
-	NUTS_TRUE(id == (long) s1.id);
-	NUTS_TRUE(end != NULL && *end == '\0');
-	nng_strfree(name);
-
-	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, "hello"));
-	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &name));
-	NUTS_MATCH(name, "hello");
-	nng_strfree(name);
-
-	char buf[128];
-	memset(buf, 'A', 128);
-	buf[127] = 0;
-
-	// strings must not be too long
-	NUTS_FAIL(
-	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
-	memset(buf, 'A', 64);
-	buf[64] = 0;
-	NUTS_FAIL(
-	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
-	buf[63] = 0;
-	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf));
-	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, "hello"));
-
-	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &str));
-	NUTS_ASSERT(str != NULL);
-	NUTS_TRUE(strlen(str) == 5);
-	NUTS_MATCH(str, "hello");
-	nng_strfree(str);
-
-	NUTS_CLOSE(s1);
-}
-
-void
-test_socket_name_oversize(void)
-{
-	nng_socket s1;
-	char       buf[256]; // 64 is max
-	size_t     sz = sizeof(buf);
-	char      *name;
-
-	memset(buf, 'A', sz);
-	NUTS_OPEN(s1);
-
-	buf[sz - 1] = '\0';
-	NUTS_FAIL(
-	    nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf), NNG_EINVAL);
-
-	strcpy(buf, "hello");
-	NUTS_PASS(nng_socket_set_string(s1, NNG_OPT_SOCKNAME, buf));
-	NUTS_PASS(nng_socket_get_string(s1, NNG_OPT_SOCKNAME, &name));
-	NUTS_MATCH(name, "hello");
-	nng_strfree(name);
-	NUTS_CLOSE(s1);
-}
-
-void
 test_send_recv(void)
 {
 	nng_socket   s1;
@@ -402,12 +332,7 @@ test_listener_options(void)
 	    nng_listener_set_bool(l, NNG_OPT_RECVMAXSZ, true), NNG_EBADTYPE);
 
 	// Cannot set inappropriate options
-	NUTS_FAIL(
-	    nng_listener_set_string(l, NNG_OPT_SOCKNAME, "1"), NNG_ENOTSUP);
-
 	NUTS_FAIL(nng_listener_set_ms(l, NNG_OPT_RECONNMINT, 1), NNG_ENOTSUP);
-	NUTS_FAIL(nng_listener_set_string(l, NNG_OPT_SOCKNAME, "bogus"),
-	    NNG_ENOTSUP);
 
 	// Read only options
 	NUTS_FAIL(nng_listener_set_string(l, NNG_OPT_URL, "inproc://junk"),
@@ -436,11 +361,7 @@ test_dialer_options(void)
 	    nng_dialer_set_bool(d, NNG_OPT_RECVMAXSZ, true), NNG_EBADTYPE);
 
 	// Cannot set inappropriate options
-	NUTS_FAIL(
-	    nng_dialer_set_string(d, NNG_OPT_SOCKNAME, "1"), NNG_ENOTSUP);
 	NUTS_FAIL(nng_dialer_set_ms(d, NNG_OPT_SENDTIMEO, 1), NNG_ENOTSUP);
-	NUTS_FAIL(
-	    nng_dialer_set_string(d, NNG_OPT_SOCKNAME, "bogus"), NNG_ENOTSUP);
 
 	// Read only options
 	NUTS_FAIL(nng_dialer_set_string(d, NNG_OPT_URL, "inproc://junk"),
@@ -542,8 +463,6 @@ NUTS_TESTS = {
 	{ "send timeout", test_send_timeout },
 	{ "send non-block", test_send_nonblock },
 	{ "socket base", test_socket_base },
-	{ "socket name", test_socket_name },
-	{ "socket name oversize", test_socket_name_oversize },
 	{ "send recv", test_send_recv },
 	{ "send recv zero length", test_send_recv_zero_length },
 	{ "connection refused", test_connection_refused },
