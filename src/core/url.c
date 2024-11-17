@@ -119,7 +119,7 @@ nni_url_decode(uint8_t *out, const char *in, size_t max_len)
 static int
 url_canonify_uri(char **outp, const char *in)
 {
-	char *  out;
+	char   *out;
 	size_t  src, dst, len;
 	uint8_t c;
 	int     rv;
@@ -294,7 +294,7 @@ nni_url_default_port(const char *scheme)
 int
 nni_url_parse(nni_url **urlp, const char *raw)
 {
-	nni_url *   url;
+	nni_url    *url;
 	size_t      len;
 	const char *s;
 	char        c;
@@ -530,9 +530,8 @@ nni_url_asprintf(char **str, const nni_url *url)
 	const char *hostcb = "";
 
 	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0) ||
-            (strcmp(scheme, "unix") == 0) ||
-            (strcmp(scheme, "ipc+abstract") == 0) ||
-	    (strcmp(scheme, "unix+abstract") == 0)) {
+	    (strcmp(scheme, "unix") == 0) ||
+	    (strcmp(scheme, "abstract") == 0)) {
 		return (nni_asprintf(str, "%s://%s", scheme, url->u_path));
 	}
 
