@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -52,6 +52,7 @@ const char *nuts_server_key =
     "-----END RSA PRIVATE KEY-----\n";
 
 const char *nuts_server_crt =
+
     "-----BEGIN CERTIFICATE-----\n"
     "MIIDRzCCAi8CFCOIJGs6plMawgBYdDuCRV7UuJuyMA0GCSqGSIb3DQEBCwUAMF8x\n"
     "CzAJBgNVBAYTAlhYMQ8wDQYDVQQIDAZVdG9waWExETAPBgNVBAcMCFBhcmFkaXNl\n"
@@ -146,4 +147,97 @@ const char *nuts_garbled_crt =
     "ExpGY3SPxrKSzDqIITVPVgzjW25N8qtgLXC6HODDiViNYq1nmuoS4O80NIYAPPs6\n"
     "sxUMa5kT+zc17q57ZcgNq/sSGI3BU4b/E/8ntIwiui2xWSf/4JR6xtanih8uY5Pu\n"
     "QTgg9qTtFgtu4WWUP7JhreoINTw6O4/g5Z18\n"
+    "-----END CERTIFICATE-----\n";
+
+// TLS certificates using ECDSA.  These are pre-generated, and should not be
+// used outside of these test cases.  They are all using prime256v1 with
+// SHA256. All certs are signed by the root key (making the root self-signed).
+// They all expire in about 100 years -- so we don't have to worry about
+// expiration.
+//
+// The server cert uses CN 127.0.0.1, and an alt name of "localhost".
+//
+// Country = XX
+// State = Utopia
+// Locality = Paradise
+// Organization = NNG Tests, Inc.
+//
+
+// clang-format off
+/*
+The following shell script was used:
+
+#!/bin/sh
+
+server_key=server_key.pem
+server_crt=server_crt.pem
+client_key=client_key.pem
+client_csr=client_csr.csr
+client_crt=client_crt.pem
+
+openssl ecparam -name secp521r1 -genkey -out $server_key
+openssl req -new -key $server_key -x509 -nodes -days 36500 -subj "/C=XX/ST=Utopia/O=NNG Tests, Inc./CN=127.0.0.1" -addext 'subjectAltName=DNS:localhost' -out $server_crt
+openssl ecparam -name secp521r1 -genkey -out $client_key
+openssl req -new -key $client_key -subj "/C=XX/ST=Utopia/O=NNG Tests, Inc./CN=client" -out $client_csr
+openssl x509 -req -days 36500 -in $client_csr -CA $server_crt -CAkey $server_key -out $client_crt -set_serial 01 -sha256
+*/
+// clang-format on
+
+const char *nuts_ecdsa_server_key =
+    "-----BEGIN EC PARAMETERS-----\n"
+    "BgUrgQQAIw==\n"
+    "-----END EC PARAMETERS-----\n"
+    "-----BEGIN EC PRIVATE KEY-----\n"
+    "MIHcAgEBBEIAHONw87DNkoisqZx1AE/VVe78AVmrVHLoRZ08om1/oU/MV0UVcr14\n"
+    "gHPuRMI+FAt77Vku/4DSxCl5Oll3q4LAGtugBwYFK4EEACOhgYkDgYYABACJ1c9q\n"
+    "go6SycHu8JWgHzltARvXdsWOHbhsnNJTVydvfKHKQRPVpRXOAl51DdvVCE5i9/TE\n"
+    "/76+NonSG7QAQ9xToQAkQ+mOX/qzCOYW/1xtrIX4G5KwnshUIuR5bYx9Gg/Bn/wC\n"
+    "9oEuM1hGe1eGRP+ZjF/fRtqdLLsW7ODnuH1ore+KHA==\n"
+    "-----END EC PRIVATE KEY-----\n";
+
+const char *nuts_ecdsa_server_crt =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIICjTCCAe6gAwIBAgIUStuZM66kGOnQVoiqV5c+yycyljwwCgYIKoZIzj0EAwIw\n"
+    "TDELMAkGA1UEBhMCWFgxDzANBgNVBAgMBlV0b3BpYTEYMBYGA1UECgwPTk5HIFRl\n"
+    "c3RzLCBJbmMuMRIwEAYDVQQDDAkxMjcuMC4wLjEwIBcNMjQxMTE2MjMyNjMzWhgP\n"
+    "MjEyNDEwMjMyMzI2MzNaMEwxCzAJBgNVBAYTAlhYMQ8wDQYDVQQIDAZVdG9waWEx\n"
+    "GDAWBgNVBAoMD05ORyBUZXN0cywgSW5jLjESMBAGA1UEAwwJMTI3LjAuMC4xMIGb\n"
+    "MBAGByqGSM49AgEGBSuBBAAjA4GGAAQAidXPaoKOksnB7vCVoB85bQEb13bFjh24\n"
+    "bJzSU1cnb3yhykET1aUVzgJedQ3b1QhOYvf0xP++vjaJ0hu0AEPcU6EAJEPpjl/6\n"
+    "swjmFv9cbayF+BuSsJ7IVCLkeW2MfRoPwZ/8AvaBLjNYRntXhkT/mYxf30banSy7\n"
+    "Fuzg57h9aK3vihyjaTBnMB0GA1UdDgQWBBTZf991Br/NIUq7yO10jupUbYTVjTAf\n"
+    "BgNVHSMEGDAWgBTZf991Br/NIUq7yO10jupUbYTVjTAPBgNVHRMBAf8EBTADAQH/\n"
+    "MBQGA1UdEQQNMAuCCWxvY2FsaG9zdDAKBggqhkjOPQQDAgOBjAAwgYgCQgCTqfIP\n"
+    "wV8e6nHVAEBt4NDx1dLG0Ap86YXtIsrwxzydziEKqexxWrJa8T24ugHA8tp4t1YG\n"
+    "sc5sfBWROZ5bAvh1TwJCAc511cMRnDX362CWJeu6cxoFVgf8c5I+oC/1+4c9eFpN\n"
+    "fAlJehKFp7zI2FrywMLqtoWlKrPh3ondzRH952OCMOqS\n"
+    "-----END CERTIFICATE-----\n";
+
+const char *nuts_ecdsa_client_key =
+    "-----BEGIN EC PARAMETERS-----\n"
+    "BgUrgQQAIw==\n"
+    "-----END EC PARAMETERS-----\n"
+    "-----BEGIN EC PRIVATE KEY-----\n"
+    "MIHcAgEBBEIBpOYclp7j7CZ0pk9JemQBtXZW1/MReB7RGl3F8zTU0U9asgF5aP/5\n"
+    "99uOuxOycnCN7GRdcAGCSRlxG4w0AzzkjRWgBwYFK4EEACOhgYkDgYYABAHmhUnU\n"
+    "kQB1Y4saF3l3sKfPBMSRUYqo6NzQFrwLdf/4XjIjRttO0ToLww8Ip1snzr6HwwL+\n"
+    "iemjAut+HR74BbgfzwC/YSsVbhR/beoFYhFzZBgU0TefENhh/cDdZWLAxkmrMIv4\n"
+    "ClCTjZK65yewbh2FE7jJM5+XhT9zSutcTTiCK8OCsg==\n"
+    "-----END EC PRIVATE KEY-----\n";
+
+const char *nuts_ecdsa_client_crt =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIICUDCCAbGgAwIBAgIBATAKBggqhkjOPQQDAjBMMQswCQYDVQQGEwJYWDEPMA0G\n"
+    "A1UECAwGVXRvcGlhMRgwFgYDVQQKDA9OTkcgVGVzdHMsIEluYy4xEjAQBgNVBAMM\n"
+    "CTEyNy4wLjAuMTAgFw0yNDExMTYyMzI2MzNaGA8yMTI0MTAyMzIzMjYzM1owSTEL\n"
+    "MAkGA1UEBhMCWFgxDzANBgNVBAgMBlV0b3BpYTEYMBYGA1UECgwPTk5HIFRlc3Rz\n"
+    "LCBJbmMuMQ8wDQYDVQQDDAZjbGllbnQwgZswEAYHKoZIzj0CAQYFK4EEACMDgYYA\n"
+    "BAHmhUnUkQB1Y4saF3l3sKfPBMSRUYqo6NzQFrwLdf/4XjIjRttO0ToLww8Ip1sn\n"
+    "zr6HwwL+iemjAut+HR74BbgfzwC/YSsVbhR/beoFYhFzZBgU0TefENhh/cDdZWLA\n"
+    "xkmrMIv4ClCTjZK65yewbh2FE7jJM5+XhT9zSutcTTiCK8OCsqNCMEAwHQYDVR0O\n"
+    "BBYEFItNESy93oLtgsOjs3jB8UtVKuRKMB8GA1UdIwQYMBaAFNl/33UGv80hSrvI\n"
+    "7XSO6lRthNWNMAoGCCqGSM49BAMCA4GMADCBiAJCAe0mobaBx+A2A9w033LSsDoD\n"
+    "8sqtb3cRksEyF4c2EhP6XstQ3fxJ2rce1cWzeb67CwJpxQ6t/HBy8ahUDGyNu/H+\n"
+    "AkIA0SKehR/cXZvqTy/IMfqLCqwjUIYO8vCY9ed5fnx4G7aSndRczGWvxcfS/wPQ\n"
+    "cyOgzDRQnlaotZq/aYmymIE4UdY=\n"
     "-----END CERTIFICATE-----\n";

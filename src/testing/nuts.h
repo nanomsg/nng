@@ -114,6 +114,11 @@ extern const char *nuts_server_crt;
 extern const char *nuts_client_key;
 extern const char *nuts_client_crt;
 extern const char *nuts_garbled_crt;
+// These ones use ecdsa with prime256v1.
+extern const char *nuts_ecdsa_server_key;
+extern const char *nuts_ecdsa_server_crt;
+extern const char *nuts_ecdsa_client_key;
+extern const char *nuts_ecdsa_client_crt;
 
 // NUTS_SUCCESS tests for NNG success.  It reports the failure if it
 // did not.
