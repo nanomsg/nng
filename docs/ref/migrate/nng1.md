@@ -60,6 +60,14 @@ Support for very old TLS versions 1.0 and 1.1 is removed.
 Further, the `NNG_TLS_1_0` and `NNG_TLS_1_1` constants are also removed.
 Applications should use `NNG_TLS_1_2` or even `NNG_TLS_1_3` instead.
 
+## Support for Local Addresses in Dial URLs Removed
+
+NNG 1.x had an undocumented ability to specify the local address to bind
+to when dialing, by using the local address in front of the destination
+address separated by a semicolon. This was provided for legacy libnanomsg
+compatilibility, and is no longer offered. The correct way to specify a
+local address is by setting `NNG_OPT_LOCADDR` on the dialer.
+
 ## Option Functions
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.

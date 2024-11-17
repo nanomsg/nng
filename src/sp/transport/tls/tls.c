@@ -684,65 +684,6 @@ tlstran_ep_close(void *arg)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-// This parses off the optional source address that this transport uses.
-// The special handling of this URL format is quite honestly an historical
-// mistake, which we would remove if we could.
-static int
-tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
-{
-	int      af;
-	char    *semi;
-	char    *src;
-	size_t   len;
-	int      rv;
-	nni_aio *aio;
-
-	// We modify the URL.  This relies on the fact that the underlying
-	// transport does not free this, so we can just use references.
-
-	url->u_scheme   = surl->u_scheme;
-	url->u_port     = surl->u_port;
-	url->u_hostname = surl->u_hostname;
-
-	if ((semi = strchr(url->u_hostname, ';')) == NULL) {
-		memset(sa, 0, sizeof(*sa));
-		return (0);
-	}
-
-	len             = (size_t) (semi - url->u_hostname);
-	url->u_hostname = semi + 1;
-
-	if (strcmp(surl->u_scheme, "tls+tcp") == 0) {
-		af = NNG_AF_UNSPEC;
-	} else if (strcmp(surl->u_scheme, "tls+tcp4") == 0) {
-		af = NNG_AF_INET;
-#ifdef NNG_ENABLE_IPV6
-	} else if (strcmp(surl->u_scheme, "tls+tcp6") == 0) {
-		af = NNG_AF_INET6;
-#endif
-	} else {
-		return (NNG_EADDRINVAL);
-	}
-
-	if ((src = nni_alloc(len + 1)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	memcpy(src, surl->u_hostname, len);
-	src[len] = '\0';
-
-	if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
-		nni_free(src, len + 1);
-		return (rv);
-	}
-
-	nni_resolv_ip(src, "0", af, 1, sa, aio);
-	nni_aio_wait(aio);
-	rv = nni_aio_result(aio);
-	nni_aio_free(aio);
-	nni_free(src, len + 1);
-	return (rv);
-}
-
 static void
 tlstran_timer_cb(void *arg)
 {
@@ -886,11 +827,9 @@ tlstran_ep_init(tlstran_ep **epp, nng_url *url, nni_sock *sock)
 static int
 tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 {
-	tlstran_ep  *ep;
-	int          rv;
-	nng_sockaddr srcsa;
-	nni_sock    *sock = nni_dialer_sock(ndialer);
-	nni_url      myurl;
+	tlstran_ep *ep;
+	int         rv;
+	nni_sock   *sock = nni_dialer_sock(ndialer);
 
 	// Check for invalid URL components.
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
@@ -902,23 +841,13 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = tlstran_url_parse_source(&myurl, &srcsa, url)) != 0) {
-		return (rv);
-	}
-
 	if (((rv = tlstran_ep_init(&ep, url, sock)) != 0) ||
 	    ((rv = nni_aio_alloc(&ep->connaio, tlstran_dial_cb, ep)) != 0)) {
 		return (rv);
 	}
 
 	if ((rv != 0) ||
-	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, &myurl)) != 0)) {
-		tlstran_ep_fini(ep);
-		return (rv);
-	}
-	if ((srcsa.s_family != NNG_AF_UNSPEC) &&
-	    ((rv = nni_stream_dialer_set(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
-	          sizeof(srcsa), NNI_TYPE_SOCKADDR)) != 0)) {
+	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != 0)) {
 		tlstran_ep_fini(ep);
 		return (rv);
 	}

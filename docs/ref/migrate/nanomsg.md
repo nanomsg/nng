@@ -121,4 +121,11 @@ There are some exceptions. Be aware that the numeric values are _not_ the same.
 | `EMFILE`       | [`NNG_ENOFILES`]                                                                         |
 | `ENOSPC`       | [`NNG_ENOSPC`]                                                                           |
 
+## Local Addresses for Dialing
+
+The ability to specify the source address in the UROL,to use when
+using `nn_dial` inside the URL is not present in NNG. The correct
+way to specify the local address is using the `NNG_OPT_LOCADDR` option on the
+dialer before starting to dial.
+
 {{#include ../xref.md}}

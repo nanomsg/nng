@@ -47,27 +47,6 @@ test_tcp_wild_card_bind(void)
 }
 
 void
-test_tcp_local_address_connect(void)
-{
-
-	nng_socket s1;
-	nng_socket s2;
-	char       addr[NNG_MAXADDRLEN];
-	uint16_t   port;
-
-	NUTS_OPEN(s1);
-	NUTS_OPEN(s2);
-	port = nuts_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
-	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
-	(void) snprintf(
-	    addr, sizeof(addr), "tcp://127.0.0.1;127.0.0.1:%u", port);
-	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
-	NUTS_CLOSE(s2);
-	NUTS_CLOSE(s1);
-}
-
-void
 test_tcp_port_zero_bind(void)
 {
 	nng_socket   s1;
@@ -88,19 +67,6 @@ test_tcp_port_zero_bind(void)
 	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
 	nng_strfree(addr);
 	NUTS_CLOSE(s2);
-	NUTS_CLOSE(s1);
-}
-
-void
-test_tcp_bad_local_interface(void)
-{
-	nng_socket s1;
-	int        rv;
-
-	NUTS_OPEN(s1);
-	rv = nng_dial(s1, "tcp://bogus1;127.0.0.1:80", NULL, 0),
-	NUTS_TRUE(rv != 0);
-	NUTS_TRUE(rv != NNG_ECONNREFUSED);
 	NUTS_CLOSE(s1);
 }
 
@@ -244,8 +210,6 @@ NUTS_TESTS = {
 	{ "tcp wild card connect fail", test_tcp_wild_card_connect_fail },
 	{ "tcp wild card bind", test_tcp_wild_card_bind },
 	{ "tcp port zero bind", test_tcp_port_zero_bind },
-	{ "tcp local address connect", test_tcp_local_address_connect },
-	{ "tcp bad local interface", test_tcp_bad_local_interface },
 	{ "tcp non-local address", test_tcp_non_local_address },
 	{ "tcp malformed address", test_tcp_malformed_address },
 	{ "tcp no delay option", test_tcp_no_delay_option },

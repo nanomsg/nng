@@ -133,38 +133,6 @@ test_tls_port_zero_bind(void)
 }
 
 void
-test_tls_local_address_connect(void)
-{
-
-	nng_socket      s1;
-	nng_socket      s2;
-	nng_tls_config *c1, *c2;
-	nng_dialer      d;
-	nng_listener    l;
-	char            addr[NNG_MAXADDRLEN];
-	uint16_t        port;
-
-	c1 = tls_server_config();
-	c2 = tls_client_config();
-	NUTS_OPEN(s1);
-	NUTS_OPEN(s2);
-	port = nuts_next_port();
-	(void) snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%u", port);
-	NUTS_PASS(nng_listener_create(&l, s1, addr));
-	NUTS_PASS(nng_listener_set_tls(l, c1));
-	NUTS_PASS(nng_listener_start(l, 0));
-	(void) snprintf(
-	    addr, sizeof(addr), "tls+tcp://127.0.0.1;127.0.0.1:%u", port);
-	NUTS_PASS(nng_dialer_create(&d, s2, addr));
-	NUTS_PASS(nng_dialer_set_tls(d, c2));
-	NUTS_PASS(nng_dialer_start(d, 0));
-	NUTS_CLOSE(s2);
-	NUTS_CLOSE(s1);
-	nng_tls_config_free(c1);
-	nng_tls_config_free(c2);
-}
-
-void
 test_tls_malformed_address(void)
 {
 	nng_socket s1;
@@ -364,7 +332,6 @@ NUTS_TESTS = {
 	{ "tls wild card connect fail", test_tls_wild_card_connect_fail },
 	{ "tls wild card bind", test_tls_wild_card_bind },
 	{ "tls port zero bind", test_tls_port_zero_bind },
-	{ "tls local address connect", test_tls_local_address_connect },
 	{ "tls malformed address", test_tls_malformed_address },
 	{ "tls no delay option", test_tls_no_delay_option },
 	{ "tls keep alive option", test_tls_keep_alive_option },
