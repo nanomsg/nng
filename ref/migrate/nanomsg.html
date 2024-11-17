@@ -324,7 +324,13 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 <tr><td><code>EMFILE</code></td><td><a href="/api/errors.html#NNG_ENOFILES"><code>NNG_ENOFILES</code></a></td><td></td></tr>
 <tr><td><code>ENOSPC</code></td><td><a href="/api/errors.html#NNG_ENOSPC"><code>NNG_ENOSPC</code></a></td><td></td></tr>
 </tbody></table>
-</div><!-- Symbol cross reference -->
+</div>
+<h2 id="local-addresses-for-dialing"><a class="header" href="#local-addresses-for-dialing">Local Addresses for Dialing</a></h2>
+<p>The ability to specify the source address in the UROL,to use when
+using <code>nn_dial</code> inside the URL is not present in NNG. The correct
+way to specify the local address is using the <code>NNG_OPT_LOCADDR</code> option on the
+dialer before starting to dial.</p>
+<!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

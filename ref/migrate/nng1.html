@@ -265,6 +265,12 @@ rather than the supplemental header.</p>
 <p>Support for very old TLS versions 1.0 and 1.1 is removed.
 Further, the <code>NNG_TLS_1_0</code> and <code>NNG_TLS_1_1</code> constants are also removed.
 Applications should use <code>NNG_TLS_1_2</code> or even <code>NNG_TLS_1_3</code> instead.</p>
+<h2 id="support-for-local-addresses-in-dial-urls-removed"><a class="header" href="#support-for-local-addresses-in-dial-urls-removed">Support for Local Addresses in Dial URLs Removed</a></h2>
+<p>NNG 1.x had an undocumented ability to specify the local address to bind
+to when dialing, by using the local address in front of the destination
+address separated by a semicolon. This was provided for legacy libnanomsg
+compatilibility, and is no longer offered. The correct way to specify a
+local address is by setting <code>NNG_OPT_LOCADDR</code> on the dialer.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
 Applications should use <code>nng_pipe_get</code> and related functions instead.</p>
