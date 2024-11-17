@@ -253,6 +253,40 @@ static struct {
 	// clang-format on
 };
 
+// List of schemes that we recognize.  We don't support them all.
+static const char *nni_schemes[] = {
+	"http",
+	"https",
+	"tcp",
+	"tcp4",
+	"tcp6",
+	"tls+tcp",
+	"tls+tcp4",
+	"tls+tcp6",
+	"socket",
+	"inproc",
+	"ipc",
+	"unix",
+	"abstract",
+	"ws",
+	"ws4",
+	"ws6",
+	"wss",
+	"wss4",
+	"wss6",
+	// we don't support these
+	"file",
+	"mailto",
+	"gopher",
+	"ftp",
+	"ssh",
+	"git",
+	"telnet",
+	"irc",
+	"imap",
+	NULL,
+};
+
 const char *
 nni_url_default_port(const char *scheme)
 {
@@ -321,14 +355,16 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		goto error;
 	}
 
-	if ((url->u_scheme = nni_alloc(len + 1)) == NULL) {
-		rv = NNG_ENOMEM;
+	for (int i = 0; nni_schemes[i] != NULL; i++) {
+		if (strncmp(s, nni_schemes[i], len) == 0) {
+			url->u_scheme = nni_schemes[i];
+			break;
+		}
+	}
+	if (url->u_scheme == NULL) {
+		rv = NNG_ENOTSUP;
 		goto error;
 	}
-	for (size_t i = 0; i < len; i++) {
-		url->u_scheme[i] = (char) tolower(s[i]);
-	}
-	url->u_scheme[len] = '\0';
 	s += len + 3; // strlen("://")
 
 	// For compatibility reasons, we treat ipc:// and inproc:// paths
@@ -507,7 +543,6 @@ nni_url_free(nni_url *url)
 {
 	if (url != NULL) {
 		nni_strfree(url->u_rawurl);
-		nni_strfree(url->u_scheme);
 		nni_strfree(url->u_userinfo);
 		nni_strfree(url->u_host);
 		nni_strfree(url->u_hostname);
@@ -580,7 +615,6 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 		return (NNG_ENOMEM);
 	}
 	if (URL_COPYSTR(dst->u_rawurl, src->u_rawurl) ||
-	    URL_COPYSTR(dst->u_scheme, src->u_scheme) ||
 	    URL_COPYSTR(dst->u_userinfo, src->u_userinfo) ||
 	    URL_COPYSTR(dst->u_host, src->u_host) ||
 	    URL_COPYSTR(dst->u_hostname, src->u_hostname) ||
@@ -592,7 +626,8 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 		nni_url_free(dst);
 		return (NNG_ENOMEM);
 	}
-	*dstp = dst;
+	dst->u_scheme = src->u_scheme;
+	*dstp         = dst;
 	return (0);
 }
 

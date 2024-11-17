@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -54,8 +54,7 @@ test_url_host_port_path(void)
 {
 	nng_url *url;
 
-	NUTS_PASS(
-	    nng_url_parse(&url, "http://www.google.com:1234/somewhere"));
+	NUTS_PASS(nng_url_parse(&url, "http://www.google.com:1234/somewhere"));
 	NUTS_ASSERT(url != NULL);
 	NUTS_TRUE(strcmp(url->u_scheme, "http") == 0);
 	NUTS_TRUE(strcmp(url->u_host, "www.google.com:1234") == 0);
@@ -310,6 +309,8 @@ test_url_bad_scheme(void)
 	NUTS_NULL(url);
 	NUTS_FAIL(nng_url_parse(&url, "http:www.google.com"), NNG_EINVAL);
 	NUTS_NULL(url);
+	NUTS_FAIL(nng_url_parse(&url, "nosuch://bogus"), NNG_ENOTSUP);
+	NUTS_NULL(url);
 }
 
 void
@@ -327,7 +328,7 @@ test_url_canonify(void)
 {
 	nng_url *url = NULL;
 	NUTS_PASS(nng_url_parse(
-	    &url, "hTTp://www.EXAMPLE.com/bogus/.%2e/%7egarrett"));
+	    &url, "http://www.EXAMPLE.com/bogus/.%2e/%7egarrett"));
 	NUTS_ASSERT(url != NULL);
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_hostname, "www.example.com");

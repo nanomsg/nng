@@ -1083,16 +1083,16 @@ enum nng_errno_enum {
 // give us a convenient way of doing so.
 
 typedef struct nng_url {
-	char *u_rawurl;   // never NULL
-	char *u_scheme;   // never NULL
-	char *u_userinfo; // will be NULL if not specified
-	char *u_host;     // including colon and port
-	char *u_hostname; // name only, will be "" if not specified
-	char *u_port;     // port, will be "" if not specified
-	char *u_path;     // path, will be "" if not specified
-	char *u_query;    // without '?', will be NULL if not specified
-	char *u_fragment; // without '#', will be NULL if not specified
-	char *u_requri;   // includes query and fragment, "" if not specified
+	char       *u_rawurl;   // never NULL
+	const char *u_scheme;   // never NULL
+	char       *u_userinfo; // will be NULL if not specified
+	char       *u_host;     // including colon and port
+	char       *u_hostname; // name only, will be "" if not specified
+	char       *u_port;     // port, will be "" if not specified
+	char       *u_path;     // path, will be "" if not specified
+	char       *u_query;    // without '?', will be NULL if not specified
+	char       *u_fragment; // without '#', will be NULL if not specified
+	char *u_requri; // includes query and fragment, "" if not specified
 } nng_url;
 
 // nng_url_parse parses a URL string into a structured form.
