@@ -1530,33 +1530,29 @@ and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3968</a>.</p>
 that are not part of the IETF standards.</p>
 <h2 id="url-structure"><a class="header" href="#url-structure">URL Structure</a></h2>
 <pre><code class="language-c">typedef struct nng_url {
-    char       *u_rawurl;
     const char *u_scheme;
     char       *u_userinfo;
-    char       *u_host;
     char       *u_hostname;
     uint16_t   u_port;
     char       *u_path;
     char       *u_query;
     char       *u_fragment;
-    char       *u_requri;
 } nng_url;
 </code></pre>
 <h3 id="url-fields"><a class="header" href="#url-fields">URL Fields</a></h3>
 <p>Applications may access individual fields, but must not free or
 alter them, as the underlying memory is managed by the library.</p>
+<p>Additionally applications must not depend on the size of this structure.
+Obtain one using <code>nng_parse_url</code>.</p>
 <p>The fields of an <code>nng_url</code> object are as follows:</p>
 <ul>
-<li><code>u_rawurl</code>: The unparsed URL string. This will never be <code>NULL</code>.</li>
 <li><code>u_scheme</code>: The URL scheme, such as “http” or “inproc”. Always lower case. This will never be <code>NULL</code>.</li>
 <li><code>u_userinfo</code>: This username and password if supplied in the URL string. Will be <code>NULL</code> when not present.</li>
-<li><code>u_host</code>: The full host part of the URL, including the port if present (separated by a colon.)</li>
 <li><code>u_hostname</code>: The name of the host, and may be the empty string in some cases.</li>
 <li><code>u_port</code>: The port. May be zero if irrelevant or not specified.</li>
 <li><code>u_path</code>: The path, typically used with HTTP or WebSockets. Will be empty string if not specified.</li>
 <li><code>u_query</code>: The query info (typically following <code>?</code> in the URL.) Will be <code>NULL</code> if not present.</li>
 <li><code>u_fragment</code>: This is used for specifying an anchor, the part after <code>#</code> in a URL. Will be <code>NULL</code> if not present.</li>
-<li><code>u_requri</code>: The full Request-URI. Will be the empty string if not specified.</li>
 </ul>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1565,10 +1561,28 @@ alter them, as the underlying memory is managed by the library.</p>
 </p>
 <p>Other fields may also be present, but only those documented here are safe for application use.</p>
 </div>
+<h2 id="format-a-url"><a class="header" href="#format-a-url">Format a URL</a></h2>
+<pre><code class="language-c">int nng_url_sprintf(char *buf, size_t bufsz, const nng_url *url);
+</code></pre>
+<p>The <a name="a003"></a><code>nng_url_sprintf</code> function formats the <em>url</em> to the <em>buf</em>,
+which must have <code>bufsz</code> bytes of free space associated with it.</p>
+<p>This function returns the number of bytes formatted to <em>buf</em>, excludng
+the terminating zero byte, or if <em>bufsz</em> is too small, then it returns
+the number of bytes that would have been formatted if there was sufficient
+space. The semantics are similar to the <code>snprintf</code> function from C99.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>If <em>bufsz</em> is 0, then <em>buf</em> can be <code>NULL</code>, and the return value
+can be used to determine the amount of space to allocate for a dynamically
+sized buffer.</p>
+</div>
 <h2 id="parse-a-url"><a class="header" href="#parse-a-url">Parse a URL</a></h2>
 <pre><code class="language-c">int nng_url_parse(nng_url **urlp, const char *str);
 </code></pre>
-<p>The <a name="a003"></a><code>nng_url_parse</code> function parses a URL string (in <em>str</em>),
+<p>The <a name="a004"></a><code>nng_url_parse</code> function parses a URL string (in <em>str</em>),
 and creates a dynamically allocated <code>nng_url</code>, returning it in <em>urlp</em>.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
@@ -1580,11 +1594,11 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
 <pre><code class="language-c">int nng_url_clone(nng_url **dup, nng_url *url);
 </code></pre>
-<p>The <a name="a004"></a><code>nng_url_clone</code> function creates a copy of <em>url</em>, and returns it in <em>dup</em>.</p>
+<p>The <a name="a005"></a><code>nng_url_clone</code> function creates a copy of <em>url</em>, and returns it in <em>dup</em>.</p>
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>
 <pre><code class="language-c">void nng_url_free(nng_url *url);
 </code></pre>
-<p>The <a name="a005"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
+<p>The <a name="a006"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
 either <a href="api//api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="api//api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
 <p>This is the only correct way to destroy an <a href="api//api/url.html#url-structure"><code>nng_url</code></a> object.</p>
 <h2 id="see-also-1"><a class="header" href="#see-also-1">See Also</a></h2>
@@ -5677,11 +5691,18 @@ they replace, are only applicable to SUB sockets.</p>
 <p>A number of the <a href="migrate//api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
 certain methods variables <code>const</code> to avoid warnings about misuse of <code>const</code>.</p>
-<h2 id="url-structure-members"><a class="header" href="#url-structure-members">Url Structure Members</a></h2>
+<h2 id="wildcards-not-valid-in-urls"><a class="header" href="#wildcards-not-valid-in-urls">Wildcards Not Valid in URLs</a></h2>
+<p>The use of <code>*</code> to act as a wild card meaning all local interface addresses
+is removed. The empty string already performs this function, and unlike
+<code>*</code> is RFC compliant.</p>
+<h2 id="url-structure-members"><a class="header" href="#url-structure-members">URL Structure Members</a></h2>
 <p>The details of <a href="migrate//api/url.html#url-structure"><code>nng_url</code></a> have changed as follows:</p>
 <ul>
 <li><code>u_port</code> is no longer a string, but a <code>uint16_t</code></li>
-<li><code>u_scheme</code> is a const char *</li>
+<li><code>u_scheme</code> is a <code>const char *</code></li>
+<li><code>u_requri</code> is removed - it can be easily formulated from the other fields.</li>
+<li><code>u_host</code> is removed - use <code>u_hostname</code> and <code>u_port</code> to construct if needed</li>
+<li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="migrate//api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
 <!-- Symbol cross reference -->
 <!-- Macros -->
@@ -6057,9 +6078,10 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_UNIT_MESSAGES</code>, <a href="api/stats.html#a026">1</a><br/>
 <code>NNG_UNIT_MILLIS</code>, <a href="api/stats.html#a027">1</a><br/>
 <code>NNG_UNIT_NONE</code>, <a href="api/stats.html#a024">1</a><br/>
-<code>nng_url_clone</code>, <a href="api/url.html#a004">1</a><br/>
-<code>nng_url_free</code>, <a href="api/url.html#a005">1</a><br/>
-<code>nng_url_parse</code>, <a href="api/url.html#a003">1</a><br/>
+<code>nng_url_clone</code>, <a href="api/url.html#a005">1</a><br/>
+<code>nng_url_free</code>, <a href="api/url.html#a006">1</a><br/>
+<code>nng_url_parse</code>, <a href="api/url.html#a004">1</a><br/>
+<code>nng_url_sprintf</code>, <a href="api/url.html#a003">1</a><br/>
 <code>nng_version</code>, <a href="api/misc.html#a004">1</a><br/>
 <em>PAIR</em>, <a href="proto/pair.html#a002">1</a><br/>
 <em>PAIR</em> protocol, <a href="proto/pair.html#a001">1</a><br/>
