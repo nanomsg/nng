@@ -229,16 +229,16 @@ and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3968</a>.</p>
 that are not part of the IETF standards.</p>
 <h2 id="url-structure"><a class="header" href="#url-structure">URL Structure</a></h2>
 <pre><code class="language-c">typedef struct nng_url {
-    char *u_rawurl;
-    char *u_scheme;
-    char *u_userinfo;
-    char *u_host;
-    char *u_hostname;
-    char *u_port;
-    char *u_path;
-    char *u_query;
-    char *u_fragment;
-    char *u_requri;
+    char       *u_rawurl;
+    const char *u_scheme;
+    char       *u_userinfo;
+    char       *u_host;
+    char       *u_hostname;
+    uint16_t   u_port;
+    char       *u_path;
+    char       *u_query;
+    char       *u_fragment;
+    char       *u_requri;
 } nng_url;
 </code></pre>
 <h3 id="url-fields"><a class="header" href="#url-fields">URL Fields</a></h3>
@@ -251,7 +251,7 @@ alter them, as the underlying memory is managed by the library.</p>
 <li><code>u_userinfo</code>: This username and password if supplied in the URL string. Will be <code>NULL</code> when not present.</li>
 <li><code>u_host</code>: The full host part of the URL, including the port if present (separated by a colon.)</li>
 <li><code>u_hostname</code>: The name of the host, and may be the empty string in some cases.</li>
-<li><code>u_port</code>: The port. May be empty if irrelevant or not specified.</li>
+<li><code>u_port</code>: The port. May be zero if irrelevant or not specified.</li>
 <li><code>u_path</code>: The path, typically used with HTTP or WebSockets. Will be empty string if not specified.</li>
 <li><code>u_query</code>: The query info (typically following <code>?</code> in the URL.) Will be <code>NULL</code> if not present.</li>
 <li><code>u_fragment</code>: This is used for specifying an anchor, the part after <code>#</code> in a URL. Will be <code>NULL</code> if not present.</li>

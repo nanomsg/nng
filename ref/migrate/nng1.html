@@ -344,6 +344,12 @@ they replace, are only applicable to SUB sockets.</p>
 <p>A number of the <a href="/api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
 certain methods variables <code>const</code> to avoid warnings about misuse of <code>const</code>.</p>
+<h2 id="url-structure-members"><a class="header" href="#url-structure-members">Url Structure Members</a></h2>
+<p>The details of <a href="/api/url.html#url-structure"><code>nng_url</code></a> have changed as follows:</p>
+<ul>
+<li><code>u_port</code> is no longer a string, but a <code>uint16_t</code></li>
+<li><code>u_scheme</code> is a const char *</li>
+</ul>
 <!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->
