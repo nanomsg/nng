@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -99,7 +99,7 @@ test_wild_card_host(void)
 	port = nuts_next_port();
 
 	// we use ws4 to ensure 127.0.0.1 binding
-	snprintf(addr, sizeof(addr), "ws4://*:%u/test", port);
+	snprintf(addr, sizeof(addr), "ws4://:%u/test", port);
 	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
 	nng_msleep(100);
 

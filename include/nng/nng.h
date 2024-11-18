@@ -1085,14 +1085,16 @@ enum nng_errno_enum {
 typedef struct nng_url {
 	char       *u_rawurl;   // never NULL
 	const char *u_scheme;   // never NULL
-	char       *u_userinfo; // will be NULL if not specified
-	char       *u_host;     // including colon and port
+	const char *u_userinfo; // will be NULL if not specified
 	char       *u_hostname; // name only, will be "" if not specified
 	uint16_t    u_port;  // port, may be zero for schemes that do not use
 	char       *u_path;  // path, will be "" if not specified
 	char       *u_query; // without '?', will be NULL if not specified
 	char       *u_fragment; // without '#', will be NULL if not specified
-	char *u_requri; // includes query and fragment, "" if not specified
+	// these members are private
+	char  *u_buffer;
+	size_t u_bufsz;
+	char   u_static[NNG_MAXADDRLEN]; // Most URLs fit within this
 } nng_url;
 
 // nng_url_parse parses a URL string into a structured form.

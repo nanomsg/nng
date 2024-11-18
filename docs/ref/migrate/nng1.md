@@ -160,11 +160,20 @@ A number of the [statistics][statistic] functions take, or return, `const nng_st
 of plain `nng_stat *`. The ABI has not changed, but it may be necessary to declare
 certain methods variables `const` to avoid warnings about misuse of `const`.
 
-## Url Structure Members
+## Wildcards Not Valid in URLs
+
+The use of `*` to act as a wild card meaning all local interface addresses
+is removed. The empty string already performs this function, and unlike
+`*` is RFC compliant.
+
+## URL Structure Members
 
 The details of [`nng_url`] have changed as follows:
 
 - `u_port` is no longer a string, but a `uint16_t`
-- `u_scheme` is a const char \*
+- `u_scheme` is a `const char *`
+- `u_requri` is removed - it can be easily formulated from the other fields.
+- `u_host` is removed - use `u_hostname` and `u_port` to construct if needed
+- `u_rawurl` is removed - a "cooked" URL can be obtained from the new [`nng_url_sprintf`] function.
 
 {{#include ../xref.md}}

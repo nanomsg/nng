@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 
 #include <ctype.h>
@@ -16,6 +17,7 @@
 #include <string.h>
 
 #include "core/platform.h"
+#include "nng/nng.h"
 #include "url.h"
 
 static uint8_t
@@ -118,19 +120,12 @@ nni_url_decode(uint8_t *out, const char *in, size_t max_len)
 }
 
 static int
-url_canonify_uri(char **outp, const char *in)
+url_canonify_uri(char *out)
 {
-	char   *out;
-	size_t  src, dst, len;
+	size_t  src, dst;
 	uint8_t c;
 	int     rv;
 	bool    skip;
-
-	// We know that the transform is strictly "reducing".
-	if ((out = nni_strdup(in)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	len = strlen(out);
 
 	// First pass, convert '%xx' for safe characters to unescaped forms.
 	src = dst = 0;
@@ -138,7 +133,6 @@ url_canonify_uri(char **outp, const char *in)
 		if (c == '%') {
 			if ((!isxdigit(out[src + 1])) ||
 			    (!isxdigit(out[src + 2]))) {
-				nni_free(out, len);
 				return (NNG_EINVAL);
 			}
 			c = url_hex_val(out[src + 1]);
@@ -224,13 +218,10 @@ url_canonify_uri(char **outp, const char *in)
 	// Finally lets make sure that the results are valid UTF-8.
 	// This guards against using UTF-8 redundancy to break security.
 	if ((rv = url_utf8_validate(out)) != 0) {
-		nni_free(out, len);
 		return (rv);
 	}
 
-	*outp = nni_strdup(out);
-	nni_free(out, len);
-	return (*outp == NULL ? NNG_ENOMEM : 0);
+	return (0);
 }
 
 static struct {
@@ -340,6 +331,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	nni_url    *url;
 	size_t      len;
 	const char *s;
+	char       *p;
 	char        c;
 	int         rv;
 
@@ -347,6 +339,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		return (NNG_ENOMEM);
 	}
 
+	// TODO: remove this when NNG_OPT_URL is gone
 	if ((url->u_rawurl = nni_strdup(raw)) == NULL) {
 		rv = NNG_ENOMEM;
 		goto error;
@@ -374,7 +367,23 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		rv = NNG_ENOTSUP;
 		goto error;
 	}
-	s += len + 3; // strlen("://")
+	s += len;
+
+	// A little tricky.  We copy the "://" here, even though we don't need
+	// it. This affords us some space for zero bytes between URL components
+	// if needed
+
+	if (strlen(s) >= sizeof(url->u_static)) {
+		url->u_buffer = nni_strdup(s);
+		url->u_bufsz  = strlen(s) + 1;
+	} else {
+		snprintf(url->u_static, sizeof(url->u_static), "%s", s);
+		url->u_buffer = url->u_static;
+		url->u_bufsz  = 0;
+	}
+
+	p = url->u_buffer + strlen("://");
+	s = p;
 
 	// For compatibility reasons, we treat ipc:// and inproc:// paths
 	// specially. These names URLs have a path name (ipc) or arbitrary
@@ -390,152 +399,119 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	    (strcmp(url->u_scheme, "unix") == 0) ||
 	    (strcmp(url->u_scheme, "abstract") == 0) ||
 	    (strcmp(url->u_scheme, "inproc") == 0)) {
-		if ((url->u_path = nni_strdup(s)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto error;
-		}
-		*urlp = url;
+		url->u_path = p;
+		*urlp       = url;
 		return (0);
 	}
 
 	// Look for host part (including colon).  Will be terminated by
 	// a path, or NUL.  May also include an "@", separating a user
 	// field.
-	for (len = 0; (c = s[len]) != '/'; len++) {
-		if ((c == '\0') || (c == '#') || (c == '?')) {
+	for (;;) {
+		c = *p;
+		if ((c == '\0') || (c == '/') || (c == '#') || (c == '?')) {
+			*p = '\0';
+			memmove(url->u_buffer, s, strlen(s) + 1);
+			*p = c;
 			break;
 		}
-		if (c == '@') {
-			// This is a username.
-			if (url->u_userinfo != NULL) { // we already have one
-				rv = NNG_EINVAL;
-				goto error;
-			}
-			if ((url->u_userinfo = nni_alloc(len + 1)) == NULL) {
-				rv = NNG_ENOMEM;
-				goto error;
-			}
-			memcpy(url->u_userinfo, s, len);
-			url->u_userinfo[len] = '\0';
-			s += len + 1; // skip past user@ ...
-			len = 0;
+		p++;
+	}
+
+	s           = p;
+	url->u_path = p;
+
+	// shift the host back to the start of the buffer, which gives us
+	// padding so we don't have to clobber the leading "/" in the path.
+	url->u_hostname = url->u_buffer;
+
+	char *at;
+	if ((at = strchr(url->u_hostname, '@')) != NULL) {
+		url->u_userinfo = url->u_hostname;
+		*at++           = 0;
+		url->u_hostname = at;
+
+		// make sure only one '@' appears in the host (only one user
+		// info is allowed)
+		if (strchr(url->u_hostname, '@') != NULL) {
+			rv = NNG_EADDRINVAL;
+			goto error;
 		}
 	}
 
-	// If the hostname part is just '*', skip over it.  (We treat it
-	// as an empty host for legacy nanomsg compatibility.  This may be
-	// non-RFC compliant, but we're really only interested in parsing
-	// nanomsg URLs.)
-	if (((len == 1) && (s[0] == '*')) ||
-	    ((len > 1) && (strncmp(s, "*:", 2) == 0))) {
-		s++;
-		len--;
-	}
-
-	if ((url->u_host = nni_alloc(len + 1)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto error;
-	}
 	// Copy the host portion, but make it lower case (hostnames are
 	// case insensitive).
-	for (size_t i = 0; i < len; i++) {
-		url->u_host[i] = (char) tolower(s[i]);
+	for (int i = 0; url->u_hostname[i]; i++) {
+		url->u_hostname[i] = (char) tolower(url->u_hostname[i]);
 	}
-	url->u_host[len] = '\0';
-	s += len;
 
-	if ((rv = url_canonify_uri(&url->u_requri, s)) != 0) {
+	if ((rv = url_canonify_uri(p)) != 0) {
 		goto error;
 	}
 
-	s = url->u_requri;
-	for (len = 0; (c = s[len]) != '\0'; len++) {
+	while ((c = *p) != '\0') {
 		if ((c == '?') || (c == '#')) {
 			break;
 		}
+		p++;
 	}
-
-	if ((url->u_path = nni_alloc(len + 1)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto error;
-	}
-	memcpy(url->u_path, s, len);
-	url->u_path[len] = '\0';
-
-	s += len;
 
 	// Look for query info portion.
-	if (s[0] == '?') {
-		s++;
-		for (len = 0; (c = s[len]) != '\0'; len++) {
+	if (*p == '?') {
+		*p++         = '\0';
+		url->u_query = p;
+		while ((c = *p) != '\0') {
 			if (c == '#') {
+				*p++            = '\0';
+				url->u_fragment = p;
 				break;
 			}
+			p++;
 		}
-		if ((url->u_query = nni_alloc(len + 1)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto error;
-		}
-		memcpy(url->u_query, s, len);
-		url->u_query[len] = '\0';
-		s += len;
-	}
-
-	// Look for fragment.  Will always be last, so we just use
-	// strdup.
-	if (s[0] == '#') {
-		if ((url->u_fragment = nni_strdup(s + 1)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto error;
-		}
+	} else if (c == '#') {
+		*p++            = '\0';
+		url->u_fragment = p;
 	}
 
 	// Now go back to the host portion, and look for a separate
 	// port We also yank off the "[" part for IPv6 addresses.
-	s = url->u_host;
-	if (s[0] == '[') {
-		s++;
-		for (len = 0; s[len] != ']'; len++) {
-			if (s[len] == '\0') {
+	p = url->u_hostname;
+	if (*p == '[') {
+		url->u_hostname++;
+		p++;
+		while (*p != ']') {
+			if (*p++ == '\0') {
 				rv = NNG_EINVAL;
 				goto error;
 			}
 		}
-		if ((s[len + 1] != ':') && (s[len + 1] != '\0')) {
+		*p++ = '\0';
+		if ((*p != ':') && (*p != '\0')) {
 			rv = NNG_EINVAL;
 			goto error;
 		}
 	} else {
-		for (len = 0; s[len] != ':'; len++) {
-			if (s[len] == '\0') {
-				break;
-			}
+		while (*p != ':' && *p != '\0') {
+			p++;
 		}
 	}
+	if ((c = *p) == ':') {
+		*p++ = '\0';
+	}
 	// hostname length check
-	if (len >= 256) {
+	if (strlen(url->u_hostname) >= 256) {
 		rv = NNG_EADDRINVAL;
 		goto error;
 	}
-	if ((url->u_hostname = nni_alloc(len + 1)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto error;
-	}
-	memcpy(url->u_hostname, s, len);
-	url->u_hostname[len] = '\0';
-	s += len;
 
-	if (s[0] == ']') {
-		s++; // skip over ']', only used with IPv6 addresses
-	}
-	if (s[0] == ':') {
+	if (c == ':') {
 		// If a colon was present, but no port value present, then
 		// that is an error.
-		if (s[1] == '\0') {
+		if (*p == '\0') {
 			rv = NNG_EINVAL;
 			goto error;
 		}
-		rv = nni_get_port_by_name(s + 1, &url->u_port);
+		rv = nni_get_port_by_name(p, &url->u_port);
 		if (rv != 0) {
 			goto error;
 		}
@@ -556,13 +532,9 @@ nni_url_free(nni_url *url)
 {
 	if (url != NULL) {
 		nni_strfree(url->u_rawurl);
-		nni_strfree(url->u_userinfo);
-		nni_strfree(url->u_host);
-		nni_strfree(url->u_hostname);
-		nni_strfree(url->u_path);
-		nni_strfree(url->u_query);
-		nni_strfree(url->u_fragment);
-		nni_strfree(url->u_requri);
+		if (url->u_bufsz != 0) {
+			nni_free(url->u_buffer, url->u_bufsz);
+		}
 		NNI_FREE_STRUCT(url);
 	}
 }
@@ -585,9 +557,6 @@ nni_url_sprintf(char *str, size_t size, const nni_url *url)
 	if (url->u_port == nni_url_default_port(scheme)) {
 		do_port = false;
 	}
-	if (strcmp(host, "*") == 0) {
-		host = "";
-	}
 	if (strchr(host, ':') != 0) {
 		hostob = "[";
 		hostcb = "]";
@@ -598,8 +567,12 @@ nni_url_sprintf(char *str, size_t size, const nni_url *url)
 	} else {
 		portstr[0] = 0;
 	}
-	return (snprintf(str, size, "%s://%s%s%s%s%s", scheme, hostob, host,
-	    hostcb, portstr, url->u_requri != NULL ? url->u_requri : ""));
+	return (snprintf(str, size, "%s://%s%s%s%s%s%s%s%s%s", scheme, hostob,
+	    host, hostcb, portstr, url->u_path,
+	    url->u_query != NULL ? "?" : "",
+	    url->u_query != NULL ? url->u_query : "",
+	    url->u_fragment != NULL ? "#" : "",
+	    url->u_fragment != NULL ? url->u_fragment : ""));
 }
 
 int
@@ -641,16 +614,37 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (URL_COPYSTR(dst->u_rawurl, src->u_rawurl) ||
-	    URL_COPYSTR(dst->u_userinfo, src->u_userinfo) ||
-	    URL_COPYSTR(dst->u_host, src->u_host) ||
-	    URL_COPYSTR(dst->u_hostname, src->u_hostname) ||
-	    URL_COPYSTR(dst->u_requri, src->u_requri) ||
-	    URL_COPYSTR(dst->u_path, src->u_path) ||
-	    URL_COPYSTR(dst->u_query, src->u_query) ||
-	    URL_COPYSTR(dst->u_fragment, src->u_fragment)) {
-		nni_url_free(dst);
+	if (URL_COPYSTR(dst->u_rawurl, src->u_rawurl)) {
+		NNI_FREE_STRUCT(dst);
 		return (NNG_ENOMEM);
+	}
+	if (src->u_bufsz != 0) {
+		if ((dst->u_buffer = nni_alloc(dst->u_bufsz)) == NULL) {
+			nni_strfree(dst->u_rawurl);
+			NNI_FREE_STRUCT(dst);
+			return (NNG_ENOMEM);
+		}
+		dst->u_bufsz = src->u_bufsz;
+		memcpy(dst->u_buffer, src->u_buffer, src->u_bufsz);
+	} else {
+		memcpy(dst->u_static, src->u_static, sizeof(src->u_static));
+		dst->u_buffer =
+		    dst->u_static + (src->u_buffer - src->u_static);
+	}
+
+	dst->u_hostname = dst->u_buffer + (src->u_hostname - src->u_buffer);
+	dst->u_path     = dst->u_buffer + (src->u_path - src->u_buffer);
+
+	if (src->u_userinfo != NULL) {
+		dst->u_userinfo =
+		    dst->u_buffer + (src->u_userinfo - src->u_buffer);
+	}
+	if (src->u_query != NULL) {
+		dst->u_query = dst->u_buffer + (src->u_query - src->u_buffer);
+	}
+	if (src->u_fragment != NULL) {
+		dst->u_fragment =
+		    dst->u_buffer + (src->u_fragment - src->u_buffer);
 	}
 	dst->u_scheme = src->u_scheme;
 	dst->u_port   = src->u_port;
@@ -683,7 +677,7 @@ nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
 	nni_aio_init(&aio, NULL, NULL);
 
 	h = url->u_hostname;
-	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strcmp(h, "") == 0))) {
+	if ((h != NULL) && (strcmp(h, "") == 0)) {
 		h = NULL;
 	}
 

@@ -46,58 +46,6 @@ tls_client_config(void)
 	return (c);
 }
 
-static void
-test_tls_wild_card_connect_fail(void)
-{
-	nng_socket s;
-	nng_dialer d;
-	char       addr[NNG_MAXADDRLEN];
-
-	NUTS_OPEN(s);
-	(void) snprintf(
-	    addr, sizeof(addr), "tls+tcp://*:%u", nuts_next_port());
-	NUTS_FAIL(nng_dialer_create(&d, s, addr), NNG_EADDRINVAL);
-	NUTS_CLOSE(s);
-}
-
-void
-test_tls_wild_card_bind(void)
-{
-	nng_socket      s1;
-	nng_socket      s2;
-	nng_listener    l;
-	nng_dialer      d;
-	char            addr[NNG_MAXADDRLEN];
-	uint16_t        port;
-	nng_tls_config *cc;
-	nng_tls_config *sc;
-	nng_tls_config *other;
-
-	port = nuts_next_port();
-
-	sc = tls_server_config();
-	cc = tls_client_config();
-
-	NUTS_OPEN(s1);
-	NUTS_OPEN(s2);
-	(void) snprintf(addr, sizeof(addr), "tls+tcp4://*:%u", port);
-	NUTS_PASS(nng_listener_create(&l, s1, addr));
-	NUTS_PASS(nng_listener_set_tls(l, sc));
-	NUTS_PASS(nng_listener_get_tls(l, &other));
-	NUTS_TRUE(sc == other);
-	NUTS_PASS(nng_listener_start(l, 0));
-	(void) snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%u", port);
-	NUTS_PASS(nng_dialer_create(&d, s2, addr));
-	NUTS_PASS(nng_dialer_set_tls(d, cc));
-	NUTS_PASS(nng_dialer_get_tls(d, &other));
-	NUTS_TRUE(cc == other);
-	NUTS_PASS(nng_dialer_start(d, 0));
-	NUTS_CLOSE(s2);
-	NUTS_CLOSE(s1);
-	nng_tls_config_free(cc);
-	nng_tls_config_free(sc);
-}
-
 void
 test_tls_port_zero_bind(void)
 {
@@ -329,8 +277,6 @@ test_tls_psk(void)
 
 NUTS_TESTS = {
 
-	{ "tls wild card connect fail", test_tls_wild_card_connect_fail },
-	{ "tls wild card bind", test_tls_wild_card_bind },
 	{ "tls port zero bind", test_tls_port_zero_bind },
 	{ "tls malformed address", test_tls_malformed_address },
 	{ "tls no delay option", test_tls_no_delay_option },

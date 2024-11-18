@@ -29,20 +29,9 @@ void
 test_udp_wild_card_bind(void)
 {
 	nng_socket s1;
-	nng_socket s2;
-	char       addr[NNG_MAXADDRLEN];
-	uint16_t   port;
-
-	port = nuts_next_port();
 
 	NUTS_OPEN(s1);
-	NUTS_OPEN(s2);
-	(void) snprintf(addr, sizeof(addr), "udp4://*:%u", port);
-	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
-	nng_msleep(500);
-	(void) snprintf(addr, sizeof(addr), "udp://127.0.0.1:%u", port);
-	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
-	NUTS_CLOSE(s2);
+	NUTS_FAIL(nng_listen(s1, "udp://*:8080", NULL, 0), NNG_EADDRINVAL);
 	NUTS_CLOSE(s1);
 }
 

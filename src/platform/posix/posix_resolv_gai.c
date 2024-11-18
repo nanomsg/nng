@@ -230,9 +230,12 @@ nni_resolv_ip(const char *host, uint16_t port, int af, bool passive,
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
-	if (host != NULL && strlen(host) >= sizeof(item->host)) {
-		nni_aio_finish_error(aio, NNG_EADDRINVAL);
-		return;
+	if (host != NULL) {
+		if ((strlen(host) >= sizeof(item->host)) ||
+		    (strcmp(host, "*") == 0)) {
+			nni_aio_finish_error(aio, NNG_EADDRINVAL);
+			return;
+		}
 	}
 	switch (af) {
 	case NNG_AF_INET:

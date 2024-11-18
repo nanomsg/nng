@@ -817,7 +817,7 @@ sfd_tran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 	nni_sock    *sock = nni_listener_sock(nlistener);
 
 	// Check for invalid URL components -- we only accept a bare scheme
-	if ((strlen(url->u_host) != 0) || (strlen(url->u_path) != 0) ||
+	if ((strlen(url->u_hostname) != 0) || (strlen(url->u_path) != 0) ||
 	    (url->u_fragment != NULL) || (url->u_userinfo != NULL) ||
 	    (url->u_query != NULL)) {
 		return (NNG_EADDRINVAL);

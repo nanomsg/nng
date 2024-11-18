@@ -14,13 +14,11 @@ that are not part of the IETF standards.
 typedef struct nng_url {
     const char *u_scheme;
     char       *u_userinfo;
-    char       *u_host;
     char       *u_hostname;
     uint16_t   u_port;
     char       *u_path;
     char       *u_query;
     char       *u_fragment;
-    char       *u_requri;
 } nng_url;
 ```
 
@@ -29,17 +27,18 @@ typedef struct nng_url {
 Applications may access individual fields, but must not free or
 alter them, as the underlying memory is managed by the library.
 
+Additionally applications must not depend on the size of this structure.
+Obtain one using `nng_parse_url`.
+
 The fields of an `nng_url` object are as follows:
 
 - `u_scheme`: The URL scheme, such as "http" or "inproc". Always lower case. This will never be `NULL`.
 - `u_userinfo`: This username and password if supplied in the URL string. Will be `NULL` when not present.
-- `u_host`: The full host part of the URL, including the port if present (separated by a colon.)
 - `u_hostname`: The name of the host, and may be the empty string in some cases.
 - `u_port`: The port. May be zero if irrelevant or not specified.
 - `u_path`: The path, typically used with HTTP or WebSockets. Will be empty string if not specified.
 - `u_query`: The query info (typically following `?` in the URL.) Will be `NULL` if not present.
 - `u_fragment`: This is used for specifying an anchor, the part after `#` in a URL. Will be `NULL` if not present.
-- `u_requri`: The full Request-URI. Will be the empty string if not specified.
 
 > [!NOTE]
 > Other fields may also be present, but only those documented here are safe for application use.

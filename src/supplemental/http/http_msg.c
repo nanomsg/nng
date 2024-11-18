@@ -617,8 +617,13 @@ nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
 	req->uri       = NULL;
 	if (url != NULL) {
 		const char *host;
+		char        host_buf[264]; // 256 + 8 for port
 		int         rv;
-		if ((req->uri = nni_strdup(url->u_requri)) == NULL) {
+		rv = nni_asprintf(&req->uri, "%s%s%s%s%s", url->u_path,
+		    url->u_query ? "?" : "", url->u_query ? url->u_query : "",
+		    url->u_fragment ? "#" : "",
+		    url->u_fragment ? url->u_fragment : "");
+		if (rv != 0) {
 			NNI_FREE_STRUCT(req);
 			return (NNG_ENOMEM);
 		}
@@ -628,7 +633,14 @@ nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
 		if (nni_url_default_port(url->u_scheme) == url->u_port) {
 			host = url->u_hostname;
 		} else {
-			host = url->u_host;
+			if (strchr(url->u_hostname, ':')) {
+				snprintf(host_buf, sizeof(host_buf), "[%s]:%u",
+				    url->u_hostname, url->u_port);
+			} else {
+				snprintf(host_buf, sizeof(host_buf), "%s:%u",
+				    url->u_hostname, url->u_port);
+			}
+			host = host_buf;
 		}
 		if ((rv = nni_http_req_add_header(req, "Host", host)) != 0) {
 			nni_http_req_free(req);
