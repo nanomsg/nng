@@ -30,6 +30,7 @@
 [`nng_url`]: /api/url.md#url-structure
 [`nng_url_parse`]: /api/url.md#parse-a-url
 [`nng_url_free`]: /api/url.md#destroy-a-url
+[`nng_url_sprintf`]: /api/url.md#format-a-url
 [`nng_socket_pair`]: /api/misc.md#create-socket-pair
 [`nng_random`]: /api/misc.md#get-random-number
 [`nng_version`]: /api/misc.md#report-library-version

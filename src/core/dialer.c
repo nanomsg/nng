@@ -72,12 +72,6 @@ dialer_stats_init(nni_dialer *d)
 		.si_desc = "socket for dialer",
 		.si_type = NNG_STAT_ID,
 	};
-	static const nni_stat_info url_info = {
-		.si_name  = "url",
-		.si_desc  = "dialer url",
-		.si_type  = NNG_STAT_STRING,
-		.si_alloc = true,
-	};
 	static const nni_stat_info pipes_info = {
 		.si_name   = "pipes",
 		.si_desc   = "open pipes",
@@ -149,7 +143,6 @@ dialer_stats_init(nni_dialer *d)
 
 	dialer_stat_init(d, &d->st_id, &id_info);
 	dialer_stat_init(d, &d->st_sock, &socket_info);
-	dialer_stat_init(d, &d->st_url, &url_info);
 	dialer_stat_init(d, &d->st_pipes, &pipes_info);
 	dialer_stat_init(d, &d->st_connect, &connect_info);
 	dialer_stat_init(d, &d->st_refused, &refused_info);
@@ -165,7 +158,6 @@ dialer_stats_init(nni_dialer *d)
 	nni_stat_set_id(&d->st_root, (int) d->d_id);
 	nni_stat_set_id(&d->st_id, (int) d->d_id);
 	nni_stat_set_id(&d->st_sock, (int) nni_sock_id(d->d_sock));
-	nni_stat_set_string(&d->st_url, d->d_url->u_rawurl);
 	nni_stat_register(&d->st_root);
 }
 #endif // NNG_ENABLE_STATS
@@ -384,8 +376,7 @@ dialer_connect_cb(void *arg)
 	case NNG_ETIMEDOUT:
 	default:
 		nng_log_warn("NNG-CONN-FAIL",
-		    "Failed connecting socket<%u> to %s: %s",
-		    nni_sock_id(d->d_sock), d->d_url->u_rawurl,
+		    "Failed connecting socket<%u>: %s", nni_sock_id(d->d_sock),
 		    nng_strerror(rv));
 
 		nni_dialer_bump_error(d, rv);
@@ -438,8 +429,8 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 		nni_aio_free(aio);
 	}
 
-	nng_log_info("NNG-DIAL", "Starting dialer for socket<%u> on %s",
-	    nni_sock_id(d->d_sock), d->d_url->u_rawurl);
+	nng_log_info("NNG-DIAL", "Starting dialer for socket<%u>",
+	    nni_sock_id(d->d_sock));
 
 	return (rv);
 }

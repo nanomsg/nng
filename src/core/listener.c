@@ -74,12 +74,6 @@ listener_stats_init(nni_listener *l)
 		.si_desc = "socket id",
 		.si_type = NNG_STAT_ID,
 	};
-	static const nni_stat_info url_info = {
-		.si_name  = "url",
-		.si_desc  = "listener url",
-		.si_type  = NNG_STAT_STRING,
-		.si_alloc = true,
-	};
 	static const nni_stat_info pipes_info = {
 		.si_name   = "pipes",
 		.si_desc   = "open pipes",
@@ -145,7 +139,6 @@ listener_stats_init(nni_listener *l)
 
 	listener_stat_init(l, &l->st_id, &id_info);
 	listener_stat_init(l, &l->st_sock, &sock_info);
-	listener_stat_init(l, &l->st_url, &url_info);
 	listener_stat_init(l, &l->st_pipes, &pipes_info);
 	listener_stat_init(l, &l->st_accept, &accept_info);
 	listener_stat_init(l, &l->st_disconnect, &disconnect_info);
@@ -160,7 +153,6 @@ listener_stats_init(nni_listener *l)
 	nni_stat_set_id(&l->st_root, (int) l->l_id);
 	nni_stat_set_id(&l->st_id, (int) l->l_id);
 	nni_stat_set_id(&l->st_sock, (int) nni_sock_id(l->l_sock));
-	nni_stat_set_string(&l->st_url, l->l_url->u_rawurl);
 	nni_stat_register(&l->st_root);
 }
 #endif // NNG_ENABLE_STATS
@@ -362,9 +354,8 @@ listener_accept_cb(void *arg)
 	case NNG_ETIMEDOUT:    // No need to sleep, we timed out already.
 	case NNG_EPEERAUTH:    // peer validation failure
 		nng_log_warn("NNG-ACCEPT-FAIL",
-		    "Failed accepting for socket<%u> on %s: %s",
-		    nni_sock_id(l->l_sock), l->l_url->u_rawurl,
-		    nng_strerror(rv));
+		    "Failed accepting for socket<%u>: %s",
+		    nni_sock_id(l->l_sock), nng_strerror(rv));
 		nni_listener_bump_error(l, rv);
 		listener_accept_start(l);
 		break;
@@ -404,10 +395,8 @@ nni_listener_start(nni_listener *l, int flags)
 	}
 
 	if ((rv = l->l_ops.l_bind(l->l_data)) != 0) {
-		nng_log_warn("NNG-BIND-FAIL",
-		    "Failed binding socket<%u> to %s: %s",
-		    nni_sock_id(l->l_sock), l->l_url->u_rawurl,
-		    nng_strerror(rv));
+		nng_log_warn("NNG-BIND-FAIL", "Failed binding socket<%u>: %s",
+		    nni_sock_id(l->l_sock), nng_strerror(rv));
 		nni_listener_bump_error(l, rv);
 		nni_atomic_flag_reset(&l->l_started);
 		return (rv);

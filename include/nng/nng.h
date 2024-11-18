@@ -1108,6 +1108,10 @@ NNG_DECL void nng_url_free(nng_url *);
 // nng_url_clone clones a URL structure.
 NNG_DECL int nng_url_clone(nng_url **, const nng_url *);
 
+// nng_url_sprintf prints a URL to a string using semantics similar to
+// snprintf.
+NNG_DECL int nng_url_sprintf(char *, size_t, const nng_url *);
+
 // nng_version returns the library version as a human readable string.
 NNG_DECL const char *nng_version(void);
 

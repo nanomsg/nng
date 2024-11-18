@@ -42,7 +42,6 @@ struct nni_dialer {
 	nni_stat_item st_root;
 	nni_stat_item st_id;
 	nni_stat_item st_sock;
-	nni_stat_item st_url;
 	nni_stat_item st_pipes;
 	nni_stat_item st_connect;
 	nni_stat_item st_refused;
@@ -78,7 +77,6 @@ struct nni_listener {
 	nni_stat_item st_root;
 	nni_stat_item st_id;
 	nni_stat_item st_sock;
-	nni_stat_item st_url;
 	nni_stat_item st_pipes;
 	nni_stat_item st_accept;
 	nni_stat_item st_disconnect; // aborted remotely
