@@ -568,7 +568,7 @@ nni_url_free(nni_url *url)
 }
 
 int
-nni_url_asprintf(char **str, const nni_url *url)
+nni_url_sprintf(char *str, size_t size, const nni_url *url)
 {
 	const char *scheme  = url->u_scheme;
 	const char *host    = url->u_hostname;
@@ -579,7 +579,7 @@ nni_url_asprintf(char **str, const nni_url *url)
 	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0) ||
 	    (strcmp(scheme, "unix") == 0) ||
 	    (strcmp(scheme, "abstract") == 0)) {
-		return (nni_asprintf(str, "%s://%s", scheme, url->u_path));
+		return (snprintf(str, size, "%s://%s", scheme, url->u_path));
 	}
 
 	if (url->u_port == nni_url_default_port(scheme)) {
@@ -598,8 +598,23 @@ nni_url_asprintf(char **str, const nni_url *url)
 	} else {
 		portstr[0] = 0;
 	}
-	return (nni_asprintf(str, "%s://%s%s%s%s%s", scheme, hostob, host,
+	return (snprintf(str, size, "%s://%s%s%s%s%s", scheme, hostob, host,
 	    hostcb, portstr, url->u_requri != NULL ? url->u_requri : ""));
+}
+
+int
+nni_url_asprintf(char **str, const nni_url *url)
+{
+	char  *result;
+	size_t sz;
+
+	sz = nni_url_sprintf(NULL, 0, url) + 1;
+	if ((result = nni_alloc(sz)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_url_sprintf(result, sz, url);
+	*str = result;
+	return (0);
 }
 
 // nni_url_asprintf_port is like nni_url_asprintf, but includes a port
