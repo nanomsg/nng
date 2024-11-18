@@ -1443,8 +1443,7 @@ udp_check_url(nng_url *url, bool listen)
 		return (NNG_EADDRINVAL);
 	}
 	if (!listen) {
-		if ((strlen(url->u_hostname) == 0) ||
-		    (strlen(url->u_port) == 0) || (atoi(url->u_port) == 0)) {
+		if ((strlen(url->u_hostname) == 0) || (url->u_port == 0)) {
 			return (NNG_EADDRINVAL);
 		}
 	}

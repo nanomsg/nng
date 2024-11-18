@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 QXSoftware <lh563566994@126.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
@@ -962,9 +962,7 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 		return (rv);
 	}
 
-	// NB: We only support number port numbers, and the URL framework
-	// expands empty port numbers to 80 or 443 as appropriate.
-	s->port = atoi(url->u_port);
+	s->port = url->u_port;
 
 	if ((s->hostname = nni_strdup(url->u_hostname)) == NULL) {
 		http_server_fini(s);
@@ -989,7 +987,7 @@ nni_http_server_init(nni_http_server **serverp, const nni_url *url)
 
 	nni_mtx_lock(&http_servers_lk);
 	NNI_LIST_FOREACH (&http_servers, s) {
-		if ((!s->closed) && (atoi(url->u_port) == s->port) &&
+		if ((!s->closed) && (url->u_port == s->port) &&
 		    (strcmp(url->u_hostname, s->hostname) == 0)) {
 			*serverp = s;
 			s->refcnt++;

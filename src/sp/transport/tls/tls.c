@@ -837,7 +837,7 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	}
 	if ((url->u_fragment != NULL) || (url->u_userinfo != NULL) ||
 	    (url->u_query != NULL) || (strlen(url->u_hostname) == 0) ||
-	    (strlen(url->u_port) == 0)) {
+	    (url->u_port == 0)) {
 		return (NNG_EADDRINVAL);
 	}
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -10,6 +10,7 @@
 //
 
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <nng/nng.h>
@@ -20,8 +21,8 @@
 
 typedef struct {
 	nng_stream_dialer ops;
-	char             *host;
-	char             *port;
+	char              host[256];
+	uint16_t          port;
 	int               af; // address family
 	bool              closed;
 	nng_sockaddr      sa;
@@ -155,8 +156,6 @@ tcp_dialer_free(void *arg)
 		nni_tcp_dialer_fini(d->d);
 	}
 	nni_mtx_fini(&d->mtx);
-	nni_strfree(d->host);
-	nni_strfree(d->port);
 	NNI_FREE_STRUCT(d);
 }
 
@@ -236,17 +235,13 @@ nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	tcp_dialer *d;
 	int         rv;
-	const char *p;
 
 	if ((rv = tcp_dialer_alloc(&d)) != 0) {
 		return (rv);
 	}
 
-	if (((p = url->u_port) == NULL) || (strlen(p) == 0)) {
-		p = nni_url_default_port(url->u_scheme);
-	}
-
-	if ((strlen(p) == 0) || (strlen(url->u_hostname) == 0)) {
+	if ((url->u_port == 0) || strlen(url->u_hostname) == 0 ||
+	    strlen(url->u_hostname) >= sizeof(d->host)) {
 		// Dialer needs both a destination hostname and port.
 		tcp_dialer_free(d);
 		return (NNG_EADDRINVAL);
@@ -260,11 +255,8 @@ nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 		d->af = NNG_AF_UNSPEC;
 	}
 
-	if (((d->host = nng_strdup(url->u_hostname)) == NULL) ||
-	    ((d->port = nng_strdup(p)) == NULL)) {
-		tcp_dialer_free(d);
-		return (NNG_ENOMEM);
-	}
+	snprintf(d->host, sizeof(d->host), "%s", url->u_hostname);
+	d->port = url->u_port;
 
 	*dp = (void *) d;
 	return (0);

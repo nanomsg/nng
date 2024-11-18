@@ -160,4 +160,11 @@ A number of the [statistics][statistic] functions take, or return, `const nng_st
 of plain `nng_stat *`. The ABI has not changed, but it may be necessary to declare
 certain methods variables `const` to avoid warnings about misuse of `const`.
 
+## Url Structure Members
+
+The details of [`nng_url`] have changed as follows:
+
+- `u_port` is no longer a string, but a `uint16_t`
+- `u_scheme` is a const char \*
+
 {{#include ../xref.md}}

@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "core/platform.h"
 #include "url.h"
 
 static uint8_t
@@ -234,22 +235,26 @@ url_canonify_uri(char **outp, const char *in)
 
 static struct {
 	const char *scheme;
-	const char *port;
+	uint16_t    port;
 } nni_url_default_ports[] = {
 	// This list is not exhaustive, but likely covers the main ones we
 	// care about.  Feel free to add additional ones as use cases arise.
 	// Note also that we don't use "default" ports for SP protocols
 	// that have no "default" port, like tcp:// or tls+tcp://.
 	// clang-format off
-	{ "git", "9418" },
-	{ "gopher", "70" },
-	{ "http", "80" },
-	{ "https", "443" },
-	{ "ssh", "22" },
-	{ "telnet", "23" },
-	{ "ws", "80" },
-	{ "wss", "443" },
-	{ NULL, NULL },
+	{ "git", 9418 },
+	{ "gopher", 70 },
+	{ "http", 80 },
+	{ "https", 443 },
+	{ "ssh", 22 },
+	{ "telnet", 23 },
+	{ "ws", 80 },
+	{ "ws4", 80 },
+	{ "ws6", 80 },
+	{ "wss", 443 },
+	{ "wss4", 443 },
+	{ "wss6", 443 },
+	{ NULL, 0 },
 	// clang-format on
 };
 
@@ -274,6 +279,9 @@ static const char *nni_schemes[] = {
 	"wss",
 	"wss4",
 	"wss6",
+	"udp",
+	"udp4",
+	"udp6",
 	// we don't support these
 	"file",
 	"mailto",
@@ -284,10 +292,11 @@ static const char *nni_schemes[] = {
 	"telnet",
 	"irc",
 	"imap",
+	"imaps",
 	NULL,
 };
 
-const char *
+uint16_t
 nni_url_default_port(const char *scheme)
 {
 	const char *s;
@@ -310,7 +319,7 @@ nni_url_default_port(const char *scheme)
 			break;
 		}
 	}
-	return ("");
+	return (0);
 }
 
 // URLs usually follow the following format:
@@ -503,6 +512,11 @@ nni_url_parse(nni_url **urlp, const char *raw)
 			}
 		}
 	}
+	// hostname length check
+	if (len >= 256) {
+		rv = NNG_EADDRINVAL;
+		goto error;
+	}
 	if ((url->u_hostname = nni_alloc(len + 1)) == NULL) {
 		rv = NNG_ENOMEM;
 		goto error;
@@ -521,13 +535,12 @@ nni_url_parse(nni_url **urlp, const char *raw)
 			rv = NNG_EINVAL;
 			goto error;
 		}
-		url->u_port = nni_strdup(s + 1);
+		rv = nni_get_port_by_name(s + 1, &url->u_port);
+		if (rv != 0) {
+			goto error;
+		}
 	} else {
-		url->u_port = nni_strdup(nni_url_default_port(url->u_scheme));
-	}
-	if (url->u_port == NULL) {
-		rv = NNG_ENOMEM;
-		goto error;
+		url->u_port = nni_url_default_port(url->u_scheme);
 	}
 
 	*urlp = url;
@@ -546,7 +559,6 @@ nni_url_free(nni_url *url)
 		nni_strfree(url->u_userinfo);
 		nni_strfree(url->u_host);
 		nni_strfree(url->u_hostname);
-		nni_strfree(url->u_port);
 		nni_strfree(url->u_path);
 		nni_strfree(url->u_query);
 		nni_strfree(url->u_fragment);
@@ -558,11 +570,11 @@ nni_url_free(nni_url *url)
 int
 nni_url_asprintf(char **str, const nni_url *url)
 {
-	const char *scheme = url->u_scheme;
-	const char *port   = url->u_port;
-	const char *host   = url->u_hostname;
-	const char *hostob = "";
-	const char *hostcb = "";
+	const char *scheme  = url->u_scheme;
+	const char *host    = url->u_hostname;
+	const char *hostob  = "";
+	const char *hostcb  = "";
+	bool        do_port = true;
 
 	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0) ||
 	    (strcmp(scheme, "unix") == 0) ||
@@ -570,11 +582,8 @@ nni_url_asprintf(char **str, const nni_url *url)
 		return (nni_asprintf(str, "%s://%s", scheme, url->u_path));
 	}
 
-	if (port != NULL) {
-		if ((strlen(port) == 0) ||
-		    (strcmp(nni_url_default_port(scheme), port) == 0)) {
-			port = NULL;
-		}
+	if (url->u_port == nni_url_default_port(scheme)) {
+		do_port = false;
 	}
 	if (strcmp(host, "*") == 0) {
 		host = "";
@@ -583,9 +592,14 @@ nni_url_asprintf(char **str, const nni_url *url)
 		hostob = "[";
 		hostcb = "]";
 	}
-	return (nni_asprintf(str, "%s://%s%s%s%s%s%s", scheme, hostob, host,
-	    hostcb, port != NULL ? ":" : "", port != NULL ? port : "",
-	    url->u_requri != NULL ? url->u_requri : ""));
+	char portstr[8];
+	if (do_port) {
+		snprintf(portstr, sizeof(portstr), ":%u", url->u_port);
+	} else {
+		portstr[0] = 0;
+	}
+	return (nni_asprintf(str, "%s://%s%s%s%s%s", scheme, hostob, host,
+	    hostcb, portstr, url->u_requri != NULL ? url->u_requri : ""));
 }
 
 // nni_url_asprintf_port is like nni_url_asprintf, but includes a port
@@ -594,12 +608,10 @@ nni_url_asprintf(char **str, const nni_url *url)
 int
 nni_url_asprintf_port(char **str, const nni_url *url, int port)
 {
-	char    portstr[16];
 	nni_url myurl = *url;
 
 	if (port > 0) {
-		(void) snprintf(portstr, sizeof(portstr), "%d", port);
-		myurl.u_port = portstr;
+		myurl.u_port = (uint16_t) port;
 	}
 	return (nni_url_asprintf(str, &myurl));
 }
@@ -618,7 +630,6 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 	    URL_COPYSTR(dst->u_userinfo, src->u_userinfo) ||
 	    URL_COPYSTR(dst->u_host, src->u_host) ||
 	    URL_COPYSTR(dst->u_hostname, src->u_hostname) ||
-	    URL_COPYSTR(dst->u_port, src->u_port) ||
 	    URL_COPYSTR(dst->u_requri, src->u_requri) ||
 	    URL_COPYSTR(dst->u_path, src->u_path) ||
 	    URL_COPYSTR(dst->u_query, src->u_query) ||
@@ -627,6 +638,7 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 		return (NNG_ENOMEM);
 	}
 	dst->u_scheme = src->u_scheme;
+	dst->u_port   = src->u_port;
 	*dstp         = dst;
 	return (0);
 }

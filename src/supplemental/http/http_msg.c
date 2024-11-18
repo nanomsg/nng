@@ -22,13 +22,13 @@
 // a comma.  From experience, for example, Firefox uses a Connection:
 // header with two values, "keepalive", and "upgrade".
 typedef struct http_header {
-	char *        name;
-	char *        value;
+	char         *name;
+	char         *value;
 	nni_list_node node;
 } http_header;
 
 typedef struct nni_http_entity {
-	char * data;
+	char  *data;
 	size_t size; // allocated/expected size
 	size_t len;  // current length
 	bool   own;  // if true, data is "ours", and should be freed
@@ -37,10 +37,10 @@ typedef struct nni_http_entity {
 struct nng_http_req {
 	nni_list        hdrs;
 	nni_http_entity data;
-	char *          meth;
-	char *          uri;
-	char *          vers;
-	char *          buf;
+	char           *meth;
+	char           *uri;
+	char           *vers;
+	char           *buf;
 	size_t          bufsz;
 	bool            parsed;
 };
@@ -49,9 +49,9 @@ struct nng_http_res {
 	nni_list        hdrs;
 	nni_http_entity data;
 	uint16_t        code;
-	char *          rsn;
-	char *          vers;
-	char *          buf;
+	char           *rsn;
+	char           *vers;
+	char           *buf;
 	size_t          bufsz;
 	bool            parsed;
 	bool            iserr;
@@ -492,7 +492,7 @@ http_asprintf(char **bufp, size_t *szp, nni_list *hdrs, const char *fmt, ...)
 	va_list ap;
 	size_t  len;
 	size_t  n;
-	char *  buf;
+	char   *buf;
 
 	va_start(ap, fmt);
 	len = vsnprintf(NULL, 0, fmt, ap);
@@ -550,7 +550,7 @@ http_res_prepare(nni_http_res *res)
 char *
 nni_http_req_headers(nni_http_req *req)
 {
-	char * s;
+	char  *s;
 	size_t len;
 
 	len = http_sprintf_headers(NULL, 0, &req->hdrs) + 1;
@@ -563,7 +563,7 @@ nni_http_req_headers(nni_http_req *req)
 char *
 nni_http_res_headers(nni_http_res *res)
 {
-	char * s;
+	char  *s;
 	size_t len;
 
 	len = http_sprintf_headers(NULL, 0, &res->hdrs) + 1;
@@ -625,8 +625,7 @@ nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
 
 		// Add a Host: header since we know that from the URL. Also,
 		// only include the :port portion if it isn't the default port.
-		if (strcmp(nni_url_default_port(url->u_scheme), url->u_port) ==
-		    0) {
+		if (nni_url_default_port(url->u_scheme) == url->u_port) {
 			host = url->u_hostname;
 		} else {
 			host = url->u_host;
@@ -735,7 +734,7 @@ http_scan_line(void *vbuf, size_t n, size_t *lenp)
 {
 	size_t len;
 	char   lc;
-	char * buf = vbuf;
+	char  *buf = vbuf;
 
 	lc = 0;
 	for (len = 0; len < n; len++) {
@@ -1042,7 +1041,7 @@ nni_http_alloc_html_error(char **html, uint16_t code, const char *details)
 int
 nni_http_res_alloc_error(nni_http_res **resp, uint16_t err)
 {
-	char *        html = NULL;
+	char         *html = NULL;
 	nni_http_res *res  = NULL;
 	int           rv;
 

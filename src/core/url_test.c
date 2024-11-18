@@ -22,13 +22,27 @@ test_url_host(void)
 	NUTS_TRUE(strcmp(url->u_scheme, "http") == 0);
 	NUTS_TRUE(strcmp(url->u_host, "www.google.com") == 0);
 	NUTS_TRUE(strcmp(url->u_hostname, "www.google.com") == 0);
-	NUTS_TRUE(strcmp(url->u_port, "80") == 0);
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_TRUE(strcmp(url->u_path, "") == 0);
 	NUTS_TRUE(strcmp(url->u_requri, "") == 0);
 	NUTS_TRUE(url->u_query == NULL);
 	NUTS_TRUE(url->u_fragment == NULL);
 	NUTS_TRUE(url->u_userinfo == NULL);
 	nng_url_free(url);
+}
+
+void
+test_url_host_too_long(void)
+{
+	nng_url *url;
+	char     buffer[512]; //
+
+	memset(buffer, 0, sizeof(buffer));
+	snprintf(buffer, sizeof(buffer), "http://");
+	for (size_t i = strlen(buffer); i < sizeof(buffer) - 1; i++) {
+		buffer[i] = 'a';
+	}
+	NUTS_FAIL(nng_url_parse(&url, buffer), NNG_EADDRINVAL);
 }
 
 void
@@ -40,7 +54,7 @@ test_url_host_port(void)
 	NUTS_TRUE(strcmp(url->u_scheme, "http") == 0);
 	NUTS_TRUE(strcmp(url->u_host, "www.google.com:1234") == 0);
 	NUTS_TRUE(strcmp(url->u_hostname, "www.google.com") == 0);
-	NUTS_TRUE(strcmp(url->u_port, "1234") == 0);
+	NUTS_TRUE(url->u_port == 1234);
 	NUTS_TRUE(strcmp(url->u_path, "") == 0);
 	NUTS_TRUE(strcmp(url->u_requri, "") == 0);
 	NUTS_TRUE(url->u_query == NULL);
@@ -59,7 +73,7 @@ test_url_host_port_path(void)
 	NUTS_TRUE(strcmp(url->u_scheme, "http") == 0);
 	NUTS_TRUE(strcmp(url->u_host, "www.google.com:1234") == 0);
 	NUTS_TRUE(strcmp(url->u_hostname, "www.google.com") == 0);
-	NUTS_TRUE(strcmp(url->u_port, "1234") == 0);
+	NUTS_TRUE(url->u_port == 1234);
 	NUTS_TRUE(strcmp(url->u_path, "/somewhere") == 0);
 	NUTS_TRUE(strcmp(url->u_requri, "/somewhere") == 0);
 	NUTS_TRUE(url->u_userinfo == NULL);
@@ -79,7 +93,7 @@ test_url_user_info(void)
 	NUTS_MATCH(url->u_userinfo, "garrett");
 	NUTS_MATCH(url->u_host, "www.google.com:1234");
 	NUTS_MATCH(url->u_hostname, "www.google.com");
-	NUTS_MATCH(url->u_port, "1234");
+	NUTS_TRUE(url->u_port == 1234);
 	NUTS_MATCH(url->u_path, "/somewhere");
 	NUTS_MATCH(url->u_requri, "/somewhere");
 	NUTS_NULL(url->u_query);
@@ -97,7 +111,7 @@ test_url_path_query_param(void)
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_host, "www.google.com");
 	NUTS_MATCH(url->u_hostname, "www.google.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/somewhere");
 	NUTS_MATCH(url->u_query, "result=yes");
 	NUTS_MATCH(url->u_requri, "/somewhere?result=yes");
@@ -117,7 +131,7 @@ test_url_query_param_anchor(void)
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_host, "www.google.com");
 	NUTS_MATCH(url->u_hostname, "www.google.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/somewhere");
 	NUTS_MATCH(url->u_query, "result=yes");
 	NUTS_MATCH(url->u_fragment, "chapter1");
@@ -136,7 +150,7 @@ test_url_path_anchor(void)
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_host, "www.google.com");
 	NUTS_MATCH(url->u_hostname, "www.google.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/somewhere");
 	NUTS_MATCH(url->u_fragment, "chapter2");
 	NUTS_MATCH(url->u_requri, "/somewhere#chapter2");
@@ -155,7 +169,7 @@ test_url_anchor(void)
 	NUTS_MATCH(url->u_host, "www.google.com");
 	NUTS_MATCH(url->u_hostname, "www.google.com");
 	NUTS_MATCH(url->u_path, "");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_fragment, "chapter3");
 	NUTS_MATCH(url->u_requri, "#chapter3");
 	NUTS_NULL(url->u_query);
@@ -173,7 +187,7 @@ test_url_query_param(void)
 	NUTS_MATCH(url->u_host, "www.google.com");
 	NUTS_MATCH(url->u_hostname, "www.google.com");
 	NUTS_MATCH(url->u_path, "");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_query, "color=red");
 	NUTS_MATCH(url->u_requri, "?color=red");
 	NUTS_ASSERT(url != NULL);
@@ -191,7 +205,7 @@ test_url_v6_host(void)
 	NUTS_MATCH(url->u_host, "[::1]");
 	NUTS_MATCH(url->u_hostname, "::1");
 	NUTS_MATCH(url->u_path, "");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_NULL(url->u_userinfo);
@@ -208,7 +222,7 @@ test_url_v6_host_port(void)
 	NUTS_MATCH(url->u_host, "[::1]:29");
 	NUTS_MATCH(url->u_hostname, "::1");
 	NUTS_MATCH(url->u_path, "");
-	NUTS_MATCH(url->u_port, "29");
+	NUTS_TRUE(url->u_port == 29);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_NULL(url->u_userinfo);
@@ -225,7 +239,7 @@ test_url_v6_host_port_path(void)
 	NUTS_MATCH(url->u_host, "[::1]:29");
 	NUTS_MATCH(url->u_hostname, "::1");
 	NUTS_MATCH(url->u_path, "/bottles");
-	NUTS_MATCH(url->u_port, "29");
+	NUTS_TRUE(url->u_port == 29);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_NULL(url->u_userinfo);
@@ -242,7 +256,7 @@ test_url_tcp_port(void)
 	NUTS_MATCH(url->u_host, ":9876");
 	NUTS_MATCH(url->u_hostname, "");
 	NUTS_MATCH(url->u_path, "/");
-	NUTS_MATCH(url->u_port, "9876");
+	NUTS_TRUE(url->u_port == 9876);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_NULL(url->u_userinfo);
@@ -260,7 +274,7 @@ test_url_bare_ws(void)
 	NUTS_MATCH(url->u_host, "");
 	NUTS_MATCH(url->u_hostname, "");
 	NUTS_MATCH(url->u_path, "");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_NULL(url->u_userinfo);
@@ -277,7 +291,7 @@ test_url_ws_wildcard(void)
 	NUTS_MATCH(url->u_host, ":12345");
 	NUTS_MATCH(url->u_hostname, "");
 	NUTS_MATCH(url->u_path, "/foobar");
-	NUTS_MATCH(url->u_port, "12345");
+	NUTS_TRUE(url->u_port == 12345);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_NULL(url->u_userinfo);
@@ -294,7 +308,7 @@ test_url_ssh(void)
 	NUTS_MATCH(url->u_host, "host.example.com");
 	NUTS_MATCH(url->u_hostname, "host.example.com");
 	NUTS_MATCH(url->u_path, "");
-	NUTS_MATCH(url->u_port, "22");
+	NUTS_TRUE(url->u_port == 22);
 	NUTS_NULL(url->u_query);
 	NUTS_NULL(url->u_fragment);
 	NUTS_MATCH(url->u_userinfo, "user");
@@ -332,7 +346,7 @@ test_url_canonify(void)
 	NUTS_ASSERT(url != NULL);
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_hostname, "www.example.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/~garrett");
 	nng_url_free(url);
 }
@@ -345,7 +359,7 @@ test_url_path_resolve(void)
 	    nng_url_parse(&url, "http://www.x.com//abc/def/./x/..///./../y"));
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_hostname, "www.x.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/abc/y");
 	nng_url_free(url);
 }
@@ -359,7 +373,7 @@ test_url_query_info_pass(void)
 	NUTS_ASSERT(url != NULL);
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_hostname, "www.x.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/");
 	NUTS_MATCH(url->u_query, "/abc/def/./x/.././../y");
 	nng_url_free(url);
@@ -383,7 +397,7 @@ test_url_good_utf8(void)
 	NUTS_ASSERT(url != NULL);
 	NUTS_MATCH(url->u_scheme, "http");
 	NUTS_MATCH(url->u_hostname, "www.x.com");
-	NUTS_MATCH(url->u_port, "80");
+	NUTS_TRUE(url->u_port == 80);
 	NUTS_MATCH(url->u_path, "/\xc2\xa2_cents");
 	nng_url_free(url);
 }
@@ -446,6 +460,7 @@ test_url_decode(void)
 
 NUTS_TESTS = {
 	{ "url host", test_url_host },
+	{ "url host too long", test_url_host_too_long },
 	{ "url host port", test_url_host_port },
 	{ "url host port path", test_url_host_port_path },
 	{ "url user info", test_url_user_info },

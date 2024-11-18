@@ -33,8 +33,8 @@ typedef struct resolv_item resolv_item;
 struct resolv_item {
 	int           family;
 	bool          passive;
-	char         *host;
-	char         *serv;
+	char          host[256];
+	char          serv[8];
 	nni_aio      *aio;
 	nng_sockaddr *sa;
 };
@@ -42,8 +42,6 @@ struct resolv_item {
 static void
 resolv_free_item(resolv_item *item)
 {
-	nni_strfree(item->serv);
-	nni_strfree(item->host);
 	NNI_FREE_STRUCT(item);
 }
 
@@ -118,27 +116,10 @@ resolv_task(resolv_item *item)
 	}
 	hints.ai_family   = item->family;
 	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_flags |= AI_NUMERICSERV;
 
-	// Check to see if this is a numeric port number, and if it is
-	// make sure that it's in the valid range (because Windows may
-	// incorrectly simple do a conversion and mask off upper bits.
-	if (item->serv != NULL) {
-		long  port;
-		char *end;
-		port = strtol(item->serv, &end, 10);
-		if (*end == '\0') { // we fully converted it as a number...
-			hints.ai_flags |= AI_NUMERICSERV;
-
-			// Not a valid port number.  Fail.
-			if ((port < 0) || (port > 0xffff)) {
-				rv = NNG_EADDRINVAL;
-				goto done;
-			}
-		}
-	}
-
-	if ((rv = getaddrinfo(item->host, item->serv, &hints, &results)) !=
-	    0) {
+	if ((rv = getaddrinfo(item->host[0] != 0 ? item->host : NULL,
+	         item->serv, &hints, &results)) != 0) {
 		rv = resolv_errno(rv);
 		goto done;
 	}
@@ -199,7 +180,7 @@ done:
 }
 
 void
-nni_resolv_ip(const char *host, const char *serv, int family, bool passive,
+nni_resolv_ip(const char *host, uint16_t port, int family, bool passive,
     nng_sockaddr *sa, nni_aio *aio)
 {
 	resolv_item *item;
@@ -209,6 +190,11 @@ nni_resolv_ip(const char *host, const char *serv, int family, bool passive,
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	if (host != NULL && strlen(host) >= sizeof(item->host)) {
+		nni_aio_finish_error(aio, NNG_EADDRINVAL);
+		return;
+	}
+
 	switch (family) {
 	case NNG_AF_INET:
 		fam = AF_INET;
@@ -234,20 +220,12 @@ nni_resolv_ip(const char *host, const char *serv, int family, bool passive,
 		nni_aio_finish_error(aio, NNG_ENOMEM);
 		return;
 	}
-	if (host == NULL) {
-		item->host = NULL;
-	} else if ((item->host = nni_strdup(host)) == NULL) {
-		nni_aio_finish_error(aio, NNG_ENOMEM);
-		resolv_free_item(item);
-		return;
-	}
 
-	if (serv == NULL) {
-		item->serv = NULL;
-	} else if ((item->serv = nni_strdup(serv)) == NULL) {
-		nni_aio_finish_error(aio, NNG_ENOMEM);
-		resolv_free_item(item);
-		return;
+	snprintf(item->serv, sizeof(item->serv), "%u", port);
+	if (host == NULL) {
+		item->host[0] = '\0';
+	} else {
+		snprintf(item->host, sizeof(item->host), "%s", host);
 	}
 
 	item->sa      = sa;
@@ -429,6 +407,26 @@ int
 nni_parse_ip_port(const char *addr, nni_sockaddr *sa)
 {
 	return (parse_ip(addr, sa, true));
+}
+
+int
+nni_get_port_by_name(const char *name, uint16_t *portp)
+{
+	struct servent *se;
+	long            port;
+	char           *end = NULL;
+
+	port = strtol(name, &end, 10);
+	if ((*end == '\0') && (port >= 0) && (port <= 0xffff)) {
+		*portp = (uint16_t) port;
+		return (0);
+	}
+
+	if ((se = getservbyname(name, "tcp")) != NULL) {
+		*portp = (uint16_t) ntohs(se->s_port);
+		return (0);
+	}
+	return (NNG_EADDRINVAL);
 }
 
 int
