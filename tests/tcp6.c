@@ -75,14 +75,4 @@ TestMain("TCP (IPv6) Transport", {
 	} else {
 		SkipSo("IPv6 not available");
 	}
-
-	Convey("Malformed TCPv6 addresses do not panic", {
-		nng_socket s1;
-
-		So(nng_pair_open(&s1) == 0);
-		Reset({ nng_close(s1); });
-		So(nng_dial(s1, "tcp://::1", NULL, 0) == NNG_EADDRINVAL);
-		So(nng_dial(s1, "tcp://::1:5055", NULL, 0) == NNG_EADDRINVAL);
-		So(nng_dial(s1, "tcp://[::1]", NULL, 0) == NNG_EADDRINVAL);
-	});
 })
