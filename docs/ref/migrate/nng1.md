@@ -166,14 +166,21 @@ The use of `*` to act as a wild card meaning all local interface addresses
 is removed. The empty string already performs this function, and unlike
 `*` is RFC compliant.
 
-## URL Structure Members
+## URL Structure Changes
 
-The details of [`nng_url`] have changed as follows:
+The details of [`nng_url`] have changed significantly, and direct
+access of the structure is no longer permitted. Intead new
+accessors functions are provided:
 
-- `u_port` is no longer a string, but a `uint16_t`
-- `u_scheme` is a `const char *`
+- `u_scheme` is replaced by [`nng_url_scheme`].
+- `u_port` is replaced by [`nng_url_port`], but this returns a `uint16_t`.
+- `u_hostname` is replaced by [`nng_url_hostname`].
+- `u_path` is replaced by [`nng_url_path`].
+- `u_query` is replaced by [`nng_url_query`].
+- `u_fragment` is replaced by [`nng_url_fragment`].
+- `u_userinfo` is replaced by [`nng_url_userinfo`].
 - `u_requri` is removed - it can be easily formulated from the other fields.
-- `u_host` is removed - use `u_hostname` and `u_port` to construct if needed
+- `u_host` is removed - use [`nng_url_hostname`] and [`nng_url_port`] to construct if needed
 - `u_rawurl` is removed - a "cooked" URL can be obtained from the new [`nng_url_sprintf`] function.
 
 {{#include ../xref.md}}

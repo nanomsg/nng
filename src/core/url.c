@@ -687,3 +687,45 @@ nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
 	nni_aio_fini(&aio);
 	return (rv);
 }
+
+const char *
+nng_url_scheme(const nng_url *url)
+{
+	return (url->u_scheme);
+}
+
+uint16_t
+nng_url_port(const nng_url *url)
+{
+	return (url->u_port);
+}
+
+const char *
+nng_url_hostname(const nng_url *url)
+{
+	return (url->u_hostname);
+}
+
+const char *
+nng_url_path(const nng_url *url)
+{
+	return (url->u_path);
+}
+
+const char *
+nng_url_query(const nng_url *url)
+{
+	return (url->u_query);
+}
+
+const char *
+nng_url_userinfo(const nng_url *url)
+{
+	return (url->u_userinfo);
+}
+
+const char *
+nng_url_fragment(const nng_url *url)
+{
+	return (url->u_fragment);
+}

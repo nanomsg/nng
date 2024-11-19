@@ -13,6 +13,21 @@
 
 #include "core/defs.h"
 
+struct nng_url {
+	char       *u_rawurl;   // never NULL
+	const char *u_scheme;   // never NULL
+	const char *u_userinfo; // will be NULL if not specified
+	char       *u_hostname; // name only, will be "" if not specified
+	uint16_t    u_port;  // port, may be zero for schemes that do not use
+	char       *u_path;  // path, will be "" if not specified
+	char       *u_query; // without '?', will be NULL if not specified
+	char       *u_fragment; // without '#', will be NULL if not specified
+	// these members are private
+	char  *u_buffer;
+	size_t u_bufsz;
+	char   u_static[NNG_MAXADDRLEN]; // Most URLs fit within this
+};
+
 extern uint16_t nni_url_default_port(const char *);
 extern int      nni_url_asprintf(char **, const nng_url *);
 extern int      nni_url_asprintf_port(char **, const nng_url *, int);
