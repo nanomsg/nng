@@ -41,7 +41,7 @@ test_url_host_too_long(void)
 	for (size_t i = strlen(buffer); i < sizeof(buffer) - 1; i++) {
 		buffer[i] = 'a';
 	}
-	NUTS_FAIL(nng_url_parse(&url, buffer), NNG_EADDRINVAL);
+	NUTS_FAIL(nng_url_parse(&url, buffer), NNG_EINVAL);
 }
 
 void

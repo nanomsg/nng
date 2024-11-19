@@ -434,7 +434,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		// make sure only one '@' appears in the host (only one user
 		// info is allowed)
 		if (strchr(url->u_hostname, '@') != NULL) {
-			rv = NNG_EADDRINVAL;
+			rv = NNG_EINVAL;
 			goto error;
 		}
 	}
@@ -500,7 +500,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 	}
 	// hostname length check
 	if (strlen(url->u_hostname) >= 256) {
-		rv = NNG_EADDRINVAL;
+		rv = NNG_EINVAL;
 		goto error;
 	}
 
