@@ -326,9 +326,9 @@ nni_url_default_port(const char *scheme)
 // scheme with a leading //, such as http:// or tcp://. So our parser
 // is a bit more restricted, but sufficient for our needs.
 int
-nni_url_parse(nni_url **urlp, const char *raw)
+nng_url_parse(nng_url **urlp, const char *raw)
 {
-	nni_url    *url;
+	nng_url    *url;
 	size_t      len;
 	const char *s;
 	char       *p;
@@ -523,12 +523,12 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	return (0);
 
 error:
-	nni_url_free(url);
+	nng_url_free(url);
 	return (rv);
 }
 
 void
-nni_url_free(nni_url *url)
+nng_url_free(nng_url *url)
 {
 	if (url != NULL) {
 		nni_strfree(url->u_rawurl);
@@ -540,7 +540,7 @@ nni_url_free(nni_url *url)
 }
 
 int
-nni_url_sprintf(char *str, size_t size, const nni_url *url)
+nng_url_sprintf(char *str, size_t size, const nng_url *url)
 {
 	const char *scheme  = url->u_scheme;
 	const char *host    = url->u_hostname;
@@ -576,16 +576,16 @@ nni_url_sprintf(char *str, size_t size, const nni_url *url)
 }
 
 int
-nni_url_asprintf(char **str, const nni_url *url)
+nni_url_asprintf(char **str, const nng_url *url)
 {
 	char  *result;
 	size_t sz;
 
-	sz = nni_url_sprintf(NULL, 0, url) + 1;
+	sz = nng_url_sprintf(NULL, 0, url) + 1;
 	if ((result = nni_alloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_url_sprintf(result, sz, url);
+	nng_url_sprintf(result, sz, url);
 	*str = result;
 	return (0);
 }
@@ -594,9 +594,9 @@ nni_url_asprintf(char **str, const nni_url *url)
 // override.  If non-zero, this port number replaces the port number
 // in the port string.
 int
-nni_url_asprintf_port(char **str, const nni_url *url, int port)
+nni_url_asprintf_port(char **str, const nng_url *url, int port)
 {
-	nni_url myurl = *url;
+	nng_url myurl = *url;
 
 	if (port > 0) {
 		myurl.u_port = (uint16_t) port;
@@ -607,9 +607,9 @@ nni_url_asprintf_port(char **str, const nni_url *url, int port)
 #define URL_COPYSTR(d, s) ((s != NULL) && ((d = nni_strdup(s)) == NULL))
 
 int
-nni_url_clone(nni_url **dstp, const nni_url *src)
+nng_url_clone(nng_url **dstp, const nng_url *src)
 {
-	nni_url *dst;
+	nng_url *dst;
 
 	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
 		return (NNG_ENOMEM);

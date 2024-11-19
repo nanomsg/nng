@@ -32,7 +32,7 @@ nni_sp_tran_register(nni_sp_tran *tran)
 }
 
 nni_sp_tran *
-nni_sp_tran_find(nni_url *url)
+nni_sp_tran_find(nng_url *url)
 {
 	// address is of the form "<scheme>://blah..."
 	nni_sp_tran *t;

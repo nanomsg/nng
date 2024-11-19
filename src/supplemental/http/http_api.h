@@ -108,7 +108,7 @@ extern int  nni_http_conn_getopt(
 // Note that the iovs of the aio's are clobbered by these methods -- callers
 // must not use them for any other purpose.
 
-extern int  nni_http_req_alloc(nni_http_req **, const nni_url *);
+extern int  nni_http_req_alloc(nni_http_req **, const nng_url *);
 extern int  nni_http_res_alloc(nni_http_res **);
 extern int  nni_http_res_alloc_error(nni_http_res **, uint16_t);
 extern void nni_http_req_free(nni_http_req *);
@@ -170,7 +170,7 @@ extern void nni_http_write_full(nni_http_conn *, nni_aio *);
 // a restricted binding is required, we recommend using a URL consisting
 // of an empty host name, such as http://  or https://  -- this would
 // convert to binding to the default port on all interfaces on the host.
-extern int nni_http_server_init(nni_http_server **, const nni_url *);
+extern int nni_http_server_init(nni_http_server **, const nng_url *);
 
 // nni_http_server_fini drops the reference count on the server, and
 // if this was the last reference, closes down the server and frees
@@ -349,7 +349,7 @@ extern const char *nni_http_handler_get_uri(nni_http_handler *);
 
 // Client stuff.
 
-extern int  nni_http_client_init(nni_http_client **, const nni_url *);
+extern int  nni_http_client_init(nni_http_client **, const nng_url *);
 extern void nni_http_client_fini(nni_http_client *);
 
 // nni_http_client_set_tls sets the TLS configuration.  This wipes out

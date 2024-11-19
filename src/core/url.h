@@ -13,14 +13,10 @@
 
 #include "core/defs.h"
 
-extern int      nni_url_parse(nni_url **, const char *path);
-extern void     nni_url_free(nni_url *);
-extern int      nni_url_clone(nni_url **, const nni_url *);
 extern uint16_t nni_url_default_port(const char *);
-extern int      nni_url_sprintf(char *, size_t, const nni_url *);
-extern int      nni_url_asprintf(char **, const nni_url *);
-extern int      nni_url_asprintf_port(char **, const nni_url *, int);
+extern int      nni_url_asprintf(char **, const nng_url *);
+extern int      nni_url_asprintf_port(char **, const nng_url *, int);
 extern size_t   nni_url_decode(uint8_t *, const char *, size_t);
-extern int      nni_url_to_address(nng_sockaddr *, const nni_url *);
+extern int      nni_url_to_address(nng_sockaddr *, const nng_url *);
 
 #endif // CORE_URL_H

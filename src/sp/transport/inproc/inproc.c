@@ -283,7 +283,7 @@ inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
+inproc_dialer_init(void **epp, nng_url *url, nni_dialer *ndialer)
 {
 	inproc_ep *ep;
 	nni_sock  *sock = nni_dialer_sock(ndialer);
@@ -306,7 +306,7 @@ inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
 }
 
 static int
-inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
+inproc_listener_init(void **epp, nng_url *url, nni_listener *nlistener)
 {
 	inproc_ep *ep;
 	nni_sock  *sock = nni_listener_sock(nlistener);

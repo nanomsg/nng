@@ -143,7 +143,7 @@ fail:
 		free(ctype);
 	}
 	if (url != NULL) {
-		nni_url_free(url);
+		nng_url_free(url);
 	}
 	if (req != NULL) {
 		nng_http_req_free(req);

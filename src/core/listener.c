@@ -43,7 +43,7 @@ nni_listener_destroy(nni_listener *l)
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
 	}
-	nni_url_free(l->l_url);
+	nng_url_free(l->l_url);
 	NNI_FREE_STRUCT(l);
 }
 
@@ -203,19 +203,19 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	nni_sp_tran  *tran;
 	nni_listener *l;
 	int           rv;
-	nni_url      *url;
+	nng_url      *url;
 
-	if ((rv = nni_url_parse(&url, url_str)) != 0) {
+	if ((rv = nng_url_parse(&url, url_str)) != 0) {
 		return (rv);
 	}
 	if (((tran = nni_sp_tran_find(url)) == NULL) ||
 	    (tran->tran_listener == NULL)) {
-		nni_url_free(url);
+		nng_url_free(url);
 		return (NNG_ENOTSUP);
 	}
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
-		nni_url_free(url);
+		nng_url_free(url);
 		return (NNG_ENOMEM);
 	}
 	l->l_url    = url;

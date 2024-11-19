@@ -42,7 +42,7 @@ nni_dialer_destroy(nni_dialer *d)
 		d->d_ops.d_fini(d->d_data);
 	}
 	nni_mtx_fini(&d->d_mtx);
-	nni_url_free(d->d_url);
+	nng_url_free(d->d_url);
 	NNI_FREE_STRUCT(d);
 }
 
@@ -214,19 +214,19 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 	nni_sp_tran *tran;
 	nni_dialer  *d;
 	int          rv;
-	nni_url     *url;
+	nng_url     *url;
 
-	if ((rv = nni_url_parse(&url, url_str)) != 0) {
+	if ((rv = nng_url_parse(&url, url_str)) != 0) {
 		return (rv);
 	}
 	if (((tran = nni_sp_tran_find(url)) == NULL) ||
 	    (tran->tran_dialer == NULL)) {
-		nni_url_free(url);
+		nng_url_free(url);
 		return (NNG_ENOTSUP);
 	}
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
-		nni_url_free(url);
+		nng_url_free(url);
 		return (NNG_ENOMEM);
 	}
 	d->d_url    = url;

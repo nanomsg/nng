@@ -27,7 +27,7 @@
 struct nni_sp_dialer_ops {
 	// d_init creates a vanilla dialer. The value created is
 	// used for the first argument for all other dialer functions.
-	int (*d_init)(void **, nni_url *, nni_dialer *);
+	int (*d_init)(void **, nng_url *, nni_dialer *);
 
 	// d_fini frees the resources associated with the dialer.
 	// The dialer will already have been closed.
@@ -66,7 +66,7 @@ struct nni_sp_dialer_ops {
 struct nni_sp_listener_ops {
 	// l_init creates a vanilla listener. The value created is
 	// used for the first argument for all other listener functions.
-	int (*l_init)(void **, nni_url *, nni_listener *);
+	int (*l_init)(void **, nng_url *, nni_listener *);
 
 	// l_fini frees the resources associated with the listener.
 	// The listener will already have been closed.
@@ -184,7 +184,7 @@ struct nni_sp_tran {
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
-extern nni_sp_tran *nni_sp_tran_find(nni_url *);
+extern nni_sp_tran *nni_sp_tran_find(nng_url *);
 extern void         nni_sp_tran_sys_init(void);
 extern void         nni_sp_tran_sys_fini(void);
 extern void         nni_sp_tran_register(nni_sp_tran *);

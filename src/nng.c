@@ -2020,30 +2020,6 @@ nng_aio_begin(nng_aio *aio)
 	return (true);
 }
 
-int
-nng_url_parse(nng_url **result, const char *ustr)
-{
-	return (nni_url_parse(result, ustr));
-}
-
-void
-nng_url_free(nng_url *url)
-{
-	nni_url_free(url);
-}
-
-int
-nng_url_clone(nng_url **dstp, const nng_url *src)
-{
-	return (nni_url_clone(dstp, src));
-}
-
-int
-nng_url_sprintf(char *buf, size_t bufsz, const nng_url *src)
-{
-	return (nni_url_sprintf(buf, bufsz, src));
-}
-
 #define xstr(a) str(a)
 #define str(a) #a
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 QXSoftware <lh563566994@126.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
@@ -932,7 +932,7 @@ http_server_fini(nni_http_server *s)
 }
 
 static int
-http_server_init(nni_http_server **serverp, const nni_url *url)
+http_server_init(nni_http_server **serverp, const nng_url *url)
 {
 	nni_http_server *s;
 	int              rv;
@@ -980,7 +980,7 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 }
 
 int
-nni_http_server_init(nni_http_server **serverp, const nni_url *url)
+nni_http_server_init(nni_http_server **serverp, const nng_url *url)
 {
 	int              rv;
 	nni_http_server *s;

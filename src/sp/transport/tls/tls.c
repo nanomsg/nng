@@ -61,7 +61,7 @@ struct tlstran_ep {
 	bool                 closed;
 	bool                 fini;
 	int                  refcnt;
-	nni_url             *url;
+	nng_url             *url;
 	nni_list             pipes;
 	nni_reap_node        reap;
 	nng_stream_dialer   *dialer;
@@ -825,7 +825,7 @@ tlstran_ep_init(tlstran_ep **epp, nng_url *url, nni_sock *sock)
 }
 
 static int
-tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
+tlstran_ep_init_dialer(void **dp, nng_url *url, nni_dialer *ndialer)
 {
 	tlstran_ep *ep;
 	int         rv;
@@ -859,7 +859,7 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 }
 
 static int
-tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
+tlstran_ep_init_listener(void **lp, nng_url *url, nni_listener *nlistener)
 {
 	tlstran_ep *ep;
 	int         rv;

@@ -600,7 +600,7 @@ nni_http_res_get_buf(nni_http_res *res, void **data, size_t *szp)
 }
 
 int
-nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
+nni_http_req_alloc(nni_http_req **reqp, const nng_url *url)
 {
 	nni_http_req *req;
 	if ((req = NNI_ALLOC_STRUCT(req)) == NULL) {

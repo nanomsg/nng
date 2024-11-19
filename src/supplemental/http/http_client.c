@@ -96,7 +96,7 @@ nni_http_client_fini(nni_http_client *c)
 }
 
 int
-nni_http_client_init(nni_http_client **cp, const nni_url *url)
+nni_http_client_init(nni_http_client **cp, const nng_url *url)
 {
 	int              rv;
 	nni_http_client *c;

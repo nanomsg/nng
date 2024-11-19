@@ -36,7 +36,6 @@
 // Internal code should use these names when possible.
 typedef nng_msg      nni_msg;
 typedef nng_sockaddr nni_sockaddr;
-typedef nng_url      nni_url;
 typedef nng_iov      nni_iov;
 typedef nng_aio      nni_aio;
 
