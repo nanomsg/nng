@@ -385,6 +385,30 @@ test_url_good_utf8(void)
 }
 
 void
+test_url_missing_port(void)
+{
+	nng_url *url = NULL;
+	NUTS_FAIL(
+	    nng_url_parse(&url, "http://www.x.com:/something"), NNG_EINVAL);
+}
+
+void
+test_url_unknown_service(void)
+{
+	nng_url *url = NULL;
+	NUTS_FAIL(
+	    nng_url_parse(&url, "http://www.x.com:nosuchservice"), NNG_EINVAL);
+}
+
+void
+test_url_duplicate_userinfo(void)
+{
+	nng_url *url = NULL;
+	NUTS_FAIL(
+	    nng_url_parse(&url, "http://user@@user@www.x.com"), NNG_EINVAL);
+}
+
+void
 test_url_decode(void)
 {
 	uint8_t out[16];
@@ -463,6 +487,9 @@ NUTS_TESTS = {
 	{ "url canonify", test_url_canonify },
 	{ "url path resolve", test_url_path_resolve },
 	{ "url query info pass", test_url_query_info_pass },
+	{ "url missing port", test_url_missing_port },
+	{ "url unknown service", test_url_unknown_service },
+	{ "url duplicate userinfo", test_url_duplicate_userinfo },
 	{ "url bad utf8", test_url_bad_utf8 },
 	{ "url good utf8", test_url_good_utf8 },
 	{ "url decode", test_url_decode },

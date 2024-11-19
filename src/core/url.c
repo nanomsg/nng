@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -326,23 +326,17 @@ nni_url_default_port(const char *scheme)
 // scheme with a leading //, such as http:// or tcp://. So our parser
 // is a bit more restricted, but sufficient for our needs.
 int
-nng_url_parse(nng_url **urlp, const char *raw)
+nni_url_parse_inline(nng_url *url, const char *raw)
 {
-	nng_url    *url;
 	size_t      len;
 	const char *s;
 	char       *p;
 	char        c;
 	int         rv;
 
-	if ((url = NNI_ALLOC_STRUCT(url)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
 	// TODO: remove this when NNG_OPT_URL is gone
 	if ((url->u_rawurl = nni_strdup(raw)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto error;
+		return (NNG_ENOMEM);
 	}
 
 	// Grab the scheme.
@@ -353,8 +347,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		}
 	}
 	if (strncmp(s + len, "://", 3) != 0) {
-		rv = NNG_EINVAL;
-		goto error;
+		return (NNG_EINVAL);
 	}
 
 	for (int i = 0; nni_schemes[i] != NULL; i++) {
@@ -364,8 +357,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		}
 	}
 	if (url->u_scheme == NULL) {
-		rv = NNG_ENOTSUP;
-		goto error;
+		return (NNG_ENOTSUP);
 	}
 	s += len;
 
@@ -400,7 +392,6 @@ nng_url_parse(nng_url **urlp, const char *raw)
 	    (strcmp(url->u_scheme, "abstract") == 0) ||
 	    (strcmp(url->u_scheme, "inproc") == 0)) {
 		url->u_path = p;
-		*urlp       = url;
 		return (0);
 	}
 
@@ -434,8 +425,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		// make sure only one '@' appears in the host (only one user
 		// info is allowed)
 		if (strchr(url->u_hostname, '@') != NULL) {
-			rv = NNG_EINVAL;
-			goto error;
+			return (NNG_EINVAL);
 		}
 	}
 
@@ -446,7 +436,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 	}
 
 	if ((rv = url_canonify_uri(p)) != 0) {
-		goto error;
+		return (rv);
 	}
 
 	while ((c = *p) != '\0') {
@@ -481,14 +471,12 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		p++;
 		while (*p != ']') {
 			if (*p++ == '\0') {
-				rv = NNG_EINVAL;
-				goto error;
+				return (NNG_EINVAL);
 			}
 		}
 		*p++ = '\0';
 		if ((*p != ':') && (*p != '\0')) {
-			rv = NNG_EINVAL;
-			goto error;
+			return (NNG_EINVAL);
 		}
 	} else {
 		while (*p != ':' && *p != '\0') {
@@ -500,31 +488,40 @@ nng_url_parse(nng_url **urlp, const char *raw)
 	}
 	// hostname length check
 	if (strlen(url->u_hostname) >= 256) {
-		rv = NNG_EINVAL;
-		goto error;
+		return (NNG_EINVAL);
 	}
 
 	if (c == ':') {
 		// If a colon was present, but no port value present, then
 		// that is an error.
 		if (*p == '\0') {
-			rv = NNG_EINVAL;
-			goto error;
+			return (NNG_EINVAL);
 		}
-		rv = nni_get_port_by_name(p, &url->u_port);
-		if (rv != 0) {
-			goto error;
+		if (nni_get_port_by_name(p, &url->u_port) != 0) {
+			return (NNG_EINVAL);
 		}
 	} else {
 		url->u_port = nni_url_default_port(url->u_scheme);
 	}
 
+	return (0);
+}
+
+int
+nng_url_parse(nng_url **urlp, const char *raw)
+{
+	nng_url *url;
+	int      rv;
+
+	if ((url = NNI_ALLOC_STRUCT(url)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_url_parse_inline(url, raw)) != 0) {
+		nng_url_free(url);
+		return (rv);
+	}
 	*urlp = url;
 	return (0);
-
-error:
-	nng_url_free(url);
-	return (rv);
 }
 
 void
