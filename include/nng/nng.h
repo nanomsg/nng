@@ -724,6 +724,7 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
+#define NNG_OPT_SNDPRIO "send-prio"
 
 // TLS options are only used when the underlying transport supports TLS.
 

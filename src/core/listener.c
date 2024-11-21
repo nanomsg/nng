@@ -438,6 +438,13 @@ nni_listener_setopt(
 		return (NNG_EREADONLY);
 	}
 
+	if (strcmp(name, NNG_OPT_SNDPRIO) == 0) {
+		int rv;
+		rv = nni_copyin_int(&l->l_sndprio, val, sz, 1, 16, t);
+		return (rv);
+	}
+
+
 	if (l->l_ops.l_setopt != NULL) {
 		int rv = l->l_ops.l_setopt(l->l_data, name, val, sz, t);
 		if (rv != NNG_ENOTSUP) {
@@ -464,6 +471,12 @@ nni_listener_getopt(
     nni_listener *l, const char *name, void *val, size_t *szp, nni_type t)
 {
 	nni_option *o;
+
+	if (strcmp(name, NNG_OPT_SNDPRIO) == 0) {
+		int rv;
+		rv = nni_copyout_int(l->l_sndprio, val, szp, t);
+		return (rv);
+	}
 
 	if (l->l_ops.l_getopt != NULL) {
 		int rv = l->l_ops.l_getopt(l->l_data, name, val, szp, t);

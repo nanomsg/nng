@@ -1289,7 +1289,6 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 		nni_mtx_unlock(&s->s_mx);
 		return;
 	}
-
 	nni_list_append(&d->d_pipes, p);
 	nni_list_append(&s->s_pipes, p);
 	d->d_pipe     = p;
