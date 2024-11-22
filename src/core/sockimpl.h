@@ -22,7 +22,6 @@ struct nni_dialer {
 	uint32_t          d_id;   // endpoint id
 	nni_list_node     d_node; // per socket list
 	nni_sock         *d_sock;
-	nng_url          *d_url;
 	nni_pipe         *d_pipe; // active pipe (for re-dialer)
 	int               d_ref;
 	bool              d_closed; // full shutdown
@@ -37,6 +36,7 @@ struct nni_dialer {
 	nni_duration      d_currtime; // current time for reconnect
 	nni_duration      d_inirtime; // initial time for reconnect
 	nni_reap_node     d_reap;
+	nng_url           d_url;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;

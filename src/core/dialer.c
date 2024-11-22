@@ -9,6 +9,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 #include "sockimpl.h"
 
@@ -42,7 +43,7 @@ nni_dialer_destroy(nni_dialer *d)
 		d->d_ops.d_fini(d->d_data);
 	}
 	nni_mtx_fini(&d->d_mtx);
-	nng_url_free(d->d_url);
+	nni_url_fini(&d->d_url);
 	NNI_FREE_STRUCT(d);
 }
 
@@ -214,22 +215,20 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 	nni_sp_tran *tran;
 	nni_dialer  *d;
 	int          rv;
-	nng_url     *url;
-
-	if ((rv = nng_url_parse(&url, url_str)) != 0) {
-		return (rv);
-	}
-	if (((tran = nni_sp_tran_find(url)) == NULL) ||
-	    (tran->tran_dialer == NULL)) {
-		nng_url_free(url);
-		return (NNG_ENOTSUP);
-	}
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
-		nng_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	d->d_url    = url;
+	if ((rv = nni_url_parse_inline(&d->d_url, url_str)) != 0) {
+		NNI_FREE_STRUCT(d);
+		return (rv);
+	}
+	if (((tran = nni_sp_tran_find(&d->d_url)) == NULL) ||
+	    (tran->tran_dialer == NULL)) {
+		nni_url_fini(&d->d_url);
+		NNI_FREE_STRUCT(d);
+		return (NNG_ENOTSUP);
+	}
 	d->d_closed = false;
 	d->d_data   = NULL;
 	d->d_ref    = 1;
@@ -258,7 +257,8 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 	dialer_stats_init(d);
 #endif
 
-	if ((rv != 0) || ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
+	if ((rv != 0) ||
+	    ((rv = d->d_ops.d_init(&d->d_data, &d->d_url, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
 		nni_mtx_lock(&dialers_lk);
 		nni_id_remove(&dialers, d->d_id);
@@ -538,7 +538,7 @@ nni_dialer_getopt(
 	// override.  This allows the URL to be created with wildcards,
 	// that are resolved later.
 	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (nni_copyout_str(d->d_url->u_rawurl, valp, szp, t));
+		return (nni_copyout_str(d->d_url.u_rawurl, valp, szp, t));
 	}
 
 	return (nni_sock_getopt(d->d_sock, name, valp, szp, t));
