@@ -270,6 +270,11 @@ NNG_DECL int nng_socket_raw(nng_socket id, bool *rawp);
 NNG_DECL const char *nng_str_sockaddr(
     const nng_sockaddr *sa, char *buf, size_t bufsz);
 
+// Obtain a port number (for NNG_AF_INET and NNG_AF_INET6this will be 16 bits
+// maximum, but other address familiies may have larger port numbers.)  For
+// address that don't have the concept of port numbers, zero will be returned.
+uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
+
 // Arguably the pipe callback functions could be handled as an option,
 // but with the need to specify an argument, we find it best to unify
 // this as a separate function to pass in the argument and the callback.

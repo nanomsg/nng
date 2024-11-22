@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 
 // IPC transport.   Platform specific IPC operations must be
@@ -971,10 +972,11 @@ ipc_ep_set_recv_max_sz(void *arg, const void *v, size_t sz, nni_type t)
 }
 
 static int
-ipc_ep_bind(void *arg)
+ipc_ep_bind(void *arg, nng_url *url)
 {
 	ipc_ep *ep = arg;
 	int     rv;
+	NNI_ARG_UNUSED(url);
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nng_stream_listener_listen(ep->listener);

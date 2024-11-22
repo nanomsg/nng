@@ -1023,13 +1023,19 @@ tcptran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static int
-tcptran_ep_bind(void *arg)
+tcptran_ep_bind(void *arg, nng_url *url)
 {
 	tcptran_ep *ep = arg;
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nng_stream_listener_listen(ep->listener);
+	if (rv == 0) {
+		int port;
+		nng_stream_listener_get_int(
+		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);
+		url->u_port = (uint32_t) port;
+	}
 	nni_mtx_unlock(&ep->mtx);
 
 	return (rv);

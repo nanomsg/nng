@@ -163,3 +163,21 @@ nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz)
 		return ("unknown");
 	}
 }
+
+uint32_t
+nng_sockaddr_port(const nng_sockaddr *sa)
+{
+	uint16_t port16;
+	switch (sa->s_family) {
+	case NNG_AF_INET:
+		NNI_GET16(&sa->s_in.sa_port, port16);
+		return (port16);
+	case NNG_AF_INET6:
+		NNI_GET16(&sa->s_in6.sa_port, port16);
+		return (port16);
+	case NNG_AF_ZT:
+		return (sa->s_zt.sa_port);
+	default:
+		return (0);
+	}
+}

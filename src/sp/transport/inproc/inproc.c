@@ -510,11 +510,12 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-inproc_ep_bind(void *arg)
+inproc_ep_bind(void *arg, nng_url *url)
 {
 	inproc_ep *ep = arg;
 	inproc_ep *srch;
 	nni_list  *list = &nni_inproc.servers;
+	NNI_ARG_UNUSED(url);
 
 	nni_mtx_lock(&nni_inproc.mx);
 	NNI_LIST_FOREACH (list, srch) {

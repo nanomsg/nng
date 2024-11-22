@@ -393,7 +393,7 @@ nni_listener_start(nni_listener *l, int flags)
 		return (NNG_ESTATE);
 	}
 
-	if ((rv = l->l_ops.l_bind(l->l_data)) != 0) {
+	if ((rv = l->l_ops.l_bind(l->l_data, &l->l_url)) != 0) {
 		nng_log_warn("NNG-BIND-FAIL", "Failed binding socket<%u>: %s",
 		    nni_sock_id(l->l_sock), nng_strerror(rv));
 		nni_listener_bump_error(l, rv);

@@ -2336,10 +2336,11 @@ zt_ep_bind_locked(zt_ep *ep)
 }
 
 static int
-zt_ep_bind(void *arg)
+zt_ep_bind(void *arg, nng_url *url)
 {
 	int    rv;
 	zt_ep *ep = arg;
+	NNI_ARG_UNUSED(url);
 
 	nni_mtx_lock(&zt_lk);
 	rv = zt_ep_bind_locked(ep);

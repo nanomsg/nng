@@ -76,8 +76,10 @@ struct nni_sp_listener_ops {
 	// reserving the address but not creating any connections.
 	// It should return NNG_EADDRINUSE if the address is already
 	// taken.  It can also return NNG_EBADADDR for an unsuitable
-	// address, or NNG_EACCESS for permission problems.
-	int (*l_bind)(void *);
+	// address, or NNG_EACCESS for permission problems. The transport
+	// should update the url if it has changed (e.g. due to converting
+	// from port 0 to a real port.)
+	int (*l_bind)(void *, nng_url *);
 
 	// l_accept accepts an inbound connection.
 	void (*l_accept)(void *, nni_aio *);

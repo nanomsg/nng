@@ -14,6 +14,7 @@
 
 #include "core/nng_impl.h"
 
+#include "nng/nng.h"
 #include "nng/supplemental/tls/tls.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be
@@ -970,13 +971,19 @@ tlstran_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-tlstran_ep_bind(void *arg)
+tlstran_ep_bind(void *arg, nng_url *url)
 {
 	tlstran_ep *ep = arg;
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nng_stream_listener_listen(ep->listener);
+	if (rv == 0) {
+		int port;
+		nng_stream_listener_get_int(
+		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);
+		url->u_port = (uint32_t) port;
+	}
 	nni_mtx_unlock(&ep->mtx);
 
 	return (rv);

@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 
 // Socket transport.  This takes sockets that may have been
@@ -884,9 +885,10 @@ sfd_tran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static int
-sfd_tran_ep_bind(void *arg)
+sfd_tran_ep_bind(void *arg, nng_url *url)
 {
 	sfd_tran_ep *ep = arg;
+	NNI_ARG_UNUSED(url);
 	return (nng_stream_listener_listen(ep->listener));
 }
 

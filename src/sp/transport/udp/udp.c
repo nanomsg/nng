@@ -1801,7 +1801,7 @@ udp_ep_start(udp_ep *ep)
 }
 
 static int
-udp_ep_bind(void *arg)
+udp_ep_bind(void *arg, nng_url *url)
 {
 	udp_ep *ep = arg;
 	int     rv;
@@ -1817,6 +1817,9 @@ udp_ep_bind(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 		return (rv);
 	}
+	nng_sockaddr sa;
+	nni_plat_udp_sockname(ep->udp, &sa);
+	url->u_port = nng_sockaddr_port(&sa);
 	udp_ep_start(ep);
 	nni_mtx_unlock(&ep->mtx);
 
