@@ -77,7 +77,7 @@ struct nng_http_server {
 	bool                 fini; // if nni_http_server_fini was called
 	nni_aio             *accaio;
 	nng_stream_listener *listener;
-	int                  port; // native order
+	uint32_t             port; // native order
 	char                *hostname;
 	nni_list             errors;
 	nni_mtx              errors_mtx;
@@ -1014,8 +1014,10 @@ http_server_start(nni_http_server *s)
 		return (rv);
 	}
 	if (s->port == 0) {
+		int port;
 		nng_stream_listener_get_int(
-		    s->listener, NNG_OPT_TCP_BOUND_PORT, &s->port);
+		    s->listener, NNG_OPT_TCP_BOUND_PORT, &port);
+		s->port = (uint32_t) port;
 	}
 	nng_stream_listener_accept(s->listener, s->accaio);
 	return (0);

@@ -1103,8 +1103,9 @@ NNG_DECL int nng_url_sprintf(char *, size_t, const nng_url *);
 
 NNG_DECL const char *nng_url_scheme(const nng_url *);
 
-// Port (TCP) for a URL, can be zero for ports are not used by the scheme.
-NNG_DECL uint16_t nng_url_port(const nng_url *);
+// Port (such as UDP or TCP) for a URL, can be zero for ports are not used by
+// the scheme.
+NNG_DECL uint32_t nng_url_port(const nng_url *);
 
 // hostname part of URL, can be NULL if irerelvant to scheme
 const char *nng_url_hostname(const nng_url *);

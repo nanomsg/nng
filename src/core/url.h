@@ -18,7 +18,7 @@ struct nng_url {
 	const char *u_scheme;   // never NULL
 	const char *u_userinfo; // will be NULL if not specified
 	char       *u_hostname; // name only, will be "" if not specified
-	uint16_t    u_port;  // port, may be zero for schemes that do not use
+	uint32_t    u_port;  // port, may be zero for schemes that do not use
 	char       *u_path;  // path, will be "" if not specified
 	char       *u_query; // without '?', will be NULL if not specified
 	char       *u_fragment; // without '#', will be NULL if not specified

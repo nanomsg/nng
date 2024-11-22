@@ -353,7 +353,7 @@ extern int nni_parse_ip_port(const char *, nng_sockaddr *);
 
 // nni_get_port_by_name resolves a name (which may be an ASCII representation
 // of a number) to a port number (the value returned is in native byte order.)
-extern int nni_get_port_by_name(const char *, uint16_t *);
+extern int nni_get_port_by_name(const char *, uint32_t *);
 
 //
 // IPC (UNIX Domain Sockets & Named Pipes) Support.

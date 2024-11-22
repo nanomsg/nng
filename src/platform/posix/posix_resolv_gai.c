@@ -460,7 +460,7 @@ nni_parse_ip_port(const char *addr, nni_sockaddr *sa)
 }
 
 int
-nni_get_port_by_name(const char *name, uint16_t *portp)
+nni_get_port_by_name(const char *name, uint32_t *portp)
 {
 	struct servent *se;
 	long            port;

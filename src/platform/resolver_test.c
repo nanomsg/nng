@@ -111,7 +111,7 @@ test_service_names(void)
 {
 	nng_aio     *aio;
 	nng_sockaddr sa;
-	uint16_t     port;
+	uint32_t     port;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("8.8.4.4", 80, NNG_AF_INET, true, &sa, aio);
