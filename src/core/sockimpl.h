@@ -63,7 +63,6 @@ struct nni_listener {
 	uint32_t            l_id;   // endpoint id
 	nni_list_node       l_node; // per socket list
 	nni_sock           *l_sock;
-	nng_url            *l_url;
 	int                 l_ref;
 	bool                l_closed;  // full shutdown
 	nni_atomic_flag     l_closing; // close started (shutdown)
@@ -72,6 +71,7 @@ struct nni_listener {
 	nni_aio             l_acc_aio;
 	nni_aio             l_tmo_aio;
 	nni_reap_node       l_reap;
+	nng_url             l_url;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;

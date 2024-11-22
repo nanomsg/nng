@@ -525,13 +525,19 @@ nng_url_parse(nng_url **urlp, const char *raw)
 }
 
 void
+nni_url_fini(nng_url *url)
+{
+	nni_strfree(url->u_rawurl);
+	if (url->u_bufsz != 0) {
+		nni_free(url->u_buffer, url->u_bufsz);
+	}
+}
+
+void
 nng_url_free(nng_url *url)
 {
 	if (url != NULL) {
-		nni_strfree(url->u_rawurl);
-		if (url->u_bufsz != 0) {
-			nni_free(url->u_buffer, url->u_bufsz);
-		}
+		nni_url_fini(url);
 		NNI_FREE_STRUCT(url);
 	}
 }

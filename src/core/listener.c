@@ -43,7 +43,7 @@ nni_listener_destroy(nni_listener *l)
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
 	}
-	nng_url_free(l->l_url);
+	nni_url_fini(&l->l_url);
 	NNI_FREE_STRUCT(l);
 }
 
@@ -203,22 +203,20 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	nni_sp_tran  *tran;
 	nni_listener *l;
 	int           rv;
-	nng_url      *url;
-
-	if ((rv = nng_url_parse(&url, url_str)) != 0) {
-		return (rv);
-	}
-	if (((tran = nni_sp_tran_find(url)) == NULL) ||
-	    (tran->tran_listener == NULL)) {
-		nng_url_free(url);
-		return (NNG_ENOTSUP);
-	}
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
-		nng_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	l->l_url    = url;
+	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
+		NNI_FREE_STRUCT(l);
+		return (rv);
+	}
+	if (((tran = nni_sp_tran_find(&l->l_url)) == NULL) ||
+	    (tran->tran_listener == NULL)) {
+		nni_url_fini(&l->l_url);
+		NNI_FREE_STRUCT(l);
+		return (NNG_ENOTSUP);
+	}
 	l->l_closed = false;
 	l->l_data   = NULL;
 	l->l_ref    = 1;
@@ -245,7 +243,8 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	listener_stats_init(l);
 #endif
 
-	if ((rv != 0) || ((rv = l->l_ops.l_init(&l->l_data, url, l)) != 0) ||
+	if ((rv != 0) ||
+	    ((rv = l->l_ops.l_init(&l->l_data, &l->l_url, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
 		nni_mtx_lock(&listeners_lk);
 		nni_id_remove(&listeners, l->l_id);
@@ -486,7 +485,7 @@ nni_listener_getopt(
 	// override.  This allows the URL to be created with wildcards,
 	// that are resolved later.
 	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (nni_copyout_str(l->l_url->u_rawurl, val, szp, t));
+		return (nni_copyout_str(l->l_url.u_rawurl, val, szp, t));
 	}
 
 	return (nni_sock_getopt(l->l_sock, name, val, szp, t));
