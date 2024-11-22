@@ -950,6 +950,33 @@ nng_listener_set_tls(nng_listener id, nng_tls_config *cfg)
 	nni_listener_rele(l);
 	return (rv);
 }
+
+int
+nng_dialer_get_url(nng_dialer id, const nng_url **urlp)
+{
+	int         rv;
+	nni_dialer *d;
+	if ((rv = nni_dialer_find(&d, id.id)) != 0) {
+		return (rv);
+	}
+	*urlp = nni_dialer_url(d);
+	nni_dialer_rele(d);
+	return (0);
+}
+
+int
+nng_listener_get_url(nng_listener id, const nng_url **urlp)
+{
+	int           rv;
+	nni_listener *l;
+	if ((rv = nni_listener_find(&l, id.id)) != 0) {
+		return (rv);
+	}
+	*urlp = nni_listener_url(l);
+	nni_listener_rele(l);
+	return (0);
+}
+
 int
 nng_dialer_close(nng_dialer did)
 {

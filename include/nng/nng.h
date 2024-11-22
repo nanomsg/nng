@@ -113,6 +113,9 @@ typedef struct nng_msg  nng_msg;
 typedef struct nng_stat nng_stat;
 typedef struct nng_aio  nng_aio;
 
+// URL structure.
+typedef struct nng_url nng_url;
+
 // For some transports, we need TLS configuration, including certificates
 // and so forth.  A TLS configuration cannot be changed once it is in use.
 typedef struct nng_tls_config nng_tls_config;
@@ -362,6 +365,7 @@ NNG_DECL int nng_dialer_get_ptr(nng_dialer, const char *, void **);
 NNG_DECL int nng_dialer_get_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_get_addr(nng_dialer, const char *, nng_sockaddr *);
 NNG_DECL int nng_dialer_get_tls(nng_dialer, nng_tls_config **);
+NNG_DECL int nng_dialer_get_url(nng_dialer id, const nng_url **urlp);
 
 NNG_DECL int nng_listener_set_bool(nng_listener, const char *, bool);
 NNG_DECL int nng_listener_set_int(nng_listener, const char *, int);
@@ -373,6 +377,7 @@ NNG_DECL int nng_listener_set_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_set_addr(
     nng_listener, const char *, const nng_sockaddr *);
 NNG_DECL int nng_listener_set_tls(nng_listener, nng_tls_config *);
+NNG_DECL int nng_listener_get_url(nng_listener id, const nng_url **urlp);
 
 NNG_DECL int nng_listener_get_bool(nng_listener, const char *, bool *);
 NNG_DECL int nng_listener_get_int(nng_listener, const char *, int *);
@@ -1083,11 +1088,6 @@ enum nng_errno_enum {
 	NNG_ESYSERR      = 0x10000000,
 	NNG_ETRANERR     = 0x20000000
 };
-
-// URL support.  We frequently want to process a URL, and these methods
-// give us a convenient way of doing so.
-
-typedef struct nng_url nng_url;
 
 // nng_url_parse parses a URL string into a structured form.
 // Note that the u_port member will be filled out with a numeric

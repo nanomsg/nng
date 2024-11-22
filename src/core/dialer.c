@@ -562,6 +562,12 @@ nni_dialer_set_tls(nni_dialer *d, nng_tls_config *cfg)
 	return (d->d_ops.d_set_tls(d->d_data, cfg));
 }
 
+nng_url *
+nni_dialer_url(nni_dialer *d)
+{
+	return (&d->d_url);
+}
+
 void
 nni_dialer_add_stat(nni_dialer *d, nni_stat_item *item)
 {

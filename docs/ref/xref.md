@@ -96,6 +96,8 @@
 [`nng_aio_set_output`]: /TODO.md
 [`nng_send`]: /TODO.md
 [`nng_recv`]: /TODO.md
+[`nng_listener_get_url`]: /TODO.md
+[`nng_dialer_get_url`]: /TODO.md
 
 <!-- Macros -->
 

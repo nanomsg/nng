@@ -25,9 +25,10 @@ extern int nni_dialer_setopt(
     nni_dialer *, const char *, const void *, size_t, nni_type);
 extern int nni_dialer_getopt(
     nni_dialer *, const char *, void *, size_t *, nni_type);
-extern int  nni_dialer_get_tls(nni_dialer *, nng_tls_config **);
-extern int  nni_dialer_set_tls(nni_dialer *, nng_tls_config *);
-extern void nni_dialer_add_stat(nni_dialer *, nni_stat_item *);
-extern void nni_dialer_bump_error(nni_dialer *, int);
+extern int      nni_dialer_get_tls(nni_dialer *, nng_tls_config **);
+extern int      nni_dialer_set_tls(nni_dialer *, nng_tls_config *);
+extern nng_url *nni_dialer_url(nni_dialer *);
+extern void     nni_dialer_add_stat(nni_dialer *, nni_stat_item *);
+extern void     nni_dialer_bump_error(nni_dialer *, int);
 
 #endif // CORE_DIALER_H
