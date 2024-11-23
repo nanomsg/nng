@@ -192,29 +192,11 @@ nni_listener_bump_error(nni_listener *l, int err)
 #endif
 }
 
-// nni_listener_create creates a listener on the socket.
-// The caller should have a hold on the socket, and on success
-// the listener inherits the callers hold.  (If the caller wants
-// an additional hold, it should get an extra hold before calling this
-// function.)
-int
-nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
+static int
+nni_listener_init(nni_listener *l, nni_sock *s, nni_sp_tran *tran)
 {
-	nni_sp_tran  *tran;
-	nni_listener *l;
-	int           rv;
+	int rv;
 
-	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
-	    (tran->tran_listener == NULL)) {
-		return (NNG_ENOTSUP);
-	}
-	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
-		NNI_FREE_STRUCT(l);
-		return (rv);
-	}
 	l->l_closed = false;
 	l->l_data   = NULL;
 	l->l_ref    = 1;
@@ -250,10 +232,66 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 #ifdef NNG_ENABLE_STATS
 		nni_stat_unregister(&l->st_root);
 #endif
+		return (rv);
+	}
+
+	return (0);
+}
+
+int
+nni_listener_create_url(nni_listener **lp, nni_sock *s, const nng_url *url)
+{
+	nni_sp_tran  *tran;
+	nni_listener *l;
+	int           rv;
+
+	if (((tran = nni_sp_tran_find(nng_url_scheme(url))) == NULL) ||
+	    (tran->tran_listener == NULL)) {
+		return (NNG_ENOTSUP);
+	}
+	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_url_clone_inline(&l->l_url, url)) != 0) {
+		NNI_FREE_STRUCT(l);
+		return (rv);
+	}
+	if ((rv = nni_listener_init(l, s, tran)) != 0) {
 		nni_listener_destroy(l);
 		return (rv);
 	}
 
+	*lp = l;
+	return (0);
+}
+
+// nni_listener_create creates a listener on the socket.
+// The caller should have a hold on the socket, and on success
+// the listener inherits the callers hold.  (If the caller wants
+// an additional hold, it should get an extra hold before calling this
+// function.)
+int
+nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
+{
+	nni_sp_tran  *tran;
+	nni_listener *l;
+	int           rv;
+
+	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
+	    (tran->tran_listener == NULL)) {
+		return (NNG_ENOTSUP);
+	}
+	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
+		NNI_FREE_STRUCT(l);
+		return (rv);
+	}
+	if ((rv = nni_listener_init(l, s, tran)) != 0) {
+		nni_listener_destroy(l);
+		return (rv);
+	}
 	*lp = l;
 	return (0);
 }

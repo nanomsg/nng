@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -17,8 +17,10 @@ extern int      nni_listener_hold(nni_listener *);
 extern void     nni_listener_rele(nni_listener *);
 extern uint32_t nni_listener_id(nni_listener *);
 extern int      nni_listener_create(nni_listener **, nni_sock *, const char *);
-extern void     nni_listener_close(nni_listener *);
-extern int      nni_listener_start(nni_listener *, int);
+extern int      nni_listener_create_url(
+         nni_listener **, nni_sock *, const nng_url *);
+extern void      nni_listener_close(nni_listener *);
+extern int       nni_listener_start(nni_listener *, int);
 extern nni_sock *nni_listener_sock(nni_listener *);
 
 extern int nni_listener_setopt(

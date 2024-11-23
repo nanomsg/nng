@@ -593,6 +593,34 @@ nng_listen(nng_socket sid, const char *addr, nng_listener *lp, int flags)
 }
 
 int
+nng_listen_url(nng_socket sid, const nng_url *url, nng_listener *lp, int flags)
+{
+	int           rv;
+	nni_sock     *s;
+	nni_listener *l;
+
+	if ((rv = nni_sock_find(&s, sid.id)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_listener_create_url(&l, s, url)) != 0) {
+		nni_sock_rele(s);
+		return (rv);
+	}
+	if ((rv = nni_listener_start(l, flags)) != 0) {
+		nni_listener_close(l);
+		return (rv);
+	}
+
+	if (lp != NULL) {
+		nng_listener lid;
+		lid.id = nni_listener_id(l);
+		*lp    = lid;
+	}
+	nni_listener_rele(l);
+	return (rv);
+}
+
+int
 nng_listener_create(nng_listener *lp, nng_socket sid, const char *addr)
 {
 	nni_sock     *s;
@@ -604,6 +632,27 @@ nng_listener_create(nng_listener *lp, nng_socket sid, const char *addr)
 		return (rv);
 	}
 	if ((rv = nni_listener_create(&l, s, addr)) != 0) {
+		nni_sock_rele(s);
+		return (rv);
+	}
+	lid.id = nni_listener_id(l);
+	*lp    = lid;
+	nni_listener_rele(l);
+	return (0);
+}
+
+int
+nng_listener_create_url(nng_listener *lp, nng_socket sid, const nng_url *url)
+{
+	nni_sock     *s;
+	int           rv;
+	nni_listener *l;
+	nng_listener  lid;
+
+	if ((rv = nni_sock_find(&s, sid.id)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_listener_create_url(&l, s, url)) != 0) {
 		nni_sock_rele(s);
 		return (rv);
 	}

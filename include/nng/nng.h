@@ -302,6 +302,7 @@ NNG_DECL int nng_pipe_notify(nng_socket, nng_pipe_ev, nng_pipe_cb, void *);
 // nn_bind(). The underlying endpoint is returned back to the caller in the
 // endpoint pointer, if it is not NULL.  The flags are ignored at present.
 NNG_DECL int nng_listen(nng_socket, const char *, nng_listener *, int);
+NNG_DECL int nng_listen_url(nng_socket, const nng_url *, nng_listener *, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
@@ -322,6 +323,8 @@ NNG_DECL int nng_dialer_create_url(nng_dialer *, nng_socket, const nng_url *);
 
 // nng_listener_create creates a new listener, that is not yet started.
 NNG_DECL int nng_listener_create(nng_listener *, nng_socket, const char *);
+NNG_DECL int nng_listener_create_url(
+    nng_listener *, nng_socket, const nng_url *);
 
 // nng_dialer_start starts the endpoint dialing.  This is only possible if
 // the dialer is not already dialing.
