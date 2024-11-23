@@ -216,13 +216,12 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 	nni_dialer  *d;
 	int          rv;
 
-	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
 	    (tran->tran_dialer == NULL)) {
-		NNI_FREE_STRUCT(d);
 		return (NNG_ENOTSUP);
+	}
+	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
+		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_url_parse_inline(&d->d_url, url_str)) != 0) {
 		nni_url_fini(&d->d_url);

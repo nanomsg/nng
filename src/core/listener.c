@@ -204,13 +204,12 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	nni_listener *l;
 	int           rv;
 
-	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
 	    (tran->tran_listener == NULL)) {
-		NNI_FREE_STRUCT(l);
 		return (NNG_ENOTSUP);
+	}
+	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
+		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
 		nni_url_fini(&l->l_url);
