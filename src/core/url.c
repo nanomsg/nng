@@ -334,11 +334,6 @@ nni_url_parse_inline(nng_url *url, const char *raw)
 	char        c;
 	int         rv;
 
-	// TODO: remove this when NNG_OPT_URL is gone
-	if ((url->u_rawurl = nni_strdup(raw)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
 	// Grab the scheme.
 	s = raw;
 	for (len = 0; (c = s[len]) != ':'; len++) {
@@ -532,7 +527,6 @@ nng_url_parse(nng_url **urlp, const char *raw)
 void
 nni_url_fini(nng_url *url)
 {
-	nni_strfree(url->u_rawurl);
 	if (url->u_bufsz != 0) {
 		nni_free(url->u_buffer, url->u_bufsz);
 	}
@@ -623,13 +617,8 @@ nng_url_clone(nng_url **dstp, const nng_url *src)
 	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (URL_COPYSTR(dst->u_rawurl, src->u_rawurl)) {
-		NNI_FREE_STRUCT(dst);
-		return (NNG_ENOMEM);
-	}
 	if (src->u_bufsz != 0) {
 		if ((dst->u_buffer = nni_alloc(dst->u_bufsz)) == NULL) {
-			nni_strfree(dst->u_rawurl);
 			NNI_FREE_STRUCT(dst);
 			return (NNG_ENOMEM);
 		}

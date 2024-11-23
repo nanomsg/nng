@@ -299,7 +299,7 @@ inproc_dialer_init(void **epp, nng_url *url, nni_dialer *ndialer)
 	NNI_LIST_INIT(&ep->clients, inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
-	ep->addr = url->u_rawurl; // we match on the full URL.
+	ep->addr = url->u_path; // we match on the URL path.
 
 	*epp = ep;
 	return (0);
@@ -322,7 +322,7 @@ inproc_listener_init(void **epp, nng_url *url, nni_listener *nlistener)
 	NNI_LIST_INIT(&ep->clients, inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
-	ep->addr = url->u_rawurl; // we match on the full URL.
+	ep->addr = url->u_path; // we match on the path
 
 	*epp = ep;
 	return (0);

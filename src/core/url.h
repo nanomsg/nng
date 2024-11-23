@@ -14,7 +14,6 @@
 #include "core/defs.h"
 
 struct nng_url {
-	char       *u_rawurl;   // never NULL
 	const char *u_scheme;   // never NULL
 	const char *u_userinfo; // will be NULL if not specified
 	char       *u_hostname; // name only, will be "" if not specified
