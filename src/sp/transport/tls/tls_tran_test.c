@@ -55,7 +55,8 @@ test_tls_port_zero_bind(void)
 	nng_sockaddr    sa;
 	nng_listener    l;
 	nng_dialer      d;
-	char           *addr;
+	char            addr[NNG_MAXADDRSTRLEN];
+	const nng_url  *url;
 
 	c1 = tls_server_config();
 	c2 = tls_client_config();
@@ -64,7 +65,9 @@ test_tls_port_zero_bind(void)
 	NUTS_PASS(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0"));
 	NUTS_PASS(nng_listener_set_tls(l, c1));
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_string(l, NNG_OPT_URL, &addr));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	nng_url_sprintf(addr, sizeof(addr), url);
+	NUTS_MATCH(nng_url_scheme(url), "tls+tcp");
 	NUTS_TRUE(memcmp(addr, "tls+tcp://", 6) == 0);
 	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
@@ -73,7 +76,6 @@ test_tls_port_zero_bind(void)
 	NUTS_PASS(nng_dialer_create(&d, s2, addr));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
 	NUTS_PASS(nng_dialer_start(d, 0));
-	nng_strfree(addr);
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c1);
