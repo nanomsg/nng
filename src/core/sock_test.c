@@ -412,6 +412,46 @@ test_dialer_options(void)
 }
 
 void
+test_dialer_create_url(void)
+{
+	nng_socket     s1;
+	nng_dialer     d;
+	nng_url       *u;
+	const nng_url *u2;
+
+	NUTS_OPEN(s1);
+
+	NUTS_PASS(nng_url_parse(&u, "inproc://dialer_create_url"));
+	NUTS_PASS(nng_dialer_create_url(&d, s1, u));
+	NUTS_PASS(nng_dialer_get_url(d, &u2));
+	NUTS_MATCH(nng_url_scheme(u), nng_url_scheme(u2));
+	NUTS_MATCH(nng_url_path(u), nng_url_path(u2));
+	nng_url_free(u);
+	NUTS_CLOSE(s1);
+}
+
+void
+test_dial_url(void)
+{
+	nng_socket     s1;
+	nng_dialer     d;
+	nng_url       *u;
+	const nng_url *u2;
+
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_url_parse(&u, "inproc://dial_url"));
+
+	NUTS_PASS(nng_dial_url(s1, u, &d, NNG_FLAG_NONBLOCK));
+	nng_dialer_get_url(d, &u2);
+
+	NUTS_MATCH(nng_url_scheme(u), nng_url_scheme(u2));
+	NUTS_MATCH(nng_url_path(u), nng_url_path(u2));
+	nng_url_free(u);
+
+	NUTS_CLOSE(s1);
+}
+
+void
 test_endpoint_absent_options(void)
 {
 	size_t       s;
@@ -515,6 +555,8 @@ NUTS_TESTS = {
 	{ "listener create url", test_listener_create_url },
 	{ "listen url", test_listen_url },
 	{ "dialer options", test_dialer_options },
+	{ "dialer create url", test_dialer_create_url },
+	{ "dial url", test_dial_url },
 	{ "timeout options", test_timeout_options },
 	{ "size options", test_size_options },
 	{ "endpoint absent options", test_endpoint_absent_options },
