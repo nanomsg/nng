@@ -40,23 +40,25 @@ test_tcp_wild_card_bind(void)
 void
 test_tcp_port_zero_bind(void)
 {
-	nng_socket   s1;
-	nng_socket   s2;
-	nng_sockaddr sa;
-	nng_listener l;
-	char        *addr;
+	nng_socket     s1;
+	nng_socket     s2;
+	nng_sockaddr   sa;
+	nng_listener   l;
+	const nng_url *u;
+	char           addr[NNG_MAXADDRSTRLEN];
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_listen(s1, "tcp://127.0.0.1:0", &l, 0));
-	NUTS_PASS(nng_listener_get_string(l, NNG_OPT_URL, &addr));
+	NUTS_PASS(nng_listener_get_url(l, &u));
+	NUTS_MATCH(nng_url_scheme(u), "tcp");
+	nng_url_sprintf(addr, sizeof(addr), u);
 	NUTS_TRUE(memcmp(addr, "tcp://", 6) == 0);
 	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
 	NUTS_TRUE(sa.s_in.sa_port != 0);
 	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
 	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
-	nng_strfree(addr);
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
 }
