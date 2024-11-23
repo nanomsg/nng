@@ -58,27 +58,38 @@ test_udp_local_address_connect(void)
 void
 test_udp_port_zero_bind(void)
 {
-	nng_socket   s1;
-	nng_socket   s2;
-	nng_sockaddr sa;
-	nng_listener l;
-	char        *addr;
-	int          port;
+	nng_socket     s1;
+	nng_socket     s2;
+	nng_sockaddr   sa;
+	nng_listener   l;
+	nng_dialer     d;
+	char           addr[NNG_MAXADDRSTRLEN];
+	int            port;
+	const nng_url *u1;
+	const nng_url *u2;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_listen(s1, "udp://127.0.0.1:0", &l, 0));
 	nng_msleep(100);
-	NUTS_PASS(nng_listener_get_string(l, NNG_OPT_URL, &addr));
-	NUTS_TRUE(memcmp(addr, "udp://", 6) == 0);
+	NUTS_PASS(nng_listener_get_url(l, &u1));
+	NUTS_TRUE(nng_url_port(u1) != 0);
+	NUTS_MATCH(nng_url_scheme(u1), "udp");
+	NUTS_MATCH(nng_url_hostname(u1), "127.0.0.1");
+	NUTS_MATCH(nng_url_path(u1), "");
+	nng_url_sprintf(addr, sizeof(addr), u1);
 	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
-	NUTS_TRUE(sa.s_in.sa_port != 0);
+	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(nng_url_port(u1)));
 	NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
-	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d, 0));
+	NUTS_PASS(nng_dialer_get_url(d, &u2));
+	NUTS_MATCH(nng_url_scheme(u1), nng_url_scheme(u2));
+	NUTS_MATCH(nng_url_hostname(u1), nng_url_hostname(u2));
+	NUTS_MATCH(nng_url_path(u1), nng_url_path(u2));
+	NUTS_TRUE(nng_url_port(u1) == nng_url_port(u2));
 	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
-	NUTS_TRUE(port == nuts_be16(sa.s_in.sa_port));
-	nng_strfree(addr);
+	NUTS_TRUE(port == (int) nng_url_port(u1));
 
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
