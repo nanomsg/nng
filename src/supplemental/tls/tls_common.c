@@ -47,6 +47,7 @@ struct nng_tls_config {
 	nni_mtx                   lock;
 	int                       ref;
 	bool                      busy;
+	bool                      key_is_set;
 	size_t                    size;
 
 	// ... engine config data follows
@@ -1140,10 +1141,16 @@ nng_tls_config_own_cert(
 {
 	int rv;
 	nni_mtx_lock(&cfg->lock);
-	if (cfg->busy) {
+	// NB: we cannot set the key if we already have done so.
+	// This is because some lower layers create a "stack" of keys
+	// and certificates, and this will almost certainly lead to confusion.
+	if (cfg->busy || cfg->key_is_set) {
 		rv = NNG_EBUSY;
 	} else {
 		rv = cfg->ops.own_cert((void *) (cfg + 1), cert, key, pass);
+		if (rv == 0) {
+			cfg->key_is_set = true;
+		}
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);

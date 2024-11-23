@@ -27,6 +27,16 @@ tls_server_config(void)
 }
 
 static nng_tls_config *
+tls_server_config_ecdsa(void)
+{
+	nng_tls_config *c;
+	NUTS_PASS(nng_tls_config_alloc(&c, NNG_TLS_MODE_SERVER));
+	NUTS_PASS(nng_tls_config_own_cert(
+	    c, nuts_ecdsa_server_crt, nuts_ecdsa_server_key, NULL));
+	return (c);
+}
+
+static nng_tls_config *
 tls_config_psk(nng_tls_mode mode, const char *name, uint8_t *key, size_t len)
 {
 	nng_tls_config *c;
@@ -43,6 +53,17 @@ tls_client_config(void)
 	NUTS_PASS(nng_tls_config_own_cert(
 	    c, nuts_client_crt, nuts_client_key, NULL));
 	NUTS_PASS(nng_tls_config_ca_chain(c, nuts_server_crt, NULL));
+	return (c);
+}
+
+static nng_tls_config *
+tls_client_config_ecdsa(void)
+{
+	nng_tls_config *c;
+	NUTS_PASS(nng_tls_config_alloc(&c, NNG_TLS_MODE_CLIENT));
+	NUTS_PASS(nng_tls_config_own_cert(
+	    c, nuts_ecdsa_client_crt, nuts_ecdsa_client_key, NULL));
+	NUTS_PASS(nng_tls_config_ca_chain(c, nuts_ecdsa_server_crt, NULL));
 	return (c);
 }
 
@@ -110,13 +131,58 @@ test_tls_bad_cert_mutual(void)
 	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
+#ifdef NNG_TLS_ENGINE_MBEDTLS
 	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ECRYPTO);
+#else
+	// WolfSSL doesn't validate this here.
+	nng_dialer_start(d, 0);
+#endif
 	nng_msleep(50);
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c1);
 	nng_tls_config_free(c2);
 }
+
+void
+test_tls_cert_mutual(void)
+{
+	nng_socket      s1;
+	nng_socket      s2;
+	nng_tls_config *c1, *c2;
+	nng_sockaddr    sa;
+	nng_listener    l;
+	nng_dialer      d;
+	const nng_url  *url;
+
+	c1 = tls_server_config_ecdsa();
+	c2 = tls_client_config_ecdsa();
+
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_tls_config_auth_mode(c1, NNG_TLS_AUTH_MODE_REQUIRED));
+	NUTS_PASS(nng_tls_config_ca_chain(c1, nuts_ecdsa_server_crt, NULL));
+	NUTS_PASS(nng_tls_config_ca_chain(c2, nuts_ecdsa_server_crt, NULL));
+	NUTS_PASS(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, c1));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_MATCH(nng_url_scheme(url), "tls+tcp");
+	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_port != 0);
+	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
+	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
+	NUTS_PASS(nng_dialer_set_tls(d, c2));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	nng_msleep(50);
+	NUTS_CLOSE(s2);
+	NUTS_CLOSE(s1);
+	nng_tls_config_free(c1);
+	nng_tls_config_free(c2);
+}
+
 void
 test_tls_malformed_address(void)
 {
@@ -321,5 +387,6 @@ NUTS_TESTS = {
 	{ "tls recv max", test_tls_recv_max },
 	{ "tls pre-shared key", test_tls_psk },
 	{ "tsl bad cert mutual", test_tls_bad_cert_mutual },
+	{ "tsl cert mutual", test_tls_cert_mutual },
 	{ NULL, NULL },
 };

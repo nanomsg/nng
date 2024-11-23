@@ -98,6 +98,8 @@
 [`nng_recv`]: /TODO.md
 [`nng_listener_get_url`]: /TODO.md
 [`nng_dialer_get_url`]: /TODO.md
+[`nng_tls_config`]: /TODO.md
+[`nng_tls_config_own_cert`]: /TODO.md
 
 <!-- Macros -->
 

@@ -60,6 +60,13 @@ Support for very old TLS versions 1.0 and 1.1 is removed.
 Further, the `NNG_TLS_1_0` and `NNG_TLS_1_1` constants are also removed.
 Applications should use `NNG_TLS_1_2` or even `NNG_TLS_1_3` instead.
 
+## Only One TLS Key/Cert Per Configuration
+
+The ability to configure multiple keys and certificates for a given TLS configuration object is removed.
+(The [`nng_tls_config_own_cert`] will return [`NNG_EBUSY`] if it has already been called for the configuration.)
+The intended purpose was to support alternative cryptographic algorithms, but this is not necessary, was never
+used, and was error prone.
+
 ## Support for Local Addresses in Dial URLs Removed
 
 NNG 1.x had an undocumented ability to specify the local address to bind
