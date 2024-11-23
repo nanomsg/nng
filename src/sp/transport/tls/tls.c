@@ -62,7 +62,6 @@ struct tlstran_ep {
 	bool                 closed;
 	bool                 fini;
 	int                  refcnt;
-	nng_url             *url;
 	nni_list             pipes;
 	nni_reap_node        reap;
 	nng_stream_dialer   *dialer;
@@ -798,6 +797,7 @@ static int
 tlstran_ep_init(tlstran_ep **epp, nng_url *url, nni_sock *sock)
 {
 	tlstran_ep *ep;
+	NNI_ARG_UNUSED(url);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -808,7 +808,6 @@ tlstran_ep_init(tlstran_ep **epp, nng_url *url, nni_sock *sock)
 	NNI_LIST_INIT(&ep->negopipes, tlstran_pipe, node);
 
 	ep->proto = nni_sock_proto_id(sock);
-	ep->url   = url;
 
 #ifdef NNG_ENABLE_STATS
 	static const nni_stat_info rcv_max_info = {
@@ -1052,25 +1051,6 @@ tlstran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_type t)
 	return (rv);
 }
 
-static int
-tlstran_ep_get_url(void *arg, void *v, size_t *szp, nni_type t)
-{
-	tlstran_ep *ep = arg;
-	char       *s;
-	int         rv;
-	int         port = 0;
-
-	if (ep->listener != NULL) {
-		(void) nng_stream_listener_get_int(
-		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);
-	}
-	if ((rv = nni_url_asprintf_port(&s, ep->url, port)) == 0) {
-		rv = nni_copyout_str(s, v, szp, t);
-		nni_strfree(s);
-	}
-	return (rv);
-}
-
 static const nni_option tlstran_pipe_opts[] = {
 	// terminate list
 	{
@@ -1107,10 +1087,6 @@ static nni_option tlstran_ep_options[] = {
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = tlstran_ep_get_recvmaxsz,
 	    .o_set  = tlstran_ep_set_recvmaxsz,
-	},
-	{
-	    .o_name = NNG_OPT_URL,
-	    .o_get  = tlstran_ep_get_url,
 	},
 	// terminate list
 	{
