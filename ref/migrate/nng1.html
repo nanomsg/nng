@@ -348,13 +348,20 @@ certain methods variables <code>const</code> to avoid warnings about misuse of <
 <p>The use of <code>*</code> to act as a wild card meaning all local interface addresses
 is removed. The empty string already performs this function, and unlike
 <code>*</code> is RFC compliant.</p>
-<h2 id="url-structure-members"><a class="header" href="#url-structure-members">URL Structure Members</a></h2>
-<p>The details of <a href="/api/url.html#url-structure"><code>nng_url</code></a> have changed as follows:</p>
+<h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
+<p>The details of <a href="/api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct
+access of the structure is no longer permitted. Intead new
+accessors functions are provided:</p>
 <ul>
-<li><code>u_port</code> is no longer a string, but a <code>uint16_t</code></li>
-<li><code>u_scheme</code> is a <code>const char *</code></li>
+<li><code>u_scheme</code> is replaced by [<code>nng_url_scheme</code>].</li>
+<li><code>u_port</code> is replaced by [<code>nng_url_port</code>], but this returns a <code>uint16_t</code>.</li>
+<li><code>u_hostname</code> is replaced by [<code>nng_url_hostname</code>].</li>
+<li><code>u_path</code> is replaced by [<code>nng_url_path</code>].</li>
+<li><code>u_query</code> is replaced by [<code>nng_url_query</code>].</li>
+<li><code>u_fragment</code> is replaced by [<code>nng_url_fragment</code>].</li>
+<li><code>u_userinfo</code> is replaced by [<code>nng_url_userinfo</code>].</li>
 <li><code>u_requri</code> is removed - it can be easily formulated from the other fields.</li>
-<li><code>u_host</code> is removed - use <code>u_hostname</code> and <code>u_port</code> to construct if needed</li>
+<li><code>u_host</code> is removed - use [<code>nng_url_hostname</code>] and [<code>nng_url_port</code>] to construct if needed</li>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="/api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
 <!-- Symbol cross reference -->
