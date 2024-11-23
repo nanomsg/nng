@@ -485,6 +485,22 @@ test_sfd_fd_option_type(void)
 }
 
 void
+test_sfd_fd_invalid_fd(void)
+{
+#ifdef NNG_HAVE_SOCKETPAIR
+	nng_socket   s;
+	nng_listener l;
+
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listener_create(&l, s, "socket://"));
+	NUTS_FAIL(
+	    nng_listener_set_int(l, NNG_OPT_SOCKET_FD, -100), NNG_EINVAL);
+	NUTS_CLOSE(s);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
+}
+void
 test_sfd_fd_dev_zero(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
@@ -521,6 +537,7 @@ NUTS_TESTS = {
 	{ "socket pipe peer id", test_sockfd_pipe_peer },
 	{ "socket listen full", test_sfd_listen_full },
 	{ "socket bad fd type", test_sfd_fd_option_type },
+	{ "socket invalid fd", test_sfd_fd_invalid_fd },
 	{ "socket dev zero", test_sfd_fd_dev_zero },
 	{ NULL, NULL },
 };

@@ -137,8 +137,7 @@ sfd_listener_set_fd(void *arg, const void *buf, size_t sz, nni_type t)
 	int           fd;
 	int           rv;
 
-	if ((rv = nni_copyin_int(&fd, buf, sz, NNI_MININT, NNI_MAXINT, t)) !=
-	    0) {
+	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != 0) {
 		return (rv);
 	}
 
@@ -169,7 +168,7 @@ static int
 sfd_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(arg);
-	nng_sockaddr      sa;
+	nng_sockaddr sa;
 	sa.s_family = NNG_AF_UNSPEC;
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
@@ -181,7 +180,7 @@ static const nni_option sfd_listener_options[] = {
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get = sfd_listener_get_addr,
+	    .o_get  = sfd_listener_get_addr,
 	},
 	{
 	    .o_name = NULL,
