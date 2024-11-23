@@ -610,16 +610,10 @@ nni_url_asprintf_port(char **str, const nng_url *url, int port)
 #define URL_COPYSTR(d, s) ((s != NULL) && ((d = nni_strdup(s)) == NULL))
 
 int
-nng_url_clone(nng_url **dstp, const nng_url *src)
+nni_url_clone_inline(nng_url *dst, const nng_url *src)
 {
-	nng_url *dst;
-
-	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (src->u_bufsz != 0) {
 		if ((dst->u_buffer = nni_alloc(dst->u_bufsz)) == NULL) {
-			NNI_FREE_STRUCT(dst);
 			return (NNG_ENOMEM);
 		}
 		dst->u_bufsz = src->u_bufsz;
@@ -646,11 +640,26 @@ nng_url_clone(nng_url **dstp, const nng_url *src)
 	}
 	dst->u_scheme = src->u_scheme;
 	dst->u_port   = src->u_port;
-	*dstp         = dst;
 	return (0);
 }
 
 #undef URL_COPYSTR
+
+int
+nng_url_clone(nng_url **dstp, const nng_url *src)
+{
+	nng_url *dst;
+	int      rv;
+	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_url_clone_inline(dst, src) != 0)) {
+		NNI_FREE_STRUCT(dst);
+		return (rv);
+	}
+	*dstp = dst;
+	return (0);
+}
 
 // nni_url_to_address resolves a URL into a sockaddr, assuming the URL is for
 // an IP address.
