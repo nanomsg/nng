@@ -314,9 +314,11 @@ NNG_DECL int nng_listen(nng_socket, const char *, nng_listener *, int);
 // case, it will still be reconnected in the background -- only the initial
 // connection attempt is normally synchronous.)
 NNG_DECL int nng_dial(nng_socket, const char *, nng_dialer *, int);
+NNG_DECL int nng_dial_url(nng_socket, const nng_url *url, nng_dialer *, int);
 
 // nng_dialer_create creates a new dialer, that is not yet started.
 NNG_DECL int nng_dialer_create(nng_dialer *, nng_socket, const char *);
+NNG_DECL int nng_dialer_create_url(nng_dialer *, nng_socket, const nng_url *);
 
 // nng_listener_create creates a new listener, that is not yet started.
 NNG_DECL int nng_listener_create(nng_listener *, nng_socket, const char *);
@@ -729,6 +731,7 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_SENDTIMEO "send-timeout"
 #define NNG_OPT_LOCADDR "local-address"
 #define NNG_OPT_REMADDR "remote-address"
+#define NNG_OPT_URL "url"
 #define NNG_OPT_MAXTTL "ttl-max"
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"

@@ -12,13 +12,14 @@
 #ifndef CORE_DIALER_H
 #define CORE_DIALER_H
 
-extern int       nni_dialer_find(nni_dialer **, uint32_t);
-extern int       nni_dialer_hold(nni_dialer *);
-extern void      nni_dialer_rele(nni_dialer *);
-extern uint32_t  nni_dialer_id(nni_dialer *);
-extern int       nni_dialer_create(nni_dialer **, nni_sock *, const char *);
-extern void      nni_dialer_close(nni_dialer *);
-extern int       nni_dialer_start(nni_dialer *, unsigned);
+extern int      nni_dialer_find(nni_dialer **, uint32_t);
+extern int      nni_dialer_hold(nni_dialer *);
+extern void     nni_dialer_rele(nni_dialer *);
+extern uint32_t nni_dialer_id(nni_dialer *);
+extern int      nni_dialer_create(nni_dialer **, nni_sock *, const char *);
+extern int  nni_dialer_create_url(nni_dialer **, nni_sock *, const nng_url *);
+extern void nni_dialer_close(nni_dialer *);
+extern int  nni_dialer_start(nni_dialer *, unsigned);
 extern nni_sock *nni_dialer_sock(nni_dialer *);
 
 extern int nni_dialer_setopt(

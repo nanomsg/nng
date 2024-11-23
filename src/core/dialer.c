@@ -204,6 +204,80 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 #endif
 }
 
+static int
+nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
+{
+	int rv;
+
+	d->d_closed = false;
+	d->d_data   = NULL;
+	d->d_ref    = 1;
+	d->d_sock   = s;
+	d->d_tran   = tran;
+	nni_atomic_flag_reset(&d->d_started);
+
+	// Make a copy of the endpoint operations.  This allows us to
+	// modify them (to override NULLs for example), and avoids an extra
+	// dereference on hot paths.
+	d->d_ops = *tran->tran_dialer;
+
+	NNI_LIST_NODE_INIT(&d->d_node);
+	NNI_LIST_INIT(&d->d_pipes, nni_pipe, p_ep_node);
+
+	nni_mtx_init(&d->d_mtx);
+
+	nni_aio_init(&d->d_con_aio, dialer_connect_cb, d);
+	nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d);
+
+	nni_mtx_lock(&dialers_lk);
+	rv = nni_id_alloc32(&dialers, &d->d_id, d);
+	nni_mtx_unlock(&dialers_lk);
+
+#ifdef NNG_ENABLE_STATS
+	dialer_stats_init(d);
+#endif
+
+	if ((rv != 0) ||
+	    ((rv = d->d_ops.d_init(&d->d_data, &d->d_url, d)) != 0) ||
+	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
+		nni_mtx_lock(&dialers_lk);
+		nni_id_remove(&dialers, d->d_id);
+		nni_mtx_unlock(&dialers_lk);
+#ifdef NNG_ENABLE_STATS
+		nni_stat_unregister(&d->st_root);
+#endif
+		return (rv);
+	}
+
+	return (0);
+}
+
+int
+nni_dialer_create_url(nni_dialer **dp, nni_sock *s, const nng_url *url)
+{
+	nni_sp_tran *tran;
+	nni_dialer  *d;
+	int          rv;
+
+	if (((tran = nni_sp_tran_find(nng_url_scheme(url))) == NULL) ||
+	    (tran->tran_dialer == NULL)) {
+		return (NNG_ENOTSUP);
+	}
+	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_url_clone_inline(&d->d_url, url)) != 0) {
+		NNI_FREE_STRUCT(d);
+		return (rv);
+	}
+	if ((rv = nni_dialer_init(d, s, tran)) != 0) {
+		nni_dialer_destroy(d);
+		return (rv);
+	}
+	*dp = d;
+	return (0);
+}
+
 // nni_dialer_create creates a dialer on the socket.
 // The caller should have a hold on the socket, and on success
 // the dialer inherits the callers hold.  (If the caller wants
@@ -224,7 +298,6 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_url_parse_inline(&d->d_url, url_str)) != 0) {
-		nni_url_fini(&d->d_url);
 		NNI_FREE_STRUCT(d);
 		return (rv);
 	}

@@ -325,8 +325,8 @@ nni_url_default_port(const char *scheme)
 // Nanomsg URLs are always of the first form, we always require a
 // scheme with a leading //, such as http:// or tcp://. So our parser
 // is a bit more restricted, but sufficient for our needs.
-int
-nni_url_parse_inline(nng_url *url, const char *raw)
+static int
+nni_url_parse_inline_inner(nng_url *url, const char *raw)
 {
 	size_t      len;
 	const char *s;
@@ -508,6 +508,16 @@ nni_url_parse_inline(nng_url *url, const char *raw)
 }
 
 int
+nni_url_parse_inline(nng_url *url, const char *raw)
+{
+	int rv = nni_url_parse_inline_inner(url, raw);
+	if (rv != 0) {
+		nni_url_fini(url);
+	}
+	return (rv);
+}
+
+int
 nng_url_parse(nng_url **urlp, const char *raw)
 {
 	nng_url *url;
@@ -517,7 +527,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_url_parse_inline(url, raw)) != 0) {
-		nng_url_free(url);
+		NNI_FREE_STRUCT(url);
 		return (rv);
 	}
 	*urlp = url;
@@ -529,6 +539,8 @@ nni_url_fini(nng_url *url)
 {
 	if (url->u_bufsz != 0) {
 		nni_free(url->u_buffer, url->u_bufsz);
+		url->u_buffer = NULL;
+		url->u_bufsz  = 0;
 	}
 }
 

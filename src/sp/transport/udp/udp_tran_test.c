@@ -63,7 +63,6 @@ test_udp_port_zero_bind(void)
 	nng_sockaddr   sa;
 	nng_listener   l;
 	nng_dialer     d;
-	char           addr[NNG_MAXADDRSTRLEN];
 	int            port;
 	const nng_url *u1;
 	const nng_url *u2;
@@ -77,12 +76,11 @@ test_udp_port_zero_bind(void)
 	NUTS_MATCH(nng_url_scheme(u1), "udp");
 	NUTS_MATCH(nng_url_hostname(u1), "127.0.0.1");
 	NUTS_MATCH(nng_url_path(u1), "");
-	nng_url_sprintf(addr, sizeof(addr), u1);
 	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
 	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(nng_url_port(u1)));
 	NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
-	NUTS_PASS(nng_dial(s2, addr, &d, 0));
+	NUTS_PASS(nng_dial_url(s2, u1, &d, 0));
 	NUTS_PASS(nng_dialer_get_url(d, &u2));
 	NUTS_MATCH(nng_url_scheme(u1), nng_url_scheme(u2));
 	NUTS_MATCH(nng_url_hostname(u1), nng_url_hostname(u2));

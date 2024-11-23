@@ -172,10 +172,14 @@ test_tcp_keep_alive_option(void)
 	bool         v;
 	int          x;
 	char        *addr;
+	nng_url     *url;
 
 	NUTS_ADDR(addr, "tcp");
+	// next cases are just to exercise nng_dialer_create_url
+	NUTS_PASS(nng_url_parse(&url, addr));
 	NUTS_OPEN(s);
-	NUTS_PASS(nng_dialer_create(&d, s, addr));
+	NUTS_PASS(nng_dialer_create_url(&d, s, url));
+	nng_url_free(url);
 	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v));
 	NUTS_TRUE(v == false);
 	NUTS_PASS(nng_dialer_set_bool(d, NNG_OPT_TCP_KEEPALIVE, true));

@@ -41,7 +41,7 @@ nni_sp_tran_find(const char *url)
 	NNI_LIST_FOREACH (&sp_tran_list, t) {
 		size_t len = strlen(t->tran_scheme);
 		if ((strncmp(url, t->tran_scheme, len) == 0) &&
-		    (strncmp(url + len, "://", 3) == 0)) {
+		    (url[len] == ':' || url[len] == '\0')) {
 			nni_rwlock_unlock(&sp_tran_lk);
 			return (t);
 		}
