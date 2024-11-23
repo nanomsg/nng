@@ -24,7 +24,7 @@ name in the file system where the socket or named pipe should be created.
 
 > [!NOTE]
 > When using relative paths on POSIX systems, the address used and returned
-> in properties like `NNG_OPT_LOCADDR` and `NNG_OPT_URL` will also be relative.
+> in properties like `NNG_OPT_LOCADDR` will also be relative.
 > Consequently, they will only be interpreted the same by processes that have
 > the same working directory.
 > To ensure maximum portability and safety, absolute paths are recommended
@@ -84,7 +84,6 @@ where supported by the underlying platform.
 - [`NNG_OPT_PEER_PID`][NNG_OPT_PEER_PID]
 - [`NNG_OPT_PEER_UID`][NNG_OPT_PEER_UID]
 - [`NNG_OPT_PEER_ZONEID`][NNG_OPT_PEER_ZONEID]
-- [`NNG_OPT_URL`][NNG_OPT_URL]
 
 [NNG_OPT_IPC_PERMISSIONS]: TODO.md
 [NNG_OPT_IPC_SECURITY_DESCRIPTOR]: TODO.md
@@ -94,7 +93,6 @@ where supported by the underlying platform.
 [NNG_OPT_PEER_PID]: TODO.md
 [NNG_OPT_PEER_UID]: TODO.md
 [NNG_OPT_PEER_ZONEID]: TODO.md
-[NNG_OPT_URL]: TODO.md
 [sockaddr]: TODO.md
 [sockaddr_ipc]: TODO.md
 [sockaddr_abstract]: TODO.md

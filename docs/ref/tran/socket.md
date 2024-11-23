@@ -66,7 +66,6 @@ Additionally, the following options may be supported on pipes when the platform 
 [nng_socket_pair]: ../../api/misc.md#create-socket-pair
 [NNG_OPT_LOCADDR]: [TODO.md]
 [NNG_OPT_REMADDR]: [TODO.md]
-[NNG_OPT_URL]: [TODO.md]
 [NNG_OPT_PEER_GID]: [TODO.md]
 [NNG_OPT_PEER_PID]: [TODO.md]
 [NNG_OPT_PEER_UID]: [TODO.md]

@@ -166,6 +166,13 @@ The use of `*` to act as a wild card meaning all local interface addresses
 is removed. The empty string already performs this function, and unlike
 `*` is RFC compliant.
 
+## URL Option Removed
+
+The `NNG_OPT_URL` option has been removed.
+It is replaced by the type safe [`nng_dialer_get_url`] and
+[`nng_listener_get_url`] functions, which return an [`nng_url`]
+structure instead of a string.
+
 ## URL Structure Changes
 
 The details of [`nng_url`] have changed significantly, and direct

@@ -70,7 +70,6 @@ where supported by the underlying platform.
 
 - [`NNG_OPT_LOCADDR`][NNG_OPT_LOCADDR]
 - [`NNG_OPT_REMADDR`][NNG_OPT_REMADDR]
-- [`NNG_OPT_URL`][NNG_OPT_URL]
 
 TODO: Document other options.
 
@@ -109,5 +108,4 @@ TODO: Document the tunables for this.
 [nng_sockaddr_in6]: [TODO.md]
 [NNG_OPT_LOCADDR]: [TODO.md]
 [NNG_OPT_REMADDR]: [TODO.md]
-[NNG_OPT_URL]: [TODO.md]
 [NNG_OPT_RECVMAXSZ]: [TODO.md]
