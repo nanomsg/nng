@@ -186,7 +186,7 @@ struct nni_sp_tran {
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
-extern nni_sp_tran *nni_sp_tran_find(nng_url *);
+extern nni_sp_tran *nni_sp_tran_find(const char *);
 extern void         nni_sp_tran_sys_init(void);
 extern void         nni_sp_tran_sys_fini(void);
 extern void         nni_sp_tran_register(nni_sp_tran *);

@@ -207,16 +207,15 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
+	    (tran->tran_listener == NULL)) {
+		NNI_FREE_STRUCT(l);
+		return (NNG_ENOTSUP);
+	}
 	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
 		nni_url_fini(&l->l_url);
 		NNI_FREE_STRUCT(l);
 		return (rv);
-	}
-	if (((tran = nni_sp_tran_find(&l->l_url)) == NULL) ||
-	    (tran->tran_listener == NULL)) {
-		nni_url_fini(&l->l_url);
-		NNI_FREE_STRUCT(l);
-		return (NNG_ENOTSUP);
 	}
 	l->l_closed = false;
 	l->l_data   = NULL;

@@ -219,15 +219,15 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_url_parse_inline(&d->d_url, url_str)) != 0) {
-		NNI_FREE_STRUCT(d);
-		return (rv);
-	}
-	if (((tran = nni_sp_tran_find(&d->d_url)) == NULL) ||
+	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
 	    (tran->tran_dialer == NULL)) {
-		nni_url_fini(&d->d_url);
 		NNI_FREE_STRUCT(d);
 		return (NNG_ENOTSUP);
+	}
+	if ((rv = nni_url_parse_inline(&d->d_url, url_str)) != 0) {
+		nni_url_fini(&d->d_url);
+		NNI_FREE_STRUCT(d);
+		return (rv);
 	}
 	d->d_closed = false;
 	d->d_data   = NULL;

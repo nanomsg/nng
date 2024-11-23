@@ -32,14 +32,16 @@ nni_sp_tran_register(nni_sp_tran *tran)
 }
 
 nni_sp_tran *
-nni_sp_tran_find(nng_url *url)
+nni_sp_tran_find(const char *url)
 {
 	// address is of the form "<scheme>://blah..."
 	nni_sp_tran *t;
 
 	nni_rwlock_rdlock(&sp_tran_lk);
 	NNI_LIST_FOREACH (&sp_tran_list, t) {
-		if (strcmp(url->u_scheme, t->tran_scheme) == 0) {
+		size_t len = strlen(t->tran_scheme);
+		if ((strncmp(url, t->tran_scheme, len) == 0) &&
+		    (strncmp(url + len, "://", 3) == 0)) {
 			nni_rwlock_unlock(&sp_tran_lk);
 			return (t);
 		}

@@ -117,9 +117,9 @@ trantest_init(trantest *tt, const char *addr)
 	So(nng_rep_open(&tt->repsock) == 0);
 
 	nng_url *url;
-	So(nng_url_parse(&url, tt->addr) == 0);
-	tt->tran = nni_sp_tran_find(url);
+	tt->tran = nni_sp_tran_find(addr);
 	So(tt->tran != NULL);
+	So(nng_url_parse(&url, tt->addr) == 0);
 	nng_url_free(url);
 }
 
