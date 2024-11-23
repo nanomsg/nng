@@ -454,9 +454,6 @@ nni_dialer_setopt(
 {
 	nni_option *o;
 
-	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (NNG_EREADONLY);
-	}
 	if (strcmp(name, NNG_OPT_RECONNMAXT) == 0) {
 		int rv;
 		nni_mtx_lock(&d->d_mtx);
@@ -531,13 +528,6 @@ nni_dialer_getopt(
 			return (NNG_EWRITEONLY);
 		}
 		return (o->o_get(d->d_data, valp, szp, t));
-	}
-
-	// We provide a fallback on the URL, but let the implementation
-	// override.  This allows the URL to be created with wildcards,
-	// that are resolved later.
-	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (nni_copyout_str(d->d_url.u_rawurl, valp, szp, t));
 	}
 
 	return (nni_sock_getopt(d->d_sock, name, valp, szp, t));

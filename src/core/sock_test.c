@@ -341,10 +341,6 @@ test_listener_options(void)
 	// Cannot set inappropriate options
 	NUTS_FAIL(nng_listener_set_ms(l, NNG_OPT_RECONNMINT, 1), NNG_ENOTSUP);
 
-	// Read only options
-	NUTS_FAIL(nng_listener_set_string(l, NNG_OPT_URL, "inproc://junk"),
-	    NNG_EREADONLY);
-
 	NUTS_CLOSE(s1);
 }
 
@@ -369,10 +365,6 @@ test_dialer_options(void)
 
 	// Cannot set inappropriate options
 	NUTS_FAIL(nng_dialer_set_ms(d, NNG_OPT_SENDTIMEO, 1), NNG_ENOTSUP);
-
-	// Read only options
-	NUTS_FAIL(nng_dialer_set_string(d, NNG_OPT_URL, "inproc://junk"),
-	    NNG_EREADONLY);
 
 	NUTS_CLOSE(s1);
 }

@@ -430,10 +430,6 @@ nni_listener_setopt(
 {
 	nni_option *o;
 
-	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (NNG_EREADONLY);
-	}
-
 	if (l->l_ops.l_setopt != NULL) {
 		int rv = l->l_ops.l_setopt(l->l_data, name, val, sz, t);
 		if (rv != NNG_ENOTSUP) {
@@ -476,13 +472,6 @@ nni_listener_getopt(
 			return (NNG_EWRITEONLY);
 		}
 		return (o->o_get(l->l_data, val, szp, t));
-	}
-
-	// We provide a fallback on the URL, but let the implementation
-	// override.  This allows the URL to be created with wildcards,
-	// that are resolved later.
-	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (nni_copyout_str(l->l_url.u_rawurl, val, szp, t));
 	}
 
 	return (nni_sock_getopt(l->l_sock, name, val, szp, t));
