@@ -208,6 +208,7 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
+		nni_url_fini(&l->l_url);
 		NNI_FREE_STRUCT(l);
 		return (rv);
 	}
