@@ -390,8 +390,13 @@ nni_url_parse_inline(nng_url *url, const char *raw)
 	if ((strcmp(url->u_scheme, "ipc") == 0) ||
 	    (strcmp(url->u_scheme, "unix") == 0) ||
 	    (strcmp(url->u_scheme, "abstract") == 0) ||
-	    (strcmp(url->u_scheme, "inproc") == 0)) {
-		url->u_path = p;
+	    (strcmp(url->u_scheme, "inproc") == 0) ||
+	    (strcmp(url->u_scheme, "socket") == 0)) {
+		url->u_path     = p;
+		url->u_hostname = NULL;
+		url->u_query    = NULL;
+		url->u_fragment = NULL;
+		url->u_userinfo = NULL;
 		return (0);
 	}
 
@@ -553,7 +558,8 @@ nng_url_sprintf(char *str, size_t size, const nng_url *url)
 
 	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0) ||
 	    (strcmp(scheme, "unix") == 0) ||
-	    (strcmp(scheme, "abstract") == 0)) {
+	    (strcmp(scheme, "abstract") == 0) ||
+	    (strcmp(scheme, "socket") == 0)) {
 		return (snprintf(str, size, "%s://%s", scheme, url->u_path));
 	}
 

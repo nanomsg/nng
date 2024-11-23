@@ -10,6 +10,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <nng/nng.h>
 #include <nuts.h>
 
 #ifdef NNG_PLATFORM_POSIX
@@ -50,10 +51,20 @@ test_sfd_malformed_address(void)
 void
 test_sfd_listen(void)
 {
-	nng_socket s1;
+	nng_socket     s1;
+	nng_listener   l;
+	const nng_url *u;
 
 	NUTS_OPEN(s1);
-	NUTS_PASS(nng_listen(s1, "socket://", NULL, 0));
+	NUTS_PASS(nng_listen(s1, "socket://", &l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &u));
+	NUTS_MATCH(nng_url_scheme(u), "socket");
+	NUTS_MATCH(nng_url_path(u), "");
+	NUTS_NULL(nng_url_userinfo(u));
+	NUTS_NULL(nng_url_hostname(u));
+	NUTS_NULL(nng_url_query(u));
+	NUTS_NULL(nng_url_fragment(u));
+
 	NUTS_CLOSE(s1);
 }
 
