@@ -464,6 +464,62 @@ test_url_decode(void)
 	NUTS_TRUE(len == (size_t) -1);
 }
 
+void
+test_url_huge(void)
+{
+	nng_url *url = NULL;
+	char     huge1[8192];
+	char     huge2[8192];
+	char    *prefix = "http://example.com/";
+	size_t   len;
+
+	memset(huge1, 'a', sizeof huge1);
+	huge1[sizeof(huge1) - 1] = '\0';       // terminate it
+	memcpy(huge1, prefix, strlen(prefix)); // *NOT* including the \0
+
+	NUTS_PASS(nng_url_parse(&url, huge1));
+	NUTS_ASSERT(url != NULL);
+	NUTS_MATCH(nng_url_scheme(url), "http");
+	NUTS_MATCH(nng_url_hostname(url), "example.com");
+	NUTS_TRUE(nng_url_port(url) == 80);
+	NUTS_MATCH(
+	    nng_url_path(url), huge1 + strlen(prefix) - 1); // -1 for '/'
+	NUTS_NULL(nng_url_query(url));
+	NUTS_NULL(nng_url_fragment(url));
+	len = nng_url_sprintf(huge2, sizeof(huge2), url);
+	NUTS_TRUE(len == strlen(huge1));
+	NUTS_MATCH(huge2, huge1);
+	nng_url_free(url);
+}
+
+void
+test_url_huge_parts(void)
+{
+	nng_url *url = NULL;
+	char     huge1[8192];
+	char     huge2[8192];
+	char    *prefix = "http://example.com/path";
+	char    *frag   = "frag";
+	size_t   len;
+
+	memset(huge2, 'a', 4096);
+	huge2[4096] = '\0';
+	snprintf(huge1, sizeof(huge1), "%s?%s#%s", prefix, huge2, frag);
+
+	NUTS_PASS(nng_url_parse(&url, huge1));
+	NUTS_ASSERT(url != NULL);
+	NUTS_MATCH(nng_url_scheme(url), "http");
+	NUTS_MATCH(nng_url_hostname(url), "example.com");
+	NUTS_TRUE(nng_url_port(url) == 80);
+	NUTS_MATCH(nng_url_path(url), "/path");
+	NUTS_MATCH(nng_url_query(url), huge2);
+	NUTS_MATCH(nng_url_fragment(url), frag);
+	len = nng_url_sprintf(huge2, sizeof(huge2), url);
+	NUTS_TRUE(len == strlen(huge1));
+	NUTS_MATCH(huge2, huge1);
+	nng_url_free(url);
+}
+
 NUTS_TESTS = {
 	{ "url host", test_url_host },
 	{ "url host too long", test_url_host_too_long },
@@ -493,5 +549,7 @@ NUTS_TESTS = {
 	{ "url bad utf8", test_url_bad_utf8 },
 	{ "url good utf8", test_url_good_utf8 },
 	{ "url decode", test_url_decode },
+	{ "url huge", test_url_huge },
+	{ "url huge parts", test_url_huge_parts },
 	{ NULL, NULL },
 };
