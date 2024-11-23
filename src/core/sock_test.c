@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 void
@@ -286,28 +287,34 @@ test_bad_url(void)
 }
 
 void
-test_url_option(void)
+test_endpoint_url(void)
 {
-	nng_socket   s1;
-	char        *url;
-	nng_listener l;
-	nng_dialer   d;
+	nng_socket     s1;
+	nng_listener   l;
+	nng_dialer     d;
+	const nng_url *url;
 
 	NUTS_OPEN(s1);
 
 	// Listener
 	NUTS_PASS(nng_listener_create(&l, s1, "inproc://url1"));
-	NUTS_PASS(nng_listener_get_string(l, NNG_OPT_URL, &url));
-	NUTS_MATCH(url, "inproc://url1");
-	NUTS_FAIL(nng_listener_set_string(l, NNG_OPT_URL, url), NNG_EREADONLY);
-	nng_strfree(url);
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_MATCH(nng_url_scheme(url), "inproc");
+	NUTS_MATCH(nng_url_path(url), "url1");
+	NUTS_NULL(nng_url_hostname(url));
+	NUTS_NULL(nng_url_query(url));
+	NUTS_NULL(nng_url_userinfo(url));
+	NUTS_NULL(nng_url_fragment(url));
 
 	// Dialer
 	NUTS_PASS(nng_dialer_create(&d, s1, "inproc://url2"));
-	NUTS_PASS(nng_dialer_get_string(d, NNG_OPT_URL, &url));
-	NUTS_MATCH(url, "inproc://url2");
-	NUTS_FAIL(nng_dialer_set_string(d, NNG_OPT_URL, url), NNG_EREADONLY);
-	nng_strfree(url);
+	NUTS_PASS(nng_dialer_get_url(d, &url));
+	NUTS_MATCH(nng_url_scheme(url), "inproc");
+	NUTS_MATCH(nng_url_path(url), "url2");
+	NUTS_NULL(nng_url_hostname(url));
+	NUTS_NULL(nng_url_query(url));
+	NUTS_NULL(nng_url_userinfo(url));
+	NUTS_NULL(nng_url_fragment(url));
 
 	NUTS_CLOSE(s1);
 }
@@ -469,7 +476,7 @@ NUTS_TESTS = {
 	{ "late connection", test_late_connection },
 	{ "address busy", test_address_busy },
 	{ "bad url", test_bad_url },
-	{ "url option", test_url_option },
+	{ "endpoint url", test_endpoint_url },
 	{ "listener options", test_listener_options },
 	{ "dialer options", test_dialer_options },
 	{ "timeout options", test_timeout_options },
