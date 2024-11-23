@@ -1646,38 +1646,6 @@ udp_ep_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-udp_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	udp_ep      *ep = arg;
-	char        *s;
-	int          rv;
-	int          port = 0;
-	nng_sockaddr sa;
-
-	nni_mtx_lock(&ep->mtx);
-	if (ep->udp != NULL) {
-		(void) nni_udp_sockname(ep->udp, &sa);
-	} else {
-		sa = ep->self_sa;
-	}
-	switch (sa.s_family) {
-	case NNG_AF_INET:
-		NNI_GET16((uint8_t *) &sa.s_in.sa_port, port);
-		break;
-	case NNG_AF_INET6:
-		NNI_GET16((uint8_t *) &sa.s_in6.sa_port, port);
-		break;
-	}
-	if ((rv = nni_url_asprintf_port(&s, ep->url, port)) == 0) {
-		rv = nni_copyout_str(s, v, szp, t);
-		nni_strfree(s);
-	}
-	nni_mtx_unlock(&ep->mtx);
-
-	return (rv);
-}
-
-static int
 udp_ep_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	udp_ep      *ep = arg;
@@ -1872,10 +1840,6 @@ static const nni_option udp_ep_opts[] = {
 	    .o_name = NNG_OPT_UDP_COPY_MAX,
 	    .o_get  = udp_ep_get_copymax,
 	    .o_set  = udp_ep_set_copymax,
-	},
-	{
-	    .o_name = NNG_OPT_URL,
-	    .o_get  = udp_ep_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
