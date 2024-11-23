@@ -2001,18 +2001,6 @@ ws_listener_get_send_text(void *arg, void *buf, size_t *szp, nni_type t)
 	return (rv);
 }
 
-static int
-ws_listener_get_url(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	nni_ws_listener *l = arg;
-	int              rv;
-
-	nni_mtx_lock(&l->mtx);
-	rv = nni_copyout_str(l->url->u_rawurl, buf, szp, t);
-	nni_mtx_unlock(&l->mtx);
-	return (rv);
-}
-
 static const nni_option ws_listener_options[] = {
 	{
 	    .o_name = NNI_OPT_WS_MSGMODE,
@@ -2042,10 +2030,6 @@ static const nni_option ws_listener_options[] = {
 	    .o_name = NNG_OPT_WS_PROTOCOL,
 	    .o_set  = ws_listener_set_proto,
 	    .o_get  = ws_listener_get_proto,
-	},
-	{
-	    .o_name = NNG_OPT_URL,
-	    .o_get  = ws_listener_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_WS_RECV_TEXT,
