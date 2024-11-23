@@ -248,7 +248,7 @@ relative to the root directory.</p>
   note
 </p>
 <p>When using relative paths on POSIX systems, the address used and returned
-in properties like <code>NNG_OPT_LOCADDR</code> and <code>NNG_OPT_URL</code> will also be relative.
+in properties like <code>NNG_OPT_LOCADDR</code> will also be relative.
 Consequently, they will only be interpreted the same by processes that have
 the same working directory.
 To ensure maximum portability and safety, absolute paths are recommended
@@ -304,7 +304,6 @@ where supported by the underlying platform.</p>
 <li><a href="TODO.html"><code>NNG_OPT_PEER_PID</code></a></li>
 <li><a href="TODO.html"><code>NNG_OPT_PEER_UID</code></a></li>
 <li><a href="TODO.html"><code>NNG_OPT_PEER_ZONEID</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_URL</code></a></li>
 </ul>
 <p><hr/>
 <p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: The purpose of this scheme is to support a future transport making use of <code>AF_UNIX</code>

@@ -348,6 +348,11 @@ certain methods variables <code>const</code> to avoid warnings about misuse of <
 <p>The use of <code>*</code> to act as a wild card meaning all local interface addresses
 is removed. The empty string already performs this function, and unlike
 <code>*</code> is RFC compliant.</p>
+<h2 id="url-option-removed"><a class="header" href="#url-option-removed">URL Option Removed</a></h2>
+<p>The <code>NNG_OPT_URL</code> option has been removed.
+It is replaced by the type safe <a href="/TODO.html"><code>nng_dialer_get_url</code></a> and
+<a href="/TODO.html"><code>nng_listener_get_url</code></a> functions, which return an <a href="/api/url.html#url-structure"><code>nng_url</code></a>
+structure instead of a string.</p>
 <h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
 <p>The details of <a href="/api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct
 access of the structure is no longer permitted. Intead new
