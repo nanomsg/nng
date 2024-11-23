@@ -152,7 +152,7 @@ tls_log_warn(const char *msgid, const char *context, int errnum)
 {
 	char errbuf[256];
 	mbedtls_strerror(errnum, errbuf, sizeof(errbuf));
-	nng_log_warn(msgid, "%s: %s", context, errbuf);
+	nng_log_warn(msgid, "%s: %d - %s", context, errnum, errbuf);
 }
 
 // tls_mk_err converts an mbed error to an NNG error.
