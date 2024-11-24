@@ -240,7 +240,19 @@ error:
 	nni_aio_finish_error(aio, rv);
 }
 
+static int
+ipc_dialer_get_remaddr(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	ipc_dialer *d = arg;
+
+	return (nni_copyout_sockaddr(&d->sa, buf, szp, t));
+}
+
 static const nni_option ipc_dialer_options[] = {
+	{
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_get  = ipc_dialer_get_remaddr,
+	},
 	{
 	    .o_name = NULL,
 	},

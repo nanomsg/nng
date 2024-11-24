@@ -69,6 +69,8 @@ test_ipc_dialer_properties(void)
 	NUTS_FAIL(nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
 
 	NUTS_FAIL(nng_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
+	NUTS_PASS(nng_dialer_get_addr(d, NNG_OPT_REMADDR, &sa));
+	NUTS_TRUE(sa.s_family == NNG_AF_IPC);
 
 	z = 8192;
 	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));
@@ -144,6 +146,95 @@ test_ipc_listener_properties(void)
 }
 
 void
+test_ipc_ping_pong(void)
+{
+	nng_socket s0;
+	nng_socket s1;
+	char      *addr;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+
+	NUTS_MARRY_EX(s0, s1, addr, NULL, NULL);
+
+	NUTS_SEND(s0, "ping");
+	NUTS_RECV(s1, "ping");
+	NUTS_SEND(s1, "pong");
+	NUTS_RECV(s0, "pong");
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+}
+
+void
+test_ipc_ping_pong_many(void)
+{
+	nng_socket s0;
+	nng_socket s1;
+	char      *addr;
+
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+
+	NUTS_MARRY_EX(s0, s1, addr, NULL, NULL);
+
+	for (int i = 0; i < 100; i++) {
+		NUTS_SEND(s0, "ping");
+		NUTS_RECV(s1, "ping");
+		NUTS_SEND(s1, "pong");
+		NUTS_RECV(s0, "pong");
+	}
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+}
+
+void
+test_ipc_huge_msg(void)
+{
+	nng_socket s0;
+	nng_socket s1;
+	char      *addr;
+	nng_msg   *m;
+
+	NUTS_ADDR(addr, "ipc");
+	NUTS_PASS(nng_msg_alloc(&m, 1 << 20));
+	memset(nng_msg_body(m), 'a', 1 << 20);
+	NUTS_OPEN(s0);
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+
+	NUTS_MARRY_EX(s0, s1, addr, NULL, NULL);
+
+	NUTS_PASS(nng_sendmsg(s0, m, 0));
+	NUTS_PASS(nng_recvmsg(s1, &m, 0));
+
+	NUTS_TRUE(nng_msg_len(m) == 1 << 20);
+	char *body = nng_msg_body(m);
+	for (int i = 0; i < 1 << 20; i++) {
+		if (body[i] != 'a') {
+			NUTS_TRUE(body[i] == 'a');
+			break;
+		}
+	}
+	nng_msg_free(m);
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+}
+
+void
 test_ipc_recv_max(void)
 {
 	char         msg[256];
@@ -175,6 +266,23 @@ test_ipc_recv_max(void)
 	NUTS_FAIL(nng_recv(s0, rcvbuf, &sz, 0), NNG_ETIMEDOUT);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+}
+
+void
+test_ipc_connect_refused(void)
+{
+	nng_socket s0;
+	nng_dialer d;
+	char      *addr;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
+	NUTS_PASS(nng_dialer_create(&d, s0, addr));
+	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ECONNREFUSED);
+	NUTS_CLOSE(s0);
 }
 
 void
@@ -248,6 +356,22 @@ test_ipc_listen_accept_cancel(void)
 	nng_aio_free(aio);
 	nng_stream_listener_close(l);
 	nng_stream_listener_free(l);
+}
+
+void
+test_ipc_listen_duplicate(void)
+{
+	nng_socket s0;
+	char      *addr;
+
+	NUTS_ENABLE_LOG(NNG_LOG_INFO);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_listen(s0, addr, NULL, 0));
+	NUTS_FAIL(nng_listen(s0, addr, NULL, 0), NNG_EADDRINUSE);
+	NUTS_CLOSE(s0);
 }
 
 void
@@ -556,10 +680,15 @@ TEST_LIST = {
 	{ "ipc dialer props", test_ipc_dialer_properties },
 	{ "ipc listener perms", test_ipc_listener_perms },
 	{ "ipc listener props", test_ipc_listener_properties },
+	{ "ipc ping pong", test_ipc_ping_pong },
+	{ "ipc ping pong many", test_ipc_ping_pong_many },
+	{ "ipc huge msg", test_ipc_huge_msg },
 	{ "ipc recv max", test_ipc_recv_max },
+	{ "ipc connect refused", test_ipc_connect_refused },
 	{ "ipc connect blocking", test_ipc_connect_blocking },
 	{ "ipc connect blocking accept", test_ipc_connect_blocking_accept },
 	{ "ipc listen cleanup stale", test_ipc_listener_clean_stale },
+	{ "ipc listen duplicate", test_ipc_listen_duplicate },
 	{ "ipc listen accept cancel", test_ipc_listen_accept_cancel },
 	{ "ipc abstract sockets", test_abstract_sockets },
 	{ "ipc abstract auto bind", test_abstract_auto_bind },
