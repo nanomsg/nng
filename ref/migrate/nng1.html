@@ -265,6 +265,11 @@ rather than the supplemental header.</p>
 <p>Support for very old TLS versions 1.0 and 1.1 is removed.
 Further, the <code>NNG_TLS_1_0</code> and <code>NNG_TLS_1_1</code> constants are also removed.
 Applications should use <code>NNG_TLS_1_2</code> or even <code>NNG_TLS_1_3</code> instead.</p>
+<h2 id="only-one-tls-keycert-per-configuration"><a class="header" href="#only-one-tls-keycert-per-configuration">Only One TLS Key/Cert Per Configuration</a></h2>
+<p>The ability to configure multiple keys and certificates for a given TLS configuration object is removed.
+(The <a href="/TODO.html"><code>nng_tls_config_own_cert</code></a> will return <a href="/api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a> if it has already been called for the configuration.)
+The intended purpose was to support alternative cryptographic algorithms, but this is not necessary, was never
+used, and was error prone.</p>
 <h2 id="support-for-local-addresses-in-dial-urls-removed"><a class="header" href="#support-for-local-addresses-in-dial-urls-removed">Support for Local Addresses in Dial URLs Removed</a></h2>
 <p>NNG 1.x had an undocumented ability to specify the local address to bind
 to when dialing, by using the local address in front of the destination
