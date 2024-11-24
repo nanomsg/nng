@@ -507,12 +507,6 @@ nng_stream_dialer_set_ms(nng_stream_dialer *d, const char *n, nng_duration v)
 }
 
 int
-nng_stream_dialer_set_ptr(nng_stream_dialer *d, const char *n, void *v)
-{
-	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_POINTER));
-}
-
-int
 nng_stream_dialer_set_string(
     nng_stream_dialer *d, const char *n, const char *v)
 {
@@ -564,13 +558,6 @@ nng_stream_listener_set_ms(
 {
 	return (
 	    nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_DURATION));
-}
-
-int
-nng_stream_listener_set_ptr(nng_stream_listener *l, const char *n, void *v)
-{
-	return (
-	    nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_POINTER));
 }
 
 int

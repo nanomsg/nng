@@ -764,12 +764,6 @@ nng_dialer_set_ms(nng_dialer id, const char *n, nng_duration v)
 }
 
 int
-nng_dialer_set_ptr(nng_dialer id, const char *n, void *v)
-{
-	return (dialer_set(id, n, &v, sizeof(v), NNI_TYPE_POINTER));
-}
-
-int
 nng_dialer_set_string(nng_dialer id, const char *n, const char *v)
 {
 	return (dialer_set(
@@ -913,12 +907,6 @@ int
 nng_listener_set_ms(nng_listener id, const char *n, nng_duration v)
 {
 	return (listener_set(id, n, &v, sizeof(v), NNI_TYPE_DURATION));
-}
-
-int
-nng_listener_set_ptr(nng_listener id, const char *n, void *v)
-{
-	return (listener_set(id, n, &v, sizeof(v), NNI_TYPE_POINTER));
 }
 
 int

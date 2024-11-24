@@ -25,8 +25,6 @@ int nng_listener_set_int(nng_listener l, const char *opt, int ival);
 
 int nng_listener_set_ms(nng_listener l, const char *opt, nng_duration dur);
 
-int nng_listener_set_ptr(nng_listener l, const char *opt, void *ptr);
-
 int nng_listener_set_size(nng_listener l, const char *opt, size_t z);
 
 int nng_listener_set_string(nng_listener l, const char *opt, const char *str);
@@ -67,16 +65,6 @@ The _ival_ is passed to the option.
 This function is used to configure time durations (such as timeouts) using
 type xref:nng_duration.5.adoc[`nng_duration`].
 The duration _dur_ is an integer number of milliseconds.
-
-`nng_listener_set_ptr()`::
-This function is used to pass a pointer, _ptr_, to structured data.
-The data referenced by _ptr_ is generally managed by other functions.
-For example, TLS configuration objects created with
-(xref:nng_tls_config_alloc.3tls.adoc[`nng_tls_config_alloc()`])
-can be passed this way.
-
-NOTE: This form is somewhat special in that the object is generally
-not copied, but instead the *pointer* to the object is copied.
 
 `nng_listener_set_size()`::
 This function is used to configure a size, _z_, typically for buffer sizes,
