@@ -280,6 +280,16 @@ nni_stream_listener_set_tls(nng_stream_listener *l, nng_tls_config *cfg)
 }
 
 int
+nng_stream_listener_set_security_descriptor(
+    nng_stream_listener *l, void *pdesc)
+{
+	if (l->sl_set_security_descriptor == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (l->sl_set_security_descriptor(l, pdesc));
+}
+
+int
 nng_stream_listener_alloc_url(nng_stream_listener **lp, const nng_url *url)
 {
 	for (int i = 0; stream_drivers[i].scheme != NULL; i++) {

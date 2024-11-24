@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -72,12 +72,12 @@ test_ipc_security_descriptor(void)
 	NUTS_ASSERT(acl != NULL);
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
-	NUTS_PASS(nng_stream_listener_set_ptr(
-	    l, NNG_OPT_IPC_SECURITY_DESCRIPTOR, sd));
+	NUTS_PASS(nng_stream_listener_set_security_descriptor(l, sd));
 	NUTS_PASS(nng_stream_listener_listen(l));
 	nng_stream_listener_accept(l, aio);
 
-	(void) snprintf(pipe, sizeof(pipe), "\\\\.\\pipe\\%s", address+strlen("ipc://"));
+	(void) snprintf(
+	    pipe, sizeof(pipe), "\\\\.\\pipe\\%s", address + strlen("ipc://"));
 	HANDLE ph = CreateFileA(pipe, READ_CONTROL, 0, NULL, OPEN_EXISTING,
 	    FILE_FLAG_OVERLAPPED, NULL);
 
@@ -132,9 +132,8 @@ test_ipc_security_descriptor_busy(void)
 
 	NUTS_PASS(nng_stream_listener_listen(l));
 
-	NUTS_FAIL(nng_stream_listener_set_ptr(
-	              l, NNG_OPT_IPC_SECURITY_DESCRIPTOR, sd),
-	    NNG_EBUSY);
+	NUTS_FAIL(
+	    nng_stream_listener_set_security_descriptor(l, sd), NNG_EBUSY);
 
 	free(sd);
 	nng_stream_listener_close(l);
@@ -151,32 +150,11 @@ test_ipc_security_descriptor_bogus(void)
 
 	NUTS_PASS(nng_stream_listener_alloc(&l, address));
 
-	NUTS_FAIL(nng_stream_listener_set_ptr(
-	              l, NNG_OPT_IPC_SECURITY_DESCRIPTOR, NULL),
-	    NNG_EINVAL);
+	NUTS_FAIL(
+	    nng_stream_listener_set_security_descriptor(l, NULL), NNG_EINVAL);
 
 	nng_stream_listener_close(l);
 	nng_stream_listener_free(l);
-}
-
-void
-test_ipc_security_descriptor_dialer(void)
-{
-	nng_stream_dialer   *d;
-	char                 address[64];
-	SECURITY_DESCRIPTOR *sdesc;
-
-	nuts_scratch_addr("ipc", sizeof(address), address);
-	NUTS_PASS(nng_stream_dialer_alloc(&d, address));
-
-	sdesc = calloc(SECURITY_DESCRIPTOR_MIN_LENGTH, 1);
-	NUTS_ASSERT(sdesc != NULL);
-	InitializeSecurityDescriptor(sdesc, SECURITY_DESCRIPTOR_REVISION);
-	NUTS_FAIL(nng_stream_dialer_set_ptr(
-	              d, NNG_OPT_IPC_SECURITY_DESCRIPTOR, sdesc),
-	    NNG_ENOTSUP);
-	free(sdesc);
-	nng_stream_dialer_free(d);
 }
 
 NUTS_TESTS = {
@@ -184,7 +162,5 @@ NUTS_TESTS = {
 	{ "ipc security descriptor busy", test_ipc_security_descriptor_busy },
 	{ "ipc security descriptor bogus",
 	    test_ipc_security_descriptor_bogus },
-	{ "ipc security descriptor dialer",
-	    test_ipc_security_descriptor_dialer },
 	{ NULL, NULL },
 };

@@ -32,8 +32,10 @@ extern int nni_stream_listener_get(
     nng_stream_listener *, const char *, void *, size_t *, nni_type);
 extern int nni_stream_listener_set(
     nng_stream_listener *, const char *, const void *, size_t, nni_type);
-extern int nni_stream_listener_set_tls(nng_stream_listener *, nng_tls_config *);
-extern int nni_stream_listener_get_tls(nng_stream_listener *, nng_tls_config **);
+extern int nni_stream_listener_set_tls(
+    nng_stream_listener *, nng_tls_config *);
+extern int nni_stream_listener_get_tls(
+    nng_stream_listener *, nng_tls_config **);
 
 // This is the common implementation of a connected byte stream.  It should be
 // the first element of any implementation.  Applications are not permitted to
@@ -69,6 +71,7 @@ struct nng_stream_listener {
 	int (*sl_set)(void *, const char *, const void *, size_t, nni_type);
 	int (*sl_get_tls)(void *, nng_tls_config **);
 	int (*sl_set_tls)(void *, nng_tls_config *);
+	int (*sl_set_security_descriptor)(void *, void *);
 };
 
 #endif // CORE_STREAM_H

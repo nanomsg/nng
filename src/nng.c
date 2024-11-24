@@ -1024,6 +1024,19 @@ nng_listener_set_tls(nng_listener id, nng_tls_config *cfg)
 }
 
 int
+nng_listener_set_security_descriptor(nng_listener id, void *cfg)
+{
+	int           rv;
+	nni_listener *l;
+	if ((rv = nni_listener_find(&l, id.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_listener_set_security_descriptor(l, cfg);
+	nni_listener_rele(l);
+	return (rv);
+}
+
+int
 nng_dialer_get_url(nng_dialer id, const nng_url **urlp)
 {
 	int         rv;

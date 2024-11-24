@@ -25,7 +25,6 @@ nng_ipc_options - IPC-specific options
 #define NNG_OPT_IPC_PEER_UID            "ipc:peer-uid"
 #define NNG_OPT_IPC_PEER_ZONEID         "ipc:peer-zoneid"
 #define NNG_OPT_IPC_PERMISSIONS         "ipc:permissions"
-#define NNG_OPT_IPC_SECURITY_DESCRIPTOR "ipc:security-descriptor"
 ----
 
 == DESCRIPTION
@@ -75,6 +74,7 @@ permission.
 
 [[NNG_OPT_IPC_SECURITY_DESCRIPTOR]]((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
 (`PSECURITY_DESCRIPTOR`)
+TODO: REWRITE THIS TO REFLECT new nng_listener_get_security_security_descriptor.
 This write-only option may be used on listeners on Windows platforms to
 configure the `SECURITY_DESCRIPTOR` that is used when creating the underlying
 named pipe.

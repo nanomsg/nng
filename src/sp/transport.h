@@ -103,6 +103,9 @@ struct nni_sp_listener_ops {
 	// This may be NULL if this listener does not support TLS.
 	int (*l_set_tls)(void *, nng_tls_config *);
 
+	// l_set_security_descriptor is used exclusively on Windows.
+	int (*l_set_security_descriptor)(void *, void *);
+
 	// l_options is an array of listener options.  The final
 	// element must have a NULL name. If this member is NULL, then
 	// no dialer specific options are available.

@@ -378,6 +378,7 @@ NNG_DECL int nng_listener_set_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_set_addr(
     nng_listener, const char *, const nng_sockaddr *);
 NNG_DECL int nng_listener_set_tls(nng_listener, nng_tls_config *);
+NNG_DECL int nng_listener_set_security_descriptor(nng_listener, void *);
 NNG_DECL int nng_listener_get_url(nng_listener id, const nng_url **urlp);
 
 NNG_DECL int nng_listener_get_bool(nng_listener, const char *, bool *);
@@ -794,11 +795,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // IPC options.  These will largely vary depending on the platform,
 // as POSIX systems have very different options than Windows.
-
-// Security Descriptor.  This option may only be set on listeners
-// on the Windows platform, where the object is a pointer to a
-// a Windows SECURITY_DESCRIPTOR.
-#define NNG_OPT_IPC_SECURITY_DESCRIPTOR "ipc:security-descriptor"
 
 // Permissions bits.  This option is only valid for listeners on
 // POSIX platforms and others that honor UNIX style permission bits.
@@ -1238,6 +1234,11 @@ NNG_DECL int nng_stream_listener_get_tls(
     nng_stream_listener *, nng_tls_config **);
 NNG_DECL int nng_stream_listener_set_tls(
     nng_stream_listener *, nng_tls_config *);
+
+// Security Descriptor only valid for IPC streams on Windows
+// Parameter is a PSECURITY_DESCRIPTOR.
+NNG_DECL int nng_stream_listener_set_security_descriptor(
+    nng_stream_listener *, void *);
 
 // UDP operations.  These are provided for convenience,
 // and should be considered somewhat experimental.

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -19,9 +19,8 @@ test_ipc_win_sec(void)
 
 	nuts_scratch_addr("ipc", sizeof(address), address);
 	NUTS_PASS(nng_stream_listener_alloc(&l, address));
-	NUTS_FAIL(nng_stream_listener_set_ptr(
-	              l, NNG_OPT_IPC_SECURITY_DESCRIPTOR, &x),
-	    NNG_ENOTSUP);
+	NUTS_FAIL(
+	    nng_stream_listener_set_security_descriptor(l, &x), NNG_ENOTSUP);
 	nng_stream_listener_free(l);
 }
 

@@ -67,9 +67,9 @@ prevent unauthorized access, or that checks against the peer credentials are mad
 
 ### Socket Address
 
-When using an [`nng_sockaddr`][sockaddr] structure,
-the actual structure is of type [`nng_sockaddr_ipc`][sockaddr_ipc],
-except for abstract sockets, which use [`nng_sockaddr_abstract`][sockaddr_abstract].
+When using an [`nng_sockaddr`] structure,
+the actual structure is of type [`nng_sockaddr_ipc`],
+except for abstract sockets, which use [`nng_sockaddr_abstract`].
 
 ### Transport Options
 
@@ -77,7 +77,6 @@ The following transport options are supported by this transport,
 where supported by the underlying platform.
 
 - [`NNG_OPT_IPC_PERMISSIONS`][NNG_OPT_IPC_PERMISSIONS]
-- [`NNG_OPT_IPC_SECURITY_DESCRIPTOR`][NNG_OPT_IPC_SECURITY_DESCRIPTOR]
 - [`NNG_OPT_LOCADDR`][NNG_OPT_LOCADDR]
 - [`NNG_OPT_REMADDR`][NNG_OPT_REMADDR]
 - [`NNG_OPT_PEER_GID`][NNG_OPT_PEER_GID]
@@ -85,14 +84,10 @@ where supported by the underlying platform.
 - [`NNG_OPT_PEER_UID`][NNG_OPT_PEER_UID]
 - [`NNG_OPT_PEER_ZONEID`][NNG_OPT_PEER_ZONEID]
 
-[NNG_OPT_IPC_PERMISSIONS]: TODO.md
-[NNG_OPT_IPC_SECURITY_DESCRIPTOR]: TODO.md
-[NNG_OPT_LOCADDR]: TODO.md
-[NNG_OPT_REMADDR]: TODO.md
-[NNG_OPT_PEER_GID]: TODO.md
-[NNG_OPT_PEER_PID]: TODO.md
-[NNG_OPT_PEER_UID]: TODO.md
-[NNG_OPT_PEER_ZONEID]: TODO.md
-[sockaddr]: TODO.md
-[sockaddr_ipc]: TODO.md
-[sockaddr_abstract]: TODO.md
+### Other Configuration Parameters
+
+On Windows systems, the security descriptor for the listener,
+which can be used to control access, can be set using the function
+[`nng_listener_set_security_descriptor`].
+
+{{#include ../xref.md}}

@@ -132,15 +132,11 @@ ipc_accept_cb(nni_win_io *io, int rv, size_t cnt)
 }
 
 static int
-ipc_listener_set_sec_desc(void *arg, const void *buf, size_t sz, nni_type t)
+ipc_listener_set_sec_desc(void *arg, void *desc)
 {
 	ipc_listener *l = arg;
-	void         *desc;
 	int           rv;
 
-	if ((rv = nni_copyin_ptr(&desc, buf, sz, t)) != 0) {
-		return (rv);
-	}
 	if (!IsValidSecurityDescriptor((SECURITY_DESCRIPTOR *) desc)) {
 		return (NNG_EINVAL);
 	}
@@ -162,10 +158,6 @@ ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static const nni_option ipc_listener_options[] = {
-	{
-	    .o_name = NNG_OPT_IPC_SECURITY_DESCRIPTOR,
-	    .o_set  = ipc_listener_set_sec_desc,
-	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
 	    .o_get  = ipc_listener_get_addr,
@@ -339,6 +331,7 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	l->sl.sl_accept                  = ipc_listener_accept;
 	l->sl.sl_get                     = ipc_listener_get;
 	l->sl.sl_set                     = ipc_listener_set;
+	l->sl.sl_set_security_descriptor = ipc_listener_set_sec_desc;
 	snprintf(l->sa.s_ipc.sa_path, NNG_MAXADDRLEN, "%s", url->u_path);
 	nni_aio_list_init(&l->aios);
 	nni_mtx_init(&l->mtx);

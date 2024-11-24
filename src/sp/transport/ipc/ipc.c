@@ -13,6 +13,7 @@
 
 #include "core/defs.h"
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or
@@ -1106,6 +1107,15 @@ ipc_listener_set(
 	return (rv);
 }
 
+static int
+ipc_listener_set_sec_desc(void *arg, void *pdesc)
+{
+	ipc_ep *ep = arg;
+
+	return (
+	    nng_stream_listener_set_security_descriptor(ep->listener, pdesc));
+}
+
 static nni_sp_dialer_ops ipc_dialer_ops = {
 	.d_init    = ipc_ep_init_dialer,
 	.d_fini    = ipc_ep_fini,
@@ -1116,13 +1126,14 @@ static nni_sp_dialer_ops ipc_dialer_ops = {
 };
 
 static nni_sp_listener_ops ipc_listener_ops = {
-	.l_init   = ipc_ep_init_listener,
-	.l_fini   = ipc_ep_fini,
-	.l_bind   = ipc_ep_bind,
-	.l_accept = ipc_ep_accept,
-	.l_close  = ipc_ep_close,
-	.l_getopt = ipc_listener_get,
-	.l_setopt = ipc_listener_set,
+	.l_init                    = ipc_ep_init_listener,
+	.l_fini                    = ipc_ep_fini,
+	.l_bind                    = ipc_ep_bind,
+	.l_accept                  = ipc_ep_accept,
+	.l_close                   = ipc_ep_close,
+	.l_getopt                  = ipc_listener_get,
+	.l_setopt                  = ipc_listener_set,
+	.l_set_security_descriptor = ipc_listener_set_sec_desc,
 };
 
 static nni_sp_tran ipc_tran = {

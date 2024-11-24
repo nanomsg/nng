@@ -532,6 +532,15 @@ nni_listener_set_tls(nni_listener *l, nng_tls_config *cfg)
 	return (l->l_ops.l_set_tls(l->l_data, cfg));
 }
 
+int
+nni_listener_set_security_descriptor(nni_listener *l, void *desc)
+{
+	if (l->l_ops.l_set_security_descriptor == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (l->l_ops.l_set_security_descriptor(l->l_data, desc));
+}
+
 nng_url *
 nni_listener_url(nni_listener *l)
 {

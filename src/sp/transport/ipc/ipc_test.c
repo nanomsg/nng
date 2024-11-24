@@ -674,6 +674,26 @@ test_ipc_pipe_peer(void)
 #endif // NNG_PLATFORM_POSIX
 }
 
+void
+test_ipc_security_descriptor(void)
+{
+	nng_socket   s;
+	nng_listener l;
+	char        *addr;
+
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listener_create(&l, s, addr));
+#ifdef NNG_PLATFORM_WINDOWS
+	// not a security descriptor
+	NUTS_FAIL(nng_listener_set_security_descriptor(l, addr), NNG_EINVAL);
+#else
+	// not appropriate
+	NUTS_FAIL(nng_listener_set_security_descriptor(l, addr), NNG_ENOTSUP);
+#endif
+	NUTS_CLOSE(s);
+}
+
 TEST_LIST = {
 	{ "ipc path too long", test_path_too_long },
 	{ "ipc dialer perms", test_ipc_dialer_perms },
@@ -696,5 +716,6 @@ TEST_LIST = {
 	{ "ipc abstract embedded null", test_abstract_null },
 	{ "ipc unix alias", test_unix_alias },
 	{ "ipc peer id", test_ipc_pipe_peer },
+	{ "ipc security descriptor", test_ipc_security_descriptor },
 	{ NULL, NULL },
 };

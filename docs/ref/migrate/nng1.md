@@ -209,4 +209,15 @@ accessors functions are provided:
 - `u_host` is removed - use [`nng_url_hostname`] and [`nng_url_port`] to construct if needed
 - `u_rawurl` is removed - a "cooked" URL can be obtained from the new [`nng_url_sprintf`] function.
 
+## Security Descriptors (Windows Only)
+
+The `NNG_OPT_IPC_SECURITY_DESCRIPTOR` option is removed, and replaced
+with the functions [`nng_listener_get_security_descriptor`] and
+[`nng_stream_listener_get_security_descriptor`].
+
+Security descriptor support is only relevant to Windows,
+and is presently only supported for IPC when Named Pipes are used.
+Planned future changes to switch to UNIX domain sockets may eliminate
+support for security descriptors altogether in NNG.
+
 {{#include ../xref.md}}
