@@ -289,10 +289,15 @@ and are thus removed:</p>
 <ul>
 <li><code>nng_ctx_get_string</code></li>
 <li><code>nng_ctx_set_string</code></li>
+<li><code>nng_dialer_set_ptr</code></li>
+<li><code>nng_listener_set_ptr</code></li>
 <li><code>nng_socket_get_ptr</code></li>
 <li><code>nng_socket_set_ptr</code></li>
 <li><code>nng_socket_get_string</code></li>
 <li><code>nng_socket_set_string</code></li>
+<li><code>nng_stream_set_ptr</code></li>
+<li><code>nng_stream_dialer_set_ptr</code></li>
+<li><code>nng_stream_listener_set_ptr</code></li>
 <li><code>nng_ctx_get_ptr</code> (not documented)</li>
 <li><code>nng_ctx_set_ptr</code> (not documented)</li>
 </ul>
@@ -386,6 +391,14 @@ accessors functions are provided:</p>
 <li><code>u_host</code> is removed - use [<code>nng_url_hostname</code>] and [<code>nng_url_port</code>] to construct if needed</li>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="/api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
+<h2 id="security-descriptors-windows-only"><a class="header" href="#security-descriptors-windows-only">Security Descriptors (Windows Only)</a></h2>
+<p>The <code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code> option is removed, and replaced
+with the functions [<code>nng_listener_get_security_descriptor</code>] and
+[<code>nng_stream_listener_get_security_descriptor</code>].</p>
+<p>Security descriptor support is only relevant to Windows,
+and is presently only supported for IPC when Named Pipes are used.
+Planned future changes to switch to UNIX domain sockets may eliminate
+support for security descriptors altogether in NNG.</p>
 <!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->

@@ -5130,31 +5130,39 @@ For example, the name <code>"a\0b"</code> would be represented as <code>abstract
 </p>
 <p>An empty name may be used with a listener to request “auto bind” be used to select a name.
 In this case the system will allocate a free name.
-The name assigned may be retrieved using <a href="tran/TODO.html"><a name="a009"></a><code>NNG_OPT_LOCADDR</code></a>.</p>
+The name assigned may be retrieved using [<a name="a009"></a><code>NNG_OPT_LOCADDR</code>][NNG_OPT_LOCADDR].</p>
 </div>
 <p>Abstract names do not include the leading <code>NUL</code> byte used in the low-level socket address.</p>
 <p>Abstract sockets do not have any representation in the file system, and are automatically freed by
 the system when no longer in use.</p>
 <p>Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
-of the peer with <a href="tran/TODO.html"><a name="a010"></a><code>NNG_OPT_PEER_UID</code></a>, and similar options.
+of the peer with [<a name="a010"></a><code>NNG_OPT_PEER_UID</code>][NNG_OPT_PEER_UID], and similar options.
 <sup><a name="to-footnote-2"><a href="tran/ipc.html#footnote-2">2</a></a></sup></p>
 <h3 id="socket-address-1"><a class="header" href="#socket-address-1">Socket Address</a></h3>
-<p>When using an <a href="tran/TODO.html"><code>nng_sockaddr</code></a> structure,
-the actual structure is of type <a href="tran/TODO.html"><code>nng_sockaddr_ipc</code></a>,
-except for abstract sockets, which use <a href="tran/TODO.html"><code>nng_sockaddr_abstract</code></a>.</p>
+<p>When using an [<code>nng_sockaddr</code>] structure,
+the actual structure is of type [<code>nng_sockaddr_ipc</code>],
+except for abstract sockets, which use [<code>nng_sockaddr_abstract</code>].</p>
 <h3 id="transport-options-1"><a class="header" href="#transport-options-1">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <ul>
-<li><a href="tran/TODO.html"><code>NNG_OPT_IPC_PERMISSIONS</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_LOCADDR</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_REMADDR</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_PEER_GID</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_PEER_PID</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_PEER_UID</code></a></li>
-<li><a href="tran/TODO.html"><code>NNG_OPT_PEER_ZONEID</code></a></li>
+<li>[<code>NNG_OPT_IPC_PERMISSIONS</code>][NNG_OPT_IPC_PERMISSIONS]</li>
+<li>[<code>NNG_OPT_LOCADDR</code>][NNG_OPT_LOCADDR]</li>
+<li>[<code>NNG_OPT_REMADDR</code>][NNG_OPT_REMADDR]</li>
+<li>[<code>NNG_OPT_PEER_GID</code>][NNG_OPT_PEER_GID]</li>
+<li>[<code>NNG_OPT_PEER_PID</code>][NNG_OPT_PEER_PID]</li>
+<li>[<code>NNG_OPT_PEER_UID</code>][NNG_OPT_PEER_UID]</li>
+<li>[<code>NNG_OPT_PEER_ZONEID</code>][NNG_OPT_PEER_ZONEID]</li>
 </ul>
+<h3 id="other-configuration-parameters"><a class="header" href="#other-configuration-parameters">Other Configuration Parameters</a></h3>
+<p>On Windows systems, the security descriptor for the listener,
+which can be used to control access, can be set using the function
+<a href="tran//TODO.html"><code>nng_listener_set_security_descriptor</code></a>.</p>
+<!-- Symbol cross reference -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <p><hr/>
 <p><a name="footnote-1"><a href="tran/ipc.html#to-footnote-1">1</a></a>: The purpose of this scheme is to support a future transport making use of <code>AF_UNIX</code>
 on Windows systems, at which time it will be necessary to discriminate between the Named Pipes and the <code>AF_UNIX</code> based transports.</p>
@@ -5653,10 +5661,15 @@ and are thus removed:</p>
 <ul>
 <li><code>nng_ctx_get_string</code></li>
 <li><code>nng_ctx_set_string</code></li>
+<li><code>nng_dialer_set_ptr</code></li>
+<li><code>nng_listener_set_ptr</code></li>
 <li><code>nng_socket_get_ptr</code></li>
 <li><code>nng_socket_set_ptr</code></li>
 <li><code>nng_socket_get_string</code></li>
 <li><code>nng_socket_set_string</code></li>
+<li><code>nng_stream_set_ptr</code></li>
+<li><code>nng_stream_dialer_set_ptr</code></li>
+<li><code>nng_stream_listener_set_ptr</code></li>
 <li><code>nng_ctx_get_ptr</code> (not documented)</li>
 <li><code>nng_ctx_set_ptr</code> (not documented)</li>
 </ul>
@@ -5750,6 +5763,14 @@ accessors functions are provided:</p>
 <li><code>u_host</code> is removed - use [<code>nng_url_hostname</code>] and [<code>nng_url_port</code>] to construct if needed</li>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="migrate//api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
+<h2 id="security-descriptors-windows-only"><a class="header" href="#security-descriptors-windows-only">Security Descriptors (Windows Only)</a></h2>
+<p>The <code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code> option is removed, and replaced
+with the functions [<code>nng_listener_get_security_descriptor</code>] and
+[<code>nng_stream_listener_get_security_descriptor</code>].</p>
+<p>Security descriptor support is only relevant to Windows,
+and is presently only supported for IPC when Named Pipes are used.
+Planned future changes to switch to UNIX domain sockets may eliminate
+support for security descriptors altogether in NNG.</p>
 <!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->

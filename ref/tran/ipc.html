@@ -280,31 +280,39 @@ For example, the name <code>"a\0b"</code> would be represented as <code>abstract
 </p>
 <p>An empty name may be used with a listener to request “auto bind” be used to select a name.
 In this case the system will allocate a free name.
-The name assigned may be retrieved using <a href="TODO.html"><a name="a009"></a><code>NNG_OPT_LOCADDR</code></a>.</p>
+The name assigned may be retrieved using [<a name="a009"></a><code>NNG_OPT_LOCADDR</code>][NNG_OPT_LOCADDR].</p>
 </div>
 <p>Abstract names do not include the leading <code>NUL</code> byte used in the low-level socket address.</p>
 <p>Abstract sockets do not have any representation in the file system, and are automatically freed by
 the system when no longer in use.</p>
 <p>Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
-of the peer with <a href="TODO.html"><a name="a010"></a><code>NNG_OPT_PEER_UID</code></a>, and similar options.
+of the peer with [<a name="a010"></a><code>NNG_OPT_PEER_UID</code>][NNG_OPT_PEER_UID], and similar options.
 <sup><a name="to-footnote-2"><a href="#footnote-2">2</a></a></sup></p>
 <h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
-<p>When using an <a href="TODO.html"><code>nng_sockaddr</code></a> structure,
-the actual structure is of type <a href="TODO.html"><code>nng_sockaddr_ipc</code></a>,
-except for abstract sockets, which use <a href="TODO.html"><code>nng_sockaddr_abstract</code></a>.</p>
+<p>When using an [<code>nng_sockaddr</code>] structure,
+the actual structure is of type [<code>nng_sockaddr_ipc</code>],
+except for abstract sockets, which use [<code>nng_sockaddr_abstract</code>].</p>
 <h3 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <ul>
-<li><a href="TODO.html"><code>NNG_OPT_IPC_PERMISSIONS</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_LOCADDR</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_REMADDR</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_PEER_GID</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_PEER_PID</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_PEER_UID</code></a></li>
-<li><a href="TODO.html"><code>NNG_OPT_PEER_ZONEID</code></a></li>
+<li>[<code>NNG_OPT_IPC_PERMISSIONS</code>][NNG_OPT_IPC_PERMISSIONS]</li>
+<li>[<code>NNG_OPT_LOCADDR</code>][NNG_OPT_LOCADDR]</li>
+<li>[<code>NNG_OPT_REMADDR</code>][NNG_OPT_REMADDR]</li>
+<li>[<code>NNG_OPT_PEER_GID</code>][NNG_OPT_PEER_GID]</li>
+<li>[<code>NNG_OPT_PEER_PID</code>][NNG_OPT_PEER_PID]</li>
+<li>[<code>NNG_OPT_PEER_UID</code>][NNG_OPT_PEER_UID]</li>
+<li>[<code>NNG_OPT_PEER_ZONEID</code>][NNG_OPT_PEER_ZONEID]</li>
 </ul>
+<h3 id="other-configuration-parameters"><a class="header" href="#other-configuration-parameters">Other Configuration Parameters</a></h3>
+<p>On Windows systems, the security descriptor for the listener,
+which can be used to control access, can be set using the function
+<a href="/TODO.html"><code>nng_listener_set_security_descriptor</code></a>.</p>
+<!-- Symbol cross reference -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <p><hr/>
 <p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: The purpose of this scheme is to support a future transport making use of <code>AF_UNIX</code>
 on Windows systems, at which time it will be necessary to discriminate between the Named Pipes and the <code>AF_UNIX</code> based transports.</p>
