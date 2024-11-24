@@ -27,8 +27,6 @@ int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration dur);
 
 int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t z);
 
-int nng_ctx_set_string(nng_ctx ctx, const char *opt, const char *str);
-
 int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t u64);
 ----
 

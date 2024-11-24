@@ -230,14 +230,12 @@ NNG_DECL int nng_socket_set_bool(nng_socket, const char *, bool);
 NNG_DECL int nng_socket_set_int(nng_socket, const char *, int);
 NNG_DECL int nng_socket_set_size(nng_socket, const char *, size_t);
 NNG_DECL int nng_socket_set_uint64(nng_socket, const char *, uint64_t);
-NNG_DECL int nng_socket_set_string(nng_socket, const char *, const char *);
 NNG_DECL int nng_socket_set_ms(nng_socket, const char *, nng_duration);
 
 NNG_DECL int nng_socket_get_bool(nng_socket, const char *, bool *);
 NNG_DECL int nng_socket_get_int(nng_socket, const char *, int *);
 NNG_DECL int nng_socket_get_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_socket_get_uint64(nng_socket, const char *, uint64_t *);
-NNG_DECL int nng_socket_get_string(nng_socket, const char *, char **);
 NNG_DECL int nng_socket_get_ms(nng_socket, const char *, nng_duration *);
 
 // These functions are used to obtain a file descriptor that will poll
@@ -485,7 +483,6 @@ NNG_DECL int nng_ctx_get_bool(nng_ctx, const char *, bool *);
 NNG_DECL int nng_ctx_get_int(nng_ctx, const char *, int *);
 NNG_DECL int nng_ctx_get_size(nng_ctx, const char *, size_t *);
 NNG_DECL int nng_ctx_get_uint64(nng_ctx, const char *, uint64_t *);
-NNG_DECL int nng_ctx_get_string(nng_ctx, const char *, char **);
 NNG_DECL int nng_ctx_get_ms(nng_ctx, const char *, nng_duration *);
 
 NNG_DECL int nng_ctx_set(nng_ctx, const char *, const void *, size_t);
@@ -493,8 +490,6 @@ NNG_DECL int nng_ctx_set_bool(nng_ctx, const char *, bool);
 NNG_DECL int nng_ctx_set_int(nng_ctx, const char *, int);
 NNG_DECL int nng_ctx_set_size(nng_ctx, const char *, size_t);
 NNG_DECL int nng_ctx_set_uint64(nng_ctx, const char *, uint64_t);
-NNG_DECL int nng_ctx_set_string(nng_ctx, const char *, const char *);
-NNG_DECL int nng_ctx_set_ptr(nng_ctx, const char *, void *);
 NNG_DECL int nng_ctx_set_ms(nng_ctx, const char *, nng_duration);
 
 // nng_alloc is used to allocate memory.  It's intended purpose is for

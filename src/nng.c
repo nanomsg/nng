@@ -436,12 +436,6 @@ nng_ctx_get_uint64(nng_ctx id, const char *n, uint64_t *v)
 }
 
 int
-nng_ctx_get_string(nng_ctx id, const char *n, char **v)
-{
-	return (ctx_get(id, n, v, NULL, NNI_TYPE_STRING));
-}
-
-int
 nng_ctx_get_ms(nng_ctx id, const char *n, nng_duration *v)
 {
 	return (ctx_get(id, n, v, NULL, NNI_TYPE_DURATION));
@@ -489,13 +483,6 @@ int
 nng_ctx_set_ms(nng_ctx id, const char *n, nng_duration v)
 {
 	return (ctx_set(id, n, &v, sizeof(v), NNI_TYPE_DURATION));
-}
-
-int
-nng_ctx_set_string(nng_ctx id, const char *n, const char *v)
-{
-	return (
-	    ctx_set(id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
 }
 
 int
@@ -1133,13 +1120,6 @@ nng_socket_set_ms(nng_socket id, const char *n, nng_duration v)
 	return (socket_set(id, n, &v, sizeof(v), NNI_TYPE_DURATION));
 }
 
-int
-nng_socket_set_string(nng_socket id, const char *n, const char *v)
-{
-	return (socket_set(
-	    id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
-}
-
 static int
 socket_get(nng_socket s, const char *name, void *val, size_t *szp, nni_type t)
 {
@@ -1176,12 +1156,6 @@ int
 nng_socket_get_uint64(nng_socket id, const char *n, uint64_t *v)
 {
 	return (socket_get(id, n, v, NULL, NNI_TYPE_UINT64));
-}
-
-int
-nng_socket_get_string(nng_socket id, const char *n, char **v)
-{
-	return (socket_get(id, n, v, NULL, NNI_TYPE_STRING));
 }
 
 int

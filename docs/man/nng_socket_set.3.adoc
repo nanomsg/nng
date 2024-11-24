@@ -27,8 +27,6 @@ int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration dur);
 
 int nng_socket_set_size(nng_socket s, const char *opt, size_t z);
 
-int nng_socket_set_string(nng_socket s, const char *opt, const char *str);
-
 int nng_socket_set_uint64(nng_socket s, const char *opt, uint64_t u64);
 ----
 
@@ -63,13 +61,6 @@ The duration _dur_ is an integer number of milliseconds.
 `nng_socket_set_size()`::
 This function is used to configure a size, _z_, typically for buffer sizes,
 message maximum sizes, and similar options.
-
-`nng_socket_set_string()`::
-This function is used to pass configure a string, _str_.
-Strings passed this way must be legal UTF-8 or ASCII strings, terminated
-with a `NUL` (`\0`) byte.
-(Other constraints may apply as well, see the documentation for each option
-for details.)
 
 `nng_socket_set_uint64()`::
 This function is used to configure a 64-bit unsigned value, _u64_.
