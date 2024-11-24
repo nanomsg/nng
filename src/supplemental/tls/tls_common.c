@@ -554,22 +554,6 @@ tls_get_peer_cn(void *arg, void *buf, size_t *szp, nni_type t)
 	return (0);
 }
 
-static int
-tls_get_peer_alt_names(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	NNI_ARG_UNUSED(szp);
-
-	if (t != NNI_TYPE_POINTER) {
-		return (NNG_EBADTYPE);
-	}
-
-	tls_conn *conn = arg;
-	nni_mtx_lock(&conn->lock);
-	*(char ***) buf = conn->ops.peer_alt_names((void *) (conn + 1));
-	nni_mtx_unlock(&conn->lock);
-	return (0);
-}
-
 static const nni_option tls_options[] = {
 	{
 	    .o_name = NNG_OPT_TLS_VERIFIED,
@@ -578,10 +562,6 @@ static const nni_option tls_options[] = {
 	{
 	    .o_name = NNG_OPT_TLS_PEER_CN,
 	    .o_get  = tls_get_peer_cn,
-	},
-	{
-	    .o_name = NNG_OPT_TLS_PEER_ALT_NAMES,
-	    .o_get  = tls_get_peer_alt_names,
 	},
 	{
 	    .o_name = NULL,

@@ -821,12 +821,6 @@ nng_dialer_get_string(nng_dialer id, const char *n, char **v)
 }
 
 int
-nng_dialer_get_ptr(nng_dialer id, const char *n, void **v)
-{
-	return (dialer_get(id, n, v, NULL, NNI_TYPE_POINTER));
-}
-
-int
 nng_dialer_get_ms(nng_dialer id, const char *n, nng_duration *v)
 {
 	return (dialer_get(id, n, v, NULL, NNI_TYPE_DURATION));
@@ -965,12 +959,6 @@ int
 nng_listener_get_string(nng_listener id, const char *n, char **v)
 {
 	return (listener_get(id, n, v, NULL, NNI_TYPE_STRING));
-}
-
-int
-nng_listener_get_ptr(nng_listener id, const char *n, void **v)
-{
-	return (listener_get(id, n, v, NULL, NNI_TYPE_POINTER));
 }
 
 int
@@ -1442,12 +1430,6 @@ int
 nng_pipe_get_string(nng_pipe id, const char *n, char **v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_STRING));
-}
-
-int
-nng_pipe_get_ptr(nng_pipe id, const char *n, void **v)
-{
-	return (pipe_get(id, n, v, NULL, NNI_TYPE_POINTER));
 }
 
 int

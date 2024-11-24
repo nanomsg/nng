@@ -89,19 +89,6 @@ nni_copyin_size(
 }
 
 int
-nni_copyin_ptr(void **pp, const void *v, size_t sz, nni_type t)
-{
-	NNI_ARG_UNUSED(sz);
-
-	if (t != NNI_TYPE_POINTER) {
-		return (NNG_EBADTYPE);
-	}
-
-	*pp = *(void **) v;
-	return (0);
-}
-
-int
 nni_copyin_str(char *s, const void *v, size_t maxsz, nni_type t)
 {
 	size_t z;
@@ -170,17 +157,6 @@ nni_copyout_ms(nng_duration d, void *dst, size_t *szp, nni_type t)
 		return (NNG_EBADTYPE);
 	}
 	*(nng_duration *) dst = d;
-	return (0);
-}
-
-int
-nni_copyout_ptr(void *p, void *dst, size_t *szp, nni_type t)
-{
-	NNI_ARG_UNUSED(szp);
-	if (t != NNI_TYPE_POINTER) {
-		return (NNG_EBADTYPE);
-	}
-	*(void **) dst = p;
 	return (0);
 }
 

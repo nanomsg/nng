@@ -92,14 +92,19 @@ and are thus removed:
 
 - `nng_ctx_get_string`
 - `nng_ctx_set_string`
+- `nng_dialer_get_ptr`
 - `nng_dialer_set_ptr`
+- `nng_listener_get_ptr`
 - `nng_listener_set_ptr`
 - `nng_socket_get_ptr`
 - `nng_socket_set_ptr`
 - `nng_socket_get_string`
 - `nng_socket_set_string`
+- `nng_stream_get_ptr`
 - `nng_stream_set_ptr`
+- `nng_stream_dialer_get_ptr`
 - `nng_stream_dialer_set_ptr`
+- `nng_stream_listener_get_ptr`
 - `nng_stream_listener_set_ptr`
 - `nng_ctx_get_ptr` (not documented)
 - `nng_ctx_set_ptr` (not documented)

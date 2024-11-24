@@ -26,8 +26,6 @@ int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
 
 int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
 
-int nng_stream_get_ptr(nng_stream *s, const char *opt, void **valp);
-
 int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
 
 int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
@@ -67,16 +65,6 @@ xref:nng_duration.5.adoc[durations]
 (such as timeouts), stored as a number of milliseconds.
 (The special value ((`NNG_DURATION_INFINITE`)) means an infinite amount of time, and
 the special value ((`NNG_DURATION_DEFAULT`)) means a context-specific default.)
-
-`nng_stream_get_ptr()`::
-This function is used to retrieve a pointer to structured data.
-The data referenced is generally managed using other functions.
-Note that this form is somewhat special in that the object is generally
-not copied, but instead the *pointer* to the object is copied.
-+
-NOTE: Care must be taken to ensure that the application respects any
-considerations about the lifetime of the underyling object.
-See the documentation for the option for more specific guidance.
 
 `nng_stream_get_size()`::
 This function is used to retrieve a size,

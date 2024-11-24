@@ -25,8 +25,6 @@ int nng_dialer_get_int(nng_dialer d, const char *opt, int *ivalp);
 
 int nng_dialer_get_ms(nng_dialer d, const char *opt, nng_duration *durp);
 
-int nng_dialer_get_ptr(nng_dialer d, const char *opt, void **ptr);
-
 int nng_dialer_get_size(nng_dialer d, const char *opt, size_t *zp);
 
 int nng_dialer_get_addr(nng_dialer d, const char *opt, nng_sockaddr *sap);
@@ -68,12 +66,6 @@ This function is used to retrieve time xref:nng_duration.5.adoc[durations]
 (such as timeouts), stored in _durp_ as a number of milliseconds.
 (The special value ((`NNG_DURATION_INFINITE`)) means an infinite amount of time, and
 the special value ((`NNG_DURATION_DEFAULT`)) means a context-specific default.)
-
-`nng_dialer_get_ptr()`::
-This function is used to retrieve a pointer, _ptr_, to structured data.
-The data referenced by _ptr_ is generally managed using other functions.
-Note that this form is somewhat special in that the object is generally
-not copied, but instead the *pointer* to the object is copied.
 
 `nng_dialer_get_size()`::
 This function is used to retrieve a size into the pointer _zp_,
