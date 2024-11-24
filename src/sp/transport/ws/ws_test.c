@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 static void
@@ -143,6 +144,7 @@ test_ws_recv_max(void)
 	nng_socket   s0;
 	nng_socket   s1;
 	nng_listener l;
+	nng_dialer   d;
 	size_t       sz;
 	char        *addr;
 
@@ -156,10 +158,14 @@ test_ws_recv_max(void)
 	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 200);
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
+	NUTS_TRUE(sz == 100);
 	NUTS_PASS(nng_listener_start(l, 0));
 
 	NUTS_OPEN(s1);
-	NUTS_PASS(nng_dial(s1, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s1, addr, &d, 0));
+	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 256));
+	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_PASS(nng_send(s1, msg, 95, 0));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
 	NUTS_PASS(nng_recv(s0, buf, &sz, 0));
