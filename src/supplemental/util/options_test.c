@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/nng.h"
 #include <nuts.h>
 
 #include <nng/supplemental/util/options.h>
@@ -258,6 +259,49 @@ test_mixed_long_short(void)
 	NUTS_TRUE(opti == 6);
 }
 
+void
+test_ambiguous(void)
+{
+	int   opti = 1;
+	char *av[2];
+	int   ac = 2;
+	int   v;
+	char *a = NULL;
+
+	nng_optspec spec[] = {
+		{ "flag", 'f', 1, false },
+		{ "fluid", 0, 2, false },
+		{ NULL, 0, 0, false },
+	};
+
+	av[0] = "program";
+	av[1] = "--fl";
+	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_EAMBIGUOUS);
+}
+
+void
+test_missing_arg(void)
+{
+	int   opti = 1;
+	char *av[2];
+	int   ac = 2;
+	int   v;
+	char *a = NULL;
+
+	nng_optspec spec[] = {
+		{ "flag", 'f', 1, true },
+		{ NULL, 0, 0, false },
+	};
+
+	av[0] = "program";
+	av[1] = "--fl";
+	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_ENOARG);
+	av[0] = "program";
+	av[1] = "-f";
+	opti  = 1;
+	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_ENOARG);
+}
+
 NUTS_TESTS = {
 	{ "simple options", test_simple_options },
 	{ "long options", test_long_options },
@@ -270,5 +314,7 @@ NUTS_TESTS = {
 	{ "bad long", test_negative_bad_long },
 	{ "arg only", test_arg_only },
 	{ "options mixed long short", test_mixed_long_short },
+	{ "ambiguous options", test_ambiguous },
+	{ "missing argument", test_missing_arg },
 	{ NULL, NULL },
 };
