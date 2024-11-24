@@ -302,6 +302,26 @@ test_missing_arg(void)
 	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_ENOARG);
 }
 
+void
+test_no_clustering(void)
+{
+	int   opti = 1;
+	char *av[2];
+	int   ac = 2;
+	int   v;
+	char *a = NULL;
+
+	nng_optspec spec[] = {
+		{ "flag", 'f', 1, false },
+		{ "verbose", 'v', 2, false },
+		{ NULL, 0, 0, false },
+	};
+
+	av[0] = "program";
+	av[1] = "-fv";
+	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_EINVAL);
+}
+
 NUTS_TESTS = {
 	{ "simple options", test_simple_options },
 	{ "long options", test_long_options },
@@ -316,5 +336,6 @@ NUTS_TESTS = {
 	{ "options mixed long short", test_mixed_long_short },
 	{ "ambiguous options", test_ambiguous },
 	{ "missing argument", test_missing_arg },
+	{ "no clustering", test_no_clustering },
 	{ NULL, NULL },
 };
