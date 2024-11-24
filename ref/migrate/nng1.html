@@ -284,6 +284,18 @@ In this case, use the <code>nng_socket_get</code> and <code>nng_socket_set</code
 <p>The <code>_getopt</code> and <code>_setopt</code> functions for contexts, listeners, and dialers are no longer
 present. Simply changing <code>_getopt</code> to <code>_get</code> or <code>_setopt</code> to <code>_set</code> in the function name
 should be sufficient in most cases.</p>
+<p>The following functions served no useful purpose (after other changes described in this document),
+and are thus removed:</p>
+<ul>
+<li><code>nng_ctx_get_string</code></li>
+<li><code>nng_ctx_set_string</code></li>
+<li><code>nng_socket_get_ptr</code></li>
+<li><code>nng_socket_set_ptr</code></li>
+<li><code>nng_socket_get_string</code></li>
+<li><code>nng_socket_set_string</code></li>
+<li><code>nng_ctx_get_ptr</code> (not documented)</li>
+<li><code>nng_ctx_set_ptr</code> (not documented)</li>
+</ul>
 <h2 id="untyped-option-functions-removed"><a class="header" href="#untyped-option-functions-removed">Untyped Option Functions Removed</a></h2>
 <p>The following functions are removed. To access options, use a proper typed access function,
 such as one ending in a suffix like <code>_bool</code> (to access a <code>bool</code> typed option).</p>
