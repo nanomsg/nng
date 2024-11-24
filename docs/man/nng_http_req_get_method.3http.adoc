@@ -20,7 +20,7 @@ nng_http_req_get_method - return HTTP request method
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-const char *nng_http_req_get_method(nng_http_req *req);
+const char *nng_http_req_get_method(const nng_http_req *req);
 ----
 
 == DESCRIPTION

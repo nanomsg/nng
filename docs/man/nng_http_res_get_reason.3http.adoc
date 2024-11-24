@@ -20,7 +20,7 @@ nng_http_res_get_reason - return HTTP response reason
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-const char *nng_http_res_get_reason(nng_http_res *res);
+const char *nng_http_res_get_reason(const nng_http_res *res);
 ----
 
 == DESCRIPTION

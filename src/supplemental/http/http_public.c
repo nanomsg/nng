@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -72,7 +72,7 @@ nng_http_res_alloc_error(nng_http_res **resp, uint16_t code)
 }
 
 const char *
-nng_http_req_get_header(nng_http_req *req, const char *key)
+nng_http_req_get_header(const nng_http_req *req, const char *key)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_req_get_header(req, key));
@@ -84,7 +84,7 @@ nng_http_req_get_header(nng_http_req *req, const char *key)
 }
 
 const char *
-nng_http_res_get_header(nng_http_res *res, const char *key)
+nng_http_res_get_header(const nng_http_res *res, const char *key)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_res_get_header(res, key));
@@ -248,7 +248,7 @@ nng_http_res_get_data(nng_http_res *res, void **datap, size_t *lenp)
 }
 
 const char *
-nng_http_req_get_method(nng_http_req *req)
+nng_http_req_get_method(const nng_http_req *req)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_req_get_method(req));
@@ -259,7 +259,7 @@ nng_http_req_get_method(nng_http_req *req)
 }
 
 const char *
-nng_http_req_get_version(nng_http_req *req)
+nng_http_req_get_version(const nng_http_req *req)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_req_get_version(req));
@@ -270,7 +270,7 @@ nng_http_req_get_version(nng_http_req *req)
 }
 
 const char *
-nng_http_req_get_uri(nng_http_req *req)
+nng_http_req_get_uri(const nng_http_req *req)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_req_get_uri(req));
@@ -317,7 +317,7 @@ nng_http_req_set_uri(nng_http_req *req, const char *uri)
 }
 
 uint16_t
-nng_http_res_get_status(nng_http_res *res)
+nng_http_res_get_status(const nng_http_res *res)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_res_get_status(res));
@@ -328,7 +328,7 @@ nng_http_res_get_status(nng_http_res *res)
 }
 
 const char *
-nng_http_res_get_version(nng_http_res *res)
+nng_http_res_get_version(const nng_http_res *res)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_res_get_version(res));
@@ -339,7 +339,7 @@ nng_http_res_get_version(nng_http_res *res)
 }
 
 const char *
-nng_http_res_get_reason(nng_http_res *res)
+nng_http_res_get_reason(const nng_http_res *res)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_res_get_reason(res));
@@ -765,7 +765,7 @@ nng_http_server_set_error_file(
 }
 
 int
-nng_http_server_set_tls(nng_http_server *srv, struct nng_tls_config *cfg)
+nng_http_server_set_tls(nng_http_server *srv, nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_server_set_tls(srv, cfg));
@@ -777,7 +777,7 @@ nng_http_server_set_tls(nng_http_server *srv, struct nng_tls_config *cfg)
 }
 
 int
-nng_http_server_get_tls(nng_http_server *srv, struct nng_tls_config **cfg)
+nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_server_get_tls(srv, cfg));
@@ -850,7 +850,7 @@ nng_http_client_free(nng_http_client *cli)
 }
 
 int
-nng_http_client_set_tls(nng_http_client *cli, struct nng_tls_config *cfg)
+nng_http_client_set_tls(nng_http_client *cli, nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_client_set_tls(cli, cfg));
@@ -862,7 +862,7 @@ nng_http_client_set_tls(nng_http_client *cli, struct nng_tls_config *cfg)
 }
 
 int
-nng_http_client_get_tls(nng_http_client *cli, struct nng_tls_config **cfgp)
+nng_http_client_get_tls(nng_http_client *cli, nng_tls_config **cfgp)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_client_get_tls(cli, cfgp));

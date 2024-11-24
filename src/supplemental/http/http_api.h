@@ -118,8 +118,8 @@ extern void nni_http_write_res(nni_http_conn *, nni_http_res *, nni_aio *);
 extern void nni_http_read_req(nni_http_conn *, nni_http_req *, nni_aio *);
 extern void nni_http_read_res(nni_http_conn *, nni_http_res *, nni_aio *);
 
-extern const char *nni_http_req_get_header(nni_http_req *, const char *);
-extern const char *nni_http_res_get_header(nni_http_res *, const char *);
+extern const char *nni_http_req_get_header(const nni_http_req *, const char *);
+extern const char *nni_http_res_get_header(const nni_http_res *, const char *);
 extern int nni_http_req_add_header(nni_http_req *, const char *, const char *);
 extern int nni_http_res_add_header(nni_http_res *, const char *, const char *);
 extern int nni_http_req_set_header(nni_http_req *, const char *, const char *);
@@ -132,17 +132,17 @@ extern int nni_http_req_set_data(nni_http_req *, const void *, size_t);
 extern int nni_http_res_set_data(nni_http_res *, const void *, size_t);
 extern int nni_http_req_alloc_data(nni_http_req *, size_t);
 extern int nni_http_res_alloc_data(nni_http_res *, size_t);
-extern const char *nni_http_req_get_method(nni_http_req *);
-extern const char *nni_http_req_get_version(nni_http_req *);
-extern const char *nni_http_req_get_uri(nni_http_req *);
+extern const char *nni_http_req_get_method(const nni_http_req *);
+extern const char *nni_http_req_get_version(const nni_http_req *);
+extern const char *nni_http_req_get_uri(const nni_http_req *);
 extern int         nni_http_req_set_method(nni_http_req *, const char *);
 extern int         nni_http_req_set_version(nni_http_req *, const char *);
 extern int         nni_http_req_set_uri(nni_http_req *, const char *);
-extern uint16_t    nni_http_res_get_status(nni_http_res *);
+extern uint16_t    nni_http_res_get_status(const nni_http_res *);
 extern int         nni_http_res_set_status(nni_http_res *, uint16_t);
-extern const char *nni_http_res_get_version(nni_http_res *);
+extern const char *nni_http_res_get_version(const nni_http_res *);
 extern int         nni_http_res_set_version(nni_http_res *, const char *);
-extern const char *nni_http_res_get_reason(nni_http_res *);
+extern const char *nni_http_res_get_reason(const nni_http_res *);
 extern int         nni_http_res_set_reason(nni_http_res *, const char *);
 
 // nni_http_res_is_error is true if the status was allocated as part of

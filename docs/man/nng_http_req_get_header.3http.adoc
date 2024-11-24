@@ -20,7 +20,7 @@ nng_http_req_get_header - return HTTP request header
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-const char *nng_http_req_get_header(nng_http_req *req, const char *key);
+const char *nng_http_req_get_header(const nng_http_req *req, const char *key);
 ----
 
 == DESCRIPTION

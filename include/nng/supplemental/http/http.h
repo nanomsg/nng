@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -22,7 +22,7 @@ extern "C" {
 
 #include <stdint.h>
 
-struct nng_tls_config;
+#include <nng/nng.h>
 
 // HTTP status codes.  This list is not exhaustive.
 enum nng_http_status {
@@ -101,14 +101,14 @@ NNG_DECL int nng_http_req_alloc(nng_http_req **, const nng_url *);
 NNG_DECL void nng_http_req_free(nng_http_req *);
 
 // nng_http_req_get_method returns the method.
-NNG_DECL const char *nng_http_req_get_method(nng_http_req *);
+NNG_DECL const char *nng_http_req_get_method(const nng_http_req *);
 
 // nng_http_req_get_version returns the version, usually HTTP/1.1.
-NNG_DECL const char *nng_http_req_get_version(nng_http_req *);
+NNG_DECL const char *nng_http_req_get_version(const nng_http_req *);
 
 // nng_http_req_get_uri returns the "abs-uri", which is URL without
 // the scheme, host, or port.
-NNG_DECL const char *nng_http_req_get_uri(nng_http_req *);
+NNG_DECL const char *nng_http_req_get_uri(const nng_http_req *);
 
 // nng_http_req_set_header sets an HTTP header, replacing any previous value
 // that might have been present.
@@ -125,7 +125,8 @@ NNG_DECL int nng_http_req_del_header(nng_http_req *, const char *);
 
 // nng_http_req_get_header looks up a header with the named, returns NULL
 // if not found.
-NNG_DECL const char *nng_http_req_get_header(nng_http_req *, const char *);
+NNG_DECL const char *nng_http_req_get_header(
+    const nng_http_req *, const char *);
 
 // nng_http_req_set_method is used to change the method of a request.
 // The method should be an upper case HTTP method, like POST, or DELETE.
@@ -174,14 +175,14 @@ NNG_DECL int nng_http_res_alloc_error(nng_http_res **, uint16_t);
 NNG_DECL void nng_http_res_free(nng_http_res *);
 
 // nng_http_res_get_status returns the HTTP status code from the server.
-NNG_DECL uint16_t nng_http_res_get_status(nng_http_res *);
+NNG_DECL uint16_t nng_http_res_get_status(const nng_http_res *);
 
 // nng_http_res_set_status sets the HTTP status code.
 NNG_DECL int nng_http_res_set_status(nng_http_res *, uint16_t);
 
 // nng_http_res_get_reason returns the human readable status message
 // that the server responds (or responded) with.
-NNG_DECL const char *nng_http_res_get_reason(nng_http_res *);
+NNG_DECL const char *nng_http_res_get_reason(const nng_http_res *);
 
 // nng_http_res_set_reason sets the human readable status message.
 // NULL means that a default reason is used based on the status code.
@@ -202,7 +203,8 @@ NNG_DECL int nng_http_res_del_header(nng_http_res *, const char *);
 
 // nng_http_res_get_header looks up a header with the named, returns NULL
 // if not found.
-NNG_DECL const char *nng_http_res_get_header(nng_http_res *, const char *);
+NNG_DECL const char *nng_http_res_get_header(
+    const nng_http_res *, const char *);
 
 // nng_http_res_set_version is used to change the version of a response.
 // Normally the version is "HTTP/1.1".  Note that the framework does
@@ -210,7 +212,7 @@ NNG_DECL const char *nng_http_res_get_header(nng_http_res *, const char *);
 NNG_DECL int nng_http_res_set_version(nng_http_res *, const char *);
 
 // nng_http_res_get_version returns the version, usually HTTP/1.1.
-NNG_DECL const char *nng_http_res_get_version(nng_http_res *);
+NNG_DECL const char *nng_http_res_get_version(const nng_http_res *);
 
 // nng_http_res_get_data gets the data for the response.
 NNG_DECL void nng_http_res_get_data(nng_http_res *, void **, size_t *);
@@ -437,14 +439,12 @@ NNG_DECL int nng_http_server_del_handler(
 // server client, so the caller must have configured it reasonably.
 // This API is not recommended unless the caller needs complete control
 // over the TLS configuration.
-NNG_DECL int nng_http_server_set_tls(
-    nng_http_server *, struct nng_tls_config *);
+NNG_DECL int nng_http_server_set_tls(nng_http_server *, nng_tls_config *);
 
 // nng_http_server_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The TLS configuration is invalidated if the
 // nng_http_server_set_tls function is called, so be careful.
-NNG_DECL int nng_http_server_get_tls(
-    nng_http_server *, struct nng_tls_config **);
+NNG_DECL int nng_http_server_get_tls(nng_http_server *, nng_tls_config **);
 
 // nng_http_server_get_addr obtains the address with which the server was
 // initialized or returns NNG_EINVAL. Useful for instance when the port has
@@ -504,14 +504,12 @@ NNG_DECL void nng_http_client_free(nng_http_client *);
 // the entire TLS configuration on the client, so the caller must have
 // configured it reasonably.  This API is not recommended unless the
 // caller needs complete control over the TLS configuration.
-NNG_DECL int nng_http_client_set_tls(
-    nng_http_client *, struct nng_tls_config *);
+NNG_DECL int nng_http_client_set_tls(nng_http_client *, nng_tls_config *);
 
 // nng_http_client_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The supplied TLS configuration object may
 // be invalidated by any future calls to nni_http_client_set_tls.
-NNG_DECL int nng_http_client_get_tls(
-    nng_http_client *, struct nng_tls_config **);
+NNG_DECL int nng_http_client_get_tls(nng_http_client *, nng_tls_config **);
 
 // nng_http_client_connect establishes a new connection with the server
 // named in the URL used when the client was created.  Once the connection

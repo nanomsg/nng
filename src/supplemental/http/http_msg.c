@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -262,7 +262,7 @@ nni_http_res_add_header(nni_http_res *res, const char *key, const char *val)
 }
 
 static const char *
-http_get_header(nni_list *hdrs, const char *key)
+http_get_header(const nni_list *hdrs, const char *key)
 {
 	http_header *h;
 	NNI_LIST_FOREACH (hdrs, h) {
@@ -274,13 +274,13 @@ http_get_header(nni_list *hdrs, const char *key)
 }
 
 const char *
-nni_http_req_get_header(nni_http_req *req, const char *key)
+nni_http_req_get_header(const nni_http_req *req, const char *key)
 {
 	return (http_get_header(&req->hdrs, key));
 }
 
 const char *
-nni_http_res_get_header(nni_http_res *res, const char *key)
+nni_http_res_get_header(const nni_http_res *res, const char *key)
 {
 	return (http_get_header(&res->hdrs, key));
 }
@@ -672,25 +672,25 @@ nni_http_res_alloc(nni_http_res **resp)
 }
 
 const char *
-nni_http_req_get_method(nni_http_req *req)
+nni_http_req_get_method(const nni_http_req *req)
 {
 	return (req->meth != NULL ? req->meth : "GET");
 }
 
 const char *
-nni_http_req_get_uri(nni_http_req *req)
+nni_http_req_get_uri(const nni_http_req *req)
 {
 	return (req->uri != NULL ? req->uri : "");
 }
 
 const char *
-nni_http_req_get_version(nni_http_req *req)
+nni_http_req_get_version(const nni_http_req *req)
 {
 	return (req->vers != NULL ? req->vers : "HTTP/1.1");
 }
 
 const char *
-nni_http_res_get_version(nni_http_res *res)
+nni_http_res_get_version(const nni_http_res *res)
 {
 	return (res->vers != NULL ? res->vers : "HTTP/1.1");
 }
@@ -736,7 +736,7 @@ nni_http_res_set_status(nni_http_res *res, uint16_t status)
 }
 
 uint16_t
-nni_http_res_get_status(nni_http_res *res)
+nni_http_res_get_status(const nni_http_res *res)
 {
 	return (res->code);
 }
@@ -1011,7 +1011,7 @@ nni_http_reason(uint16_t code)
 }
 
 const char *
-nni_http_res_get_reason(nni_http_res *res)
+nni_http_res_get_reason(const nni_http_res *res)
 {
 	return (res->rsn ? res->rsn : nni_http_reason(res->code));
 }

@@ -20,7 +20,7 @@ nng_http_req_get_version - return HTTP request protocol version
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-const char *nng_http_req_get_version(nng_http_req *req);
+const char *nng_http_req_get_version(const nng_http_req *req);
 ----
 
 == DESCRIPTION

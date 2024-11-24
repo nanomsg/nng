@@ -20,7 +20,7 @@ nng_http_req_get_uri - return HTTP request URI
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-const char *nng_http_req_get_uri(nng_http_req *req);
+const char *nng_http_req_get_uri(const nng_http_req *req);
 ----
 
 == DESCRIPTION
