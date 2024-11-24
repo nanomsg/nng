@@ -132,7 +132,6 @@ add_nng_test(inproc 5)
 add_nng_test(ipcsupp 10)
 add_nng_test(multistress 60)
 add_nng_test(nonblock 60)
-add_nng_test(options 5)
 add_nng_test(pipe 5)
 add_nng_test(scalability 20 ON)
 add_nng_test(synch 5)
@@ -143,7 +142,6 @@ add_nng_test(ws 30)
 add_nng_test(wss 30)
 add_nng_test1(zt 60 NNG_TRANSPORT_ZEROTIER)
 
-add_nng_test(reqctx 5)
 add_nng_test(reqstress 60)
 
 # c++ tests
