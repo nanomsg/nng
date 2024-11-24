@@ -442,12 +442,6 @@ nng_ctx_get_string(nng_ctx id, const char *n, char **v)
 }
 
 int
-nng_ctx_get_ptr(nng_ctx id, const char *n, void **v)
-{
-	return (ctx_get(id, n, v, NULL, NNI_TYPE_POINTER));
-}
-
-int
 nng_ctx_get_ms(nng_ctx id, const char *n, nng_duration *v)
 {
 	return (ctx_get(id, n, v, NULL, NNI_TYPE_DURATION));
@@ -495,12 +489,6 @@ int
 nng_ctx_set_ms(nng_ctx id, const char *n, nng_duration v)
 {
 	return (ctx_set(id, n, &v, sizeof(v), NNI_TYPE_DURATION));
-}
-
-int
-nng_ctx_set_ptr(nng_ctx id, const char *n, void *v)
-{
-	return (ctx_set(id, n, &v, sizeof(v), NNI_TYPE_POINTER));
 }
 
 int
@@ -1146,12 +1134,6 @@ nng_socket_set_ms(nng_socket id, const char *n, nng_duration v)
 }
 
 int
-nng_socket_set_ptr(nng_socket id, const char *n, void *v)
-{
-	return (socket_set(id, n, &v, sizeof(v), NNI_TYPE_POINTER));
-}
-
-int
 nng_socket_set_string(nng_socket id, const char *n, const char *v)
 {
 	return (socket_set(
@@ -1200,12 +1182,6 @@ int
 nng_socket_get_string(nng_socket id, const char *n, char **v)
 {
 	return (socket_get(id, n, v, NULL, NNI_TYPE_STRING));
-}
-
-int
-nng_socket_get_ptr(nng_socket id, const char *n, void **v)
-{
-	return (socket_get(id, n, v, NULL, NNI_TYPE_POINTER));
 }
 
 int

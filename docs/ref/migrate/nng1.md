@@ -87,6 +87,14 @@ The `_getopt` and `_setopt` functions for contexts, listeners, and dialers are n
 present. Simply changing `_getopt` to `_get` or `_setopt` to `_set` in the function name
 should be sufficient in most cases.
 
+The following functions served no useful purpose (after other changes described in this document),
+and are thus removed:
+
+- `nng_socket_get_ptr`
+- `nng_socket_set_ptr`
+- `nng_ctx_get_ptr` (not documented)
+- `nng_ctx_set_ptr` (not documented)
+
 ## Untyped Option Functions Removed
 
 The following functions are removed. To access options, use a proper typed access function,
