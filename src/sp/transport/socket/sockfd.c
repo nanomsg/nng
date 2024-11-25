@@ -802,15 +802,6 @@ sfd_tran_ep_init(sfd_tran_ep **epp, nng_url *url, nni_sock *sock)
 }
 
 static int
-sfd_tran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
-{
-	NNI_ARG_UNUSED(dp);
-	NNI_ARG_UNUSED(url);
-	NNI_ARG_UNUSED(ndialer);
-	return (NNG_ENOTSUP);
-}
-
-static int
 sfd_tran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 {
 	sfd_tran_ep *ep;
@@ -978,15 +969,6 @@ sfd_tran_listener_setopt(
 	return (rv);
 }
 
-static nni_sp_dialer_ops sfd_tran_dialer_ops = {
-	.d_init    = sfd_tran_dialer_init,
-	.d_fini    = NULL,
-	.d_connect = NULL,
-	.d_close   = NULL,
-	.d_getopt  = NULL,
-	.d_setopt  = NULL,
-};
-
 static nni_sp_listener_ops sfd_tran_listener_ops = {
 	.l_init   = sfd_tran_listener_init,
 	.l_fini   = sfd_tran_ep_fini,
@@ -999,7 +981,7 @@ static nni_sp_listener_ops sfd_tran_listener_ops = {
 
 static nni_sp_tran sfd_tran = {
 	.tran_scheme   = "socket",
-	.tran_dialer   = &sfd_tran_dialer_ops,
+	.tran_dialer   = NULL,
 	.tran_listener = &sfd_tran_listener_ops,
 	.tran_pipe     = &sfd_tran_pipe_ops,
 	.tran_init     = sfd_tran_init,
