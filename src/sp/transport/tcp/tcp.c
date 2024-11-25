@@ -23,47 +23,42 @@ typedef struct tcptran_ep   tcptran_ep;
 
 // tcp_pipe is one end of a TCP connection.
 struct tcptran_pipe {
-	nng_stream     *conn;
-	nni_pipe       *npipe;
-	uint16_t        peer;
-	uint16_t        proto;
-	size_t          rcvmax;
-	bool            closed;
-	nni_list_node   node;
-	tcptran_ep     *ep;
-	nni_atomic_flag reaped;
-	nni_reap_node   reap;
-	uint8_t         txlen[sizeof(uint64_t)];
-	uint8_t         rxlen[sizeof(uint64_t)];
-	size_t          gottxhead;
-	size_t          gotrxhead;
-	size_t          wanttxhead;
-	size_t          wantrxhead;
-	nni_list        recvq;
-	nni_list        sendq;
-	nni_aio        *txaio;
-	nni_aio        *rxaio;
-	nni_aio        *negoaio;
-	nni_msg        *rxmsg;
-	nni_mtx         mtx;
+	nng_stream   *conn;
+	nni_pipe     *npipe;
+	uint16_t      peer;
+	uint16_t      proto;
+	size_t        rcvmax;
+	bool          closed;
+	nni_list_node node;
+	tcptran_ep   *ep;
+	uint8_t       txlen[sizeof(uint64_t)];
+	uint8_t       rxlen[sizeof(uint64_t)];
+	size_t        gottxhead;
+	size_t        gotrxhead;
+	size_t        wanttxhead;
+	size_t        wantrxhead;
+	nni_list      recvq;
+	nni_list      sendq;
+	nni_aio      *txaio;
+	nni_aio      *rxaio;
+	nni_aio      *negoaio;
+	nni_msg      *rxmsg;
+	nni_mtx       mtx;
 };
 
 struct tcptran_ep {
 	nni_mtx              mtx;
 	uint16_t             proto;
 	size_t               rcvmax;
-	bool                 fini;
 	bool                 started;
 	bool                 closed;
-	const char          *host;   // for dialers
-	int                  refcnt; // active pipes
+	const char          *host; // for dialers
 	nni_aio             *useraio;
 	nni_aio             *connaio;
 	nni_aio             *timeaio;
 	nni_list             busypipes; // busy pipes -- ones passed to socket
 	nni_list             waitpipes; // pipes waiting to match to socket
 	nni_list             negopipes; // pipes busy negotiating
-	nni_reap_node        reap;
 	nng_stream_dialer   *dialer;
 	nng_stream_listener *listener;
 
@@ -79,16 +74,6 @@ static void tcptran_pipe_recv_cb(void *);
 static void tcptran_pipe_nego_cb(void *);
 static void tcptran_ep_fini(void *);
 static void tcptran_pipe_fini(void *);
-
-static nni_reap_list tcptran_ep_reap_list = {
-	.rl_offset = offsetof(tcptran_ep, reap),
-	.rl_func   = tcptran_ep_fini,
-};
-
-static nni_reap_list tcptran_pipe_reap_list = {
-	.rl_offset = offsetof(tcptran_pipe, reap),
-	.rl_func   = tcptran_pipe_fini,
-};
 
 static void
 tcptran_init(void)
@@ -145,10 +130,6 @@ tcptran_pipe_fini(void *arg)
 	if ((ep = p->ep) != NULL) {
 		nni_mtx_lock(&ep->mtx);
 		nni_list_node_remove(&p->node);
-		ep->refcnt--;
-		if (ep->fini && (ep->refcnt == 0)) {
-			nni_reap(&tcptran_ep_reap_list, ep);
-		}
 		nni_mtx_unlock(&ep->mtx);
 	}
 
@@ -159,17 +140,6 @@ tcptran_pipe_fini(void *arg)
 	nni_msg_free(p->rxmsg);
 	nni_mtx_fini(&p->mtx);
 	NNI_FREE_STRUCT(p);
-}
-
-static void
-tcptran_pipe_reap(tcptran_pipe *p)
-{
-	if (!nni_atomic_flag_test_and_set(&p->reaped)) {
-		if (p->conn != NULL) {
-			nng_stream_close(p->conn);
-		}
-		nni_reap(&tcptran_pipe_reap_list, p);
-	}
 }
 
 static int
@@ -191,7 +161,6 @@ tcptran_pipe_alloc(tcptran_pipe **pipep)
 	}
 	nni_aio_list_init(&p->recvq);
 	nni_aio_list_init(&p->sendq);
-	nni_atomic_flag_reset(&p->reaped);
 
 	*pipep = p;
 
@@ -294,8 +263,7 @@ error:
 	}
 	nni_list_remove(&ep->negopipes, p);
 	nni_mtx_unlock(&ep->mtx);
-
-	tcptran_pipe_reap(p);
+	tcptran_pipe_fini(p);
 }
 
 static void
@@ -641,8 +609,6 @@ tcptran_pipe_start(tcptran_pipe *p, nng_stream *conn, tcptran_ep *ep)
 {
 	nni_iov iov;
 
-	ep->refcnt++;
-
 	p->conn  = conn;
 	p->ep    = ep;
 	p->proto = ep->proto;
@@ -672,13 +638,6 @@ tcptran_ep_fini(void *arg)
 {
 	tcptran_ep *ep = arg;
 
-	nni_mtx_lock(&ep->mtx);
-	ep->fini = true;
-	if (ep->refcnt != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-	nni_mtx_unlock(&ep->mtx);
 	nni_aio_stop(ep->timeaio);
 	nni_aio_stop(ep->connaio);
 	nng_stream_dialer_free(ep->dialer);
