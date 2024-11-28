@@ -1030,7 +1030,7 @@ nni_sock_set_pipe_cb(nni_sock *s, int ev, nng_pipe_cb cb, void *arg)
 }
 
 int
-nni_ctx_find(nni_ctx **cp, uint32_t id, bool closing)
+nni_ctx_find(nni_ctx **cp, uint32_t id)
 {
 	int      rv = 0;
 	nni_ctx *ctx;
@@ -1043,7 +1043,7 @@ nni_ctx_find(nni_ctx **cp, uint32_t id, bool closing)
 		// we can close it, then we still allow.  In the case
 		// the only valid operation will be to close the
 		// socket.)
-		if (ctx->c_closed || ((!closing) && ctx->c_sock->s_closed)) {
+		if (ctx->c_closed || ctx->c_sock->s_closed) {
 			rv = NNG_ECLOSED;
 		} else {
 			ctx->c_ref++;
