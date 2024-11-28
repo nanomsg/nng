@@ -73,11 +73,8 @@ extern void nni_sock_set_pipe_cb(nni_sock *sock, int, nng_pipe_cb, void *);
 // sockets (will also return NNG_ENOTSUP).
 extern int nni_ctx_open(nni_ctx **, nni_sock *);
 
-// nni_ctx_find finds a context given its id.  The last argument should
-// be true if the context is acquired merely to close it, false otherwise.
-// (If the socket for the context is being closed, then this will return
-// NNG_ECLOSED unless the final argument is true.)
-extern int nni_ctx_find(nni_ctx **, uint32_t, bool);
+// nni_ctx_find finds a context given its id.
+extern int nni_ctx_find(nni_ctx **, uint32_t);
 
 extern void *nni_ctx_proto_data(nni_ctx *);
 

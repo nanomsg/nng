@@ -272,7 +272,7 @@ nng_ctx_close(nng_ctx c)
 	int      rv;
 	nni_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&ctx, c.id, true)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, c.id)) != 0) {
 		return (rv);
 	}
 	// no release, close releases implicitly.
@@ -293,7 +293,7 @@ nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 	nni_aio  aio;
 	nni_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&ctx, cid.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
 		return (rv);
 	}
 
@@ -326,7 +326,7 @@ nng_ctx_recv(nng_ctx cid, nng_aio *aio)
 	int      rv;
 	nni_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&ctx, cid.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
 		if (nni_aio_begin(aio) == 0) {
 			nni_aio_finish_error(aio, rv);
 		}
@@ -348,7 +348,7 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 		}
 		return;
 	}
-	if ((rv = nni_ctx_find(&ctx, cid.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
 		if (nni_aio_begin(aio) == 0) {
 			nni_aio_finish_error(aio, rv);
 		}
@@ -368,7 +368,7 @@ nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 	if (msg == NULL) {
 		return (NNG_EINVAL);
 	}
-	if ((rv = nni_ctx_find(&ctx, cid.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
 		return (rv);
 	}
 
@@ -403,7 +403,7 @@ ctx_get(nng_ctx id, const char *n, void *v, size_t *szp, nni_type t)
 	nni_ctx *ctx;
 	int      rv;
 
-	if ((rv = nni_ctx_find(&ctx, id.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, id.id)) != 0) {
 		return (rv);
 	}
 	rv = nni_ctx_getopt(ctx, n, v, szp, t);
@@ -447,7 +447,7 @@ ctx_set(nng_ctx id, const char *n, const void *v, size_t sz, nni_type t)
 	nni_ctx *ctx;
 	int      rv;
 
-	if ((rv = nni_ctx_find(&ctx, id.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, id.id)) != 0) {
 		return (rv);
 	}
 	rv = nni_ctx_setopt(ctx, n, v, sz, t);
