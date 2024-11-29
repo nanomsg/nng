@@ -632,18 +632,12 @@ nni_sock_shutdown(nni_sock *sock)
 	// Mark us closing, so no more EPs or changes can occur.
 	sock->s_closing = true;
 
-	while ((l = nni_list_first(&sock->s_listeners)) != NULL) {
-		nni_listener_hold(l);
-		nni_mtx_unlock(&sock->s_mx);
+	NNI_LIST_FOREACH (&sock->s_listeners, l) {
 		nni_listener_close(l);
-		nni_mtx_lock(&sock->s_mx);
 	}
 
-	while ((d = nni_list_first(&sock->s_dialers)) != NULL) {
-		nni_dialer_hold(d);
-		nni_mtx_unlock(&sock->s_mx);
+	NNI_LIST_FOREACH (&sock->s_dialers, d) {
 		nni_dialer_close(d);
-		nni_mtx_lock(&sock->s_mx);
 	}
 	nni_mtx_unlock(&sock->s_mx);
 
@@ -848,11 +842,6 @@ nni_sock_add_listener(nni_sock *s, nni_listener *l)
 {
 	int rv;
 
-	// grab a hold on the listener for the socket
-	if ((rv = nni_listener_hold(l)) != 0) {
-		return (rv);
-	}
-
 	// copy initial values for some options from socket
 	for (int i = 0; ep_options[i].eo_name != NULL; i++) {
 		uint64_t             val; // big enough
@@ -863,7 +852,6 @@ nni_sock_add_listener(nni_sock *s, nni_listener *l)
 			    l, o->eo_name, &val, 0, o->eo_type);
 		}
 		if (rv != 0 && rv != NNG_ENOTSUP) {
-			nni_listener_rele(l);
 			return (rv);
 		}
 	}
@@ -871,7 +859,6 @@ nni_sock_add_listener(nni_sock *s, nni_listener *l)
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_listener_rele(l);
 		return (NNG_ECLOSED);
 	}
 
@@ -885,28 +872,11 @@ nni_sock_add_listener(nni_sock *s, nni_listener *l)
 	return (0);
 }
 
-void
-nni_sock_remove_listener(nni_listener *l)
-{
-	nni_sock *s = l->l_sock;
-	nni_mtx_lock(&s->s_mx);
-	NNI_ASSERT(nni_list_node_active(&l->l_node));
-	nni_list_node_remove(&l->l_node);
-	nni_mtx_unlock(&s->s_mx);
-
-	// also drop the hold from the socket
-	nni_listener_rele(l);
-}
-
 int
 nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 {
 	int rv;
 
-	// grab a hold on the dialer for the socket
-	if ((rv = nni_dialer_hold(d)) != 0) {
-		return (rv);
-	}
 	// copy initial values for some options from socket
 	for (int i = 0; ep_options[i].eo_name != NULL; i++) {
 		uint64_t             val; // big enough
@@ -917,7 +887,6 @@ nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 			    d, o->eo_name, &val, 0, o->eo_type);
 		}
 		if (rv != 0 && rv != NNG_ENOTSUP) {
-			nni_dialer_rele(d);
 			return (rv);
 		}
 	}
@@ -925,7 +894,6 @@ nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_dialer_rele(d);
 		return (NNG_ECLOSED);
 	}
 
@@ -937,19 +905,6 @@ nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 
 	nni_mtx_unlock(&s->s_mx);
 	return (0);
-}
-
-void
-nni_sock_remove_dialer(nni_dialer *d)
-{
-	nni_sock *s = d->d_sock;
-	nni_mtx_lock(&s->s_mx);
-	NNI_ASSERT(nni_list_node_active(&d->d_node));
-	nni_list_node_remove(&d->d_node);
-	nni_mtx_unlock(&s->s_mx);
-
-	// also drop the hold from the socket
-	nni_dialer_rele(d);
 }
 
 int
@@ -1347,60 +1302,17 @@ nni_dialer_shutdown(nni_dialer *d)
 	nni_sock *s = d->d_sock;
 	nni_pipe *p;
 
-	if (nni_atomic_flag_test_and_set(&d->d_closing)) {
-		return;
-	}
-
-	nni_dialer_stop(d);
-
 	nni_mtx_lock(&s->s_mx);
 	NNI_LIST_FOREACH (&d->d_pipes, p) {
 		nni_pipe_close(p);
 	}
+	nni_list_node_remove(&d->d_node);
 	nni_mtx_unlock(&s->s_mx);
-}
-
-static void dialer_reap(void *);
-
-static nni_reap_list dialer_reap_list = {
-	.rl_offset = offsetof(nni_dialer, d_reap),
-	.rl_func   = dialer_reap,
-};
-
-static void
-dialer_reap(void *arg)
-{
-	nni_dialer *d = arg;
-	nni_sock   *s = d->d_sock;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&d->st_root);
 #endif
-
-	nni_mtx_lock(&s->s_mx);
-	if (!nni_list_empty(&d->d_pipes)) {
-		nni_pipe *p;
-		// This should already have been done, but be certain!
-		NNI_LIST_FOREACH (&d->d_pipes, p) {
-			nni_pipe_close(p);
-		}
-		nni_mtx_unlock(&s->s_mx);
-		// Go back to the end of reap list.
-		nni_dialer_reap(d);
-		return;
-	}
-
-	nni_mtx_unlock(&s->s_mx);
-
-	nni_sock_rele(s);
-
-	nni_dialer_destroy(d);
-}
-
-void
-nni_dialer_reap(nni_dialer *d)
-{
-	nni_reap(&dialer_reap_list, d);
+	nni_sock_rele(d->d_sock);
 }
 
 void
@@ -1463,61 +1375,17 @@ nni_listener_shutdown(nni_listener *l)
 	nni_sock *s = l->l_sock;
 	nni_pipe *p;
 
-	if (nni_atomic_flag_test_and_set(&l->l_closing)) {
-		return;
-	}
-
-	nni_listener_stop(l);
-
 	nni_mtx_lock(&s->s_mx);
 	NNI_LIST_FOREACH (&l->l_pipes, p) {
 		nni_pipe_close(p);
 	}
+	nni_list_node_remove(&l->l_node);
 	nni_mtx_unlock(&s->s_mx);
-}
-
-static void listener_reap(void *);
-
-static nni_reap_list listener_reap_list = {
-	.rl_offset = offsetof(nni_listener, l_reap),
-	.rl_func   = listener_reap,
-};
-
-static void
-listener_reap(void *arg)
-{
-	nni_listener *l = arg;
-	nni_sock     *s = l->l_sock;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&l->st_root);
 #endif
-
-	nni_mtx_lock(&s->s_mx);
-	if (!nni_list_empty(&l->l_pipes)) {
-		nni_pipe *p;
-		// This should already have been done, but be certain!
-		NNI_LIST_FOREACH (&l->l_pipes, p) {
-			nni_pipe_close(p);
-		}
-		nni_mtx_unlock(&s->s_mx);
-		// Go back to the end of reap list.
-		nni_reap(&listener_reap_list, l);
-		return;
-	}
-
-	nni_list_node_remove(&l->l_node);
-	nni_mtx_unlock(&s->s_mx);
-
 	nni_sock_rele(s);
-
-	nni_listener_destroy(l);
-}
-
-void
-nni_listener_reap(nni_listener *l)
-{
-	nni_reap(&listener_reap_list, l);
 }
 
 void

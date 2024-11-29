@@ -20,6 +20,7 @@
 static void dialer_connect_start(nni_dialer *);
 static void dialer_connect_cb(void *);
 static void dialer_timer_cb(void *);
+static void dialer_destroy(void *);
 
 static nni_id_map dialers    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
 static nni_mtx    dialers_lk = NNI_MTX_INITIALIZER;
@@ -30,11 +31,10 @@ nni_dialer_id(nni_dialer *d)
 	return (d->d_id);
 }
 
-void
-nni_dialer_destroy(nni_dialer *d)
+static void
+dialer_destroy(void *arg)
 {
-	nni_aio_stop(&d->d_con_aio);
-	nni_aio_stop(&d->d_tmo_aio);
+	nni_dialer *d = arg;
 
 	nni_aio_fini(&d->d_con_aio);
 	nni_aio_fini(&d->d_tmo_aio);
@@ -209,11 +209,9 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 {
 	int rv;
 
-	d->d_closed = false;
-	d->d_data   = NULL;
-	d->d_ref    = 1;
-	d->d_sock   = s;
-	d->d_tran   = tran;
+	d->d_data = NULL;
+	d->d_sock = s;
+	d->d_tran = tran;
 	nni_atomic_flag_reset(&d->d_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
@@ -229,6 +227,8 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 	nni_aio_init(&d->d_con_aio, dialer_connect_cb, d);
 	nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d);
 
+	nni_refcnt_init(&d->d_refcnt, 2, d, dialer_destroy);
+
 	nni_mtx_lock(&dialers_lk);
 	rv = nni_id_alloc32(&dialers, &d->d_id, d);
 	nni_mtx_unlock(&dialers_lk);
@@ -240,12 +240,8 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 	if ((rv != 0) ||
 	    ((rv = d->d_ops.d_init(&d->d_data, &d->d_url, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
-		nni_mtx_lock(&dialers_lk);
-		nni_id_remove(&dialers, d->d_id);
-		nni_mtx_unlock(&dialers_lk);
-#ifdef NNG_ENABLE_STATS
-		nni_stat_unregister(&d->st_root);
-#endif
+		nni_dialer_close(d);
+		nni_dialer_rele(d);
 		return (rv);
 	}
 
@@ -271,7 +267,6 @@ nni_dialer_create_url(nni_dialer **dp, nni_sock *s, const nng_url *url)
 		return (rv);
 	}
 	if ((rv = nni_dialer_init(d, s, tran)) != 0) {
-		nni_dialer_destroy(d);
 		return (rv);
 	}
 	*dp = d;
@@ -301,44 +296,7 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 		NNI_FREE_STRUCT(d);
 		return (rv);
 	}
-	d->d_closed = false;
-	d->d_data   = NULL;
-	d->d_ref    = 1;
-	d->d_sock   = s;
-	d->d_tran   = tran;
-	nni_atomic_flag_reset(&d->d_started);
-
-	// Make a copy of the endpoint operations.  This allows us to
-	// modify them (to override NULLs for example), and avoids an extra
-	// dereference on hot paths.
-	d->d_ops = *tran->tran_dialer;
-
-	NNI_LIST_NODE_INIT(&d->d_node);
-	NNI_LIST_INIT(&d->d_pipes, nni_pipe, p_ep_node);
-
-	nni_mtx_init(&d->d_mtx);
-
-	nni_aio_init(&d->d_con_aio, dialer_connect_cb, d);
-	nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d);
-
-	nni_mtx_lock(&dialers_lk);
-	rv = nni_id_alloc32(&dialers, &d->d_id, d);
-	nni_mtx_unlock(&dialers_lk);
-
-#ifdef NNG_ENABLE_STATS
-	dialer_stats_init(d);
-#endif
-
-	if ((rv != 0) ||
-	    ((rv = d->d_ops.d_init(&d->d_data, &d->d_url, d)) != 0) ||
-	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
-		nni_mtx_lock(&dialers_lk);
-		nni_id_remove(&dialers, d->d_id);
-		nni_mtx_unlock(&dialers_lk);
-#ifdef NNG_ENABLE_STATS
-		nni_stat_unregister(&d->st_root);
-#endif
-		nni_dialer_destroy(d);
+	if ((rv = nni_dialer_init(d, s, tran)) != 0) {
 		return (rv);
 	}
 
@@ -353,61 +311,58 @@ nni_dialer_find(nni_dialer **dp, uint32_t id)
 
 	nni_mtx_lock(&dialers_lk);
 	if ((d = nni_id_get(&dialers, id)) != NULL) {
-		d->d_ref++;
+		nni_dialer_hold(d);
 		*dp = d;
 	}
 	nni_mtx_unlock(&dialers_lk);
 	return (d == NULL ? NNG_ENOENT : 0);
 }
 
-int
+void
 nni_dialer_hold(nni_dialer *d)
 {
-	int rv;
-	nni_mtx_lock(&dialers_lk);
-	if (d->d_closed) {
-		rv = NNG_ECLOSED;
-	} else {
-		d->d_ref++;
-		rv = 0;
-	}
-	nni_mtx_unlock(&dialers_lk);
-	return (rv);
+	nni_refcnt_hold(&d->d_refcnt);
 }
 
 void
 nni_dialer_rele(nni_dialer *d)
 {
-	bool reap;
-
-	nni_mtx_lock(&dialers_lk);
-	NNI_ASSERT(d->d_ref > 0);
-	d->d_ref--;
-	reap = ((d->d_ref == 0) && (d->d_closed));
-	nni_mtx_unlock(&dialers_lk);
-
-	if (reap) {
-		nni_dialer_reap(d);
-	}
+	nni_refcnt_rele(&d->d_refcnt);
 }
+
+static void
+dialer_reap(void *arg)
+{
+	nni_dialer *d = arg;
+
+	nni_aio_stop(&d->d_tmo_aio);
+	nni_aio_stop(&d->d_con_aio);
+	if (d->d_data != NULL) {
+		d->d_ops.d_close(d->d_data);
+	}
+
+	nni_dialer_shutdown(d);
+	nni_dialer_rele(d);
+}
+
+static nni_reap_list dialer_reap_list = {
+	.rl_offset = offsetof(nni_dialer, d_reap),
+	.rl_func   = dialer_reap,
+};
 
 void
 nni_dialer_close(nni_dialer *d)
 {
-	nni_mtx_lock(&dialers_lk);
-	if (d->d_closed) {
-		nni_mtx_unlock(&dialers_lk);
-		nni_dialer_rele(d);
+	if (nni_atomic_flag_test_and_set(&d->d_closing)) {
 		return;
 	}
-	d->d_closed = true;
+	nni_mtx_lock(&dialers_lk);
 	nni_id_remove(&dialers, d->d_id);
 	nni_mtx_unlock(&dialers_lk);
+	nni_aio_close(&d->d_tmo_aio);
+	nni_aio_close(&d->d_con_aio);
 
-	nni_dialer_shutdown(d);
-
-	nni_sock_remove_dialer(d);
-	nni_dialer_rele(d);
+	nni_reap(&dialer_reap_list, d);
 }
 
 static void
@@ -505,14 +460,6 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 	    nni_sock_id(d->d_sock));
 
 	return (rv);
-}
-
-void
-nni_dialer_stop(nni_dialer *d)
-{
-	nni_aio_stop(&d->d_tmo_aio);
-	nni_aio_stop(&d->d_con_aio);
-	d->d_ops.d_close(d->d_data);
 }
 
 nni_sock *
