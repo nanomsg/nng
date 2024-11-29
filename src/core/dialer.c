@@ -233,6 +233,8 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 	rv = nni_id_alloc32(&dialers, &d->d_id, d);
 	nni_mtx_unlock(&dialers_lk);
 
+	nni_sock_hold(s);
+
 #ifdef NNG_ENABLE_STATS
 	dialer_stats_init(d);
 #endif
