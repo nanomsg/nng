@@ -9,8 +9,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <nng/nng.h>
+
 #include "core/nng_impl.h"
-#include "nng/nng.h"
+
+#include "dialer.h"
+#include "listener.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -47,8 +51,10 @@ pipe_destroy(void *arg)
 void
 pipe_reap(void *arg)
 {
-	nni_pipe *p = arg;
-	nni_sock *s = p->p_sock;
+	nni_pipe     *p = arg;
+	nni_sock     *s = p->p_sock;
+	nni_dialer   *d = p->p_dialer;
+	nni_listener *l = p->p_listener;
 
 	nni_pipe_run_cb(p, NNG_PIPE_EV_REM_POST);
 
@@ -71,6 +77,12 @@ pipe_reap(void *arg)
 	}
 
 	nni_pipe_rele(p);
+	if (l != NULL) {
+		nni_listener_rele(l);
+	}
+	if (d != NULL) {
+		nni_dialer_rele(d);
+	}
 	nni_sock_rele(s);
 }
 
@@ -291,6 +303,7 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
 	pipe_stat_init(p, &p->st_ep_id, &dialer_info);
 	nni_stat_set_id(&p->st_ep_id, (int) nni_dialer_id(d));
 #endif
+	nni_dialer_hold(d);
 	*pp = p;
 	return (0);
 }
@@ -312,6 +325,7 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
 		.si_desc = "listener for pipe",
 		.si_type = NNG_STAT_ID,
 	};
+	nni_listener_hold(l);
 	pipe_stat_init(p, &p->st_ep_id, &listener_info);
 	nni_stat_set_id(&p->st_ep_id, (int) nni_listener_id(l));
 #endif
