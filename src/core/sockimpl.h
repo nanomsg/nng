@@ -23,10 +23,6 @@ struct nni_dialer {
 	nni_list_node     d_node; // per socket list
 	nni_sock         *d_sock;
 	nni_pipe         *d_pipe; // active pipe (for re-dialer)
-	int               d_ref;
-	bool              d_closed; // full shutdown
-	nni_atomic_flag   d_closing;
-	nni_atomic_flag   d_started;
 	nni_mtx           d_mtx;
 	nni_list          d_pipes;
 	nni_aio          *d_user_aio;
@@ -35,8 +31,11 @@ struct nni_dialer {
 	nni_duration      d_maxrtime; // maximum time for reconnect
 	nni_duration      d_currtime; // current time for reconnect
 	nni_duration      d_inirtime; // initial time for reconnect
-	nni_reap_node     d_reap;
 	nng_url           d_url;
+	nni_reap_node     d_reap;
+	nni_atomic_flag   d_closing;
+	nni_atomic_flag   d_started;
+	nni_refcnt        d_refcnt;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;
@@ -63,15 +62,14 @@ struct nni_listener {
 	uint32_t            l_id;   // endpoint id
 	nni_list_node       l_node; // per socket list
 	nni_sock           *l_sock;
-	int                 l_ref;
-	bool                l_closed;  // full shutdown
-	nni_atomic_flag     l_closing; // close started (shutdown)
-	nni_atomic_flag     l_started;
 	nni_list            l_pipes;
 	nni_aio             l_acc_aio;
 	nni_aio             l_tmo_aio;
-	nni_reap_node       l_reap;
 	nng_url             l_url;
+	nni_reap_node       l_reap;
+	nni_atomic_flag     l_closing; // close started (shutdown)
+	nni_atomic_flag     l_started;
+	nni_refcnt          l_refcnt;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;
@@ -120,23 +118,15 @@ struct nni_pipe {
 #endif
 };
 
-extern int  nni_sock_add_dialer(nni_sock *, nni_dialer *);
-extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
-extern void nni_sock_remove_listener(nni_listener *);
-extern void nni_sock_remove_dialer(nni_dialer *);
+extern int nni_sock_add_dialer(nni_sock *, nni_dialer *);
+extern int nni_sock_add_listener(nni_sock *, nni_listener *);
 
 extern void nni_dialer_add_pipe(nni_dialer *, void *);
 extern void nni_dialer_shutdown(nni_dialer *);
-extern void nni_dialer_reap(nni_dialer *);
-extern void nni_dialer_destroy(nni_dialer *);
 extern void nni_dialer_timer_start(nni_dialer *);
-extern void nni_dialer_stop(nni_dialer *);
 
 extern void nni_listener_add_pipe(nni_listener *, void *);
 extern void nni_listener_shutdown(nni_listener *);
-extern void nni_listener_reap(nni_listener *);
-extern void nni_listener_destroy(nni_listener *);
-extern void nni_listener_stop(nni_listener *);
 
 extern void nni_pipe_remove(nni_pipe *);
 extern bool nni_pipe_is_closed(nni_pipe *);
