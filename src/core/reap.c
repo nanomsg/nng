@@ -18,9 +18,9 @@
 static nni_reap_list *reap_list = NULL;
 static nni_thr        reap_thr;
 static bool           reap_exit = false;
-static nni_mtx        reap_mtx = NNI_MTX_INITIALIZER;
+static nni_mtx        reap_mtx  = NNI_MTX_INITIALIZER;
 static bool           reap_empty;
-static nni_cv         reap_work_cv = NNI_CV_INITIALIZER(&reap_mtx);
+static nni_cv         reap_work_cv  = NNI_CV_INITIALIZER(&reap_mtx);
 static nni_cv         reap_empty_cv = NNI_CV_INITIALIZER(&reap_mtx);
 
 static void
@@ -105,6 +105,7 @@ nni_reap_sys_init(void)
 {
 	int rv;
 
+	reap_exit = false;
 	// If this fails, we don't fail init, instead we will try to
 	// start up at reap time.
 	if ((rv = nni_thr_init(&reap_thr, reap_worker, NULL)) != 0) {
