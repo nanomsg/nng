@@ -105,9 +105,8 @@ struct nni_pipe {
 	nni_atomic_bool    p_closed;
 	nni_atomic_flag    p_stop;
 	bool               p_cbs;
-	int                p_ref;
-	nni_cv             p_cv;
 	nni_reap_node      p_reap;
+	nni_refcnt         p_refcnt;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;
