@@ -25,8 +25,7 @@
 #include <nng/protocol/survey0/respond.h>
 #include <nng/protocol/survey0/survey.h>
 
-#include "convey.h"
-#include "stubs.h"
+#include <nuts.h>
 
 #ifdef NDEBUG
 #define dprintf(...)
@@ -761,7 +760,9 @@ pipeline0_test(int ntests)
 	nng_sleep_aio(1, srv->woke);
 }
 
-Main({
+void
+test_multi_stress(void)
+{
 	int   i;
 	char *str;
 	int   tmo;
@@ -769,13 +770,13 @@ Main({
 	// Each run should truly be random.
 	srand((int) time(NULL));
 
-	if (((str = ConveyGetEnv("STRESSTIME")) == NULL) ||
+	if (((str = getenv("STRESSTIME")) == NULL) ||
 	    ((tmo = atoi(str)) < 1)) {
 		tmo = 30;
 	}
 	// We have to keep this relatively low by default because some
 	// platforms have limited resources.
-	if (((str = ConveyGetEnv("STRESSPRESSURE")) == NULL) ||
+	if (((str = getenv("STRESSPRESSURE")) == NULL) ||
 	    ((ncases = atoi(str)) < 1)) {
 		ncases = 32;
 	}
@@ -822,31 +823,32 @@ Main({
 		nng_aio_stop(cases[i].woke);
 	}
 
-	Test("MultiProtocol/Transport Stress", {
-		Convey("All tests worked", {
-			for (i = 0; i < ncases; i++) {
-				test_case *c = &cases[i];
-				if (c->name == NULL) {
-					break;
-				}
-				nng_aio_stop(c->sent);
-				nng_aio_stop(c->recd);
-				nng_aio_stop(c->woke);
-				nng_aio_free(c->sent);
-				nng_aio_free(c->recd);
-				nng_aio_free(c->woke);
+	for (i = 0; i < ncases; i++) {
+		test_case *c = &cases[i];
+		if (c->name == NULL) {
+			break;
+		}
+		nng_aio_stop(c->sent);
+		nng_aio_stop(c->recd);
+		nng_aio_stop(c->woke);
+		nng_aio_free(c->sent);
+		nng_aio_free(c->recd);
+		nng_aio_free(c->woke);
 
-				dprintf("RESULT socket %u (%s) sent %d "
-				        "recd %d fail %d\n",
-				    c->sock.id, c->name, c->nsend, c->nrecv,
-				    c->nfail);
-				So(c->nfail == 0);
-				So((c->sent == NULL) || (c->nsend > 0));
-				So((c->recd == NULL) || (c->nrecv > 0));
-			}
-		});
-	});
+		dprintf("RESULT socket %u (%s) sent %d "
+		        "recd %d fail %d\n",
+		    c->sock.id, c->name, c->nsend, c->nrecv, c->nfail);
+		NUTS_TRUE(c->nfail == 0);
+		NUTS_TRUE((c->sent == NULL) || (c->nsend > 0));
+		NUTS_TRUE((c->recd == NULL) || (c->nrecv > 0));
+
+		NUTS_CLOSE(c->sock);
+	}
 
 	free(cases);
-	nng_fini();
-})
+}
+
+NUTS_TESTS = {
+	{ "multi stress", test_multi_stress },
+	{ NULL, NULL },
+};
