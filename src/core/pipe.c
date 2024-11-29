@@ -48,6 +48,7 @@ void
 pipe_reap(void *arg)
 {
 	nni_pipe *p = arg;
+	nni_sock *s = p->p_sock;
 
 	nni_pipe_run_cb(p, NNG_PIPE_EV_REM_POST);
 
@@ -70,6 +71,7 @@ pipe_reap(void *arg)
 	}
 
 	nni_pipe_rele(p);
+	nni_sock_rele(s);
 }
 
 int
@@ -255,6 +257,8 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 #ifdef NNG_ENABLE_STATS
 	pipe_stats_init(p);
 #endif
+
+	nni_sock_hold(sock);
 
 	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tran_data, p)) != 0) ||
 	    ((rv = pops->pipe_init(p->p_proto_data, p, sock_data)) != 0)) {
