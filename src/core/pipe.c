@@ -37,9 +37,7 @@ pipe_destroy(void *arg)
 {
 	nni_pipe *p = arg;
 
-	if (p->p_proto_data != NULL) {
-		p->p_proto_ops.pipe_fini(p->p_proto_data);
-	}
+	p->p_proto_ops.pipe_fini(p->p_proto_data);
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
@@ -66,9 +64,7 @@ pipe_reap(void *arg)
 #endif
 	nni_pipe_remove(p);
 
-	if (p->p_proto_data != NULL) {
-		p->p_proto_ops.pipe_stop(p->p_proto_data);
-	}
+	p->p_proto_ops.pipe_stop(p->p_proto_data);
 	if ((p->p_tran_data != NULL) && (p->p_tran_ops.p_stop != NULL)) {
 		p->p_tran_ops.p_stop(p->p_tran_data);
 	}
@@ -129,9 +125,7 @@ nni_pipe_close(nni_pipe *p)
 		return; // We already did a close.
 	}
 
-	if (p->p_proto_data != NULL) {
-		p->p_proto_ops.pipe_close(p->p_proto_data);
-	}
+	p->p_proto_ops.pipe_close(p->p_proto_data);
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
