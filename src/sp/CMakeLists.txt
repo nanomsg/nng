@@ -17,3 +17,5 @@ nng_sources(
         transport.c
         transport.h
 )
+
+nng_test(pipe_test)
