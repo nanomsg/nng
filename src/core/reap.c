@@ -108,6 +108,7 @@ nni_reap_sys_init(void)
 {
 	int rv;
 
+	reap_exit = false;
 	// If this fails, we don't fail init, instead we will try to
 	// start up at reap time.
 	if ((rv = nni_thr_init(&reap_thr, reap_worker, NULL)) != 0) {
