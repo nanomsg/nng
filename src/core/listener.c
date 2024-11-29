@@ -11,6 +11,7 @@
 
 #include "core/defs.h"
 #include "core/nng_impl.h"
+#include "core/platform.h"
 #include "core/strs.h"
 #include "nng/nng.h"
 #include "sockimpl.h"
@@ -33,10 +34,11 @@ nni_listener_id(nni_listener *l)
 	return (l->l_id);
 }
 
-void
-nni_listener_destroy(nni_listener *l)
+static void
+listener_destroy(void *arg)
 {
-	// NB: both these will have already been stopped.
+	nni_listener *l = arg;
+
 	nni_aio_fini(&l->l_acc_aio);
 	nni_aio_fini(&l->l_tmo_aio);
 
@@ -197,11 +199,9 @@ nni_listener_init(nni_listener *l, nni_sock *s, nni_sp_tran *tran)
 {
 	int rv;
 
-	l->l_closed = false;
-	l->l_data   = NULL;
-	l->l_ref    = 1;
-	l->l_sock   = s;
-	l->l_tran   = tran;
+	l->l_data = NULL;
+	l->l_sock = s;
+	l->l_tran = tran;
 	nni_atomic_flag_reset(&l->l_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
@@ -215,9 +215,13 @@ nni_listener_init(nni_listener *l, nni_sock *s, nni_sp_tran *tran)
 	nni_aio_init(&l->l_acc_aio, listener_accept_cb, l);
 	nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l);
 
+	nni_refcnt_init(&l->l_refcnt, 2, l, listener_destroy);
+
 	nni_mtx_lock(&listeners_lk);
 	rv = nni_id_alloc32(&listeners, &l->l_id, l);
 	nni_mtx_unlock(&listeners_lk);
+
+	nni_sock_hold(s);
 
 #ifdef NNG_ENABLE_STATS
 	listener_stats_init(l);
@@ -226,12 +230,8 @@ nni_listener_init(nni_listener *l, nni_sock *s, nni_sp_tran *tran)
 	if ((rv != 0) ||
 	    ((rv = l->l_ops.l_init(&l->l_data, &l->l_url, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
-		nni_mtx_lock(&listeners_lk);
-		nni_id_remove(&listeners, l->l_id);
-		nni_mtx_unlock(&listeners_lk);
-#ifdef NNG_ENABLE_STATS
-		nni_stat_unregister(&l->st_root);
-#endif
+		nni_listener_close(l);
+		nni_listener_rele(l);
 		return (rv);
 	}
 
@@ -257,7 +257,6 @@ nni_listener_create_url(nni_listener **lp, nni_sock *s, const nng_url *url)
 		return (rv);
 	}
 	if ((rv = nni_listener_init(l, s, tran)) != 0) {
-		nni_listener_destroy(l);
 		return (rv);
 	}
 
@@ -289,7 +288,6 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 		return (rv);
 	}
 	if ((rv = nni_listener_init(l, s, tran)) != 0) {
-		nni_listener_destroy(l);
 		return (rv);
 	}
 	*lp = l;
@@ -303,60 +301,58 @@ nni_listener_find(nni_listener **lp, uint32_t id)
 
 	nni_mtx_lock(&listeners_lk);
 	if ((l = nni_id_get(&listeners, id)) != NULL) {
-		l->l_ref++;
+		nni_listener_hold(l);
 		*lp = l;
 	}
 	nni_mtx_unlock(&listeners_lk);
 	return (l == NULL ? NNG_ENOENT : 0);
 }
 
-int
+void
 nni_listener_hold(nni_listener *l)
 {
-	int rv;
-	nni_mtx_lock(&listeners_lk);
-	if (l->l_closed) {
-		rv = NNG_ECLOSED;
-	} else {
-		l->l_ref++;
-		rv = 0;
-	}
-	nni_mtx_unlock(&listeners_lk);
-	return (rv);
+	nni_refcnt_hold(&l->l_refcnt);
 }
 
 void
 nni_listener_rele(nni_listener *l)
 {
-	bool reap;
-
-	nni_mtx_lock(&listeners_lk);
-	NNI_ASSERT(l->l_ref > 0);
-	l->l_ref--;
-	reap = ((l->l_ref == 0) && (l->l_closed));
-	nni_mtx_unlock(&listeners_lk);
-	if (reap) {
-		nni_listener_reap(l);
-	}
+	nni_refcnt_rele(&l->l_refcnt);
 }
+
+static void
+listener_reap(void *arg)
+{
+	nni_listener *l = arg;
+
+	nni_aio_stop(&l->l_tmo_aio);
+	nni_aio_stop(&l->l_acc_aio);
+	if (l->l_data) {
+		l->l_ops.l_close(l->l_data);
+	}
+
+	nni_listener_shutdown(l);
+	nni_listener_rele(l);
+}
+
+static nni_reap_list listener_reap_list = {
+	.rl_offset = offsetof(nni_listener, l_reap),
+	.rl_func   = listener_reap,
+};
 
 void
 nni_listener_close(nni_listener *l)
 {
-	nni_mtx_lock(&listeners_lk);
-	if (l->l_closed) {
-		nni_mtx_unlock(&listeners_lk);
-		nni_listener_rele(l);
+	if (nni_atomic_flag_test_and_set(&l->l_closing)) {
 		return;
 	}
-	l->l_closed = true;
+	nni_mtx_lock(&listeners_lk);
 	nni_id_remove(&listeners, l->l_id);
 	nni_mtx_unlock(&listeners_lk);
+	nni_aio_close(&l->l_tmo_aio);
+	nni_aio_close(&l->l_acc_aio);
 
-	nni_listener_shutdown(l);
-
-	nni_sock_remove_listener(l);
-	nni_listener_rele(l); // This will reap if reference count is zero.
+	nni_reap(&listener_reap_list, l);
 }
 
 static void
@@ -445,14 +441,6 @@ nni_listener_start(nni_listener *l, int flags)
 	listener_accept_start(l);
 
 	return (0);
-}
-
-void
-nni_listener_stop(nni_listener *l)
-{
-	nni_aio_stop(&l->l_tmo_aio);
-	nni_aio_stop(&l->l_acc_aio);
-	l->l_ops.l_close(l->l_data);
 }
 
 nni_sock *
