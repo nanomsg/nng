@@ -31,7 +31,7 @@ struct nng_http_handler {
 	bool            host_ip;
 	bool            tree;
 	bool            tree_exclusive;
-	nni_atomic_u64  ref;
+	nni_atomic_int  ref;
 	nni_atomic_bool busy;
 	size_t          maxbody;
 	bool            getbody;
@@ -107,8 +107,8 @@ nni_http_handler_init(
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_atomic_init64(&h->ref);
-	nni_atomic_inc64(&h->ref);
+	nni_atomic_init(&h->ref);
+	nni_atomic_inc(&h->ref);
 
 	// Default for HTTP is /.  But remap it to "" for ease of matching.
 	if ((uri == NULL) || (strlen(uri) == 0) || (strcmp(uri, "/") == 0)) {
@@ -137,7 +137,7 @@ nni_http_handler_init(
 void
 nni_http_handler_fini(nni_http_handler *h)
 {
-	if (nni_atomic_dec64_nv(&h->ref) != 0) {
+	if (nni_atomic_dec_nv(&h->ref) != 0) {
 		return;
 	}
 	if (h->dtor != NULL) {
@@ -735,7 +735,7 @@ finish:
 
 	// Set a reference -- this because the callback may be running
 	// asynchronously even after it gets removed from the server.
-	nni_atomic_inc64(&h->ref);
+	nni_atomic_inc(&h->ref);
 
 	// Documented that we call this on behalf of the callback.
 	if (nni_aio_begin(sc->cbaio) != 0) {
