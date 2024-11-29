@@ -605,7 +605,7 @@ nni_aio_expire_loop(void *arg)
 			nni_cv_until(cv, next);
 			continue;
 		}
-		q->eq_next = NNI_TIME_NEVER;
+		q->eq_next = q->eq_exit ? nni_clock() : NNI_TIME_NEVER;
 		exp_idx    = 0;
 		while (aio != NULL) {
 			if ((aio->a_expire < now) &&
