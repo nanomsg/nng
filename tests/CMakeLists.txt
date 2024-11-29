@@ -124,7 +124,6 @@ else ()
     endmacro(add_nng_test3)
 endif ()
 
-add_nng_test(device 5)
 add_nng_test(files 5)
 add_nng_test1(httpclient 60 NNG_SUPP_HTTP)
 add_nng_test1(httpserver 30 NNG_SUPP_HTTP)

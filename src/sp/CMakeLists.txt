@@ -19,4 +19,5 @@ nng_sources(
 )
 
 nng_test(pipe_test)
+nng_test(device_test)
 nng_test(multistress_test)
