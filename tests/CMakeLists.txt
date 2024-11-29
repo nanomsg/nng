@@ -140,7 +140,5 @@ add_nng_test(ws 30)
 add_nng_test(wss 30)
 add_nng_test1(zt 60 NNG_TRANSPORT_ZEROTIER)
 
-add_nng_test(reqstress 60)
-
 # c++ tests
 add_nng_cpp_test(cplusplus_pair 5)

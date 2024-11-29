@@ -17,8 +17,7 @@
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
 
-#include "convey.h"
-#include "stubs.h"
+#include <nuts.h>
 
 #ifdef NDEBUG
 #define dprintf(...)
@@ -261,19 +260,21 @@ reqrep_test(int ntests)
 	}
 }
 
-Main({
+static void
+test_req_stress(void)
+{
 	int   i;
 	int   tmo;
 	char *str;
 
-	if (((str = ConveyGetEnv("STRESSTIME")) == NULL) ||
+	if (((str = getenv("STRESSTIME")) == NULL) ||
 	    ((tmo = atoi(str)) < 1)) {
 		tmo = 30;
 	}
 	// We have to keep this relatively low by default because some
 	// platforms don't support large numbers of sockets.  (On macOS
 	// laptop I can run this with 500 though.)
-	if (((str = ConveyGetEnv("STRESSPRESSURE")) == NULL) ||
+	if (((str = getenv("STRESSPRESSURE")) == NULL) ||
 	    ((ncases = atoi(str)) < 1)) {
 		ncases = 32;
 	}
@@ -307,30 +308,29 @@ Main({
 	}
 	nng_msleep(100);
 
-	Test("Req/Rep Stress", {
-		Convey("All tests worked", {
-			for (i = 0; i < ncases; i++) {
-				nng_aio_stop(cases[i].recv_aio);
-				nng_aio_stop(cases[i].send_aio);
-				nng_aio_stop(cases[i].time_aio);
-				nng_aio_free(cases[i].recv_aio);
-				nng_aio_free(cases[i].send_aio);
-				nng_aio_free(cases[i].time_aio);
-				if (cases[i].name != NULL) {
-					dprintf(
-					    "RESULT socket %u (%s) sent %d "
-					    "recd %d fail %d\n",
-					    cases[i].socket.id, cases[i].name,
-					    cases[i].nsend, cases[i].nrecv,
-					    cases[i].nfail);
-					So(cases[i].nfail == 0);
-					So(cases[i].nsend > 0 ||
-					    cases[i].nrecv > 0);
-				}
-			}
-		});
-	});
+	for (i = 0; i < ncases; i++) {
+		nng_aio_stop(cases[i].recv_aio);
+		nng_aio_stop(cases[i].send_aio);
+		nng_aio_stop(cases[i].time_aio);
+		nng_aio_free(cases[i].recv_aio);
+		nng_aio_free(cases[i].send_aio);
+		nng_aio_free(cases[i].time_aio);
+		if (cases[i].name != NULL) {
+			dprintf("RESULT socket %u (%s) sent %d "
+			        "recd %d fail %d\n",
+			    cases[i].socket.id, cases[i].name, cases[i].nsend,
+			    cases[i].nrecv, cases[i].nfail);
+			NUTS_TRUE(cases[i].nfail == 0);
+			NUTS_TRUE(cases[i].nsend > 0 || cases[i].nrecv > 0);
+			NUTS_CLOSE(cases[i].socket);
+		}
+	}
 
 	free(cases);
 	nng_fini();
-})
+}
+
+NUTS_TESTS = {
+	{ "req stress", test_req_stress },
+	{ NULL, NULL },
+};
