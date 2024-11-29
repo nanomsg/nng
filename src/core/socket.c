@@ -68,7 +68,6 @@ static const nni_ep_option ep_options[] = {
 struct nni_socket {
 	nni_list_node s_node;
 	nni_mtx       s_mx;
-	nni_cv        s_cv;
 	nni_cv        s_close_cv;
 
 	uint32_t s_id;
@@ -488,7 +487,6 @@ sock_destroy(nni_sock *s)
 	nni_msgq_fini(s->s_urq);
 	nni_msgq_fini(s->s_uwq);
 	nni_cv_fini(&s->s_close_cv);
-	nni_cv_fini(&s->s_cv);
 	nni_mtx_fini(&s->s_mx);
 	nni_mtx_fini(&s->s_pipe_cbs_mtx);
 	nni_free(s, s->s_size);
@@ -536,7 +534,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	NNI_LIST_INIT(&s->s_dialers, nni_dialer, d_node);
 	nni_mtx_init(&s->s_mx);
 	nni_mtx_init(&s->s_pipe_cbs_mtx);
-	nni_cv_init(&s->s_cv, &s->s_mx);
 	nni_cv_init(&s->s_close_cv, &sock_lk);
 
 #ifdef NNG_ENABLE_STATS
@@ -639,6 +636,10 @@ nni_sock_shutdown(nni_sock *sock)
 	NNI_LIST_FOREACH (&sock->s_dialers, d) {
 		nni_dialer_close(d);
 	}
+
+	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
+		nni_pipe_close(pipe);
+	}
 	nni_mtx_unlock(&sock->s_mx);
 
 	// Close the upper queues immediately.
@@ -678,22 +679,7 @@ nni_sock_shutdown(nni_sock *sock)
 	// give the protocol a chance to flush its write side.  Now
 	// it is time to be a little more insistent.
 
-	// For each pipe, arrange for it to teardown hard.  We would
-	// expect there not to be any here.
-	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
-		nni_pipe_close(pipe);
-	}
-
-	// We have to wait for pipes to be removed.
-	while (!nni_list_empty(&sock->s_pipes)) {
-		nni_cv_wait(&sock->s_cv);
-	}
-
 	sock->s_sock_ops.sock_close(sock->s_data);
-
-	nni_cv_wake(&sock->s_cv);
-
-	NNI_ASSERT(nni_list_first(&sock->s_pipes) == NULL);
 
 	nni_mtx_unlock(&sock->s_mx);
 
@@ -1442,7 +1428,6 @@ nni_pipe_remove(nni_pipe *p)
 		d->d_pipe = NULL;
 		dialer_timer_start_locked(d); // Kick the timer to redial.
 	}
-	nni_cv_wake(&s->s_cv);
 	nni_mtx_unlock(&s->s_mx);
 }
 
