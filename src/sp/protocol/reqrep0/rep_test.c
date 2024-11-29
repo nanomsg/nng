@@ -164,6 +164,7 @@ test_rep_double_recv(void)
 	nng_aio_wait(aio2);
 	NUTS_FAIL(nng_aio_result(aio2), NNG_ESTATE);
 	NUTS_CLOSE(s1);
+	nng_aio_wait(aio1);
 	NUTS_FAIL(nng_aio_result(aio1), NNG_ECLOSED);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);

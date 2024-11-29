@@ -504,6 +504,7 @@ test_surv_ctx_recv_close_socket(void)
 	nng_ctx_recv(ctx, aio);
 	nng_close(surv);
 
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	nng_aio_free(aio);
 	NUTS_CLOSE(resp);
