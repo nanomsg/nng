@@ -197,8 +197,6 @@ extern void     nni_atomic_sub64(nni_atomic_u64 *, uint64_t);
 extern uint64_t nni_atomic_get64(nni_atomic_u64 *);
 extern void     nni_atomic_set64(nni_atomic_u64 *, uint64_t);
 extern uint64_t nni_atomic_swap64(nni_atomic_u64 *, uint64_t);
-extern uint64_t nni_atomic_dec64_nv(nni_atomic_u64 *);
-extern void     nni_atomic_inc64(nni_atomic_u64 *);
 
 // nni_atomic_cas64 is a compare and swap.  The second argument is the
 // value to compare against, and the third is the new value. Returns
@@ -218,6 +216,11 @@ extern void nni_atomic_sub(nni_atomic_int *, int);
 extern int  nni_atomic_get(nni_atomic_int *);
 extern void nni_atomic_set(nni_atomic_int *, int);
 extern int  nni_atomic_swap(nni_atomic_int *, int);
+
+// These versions are tuned for use as reference
+// counters. Relaxed order when possible to increase
+// reference count, acquire-release order for dropping
+// it (where we need to check the value).
 extern int  nni_atomic_dec_nv(nni_atomic_int *);
 extern void nni_atomic_dec(nni_atomic_int *);
 extern void nni_atomic_inc(nni_atomic_int *);
