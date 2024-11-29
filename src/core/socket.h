@@ -78,6 +78,8 @@ extern int nni_ctx_find(nni_ctx **, uint32_t);
 
 extern void *nni_ctx_proto_data(nni_ctx *);
 
+extern void nni_ctx_hold(nni_ctx *);
+
 // nni_ctx_rele is called to release a hold on the context.  These holds
 // are acquired by either nni_ctx_open or nni_ctx_find.  If the context
 // is being closed (nni_ctx_close was called), and this is the last reference,

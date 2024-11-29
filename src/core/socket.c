@@ -12,6 +12,7 @@
 #include "core/nng_impl.h"
 #include "core/options.h"
 #include "core/pipe.h"
+#include "core/platform.h"
 #include "list.h"
 #include "nng/nng.h"
 #include "sockimpl.h"
@@ -27,11 +28,12 @@ struct nni_ctx {
 	nni_proto_ctx_ops c_ops;
 	void             *c_data;
 	size_t            c_size;
-	bool              c_closed;
-	unsigned          c_ref; // protected by global lock
 	uint32_t          c_id;
 	nng_duration      c_sndtimeo;
 	nng_duration      c_rcvtimeo;
+	nni_reap_node     c_reap;
+	nni_atomic_flag   c_closed;
+	nni_refcnt        c_refcnt;
 };
 
 typedef struct nni_sock_pipe_cb {
@@ -123,8 +125,6 @@ static nni_list sock_list  = NNI_LIST_INITIALIZER(sock_list, nni_sock, s_node);
 static nni_mtx  sock_lk    = NNI_MTX_INITIALIZER;
 static nni_id_map sock_ids = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
 static nni_id_map ctx_ids  = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
-
-static void nni_ctx_destroy(nni_ctx *);
 
 #define SOCK(s) ((nni_sock *) (s))
 
@@ -619,7 +619,6 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_dialer   *d;
 	nni_listener *l;
 	nni_ctx      *ctx;
-	nni_ctx      *nctx;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
@@ -640,38 +639,15 @@ nni_sock_shutdown(nni_sock *sock)
 	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
 		nni_pipe_close(pipe);
 	}
+
+	NNI_LIST_FOREACH (&sock->s_ctxs, ctx) {
+		nni_ctx_close(ctx);
+	}
 	nni_mtx_unlock(&sock->s_mx);
 
 	// Close the upper queues immediately.
 	nni_msgq_close(sock->s_urq);
 	nni_msgq_close(sock->s_uwq);
-
-	// We now mark any owned contexts as closing.
-	// XXX: Add context draining support here!
-	nni_mtx_lock(&sock_lk);
-	nctx = nni_list_first(&sock->s_ctxs);
-	while ((ctx = nctx) != NULL) {
-		nctx          = nni_list_next(&sock->s_ctxs, ctx);
-		ctx->c_closed = true;
-		if (ctx->c_ref == 0) {
-			// No open operations.  So close it.
-			nni_id_remove(&ctx_ids, ctx->c_id);
-			nni_list_remove(&sock->s_ctxs, ctx);
-			nni_ctx_destroy(ctx);
-		}
-		// If still has a reference count, then wait for last
-		// reference to close before nuking it.
-	}
-
-	// Generally, unless the protocol is blocked trying to perform
-	// writes (e.g. a slow reader on the other side), it should be
-	// trying to shut things down.  We wait to give it
-	// a chance to do so gracefully.
-
-	while (!nni_list_empty(&sock->s_ctxs)) {
-		nni_cv_wait(&sock->s_close_cv);
-	}
-	nni_mtx_unlock(&sock_lk);
 
 	nni_mtx_lock(&sock->s_mx);
 
@@ -984,12 +960,8 @@ nni_ctx_find(nni_ctx **cp, uint32_t id)
 		// we can close it, then we still allow.  In the case
 		// the only valid operation will be to close the
 		// socket.)
-		if (ctx->c_closed || ctx->c_sock->s_closed) {
-			rv = NNG_ECLOSED;
-		} else {
-			ctx->c_ref++;
-			*cp = ctx;
-		}
+		nni_ctx_hold(ctx);
+		*cp = ctx;
 	} else {
 		rv = NNG_ECLOSED;
 	}
@@ -1005,38 +977,30 @@ nni_ctx_proto_data(nni_ctx *ctx)
 }
 
 static void
-nni_ctx_destroy(nni_ctx *ctx)
+ctx_destroy(void *arg)
 {
+	nni_ctx *ctx = arg;
+
 	if (ctx->c_data != NULL) {
 		ctx->c_ops.ctx_fini(ctx->c_data);
 	}
+
+	nni_sock_rele(ctx->c_sock);
 
 	// Let the socket go, our hold on it is done.
 	nni_free(ctx, ctx->c_size);
 }
 
 void
+nni_ctx_hold(nni_ctx *ctx)
+{
+	nni_refcnt_hold(&ctx->c_refcnt);
+}
+
+void
 nni_ctx_rele(nni_ctx *ctx)
 {
-	nni_sock *sock = ctx->c_sock;
-	nni_mtx_lock(&sock_lk);
-	ctx->c_ref--;
-	if ((ctx->c_ref > 0) || (!ctx->c_closed)) {
-		// Either still have an active reference, or not
-		// actually closing yet.
-		nni_mtx_unlock(&sock_lk);
-		return;
-	}
-
-	// Remove us from the hash, so we can't be found any more.
-	// This allows our ID to be reused later, although the system
-	// tries to avoid ID reuse.
-	nni_id_remove(&ctx_ids, ctx->c_id);
-	nni_list_remove(&sock->s_ctxs, ctx);
-	nni_cv_wake(&sock->s_close_cv);
-	nni_mtx_unlock(&sock_lk);
-
-	nni_ctx_destroy(ctx);
+	nni_refcnt_rele(&ctx->c_refcnt);
 }
 
 int
@@ -1056,8 +1020,6 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 	}
 	ctx->c_size     = sz;
 	ctx->c_data     = ctx + 1;
-	ctx->c_closed   = false;
-	ctx->c_ref      = 1; // Caller implicitly gets a reference.
 	ctx->c_sock     = sock;
 	ctx->c_ops      = sock->s_ctx_ops;
 	ctx->c_rcvtimeo = sock->s_rcvtimeo;
@@ -1077,32 +1039,51 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 
 	sock->s_ctx_ops.ctx_init(ctx->c_data, sock->s_data);
 
-	nni_list_append(&sock->s_ctxs, ctx);
+	nni_refcnt_init(&ctx->c_refcnt, 2, ctx, ctx_destroy);
+	sock->s_ref++;
 	nni_mtx_unlock(&sock_lk);
 
-	// Paranoia, fixing a possible race in close.  Don't let us
-	// give back a context if the socket is being shutdown (it
-	// might not have reached the "closed" state yet.)
 	nni_mtx_lock(&sock->s_mx);
-	if (sock->s_closing) {
-		nni_mtx_unlock(&sock->s_mx);
-		nni_ctx_rele(ctx);
-		return (NNG_ECLOSED);
-	}
+	nni_list_append(&sock->s_ctxs, ctx);
 	nni_mtx_unlock(&sock->s_mx);
+
 	*ctxp = ctx;
 
 	return (0);
 }
 
+static void
+ctx_reap(void *arg)
+{
+	nni_ctx  *ctx  = arg;
+	nni_sock *sock = ctx->c_sock;
+
+	nni_mtx_lock(&sock->s_mx);
+	nni_list_remove(&sock->s_ctxs, ctx);
+	nni_mtx_unlock(&sock->s_mx);
+
+	nni_ctx_rele(ctx);
+}
+
+static nni_reap_list ctx_reap_list = {
+	.rl_offset = offsetof(nni_ctx, c_reap),
+	.rl_func   = ctx_reap,
+};
+
 void
 nni_ctx_close(nni_ctx *ctx)
 {
+	if (nni_atomic_flag_test_and_set(&ctx->c_closed)) {
+		return;
+	}
 	nni_mtx_lock(&sock_lk);
-	ctx->c_closed = true;
+	// Remove us from the hash, so we can't be found any more.
+	// This allows our ID to be reused later, although the system
+	// tries to avoid ID reuse.
+	nni_id_remove(&ctx_ids, ctx->c_id);
 	nni_mtx_unlock(&sock_lk);
 
-	nni_ctx_rele(ctx);
+	nni_reap(&ctx_reap_list, ctx);
 }
 
 uint32_t

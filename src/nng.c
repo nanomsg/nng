@@ -275,8 +275,8 @@ nng_ctx_close(nng_ctx c)
 	if ((rv = nni_ctx_find(&ctx, c.id)) != 0) {
 		return (rv);
 	}
-	// no release, close releases implicitly.
 	nni_ctx_close(ctx);
+	nni_ctx_rele(ctx);
 	return (0);
 }
 
