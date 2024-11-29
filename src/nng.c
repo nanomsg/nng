@@ -36,8 +36,8 @@ nng_close(nng_socket s)
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
 		return (rv);
 	}
-	// No release -- close releases it.
 	nni_sock_close(sock);
+	nni_sock_rele(sock);
 	return (0);
 }
 
