@@ -13,3 +13,4 @@ nng_directory(inproc)
 
 nng_sources_if(NNG_TRANSPORT_INPROC inproc.c)
 nng_defines_if(NNG_TRANSPORT_INPROC NNG_TRANSPORT_INPROC)
+nng_test_if(NNG_TRANSPORT_INPROC inproc_test)

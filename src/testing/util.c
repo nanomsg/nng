@@ -214,3 +214,270 @@ nuts_logger(nng_log_level level, nng_log_facility fac, const char *msgid,
 	}
 	acutest_message_color_(color, "%s: %s: %s", lstr, msgid, msg);
 }
+
+void
+nuts_tran_conn_refused(const char *scheme)
+{
+	nng_socket  s = NNG_SOCKET_INITIALIZER;
+	nng_dialer  d = NNG_DIALER_INITIALIZER;
+	const char *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s);
+	NUTS_FAIL(nng_dial(s, addr, &d, 0), NNG_ECONNREFUSED);
+	NUTS_TRUE(nng_dialer_id(d) < 0);
+	NUTS_CLOSE(s);
+}
+
+void
+nuts_tran_duplicate_listen(const char *scheme)
+{
+	nng_socket   s  = NNG_SOCKET_INITIALIZER;
+	nng_listener l1 = NNG_LISTENER_INITIALIZER;
+	nng_listener l2 = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listen(s, addr, &l1, 0));
+	NUTS_FAIL(nng_listen(s, addr, &l2, 0), NNG_EADDRINUSE);
+	NUTS_TRUE(nng_listener_id(l1) > 0);
+	NUTS_TRUE(nng_listener_id(l2) < 0);
+	NUTS_CLOSE(s);
+}
+
+void
+nuts_tran_listen_accept(const char *scheme)
+{
+	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer   d2 = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d2, 0));
+	NUTS_TRUE(nng_listener_id(l1) > 0);
+	NUTS_TRUE(nng_dialer_id(d1) > 0);
+	NUTS_TRUE(nng_dialer_id(d2) > 0);
+	NUTS_TRUE(nng_dialer_id(d1) != nng_dialer_id(d2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
+
+void
+nuts_tran_exchange(const char *scheme)
+{
+	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_TRUE(nng_listener_id(l1) > 0);
+	NUTS_TRUE(nng_dialer_id(d1) > 0);
+	for (int i = 0; i < 5; i++) {
+		NUTS_SEND(s1, "ping");
+		NUTS_RECV(s2, "ping");
+		NUTS_SEND(s2, "acknowledge");
+		NUTS_RECV(s1, "acknowledge");
+	}
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
+
+void
+nuts_tran_pipe_id(const char *scheme)
+{
+	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+	nng_msg     *msg;
+	nng_pipe     p1;
+	nng_pipe     p2;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_TRUE(nng_listener_id(l1) > 0);
+	NUTS_TRUE(nng_dialer_id(d1) > 0);
+	NUTS_SEND(s1, "ping");
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	NUTS_MATCH(nng_msg_body(msg), "ping");
+	p1 = nng_msg_get_pipe(msg);
+	nng_msg_free(msg);
+	NUTS_TRUE(nng_pipe_id(p1) > 0);
+	NUTS_SEND(s2, "acknowledge");
+	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+	NUTS_MATCH(nng_msg_body(msg), "acknowledge");
+	p2 = nng_msg_get_pipe(msg);
+	NUTS_TRUE(nng_pipe_id(p2) > 0);
+	nng_msg_free(msg);
+	NUTS_TRUE(nng_pipe_id(p1) != nng_pipe_id(p2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
+
+void
+nuts_tran_huge_msg(const char *scheme, size_t size)
+{
+	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+	char        *buf;
+	nng_msg     *msg;
+
+	buf = nng_alloc(size);
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_TRUE(nng_listener_id(l1) > 0);
+	NUTS_TRUE(nng_dialer_id(d1) > 0);
+	for (int i = 0; i < 5; i++) {
+		for (size_t j = 0; j < size; j++) {
+			buf[j] = nng_random() & 0xff;
+		}
+		NUTS_PASS(nng_send(s1, buf, size, 0));
+		NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+		NUTS_TRUE(nng_msg_len(msg) == size);
+		NUTS_TRUE(memcmp(nng_msg_body(msg), buf, size) == 0);
+		nng_msg_free(msg);
+		NUTS_PASS(nng_send(s2, buf, size, 0));
+		NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+		NUTS_TRUE(nng_msg_len(msg) == size);
+		NUTS_TRUE(memcmp(nng_msg_body(msg), buf, size) == 0);
+		nng_msg_free(msg);
+	}
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+	nng_free(buf, size);
+}
+
+void
+nuts_tran_msg_props(const char *scheme, void (*check)(nng_msg *))
+{
+	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+	nng_msg     *msg;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
+	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_TRUE(nng_listener_id(l1) > 0);
+	NUTS_TRUE(nng_dialer_id(d1) > 0);
+	NUTS_SEND(s1, "ping");
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	NUTS_MATCH(nng_msg_body(msg), "ping");
+	check(msg);
+	nng_msg_free(msg);
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
+
+void
+nuts_tran_perf(const char *scheme)
+{
+	nng_socket  s1;
+	nng_socket  s2;
+	const char *addr;
+	nng_msg    *msg;
+
+	nuts_set_logger(NNG_LOG_NOTICE);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_ADDR(addr, scheme);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_MARRY_EX(s1, s2, addr, NULL, NULL);
+	NUTS_PASS(nng_msg_alloc(&msg, 64));
+	nng_log_notice(scheme, "Exchanging 64 byte messages for 10 seconds");
+	nng_time     now = nng_clock();
+	nng_time     end = now + 10000; // ten seconds
+	nng_duration delta;
+	int          rv;
+	int          num = 0;
+
+	// count round trips for 10 seconds
+	while (nng_clock() < end) {
+		if ((rv = nng_sendmsg(s1, msg, 0)) != 0) {
+			NUTS_PASS(rv);
+			NUTS_MSG("nng_sendmsg failed");
+			break;
+		}
+		if ((rv = nng_recvmsg(s2, &msg, 0)) != 0) {
+			NUTS_PASS(rv);
+			NUTS_MSG("nng_recvmsg failed");
+			break;
+		}
+		num++;
+	}
+	delta = (nng_clock() - now);
+	nng_msg_free(msg);
+
+	// now count the cost of the time collection
+	now = nng_clock();
+	for (int i = 0; i < num; i++) {
+		end = nng_clock();
+		if (end < now) {
+			NUTS_ASSERT(end >= now);
+		}
+	}
+	NUTS_ASSERT(end - now > 0);
+	NUTS_ASSERT(end - now < 10000);
+	// remove the cost of timing
+	delta -= (end - now);
+	nng_log_notice(scheme,
+	    "Did %u roundtrips in %0.2f seconds (%0.3f msg/sec)", num,
+	    delta / 1000.0, (float) num / (delta / 1000.0));
+	nng_log_notice(scheme, "RTT %0.3f ms", (float) delta / (float) num);
+	nng_log_notice(
+	    scheme, "Timing overhead %0.3f ms", (end - now) / (float) num);
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
