@@ -706,19 +706,9 @@ nni_sock_closeall(void)
 	nni_sock *s;
 	uint32_t  next = 0;
 
-	nni_mtx_lock(&sock_lk);
 	while (nni_id_visit(&sock_ids, NULL, (void **) &s, &next)) {
-		if (nni_atomic_flag_test_and_set(&s->s_close_once)) {
-			continue;
-		}
-		s->s_closed = true;
-		nni_id_remove(&sock_ids, s->s_id);
-
-		sock_close_children(s);
-
-		nni_reap(&sock_reap_list, s);
+		nni_sock_close(s);
 	}
-	nni_mtx_unlock(&sock_lk);
 }
 
 void
