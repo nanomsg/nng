@@ -9,6 +9,7 @@
 //
 
 #include "nng/nng.h"
+#include <stdbool.h>
 #define TEST_NO_MAIN
 
 #ifdef _WIN32
@@ -41,7 +42,7 @@
 #include <poll.h>
 #endif
 
-#include "nuts.h"
+#include <nuts.h>
 
 uint64_t
 nuts_clock(void)
@@ -171,6 +172,25 @@ nuts_sleep(int msec)
 #define NUTS_COLOR_GREEN_INTENSIVE_ 4
 #define NUTS_COLOR_RED_INTENSIVE_ 5
 
+bool
+nuts_has_ipv6(void)
+{
+	nng_sockaddr sa;
+	nng_udp     *u;
+	int          rv;
+
+	sa.s_in6.sa_family = NNG_AF_INET6;
+	sa.s_in6.sa_port   = 0;
+	memset(sa.s_in6.sa_addr, 0, 16);
+	sa.s_in6.sa_addr[15] = 1;
+
+	rv = nng_udp_open(&u, &sa);
+	if (rv == 0) {
+		nng_udp_close(u);
+	}
+	return (rv == 0 ? 1 : 0);
+}
+
 void
 nuts_set_logger(int level)
 {
@@ -222,6 +242,7 @@ nuts_tran_conn_refused(const char *scheme)
 	nng_dialer  d = NNG_DIALER_INITIALIZER;
 	const char *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_FAIL(nng_dial(s, addr, &d, 0), NNG_ECONNREFUSED);
@@ -236,6 +257,7 @@ nuts_tran_dialer_cancel(const char *scheme)
 	nng_dialer  d = NNG_DIALER_INITIALIZER;
 	const char *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
@@ -251,6 +273,7 @@ nuts_tran_dialer_closed(const char *scheme)
 	nng_dialer  d = NNG_DIALER_INITIALIZER;
 	const char *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dialer_create(&d, s, addr));
@@ -268,6 +291,7 @@ nuts_tran_duplicate_listen(const char *scheme)
 	nng_listener l2 = NNG_LISTENER_INITIALIZER;
 	const char  *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listen(s, addr, &l1, 0));
@@ -284,6 +308,7 @@ nuts_tran_listener_cancel(const char *scheme)
 	nng_listener l = NNG_LISTENER_INITIALIZER;
 	const char  *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listen(s, addr, &l, 0));
@@ -299,6 +324,7 @@ nuts_tran_listener_closed(const char *scheme)
 	nng_listener l = NNG_LISTENER_INITIALIZER;
 	const char  *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listener_create(&l, s, addr));
@@ -318,6 +344,7 @@ nuts_tran_listen_accept(const char *scheme)
 	nng_dialer   d2 = NNG_LISTENER_INITIALIZER;
 	const char  *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -345,6 +372,7 @@ nuts_tran_exchange(const char *scheme)
 	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
 	const char  *addr;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -378,6 +406,7 @@ nuts_tran_pipe_id(const char *scheme)
 	nng_pipe     p1;
 	nng_pipe     p2;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -419,6 +448,7 @@ nuts_tran_huge_msg(const char *scheme, size_t size)
 
 	buf = nng_alloc(size);
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -460,6 +490,7 @@ nuts_tran_msg_props(const char *scheme, void (*check)(nng_msg *))
 	const char  *addr;
 	nng_msg     *msg;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -488,6 +519,7 @@ nuts_tran_perf(const char *scheme)
 	const char *addr;
 	nng_msg    *msg;
 
+	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	nuts_set_logger(NNG_LOG_NOTICE);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);

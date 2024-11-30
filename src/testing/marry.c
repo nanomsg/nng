@@ -48,16 +48,19 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 	if ((strncmp(scheme, "tcp", 3) == 0) ||
 	    (strncmp(scheme, "tls", 3) == 0) ||
 	    (strncmp(scheme, "udp", 3) == 0)) {
+		const char *ip =
+		    strchr(scheme, '6') != NULL ? "[::1]" : "127.0.0.1";
 		(void) snprintf(
-		    addr, sz, "%s://127.0.0.1:%u", scheme, nuts_next_port());
+		    addr, sz, "%s://%s:%u", scheme, ip, nuts_next_port());
 		return;
 	}
 
 	if (strncmp(scheme, "ws", 2) == 0) {
-		(void) snprintf(addr, sz,
-		    "%s://127.0.0.1:%u/nuts%04x%04x%04x%04x", scheme,
-		    nuts_next_port(), nng_random(), nng_random(), nng_random(),
-		    nng_random());
+		const char *ip =
+		    strchr(scheme, '6') != NULL ? "[::1]" : "127.0.0.1";
+		(void) snprintf(addr, sz, "%s://%s:%u/nuts%04x%04x%04x%04x",
+		    scheme, ip, nuts_next_port(), nng_random(), nng_random(),
+		    nng_random(), nng_random());
 		return;
 	}
 

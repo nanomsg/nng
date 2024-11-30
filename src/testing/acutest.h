@@ -332,6 +332,8 @@ void acutest_message_(const char* fmt, ...);
 void acutest_message_color_(int color, const char* fmt, ...);
 void acutest_dump_(const char* title, const void* addr, size_t size);
 void acutest_abort_(void) ACUTEST_ATTRIBUTE_(noreturn);
+void ACUTEST_ATTRIBUTE_(format (printf, 3, 4))
+acutest_skip_(const char* file, int line, const char* fmt, ...);
 #ifdef __cplusplus
     }  /* extern "C" */
 #endif

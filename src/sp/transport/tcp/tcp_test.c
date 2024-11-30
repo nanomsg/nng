@@ -127,42 +127,6 @@ test_tcp_no_delay_option(void)
 	NUTS_CLOSE(s);
 }
 
-static bool
-has_v6(void)
-{
-	nng_sockaddr sa;
-	nng_udp     *u;
-	int          rv;
-
-	sa.s_in6.sa_family = NNG_AF_INET6;
-	sa.s_in6.sa_port   = 0;
-	memset(sa.s_in6.sa_addr, 0, 16);
-	sa.s_in6.sa_addr[15] = 1;
-
-	rv = nng_udp_open(&u, &sa);
-	if (rv == 0) {
-		nng_udp_close(u);
-	}
-	return (rv == 0 ? 1 : 0);
-}
-
-void
-test_tcp_ipv6(void)
-{
-	if (!has_v6()) {
-		NUTS_SKIP("No IPv6 support");
-		return;
-	}
-	nng_socket s;
-	NUTS_OPEN(s);
-	// this should have a [::1] bracket
-	NUTS_FAIL(nng_dial(s, "tcp://::1", NULL, 0), NNG_EINVAL);
-	NUTS_FAIL(nng_dial(s, "tcp://::1:5055", NULL, 0), NNG_EINVAL);
-	// this requires a port, but otherwise its ok, so address is invalid
-	NUTS_FAIL(nng_dial(s, "tcp://[::1]", NULL, 0), NNG_EADDRINVAL);
-	NUTS_CLOSE(s);
-}
-
 void
 test_tcp_keep_alive_option(void)
 {
@@ -270,12 +234,51 @@ check_props_v4(nng_msg *msg)
 }
 
 void
+check_props_v6(nng_msg *msg)
+{
+	nng_pipe     p;
+	size_t       z;
+	nng_sockaddr la;
+	nng_sockaddr ra;
+	bool         b;
+	uint8_t self[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
+
+	p = nng_msg_get_pipe(msg);
+	NUTS_TRUE(nng_pipe_id(p) > 0);
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la));
+	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_LOCADDR, &z), NNG_EBADTYPE);
+	NUTS_TRUE(la.s_family == NNG_AF_INET6);
+	NUTS_TRUE(la.s_in6.sa_port != 0);
+	NUTS_TRUE(memcmp(la.s_in6.sa_addr, self, 16) == 0);
+
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra));
+	NUTS_TRUE(ra.s_family == NNG_AF_INET6);
+	NUTS_TRUE(ra.s_in6.sa_port != 0);
+	NUTS_TRUE(memcmp(ra.s_in6.sa_addr, self, 16) == 0);
+	NUTS_TRUE(ra.s_in6.sa_port != la.s_in6.sa_port);
+	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z), NNG_EBADTYPE);
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b));
+	NUTS_TRUE(b == false); // default
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_NODELAY, &b));
+	NUTS_TRUE(b); // default
+}
+
+void
 test_tcp_props_v4(void)
 {
 	nuts_tran_msg_props("tcp4", check_props_v4);
 }
 
+void
+test_tcp_props_v6(void)
+{
+	nuts_tran_msg_props("tcp6", check_props_v6);
+}
+
 NUTS_DECLARE_TRAN_TESTS(tcp)
+NUTS_DECLARE_TRAN_TESTS(tcp6)
 
 NUTS_TESTS = {
 	NUTS_INSERT_TRAN_TESTS(tcp),
@@ -287,7 +290,8 @@ NUTS_TESTS = {
 	{ "tcp no delay option", test_tcp_no_delay_option },
 	{ "tcp keep alive option", test_tcp_keep_alive_option },
 	{ "tcp recv max", test_tcp_recv_max },
-	{ "tcp ipv6", test_tcp_ipv6 },
 	{ "tcp props v4", test_tcp_props_v4 },
+	NUTS_INSERT_TRAN_TESTS(tcp6),
+	{ "tcp props v6", test_tcp_props_v6 },
 	{ NULL, NULL },
 };

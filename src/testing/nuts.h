@@ -121,6 +121,14 @@ extern void nuts_tran_huge_msg(const char *scheme, size_t size);
 extern void nuts_tran_msg_props(const char *scheme, void (*check)(nng_msg *));
 extern void nuts_tran_perf(const char *scheme);
 
+#define NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme)                        \
+	do {                                                               \
+		if ((strchr(scheme, '6') != NULL) && (!nuts_has_ipv6())) { \
+			NUTS_SKIP("No IPv6 support present");              \
+			return;                                            \
+		}                                                          \
+	} while (0)
+
 #ifndef NUTS_TRAN_HUGE_MSG_SIZE
 #define NUTS_TRAN_HUGE_MSG_SIZE (1U << 20)
 #endif
