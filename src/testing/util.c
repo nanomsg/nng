@@ -230,6 +230,37 @@ nuts_tran_conn_refused(const char *scheme)
 }
 
 void
+nuts_tran_dialer_cancel(const char *scheme)
+{
+	nng_socket  s = NNG_SOCKET_INITIALIZER;
+	nng_dialer  d = NNG_DIALER_INITIALIZER;
+	const char *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
+	NUTS_TRUE(nng_dialer_id(d) > 0);
+	NUTS_PASS(nng_dialer_close(d));
+	NUTS_CLOSE(s);
+}
+
+void
+nuts_tran_dialer_closed(const char *scheme)
+{
+	nng_socket  s = NNG_SOCKET_INITIALIZER;
+	nng_dialer  d = NNG_DIALER_INITIALIZER;
+	const char *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, addr));
+	NUTS_TRUE(nng_dialer_id(d) > 0);
+	NUTS_PASS(nng_dialer_close(d));
+	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ENOENT);
+	NUTS_CLOSE(s);
+}
+
+void
 nuts_tran_duplicate_listen(const char *scheme)
 {
 	nng_socket   s  = NNG_SOCKET_INITIALIZER;
@@ -243,6 +274,37 @@ nuts_tran_duplicate_listen(const char *scheme)
 	NUTS_FAIL(nng_listen(s, addr, &l2, 0), NNG_EADDRINUSE);
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_listener_id(l2) < 0);
+	NUTS_CLOSE(s);
+}
+
+void
+nuts_tran_listener_cancel(const char *scheme)
+{
+	nng_socket   s = NNG_SOCKET_INITIALIZER;
+	nng_listener l = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listen(s, addr, &l, 0));
+	NUTS_TRUE(nng_listener_id(l) > 0);
+	NUTS_PASS(nng_listener_close(l));
+	NUTS_CLOSE(s);
+}
+
+void
+nuts_tran_listener_closed(const char *scheme)
+{
+	nng_socket   s = NNG_SOCKET_INITIALIZER;
+	nng_listener l = NNG_LISTENER_INITIALIZER;
+	const char  *addr;
+
+	NUTS_ADDR(addr, scheme);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listener_create(&l, s, addr));
+	NUTS_TRUE(nng_listener_id(l) > 0);
+	NUTS_PASS(nng_listener_close(l));
+	NUTS_FAIL(nng_listener_start(l, 0), NNG_ENOENT);
 	NUTS_CLOSE(s);
 }
 

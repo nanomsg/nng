@@ -109,7 +109,11 @@ extern int   nuts_stream_wait(void *);
 // nuts_tran_ functions are implementation of tesets
 // for transports, to improve code reuse.
 extern void nuts_tran_conn_refused(const char *scheme);
+extern void nuts_tran_dialer_cancel(const char *scheme);
+extern void nuts_tran_dialer_closed(const char *scheme);
 extern void nuts_tran_duplicate_listen(const char *scheme);
+extern void nuts_tran_listener_cancel(const char *scheme);
+extern void nuts_tran_listener_closed(const char *scheme);
 extern void nuts_tran_listen_accept(const char *scheme);
 extern void nuts_tran_exchange(const char *scheme);
 extern void nuts_tran_pipe_id(const char *scheme);
@@ -126,9 +130,25 @@ extern void nuts_tran_perf(const char *scheme);
 	{                                                             \
 		nuts_tran_conn_refused(#scheme);                      \
 	}                                                             \
+	void test_##scheme##_dialer_cancel(void)                      \
+	{                                                             \
+		nuts_tran_dialer_cancel(#scheme);                     \
+	}                                                             \
+	void test_##scheme##_dialer_closed(void)                      \
+	{                                                             \
+		nuts_tran_dialer_closed(#scheme);                     \
+	}                                                             \
 	void test_##scheme##_duplicate_listen(void)                   \
 	{                                                             \
 		nuts_tran_duplicate_listen(#scheme);                  \
+	}                                                             \
+	void test_##scheme##_listener_cancel(void)                    \
+	{                                                             \
+		nuts_tran_listener_cancel(#scheme);                   \
+	}                                                             \
+	void test_##scheme##_listener_closed(void)                    \
+	{                                                             \
+		nuts_tran_listener_closed(#scheme);                   \
 	}                                                             \
 	void test_##scheme##_listen_accept(void)                      \
 	{                                                             \
@@ -154,7 +174,11 @@ extern void nuts_tran_perf(const char *scheme);
 // clang-format off
 #define NUTS_INSERT_TRAN_TESTS(scheme) \
 	{ #scheme " conn refused", test_##scheme##_conn_refused }, \
+	{ #scheme " dialer cancel", test_##scheme##_dialer_cancel }, \
+	{ #scheme " dialer closed", test_##scheme##_dialer_closed }, \
 	{ #scheme " duplicate listen", test_##scheme##_duplicate_listen }, \
+	{ #scheme " listener cancel", test_##scheme##_listener_cancel }, \
+	{ #scheme " listener closed", test_##scheme##_listener_closed }, \
 	{ #scheme " listen accept", test_##scheme##_listen_accept }, \
 	{ #scheme " exchange", test_##scheme##_exchange }, \
 	{ #scheme " pipe id", test_##scheme##_pipe_id }, \
