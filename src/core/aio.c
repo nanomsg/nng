@@ -92,33 +92,35 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 void
 nni_aio_fini(nni_aio *aio)
 {
-	nni_aio_cancel_fn fn;
-	void             *arg;
-	nni_aio_expire_q *eq = aio->a_expire_q;
+	if (aio != NULL && aio->a_expire_q != NULL) {
+		nni_aio_cancel_fn fn;
+		void             *arg;
+		nni_aio_expire_q *eq = aio->a_expire_q;
 
-	// This is like aio_close, but we don't want to dispatch
-	// the task.  And unlike aio_stop, we don't want to wait
-	// for the task.  (Because we implicitly do task_fini.)
-	// We also wait if the aio is being expired.
-	nni_mtx_lock(&eq->eq_mtx);
-	aio->a_stop = true;
-	while (aio->a_expiring) {
-		nni_cv_wait(&eq->eq_cv);
+		// This is like aio_close, but we don't want to dispatch
+		// the task.  And unlike aio_stop, we don't want to wait
+		// for the task.  (Because we implicitly do task_fini.)
+		// We also wait if the aio is being expired.
+		nni_mtx_lock(&eq->eq_mtx);
+		aio->a_stop = true;
+		while (aio->a_expiring) {
+			nni_cv_wait(&eq->eq_cv);
+		}
+		nni_aio_expire_rm(aio);
+		fn                = aio->a_cancel_fn;
+		arg               = aio->a_cancel_arg;
+		aio->a_cancel_fn  = NULL;
+		aio->a_cancel_arg = NULL;
+		nni_mtx_unlock(&eq->eq_mtx);
+
+		if (fn != NULL) {
+			fn(aio, arg, NNG_ECLOSED);
+		} else {
+			nni_task_abort(&aio->a_task);
+		}
+
+		nni_task_fini(&aio->a_task);
 	}
-	nni_aio_expire_rm(aio);
-	fn                = aio->a_cancel_fn;
-	arg               = aio->a_cancel_arg;
-	aio->a_cancel_fn  = NULL;
-	aio->a_cancel_arg = NULL;
-	nni_mtx_unlock(&eq->eq_mtx);
-
-	if (fn != NULL) {
-		fn(aio, arg, NNG_ECLOSED);
-	} else {
-		nni_task_abort(&aio->a_task);
-	}
-
-	nni_task_fini(&aio->a_task);
 }
 
 int
@@ -137,7 +139,7 @@ nni_aio_alloc(nni_aio **aio_p, nni_cb cb, void *arg)
 void
 nni_aio_free(nni_aio *aio)
 {
-	if (aio != NULL) {
+	if (aio != NULL && aio->a_expire_q != NULL) {
 		nni_aio_fini(aio);
 		NNI_FREE_STRUCT(aio);
 	}
@@ -146,7 +148,7 @@ nni_aio_free(nni_aio *aio)
 void
 nni_aio_reap(nni_aio *aio)
 {
-	if (aio != NULL) {
+	if (aio != NULL && aio->a_expire_q != NULL) {
 		nni_reap(&aio_reap_list, aio);
 	}
 }
@@ -179,7 +181,7 @@ nni_aio_set_iov(nni_aio *aio, unsigned nio, const nni_iov *iov)
 void
 nni_aio_stop(nni_aio *aio)
 {
-	if (aio != NULL) {
+	if (aio != NULL && aio->a_expire_q != NULL) {
 		nni_aio_cancel_fn fn;
 		void             *arg;
 		nni_aio_expire_q *eq = aio->a_expire_q;
@@ -206,7 +208,7 @@ nni_aio_stop(nni_aio *aio)
 void
 nni_aio_close(nni_aio *aio)
 {
-	if (aio != NULL) {
+	if (aio != NULL && aio->a_expire_q != NULL) {
 		nni_aio_cancel_fn fn;
 		void             *arg;
 		nni_aio_expire_q *eq = aio->a_expire_q;
@@ -309,7 +311,9 @@ nni_aio_count(nni_aio *aio)
 void
 nni_aio_wait(nni_aio *aio)
 {
-	nni_task_wait(&aio->a_task);
+	if (aio != NULL && aio->a_expire_q != NULL) {
+		nni_task_wait(&aio->a_task);
+	}
 }
 
 bool
