@@ -195,6 +195,57 @@ test_ws_no_tls(void)
 	NUTS_CLOSE(s0);
 }
 
+static void
+check_props_v4(nng_msg *msg)
+{
+	nng_pipe     p;
+	size_t       z;
+	nng_sockaddr la;
+	nng_sockaddr ra;
+	bool         b;
+
+	p = nng_msg_get_pipe(msg);
+	NUTS_TRUE(nng_pipe_id(p) > 0);
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la));
+	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_LOCADDR, &z), NNG_EBADTYPE);
+	NUTS_TRUE(la.s_family == NNG_AF_INET);
+	NUTS_TRUE(la.s_in.sa_port != 0);
+	NUTS_TRUE(la.s_in.sa_addr == htonl(0x7f000001));
+
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra));
+	NUTS_TRUE(ra.s_family == NNG_AF_INET);
+	NUTS_TRUE(ra.s_in.sa_port != 0);
+	NUTS_TRUE(ra.s_in.sa_addr == htonl(0x7f000001));
+	NUTS_TRUE(ra.s_in.sa_port != la.s_in.sa_port);
+	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z), NNG_EBADTYPE);
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b));
+	NUTS_TRUE(b == false); // default
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_NODELAY, &b));
+	NUTS_TRUE(b); // default
+
+	// Request Header
+	char *buf = NULL;
+	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_REQUEST_HEADERS, &buf));
+	NUTS_TRUE(strstr(buf, "Sec-WebSocket-Key") != NULL);
+	nng_strfree(buf);
+
+	// Response Header
+	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_RESPONSE_HEADERS, &buf));
+	NUTS_TRUE(strstr(buf, "Sec-WebSocket-Accept") != NULL);
+	nng_strfree(buf);
+}
+
+void
+test_ws_props_v4(void)
+{
+	nuts_tran_msg_props("ws", check_props_v4);
+}
+
+NUTS_DECLARE_TRAN_TESTS(ws)
+NUTS_DECLARE_TRAN_TESTS(ws6)
+
 TEST_LIST = {
 	{ "ws url path filters", test_ws_url_path_filters },
 	{ "ws wild card port", test_wild_card_port },
@@ -202,5 +253,8 @@ TEST_LIST = {
 	{ "ws empty host", test_empty_host },
 	{ "ws recv max", test_ws_recv_max },
 	{ "ws no tls", test_ws_no_tls },
+	NUTS_INSERT_TRAN_TESTS(ws),
+	{ "ws msg props", test_ws_props_v4 },
+	NUTS_INSERT_TRAN_TESTS(ws6),
 	{ NULL, NULL },
 };
