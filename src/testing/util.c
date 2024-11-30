@@ -538,8 +538,8 @@ nuts_tran_perf(const char *scheme)
 	    "Did %u roundtrips in %0.2f seconds (%0.3f msg/sec)", num,
 	    delta / 1000.0, (float) num / (delta / 1000.0));
 	nng_log_notice(scheme, "RTT %0.3f ms", (float) delta / (float) num);
-	nng_log_notice(
-	    scheme, "Timing overhead %0.3f ms", (end - now) / (float) num);
+	nng_log_notice(scheme, "Timing overhead %0.3f ms, %0.3f us/msg",
+	    (float) (end - now), (end - now) * 1000.0 / (float) num);
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
 }
