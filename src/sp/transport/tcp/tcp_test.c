@@ -238,8 +238,47 @@ test_tcp_recv_max(void)
 	NUTS_CLOSE(s1);
 }
 
-NUTS_TESTS = {
+static void
+check_props_v4(nng_msg *msg)
+{
+	nng_pipe     p;
+	size_t       z;
+	nng_sockaddr la;
+	nng_sockaddr ra;
+	bool         b;
 
+	p = nng_msg_get_pipe(msg);
+	NUTS_TRUE(nng_pipe_id(p) > 0);
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la));
+	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_LOCADDR, &z), NNG_EBADTYPE);
+	NUTS_TRUE(la.s_family == NNG_AF_INET);
+	NUTS_TRUE(la.s_in.sa_port != 0);
+	NUTS_TRUE(la.s_in.sa_addr == htonl(0x7f000001));
+
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra));
+	NUTS_TRUE(ra.s_family == NNG_AF_INET);
+	NUTS_TRUE(ra.s_in.sa_port != 0);
+	NUTS_TRUE(ra.s_in.sa_addr == htonl(0x7f000001));
+	NUTS_TRUE(ra.s_in.sa_port != la.s_in.sa_port);
+	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z), NNG_EBADTYPE);
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b));
+	NUTS_TRUE(b == false); // default
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_NODELAY, &b));
+	NUTS_TRUE(b); // default
+}
+
+void
+test_tcp_props_v4(void)
+{
+	nuts_tran_msg_props("tcp4", check_props_v4);
+}
+
+NUTS_DECLARE_TRAN_TESTS(tcp)
+
+NUTS_TESTS = {
+	NUTS_INSERT_TRAN_TESTS(tcp),
 	{ "tcp wild card connect fail", test_tcp_wild_card_connect_fail },
 	{ "tcp wild card bind", test_tcp_wild_card_bind },
 	{ "tcp port zero bind", test_tcp_port_zero_bind },
@@ -249,5 +288,6 @@ NUTS_TESTS = {
 	{ "tcp keep alive option", test_tcp_keep_alive_option },
 	{ "tcp recv max", test_tcp_recv_max },
 	{ "tcp ipv6", test_tcp_ipv6 },
+	{ "tcp props v4", test_tcp_props_v4 },
 	{ NULL, NULL },
 };
