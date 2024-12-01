@@ -562,7 +562,7 @@ nuts_tran_perf(const char *scheme)
 			NUTS_ASSERT(end >= now);
 		}
 	}
-	NUTS_ASSERT(end - now >= 0);
+	NUTS_ASSERT(end >= now);
 	NUTS_ASSERT(end - now < 10000);
 	// remove the cost of timing
 	delta -= (end - now);
