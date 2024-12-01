@@ -1078,6 +1078,7 @@ nng_listener_close(nng_listener lid)
 		return (rv);
 	}
 	nni_listener_close(l);
+	nni_listener_rele(l);
 	return (0);
 }
 
