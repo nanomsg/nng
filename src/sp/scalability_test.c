@@ -14,8 +14,7 @@
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
 
-#include "convey.h"
-#include "stubs.h"
+#include <nuts.h>
 
 static int nclients = 200;
 
@@ -45,18 +44,15 @@ serve(void *arg)
 int
 openclients(nng_socket *clients, int num)
 {
-	int          rv;
 	int          i;
 	nng_duration t;
 	for (i = 0; i < num; i++) {
 		t = 100; // 100ms
 		nng_socket c;
-		if (((rv = nng_req_open(&c)) != 0) ||
-		    ((rv = nng_socket_set_ms(c, NNG_OPT_RECVTIMEO, t)) != 0) ||
-		    ((rv = nng_socket_set_ms(c, NNG_OPT_SENDTIMEO, t)) != 0) ||
-		    ((rv = nng_dial(c, addr, NULL, 0)) != 0)) {
-			return (rv);
-		}
+		NUTS_PASS(nng_req_open(&c));
+		NUTS_PASS(nng_socket_set_ms(c, NNG_OPT_RECVTIMEO, t));
+		NUTS_PASS(nng_socket_set_ms(c, NNG_OPT_SENDTIMEO, t));
+		NUTS_PASS(nng_dial(c, addr, NULL, 0));
 		clients[i] = c;
 	}
 	return (0);
@@ -84,36 +80,35 @@ transact(nng_socket *clients, int num)
 	return (rv);
 }
 
-Main({
+void
+test_scalability(void)
+{
 	nng_socket *clients;
 	int        *results;
 
 	clients = calloc(nclients, sizeof(nng_socket));
 	results = calloc(nclients, sizeof(int));
 
-	if ((nng_rep_open(&rep) != 0) ||
-	    (nng_socket_set_int(rep, NNG_OPT_RECVBUF, 256) != 0) ||
-	    (nng_socket_set_int(rep, NNG_OPT_SENDBUF, 256) != 0) ||
-	    (nng_listen(rep, addr, NULL, 0) != 0) ||
-	    (nng_thread_create(&server, serve, NULL) != 0)) {
-		fprintf(stderr, "Unable to set up server!\n");
-		exit(1);
+	NUTS_PASS(nng_rep_open(&rep));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_RECVBUF, 256));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_SENDBUF, 256));
+	NUTS_PASS(nng_listen(rep, addr, NULL, 0));
+	NUTS_PASS(nng_thread_create(&server, serve, NULL));
+
+	int i;
+	NUTS_TRUE(openclients(clients, nclients) == 0);
+	NUTS_TRUE(transact(clients, nclients) == 0);
+	for (i = 0; i < nclients; i++) {
+		NUTS_CLOSE(clients[i]);
 	}
-
-	Test("Scalability", {
-		Convey("We can handle many many clients", {
-			int i;
-			So(openclients(clients, nclients) == 0);
-			So(transact(clients, nclients) == 0);
-			for (i = 0; i < nclients; i++) {
-				So(nng_close(clients[i]) == 0);
-			}
-		});
-	});
-
-	nng_close(rep);
+	NUTS_CLOSE(rep);
 	nng_thread_destroy(server);
 
 	free(clients);
 	free(results);
-})
+}
+
+NUTS_TESTS = {
+	{ "scalability", test_scalability },
+	{ NULL, NULL },
+};
