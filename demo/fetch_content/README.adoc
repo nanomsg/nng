@@ -1,0 +1,41 @@
+= CMake FetchContent demo
+
+This demonstration simply outputs the NNG version. Its main purpose is to show
+an alternate way for downstream developers to consume NNG with certain
+advantages.
+
+NNG Quick Start instructions (as of this writing) assume a final step of
+`ninja install`. While this is one valid choice for NNG clients, it does require
+elevated privilege in many environments. For modern CMake usage, this is not
+the only valid choice.
+
+== Compiling, Running
+
+This build assumes installations of cmake and a modern C compiler. Note that it
+intentionally DOES NOT assume a pre-installed version of NNG:
+
+[source, bash]
+----
+% cmake -B ./build -S . -G Ninja
+% cmake --build ./build
+% ./build/version
+----
+
+== Supporting Evidence for this Approach
+
+* @craigscott-crascit, author of "Professional CMake: A Practical Guide" has the
+following relevant recommendation in his 19th Edition: "For each library that
+will be installed or packaged, a common pattern is to also create a matching
+library alias with a name of the form projNamespace::targetName" (p. 236).
+Further justification in this book also encourages this approach.
+* The
+https://cmake.org/cmake/help/latest/module/FetchContent.html[FetchContent]
+Overview section explains that the FetchContent "module enables populating
+content at configure time" (as opposed to build time).
+* The following popular projects use this approach:
+https://github.com/catchorg/Catch2[catchorg/Catch2],
+https://github.com/google/benchmark[google/benchmark],
+https://gitlab.com/libeigen/eigen[libeigen/eigen],
+https://github.com/gabime/spdlog[gabime/spdlog],
+https://github.com/rollbear/trompeloeil[rollbear/trompeloeil],
+https://github.com/jbeder/yaml-cpp[jbeder/yaml-cpp]
