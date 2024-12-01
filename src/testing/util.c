@@ -175,7 +175,7 @@ nuts_sleep(int msec)
 bool
 nuts_has_ipv6(void)
 {
-	nng_sockaddr sa;
+	nng_sockaddr sa = { 0 };
 	nng_udp     *u;
 	int          rv;
 
