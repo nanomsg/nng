@@ -217,12 +217,12 @@ check_props_v4(nng_msg *msg)
 	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_LOCADDR, &z), NNG_EBADTYPE);
 	NUTS_TRUE(la.s_family == NNG_AF_INET);
 	NUTS_TRUE(la.s_in.sa_port != 0);
-	NUTS_TRUE(la.s_in.sa_addr == htonl(0x7f000001));
+	NUTS_TRUE(la.s_in.sa_addr == nuts_be32(0x7f000001));
 
 	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra));
 	NUTS_TRUE(ra.s_family == NNG_AF_INET);
 	NUTS_TRUE(ra.s_in.sa_port != 0);
-	NUTS_TRUE(ra.s_in.sa_addr == htonl(0x7f000001));
+	NUTS_TRUE(ra.s_in.sa_addr == nuts_be32(0x7f000001));
 	NUTS_TRUE(ra.s_in.sa_port != la.s_in.sa_port);
 	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z), NNG_EBADTYPE);
 
