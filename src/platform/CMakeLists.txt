@@ -13,6 +13,7 @@ nng_directory(platform)
 add_subdirectory(posix)
 add_subdirectory(windows)
 
+nng_test(ipc_stream_test)
 nng_test(platform_test)
 nng_test(resolver_test)
 nng_test(tcp_stream_test)
