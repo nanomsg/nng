@@ -142,7 +142,7 @@ test_init_too_many_poller_threads(void)
 }
 
 void
-test_init_repeated()
+test_init_repeated(void)
 {
 	nng_init_params p = { 0 };
 	NUTS_PASS(nng_init(NULL));
@@ -167,7 +167,7 @@ concurrent_init(void *arg)
 }
 
 void
-test_init_concurrent()
+test_init_concurrent(void)
 {
 	nng_thread *threads[4];
 	nng_mtx    *m = NULL;
