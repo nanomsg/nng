@@ -14,14 +14,19 @@
 #ifndef _WIN32
 #include <sys/select.h>
 #include <sys/time.h>
+#define PLATFD int
+#else
+#include <winsock2.h>
+// order counts
+#include <mswsock.h>
+#define PLATFD SOCKET
 #endif
 
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
 
-#include "convey.h"
-#include "stubs.h"
+#include <nuts.h>
 
 const char *addr = "inproc://bug346";
 
@@ -92,27 +97,32 @@ reqthr(void *arg)
 nng_socket reqs[NCLIENTS];
 nng_socket rep;
 
-TestMain("Nonblocking Works", {
-	Convey("Running for 15 sec", {
-		nng_thread *server;
-		nng_thread *clients[NCLIENTS];
+static void
+test_nonblocking(void)
+{
+	nng_thread *server;
+	nng_thread *clients[NCLIENTS];
 
-		So(nng_rep0_open(&rep) == 0);
-		for (int i = 0; i < NCLIENTS; i++) {
-			So(nng_req0_open(&reqs[i]) == 0);
-		}
+	NUTS_PASS(nng_rep0_open(&rep));
+	for (int i = 0; i < NCLIENTS; i++) {
+		NUTS_PASS(nng_req0_open(&reqs[i]));
+	}
 
-		nng_thread_create(&server, repthr, &rep);
-		for (int i = 0; i < NCLIENTS; i++) {
-			nng_thread_create(&clients[i], reqthr, &reqs[i]);
-		}
+	NUTS_PASS(nng_thread_create(&server, repthr, &rep));
+	for (int i = 0; i < NCLIENTS; i++) {
+		NUTS_PASS(nng_thread_create(&clients[i], reqthr, &reqs[i]));
+	}
 
-		nng_msleep(15000);
-		nng_close(rep);
-		nng_thread_destroy(server);
-		for (int i = 0; i < NCLIENTS; i++) {
-			nng_close(reqs[i]);
-			nng_thread_destroy(clients[i]);
-		}
-	});
-})
+	nng_msleep(15000);
+	nng_close(rep);
+	nng_thread_destroy(server);
+	for (int i = 0; i < NCLIENTS; i++) {
+		nng_close(reqs[i]);
+		nng_thread_destroy(clients[i]);
+	}
+}
+
+NUTS_TESTS = {
+	{ "nonblocking", test_nonblocking },
+	{ NULL, NULL },
+};
