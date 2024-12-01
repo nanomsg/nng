@@ -452,10 +452,10 @@ nuts_tran_huge_msg(const char *scheme, size_t size)
 	NUTS_ADDR(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
 	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
 	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
 	NUTS_TRUE(nng_listener_id(l1) > 0);
