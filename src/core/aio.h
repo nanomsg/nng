@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -13,6 +13,7 @@
 
 #include "core/defs.h"
 #include "core/list.h"
+#include "core/platform.h"
 #include "core/reap.h"
 #include "core/taskq.h"
 #include "core/thread.h"
@@ -219,7 +220,8 @@ struct nng_aio {
 	bool         a_expiring;   // Expiration in progress
 	bool         a_use_expire; // Use expire instead of timeout
 	bool         a_init;       // This is initialized
-	nni_task     a_task;
+
+	nni_task a_task;
 
 	// Read/write operations.
 	nni_iov  a_iov[8];
@@ -234,14 +236,16 @@ struct nng_aio {
 	void *a_inputs[4];
 	void *a_outputs[4];
 
+	nni_atomic_bool   a_stopped;
+	nni_aio_expire_q *a_expire_q;
+	nni_list_node     a_expire_node; // Expiration node
+	nni_reap_node     a_reap_node;
+
 	// Provider-use fields.
 	nni_aio_cancel_fn a_cancel_fn;
 	void             *a_cancel_arg;
 	void             *a_prov_data;
 	nni_list_node     a_prov_node; // Linkage on provider list.
-	nni_aio_expire_q *a_expire_q;
-	nni_list_node     a_expire_node; // Expiration node
-	nni_reap_node     a_reap_node;
 };
 
 #endif // CORE_AIO_H

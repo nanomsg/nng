@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "core/platform.h"
 #include "nng/nng.h"
 #include <string.h>
 
@@ -91,6 +92,12 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	aio->a_init = true;
 }
 
+static bool
+aio_stopped(nni_aio *aio)
+{
+	return (nni_atomic_get_bool(&aio->a_stopped));
+}
+
 void
 nni_aio_fini(nni_aio *aio)
 {
@@ -125,7 +132,7 @@ nni_aio_free(nni_aio *aio)
 void
 nni_aio_reap(nni_aio *aio)
 {
-	if (aio != NULL && aio->a_expire_q != NULL) {
+	if (aio != NULL && aio->a_init) {
 		nni_reap(&aio_reap_list, aio);
 	}
 }
@@ -158,7 +165,7 @@ nni_aio_set_iov(nni_aio *aio, unsigned nio, const nni_iov *iov)
 void
 nni_aio_stop(nni_aio *aio)
 {
-	if (aio != NULL && aio->a_expire_q != NULL) {
+	if (aio != NULL && aio->a_init && !aio_stopped(aio)) {
 		nni_aio_cancel_fn fn;
 		void             *arg;
 		nni_aio_expire_q *eq = aio->a_expire_q;
@@ -180,17 +187,14 @@ nni_aio_stop(nni_aio *aio)
 
 		nni_aio_wait(aio);
 
-		// Disconnect us from the expire queue.
-		// We cannot be used any more.  This reduces
-		// lock contention during teardown.
-		aio->a_expire_q = NULL;
+		nni_atomic_set_bool(&aio->a_stopped, true);
 	}
 }
 
 void
 nni_aio_close(nni_aio *aio)
 {
-	if (aio != NULL && aio->a_expire_q != NULL) {
+	if (aio != NULL && aio->a_init && !aio_stopped(aio)) {
 		nni_aio_cancel_fn fn;
 		void             *arg;
 		nni_aio_expire_q *eq = aio->a_expire_q;
@@ -293,7 +297,7 @@ nni_aio_count(nni_aio *aio)
 void
 nni_aio_wait(nni_aio *aio)
 {
-	if (aio != NULL && aio->a_expire_q != NULL) {
+	if (aio != NULL && aio->a_init && !aio_stopped(aio)) {
 		nni_task_wait(&aio->a_task);
 	}
 }
@@ -314,7 +318,7 @@ nni_aio_begin(nni_aio *aio)
 	// checks may wish ignore or suppress these checks.
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
-	if (eq == NULL) {
+	if (aio_stopped(aio)) {
 		NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
 		aio->a_result    = NNG_ECANCELED;
 		aio->a_cancel_fn = NULL;
@@ -341,7 +345,7 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_expire    = NNI_TIME_NEVER;
 		aio->a_sleep     = false;
 		aio->a_expire_ok = false;
-		aio->a_expire_q  = NULL;
+		nni_atomic_set_bool(&aio->a_stopped, true);
 		nni_mtx_unlock(&eq->eq_mtx);
 
 		return (NNG_ECANCELED);
