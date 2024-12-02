@@ -11,8 +11,10 @@
 
 #include <nng/nng.h>
 
+#include "core/defs.h"
 #include "core/nng_impl.h"
 
+#include "core/pipe.h"
 #include "dialer.h"
 #include "listener.h"
 #include "sockimpl.h"
@@ -41,7 +43,9 @@ pipe_destroy(void *arg)
 {
 	nni_pipe *p = arg;
 
-	p->p_proto_ops.pipe_fini(p->p_proto_data);
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_fini(p->p_proto_data);
+	}
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
@@ -71,7 +75,9 @@ pipe_reap(void *arg)
 #endif
 	nni_pipe_remove(p);
 
-	p->p_proto_ops.pipe_stop(p->p_proto_data);
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_stop(p->p_proto_data);
+	}
 	if ((p->p_tran_data != NULL) && (p->p_tran_ops.p_stop != NULL)) {
 		p->p_tran_ops.p_stop(p->p_tran_data);
 	}
@@ -233,28 +239,40 @@ pipe_stats_init(nni_pipe *p)
 static int
 pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 {
-	nni_pipe           *p;
-	int                 rv;
-	void               *sock_data = nni_sock_proto_data(sock);
-	nni_proto_pipe_ops *pops      = nni_sock_proto_pipe_ops(sock);
-	size_t              sz;
+	nni_pipe                 *p;
+	int                       rv;
+	void                     *sock_data = nni_sock_proto_data(sock);
+	const nni_proto_pipe_ops *pops      = nni_sock_proto_pipe_ops(sock);
+	const nni_sp_pipe_ops    *tops      = tran->tran_pipe;
+	size_t                    sz;
 
-	sz = NNI_ALIGN_UP(sizeof(*p)) + pops->pipe_size;
+	sz = NNI_ALIGN_UP(sizeof(*p)) + NNI_ALIGN_UP(pops->pipe_size) +
+	    NNI_ALIGN_UP(tops->p_size);
 
 	if ((p = nni_zalloc(sz)) == NULL) {
 		// In this case we just toss the pipe...
-		tran->tran_pipe->p_fini(tran_data);
+		// TODO: remove when all transports converted
+		// to use p_size.
+		if (tran_data != NULL) {
+			tops->p_fini(tran_data);
+		}
 		return (NNG_ENOMEM);
 	}
 
-	p->p_size       = sz;
-	p->p_proto_data = p + 1;
-	p->p_tran_ops   = *tran->tran_pipe;
-	p->p_tran_data  = tran_data;
-	p->p_proto_ops  = *pops;
-	p->p_sock       = sock;
-	p->p_cbs        = false;
+	uint8_t *proto_data = (uint8_t *) p + NNI_ALIGN_UP(sizeof(*p));
 
+	if (tran_data == NULL) {
+		tran_data = proto_data + NNI_ALIGN_UP(pops->pipe_size);
+	}
+
+	p->p_size      = sz;
+	p->p_proto_ops = *pops;
+	p->p_tran_ops  = *tops;
+	p->p_sock      = sock;
+	p->p_cbs       = false;
+
+	// Two references - one for our caller, and
+	// one to be dropped when the pipe is closed.
 	nni_refcnt_init(&p->p_refcnt, 2, p, pipe_destroy);
 
 	nni_atomic_init_bool(&p->p_closed);
@@ -272,8 +290,14 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 
 	nni_sock_hold(sock);
 
-	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tran_data, p)) != 0) ||
-	    ((rv = pops->pipe_init(p->p_proto_data, p, sock_data)) != 0)) {
+	if ((rv == 0) && (rv = tops->p_init(tran_data, p)) == 0) {
+		p->p_tran_data = tran_data;
+	}
+	if ((rv == 0) &&
+	    (rv = pops->pipe_init(proto_data, p, sock_data)) == 0) {
+		p->p_proto_data = proto_data;
+	}
+	if (rv != 0) {
 		nni_pipe_close(p);
 		nni_pipe_rele(p);
 		return (rv);
@@ -306,6 +330,30 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
 	nni_dialer_hold(d);
 	*pp = p;
 	return (0);
+}
+
+void *
+nni_pipe_tran_data(nni_pipe *p)
+{
+	return (p->p_tran_data);
+}
+
+int
+nni_sp_pipe_alloc(void **datap, nni_dialer *d, nni_listener *l)
+{
+	int       rv;
+	nni_pipe *p;
+	if (d != NULL) {
+		rv = nni_pipe_create_dialer(&p, d, NULL);
+	} else if (l != NULL) {
+		rv = nni_pipe_create_listener(&p, l, NULL);
+	} else {
+		rv = NNG_EINVAL;
+	}
+	if (rv == 0) {
+		*datap = nni_pipe_tran_data(p);
+	}
+	return (rv);
 }
 
 int

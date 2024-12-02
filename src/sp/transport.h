@@ -12,6 +12,8 @@
 #ifndef PROTOCOL_SP_TRANSPORT_H
 #define PROTOCOL_SP_TRANSPORT_H
 
+#include "core/defs.h"
+#include "core/list.h"
 #include "core/options.h"
 
 // Endpoint operations are called by the socket in a
@@ -118,9 +120,14 @@ struct nni_sp_listener_ops {
 // pointers back to socket or even enclosing pipe state, are not
 // provided.)
 struct nni_sp_pipe_ops {
-	// p_init initializes the pipe data structures.  The main
-	// purpose of this is so that the pipe will see the upper
-	// layer nni_pipe and get a chance to register stats and such.
+	// p_size specifies the size of the transport private pipe data.
+	size_t p_size;
+
+	// p_init initializes the transport's pipe data structure.
+	// The pipe MUST be left in a state that p_fini can be safely
+	// called on it, even if it does not succeed.  (The upper layers
+	// will call p_fini as part of the cleanup of a failure.)
+	// This function should not acquire any locks.
 	int (*p_init)(void *, nni_pipe *);
 
 	// p_fini destroys the pipe.  This should clean up all local
@@ -134,7 +141,7 @@ struct nni_sp_pipe_ops {
 	// resources with p_fini.
 	void (*p_stop)(void *);
 
-	// p_aio_send queues the message for transmit.  If this fails,
+	// p_send queues the message for transmit.  If this fails,
 	// then the caller may try again with the same message (or free
 	// it).  If the call succeeds, then the transport has taken
 	// ownership of the message, and the caller may not use it
@@ -193,5 +200,7 @@ extern nni_sp_tran *nni_sp_tran_find(const char *);
 extern void         nni_sp_tran_sys_init(void);
 extern void         nni_sp_tran_sys_fini(void);
 extern void         nni_sp_tran_register(nni_sp_tran *);
+
+extern int nni_sp_pipe_alloc(void **datap, nni_dialer *d, nni_listener *l);
 
 #endif // PROTOCOL_SP_TRANSPORT_H
