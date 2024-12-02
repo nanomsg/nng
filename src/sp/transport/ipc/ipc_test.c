@@ -237,8 +237,8 @@ test_ipc_huge_msg(void)
 void
 test_ipc_recv_max(void)
 {
-	char         msg[256];
-	char         rcvbuf[256];
+	char         msg[256]    = { 0 };
+	char         rcvbuf[256] = { 0 };
 	nng_socket   s0;
 	nng_socket   s1;
 	nng_listener l;
