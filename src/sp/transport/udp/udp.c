@@ -1145,10 +1145,10 @@ udp_ep_rele(udp_ep *ep)
 	}
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_close(&ep->timeaio);
-	nni_aio_close(&ep->resaio);
-	nni_aio_close(&ep->tx_aio);
-	nni_aio_close(&ep->rx_aio);
+	nni_aio_stop(&ep->timeaio);
+	nni_aio_stop(&ep->resaio);
+	nni_aio_stop(&ep->tx_aio);
+	nni_aio_stop(&ep->rx_aio);
 	if (ep->udp != NULL) {
 		nni_udp_close(ep->udp);
 	}

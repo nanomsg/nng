@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 #include <string.h>
 
 struct nni_aio_expire_q {
@@ -87,38 +88,13 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	aio->a_timeout = NNG_DURATION_INFINITE;
 	aio->a_expire_q =
 	    nni_aio_expire_q_list[nni_random() % nni_aio_expire_q_cnt];
+	aio->a_init = true;
 }
 
 void
 nni_aio_fini(nni_aio *aio)
 {
-	if (aio != NULL && aio->a_expire_q != NULL) {
-		nni_aio_cancel_fn fn;
-		void             *arg;
-		nni_aio_expire_q *eq = aio->a_expire_q;
-
-		// This is like aio_close, but we don't want to dispatch
-		// the task.  And unlike aio_stop, we don't want to wait
-		// for the task.  (Because we implicitly do task_fini.)
-		// We also wait if the aio is being expired.
-		nni_mtx_lock(&eq->eq_mtx);
-		aio->a_stop = true;
-		while (aio->a_expiring) {
-			nni_cv_wait(&eq->eq_cv);
-		}
-		nni_aio_expire_rm(aio);
-		fn                = aio->a_cancel_fn;
-		arg               = aio->a_cancel_arg;
-		aio->a_cancel_fn  = NULL;
-		aio->a_cancel_arg = NULL;
-		nni_mtx_unlock(&eq->eq_mtx);
-
-		if (fn != NULL) {
-			fn(aio, arg, NNG_ECLOSED);
-		} else {
-			nni_task_abort(&aio->a_task);
-		}
-
+	if (aio != NULL && aio->a_init) {
 		nni_task_fini(&aio->a_task);
 	}
 }
@@ -139,7 +115,8 @@ nni_aio_alloc(nni_aio **aio_p, nni_cb cb, void *arg)
 void
 nni_aio_free(nni_aio *aio)
 {
-	if (aio != NULL && aio->a_expire_q != NULL) {
+	if (aio != NULL) {
+		nni_aio_stop(aio);
 		nni_aio_fini(aio);
 		NNI_FREE_STRUCT(aio);
 	}
@@ -202,6 +179,11 @@ nni_aio_stop(nni_aio *aio)
 		}
 
 		nni_aio_wait(aio);
+
+		// Disconnect us from the expire queue.
+		// We cannot be used any more.  This reduces
+		// lock contention during teardown.
+		aio->a_expire_q = NULL;
 	}
 }
 
@@ -332,6 +314,12 @@ nni_aio_begin(nni_aio *aio)
 	// checks may wish ignore or suppress these checks.
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
+	if (eq == NULL) {
+		NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
+		aio->a_result    = NNG_ECANCELED;
+		aio->a_cancel_fn = NULL;
+		return (NNG_ECANCELED);
+	}
 	nni_mtx_lock(&eq->eq_mtx);
 	NNI_ASSERT(!nni_aio_list_active(aio));
 	NNI_ASSERT(aio->a_cancel_fn == NULL);
@@ -353,6 +341,7 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_expire    = NNI_TIME_NEVER;
 		aio->a_sleep     = false;
 		aio->a_expire_ok = false;
+		aio->a_expire_q  = NULL;
 		nni_mtx_unlock(&eq->eq_mtx);
 
 		return (NNG_ECANCELED);
@@ -435,6 +424,13 @@ nni_aio_finish_impl(
     nni_aio *aio, int rv, size_t count, nni_msg *msg, bool sync)
 {
 	nni_aio_expire_q *eq = aio->a_expire_q;
+
+	if (eq == NULL) {
+		// This happens if we have stopped I/O
+		// and some caller has not noticed yet.
+		// (The caller should own the aio.)
+		return;
+	}
 
 	nni_mtx_lock(&eq->eq_mtx);
 

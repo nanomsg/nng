@@ -41,7 +41,10 @@ static nni_reap_list pipe_reap_list = {
 static void
 pipe_destroy(void *arg)
 {
-	nni_pipe *p = arg;
+	nni_pipe     *p = arg;
+	nni_sock     *s = p->p_sock;
+	nni_dialer   *d = p->p_dialer;
+	nni_listener *l = p->p_listener;
 
 	if (p->p_proto_data != NULL) {
 		p->p_proto_ops.pipe_fini(p->p_proto_data);
@@ -49,16 +52,20 @@ pipe_destroy(void *arg)
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
+	if (l != NULL) {
+		nni_listener_rele(l);
+	}
+	if (d != NULL) {
+		nni_dialer_rele(d);
+	}
+	nni_sock_rele(s);
 	nni_free(p, p->p_size);
 }
 
 void
 pipe_reap(void *arg)
 {
-	nni_pipe     *p = arg;
-	nni_sock     *s = p->p_sock;
-	nni_dialer   *d = p->p_dialer;
-	nni_listener *l = p->p_listener;
+	nni_pipe *p = arg;
 
 	nni_pipe_run_cb(p, NNG_PIPE_EV_REM_POST);
 
@@ -83,13 +90,6 @@ pipe_reap(void *arg)
 	}
 
 	nni_pipe_rele(p);
-	if (l != NULL) {
-		nni_listener_rele(l);
-	}
-	if (d != NULL) {
-		nni_dialer_rele(d);
-	}
-	nni_sock_rele(s);
 }
 
 int

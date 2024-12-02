@@ -50,6 +50,7 @@ xsurv0_sock_fini(void *arg)
 {
 	xsurv0_sock *s = arg;
 
+	nni_aio_stop(&s->aio_getq);
 	nni_aio_fini(&s->aio_getq);
 	nni_mtx_fini(&s->mtx);
 }
