@@ -75,6 +75,7 @@ pair1poly_sock_fini(void *arg)
 {
 	pair1poly_sock *s = arg;
 
+	nni_aio_stop(&s->aio_get);
 	nni_aio_fini(&s->aio_get);
 	nni_id_map_fini(&s->pipes);
 	nni_mtx_fini(&s->mtx);

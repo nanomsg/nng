@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -13,6 +13,7 @@
 
 #include "core/defs.h"
 #include "core/list.h"
+#include "core/platform.h"
 #include "core/reap.h"
 #include "core/taskq.h"
 #include "core/thread.h"
@@ -26,11 +27,14 @@ typedef void (*nni_aio_cancel_fn)(nni_aio *, void *, int);
 extern void nni_aio_init(nni_aio *, nni_cb, void *arg);
 
 // nni_aio_fini finalizes an aio object, releasing associated resources.
-// It waits for the callback to complete.
+// It does NOT wait for the callback to complete, so it is mandatory
+// that nni_aio_stop be called first.
 extern void nni_aio_fini(nni_aio *);
 
 // nni_aio_reap is used to asynchronously reap the aio.  It can
 // be called even from the callback of the aio itself.
+// Note that this only works with aio objects created
+// with nni_aio_alloc.
 extern void nni_aio_reap(nni_aio *);
 
 // nni_aio_alloc allocates an aio object and initializes it.  The callback
@@ -42,17 +46,19 @@ extern int nni_aio_alloc(nni_aio **, nni_cb, void *arg);
 // nni_aio_free frees the aio, releasing resources (locks)
 // associated with it. This is safe to call on zeroed memory.
 // This must only be called on an object that was allocated
-// with nni_aio_allocate.
+// with nni_aio_alloc.
 extern void nni_aio_free(nni_aio *aio);
 
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
-// return NNG_ESTATE).  This should be called before nni_aio_free().  The
-// best pattern is to call nni_aio_stop on all linked aio objects, before
-// calling nni_aio_free on any of them.  This function will block until any
-// callbacks are executed, and therefore it should never be executed
-// from a callback itself.  (To abort operations without blocking
-// use nni_aio_cancel instead.)
+// return NNG_ESTATE).  This should be called before nni_aio_free(), and MUST
+// be called before nni_aio_fini().
+//
+// The best pattern is to call nni_aio_stop on all linked aio objects, before
+// calling nni_aio_free or nni_aio_fini on any of them.  This function will
+// block until any callbacks are executed, and therefore it should never be
+// executed from a callback itself.  (To abort operations without blocking use
+// nni_aio_cancel instead.)
 extern void nni_aio_stop(nni_aio *);
 
 // nni_aio_close closes the aio for further activity. It aborts any in-progress
@@ -214,7 +220,9 @@ struct nng_aio {
 	bool         a_expire_ok;  // Expire from sleep is ok
 	bool         a_expiring;   // Expiration in progress
 	bool         a_use_expire; // Use expire instead of timeout
-	nni_task     a_task;
+	bool         a_init;       // This is initialized
+
+	nni_task a_task;
 
 	// Read/write operations.
 	nni_iov  a_iov[8];
@@ -229,14 +237,20 @@ struct nng_aio {
 	void *a_inputs[4];
 	void *a_outputs[4];
 
+#ifndef NDEBUG
+	nni_atomic_bool a_started; // Used only in NNI_ASSERT
+#endif
+
+	nni_atomic_bool   a_stopped;
+	nni_aio_expire_q *a_expire_q;
+	nni_list_node     a_expire_node; // Expiration node
+	nni_reap_node     a_reap_node;
+
 	// Provider-use fields.
 	nni_aio_cancel_fn a_cancel_fn;
 	void             *a_cancel_arg;
 	void             *a_prov_data;
 	nni_list_node     a_prov_node; // Linkage on provider list.
-	nni_aio_expire_q *a_expire_q;
-	nni_list_node     a_expire_node; // Expiration node
-	nni_reap_node     a_reap_node;
 };
 
 #endif // CORE_AIO_H

@@ -141,6 +141,7 @@ nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 	    ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK)) {
 		rv = NNG_EAGAIN;
 	}
+	nni_aio_stop(&aio);
 	nni_aio_fini(&aio);
 
 	return (rv);
@@ -194,6 +195,7 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 
 	nni_aio_wait(&aio);
 	rv = nni_aio_result(&aio);
+	nni_aio_stop(&aio);
 	nni_aio_fini(&aio);
 
 	// Possibly massage nonblocking attempt.  Note that nonblocking is
@@ -315,6 +317,7 @@ nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 	    ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK)) {
 		rv = NNG_EAGAIN;
 	}
+	nni_aio_stop(&aio);
 	nni_aio_fini(&aio);
 
 	return (rv);
@@ -385,6 +388,7 @@ nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 
 	nni_aio_wait(&aio);
 	rv = nni_aio_result(&aio);
+	nni_aio_stop(&aio);
 	nni_aio_fini(&aio);
 
 	// Possibly massage nonblocking attempt.  Note that nonblocking is
@@ -1333,6 +1337,7 @@ nng_device(nng_socket s1, nng_socket s2)
 	nng_device_aio(&aio, s1, s2);
 	nni_aio_wait(&aio);
 	rv = nni_aio_result(&aio);
+	nni_aio_stop(&aio);
 	nni_aio_fini(&aio);
 	return (rv);
 }

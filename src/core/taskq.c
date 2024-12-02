@@ -248,11 +248,6 @@ nni_task_init(nni_task *task, nni_taskq *tq, nni_cb cb, void *arg)
 void
 nni_task_fini(nni_task *task)
 {
-	nni_mtx_lock(&task->task_mtx);
-	while (task->task_busy) {
-		nni_cv_wait(&task->task_cv);
-	}
-	nni_mtx_unlock(&task->task_mtx);
 	nni_cv_fini(&task->task_cv);
 	nni_mtx_fini(&task->task_mtx);
 }
