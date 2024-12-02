@@ -1272,9 +1272,13 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_pipe *p;
 
 	nni_mtx_lock(&s->s_mx);
-	if (nni_pipe_create_listener(&p, l, tpipe) != 0) {
-		nni_mtx_unlock(&s->s_mx);
-		return;
+	if (l->l_tran->tran_pipe->p_size != 0) {
+		p = tpipe;
+	} else {
+		if (nni_pipe_create_listener(&p, l, tpipe) != 0) {
+			nni_mtx_unlock(&s->s_mx);
+			return;
+		}
 	}
 
 	nni_list_append(&l->l_pipes, p);

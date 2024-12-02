@@ -157,8 +157,8 @@ void
 test_sfd_recv_max(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
-	char         msg[256];
-	char         buf[256];
+	char         msg[256] = { 0 };
+	char         buf[256] = { 0 };
 	nng_socket   s0;
 	nng_socket   s1;
 	nng_listener l0;
