@@ -57,7 +57,6 @@ struct sfd_tran_ep {
 	nng_sockaddr         src;
 	nni_aio             *useraio;
 	nni_aio              connaio;
-	nni_aio              timeaio;
 	nni_list             waitpipes; // pipes waiting to match to socket
 	nni_list             negopipes; // pipes busy negotiating
 	nng_stream_listener *listener;
@@ -612,10 +611,8 @@ sfd_tran_ep_fini(void *arg)
 {
 	sfd_tran_ep *ep = arg;
 
-	nni_aio_stop(&ep->timeaio);
 	nni_aio_stop(&ep->connaio);
 	nng_stream_listener_free(ep->listener);
-	nni_aio_fini(&ep->timeaio);
 	nni_aio_fini(&ep->connaio);
 
 	nni_mtx_fini(&ep->mtx);
@@ -631,7 +628,6 @@ sfd_tran_ep_close(void *arg)
 	nni_mtx_lock(&ep->mtx);
 
 	ep->closed = true;
-	nni_aio_close(&ep->timeaio);
 	if (ep->listener != NULL) {
 		nng_stream_listener_close(ep->listener);
 	}
@@ -649,15 +645,6 @@ sfd_tran_ep_close(void *arg)
 	}
 
 	nni_mtx_unlock(&ep->mtx);
-}
-
-static void
-sfd_tran_timer_cb(void *arg)
-{
-	sfd_tran_ep *ep = arg;
-	if (nni_aio_result(&ep->timeaio) == 0) {
-		nng_stream_listener_accept(ep->listener, &ep->connaio);
-	}
 }
 
 static void
@@ -701,18 +688,8 @@ error:
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
 	}
-	switch (rv) {
-
-	case NNG_ENOMEM:
-	case NNG_ENOFILES:
-		nng_sleep_aio(10, &ep->timeaio);
-		break;
-
-	default:
-		if (!ep->closed) {
-			nng_stream_listener_accept(ep->listener, &ep->connaio);
-		}
-		break;
+	if (!ep->closed) {
+		nng_stream_listener_accept(ep->listener, &ep->connaio);
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
@@ -766,7 +743,6 @@ sfd_tran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 	}
 
 	nni_aio_init(&ep->connaio, sfd_tran_accept_cb, ep);
-	nni_aio_init(&ep->timeaio, sfd_tran_timer_cb, ep);
 
 	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) {
 		sfd_tran_ep_fini(ep);
