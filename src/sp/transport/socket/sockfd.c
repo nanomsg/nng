@@ -841,7 +841,7 @@ sfd_tran_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static nni_sp_pipe_ops sfd_tran_pipe_ops = {
+static const nni_sp_pipe_ops sfd_tran_pipe_ops = {
 	.p_size   = sizeof(sfd_tran_pipe),
 	.p_init   = sfd_tran_pipe_init,
 	.p_fini   = sfd_tran_pipe_fini,
@@ -893,7 +893,7 @@ sfd_tran_listener_setopt(
 	return (rv);
 }
 
-static nni_sp_listener_ops sfd_tran_listener_ops = {
+static const nni_sp_listener_ops sfd_tran_listener_ops = {
 	.l_init   = sfd_tran_listener_init,
 	.l_fini   = sfd_tran_ep_fini,
 	.l_bind   = sfd_tran_ep_bind,
