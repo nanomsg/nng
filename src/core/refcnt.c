@@ -12,6 +12,7 @@ void
 nni_refcnt_init(
     nni_refcnt *rc, unsigned value, void *data, void (*fini)(void *))
 {
+	nni_atomic_init(&rc->rc_cnt);
 	nni_atomic_set(&rc->rc_cnt, value);
 	rc->rc_data = data;
 	rc->rc_fini = fini;
