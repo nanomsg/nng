@@ -89,8 +89,20 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	aio->a_timeout = NNG_DURATION_INFINITE;
 	aio->a_expire_q =
 	    nni_aio_expire_q_list[nni_random() % nni_aio_expire_q_cnt];
+#ifndef NDEBUG
+	nni_atomic_init_bool(&aio->a_started);
+#endif
+	nni_atomic_init_bool(&aio->a_stopped);
 	aio->a_init = true;
 }
+
+#ifndef NDEBUG
+static bool
+aio_started(nni_aio *aio)
+{
+	return (nni_atomic_get_bool(&aio->a_started));
+}
+#endif
 
 static bool
 aio_stopped(nni_aio *aio)
@@ -102,6 +114,7 @@ void
 nni_aio_fini(nni_aio *aio)
 {
 	if (aio != NULL && aio->a_init) {
+		NNI_ASSERT(aio_stopped(aio) || !aio_started(aio));
 		nni_task_fini(&aio->a_task);
 	}
 }
@@ -324,6 +337,9 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_cancel_fn = NULL;
 		return (NNG_ECANCELED);
 	}
+#ifndef NDEBUG
+	nni_atomic_set_bool(&aio->a_started, true);
+#endif
 	nni_mtx_lock(&eq->eq_mtx);
 	NNI_ASSERT(!nni_aio_list_active(aio));
 	NNI_ASSERT(aio->a_cancel_fn == NULL);

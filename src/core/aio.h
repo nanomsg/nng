@@ -236,6 +236,10 @@ struct nng_aio {
 	void *a_inputs[4];
 	void *a_outputs[4];
 
+#ifndef NDEBUG
+	nni_atomic_bool a_started; // Used only in NNI_ASSERT
+#endif
+
 	nni_atomic_bool   a_stopped;
 	nni_aio_expire_q *a_expire_q;
 	nni_list_node     a_expire_node; // Expiration node
