@@ -46,12 +46,8 @@ pipe_destroy(void *arg)
 	nni_dialer   *d = p->p_dialer;
 	nni_listener *l = p->p_listener;
 
-	if (p->p_proto_data != NULL) {
-		p->p_proto_ops.pipe_fini(p->p_proto_data);
-	}
-	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.p_fini(p->p_tran_data);
-	}
+	p->p_proto_ops.pipe_fini(p->p_proto_data);
+	p->p_tran_ops.p_fini(p->p_tran_data);
 	if (l != NULL) {
 		nni_listener_rele(l);
 	}
@@ -82,12 +78,8 @@ pipe_reap(void *arg)
 #endif
 	nni_pipe_remove(p);
 
-	if (p->p_proto_data != NULL) {
-		p->p_proto_ops.pipe_stop(p->p_proto_data);
-	}
-	if ((p->p_tran_data != NULL) && (p->p_tran_ops.p_stop != NULL)) {
-		p->p_tran_ops.p_stop(p->p_tran_data);
-	}
+	p->p_proto_ops.pipe_stop(p->p_proto_data);
+	p->p_tran_ops.p_stop(p->p_tran_data);
 
 	nni_pipe_rele(p);
 }
@@ -148,9 +140,7 @@ nni_pipe_close(nni_pipe *p)
 	p->p_proto_ops.pipe_close(p->p_proto_data);
 
 	// Close the underlying transport.
-	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.p_close(p->p_tran_data);
-	}
+	p->p_tran_ops.p_close(p->p_tran_data);
 
 	nni_reap(&pipe_reap_list, p);
 }
@@ -240,7 +230,7 @@ static int
 pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 {
 	nni_pipe                 *p;
-	int                       rv;
+	int                       rv1, rv2, rv3;
 	void                     *sock_data = nni_sock_proto_data(sock);
 	const nni_proto_pipe_ops *pops      = nni_sock_proto_pipe_ops(sock);
 	const nni_sp_pipe_ops    *tops      = tran->tran_pipe;
@@ -281,26 +271,21 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	nni_mtx_lock(&pipes_lk);
-	rv = nni_id_alloc32(&pipes, &p->p_id, p);
+	rv1 = nni_id_alloc32(&pipes, &p->p_id, p);
 	nni_mtx_unlock(&pipes_lk);
 
 #ifdef NNG_ENABLE_STATS
 	pipe_stats_init(p);
 #endif
 
-	nni_sock_hold(sock);
+	p->p_tran_data  = tran_data;
+	p->p_proto_data = proto_data;
 
-	if ((rv == 0) && (rv = tops->p_init(tran_data, p)) == 0) {
-		p->p_tran_data = tran_data;
-	}
-	if ((rv == 0) &&
-	    (rv = pops->pipe_init(proto_data, p, sock_data)) == 0) {
-		p->p_proto_data = proto_data;
-	}
-	if (rv != 0) {
-		nni_pipe_close(p);
-		nni_pipe_rele(p);
-		return (rv);
+	rv2 = tops->p_init(tran_data, p);
+	rv3 = pops->pipe_init(proto_data, p, sock_data);
+	if (rv1 != 0 || rv2 != 0 || rv3 != 0) {
+		pipe_destroy(p);
+		return (rv1 ? rv1 : rv2 ? rv2 : rv3);
 	}
 
 	*pp = p;
@@ -327,6 +312,7 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
 	pipe_stat_init(p, &p->st_ep_id, &dialer_info);
 	nni_stat_set_id(&p->st_ep_id, (int) nni_dialer_id(d));
 #endif
+	nni_sock_hold(d->d_sock);
 	nni_dialer_hold(d);
 	*pp = p;
 	return (0);
@@ -373,10 +359,11 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
 		.si_desc = "listener for pipe",
 		.si_type = NNG_STAT_ID,
 	};
-	nni_listener_hold(l);
 	pipe_stat_init(p, &p->st_ep_id, &listener_info);
 	nni_stat_set_id(&p->st_ep_id, (int) nni_listener_id(l));
 #endif
+	nni_listener_hold(l);
+	nni_sock_hold(l->l_sock);
 	*pp = p;
 	return (0);
 }
