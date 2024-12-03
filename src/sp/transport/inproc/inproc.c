@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -112,6 +112,12 @@ inproc_pipe_init(void *arg, nni_pipe *p)
 	NNI_ARG_UNUSED(arg);
 	NNI_ARG_UNUSED(p);
 	return (0);
+}
+
+static void
+inproc_pipe_stop(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
 }
 
 static void
@@ -620,6 +626,7 @@ static nni_sp_pipe_ops inproc_pipe_ops = {
 	.p_send   = inproc_pipe_send,
 	.p_recv   = inproc_pipe_recv,
 	.p_close  = inproc_pipe_close,
+	.p_stop   = inproc_pipe_stop,
 	.p_peer   = inproc_pipe_peer,
 	.p_getopt = inproc_pipe_getopt,
 };
