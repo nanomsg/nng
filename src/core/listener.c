@@ -39,12 +39,14 @@ listener_destroy(void *arg)
 {
 	nni_listener *l = arg;
 
-	nni_aio_fini(&l->l_acc_aio);
-	nni_aio_fini(&l->l_tmo_aio);
-
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
 	}
+	nni_aio_fini(&l->l_acc_aio);
+	nni_aio_fini(&l->l_tmo_aio);
+
+	nni_sock_rele(l->l_sock);
+
 	nni_url_fini(&l->l_url);
 	NNI_FREE_STRUCT(l);
 }

@@ -1262,7 +1262,6 @@ nni_dialer_shutdown(nni_dialer *d)
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&d->st_root);
 #endif
-	nni_sock_rele(d->d_sock);
 }
 
 void
@@ -1339,7 +1338,6 @@ nni_listener_shutdown(nni_listener *l)
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&l->st_root);
 #endif
-	nni_sock_rele(s);
 }
 
 void
