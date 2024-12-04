@@ -999,6 +999,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 		// floor. this is on the sender, so there isn't a compelling
 		// need to disconnect the pipe, since it we're not being
 		// "ill-behaved" to our peer.
+		nni_aio_finish(aio, 0, count);
 		nni_stat_inc(&ep->st_snd_toobig, 1);
 		nni_msg_free(msg);
 		return;
