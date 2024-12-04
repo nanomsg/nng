@@ -211,16 +211,18 @@ typedef struct nni_aio_expire_q nni_aio_expire_q;
 // any of these members -- the definition is provided here to facilitate
 // inlining, but that should be the only use.
 struct nng_aio {
-	size_t       a_count;      // Bytes transferred (I/O only)
-	nni_time     a_expire;     // Absolute timeout
-	nni_duration a_timeout;    // Relative timeout
-	int          a_result;     // Result code (nng_errno)
-	bool         a_stop;       // Shutting down (no new operations)
-	bool         a_sleep;      // Sleeping with no action
-	bool         a_expire_ok;  // Expire from sleep is ok
-	bool         a_expiring;   // Expiration in progress
-	bool         a_use_expire; // Use expire instead of timeout
-	bool         a_init;       // This is initialized
+	size_t       a_count;        // Bytes transferred (I/O only)
+	nni_time     a_expire;       // Absolute timeout
+	nni_duration a_timeout;      // Relative timeout
+	int          a_result;       // Result code (nng_errno)
+	int          a_abort_result; // Reason for abort (result code)
+	bool         a_stop;         // Shutting down (no new operations)
+	bool         a_abort;        // Aborted (after begin, before schedule)
+	bool         a_sleep;        // Sleeping with no action
+	bool         a_expire_ok;    // Expire from sleep is ok
+	bool         a_expiring;     // Expiration in progress
+	bool         a_use_expire;   // Use expire instead of timeout
+	bool         a_init;         // This is initialized
 
 	nni_task a_task;
 
@@ -237,11 +239,6 @@ struct nng_aio {
 	void *a_inputs[4];
 	void *a_outputs[4];
 
-#ifndef NDEBUG
-	nni_atomic_bool a_started; // Used only in NNI_ASSERT
-#endif
-
-	nni_atomic_bool   a_stopped;
 	nni_aio_expire_q *a_expire_q;
 	nni_list_node     a_expire_node; // Expiration node
 	nni_reap_node     a_reap_node;
