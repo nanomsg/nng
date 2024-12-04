@@ -109,6 +109,7 @@ static void
 sfd_listener_accept(void *arg, nng_aio *aio)
 {
 	sfd_listener *l = arg;
+	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -122,8 +123,9 @@ sfd_listener_accept(void *arg, nng_aio *aio)
 
 	if (l->listen_cnt) {
 		sfd_start_conn(l, aio);
+	} else if ((rv = nni_aio_schedule(aio, sfd_cancel_accept, l)) != 0) {
+		nni_aio_finish_error(aio, rv);
 	} else {
-		nni_aio_schedule(aio, sfd_cancel_accept, l);
 		nni_aio_list_append(&l->accept_q, aio);
 	}
 	nni_mtx_unlock(&l->mtx);
