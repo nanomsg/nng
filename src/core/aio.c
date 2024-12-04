@@ -187,12 +187,15 @@ nni_aio_stop(nni_aio *aio)
 		nni_aio_expire_q *eq = aio->a_expire_q;
 
 		nni_mtx_lock(&eq->eq_mtx);
+		aio->a_stop       = true;
+		while (aio->a_expiring) {
+			nni_cv_wait(&eq->eq_cv);
+		}
 		nni_aio_expire_rm(aio);
 		fn                = aio->a_cancel_fn;
 		arg               = aio->a_cancel_arg;
 		aio->a_cancel_fn  = NULL;
 		aio->a_cancel_arg = NULL;
-		aio->a_stop       = true;
 		nni_mtx_unlock(&eq->eq_mtx);
 
 		if (fn != NULL) {
