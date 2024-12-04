@@ -661,21 +661,20 @@ sfd_tran_accept_cb(void *arg)
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
-
 	conn = nni_aio_get_output(aio, 0);
-	if ((rv = nni_sp_pipe_alloc((void **) &p, NULL, ep->nlistener)) != 0) {
+	if (ep->closed) {
+		nng_stream_free(conn);
+		rv = NNG_ECLOSED;
+		goto error;
+	}
+
+	if ((rv = nni_pipe_alloc_listener((void **) &p, ep->nlistener)) != 0) {
 		nng_stream_free(conn);
 		goto error;
 	}
 	p->conn = conn;
 	p->ep   = ep;
 
-	if (ep->closed) {
-		nni_pipe_close(p->npipe);
-		nni_pipe_rele(p->npipe);
-		rv = NNG_ECLOSED;
-		goto error;
-	}
 	sfd_tran_pipe_start(p, conn, ep);
 	nng_stream_listener_accept(ep->listener, &ep->connaio);
 	nni_mtx_unlock(&ep->mtx);
@@ -829,15 +828,13 @@ sfd_tran_ep_accept(void *arg, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, sfd_tran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		return;
 	}
 	ep->useraio = aio;
 	if (!ep->started) {
 		ep->started = true;
 		nng_stream_listener_accept(ep->listener, &ep->connaio);
-	} else {
-		sfd_tran_ep_match(ep);
 	}
+	sfd_tran_ep_match(ep);
 	nni_mtx_unlock(&ep->mtx);
 }
 

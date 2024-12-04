@@ -201,6 +201,4 @@ extern void         nni_sp_tran_sys_init(void);
 extern void         nni_sp_tran_sys_fini(void);
 extern void         nni_sp_tran_register(nni_sp_tran *);
 
-extern int nni_sp_pipe_alloc(void **datap, nni_dialer *d, nni_listener *l);
-
 #endif // PROTOCOL_SP_TRANSPORT_H
