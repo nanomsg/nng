@@ -41,6 +41,7 @@ nni_taskq_thread(void *self)
 	for (;;) {
 		if ((task = nni_list_first(&tq->tq_tasks)) != NULL) {
 
+			NNI_ASSERT(!task->task_dead);
 			nni_list_remove(&tq->tq_tasks, task);
 
 			nni_mtx_unlock(&tq->tq_mtx);
@@ -50,6 +51,7 @@ nni_taskq_thread(void *self)
 			nni_mtx_lock(&task->task_mtx);
 			task->task_busy--;
 			if (task->task_busy == 0) {
+				NNI_ASSERT(!task->task_prep);
 				nni_cv_wake(&task->task_cv);
 			}
 			nni_mtx_unlock(&task->task_mtx);
@@ -131,7 +133,9 @@ void
 nni_task_exec(nni_task *task)
 {
 	nni_mtx_lock(&task->task_mtx);
+	NNI_ASSERT(!task->task_dead);
 	if (task->task_prep) {
+		NNI_ASSERT(task->task_busy > 0);
 		task->task_prep = false;
 	} else {
 		task->task_busy++;
@@ -155,6 +159,7 @@ nni_task_dispatch(nni_task *task)
 {
 	nni_taskq *tq = task->task_tq;
 
+	NNI_ASSERT(!task->task_dead);
 	// If there is no callback to perform, then do nothing!
 	// The user will be none the wiser.
 	if (task->task_cb == NULL) {
@@ -163,6 +168,7 @@ nni_task_dispatch(nni_task *task)
 	}
 	nni_mtx_lock(&task->task_mtx);
 	if (task->task_prep) {
+		NNI_ASSERT(task->task_busy > 0);
 		task->task_prep = false;
 	} else {
 		task->task_busy++;
@@ -179,29 +185,17 @@ void
 nni_task_prep(nni_task *task)
 {
 	nni_mtx_lock(&task->task_mtx);
+	NNI_ASSERT(!task->task_dead);
 	task->task_busy++;
 	task->task_prep = true;
 	nni_mtx_unlock(&task->task_mtx);
 }
 
 void
-nni_task_abort(nni_task *task)
-{
-	// This is called when unscheduling the task.
-	nni_mtx_lock(&task->task_mtx);
-	if (task->task_prep) {
-		task->task_prep = false;
-		task->task_busy--;
-		if (task->task_busy == 0) {
-			nni_cv_wake(&task->task_cv);
-		}
-	}
-	nni_mtx_unlock(&task->task_mtx);
-}
-void
 nni_task_wait(nni_task *task)
 {
 	nni_mtx_lock(&task->task_mtx);
+	NNI_ASSERT(!task->task_dead);
 	while (task->task_busy) {
 		nni_cv_wait(&task->task_cv);
 	}
@@ -234,6 +228,8 @@ nni_task_init(nni_task *task, nni_taskq *tq, nni_cb cb, void *arg)
 void
 nni_task_fini(nni_task *task)
 {
+	task->task_dead = true;
+	NNI_ASSERT(!nni_list_node_active(&task->task_node));
 	nni_cv_fini(&task->task_cv);
 	nni_mtx_fini(&task->task_mtx);
 }

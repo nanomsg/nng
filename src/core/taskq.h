@@ -40,11 +40,6 @@ extern void nni_task_exec(nni_task *);
 // nni_task_exec).
 extern void nni_task_prep(nni_task *);
 
-// nni_task_abort is called to undo the effect of nni_task_prep,
-// basically. The aio framework uses this when nni_aio_schedule()
-// returns an error.
-extern void nni_task_abort(nni_task *);
-
 // nni_task_busy checks to see if a task is still busy.
 // This is uses the same check that nni_task_wait uses.
 extern bool nni_task_busy(nni_task *);
@@ -53,6 +48,7 @@ extern bool nni_task_busy(nni_task *);
 // work is scheduled on the task then it will not return until that
 // work (or any other work subsequently scheduled) is complete.
 extern void nni_task_wait(nni_task *);
+extern void nni_task_stop(nni_task *);
 extern void nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 
 // nni_task_fini destroys the task.  It will reap resources asynchronously
@@ -74,6 +70,7 @@ struct nni_task {
 	nni_taskq    *task_tq;
 	unsigned      task_busy;
 	bool          task_prep;
+	bool          task_dead;
 	nni_mtx       task_mtx;
 	nni_cv        task_cv;
 };
