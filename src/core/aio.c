@@ -399,7 +399,7 @@ nni_aio_abort(nni_aio *aio, int rv)
 	arg               = aio->a_cancel_arg;
 	aio->a_cancel_fn  = NULL;
 	aio->a_cancel_arg = NULL;
-	if (fn != NULL) {
+	if (fn == NULL) {
 		aio->a_abort        = true;
 		aio->a_abort_result = rv;
 	}
