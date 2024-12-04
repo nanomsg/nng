@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <nng/nng.h>
 #include <core/nng_impl.h>
 #include <nng/protocol/survey0/survey.h>
@@ -24,13 +25,27 @@ struct work {
 };
 
 void
+fatal(const char *msg, int result)
+{
+	fprintf(stderr, "%s: %s\n", msg, nng_strerror(result));
+	abort();
+}
+
+#define PASS(cond)                 \
+	do {                           \
+		int result_ = (cond);      \
+		if (result_ != 0)          \
+			fatal(#cond, result_); \
+	} while (0)
+
+void
 work_send(struct work *w, void *data, size_t size)
 {
 	nng_msg *msg;
 
 	w->state = SEND;
-	NUTS_PASS(nng_msg_alloc(&msg, 0));
-	NUTS_PASS(nng_msg_append(msg, data, size));
+	PASS(nng_msg_alloc(&msg, 0));
+	PASS(nng_msg_append(msg, data, size));
 	nng_aio_set_msg(w->aio, msg);
 	nng_send_aio(w->socket, w->aio);
 }
@@ -48,7 +63,7 @@ free_aio_msg(struct work *w)
 void
 work_listen(struct work *w, const char *url)
 {
-	NUTS_PASS(nng_listen(w->socket, url, NULL, 0));
+	PASS(nng_listen(w->socket, url, NULL, 0));
 }
 
 void
@@ -57,7 +72,7 @@ work_dial(struct work *w, const char * const * urls, size_t urls_size)
 	size_t i;
 
 	for (i = 0; i < urls_size; ++i)
-		NUTS_PASS(nng_dial(w->socket, urls[i], NULL, 0));
+		PASS(nng_dial(w->socket, urls[i], NULL, 0));
 }
 
 void
@@ -93,8 +108,7 @@ ping_cb(void *arg)
 				free_aio_msg(w);
 				return;
 			default:
-				NUTS_PASS(result);
-				abort();
+				fatal("ping_cb", result);
 		}
 
 	switch (w->state) {
@@ -104,9 +118,9 @@ ping_cb(void *arg)
 			break;
 		case RECV:
 			msg = nng_aio_get_msg(w->aio);
-			TEST_ASSERT(msg);
-			TEST_ASSERT(nng_msg_len(msg) == 5);
-			TEST_ASSERT(0 == strncmp(nng_msg_body(msg), "echo", 4));
+			assert(msg != NULL);
+			assert(nng_msg_len(msg) == 5);
+			assert(0 == strncmp(nng_msg_body(msg), "echo", 4));
 			nng_msg_free(msg);
 			nni_atomic_inc(&w->received);
 			ping_start(w);
@@ -135,16 +149,15 @@ echo_cb(void *arg)
 				free_aio_msg(w);
 				return;
 			default:
-				NUTS_PASS(result);
-				abort();
+				fatal("echo_cb", result);
 		}
 
 	switch (w->state) {
 		case RECV:
 			msg = nng_aio_get_msg(w->aio);
-			TEST_ASSERT(msg);
-			TEST_ASSERT(nng_msg_len(msg) == 5);
-			TEST_ASSERT(0 == strncmp(nng_msg_body(msg), "ping", 4));
+			assert(msg != NULL);
+			assert(nng_msg_len(msg) == 5);
+			assert(0 == strncmp(nng_msg_body(msg), "ping", 4));
 			nng_msg_free(msg);
 			nni_atomic_inc(&w->received);
 			work_send(w, "echo", 5);

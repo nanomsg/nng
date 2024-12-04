@@ -117,19 +117,6 @@ function(nng_test NAME)
     endif ()
 endfunction()
 
-function(nng_test_quiet NAME)
-    if (NNG_TESTS)
-        add_executable(${NAME} ${NAME}.c ${ARGN})
-        target_link_libraries(${NAME} nng_testing)
-        target_include_directories(${NAME} PRIVATE
-                ${PROJECT_SOURCE_DIR}/tests
-                ${PROJECT_SOURCE_DIR}/src
-                ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME ${NNG_TEST_PREFIX}.${NAME} COMMAND ${NAME} -t)
-        set_tests_properties(${NNG_TEST_PREFIX}.${NAME} PROPERTIES TIMEOUT 180)
-    endif ()
-endfunction()
-
 function(nng_test_if COND NAME)
     if (${COND} AND NNG_TESTS)
         add_executable(${NAME} ${NAME}.c ${ARGN})
