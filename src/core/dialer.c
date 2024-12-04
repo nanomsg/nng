@@ -36,12 +36,14 @@ dialer_destroy(void *arg)
 {
 	nni_dialer *d = arg;
 
-	nni_aio_fini(&d->d_con_aio);
-	nni_aio_fini(&d->d_tmo_aio);
-
 	if (d->d_data != NULL) {
 		d->d_ops.d_fini(d->d_data);
 	}
+	nni_aio_fini(&d->d_con_aio);
+	nni_aio_fini(&d->d_tmo_aio);
+
+	nni_sock_rele(d->d_sock);
+
 	nni_mtx_fini(&d->d_mtx);
 	nni_url_fini(&d->d_url);
 	NNI_FREE_STRUCT(d);
