@@ -36,6 +36,16 @@ work_send(struct work *w, void *data, size_t size)
 }
 
 void
+free_aio_msg(struct work *w)
+{
+	nng_msg *msg;
+
+	msg = nng_aio_get_msg(w->aio);
+	if (msg)
+		nng_msg_free(msg);
+}
+
+void
 work_listen(struct work *w, const char *url)
 {
 	NUTS_PASS(nng_listen(w->socket, url, NULL, 0));
@@ -54,6 +64,7 @@ void
 close_work(struct work *w)
 {
 	nng_close(w->socket);
+	nng_aio_wait(w->aio);
 	nng_aio_free(w->aio);
 }
 
@@ -74,10 +85,12 @@ ping_cb(void *arg)
 		switch (result) {
 			case NNG_ETIMEDOUT:
 			case NNG_ESTATE:
+				free_aio_msg(w);
 				ping_start(w);
 				return;
 			case NNG_ECANCELED:
 			case NNG_ECLOSED:
+				free_aio_msg(w);
 				return;
 			default:
 				NUTS_PASS(result);
@@ -119,6 +132,7 @@ echo_cb(void *arg)
 		switch (result) {
 			case NNG_ECANCELED:
 			case NNG_ECLOSED:
+				free_aio_msg(w);
 				return;
 			default:
 				NUTS_PASS(result);
