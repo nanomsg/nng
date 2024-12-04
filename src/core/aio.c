@@ -393,14 +393,12 @@ nni_aio_abort(nni_aio *aio, int rv)
 	NNI_ASSERT(rv > 0);
 	nni_mtx_lock(&eq->eq_mtx);
 	nni_aio_expire_rm(aio);
-	fn                = aio->a_cancel_fn;
-	arg               = aio->a_cancel_arg;
-	aio->a_cancel_fn  = NULL;
-	aio->a_cancel_arg = NULL;
-	if (fn != NULL) {
-		aio->a_abort        = true;
-		aio->a_abort_result = rv;
-	}
+	fn                  = aio->a_cancel_fn;
+	arg                 = aio->a_cancel_arg;
+	aio->a_cancel_fn    = NULL;
+	aio->a_cancel_arg   = NULL;
+	aio->a_abort        = true;
+	aio->a_abort_result = rv;
 	nni_mtx_unlock(&eq->eq_mtx);
 
 	// Stop any I/O at the provider level.
