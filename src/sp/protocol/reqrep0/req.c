@@ -630,14 +630,9 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	}
 
 	if ((msg = ctx->rep_msg) == NULL) {
-		int rv;
-		rv = nni_aio_schedule(aio, req0_ctx_cancel_recv, ctx);
-		if (rv != 0) {
-			nni_mtx_unlock(&s->mtx);
-			nni_aio_finish_error(aio, rv);
-			return;
+		if (nni_aio_schedule(aio, req0_ctx_cancel_recv, ctx)) {
+			ctx->recv_aio = aio;
 		}
-		ctx->recv_aio = aio;
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
@@ -730,12 +725,12 @@ req0_ctx_send(void *arg, nni_aio *aio)
 
 	// If no pipes are ready, and the request was a poll (no background
 	// schedule), then fail it.  Should be NNG_ETIMEDOUT.
-	rv = nni_aio_schedule(aio, req0_ctx_cancel_send, ctx);
-	if ((rv != 0) && (nni_list_empty(&s->ready_pipes))) {
-		nni_id_remove(&s->requests, ctx->request_id);
-		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_list_empty(&s->ready_pipes)) {
+		if (!nni_aio_schedule(aio, req0_ctx_cancel_send, ctx)) {
+			nni_id_remove(&s->requests, ctx->request_id);
+			nni_mtx_unlock(&s->mtx);
+			return;
+		}
 	}
 	ctx->req_len  = nni_msg_len(msg);
 	ctx->req_msg  = msg;

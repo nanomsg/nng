@@ -118,19 +118,15 @@ static void
 wstran_pipe_recv(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
-	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, wstran_pipe_recv_cancel, p)) != 0) {
-		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, wstran_pipe_recv_cancel, p)) {
+		p->user_rxaio = aio;
+		nng_stream_recv(p->ws, &p->rxaio);
 	}
-	p->user_rxaio = aio;
-	nng_stream_recv(p->ws, &p->rxaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -153,7 +149,6 @@ static void
 wstran_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
-	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		// No way to give the message back to the protocol, so
@@ -163,9 +158,8 @@ wstran_pipe_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, wstran_pipe_send_cancel, p)) != 0) {
+	if (!nni_aio_schedule(aio, wstran_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	p->user_txaio = aio;
@@ -279,7 +273,6 @@ static void
 wstran_listener_accept(void *arg, nni_aio *aio)
 {
 	ws_listener *l = arg;
-	int          rv;
 
 	// We already bound, so we just need to look for an available
 	// pipe (created by the handler), and match it.
@@ -288,9 +281,8 @@ wstran_listener_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&l->mtx);
-	if ((rv = nni_aio_schedule(aio, ws_listener_cancel, l)) != 0) {
+	if (!nni_aio_schedule(aio, ws_listener_cancel, l)) {
 		nni_mtx_unlock(&l->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&l->aios, aio);
@@ -317,16 +309,14 @@ static void
 wstran_dialer_connect(void *arg, nni_aio *aio)
 {
 	ws_dialer *d = arg;
-	int        rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
 	nni_mtx_lock(&d->mtx);
-	if ((rv = nni_aio_schedule(aio, wstran_dialer_cancel, d)) != 0) {
+	if (!nni_aio_schedule(aio, wstran_dialer_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	NNI_ASSERT(nni_list_empty(&d->aios));

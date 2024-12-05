@@ -225,9 +225,8 @@ nni_device(nni_aio *aio, nni_sock *s1, nni_sock *s2)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, device_cancel, d)) != 0) {
+	if (!nni_aio_schedule(aio, device_cancel, d)) {
 		nni_mtx_unlock(&device_mtx);
-		nni_aio_finish_error(aio, rv);
 		nni_reap(&device_reap, d);
 	}
 	device_start(d, aio);

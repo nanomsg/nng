@@ -200,39 +200,39 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		return;
 	}
 
+	if ((rv = nni_posix_tcp_alloc(&c, d)) != 0) {
+		close(fd);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_atomic_inc(&d->ref);
 
-	if ((rv = nni_posix_tcp_alloc(&c, d)) != 0) {
-		nni_aio_finish_error(aio, rv);
-		nni_posix_tcp_dialer_rele(d);
+	nni_mtx_lock(&d->mtx);
+	if (!nni_aio_schedule(aio, tcp_dialer_cancel, d)) {
+		nni_mtx_unlock(&d->mtx);
+		nng_stream_free(&c->stream);
 		return;
+	}
+
+	if (d->closed) {
+		rv = NNG_ECLOSED;
 	}
 
 	// This arranges for the fd to be in non-blocking mode, and adds the
 	// poll fd to the list.
-	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+	if ((rv != 0) || (rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
 		(void) close(fd);
-		// the error label unlocks this
-		nni_mtx_lock(&d->mtx);
 		goto error;
 	}
 
 	nni_posix_tcp_init(c, pfd);
 	nni_posix_pfd_set_cb(pfd, tcp_dialer_cb, c);
 
-	nni_mtx_lock(&d->mtx);
-	if (d->closed) {
-		rv = NNG_ECLOSED;
-		goto error;
-	}
 	if (d->srclen != 0) {
 		if (bind(fd, (void *) &d->src, d->srclen) != 0) {
 			rv = nni_plat_errno(errno);
 			goto error;
 		}
-	}
-	if ((rv = nni_aio_schedule(aio, tcp_dialer_cancel, d)) != 0) {
-		goto error;
 	}
 	if (connect(fd, (void *) &ss, sslen) != 0) {
 		if (errno != EINPROGRESS) {

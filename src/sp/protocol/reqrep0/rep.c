@@ -191,15 +191,11 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, rep0_ctx_cancel_send, ctx)) != 0) {
-		nni_mtx_unlock(&s->lk);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, rep0_ctx_cancel_send, ctx)) {
+		ctx->saio  = aio;
+		ctx->spipe = p;
+		nni_list_append(&p->sendq, ctx);
 	}
-
-	ctx->saio  = aio;
-	ctx->spipe = p;
-	nni_list_append(&p->sendq, ctx);
 	nni_mtx_unlock(&s->lk);
 }
 
@@ -429,10 +425,8 @@ rep0_ctx_recv(void *arg, nni_aio *aio)
 	}
 	nni_mtx_lock(&s->lk);
 	if ((p = nni_list_first(&s->recvpipes)) == NULL) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, rep0_cancel_recv, ctx)) != 0) {
+		if (!nni_aio_schedule(aio, rep0_cancel_recv, ctx)) {
 			nni_mtx_unlock(&s->lk);
-			nni_aio_finish_error(aio, rv);
 			return;
 		}
 		if (ctx->raio != NULL) {

@@ -363,8 +363,6 @@ http_rd_cancel(nni_aio *aio, void *arg, int rv)
 static void
 http_rd_submit(nni_http_conn *conn, nni_aio *aio, enum read_flavor flavor)
 {
-	int rv;
-
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -372,8 +370,7 @@ http_rd_submit(nni_http_conn *conn, nni_aio *aio, enum read_flavor flavor)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, http_rd_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_schedule(aio, http_rd_cancel, conn)) {
 		return;
 	}
 	conn->rd_flavor = flavor;
@@ -483,8 +480,6 @@ http_wr_cancel(nni_aio *aio, void *arg, int rv)
 static void
 http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 {
-	int rv;
-
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -492,8 +487,7 @@ http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, http_wr_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_schedule(aio, http_wr_cancel, conn)) {
 		return;
 	}
 	conn->wr_flavor = flavor;

@@ -166,7 +166,7 @@ nni_aio_stop(nni_aio *aio)
 		nni_aio_expire_q *eq = aio->a_expire_q;
 
 		nni_mtx_lock(&eq->eq_mtx);
-		aio->a_stop       = true;
+		aio->a_stop = true;
 		while (aio->a_expiring) {
 			nni_cv_wait(&eq->eq_cv);
 		}
@@ -336,7 +336,7 @@ nni_aio_begin(nni_aio *aio)
 	return (0);
 }
 
-int
+bool
 nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 {
 	nni_aio_expire_q *eq = aio->a_expire_q;
@@ -345,7 +345,8 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 		// Convert the relative timeout to an absolute timeout.
 		switch (aio->a_timeout) {
 		case NNG_DURATION_ZERO:
-			return (NNG_ETIMEDOUT);
+			nni_aio_finish_error(aio, NNG_ETIMEDOUT);
+			return (false);
 		case NNG_DURATION_INFINITE:
 		case NNG_DURATION_DEFAULT:
 			aio->a_expire = NNI_TIME_NEVER;
@@ -360,14 +361,16 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	NNI_ASSERT(nni_task_busy(&aio->a_task));
 	if (aio->a_stop) {
 		nni_mtx_unlock(&eq->eq_mtx);
-		return (NNG_ECLOSED);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return (false);
 	}
 	if (aio->a_abort) {
 		int rv              = aio->a_abort_result;
 		aio->a_abort        = false;
 		aio->a_abort_result = 0;
 		nni_mtx_unlock(&eq->eq_mtx);
-		return (rv);
+		nni_aio_finish_error(aio, rv);
+		return (false);
 	}
 
 	NNI_ASSERT(aio->a_cancel_fn == NULL);
@@ -380,7 +383,7 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 		nni_aio_expire_add(aio);
 	}
 	nni_mtx_unlock(&eq->eq_mtx);
-	return (0);
+	return (true);
 }
 
 // nni_aio_abort is called by a consumer which guarantees that the aio
@@ -734,7 +737,6 @@ nni_sleep_cancel(nng_aio *aio, void *arg, int rv)
 void
 nni_sleep_aio(nng_duration ms, nng_aio *aio)
 {
-	int rv;
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -756,9 +758,8 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 	aio->a_expire =
 	    ms == NNG_DURATION_INFINITE ? NNI_TIME_NEVER : nni_clock() + ms;
 
-	if ((rv = nni_aio_schedule(aio, nni_sleep_cancel, NULL)) != 0) {
-		nni_aio_finish_error(aio, rv);
-	}
+	// no need for anything further on this
+	(void) nni_aio_schedule(aio, nni_sleep_cancel, NULL);
 }
 
 static void

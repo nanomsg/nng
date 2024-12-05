@@ -163,14 +163,11 @@ extern void         nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void         nni_aio_bump_count(nni_aio *, size_t);
 
 // nni_aio_schedule indicates that the AIO has begun, and is scheduled for
-// asynchronous completion. This also starts the expiration timer. Note that
-// prior to this, the aio cannot be canceled.  If the operation has a zero
-// timeout (NNG_FLAG_NONBLOCK) then NNG_ETIMEDOUT is returned.  If the
-// operation has already been canceled, or should not be run, then an error
-// is returned.  (In that case the caller should probably either return an
-// error to its caller, or possibly cause an asynchronous error by calling
-// nni_aio_finish_error on this aio.)
-extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
+// asynchronous completion. This also starts the expiration timer. This also
+// represents a cancellation point for the AIO.  If this function returns
+// false, then the caller should cease further operations.  The operation
+// will be completed by nni_aio_schedule with an appropriate error number.
+extern bool nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 

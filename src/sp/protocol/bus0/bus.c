@@ -338,13 +338,9 @@ bus0_sock_recv(void *arg, nni_aio *aio)
 	nni_mtx_lock(&s->mtx);
 again:
 	if (nni_lmq_empty(&s->recv_msgs)) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, bus0_recv_cancel, s)) != 0) {
-			nni_mtx_unlock(&s->mtx);
-			nni_aio_finish_error(aio, rv);
-			return;
+		if (nni_aio_schedule(aio, bus0_recv_cancel, s)) {
+			nni_list_append(&s->recv_wait, aio);
 		}
-		nni_list_append(&s->recv_wait, aio);
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}

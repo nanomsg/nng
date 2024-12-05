@@ -239,10 +239,9 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 
 	c->dialer = d;
 	nni_aio_set_prov_data(aio, c);
-	if ((rv = nni_aio_schedule(aio, tcp_dial_cancel, d)) != 0) {
+	if (!nni_aio_schedule(aio, tcp_dial_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
 		nng_stream_free(&c->ops);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	c->conn_aio = aio;

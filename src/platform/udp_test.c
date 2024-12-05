@@ -248,7 +248,9 @@ test_udp_send_ipc(void)
 	nng_aio_wait(aio1);
 
 	rv = nng_aio_result(aio1);
-	NUTS_ASSERT(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP);
+	NUTS_TRUE(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP ||
+	    rv == NNG_EUNREACHABLE);
+	NUTS_MSG("result was %s", nng_strerror(rv));
 
 	nng_aio_free(aio1);
 	nng_udp_close(u1);

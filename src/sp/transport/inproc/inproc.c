@@ -210,7 +210,6 @@ inproc_pipe_send(void *arg, nni_aio *aio)
 {
 	inproc_pipe  *pipe  = arg;
 	inproc_queue *queue = pipe->send_queue;
-	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		// No way to give the message back to the protocol, so
@@ -221,13 +220,10 @@ inproc_pipe_send(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&queue->lock);
-	if ((rv = nni_aio_schedule(aio, inproc_queue_cancel, queue)) != 0) {
-		nni_mtx_unlock(&queue->lock);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, inproc_queue_cancel, queue)) {
+		nni_aio_list_append(&queue->writers, aio);
+		inproc_queue_run(queue);
 	}
-	nni_aio_list_append(&queue->writers, aio);
-	inproc_queue_run(queue);
 	nni_mtx_unlock(&queue->lock);
 }
 
@@ -236,20 +232,16 @@ inproc_pipe_recv(void *arg, nni_aio *aio)
 {
 	inproc_pipe  *pipe  = arg;
 	inproc_queue *queue = pipe->recv_queue;
-	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
 	nni_mtx_lock(&queue->lock);
-	if ((rv = nni_aio_schedule(aio, inproc_queue_cancel, queue)) != 0) {
-		nni_mtx_unlock(&queue->lock);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, inproc_queue_cancel, queue)) {
+		nni_aio_list_append(&queue->readers, aio);
+		inproc_queue_run(queue);
 	}
-	nni_aio_list_append(&queue->readers, aio);
-	inproc_queue_run(queue);
 	nni_mtx_unlock(&queue->lock);
 }
 
@@ -479,7 +471,6 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 {
 	inproc_ep *ep = arg;
 	inproc_ep *server;
-	int        rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -502,16 +493,12 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 	// We don't have to worry about the case where a zero timeout
 	// on connect was specified, as there is no option to specify
 	// that in the upper API.
-	if ((rv = nni_aio_schedule(aio, inproc_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, inproc_ep_cancel, ep)) {
+		nni_list_append(&server->clients, ep);
+		nni_aio_list_append(&ep->aios, aio);
+
+		inproc_accept_clients(server);
 	}
-
-	nni_list_append(&server->clients, ep);
-	nni_aio_list_append(&ep->aios, aio);
-
-	inproc_accept_clients(server);
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
@@ -539,7 +526,6 @@ static void
 inproc_ep_accept(void *arg, nni_aio *aio)
 {
 	inproc_ep *ep = arg;
-	int        rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -549,16 +535,13 @@ inproc_ep_accept(void *arg, nni_aio *aio)
 
 	// We need not worry about the case where a non-blocking
 	// accept was tried -- there is no API to do such a thing.
-	if ((rv = nni_aio_schedule(aio, inproc_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, inproc_ep_cancel, ep)) {
+		// We are already on the master list of servers, thanks to
+		// bind. Insert us into pending server aios, and then run
+		// accept list.
+		nni_aio_list_append(&ep->aios, aio);
+		inproc_accept_clients(ep);
 	}
-
-	// We are already on the master list of servers, thanks to bind.
-	// Insert us into pending server aios, and then run accept list.
-	nni_aio_list_append(&ep->aios, aio);
-	inproc_accept_clients(ep);
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 

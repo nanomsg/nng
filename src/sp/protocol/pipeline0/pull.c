@@ -230,14 +230,10 @@ pull0_sock_recv(void *arg, nni_aio *aio)
 	nni_mtx_lock(&s->m);
 	if ((p = nni_list_first(&s->pl)) == NULL) {
 
-		int rv;
-		if ((rv = nni_aio_schedule(aio, pull0_cancel, s)) != 0) {
-			nni_mtx_unlock(&s->m);
-			nni_aio_finish_error(aio, rv);
-			return;
+		if (nni_aio_schedule(aio, pull0_cancel, s)) {
+			nni_aio_list_append(&s->rq, aio);
 		}
 
-		nni_aio_list_append(&s->rq, aio);
 		nni_mtx_unlock(&s->m);
 		return;
 	}

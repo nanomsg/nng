@@ -183,12 +183,12 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, tls_conn_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	nni_mtx_lock(&d->lk);
+	if (!nni_aio_schedule(aio, tls_conn_cancel, conn)) {
+		nni_mtx_unlock(&d->lk);
 		tls_free(conn);
 		return;
 	}
-	nni_mtx_lock(&d->lk);
 	d->started = true;
 	nni_mtx_unlock(&d->lk);
 
@@ -344,8 +344,7 @@ tls_listener_accept(void *arg, nng_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, tls_conn_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_schedule(aio, tls_conn_cancel, conn)) {
 		tls_free(conn);
 		return;
 	}
@@ -466,7 +465,6 @@ tls_cancel(nni_aio *aio, void *arg, int rv)
 static void
 tls_send(void *arg, nni_aio *aio)
 {
-	int       rv;
 	tls_conn *conn = arg;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -478,20 +476,16 @@ tls_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tls_cancel, conn)) != 0) {
-		nni_mtx_unlock(&conn->lock);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, tls_cancel, conn)) {
+		nni_list_append(&conn->send_queue, aio);
+		tls_do_send(conn);
 	}
-	nni_list_append(&conn->send_queue, aio);
-	tls_do_send(conn);
 	nni_mtx_unlock(&conn->lock);
 }
 
 static void
 tls_recv(void *arg, nni_aio *aio)
 {
-	int       rv;
 	tls_conn *conn = arg;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -503,14 +497,10 @@ tls_recv(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tls_cancel, conn)) != 0) {
-		nni_mtx_unlock(&conn->lock);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, tls_cancel, conn)) {
+		nni_list_append(&conn->recv_queue, aio);
+		tls_do_recv(conn);
 	}
-
-	nni_list_append(&conn->recv_queue, aio);
-	tls_do_recv(conn);
 	nni_mtx_unlock(&conn->lock);
 }
 
