@@ -719,6 +719,14 @@ nng_url_port(const nng_url *url)
 	return (url->u_port);
 }
 
+void
+nng_url_resolve_port(nng_url *url, uint32_t port)
+{
+	if (url->u_port == 0) {
+		url->u_port = port;
+	}
+}
+
 const char *
 nng_url_hostname(const nng_url *url)
 {

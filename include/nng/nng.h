@@ -1100,6 +1100,11 @@ NNG_DECL const char *nng_url_scheme(const nng_url *);
 // the scheme.
 NNG_DECL uint32_t nng_url_port(const nng_url *);
 
+// Update a URL with a zero port to a non-zero port (useful
+// after a bind to port 0).  Does nothing if the URL's port is not
+// zero to start with.
+NNG_DECL void nng_url_resolve_port(nng_url *url, uint32_t port);
+
 // hostname part of URL, can be NULL if irerelvant to scheme
 const char *nng_url_hostname(const nng_url *);
 
