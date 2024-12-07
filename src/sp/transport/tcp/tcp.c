@@ -524,7 +524,6 @@ static void
 tcptran_pipe_send(void *arg, nni_aio *aio)
 {
 	tcptran_pipe *p = arg;
-	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		// No way to give the message back to the protocol, so
@@ -534,9 +533,8 @@ tcptran_pipe_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, tcptran_pipe_send_cancel, p)) != 0) {
+	if (!nni_aio_schedule(aio, tcptran_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&p->sendq, aio);
@@ -601,15 +599,13 @@ static void
 tcptran_pipe_recv(void *arg, nni_aio *aio)
 {
 	tcptran_pipe *p = arg;
-	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, tcptran_pipe_recv_cancel, p)) != 0) {
+	if (!nni_aio_schedule(aio, tcptran_pipe_recv_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -945,7 +941,6 @@ static void
 tcptran_ep_connect(void *arg, nni_aio *aio)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -961,14 +956,10 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, tcptran_ep_cancel, ep)) {
+		ep->useraio = aio;
+		nng_stream_dialer_dial(ep->dialer, ep->connaio);
 	}
-	ep->useraio = aio;
-
-	nng_stream_dialer_dial(ep->dialer, ep->connaio);
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -1024,7 +1015,6 @@ static void
 tcptran_ep_accept(void *arg, nni_aio *aio)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1040,9 +1030,8 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
+	if (!nni_aio_schedule(aio, tcptran_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	ep->useraio = aio;

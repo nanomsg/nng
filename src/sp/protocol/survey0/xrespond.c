@@ -62,6 +62,7 @@ xresp0_sock_fini(void *arg)
 {
 	xresp0_sock *s = arg;
 
+	nni_aio_stop(&s->aio_getq);
 	nni_aio_fini(&s->aio_getq);
 	nni_id_map_fini(&s->pipes);
 	nni_mtx_fini(&s->mtx);

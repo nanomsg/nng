@@ -51,6 +51,8 @@ device_fini(void *arg)
 	for (int i = 0; i < d->num_paths; i++) {
 		nni_aio_stop(&d->paths[i].aio);
 	}
+	nni_sock_rele(d->paths[0].src);
+	nni_sock_rele(d->paths[0].dst);
 	NNI_FREE_STRUCT(d);
 }
 
@@ -97,8 +99,6 @@ device_cb(void *arg)
 				nni_aio_finish_error(d->user, d->rv);
 				d->user = NULL;
 			}
-			nni_sock_rele(d->paths[0].src);
-			nni_sock_rele(d->paths[0].dst);
 
 			nni_reap(&device_reap, d);
 		}
@@ -225,9 +225,8 @@ nni_device(nni_aio *aio, nni_sock *s1, nni_sock *s2)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, device_cancel, d)) != 0) {
+	if (!nni_aio_schedule(aio, device_cancel, d)) {
 		nni_mtx_unlock(&device_mtx);
-		nni_aio_finish_error(aio, rv);
 		nni_reap(&device_reap, d);
 	}
 	device_start(d, aio);

@@ -15,9 +15,10 @@
 // OUTSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 
+#include "nng/nng.h"
+
 #include "core/defs.h"
 #include "core/thread.h"
-#include "nng/nng.h"
 #include "sp/transport.h"
 
 // AIO
@@ -62,5 +63,8 @@ extern void nni_pipe_bump_tx(nni_pipe *, size_t);
 extern void nni_pipe_bump_error(nni_pipe *, int);
 
 extern char *nni_pipe_peer_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN]);
+
+extern int nni_pipe_alloc_dialer(void **, nni_dialer *);
+extern int nni_pipe_alloc_listener(void **, nni_listener *);
 
 #endif // CORE_PIPE_H

@@ -22,6 +22,7 @@ nni_proto_open(nng_socket *sip, const nni_proto *proto)
 		nng_socket s;
 		s.id = nni_sock_id(sock); // Keep socket held open.
 		*sip = s;
+		nni_sock_rele(sock);
 	}
 	return (rv);
 }

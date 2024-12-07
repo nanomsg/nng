@@ -999,6 +999,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 		// floor. this is on the sender, so there isn't a compelling
 		// need to disconnect the pipe, since it we're not being
 		// "ill-behaved" to our peer.
+		nni_aio_finish(aio, 0, count);
 		nni_stat_inc(&ep->st_snd_toobig, 1);
 		nni_msg_free(msg);
 		return;
@@ -1040,7 +1041,6 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 {
 	udp_pipe *p  = arg;
 	udp_ep   *ep = p->ep;
-	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1051,13 +1051,9 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, udp_pipe_recv_cancel, p)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, udp_pipe_recv_cancel, p)) {
+		nni_list_append(&p->rx_aios, aio);
 	}
-
-	nni_list_append(&p->rx_aios, aio);
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -1145,10 +1141,10 @@ udp_ep_rele(udp_ep *ep)
 	}
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_close(&ep->timeaio);
-	nni_aio_close(&ep->resaio);
-	nni_aio_close(&ep->tx_aio);
-	nni_aio_close(&ep->rx_aio);
+	nni_aio_stop(&ep->timeaio);
+	nni_aio_stop(&ep->resaio);
+	nni_aio_stop(&ep->tx_aio);
+	nni_aio_stop(&ep->rx_aio);
 	if (ep->udp != NULL) {
 		nni_udp_close(ep->udp);
 	}
@@ -1569,7 +1565,6 @@ static void
 udp_ep_connect(void *arg, nni_aio *aio)
 {
 	udp_ep *ep = arg;
-	int     rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1588,9 +1583,8 @@ udp_ep_connect(void *arg, nni_aio *aio)
 	NNI_ASSERT(nni_list_empty(&ep->connaios));
 	ep->dialer = true;
 
-	if ((rv = nni_aio_schedule(aio, udp_ep_cancel, ep)) != 0) {
+	if (!nni_aio_schedule(aio, udp_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -1798,7 +1792,6 @@ static void
 udp_ep_accept(void *arg, nni_aio *aio)
 {
 	udp_ep *ep = arg;
-	int     rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1809,13 +1802,10 @@ udp_ep_accept(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, udp_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, udp_ep_cancel, ep)) {
+		nni_aio_list_append(&ep->connaios, aio);
+		udp_ep_match(ep);
 	}
-	nni_aio_list_append(&ep->connaios, aio);
-	udp_ep_match(ep);
 	nni_mtx_unlock(&ep->mtx);
 }
 

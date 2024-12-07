@@ -26,7 +26,7 @@ struct ws_dialer {
 	uint16_t           peer; // remote protocol
 	nni_list           aios;
 	nni_mtx            mtx;
-	nni_aio           *connaio;
+	nni_aio            connaio;
 	nng_stream_dialer *dialer;
 	bool               started;
 };
@@ -35,7 +35,7 @@ struct ws_listener {
 	uint16_t             peer; // remote protocol
 	nni_list             aios;
 	nni_mtx              mtx;
-	nni_aio             *accaio;
+	nni_aio              accaio;
 	nng_stream_listener *listener;
 	bool                 started;
 };
@@ -46,20 +46,19 @@ struct ws_pipe {
 	uint16_t    peer;
 	nni_aio    *user_txaio;
 	nni_aio    *user_rxaio;
-	nni_aio    *txaio;
-	nni_aio    *rxaio;
+	nni_aio     txaio;
+	nni_aio     rxaio;
 	nng_stream *ws;
 };
 
 static void
 wstran_pipe_send_cb(void *arg)
 {
-	ws_pipe *p = arg;
-	nni_aio *taio;
+	ws_pipe *p    = arg;
+	nni_aio *taio = &p->txaio;
 	nni_aio *uaio;
 
 	nni_mtx_lock(&p->mtx);
-	taio          = p->txaio;
 	uaio          = p->user_txaio;
 	p->user_txaio = NULL;
 
@@ -78,7 +77,7 @@ static void
 wstran_pipe_recv_cb(void *arg)
 {
 	ws_pipe *p    = arg;
-	nni_aio *raio = p->rxaio;
+	nni_aio *raio = &p->rxaio;
 	nni_aio *uaio;
 	int      rv;
 
@@ -110,7 +109,7 @@ wstran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 		return;
 	}
 	p->user_rxaio = NULL;
-	nni_aio_abort(p->rxaio, rv);
+	nni_aio_abort(&p->rxaio, rv);
 	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -119,19 +118,15 @@ static void
 wstran_pipe_recv(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
-	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, wstran_pipe_recv_cancel, p)) != 0) {
-		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, wstran_pipe_recv_cancel, p)) {
+		p->user_rxaio = aio;
+		nng_stream_recv(p->ws, &p->rxaio);
 	}
-	p->user_rxaio = aio;
-	nng_stream_recv(p->ws, p->rxaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -145,7 +140,7 @@ wstran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 		return;
 	}
 	p->user_txaio = NULL;
-	nni_aio_abort(p->txaio, rv);
+	nni_aio_abort(&p->txaio, rv);
 	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -154,7 +149,6 @@ static void
 wstran_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
-	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		// No way to give the message back to the protocol, so
@@ -164,16 +158,15 @@ wstran_pipe_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, wstran_pipe_send_cancel, p)) != 0) {
+	if (!nni_aio_schedule(aio, wstran_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	p->user_txaio = aio;
-	nni_aio_set_msg(p->txaio, nni_aio_get_msg(aio));
+	nni_aio_set_msg(&p->txaio, nni_aio_get_msg(aio));
 	nni_aio_set_msg(aio, NULL);
 
-	nng_stream_send(p->ws, p->txaio);
+	nng_stream_send(p->ws, &p->txaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -182,8 +175,8 @@ wstran_pipe_stop(void *arg)
 {
 	ws_pipe *p = arg;
 
-	nni_aio_stop(p->rxaio);
-	nni_aio_stop(p->txaio);
+	nni_aio_stop(&p->rxaio);
+	nni_aio_stop(&p->txaio);
 }
 
 static int
@@ -200,8 +193,8 @@ wstran_pipe_fini(void *arg)
 	ws_pipe *p = arg;
 
 	nng_stream_free(p->ws);
-	nni_aio_free(p->rxaio);
-	nni_aio_free(p->txaio);
+	nni_aio_fini(&p->rxaio);
+	nni_aio_fini(&p->txaio);
 
 	nni_mtx_fini(&p->mtx);
 	NNI_FREE_STRUCT(p);
@@ -212,8 +205,8 @@ wstran_pipe_close(void *arg)
 {
 	ws_pipe *p = arg;
 
-	nni_aio_close(p->rxaio);
-	nni_aio_close(p->txaio);
+	nni_aio_close(&p->rxaio);
+	nni_aio_close(&p->txaio);
 
 	nni_mtx_lock(&p->mtx);
 	nng_stream_close(p->ws);
@@ -224,20 +217,16 @@ static int
 wstran_pipe_alloc(ws_pipe **pipep, void *ws)
 {
 	ws_pipe *p;
-	int      rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	p->ws = ws;
 	nni_mtx_init(&p->mtx);
 
 	// Initialize AIOs.
-	if (((rv = nni_aio_alloc(&p->txaio, wstran_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->rxaio, wstran_pipe_recv_cb, p)) != 0)) {
-		wstran_pipe_fini(p);
-		return (rv);
-	}
-	p->ws = ws;
+	nni_aio_init(&p->txaio, wstran_pipe_send_cb, p);
+	nni_aio_init(&p->rxaio, wstran_pipe_recv_cb, p);
 
 	*pipep = p;
 	return (0);
@@ -284,7 +273,6 @@ static void
 wstran_listener_accept(void *arg, nni_aio *aio)
 {
 	ws_listener *l = arg;
-	int          rv;
 
 	// We already bound, so we just need to look for an available
 	// pipe (created by the handler), and match it.
@@ -293,14 +281,13 @@ wstran_listener_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&l->mtx);
-	if ((rv = nni_aio_schedule(aio, ws_listener_cancel, l)) != 0) {
+	if (!nni_aio_schedule(aio, ws_listener_cancel, l)) {
 		nni_mtx_unlock(&l->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&l->aios, aio);
 	if (aio == nni_list_first(&l->aios)) {
-		nng_stream_listener_accept(l->listener, l->accaio);
+		nng_stream_listener_accept(l->listener, &l->accaio);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
@@ -322,22 +309,20 @@ static void
 wstran_dialer_connect(void *arg, nni_aio *aio)
 {
 	ws_dialer *d = arg;
-	int        rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
 	nni_mtx_lock(&d->mtx);
-	if ((rv = nni_aio_schedule(aio, wstran_dialer_cancel, d)) != 0) {
+	if (!nni_aio_schedule(aio, wstran_dialer_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	NNI_ASSERT(nni_list_empty(&d->aios));
 	d->started = true;
 	nni_list_append(&d->aios, aio);
-	nng_stream_dialer_dial(d->dialer, d->connaio);
+	nng_stream_dialer_dial(d->dialer, &d->connaio);
 	nni_mtx_unlock(&d->mtx);
 }
 
@@ -377,9 +362,9 @@ wstran_dialer_fini(void *arg)
 {
 	ws_dialer *d = arg;
 
-	nni_aio_stop(d->connaio);
+	nni_aio_stop(&d->connaio);
 	nng_stream_dialer_free(d->dialer);
-	nni_aio_free(d->connaio);
+	nni_aio_fini(&d->connaio);
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
 }
@@ -389,9 +374,9 @@ wstran_listener_fini(void *arg)
 {
 	ws_listener *l = arg;
 
-	nni_aio_stop(l->accaio);
+	nni_aio_stop(&l->accaio);
 	nng_stream_listener_free(l->listener);
-	nni_aio_free(l->accaio);
+	nni_aio_fini(&l->accaio);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
@@ -401,7 +386,7 @@ wstran_connect_cb(void *arg)
 {
 	ws_dialer  *d = arg;
 	ws_pipe    *p;
-	nni_aio    *caio = d->connaio;
+	nni_aio    *caio = &d->connaio;
 	nni_aio    *uaio;
 	int         rv;
 	nng_stream *ws = NULL;
@@ -437,7 +422,7 @@ wstran_dialer_close(void *arg)
 {
 	ws_dialer *d = arg;
 
-	nni_aio_close(d->connaio);
+	nni_aio_close(&d->connaio);
 	nng_stream_dialer_close(d->dialer);
 }
 
@@ -446,7 +431,7 @@ wstran_listener_close(void *arg)
 {
 	ws_listener *l = arg;
 
-	nni_aio_close(l->accaio);
+	nni_aio_close(&l->accaio);
 	nng_stream_listener_close(l->listener);
 }
 
@@ -454,7 +439,7 @@ static void
 wstran_accept_cb(void *arg)
 {
 	ws_listener *l    = arg;
-	nni_aio     *aaio = l->accaio;
+	nni_aio     *aaio = &l->accaio;
 	nni_aio     *uaio;
 	int          rv;
 
@@ -502,6 +487,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	nni_mtx_init(&d->mtx);
 
 	nni_aio_list_init(&d->aios);
+	nni_aio_init(&d->connaio, wstran_connect_cb, d);
 
 	d->peer = nni_sock_peer_id(s);
 
@@ -509,7 +495,6 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	    name, sizeof(name), "%s.sp.nanomsg.org", nni_sock_peer_name(s));
 
 	if (((rv = nni_ws_dialer_alloc(&d->dialer, url)) != 0) ||
-	    ((rv = nni_aio_alloc(&d->connaio, wstran_connect_cb, d)) != 0) ||
 	    ((rv = nng_stream_dialer_set_bool(
 	          d->dialer, NNI_OPT_WS_MSGMODE, true)) != 0) ||
 	    ((rv = nng_stream_dialer_set_string(
@@ -536,6 +521,7 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 	nni_mtx_init(&l->mtx);
 
 	nni_aio_list_init(&l->aios);
+	nni_aio_init(&l->accaio, wstran_accept_cb, l);
 
 	l->peer = nni_sock_peer_id(s);
 
@@ -543,7 +529,6 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 	    name, sizeof(name), "%s.sp.nanomsg.org", nni_sock_proto_name(s));
 
 	if (((rv = nni_ws_listener_alloc(&l->listener, url)) != 0) ||
-	    ((rv = nni_aio_alloc(&l->accaio, wstran_accept_cb, l)) != 0) ||
 	    ((rv = nng_stream_listener_set_bool(
 	          l->listener, NNI_OPT_WS_MSGMODE, true)) != 0) ||
 	    ((rv = nng_stream_listener_set_string(

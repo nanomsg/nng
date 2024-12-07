@@ -192,6 +192,15 @@ test_init_concurrent(void)
 	nng_fini();
 }
 
+void
+test_fini_closes_socket(void)
+{
+	nng_socket s;
+	NUTS_OPEN(s);
+	nng_fini();
+	NUTS_FAIL(nng_close(s), NNG_ECLOSED);
+}
+
 NUTS_TESTS = {
 	{ "init parameter", test_init_param },
 	{ "init zero resolvers", test_init_zero_resolvers },
@@ -203,6 +212,7 @@ NUTS_TESTS = {
 	{ "init too many poller threads", test_init_too_many_poller_threads },
 	{ "init repeated", test_init_repeated },
 	{ "init concurrent", test_init_concurrent },
+	{ "fini closes socket", test_fini_closes_socket },
 
 	{ NULL, NULL },
 };

@@ -40,6 +40,7 @@
 #include "core/pollable.h"
 #include "core/protocol.h"
 #include "core/reap.h"
+#include "core/refcnt.h"
 #include "core/stats.h"
 #include "core/stream.h"
 #include "core/strs.h"

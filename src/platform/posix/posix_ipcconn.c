@@ -244,16 +244,14 @@ static void
 ipc_send(void *arg, nni_aio *aio)
 {
 	ipc_conn *c = arg;
-	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
 
-	if ((rv = nni_aio_schedule(aio, ipc_cancel, c)) != 0) {
+	if (!nni_aio_schedule(aio, ipc_cancel, c)) {
 		nni_mtx_unlock(&c->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_aio_list_append(&c->writeq, aio);
@@ -274,16 +272,14 @@ static void
 ipc_recv(void *arg, nni_aio *aio)
 {
 	ipc_conn *c = arg;
-	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
 
-	if ((rv = nni_aio_schedule(aio, ipc_cancel, c)) != 0) {
+	if (!nni_aio_schedule(aio, ipc_cancel, c)) {
 		nni_mtx_unlock(&c->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_aio_list_append(&c->readq, aio);

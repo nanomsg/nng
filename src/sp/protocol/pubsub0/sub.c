@@ -105,13 +105,9 @@ sub0_ctx_recv(void *arg, nni_aio *aio)
 
 again:
 	if (nni_lmq_empty(&ctx->lmq)) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, sub0_ctx_cancel, ctx)) != 0) {
-			nni_mtx_unlock(&sock->lk);
-			nni_aio_finish_error(aio, rv);
-			return;
+		if (nni_aio_schedule(aio, sub0_ctx_cancel, ctx)) {
+			nni_list_append(&ctx->recv_queue, aio);
 		}
-		nni_list_append(&ctx->recv_queue, aio);
 		nni_mtx_unlock(&sock->lk);
 		return;
 	}
@@ -753,7 +749,7 @@ nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz)
 	nni_ctx  *c;
 	sub0_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&c, id.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&c, id.id)) != 0) {
 		return (rv);
 	}
 	// validate the socket type
@@ -774,7 +770,7 @@ nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz)
 	nni_ctx  *c;
 	sub0_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&c, id.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&c, id.id)) != 0) {
 		return (rv);
 	}
 	// validate the socket type

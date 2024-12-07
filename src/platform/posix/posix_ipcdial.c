@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -69,7 +69,7 @@ ipc_dialer_free(void *arg)
 void
 nni_posix_ipc_dialer_rele(ipc_dialer *d)
 {
-	if (((nni_atomic_dec64_nv(&d->ref)) != 0) ||
+	if (((nni_atomic_dec_nv(&d->ref)) != 0) ||
 	    (!nni_atomic_get_bool(&d->fini))) {
 		return;
 	}
@@ -154,7 +154,7 @@ void
 ipc_dialer_dial(void *arg, nni_aio *aio)
 {
 	ipc_dialer             *d = arg;
-	nni_ipc_conn           *c;
+	nni_ipc_conn           *c = NULL;
 	nni_posix_pfd          *pfd = NULL;
 	struct sockaddr_storage ss;
 	size_t                  len;
@@ -176,34 +176,34 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		return;
 	}
 
-	nni_atomic_inc64(&d->ref);
-
 	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d)) != 0) {
 		(void) close(fd);
-		nni_posix_ipc_dialer_rele(d);
 		nni_aio_finish_error(aio, rv);
 		return;
+	}
+	nni_atomic_inc(&d->ref);
+
+	nni_mtx_lock(&d->mtx);
+	if (!nni_aio_schedule(aio, ipc_dialer_cancel, d)) {
+		nni_mtx_unlock(&d->mtx);
+		nng_stream_free(&c->stream);
+		return;
+	}
+
+	if (d->closed) {
+		rv = NNG_ECLOSED;
 	}
 
 	// This arranges for the fd to be in non-blocking mode, and adds the
 	// poll fd to the list.
-	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
-		// the error label unlocks this
-		nni_mtx_lock(&d->mtx);
+	if ((rv != 0) || (rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+		(void) close(fd);
 		goto error;
 	}
 
 	nni_posix_ipc_init(c, pfd);
 	nni_posix_pfd_set_cb(pfd, ipc_dialer_cb, c);
 
-	nni_mtx_lock(&d->mtx);
-	if (d->closed) {
-		rv = NNG_ECLOSED;
-		goto error;
-	}
-	if ((rv = nni_aio_schedule(aio, ipc_dialer_cancel, d)) != 0) {
-		goto error;
-	}
 	if (connect(fd, (void *) &ss, len) != 0) {
 		if (errno != EINPROGRESS && errno != EAGAIN) {
 			if (errno == ENOENT) {
@@ -236,7 +236,9 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 error:
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
-	nng_stream_free(&c->stream);
+	if (c != NULL) {
+		nng_stream_free(&c->stream);
+	}
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -323,8 +325,8 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_get   = ipc_dialer_get;
 	d->sd.sd_set   = ipc_dialer_set;
 	nni_atomic_init_bool(&d->fini);
-	nni_atomic_init64(&d->ref);
-	nni_atomic_inc64(&d->ref);
+	nni_atomic_init(&d->ref);
+	nni_atomic_inc(&d->ref);
 
 	*dp = (void *) d;
 	return (0);

@@ -225,7 +225,6 @@ nni_resolv_ip(const char *host, uint16_t port, int af, bool passive,
 {
 	resolv_item *item;
 	sa_family_t  fam;
-	int          rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -278,18 +277,18 @@ nni_resolv_ip(const char *host, uint16_t port, int af, bool passive,
 	item->sa      = sa;
 
 	nni_mtx_lock(&resolv_mtx);
-	if (resolv_fini) {
-		rv = NNG_ECLOSED;
-	} else {
-		nni_aio_set_prov_data(aio, item);
-		rv = nni_aio_schedule(aio, resolv_cancel, item);
-	}
-	if (rv != 0) {
+	if (!nni_aio_schedule(aio, resolv_cancel, item)) {
 		nni_mtx_unlock(&resolv_mtx);
 		resolv_free_item(item);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
+	if (resolv_fini) {
+		nni_mtx_unlock(&resolv_mtx);
+		resolv_free_item(item);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	nni_aio_set_prov_data(aio, item);
 	nni_list_append(&resolv_aios, aio);
 	nni_cv_wake1(&resolv_cv);
 	nni_mtx_unlock(&resolv_mtx);

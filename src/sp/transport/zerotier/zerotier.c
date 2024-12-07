@@ -1948,7 +1948,6 @@ static void
 zt_pipe_recv(void *arg, nni_aio *aio)
 {
 	zt_pipe *p = arg;
-	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1959,13 +1958,10 @@ zt_pipe_recv(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, zt_pipe_cancel_recv, p)) != 0) {
-		nni_mtx_unlock(&zt_lk);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, zt_pipe_cancel_recv, p)) {
+		p->zp_user_rxaio = aio;
+		zt_pipe_dorecv(p);
 	}
-	p->zp_user_rxaio = aio;
-	zt_pipe_dorecv(p);
 	nni_mtx_unlock(&zt_lk);
 }
 
@@ -2419,19 +2415,15 @@ static void
 zt_ep_accept(void *arg, nni_aio *aio)
 {
 	zt_ep *ep = arg;
-	int    rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&zt_lk);
-	if ((rv = nni_aio_schedule(aio, zt_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&zt_lk);
-		nni_aio_finish_error(aio, rv);
-		return;
+	if (nni_aio_schedule(aio, zt_ep_cancel, ep)) {
+		nni_aio_list_append(&ep->ze_aios, aio);
+		zt_ep_doaccept(ep);
 	}
-	nni_aio_list_append(&ep->ze_aios, aio);
-	zt_ep_doaccept(ep);
 	nni_mtx_unlock(&zt_lk);
 }
 
@@ -2504,10 +2496,7 @@ zt_ep_conn_req_cb(void *arg)
 	if (nni_list_first(&ep->ze_aios) != NULL) {
 		nni_aio_set_timeout(aio, ep->ze_conn_time);
 		if (nni_aio_begin(aio) == 0) {
-			rv = nni_aio_schedule(aio, zt_ep_conn_req_cancel, ep);
-			if (rv != 0) {
-				nni_aio_finish_error(aio, rv);
-			} else {
+			if (nni_aio_schedule(aio, zt_ep_conn_req_cancel, ep)) {
 				ep->ze_creq_active = true;
 				ep->ze_creq_try++;
 				zt_ep_send_conn_req(ep);
@@ -2545,8 +2534,7 @@ zt_ep_connect(void *arg, nni_aio *aio)
 	if ((ep->ze_raddr >> 24) == 0) {
 		ep->ze_raddr |= (ep->ze_ztn->zn_self << zt_port_shift);
 	}
-	if ((rv = nni_aio_schedule(aio, zt_ep_cancel, ep)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_schedule(aio, zt_ep_cancel, ep)) {
 		nni_mtx_unlock(&zt_lk);
 		return;
 	}
@@ -2555,11 +2543,8 @@ zt_ep_connect(void *arg, nni_aio *aio)
 
 	nni_aio_set_timeout(ep->ze_creq_aio, ep->ze_conn_time);
 	if (nni_aio_begin(ep->ze_creq_aio) == 0) {
-		rv = nni_aio_schedule(
-		    ep->ze_creq_aio, zt_ep_conn_req_cancel, ep);
-		if (rv != 0) {
-			nni_aio_finish_error(ep->ze_creq_aio, rv);
-		} else {
+		if (nni_aio_schedule(
+		        ep->ze_creq_aio, zt_ep_conn_req_cancel, ep)) {
 			// Send out the first connect message; if not
 			// yet attached to network message will be dropped.
 			ep->ze_creq_try    = 1;

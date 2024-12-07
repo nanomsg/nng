@@ -105,7 +105,7 @@ nni_atomic_swap(nni_atomic_int *v, int i)
 void
 nni_atomic_inc(nni_atomic_int *v)
 {
-	atomic_fetch_add(&v->v, 1);
+	atomic_fetch_add_explicit(&v->v, 1, memory_order_relaxed);
 }
 
 void
@@ -117,7 +117,7 @@ nni_atomic_dec(nni_atomic_int *v)
 int
 nni_atomic_dec_nv(nni_atomic_int *v)
 {
-	return (atomic_fetch_sub(&v->v, 1) - 1);
+	return (atomic_fetch_sub_explicit(&v->v, 1, memory_order_acq_rel) - 1);
 }
 
 bool
@@ -319,10 +319,11 @@ nni_atomic_get(nni_atomic_int *v)
 {
 	return (__atomic_load_n(&v->v, __ATOMIC_SEQ_CST));
 }
+
 void
 nni_atomic_inc(nni_atomic_int *v)
 {
-	__atomic_add_fetch(&v->v, 1, __ATOMIC_SEQ_CST);
+	__atomic_add_fetch(&v->v, 1, __ATOMIC_RELAXED);
 }
 
 void

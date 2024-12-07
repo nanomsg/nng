@@ -13,7 +13,7 @@
 #define CORE_LISTENER_H
 
 extern int      nni_listener_find(nni_listener **, uint32_t);
-extern int      nni_listener_hold(nni_listener *);
+extern void     nni_listener_hold(nni_listener *);
 extern void     nni_listener_rele(nni_listener *);
 extern uint32_t nni_listener_id(nni_listener *);
 extern int      nni_listener_create(nni_listener **, nni_sock *, const char *);
