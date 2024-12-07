@@ -343,7 +343,7 @@ nni_aio_begin(nni_aio *aio)
 	aio->a_cancel_fn = NULL;
 
 	// We should not reschedule anything at this point.
-	if (aio->a_stop) {
+	if (aio->a_stop || eq->eq_exit) {
 		aio->a_result    = NNG_ECANCELED;
 		aio->a_cancel_fn = NULL;
 		aio->a_expire    = NNI_TIME_NEVER;
@@ -380,7 +380,7 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	}
 
 	nni_mtx_lock(&eq->eq_mtx);
-	if (aio->a_stop) {
+	if (aio->a_stop || eq->eq_exit) {
 		nni_task_abort(&aio->a_task);
 		nni_mtx_unlock(&eq->eq_mtx);
 		return (NNG_ECLOSED);
