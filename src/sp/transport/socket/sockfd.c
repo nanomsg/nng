@@ -25,48 +25,42 @@ typedef struct sfd_tran_ep   sfd_tran_ep;
 
 // sfd_tran_pipe wraps an open file descriptor
 struct sfd_tran_pipe {
-	nng_stream     *conn;
-	nni_pipe       *npipe;
-	uint16_t        peer;
-	uint16_t        proto;
-	size_t          rcvmax;
-	bool            closed;
-	nni_list_node   node;
-	sfd_tran_ep    *ep;
-	nni_atomic_flag reaped;
-	nni_reap_node   reap;
-	uint8_t         txlen[sizeof(uint64_t)];
-	uint8_t         rxlen[sizeof(uint64_t)];
-	size_t          gottxhead;
-	size_t          gotrxhead;
-	size_t          wanttxhead;
-	size_t          wantrxhead;
-	nni_list        recvq;
-	nni_list        sendq;
-	nni_aio         txaio;
-	nni_aio         rxaio;
-	nni_aio         negoaio;
-	nni_msg        *rxmsg;
-	nni_mtx         mtx;
+	nng_stream   *conn;
+	nni_pipe     *npipe;
+	uint16_t      peer;
+	uint16_t      proto;
+	size_t        rcvmax;
+	bool          closed;
+	nni_list_node node;
+	sfd_tran_ep  *ep;
+	uint8_t       txlen[sizeof(uint64_t)];
+	uint8_t       rxlen[sizeof(uint64_t)];
+	size_t        gottxhead;
+	size_t        gotrxhead;
+	size_t        wanttxhead;
+	size_t        wantrxhead;
+	nni_list      recvq;
+	nni_list      sendq;
+	nni_aio       txaio;
+	nni_aio       rxaio;
+	nni_aio       negoaio;
+	nni_msg      *rxmsg;
+	nni_mtx       mtx;
 };
 
 struct sfd_tran_ep {
 	nni_mtx              mtx;
 	uint16_t             proto;
 	size_t               rcvmax;
-	bool                 fini;
 	bool                 started;
 	bool                 closed;
 	nng_sockaddr         src;
-	int                  refcnt; // active pipes
 	nni_aio             *useraio;
 	nni_aio              connaio;
-	nni_aio              timeaio;
-	nni_list             busypipes; // busy pipes -- ones passed to socket
 	nni_list             waitpipes; // pipes waiting to match to socket
 	nni_list             negopipes; // pipes busy negotiating
-	nni_reap_node        reap;
 	nng_stream_listener *listener;
+	nni_listener        *nlistener;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
@@ -80,16 +74,6 @@ static void sfd_tran_pipe_recv_cb(void *);
 static void sfd_tran_pipe_nego_cb(void *);
 static void sfd_tran_ep_fini(void *);
 static void sfd_tran_pipe_fini(void *);
-
-static nni_reap_list sfd_tran_ep_reap_list = {
-	.rl_offset = offsetof(sfd_tran_ep, reap),
-	.rl_func   = sfd_tran_ep_fini,
-};
-
-static nni_reap_list sfd_tran_pipe_reap_list = {
-	.rl_offset = offsetof(sfd_tran_pipe, reap),
-	.rl_func   = sfd_tran_pipe_fini,
-};
 
 static void
 sfd_tran_init(void)
@@ -109,12 +93,13 @@ sfd_tran_pipe_close(void *arg)
 	nni_mtx_lock(&p->mtx);
 	p->closed = true;
 	nni_mtx_unlock(&p->mtx);
+	if (p->conn != NULL) {
+		nng_stream_close(p->conn);
+	}
 
 	nni_aio_close(&p->rxaio);
 	nni_aio_close(&p->txaio);
 	nni_aio_close(&p->negoaio);
-
-	nng_stream_close(p->conn);
 }
 
 static void
@@ -132,6 +117,12 @@ sfd_tran_pipe_init(void *arg, nni_pipe *npipe)
 {
 	sfd_tran_pipe *p = arg;
 	p->npipe         = npipe;
+	nni_mtx_init(&p->mtx);
+	nni_aio_init(&p->txaio, sfd_tran_pipe_send_cb, p);
+	nni_aio_init(&p->rxaio, sfd_tran_pipe_recv_cb, p);
+	nni_aio_init(&p->negoaio, sfd_tran_pipe_nego_cb, p);
+	nni_aio_list_init(&p->recvq);
+	nni_aio_list_init(&p->sendq);
 
 	return (0);
 }
@@ -146,52 +137,17 @@ sfd_tran_pipe_fini(void *arg)
 	if ((ep = p->ep) != NULL) {
 		nni_mtx_lock(&ep->mtx);
 		nni_list_node_remove(&p->node);
-		ep->refcnt--;
-		if (ep->fini && (ep->refcnt == 0)) {
-			nni_reap(&sfd_tran_ep_reap_list, ep);
-		}
 		nni_mtx_unlock(&ep->mtx);
+	}
+	if (p->conn != NULL) {
+		nng_stream_free(p->conn);
 	}
 
 	nni_aio_fini(&p->rxaio);
 	nni_aio_fini(&p->txaio);
 	nni_aio_fini(&p->negoaio);
-	nng_stream_free(p->conn);
 	nni_msg_free(p->rxmsg);
 	nni_mtx_fini(&p->mtx);
-	NNI_FREE_STRUCT(p);
-}
-
-static void
-sfd_tran_pipe_reap(sfd_tran_pipe *p)
-{
-	if (!nni_atomic_flag_test_and_set(&p->reaped)) {
-		if (p->conn != NULL) {
-			nng_stream_close(p->conn);
-		}
-		nni_reap(&sfd_tran_pipe_reap_list, p);
-	}
-}
-
-static int
-sfd_tran_pipe_alloc(sfd_tran_pipe **pipep)
-{
-	sfd_tran_pipe *p;
-
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	nni_mtx_init(&p->mtx);
-	nni_aio_init(&p->txaio, sfd_tran_pipe_send_cb, p);
-	nni_aio_init(&p->rxaio, sfd_tran_pipe_recv_cb, p);
-	nni_aio_init(&p->negoaio, sfd_tran_pipe_nego_cb, p);
-	nni_aio_list_init(&p->recvq);
-	nni_aio_list_init(&p->sendq);
-	nni_atomic_flag_reset(&p->reaped);
-
-	*pipep = p;
-
-	return (0);
 }
 
 static void
@@ -205,10 +161,9 @@ sfd_tran_ep_match(sfd_tran_ep *ep)
 		return;
 	}
 	nni_list_remove(&ep->waitpipes, p);
-	nni_list_append(&ep->busypipes, p);
 	ep->useraio = NULL;
 	p->rcvmax   = ep->rcvmax;
-	nni_aio_set_output(aio, 0, p);
+	nni_aio_set_output(aio, 0, p->npipe);
 	nni_aio_finish(aio, 0, 0);
 }
 
@@ -282,14 +237,13 @@ error:
 	if (rv == NNG_ECLOSED) {
 		rv = NNG_ECONNSHUT;
 	}
-	nng_stream_close(p->conn);
 
 	if ((uaio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(uaio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	sfd_tran_pipe_reap(p);
+	nni_pipe_close(p->npipe);
 }
 
 static void
@@ -621,8 +575,6 @@ sfd_tran_pipe_start(sfd_tran_pipe *p, nng_stream *conn, sfd_tran_ep *ep)
 {
 	nni_iov iov;
 
-	ep->refcnt++;
-
 	p->conn  = conn;
 	p->ep    = ep;
 	p->proto = ep->proto;
@@ -659,17 +611,8 @@ sfd_tran_ep_fini(void *arg)
 {
 	sfd_tran_ep *ep = arg;
 
-	nni_mtx_lock(&ep->mtx);
-	ep->fini = true;
-	if (ep->refcnt != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-	nni_mtx_unlock(&ep->mtx);
-	nni_aio_stop(&ep->timeaio);
 	nni_aio_stop(&ep->connaio);
 	nng_stream_listener_free(ep->listener);
-	nni_aio_fini(&ep->timeaio);
 	nni_aio_fini(&ep->connaio);
 
 	nni_mtx_fini(&ep->mtx);
@@ -685,18 +628,16 @@ sfd_tran_ep_close(void *arg)
 	nni_mtx_lock(&ep->mtx);
 
 	ep->closed = true;
-	nni_aio_close(&ep->timeaio);
 	if (ep->listener != NULL) {
 		nng_stream_listener_close(ep->listener);
 	}
-	NNI_LIST_FOREACH (&ep->negopipes, p) {
-		sfd_tran_pipe_close(p);
-	}
-	NNI_LIST_FOREACH (&ep->waitpipes, p) {
-		sfd_tran_pipe_close(p);
-	}
-	NNI_LIST_FOREACH (&ep->busypipes, p) {
-		sfd_tran_pipe_close(p);
+	while (((p = nni_list_first(&ep->negopipes)) != NULL) ||
+	    ((p = nni_list_first(&ep->waitpipes)) != NULL)) {
+		nni_list_node_remove(&p->node);
+		nni_mtx_unlock(&ep->mtx);
+		nni_pipe_close(p->npipe);
+		nni_pipe_rele(p->npipe);
+		nni_mtx_lock(&ep->mtx);
 	}
 	if (ep->useraio != NULL) {
 		nni_aio_finish_error(ep->useraio, NNG_ECLOSED);
@@ -704,15 +645,6 @@ sfd_tran_ep_close(void *arg)
 	}
 
 	nni_mtx_unlock(&ep->mtx);
-}
-
-static void
-sfd_tran_timer_cb(void *arg)
-{
-	sfd_tran_ep *ep = arg;
-	if (nni_aio_result(&ep->timeaio) == 0) {
-		nng_stream_listener_accept(ep->listener, &ep->connaio);
-	}
 }
 
 static void
@@ -729,19 +661,20 @@ sfd_tran_accept_cb(void *arg)
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
-
 	conn = nni_aio_get_output(aio, 0);
-	if ((rv = sfd_tran_pipe_alloc(&p)) != 0) {
-		nng_stream_free(conn);
-		goto error;
-	}
-
 	if (ep->closed) {
-		sfd_tran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
 		goto error;
 	}
+
+	if ((rv = nni_pipe_alloc_listener((void **) &p, ep->nlistener)) != 0) {
+		nng_stream_free(conn);
+		goto error;
+	}
+	p->conn = conn;
+	p->ep   = ep;
+
 	sfd_tran_pipe_start(p, conn, ep);
 	nng_stream_listener_accept(ep->listener, &ep->connaio);
 	nni_mtx_unlock(&ep->mtx);
@@ -754,37 +687,27 @@ error:
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
 	}
-	switch (rv) {
-
-	case NNG_ENOMEM:
-	case NNG_ENOFILES:
-		nng_sleep_aio(10, &ep->timeaio);
-		break;
-
-	default:
-		if (!ep->closed) {
-			nng_stream_listener_accept(ep->listener, &ep->connaio);
-		}
-		break;
+	if (!ep->closed) {
+		nng_stream_listener_accept(ep->listener, &ep->connaio);
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
 
 static int
-sfd_tran_ep_init(sfd_tran_ep **epp, nng_url *url, nni_sock *sock)
+sfd_tran_ep_init(sfd_tran_ep **epp, nni_listener *nlistener)
 {
 	sfd_tran_ep *ep;
-	NNI_ARG_UNUSED(url);
+	nni_sock    *sock = nni_listener_sock(nlistener);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);
-	NNI_LIST_INIT(&ep->busypipes, sfd_tran_pipe, node);
 	NNI_LIST_INIT(&ep->waitpipes, sfd_tran_pipe, node);
 	NNI_LIST_INIT(&ep->negopipes, sfd_tran_pipe, node);
 
-	ep->proto = nni_sock_proto_id(sock);
+	ep->nlistener = nlistener;
+	ep->proto     = nni_sock_proto_id(sock);
 
 #ifdef NNG_ENABLE_STATS
 	static const nni_stat_info rcv_max_info = {
@@ -806,7 +729,6 @@ sfd_tran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 {
 	sfd_tran_ep *ep;
 	int          rv;
-	nni_sock    *sock = nni_listener_sock(nlistener);
 
 	// Check for invalid URL components -- we only accept a bare scheme
 	if ((url->u_hostname != NULL) || (strlen(url->u_path) != 0) ||
@@ -815,12 +737,11 @@ sfd_tran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = sfd_tran_ep_init(&ep, url, sock)) != 0) {
+	if ((rv = sfd_tran_ep_init(&ep, nlistener)) != 0) {
 		return (rv);
 	}
 
 	nni_aio_init(&ep->connaio, sfd_tran_accept_cb, ep);
-	nni_aio_init(&ep->timeaio, sfd_tran_timer_cb, ep);
 
 	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) {
 		sfd_tran_ep_fini(ep);
@@ -907,19 +828,18 @@ sfd_tran_ep_accept(void *arg, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, sfd_tran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		return;
 	}
 	ep->useraio = aio;
 	if (!ep->started) {
 		ep->started = true;
 		nng_stream_listener_accept(ep->listener, &ep->connaio);
-	} else {
-		sfd_tran_ep_match(ep);
 	}
+	sfd_tran_ep_match(ep);
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static nni_sp_pipe_ops sfd_tran_pipe_ops = {
+static const nni_sp_pipe_ops sfd_tran_pipe_ops = {
+	.p_size   = sizeof(sfd_tran_pipe),
 	.p_init   = sfd_tran_pipe_init,
 	.p_fini   = sfd_tran_pipe_fini,
 	.p_stop   = sfd_tran_pipe_stop,
@@ -970,7 +890,7 @@ sfd_tran_listener_setopt(
 	return (rv);
 }
 
-static nni_sp_listener_ops sfd_tran_listener_ops = {
+static const nni_sp_listener_ops sfd_tran_listener_ops = {
 	.l_init   = sfd_tran_listener_init,
 	.l_fini   = sfd_tran_ep_fini,
 	.l_bind   = sfd_tran_ep_bind,

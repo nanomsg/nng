@@ -703,6 +703,7 @@ nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
 	nni_resolv_ip(h, url->u_port, af, true, sa, &aio);
 	nni_aio_wait(&aio);
 	rv = nni_aio_result(&aio);
+	nni_aio_stop(&aio);
 	nni_aio_fini(&aio);
 	return (rv);
 }

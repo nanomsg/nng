@@ -199,6 +199,8 @@ pair1_pipe_stop(void *arg)
 	pair1_pipe *p = arg;
 	pair1_sock *s = p->pair;
 
+	nni_aio_close(&p->aio_send);
+	nni_aio_close(&p->aio_recv);
 	nni_mtx_lock(&s->mtx);
 	if (s->p == p) {
 		s->p = NULL;

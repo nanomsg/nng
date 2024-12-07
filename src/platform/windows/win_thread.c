@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -22,6 +22,8 @@ static pfnSetThreadDescription set_thread_desc;
 // mingw does not define InterlockedAddNoFence64, use the mingw equivalent
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #define InterlockedAddNoFence(a, b) __atomic_add_fetch(a, b, __ATOMIC_RELAXED)
+#define InterlockedIncrementNoFence(a) \
+	__atomic_add_fetch(a, 1, __ATOMIC_RELAXED)
 #define InterlockedAddNoFence64(a, b) \
 	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #define InterlockedIncrementAcquire64(a) \
@@ -326,7 +328,7 @@ nni_atomic_init(nni_atomic_int *v)
 void
 nni_atomic_inc(nni_atomic_int *v)
 {
-	(void) InterlockedIncrementAcquire(&v->v);
+	(void) InterlockedIncrementNoFence(&v->v);
 }
 
 int

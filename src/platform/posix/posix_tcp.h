@@ -18,12 +18,12 @@
 
 struct nni_tcp_conn {
 	nng_stream      stream;
-	nni_posix_pfd * pfd;
+	nni_posix_pfd  *pfd;
 	nni_list        readq;
 	nni_list        writeq;
 	bool            closed;
 	nni_mtx         mtx;
-	nni_aio *       dial_aio;
+	nni_aio        *dial_aio;
 	nni_tcp_dialer *dialer;
 	nni_reap_node   reap;
 };
@@ -36,7 +36,7 @@ struct nni_tcp_dialer {
 	struct sockaddr_storage src;
 	size_t                  srclen;
 	nni_mtx                 mtx;
-	nni_atomic_u64          ref;
+	nni_atomic_int          ref;
 	nni_atomic_bool         fini;
 };
 

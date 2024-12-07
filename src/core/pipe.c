@@ -9,8 +9,14 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <nng/nng.h>
+
+#include "core/defs.h"
 #include "core/nng_impl.h"
-#include "nng/nng.h"
+
+#include "core/pipe.h"
+#include "dialer.h"
+#include "listener.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -35,12 +41,20 @@ static nni_reap_list pipe_reap_list = {
 static void
 pipe_destroy(void *arg)
 {
-	nni_pipe *p = arg;
+	nni_pipe     *p = arg;
+	nni_sock     *s = p->p_sock;
+	nni_dialer   *d = p->p_dialer;
+	nni_listener *l = p->p_listener;
 
 	p->p_proto_ops.pipe_fini(p->p_proto_data);
-	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.p_fini(p->p_tran_data);
+	p->p_tran_ops.p_fini(p->p_tran_data);
+	if (l != NULL) {
+		nni_listener_rele(l);
 	}
+	if (d != NULL) {
+		nni_dialer_rele(d);
+	}
+	nni_sock_rele(s);
 	nni_free(p, p->p_size);
 }
 
@@ -65,9 +79,7 @@ pipe_reap(void *arg)
 	nni_pipe_remove(p);
 
 	p->p_proto_ops.pipe_stop(p->p_proto_data);
-	if ((p->p_tran_data != NULL) && (p->p_tran_ops.p_stop != NULL)) {
-		p->p_tran_ops.p_stop(p->p_tran_data);
-	}
+	p->p_tran_ops.p_stop(p->p_tran_data);
 
 	nni_pipe_rele(p);
 }
@@ -128,9 +140,7 @@ nni_pipe_close(nni_pipe *p)
 	p->p_proto_ops.pipe_close(p->p_proto_data);
 
 	// Close the underlying transport.
-	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.p_close(p->p_tran_data);
-	}
+	p->p_tran_ops.p_close(p->p_tran_data);
 
 	nni_reap(&pipe_reap_list, p);
 }
@@ -219,28 +229,40 @@ pipe_stats_init(nni_pipe *p)
 static int
 pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 {
-	nni_pipe           *p;
-	int                 rv;
-	void               *sock_data = nni_sock_proto_data(sock);
-	nni_proto_pipe_ops *pops      = nni_sock_proto_pipe_ops(sock);
-	size_t              sz;
+	nni_pipe                 *p;
+	int                       rv1, rv2, rv3;
+	void                     *sock_data = nni_sock_proto_data(sock);
+	const nni_proto_pipe_ops *pops      = nni_sock_proto_pipe_ops(sock);
+	const nni_sp_pipe_ops    *tops      = tran->tran_pipe;
+	size_t                    sz;
 
-	sz = NNI_ALIGN_UP(sizeof(*p)) + pops->pipe_size;
+	sz = NNI_ALIGN_UP(sizeof(*p)) + NNI_ALIGN_UP(pops->pipe_size) +
+	    NNI_ALIGN_UP(tops->p_size);
 
 	if ((p = nni_zalloc(sz)) == NULL) {
 		// In this case we just toss the pipe...
-		tran->tran_pipe->p_fini(tran_data);
+		// TODO: remove when all transports converted
+		// to use p_size.
+		if (tran_data != NULL) {
+			tops->p_fini(tran_data);
+		}
 		return (NNG_ENOMEM);
 	}
 
-	p->p_size       = sz;
-	p->p_proto_data = p + 1;
-	p->p_tran_ops   = *tran->tran_pipe;
-	p->p_tran_data  = tran_data;
-	p->p_proto_ops  = *pops;
-	p->p_sock       = sock;
-	p->p_cbs        = false;
+	uint8_t *proto_data = (uint8_t *) p + NNI_ALIGN_UP(sizeof(*p));
 
+	if (tran_data == NULL) {
+		tran_data = proto_data + NNI_ALIGN_UP(pops->pipe_size);
+	}
+
+	p->p_size      = sz;
+	p->p_proto_ops = *pops;
+	p->p_tran_ops  = *tops;
+	p->p_sock      = sock;
+	p->p_cbs       = false;
+
+	// Two references - one for our caller, and
+	// one to be dropped when the pipe is closed.
 	nni_refcnt_init(&p->p_refcnt, 2, p, pipe_destroy);
 
 	nni_atomic_init_bool(&p->p_closed);
@@ -249,22 +271,59 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	nni_mtx_lock(&pipes_lk);
-	rv = nni_id_alloc32(&pipes, &p->p_id, p);
+	rv1 = nni_id_alloc32(&pipes, &p->p_id, p);
 	nni_mtx_unlock(&pipes_lk);
 
 #ifdef NNG_ENABLE_STATS
 	pipe_stats_init(p);
 #endif
 
-	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tran_data, p)) != 0) ||
-	    ((rv = pops->pipe_init(p->p_proto_data, p, sock_data)) != 0)) {
-		nni_pipe_close(p);
-		nni_pipe_rele(p);
-		return (rv);
+	p->p_tran_data  = tran_data;
+	p->p_proto_data = proto_data;
+
+	rv2 = tops->p_init(tran_data, p);
+	rv3 = pops->pipe_init(proto_data, p, sock_data);
+	if (rv1 != 0 || rv2 != 0 || rv3 != 0) {
+		pipe_destroy(p);
+		return (rv1 ? rv1 : rv2 ? rv2 : rv3);
 	}
 
 	*pp = p;
 	return (0);
+}
+
+static void
+pipe_init_dialer(nni_pipe *p, nni_dialer *d)
+{
+	p->p_dialer = d;
+	nni_sock_hold(d->d_sock);
+	nni_dialer_hold(d);
+#ifdef NNG_ENABLE_STATS
+	static const nni_stat_info dialer_info = {
+		.si_name = "dialer",
+		.si_desc = "dialer for pipe",
+		.si_type = NNG_STAT_ID,
+	};
+	pipe_stat_init(p, &p->st_ep_id, &dialer_info);
+	nni_stat_set_id(&p->st_ep_id, (int) nni_dialer_id(d));
+#endif
+}
+
+static void
+pipe_init_listener(nni_pipe *p, nni_listener *l)
+{
+	p->p_listener = l;
+	nni_listener_hold(l);
+	nni_sock_hold(l->l_sock);
+#ifdef NNG_ENABLE_STATS
+	static const nni_stat_info listener_info = {
+		.si_name = "listener",
+		.si_desc = "listener for pipe",
+		.si_type = NNG_STAT_ID,
+	};
+	pipe_stat_init(p, &p->st_ep_id, &listener_info);
+	nni_stat_set_id(&p->st_ep_id, (int) nni_listener_id(l));
+#endif
 }
 
 int
@@ -277,16 +336,7 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
 	if ((rv = pipe_create(&p, d->d_sock, tran, tran_data)) != 0) {
 		return (rv);
 	}
-	p->p_dialer = d;
-#ifdef NNG_ENABLE_STATS
-	static const nni_stat_info dialer_info = {
-		.si_name = "dialer",
-		.si_desc = "dialer for pipe",
-		.si_type = NNG_STAT_ID,
-	};
-	pipe_stat_init(p, &p->st_ep_id, &dialer_info);
-	nni_stat_set_id(&p->st_ep_id, (int) nni_dialer_id(d));
-#endif
+	pipe_init_dialer(p, d);
 	*pp = p;
 	return (0);
 }
@@ -301,17 +351,40 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
 	if ((rv = pipe_create(&p, l->l_sock, tran, tran_data)) != 0) {
 		return (rv);
 	}
-	p->p_listener = l;
-#ifdef NNG_ENABLE_STATS
-	static const nni_stat_info listener_info = {
-		.si_name = "listener",
-		.si_desc = "listener for pipe",
-		.si_type = NNG_STAT_ID,
-	};
-	pipe_stat_init(p, &p->st_ep_id, &listener_info);
-	nni_stat_set_id(&p->st_ep_id, (int) nni_listener_id(l));
-#endif
+	pipe_init_listener(p, l);
 	*pp = p;
+	return (0);
+}
+
+int
+nni_pipe_alloc_dialer(void **datap, nni_dialer *d)
+{
+	int          rv;
+	nni_sp_tran *tran = d->d_tran;
+	nni_sock    *s    = d->d_sock;
+	nni_pipe    *p;
+
+	if ((rv = pipe_create(&p, s, tran, NULL)) != 0) {
+		return (rv);
+	}
+	pipe_init_dialer(p, d);
+	*datap = p->p_tran_data;
+	return (0);
+}
+
+int
+nni_pipe_alloc_listener(void **datap, nni_listener *l)
+{
+	int          rv;
+	nni_sp_tran *tran = l->l_tran;
+	nni_sock    *s    = l->l_sock;
+	nni_pipe    *p;
+
+	if ((rv = pipe_create(&p, s, tran, NULL)) != 0) {
+		return (rv);
+	}
+	pipe_init_listener(p, l);
+	*datap = p->p_tran_data;
 	return (0);
 }
 

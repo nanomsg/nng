@@ -753,7 +753,7 @@ nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz)
 	nni_ctx  *c;
 	sub0_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&c, id.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&c, id.id)) != 0) {
 		return (rv);
 	}
 	// validate the socket type
@@ -774,7 +774,7 @@ nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz)
 	nni_ctx  *c;
 	sub0_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&c, id.id, false)) != 0) {
+	if ((rv = nni_ctx_find(&c, id.id)) != 0) {
 		return (rv);
 	}
 	// validate the socket type

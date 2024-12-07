@@ -41,8 +41,8 @@ nni_tcp_dialer_init(nni_tcp_dialer **dp)
 	d->nodelay = true;
 	nni_aio_list_init(&d->connq);
 	nni_atomic_init_bool(&d->fini);
-	nni_atomic_init64(&d->ref);
-	nni_atomic_inc64(&d->ref);
+	nni_atomic_init(&d->ref);
+	nni_atomic_inc(&d->ref);
 	*dp = d;
 	return (0);
 }
@@ -87,7 +87,7 @@ nni_tcp_dialer_fini(nni_tcp_dialer *d)
 void
 nni_posix_tcp_dialer_rele(nni_tcp_dialer *d)
 {
-	if (((nni_atomic_dec64_nv(&d->ref) != 0)) ||
+	if (((nni_atomic_dec_nv(&d->ref) != 0)) ||
 	    (!nni_atomic_get_bool(&d->fini))) {
 		return;
 	}
@@ -200,7 +200,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		return;
 	}
 
-	nni_atomic_inc64(&d->ref);
+	nni_atomic_inc(&d->ref);
 
 	if ((rv = nni_posix_tcp_alloc(&c, d)) != 0) {
 		nni_aio_finish_error(aio, rv);

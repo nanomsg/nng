@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -69,7 +69,7 @@ ipc_dialer_free(void *arg)
 void
 nni_posix_ipc_dialer_rele(ipc_dialer *d)
 {
-	if (((nni_atomic_dec64_nv(&d->ref)) != 0) ||
+	if (((nni_atomic_dec_nv(&d->ref)) != 0) ||
 	    (!nni_atomic_get_bool(&d->fini))) {
 		return;
 	}
@@ -176,7 +176,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		return;
 	}
 
-	nni_atomic_inc64(&d->ref);
+	nni_atomic_inc(&d->ref);
 
 	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d)) != 0) {
 		(void) close(fd);
@@ -323,8 +323,8 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_get   = ipc_dialer_get;
 	d->sd.sd_set   = ipc_dialer_set;
 	nni_atomic_init_bool(&d->fini);
-	nni_atomic_init64(&d->ref);
-	nni_atomic_inc64(&d->ref);
+	nni_atomic_init(&d->ref);
+	nni_atomic_inc(&d->ref);
 
 	*dp = (void *) d;
 	return (0);
