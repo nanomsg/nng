@@ -72,6 +72,46 @@ test_sleep_timeout(void)
 	nng_aio_free(aio);
 }
 
+static void
+sleep_reap(void *arg)
+{
+	nng_aio *aio = *(nng_aio **) arg;
+	if (nng_aio_result(aio) != NNG_ECANCELED) {
+		NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	}
+	nng_aio_reap(aio);
+}
+
+static void
+test_sleep_fini(void)
+{
+	static nng_aio *aio;
+	NUTS_TRUE(nng_aio_alloc(&aio, sleep_reap, &aio) == 0);
+	nng_sleep_aio(20000, aio);
+	nng_msleep(1);
+	// intentionally we do not free the aio here. reap should clean it.
+	nng_fini();
+	nng_init(NULL); // so that TEST_FINI will reap
+}
+
+static void
+test_sleep_fini_many(void)
+{
+#define NIOS 2000
+	static nng_aio *aios[NIOS];
+	for (int i = 0; i < NIOS; i++) {
+		int rv = nng_aio_alloc(&(aios[i]), sleep_reap, &(aios[i]));
+		if (rv != 0) {
+			NUTS_ASSERT(rv == 0);
+		}
+	}
+	for (int i = 0; i < NIOS; i++) {
+		nng_sleep_aio(20000, aios[i]);
+	}
+	nng_fini();
+	nng_init(NULL);
+}
+
 void
 test_insane_nio(void)
 {
@@ -400,6 +440,8 @@ test_aio_busy(void)
 NUTS_TESTS = {
 	{ "sleep", test_sleep },
 	{ "sleep timeout", test_sleep_timeout },
+	{ "sleep fini", test_sleep_fini },
+	{ "sleep fini many", test_sleep_fini_many },
 	{ "insane nio", test_insane_nio },
 	{ "provider cancel", test_provider_cancel },
 	{ "consumer cancel", test_consumer_cancel },
