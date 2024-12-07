@@ -62,6 +62,7 @@ extern void nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 extern void nni_task_fini(nni_task *);
 
 extern int  nni_taskq_sys_init(nng_init_params *);
+extern bool nni_taskq_sys_drain(void);
 extern void nni_taskq_sys_fini(void);
 
 // nni_task implementation details are not to be used except by the

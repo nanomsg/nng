@@ -133,13 +133,18 @@ nng_fini(void)
 		nni_atomic_flag_reset(&init_busy);
 		return;
 	}
-	nni_aio_sys_stop(); // no more scheduling allowed!
 	nni_sock_closeall();
 	nni_sp_tran_sys_fini();
+
+	// Drain everything. This is important because some of
+	// these subsystems can dispatch things to other ones.
+	// So we need them *all* to be empty before proceeding.
+	while ((nni_aio_sys_drain() || nni_taskq_sys_drain() ||
+	    nni_reap_sys_drain())) {
+		continue;
+	}
 	nni_tls_sys_fini();
-	nni_reap_drain();
 	nni_taskq_sys_fini();
-	nni_reap_drain();
 	nni_aio_sys_fini();
 	nni_id_map_sys_fini();
 	nni_reap_sys_fini(); // must be near the end

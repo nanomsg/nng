@@ -780,15 +780,21 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 	}
 }
 
-static void
+static bool
 nni_aio_expire_q_stop(nni_aio_expire_q *eq)
 {
-	if (eq != NULL && !eq->eq_stop) {
+	bool result = false;
+	if (eq != NULL) {
 		nni_mtx_lock(&eq->eq_mtx);
 		eq->eq_stop = true;
 		nni_cv_wake(&eq->eq_cv);
+		while (!nni_list_empty(&eq->eq_list)) {
+			result = true;
+			nni_cv_wait(&eq->eq_cv);
+		}
 		nni_mtx_unlock(&eq->eq_mtx);
 	}
+	return (result);
 }
 
 static void
@@ -834,12 +840,16 @@ nni_aio_expire_q_alloc(void)
 	return (eq);
 }
 
-void
-nni_aio_sys_stop(void)
+bool
+nni_aio_sys_drain(void)
 {
+	bool result = false;
 	for (int i = 0; i < nni_aio_expire_q_cnt; i++) {
-		nni_aio_expire_q_stop(nni_aio_expire_q_list[i]);
+		if (nni_aio_expire_q_stop(nni_aio_expire_q_list[i])) {
+			result = true;
+		}
 	}
+	return (result);
 }
 
 void

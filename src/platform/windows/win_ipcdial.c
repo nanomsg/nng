@@ -295,7 +295,7 @@ nni_win_ipc_sysfini(void)
 {
 	ipc_dial_work *worker = &ipc_connector;
 
-	nni_reap_drain(); // so that listeners get cleaned up.
+	nni_reap_sys_drain(); // so that listeners get cleaned up.
 
 	nni_mtx_lock(&worker->mtx);
 	worker->exit = 1;

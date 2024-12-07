@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -56,8 +56,9 @@ struct nni_reap_list {
 
 extern void nni_reap(nni_reap_list *, void *);
 
-// nni_reap_drain waits for the reap queue to be drained.
-extern void nni_reap_drain(void);
+// nni_reap_sys_drain waits for the reap queue to be drained.
+// It returns true if it found anything to wait for.
+extern bool nni_reap_sys_drain(void);
 
 extern int  nni_reap_sys_init(void);
 extern void nni_reap_sys_fini(void);

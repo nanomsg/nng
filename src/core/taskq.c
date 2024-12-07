@@ -59,6 +59,7 @@ nni_taskq_thread(void *self)
 			continue;
 		}
 
+		nni_cv_wake(&tq->tq_wait_cv);
 		if (!tq->tq_run) {
 			break;
 		}
@@ -125,6 +126,19 @@ nni_taskq_fini(nni_taskq *tq)
 	nni_mtx_fini(&tq->tq_mtx);
 	NNI_FREE_STRUCTS(tq->tq_threads, tq->tq_nthreads);
 	NNI_FREE_STRUCT(tq);
+}
+
+bool
+nni_taskq_drain(nni_taskq *tq)
+{
+	bool result = false;
+	nni_mtx_lock(&tq->tq_mtx);
+	while (!nni_list_empty(&tq->tq_tasks)) {
+		result = true;
+		nni_cv_wait(&tq->tq_wait_cv);
+	}
+	nni_mtx_unlock(&tq->tq_mtx);
+	return (result);
 }
 
 void
@@ -261,6 +275,12 @@ nni_taskq_sys_init(nng_init_params *params)
 	params->num_task_threads = num_thr;
 
 	return (nni_taskq_init(&nni_taskq_systq, (int) num_thr));
+}
+
+bool
+nni_taskq_sys_drain(void)
+{
+	return (nni_taskq_drain(nni_taskq_systq));
 }
 
 void
