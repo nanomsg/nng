@@ -85,6 +85,10 @@ extern uint16_t nuts_next_port(void);
 // 64 bytes to ensure no truncation occurs.
 extern void nuts_scratch_addr(const char *, size_t, char *);
 
+// like nuts_scratch_addr, but attempts to use an autobind (0 port)
+// address instead.
+extern void nuts_scratch_addr_zero(const char *, size_t, char *);
+
 // nuts_marry connects two sockets using inproc.  It uses socket
 // pipe hooks to ensure that it does not return before both sockets
 // are fully connected.
@@ -262,6 +266,14 @@ extern const char *nuts_ecdsa_client_crt;
 		static char nuts_addr_[64];                                \
 		nuts_scratch_addr(scheme, sizeof(nuts_addr_), nuts_addr_); \
 		(var) = nuts_addr_;                                        \
+	} while (0)
+
+#define NUTS_ADDR_ZERO(var, scheme)                          \
+	do {                                                 \
+		static char nuts_addr_[64];                  \
+		nuts_scratch_addr_zero(                      \
+		    scheme, sizeof(nuts_addr_), nuts_addr_); \
+		(var) = nuts_addr_;                          \
 	} while (0)
 
 #define NUTS_OPEN(sock) NUTS_PASS(nng_pair1_open(&(sock)))

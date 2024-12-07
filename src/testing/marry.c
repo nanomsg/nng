@@ -92,6 +92,62 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 	abort();
 }
 
+void
+nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
+{
+	if ((strcmp(scheme, "inproc") == 0) ||
+	    (strcmp(scheme, "abstract") == 0)) {
+		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
+		    nng_random(), nng_random(), nng_random(), nng_random());
+		return;
+	}
+
+	if ((strncmp(scheme, "tcp", 3) == 0) ||
+	    (strncmp(scheme, "tls", 3) == 0) ||
+	    (strncmp(scheme, "udp", 3) == 0)) {
+		const char *ip =
+		    strchr(scheme, '6') != NULL ? "[::1]" : "127.0.0.1";
+		(void) snprintf(addr, sz, "%s://%s:%u", scheme, ip, 0);
+		return;
+	}
+
+	if (strncmp(scheme, "ws", 2) == 0) {
+		const char *ip =
+		    strchr(scheme, '6') != NULL ? "[::1]" : "127.0.0.1";
+		(void) snprintf(addr, sz, "%s://%s:%u/nuts%04x%04x%04x%04x",
+		    scheme, ip, 0, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+		return;
+	}
+
+	if ((strncmp(scheme, "ipc", 3) == 0) ||
+	    (strncmp(scheme, "unix", 4) == 0)) {
+#ifdef _WIN32
+		// Windows doesn't place IPC names in the filesystem.
+		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
+		    nng_random(), nng_random(), nng_random(), nng_random());
+		return;
+#else
+		char *tmpdir;
+
+		if (((tmpdir = getenv("TMPDIR")) == NULL) &&
+		    ((tmpdir = getenv("TEMP")) == NULL) &&
+		    ((tmpdir = getenv("TMP")) == NULL)) {
+			tmpdir = "/tmp";
+		}
+
+		(void) snprintf(addr, sz, "%s://%s/nuts%04x%04x%04x%04x",
+		    scheme, tmpdir, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+		return;
+#endif
+	}
+
+	// We should not be here.
+	nng_log_err("NUTS", "Unknown scheme");
+	abort();
+}
+
 // nuts_next_port returns a "next" allocation port.
 // Ports are chosen by starting from a random point within a
 // range (normally 38000-40000, but other good places to choose

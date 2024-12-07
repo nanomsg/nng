@@ -286,16 +286,18 @@ nuts_tran_dialer_closed(const char *scheme)
 void
 nuts_tran_duplicate_listen(const char *scheme)
 {
-	nng_socket   s  = NNG_SOCKET_INITIALIZER;
-	nng_listener l1 = NNG_LISTENER_INITIALIZER;
-	nng_listener l2 = NNG_LISTENER_INITIALIZER;
-	const char  *addr;
+	nng_socket     s  = NNG_SOCKET_INITIALIZER;
+	nng_listener   l1 = NNG_LISTENER_INITIALIZER;
+	nng_listener   l2 = NNG_LISTENER_INITIALIZER;
+	const char    *addr;
+	const nng_url *url;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listen(s, addr, &l1, 0));
-	NUTS_FAIL(nng_listen(s, addr, &l2, 0), NNG_EADDRINUSE);
+	NUTS_PASS(nng_listener_get_url(l1, &url));
+	NUTS_FAIL(nng_listen_url(s, url, &l2, 0), NNG_EADDRINUSE);
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_listener_id(l2) < 0);
 	NUTS_CLOSE(s);
@@ -309,7 +311,7 @@ nuts_tran_listener_cancel(const char *scheme)
 	const char  *addr;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listen(s, addr, &l, 0));
 	NUTS_TRUE(nng_listener_id(l) > 0);
@@ -325,7 +327,7 @@ nuts_tran_listener_closed(const char *scheme)
 	const char  *addr;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listener_create(&l, s, addr));
 	NUTS_TRUE(nng_listener_id(l) > 0);
@@ -337,15 +339,16 @@ nuts_tran_listener_closed(const char *scheme)
 void
 nuts_tran_listen_accept(const char *scheme)
 {
-	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
-	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
-	nng_listener l1 = NNG_LISTENER_INITIALIZER;
-	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
-	nng_dialer   d2 = NNG_LISTENER_INITIALIZER;
-	const char  *addr;
+	nng_socket     s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket     s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener   l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer     d1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer     d2 = NNG_LISTENER_INITIALIZER;
+	const char    *addr;
+	const nng_url *url;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
@@ -353,8 +356,9 @@ nuts_tran_listen_accept(const char *scheme)
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
-	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
-	NUTS_PASS(nng_dial(s2, addr, &d2, 0));
+	NUTS_PASS(nng_listener_get_url(l1, &url));
+	NUTS_PASS(nng_dial_url(s2, url, &d1, 0));
+	NUTS_PASS(nng_dial_url(s2, url, &d2, 0));
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_dialer_id(d1) > 0);
 	NUTS_TRUE(nng_dialer_id(d2) > 0);
@@ -366,14 +370,15 @@ nuts_tran_listen_accept(const char *scheme)
 void
 nuts_tran_exchange(const char *scheme)
 {
-	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
-	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
-	nng_listener l1 = NNG_LISTENER_INITIALIZER;
-	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
-	const char  *addr;
+	nng_socket     s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket     s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener   l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer     d1 = NNG_LISTENER_INITIALIZER;
+	const char    *addr;
+	const nng_url *url;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
@@ -381,7 +386,8 @@ nuts_tran_exchange(const char *scheme)
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
-	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_PASS(nng_listener_get_url(l1, &url));
+	NUTS_PASS(nng_dial_url(s2, url, &d1, 0));
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_dialer_id(d1) > 0);
 	for (int i = 0; i < 5; i++) {
@@ -397,17 +403,18 @@ nuts_tran_exchange(const char *scheme)
 void
 nuts_tran_pipe_id(const char *scheme)
 {
-	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
-	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
-	nng_listener l1 = NNG_LISTENER_INITIALIZER;
-	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
-	const char  *addr;
-	nng_msg     *msg;
-	nng_pipe     p1;
-	nng_pipe     p2;
+	nng_socket     s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket     s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener   l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer     d1 = NNG_LISTENER_INITIALIZER;
+	const char    *addr;
+	nng_msg       *msg;
+	nng_pipe       p1;
+	nng_pipe       p2;
+	const nng_url *url;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
@@ -415,7 +422,8 @@ nuts_tran_pipe_id(const char *scheme)
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
-	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_PASS(nng_listener_get_url(l1, &url));
+	NUTS_PASS(nng_dial_url(s2, url, &d1, 0));
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_dialer_id(d1) > 0);
 	NUTS_SEND(s1, "ping");
@@ -438,18 +446,19 @@ nuts_tran_pipe_id(const char *scheme)
 void
 nuts_tran_huge_msg(const char *scheme, size_t size)
 {
-	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
-	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
-	nng_listener l1 = NNG_LISTENER_INITIALIZER;
-	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
-	const char  *addr;
-	char        *buf;
-	nng_msg     *msg;
+	nng_socket     s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket     s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener   l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer     d1 = NNG_LISTENER_INITIALIZER;
+	const char    *addr;
+	char          *buf;
+	nng_msg       *msg;
+	const nng_url *url;
 
 	buf = nng_alloc(size);
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
@@ -457,7 +466,8 @@ nuts_tran_huge_msg(const char *scheme, size_t size)
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 5000));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
 	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
-	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_PASS(nng_listener_get_url(l1, &url));
+	NUTS_PASS(nng_dial_url(s2, url, &d1, 0));
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_dialer_id(d1) > 0);
 	for (int i = 0; i < 5; i++) {
@@ -483,12 +493,13 @@ nuts_tran_huge_msg(const char *scheme, size_t size)
 void
 nuts_tran_msg_props(const char *scheme, void (*check)(nng_msg *))
 {
-	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
-	nng_socket   s2 = NNG_SOCKET_INITIALIZER;
-	nng_listener l1 = NNG_LISTENER_INITIALIZER;
-	nng_dialer   d1 = NNG_LISTENER_INITIALIZER;
-	const char  *addr;
-	nng_msg     *msg;
+	nng_socket     s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket     s2 = NNG_SOCKET_INITIALIZER;
+	nng_listener   l1 = NNG_LISTENER_INITIALIZER;
+	nng_dialer     d1 = NNG_LISTENER_INITIALIZER;
+	const char    *addr;
+	nng_msg       *msg;
+	const nng_url *url;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
 	NUTS_ADDR(addr, scheme);
@@ -499,7 +510,8 @@ nuts_tran_msg_props(const char *scheme, void (*check)(nng_msg *))
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_listen(s1, addr, &l1, 0));
-	NUTS_PASS(nng_dial(s2, addr, &d1, 0));
+	NUTS_PASS(nng_listener_get_url(l1, &url));
+	NUTS_PASS(nng_dial_url(s2, url, &d1, 0));
 	NUTS_TRUE(nng_listener_id(l1) > 0);
 	NUTS_TRUE(nng_dialer_id(d1) > 0);
 	NUTS_SEND(s1, "ping");
