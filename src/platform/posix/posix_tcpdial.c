@@ -27,6 +27,8 @@
 #undef NNG_ENABLE_IPV6
 #endif
 
+static void tcp_dialer_fini(void *);
+
 // Dialer stuff.
 int
 nni_tcp_dialer_init(nni_tcp_dialer **dp)
@@ -40,9 +42,7 @@ nni_tcp_dialer_init(nni_tcp_dialer **dp)
 	d->closed  = false;
 	d->nodelay = true;
 	nni_aio_list_init(&d->connq);
-	nni_atomic_init_bool(&d->fini);
-	nni_atomic_init(&d->ref);
-	nni_atomic_inc(&d->ref);
+	nni_refcnt_init(&d->ref, 1, d, tcp_dialer_fini);
 	*dp = d;
 	return (0);
 }
@@ -70,8 +70,9 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 }
 
 static void
-tcp_dialer_fini(nni_tcp_dialer *d)
+tcp_dialer_fini(void *arg)
 {
+	nni_tcp_dialer *d = arg;
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
 }
@@ -80,18 +81,7 @@ void
 nni_tcp_dialer_fini(nni_tcp_dialer *d)
 {
 	nni_tcp_dialer_close(d);
-	nni_atomic_set_bool(&d->fini, true);
-	nni_posix_tcp_dialer_rele(d);
-}
-
-void
-nni_posix_tcp_dialer_rele(nni_tcp_dialer *d)
-{
-	if (((nni_atomic_dec_nv(&d->ref) != 0)) ||
-	    (!nni_atomic_get_bool(&d->fini))) {
-		return;
-	}
-	tcp_dialer_fini(d);
+	nni_refcnt_rele(&d->ref);
 }
 
 static void
@@ -108,11 +98,13 @@ tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 	}
 	nni_aio_list_remove(aio);
 	c->dial_aio = NULL;
+	c->dialer   = NULL;
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
 
 	nni_aio_finish_error(aio, rv);
 	nng_stream_free(&c->stream);
+	nni_refcnt_rele(&d->ref);
 }
 
 static void
@@ -152,12 +144,14 @@ tcp_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 	}
 
 	c->dial_aio = NULL;
+	c->dialer   = NULL;
 	nni_aio_list_remove(aio);
 	nni_aio_set_prov_data(aio, NULL);
-	nd = d->nodelay ? 1 : 0;
-	ka = d->keepalive ? 1 : 0;
+	nd = c->nodelay ? 1 : 0;
+	ka = c->keepalive ? 1 : 0;
 
 	nni_mtx_unlock(&d->mtx);
+	nni_refcnt_rele(&d->ref);
 
 	if (rv != 0) {
 		nng_stream_close(&c->stream);
@@ -182,8 +176,6 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	size_t                  sslen;
 	int                     fd;
 	int                     rv;
-	int                     ka;
-	int                     nd;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -205,8 +197,10 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	nni_atomic_inc(&d->ref);
+	c->keepalive = d->keepalive;
+	c->nodelay   = d->nodelay;
 
+	nni_refcnt_hold(&d->ref);
 	nni_mtx_lock(&d->mtx);
 	if (!nni_aio_schedule(aio, tcp_dialer_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
@@ -252,17 +246,17 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	// Immediate connect, cool!  This probably only happens
 	// on loop back, and probably not on every platform.
 	nni_aio_set_prov_data(aio, NULL);
-	nd = d->nodelay ? 1 : 0;
-	ka = d->keepalive ? 1 : 0;
 	nni_mtx_unlock(&d->mtx);
-	nni_posix_tcp_start(c, nd, ka);
+	nni_posix_tcp_start(c, c->nodelay ? 1 : 0, c->keepalive ? 1 : 0);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
+	nni_refcnt_rele(&d->ref);
 	return;
 
 error:
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
+	nni_refcnt_rele(&d->ref);
 	nng_stream_free(&c->stream);
 	nni_aio_finish_error(aio, rv);
 }
