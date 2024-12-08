@@ -10,6 +10,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng/protocol/pubsub0/sub.h"
 #include <nng/nng.h>
 #include <nuts.h>
 
@@ -92,6 +93,48 @@ test_sfd_accept(void)
 }
 
 void
+test_sfd_accept_multi(void)
+{
+#ifdef NNG_HAVE_SOCKETPAIR
+	nng_socket   s1, s2, s3;
+	nng_listener l1, l2, l3;
+	int          fds1[2];
+	int          fds2[2];
+
+	NUTS_PASS(nng_socket_pair(fds1));
+	NUTS_PASS(nng_socket_pair(fds2));
+	NUTS_PASS(nng_pub0_open(&s1));
+	NUTS_PASS(nng_sub0_open(&s2));
+	NUTS_PASS(nng_sub0_open(&s3));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s3, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_sub0_socket_subscribe(s2, NULL, 0));
+	NUTS_PASS(nng_sub0_socket_subscribe(s3, NULL, 0));
+
+	NUTS_PASS(nng_listener_create(&l1, s1, "socket://"));
+	NUTS_PASS(nng_listener_create(&l2, s2, "socket://"));
+	NUTS_PASS(nng_listener_create(&l3, s3, "socket://"));
+	NUTS_PASS(nng_listener_start(l1, 0));
+	NUTS_PASS(nng_listener_start(l2, 0));
+	NUTS_PASS(nng_listener_start(l3, 0));
+	NUTS_PASS(nng_listener_set_int(l1, NNG_OPT_SOCKET_FD, fds1[0]));
+	NUTS_PASS(nng_listener_set_int(l2, NNG_OPT_SOCKET_FD, fds1[1]));
+	NUTS_PASS(nng_listener_set_int(l1, NNG_OPT_SOCKET_FD, fds2[0]));
+	NUTS_PASS(nng_listener_set_int(l3, NNG_OPT_SOCKET_FD, fds2[1]));
+	nng_msleep(200);
+	NUTS_SEND(s1, "ping");
+	NUTS_RECV(s2, "ping");
+	NUTS_RECV(s3, "ping");
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+	NUTS_CLOSE(s3);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
+}
+
+void
 test_sfd_exchange(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
@@ -157,8 +200,8 @@ void
 test_sfd_recv_max(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
-	char         msg[256];
-	char         buf[256];
+	char         msg[256] = { 0 };
+	char         buf[256] = { 0 };
 	nng_socket   s0;
 	nng_socket   s1;
 	nng_listener l0;
@@ -526,6 +569,7 @@ NUTS_TESTS = {
 	{ "socket malformed address", test_sfd_malformed_address },
 	{ "socket listen", test_sfd_listen },
 	{ "socket accept", test_sfd_accept },
+	{ "socket accept multi", test_sfd_accept_multi },
 	{ "socket exchange", test_sfd_exchange },
 	{ "socket exchange late", test_sfd_exchange_late },
 	{ "socket recv max", test_sfd_recv_max },
