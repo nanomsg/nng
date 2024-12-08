@@ -543,6 +543,8 @@ NNG_DECL void nng_aio_reap(nng_aio *);
 // AIO to be free, including for the callback to have completed
 // execution.  Therefore, the caller must NOT hold any locks that
 // are acquired in the callback, or deadlock will occur.
+// No further operations may be scheduled on the aio, stop is
+// a permanent operation.
 NNG_DECL void nng_aio_stop(nng_aio *);
 
 // nng_aio_result returns the status/result of the operation. This
@@ -558,6 +560,7 @@ NNG_DECL size_t nng_aio_count(nng_aio *);
 // nng_aio_cancel attempts to cancel any in-progress I/O operation.
 // The AIO callback will still be executed, but if the cancellation is
 // successful then the status will be NNG_ECANCELED.
+// An AIO can only be canceled if it was submitted already.
 NNG_DECL void nng_aio_cancel(nng_aio *);
 
 // nng_aio_abort is like nng_aio_cancel, but allows for a different
