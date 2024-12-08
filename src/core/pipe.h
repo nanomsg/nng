@@ -63,4 +63,7 @@ extern void nni_pipe_bump_error(nni_pipe *, int);
 
 extern char *nni_pipe_peer_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN]);
 
+extern int nni_pipe_alloc_dialer(void **, nni_dialer *);
+extern int nni_pipe_alloc_listener(void **, nni_listener *);
+
 #endif // CORE_PIPE_H
