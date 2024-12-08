@@ -132,12 +132,14 @@ extern void nni_dialer_destroy(nni_dialer *);
 extern void nni_dialer_timer_start(nni_dialer *);
 extern void nni_dialer_stop(nni_dialer *);
 
+extern void nni_listener_start_pipe(nni_listener *, nni_pipe *);
 extern void nni_listener_add_pipe(nni_listener *, void *);
 extern void nni_listener_shutdown(nni_listener *);
 extern void nni_listener_reap(nni_listener *);
 extern void nni_listener_destroy(nni_listener *);
 extern void nni_listener_stop(nni_listener *);
 
+extern void nni_pipe_add(nni_pipe *);
 extern void nni_pipe_remove(nni_pipe *);
 extern bool nni_pipe_is_closed(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);
