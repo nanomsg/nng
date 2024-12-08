@@ -22,6 +22,7 @@
 
 static void listener_accept_start(nni_listener *);
 static void listener_accept_cb(void *);
+static void listener_accept_cb_old(void *);
 static void listener_timer_cb(void *);
 
 static nni_id_map listeners    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
@@ -44,7 +45,7 @@ nni_listener_destroy(nni_listener *l)
 		l->l_ops.l_fini(l->l_data);
 	}
 	nni_url_fini(&l->l_url);
-	NNI_FREE_STRUCT(l);
+	nni_free(l, NNI_ALIGN_UP(sizeof(*l)) + l->l_ops.l_size);
 }
 
 #ifdef NNG_ENABLE_STATS
@@ -55,10 +56,12 @@ listener_stat_init(
 	nni_stat_init(item, info);
 	nni_stat_add(&l->st_root, item);
 }
+#endif
 
 static void
 listener_stats_init(nni_listener *l)
 {
+#ifdef NNG_ENABLE_STATS
 	static const nni_stat_info root_info = {
 		.si_name = "listener",
 		.si_desc = "listener statistics",
@@ -153,9 +156,23 @@ listener_stats_init(nni_listener *l)
 	nni_stat_set_id(&l->st_root, (int) l->l_id);
 	nni_stat_set_id(&l->st_id, (int) l->l_id);
 	nni_stat_set_id(&l->st_sock, (int) nni_sock_id(l->l_sock));
-	nni_stat_register(&l->st_root);
-}
+#else
+	NNI_ARG_UNUSED(l);
 #endif // NNG_ENABLE_STATS
+}
+
+static void
+listener_register_stats(nni_listener *l)
+{
+#ifdef NNG_ENABLE_STATS
+	nni_stat_set_id(&l->st_root, (int) l->l_id);
+	nni_stat_set_id(&l->st_id, (int) l->l_id);
+	nni_stat_set_id(&l->st_sock, (int) nni_sock_id(l->l_sock));
+	nni_stat_register(&l->st_root);
+#else
+	NNI_ARG_UNUSED(l);
+#endif
+}
 
 void
 nni_listener_bump_error(nni_listener *l, int err)
@@ -195,7 +212,8 @@ nni_listener_bump_error(nni_listener *l, int err)
 static int
 nni_listener_init(nni_listener *l, nni_sock *s, nni_sp_tran *tran)
 {
-	int rv;
+	int   rv;
+	void *lp;
 
 	l->l_closed = false;
 	l->l_data   = NULL;
@@ -212,30 +230,40 @@ nni_listener_init(nni_listener *l, nni_sock *s, nni_sp_tran *tran)
 	NNI_LIST_NODE_INIT(&l->l_node);
 	NNI_LIST_INIT(&l->l_pipes, nni_pipe, p_ep_node);
 
-	nni_aio_init(&l->l_acc_aio, listener_accept_cb, l);
+	if (tran->tran_pipe->p_size) {
+		nni_aio_init(&l->l_acc_aio, listener_accept_cb, l);
+	} else {
+		nni_aio_init(&l->l_acc_aio, listener_accept_cb_old, l);
+	}
 	nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l);
 
-	nni_mtx_lock(&listeners_lk);
-	rv = nni_id_alloc32(&listeners, &l->l_id, l);
-	nni_mtx_unlock(&listeners_lk);
-
-#ifdef NNG_ENABLE_STATS
 	listener_stats_init(l);
-#endif
 
-	if ((rv != 0) ||
-	    ((rv = l->l_ops.l_init(&l->l_data, &l->l_url, l)) != 0) ||
-	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
-		nni_mtx_lock(&listeners_lk);
-		nni_id_remove(&listeners, l->l_id);
-		nni_mtx_unlock(&listeners_lk);
-#ifdef NNG_ENABLE_STATS
-		nni_stat_unregister(&l->st_root);
-#endif
-		return (rv);
+	if (l->l_ops.l_size != 0) {
+		l->l_data = ((uint8_t *) l) + NNI_ALIGN_UP(sizeof(*l));
+		lp        = l->l_data;
+	} else {
+		// legacy: remove me when transports converted
+		lp = &l->l_data;
 	}
 
-	return (0);
+	rv = l->l_ops.l_init(lp, &l->l_url, l);
+
+	if (rv == 0) {
+		rv = nni_sock_add_listener(s, l);
+	}
+
+	if (rv == 0) {
+		nni_mtx_lock(&listeners_lk);
+		rv = nni_id_alloc32(&listeners, &l->l_id, l);
+		nni_mtx_unlock(&listeners_lk);
+	}
+
+	if (rv == 0) {
+		listener_register_stats(l);
+	}
+
+	return (rv);
 }
 
 int
@@ -244,16 +272,18 @@ nni_listener_create_url(nni_listener **lp, nni_sock *s, const nng_url *url)
 	nni_sp_tran  *tran;
 	nni_listener *l;
 	int           rv;
+	size_t        sz;
 
 	if (((tran = nni_sp_tran_find(nng_url_scheme(url))) == NULL) ||
 	    (tran->tran_listener == NULL)) {
 		return (NNG_ENOTSUP);
 	}
-	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
+	sz = NNI_ALIGN_UP(sizeof(*l)) + tran->tran_listener->l_size;
+	if ((l = nni_zalloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_url_clone_inline(&l->l_url, url)) != 0) {
-		NNI_FREE_STRUCT(l);
+		nni_free(l, sz);
 		return (rv);
 	}
 	if ((rv = nni_listener_init(l, s, tran)) != 0) {
@@ -276,16 +306,19 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	nni_sp_tran  *tran;
 	nni_listener *l;
 	int           rv;
+	size_t        sz;
 
 	if (((tran = nni_sp_tran_find(url_str)) == NULL) ||
 	    (tran->tran_listener == NULL)) {
 		return (NNG_ENOTSUP);
 	}
-	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
+	sz = NNI_ALIGN_UP(sizeof(*l)) + tran->tran_listener->l_size;
+	if ((l = nni_zalloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+
 	if ((rv = nni_url_parse_inline(&l->l_url, url_str)) != 0) {
-		NNI_FREE_STRUCT(l);
+		nni_free(l, sz);
 		return (rv);
 	}
 	if ((rv = nni_listener_init(l, s, tran)) != 0) {
@@ -371,6 +404,47 @@ listener_timer_cb(void *arg)
 
 static void
 listener_accept_cb(void *arg)
+{
+	nni_listener *l   = arg;
+	nni_aio      *aio = &l->l_acc_aio;
+	int           rv;
+
+	switch ((rv = nni_aio_result(aio))) {
+	case 0:
+#ifdef NNG_ENABLE_STATS
+		nni_stat_inc(&l->st_accept, 1);
+#endif
+		nni_pipe_start(nni_aio_get_output(aio, 0));
+		listener_accept_start(l);
+		break;
+	case NNG_ECONNABORTED: // remote condition, no cool down
+	case NNG_ECONNRESET:   // remote condition, no cool down
+	case NNG_ETIMEDOUT:    // No need to sleep, we timed out already.
+	case NNG_EPEERAUTH:    // peer validation failure
+		nng_log_warn("NNG-ACCEPT-FAIL",
+		    "Failed accepting for socket<%u>: %s",
+		    nni_sock_id(l->l_sock), nng_strerror(rv));
+		nni_listener_bump_error(l, rv);
+		listener_accept_start(l);
+		break;
+	case NNG_ECLOSED:   // no further action
+	case NNG_ECANCELED: // no further action
+		nni_listener_bump_error(l, rv);
+		break;
+	default:
+		// We don't really know why we failed, but we back off
+		// here. This is because errors here are probably due
+		// to system failures (resource exhaustion) and we hope
+		// by not thrashing we give the system a chance to
+		// recover.  100 ms is enough to cool down.
+		nni_listener_bump_error(l, rv);
+		nni_sleep_aio(100, &l->l_tmo_aio);
+		break;
+	}
+}
+
+static void
+listener_accept_cb_old(void *arg)
 {
 	nni_listener *l   = arg;
 	nni_aio      *aio = &l->l_acc_aio;
