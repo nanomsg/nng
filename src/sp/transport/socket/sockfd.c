@@ -621,6 +621,7 @@ sfd_tran_ep_close(void *arg)
 	sfd_tran_ep   *ep = arg;
 	sfd_tran_pipe *p;
 
+	nni_aio_close(&ep->connaio);
 	nni_mtx_lock(&ep->mtx);
 
 	ep->closed = true;
@@ -639,6 +640,14 @@ sfd_tran_ep_close(void *arg)
 	}
 
 	nni_mtx_unlock(&ep->mtx);
+}
+
+static void
+sfd_tran_ep_stop(void *arg)
+{
+	sfd_tran_ep *ep = arg;
+
+	nni_aio_stop(&ep->connaio);
 }
 
 static void
@@ -872,6 +881,7 @@ static nni_sp_listener_ops sfd_tran_listener_ops = {
 	.l_bind   = sfd_tran_ep_bind,
 	.l_accept = sfd_tran_ep_accept,
 	.l_close  = sfd_tran_ep_close,
+	.l_stop   = sfd_tran_ep_stop,
 	.l_getopt = sfd_tran_listener_getopt,
 	.l_setopt = sfd_tran_listener_setopt,
 };
