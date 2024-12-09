@@ -541,9 +541,12 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 void
 nni_dialer_stop(nni_dialer *d)
 {
+	d->d_ops.d_close(d->d_data);
 	nni_aio_stop(&d->d_tmo_aio);
 	nni_aio_stop(&d->d_con_aio);
-	d->d_ops.d_close(d->d_data);
+	if (d->d_ops.d_stop) {
+		d->d_ops.d_stop(d->d_data);
+	}
 }
 
 nni_sock *
