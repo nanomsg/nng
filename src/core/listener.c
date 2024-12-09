@@ -524,9 +524,12 @@ nni_listener_start(nni_listener *l, int flags)
 void
 nni_listener_stop(nni_listener *l)
 {
+	l->l_ops.l_close(l->l_data);
 	nni_aio_stop(&l->l_tmo_aio);
 	nni_aio_stop(&l->l_acc_aio);
-	l->l_ops.l_close(l->l_data);
+	if (l->l_ops.l_stop) {
+		l->l_ops.l_stop(l->l_data);
+	}
 }
 
 nni_sock *

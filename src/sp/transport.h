@@ -43,10 +43,13 @@ struct nni_sp_dialer_ops {
 	// NNG_ECONNFAILED, NNG_ETIMEDOUT, and NNG_EPROTO.
 	void (*d_connect)(void *, nni_aio *);
 
-	// d_close stops the dialer from operating altogether.  It
-	// does not affect pipes that have already been created.  It is
-	// nonblocking.
+	// d_close stops the dialer from operating altogether.
+	// It is nonblocking.
 	void (*d_close)(void *);
+
+	// d_stop is close, but also waits for the operation to be
+	// be fully stopped.
+	void (*d_stop)(void *);
 
 	// d_getopt is used to obtain an option.
 	int (*d_getopt)(void *, const char *, void *, size_t *, nni_type);
@@ -93,10 +96,13 @@ struct nni_sp_listener_ops {
 	// l_accept accepts an inbound connection.
 	void (*l_accept)(void *, nni_aio *);
 
-	// l_close stops the listener from operating altogether.  It
-	// does not affect pipes that have already been created.  It is
-	// nonblocking.
+	// l_close stops the listener from operating altogether.
+	// It is nonblocking.
 	void (*l_close)(void *);
+
+	// l_stop is close, but also waits for the operation to be
+	// be fully stopped.
+	void (*l_stop)(void *);
 
 	// l_getopt is used to obtain an option.
 	int (*l_getopt)(void *, const char *, void *, size_t *, nni_type);
