@@ -356,7 +356,7 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_sleep     = false;
 		aio->a_expire_ok = false;
 		nni_mtx_unlock(&eq->eq_mtx);
-
+		nni_task_dispatch(&aio->a_task);
 		return (NNG_ECANCELED);
 	}
 	nni_task_prep(&aio->a_task);
