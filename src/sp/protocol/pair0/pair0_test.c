@@ -212,7 +212,7 @@ test_pair0_send_closed_aio(void)
 	nng_aio_stop(aio);
 	nng_send_aio(s1, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	nng_msg_free(msg);
 	nng_aio_free(aio);
 	NUTS_PASS(nng_close(s1));

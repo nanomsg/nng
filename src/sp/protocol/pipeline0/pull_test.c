@@ -175,7 +175,7 @@ test_pull_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_recv_aio(s, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	NUTS_CLOSE(s);
 	nng_aio_free(aio);
 }
