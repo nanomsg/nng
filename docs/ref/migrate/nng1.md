@@ -38,6 +38,17 @@ The `NNG_OPT_WSS_REQUEST_HEADERS` and `NNG_OPT_WSS_RESPONSE_HEADERS` aliases for
 Just convert any use of them to `NNG_OPT_WS_REQUEST_HEADERS` or
 `NNG_OPT_WS_RESPONSE_HEADERS` as appropriate.
 
+## Asynchronous I/O Returns
+
+When closing an [`nng_aio`] object with [`nng_aio_stop`], the result
+of operation will be aborted with a result error of [`NNG_ECLOSED`], instead of [`NNG_ECANCELED`].
+The `NNG_ECLOSED` error is a permanent failure, and operations should not be tried when
+encountering it, whereas `NNG_ECANCELED` might just apply to a single operation that was
+canceled by the submitter.
+
+This situation can also occur when an underlying object such as a socket is closed.
+In all cases, `NNG_ECLOSED` should be treated as a permanent failure.
+
 ## TLS Configuration
 
 The support for configuring TLS via `NNG_OPT_TLS_CONFIG`, `NNG_TLS_AUTH_MODE`, `NNG_OPT_TLS_CA_FILE`,

@@ -131,10 +131,12 @@ extern void nni_aio_abort(nni_aio *, int rv);
 
 // nni_aio_begin is called by a provider to indicate it is starting the
 // operation, and to check that the aio has not already been marked for
-// teardown.  It returns 0 on success, or NNG_ECANCELED if the aio is being
+// teardown.  It returns 0 on success, or NNG_ECLOSED if the aio is being
 // torn down.  (In that case, no operation should be aborted without any
 // call to any other functions on this AIO, most especially not the
-// nng_aio_finish family of functions.)
+// nng_aio_finish family of functions.)  Note that it also executes the
+// completion callback with NNG_ECLOSED.  It is important that aio consumers
+// do not resubmit an operation if NNG_ECLOSED is returned.
 extern int nni_aio_begin(nni_aio *);
 
 extern void *nni_aio_get_prov_data(nni_aio *);
