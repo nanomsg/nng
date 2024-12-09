@@ -2062,10 +2062,10 @@ nng_aio_finish(nng_aio *aio, int rv)
 	nni_aio_finish(aio, rv, nni_aio_count(aio));
 }
 
-void
+bool
 nng_aio_defer(nng_aio *aio, nng_aio_cancelfn fn, void *arg)
 {
-	nni_aio_schedule(aio, fn, arg);
+	return (nni_aio_defer(aio, fn, arg));
 }
 
 bool

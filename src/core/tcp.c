@@ -177,7 +177,6 @@ static void
 tcp_dialer_dial(void *arg, nng_aio *aio)
 {
 	tcp_dialer *d = arg;
-	int         rv;
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -187,9 +186,8 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcp_dial_cancel, d)) != 0) {
+	if (!nni_aio_defer(aio, tcp_dial_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&d->conaios, aio);

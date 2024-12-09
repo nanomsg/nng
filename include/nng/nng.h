@@ -640,8 +640,11 @@ NNG_DECL void nng_aio_finish(nng_aio *, int);
 // final argument is passed to the cancelfn.  The final argument of the
 // cancellation function is the error number (will not be zero) corresponding
 // to the reason for cancellation, e.g. NNG_ETIMEDOUT or NNG_ECANCELED.
+// This returns false if the operation cannot be deferred (because the AIO
+// has been stopped with nng_aio_stop.)  If it does so, then the aio's
+// completion callback will fire with a result of NNG_ECLOSED.
 typedef void (*nng_aio_cancelfn)(nng_aio *, void *, int);
-NNG_DECL void nng_aio_defer(nng_aio *, nng_aio_cancelfn, void *);
+NNG_DECL bool nng_aio_defer(nng_aio *, nng_aio_cancelfn, void *);
 
 // nng_aio_sleep does a "sleeping" operation, basically does nothing
 // but wait for the specified number of milliseconds to expire, then
