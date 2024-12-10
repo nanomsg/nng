@@ -37,11 +37,10 @@ win_io_handler(void *arg)
 		int         rv;
 
 		ok = GetQueuedCompletionStatus(
-		    win_io_h, &cnt, &key, &olpd, INFINITE);
+		    win_io_h, &cnt, &key, &olpd, 5000);
 
 		if (olpd == NULL) {
 			// Completion port closed...
-			NNI_ASSERT(ok == FALSE);
 			break;
 		}
 
@@ -124,11 +123,15 @@ nni_win_io_sysfini(void)
 	HANDLE h;
 
 	if ((h = win_io_h) != NULL) {
+		// send wakeups in case closing the handle doesn't work
+		for (i = 0; i < win_io_nthr; i++) {
+			PostQueuedCompletionStatus(h, 0, 0, NULL);
+		}
 		CloseHandle(h);
+		for (i = 0; i < win_io_nthr; i++) {
+			nni_thr_fini(&win_io_thrs[i]);
+		}
 		win_io_h = NULL;
-	}
-	for (i = 0; i < win_io_nthr; i++) {
-		nni_thr_fini(&win_io_thrs[i]);
 	}
 
 	NNI_FREE_STRUCTS(win_io_thrs, win_io_nthr);
