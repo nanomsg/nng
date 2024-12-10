@@ -130,7 +130,29 @@ test_tcp_stream(void)
 	nng_stream_free(c2);
 }
 
+void
+test_tcp_listen_accept_cancel(void)
+{
+	nng_stream_listener *l;
+	char                *addr;
+	nng_aio             *aio;
+
+	nng_log_set_logger(nng_stderr_logger);
+	NUTS_ADDR(addr, "tcp");
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	nng_stream_listener_accept(l, aio);
+	nng_msleep(100);
+	nng_aio_free(aio);
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+}
+
 NUTS_TESTS = {
 	{ "tcp stream", test_tcp_stream },
+	{ "tcp stream listen accept cancel", test_tcp_listen_accept_cancel },
 	{ NULL, NULL },
 };
