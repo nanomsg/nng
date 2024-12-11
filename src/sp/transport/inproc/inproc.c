@@ -335,6 +335,12 @@ inproc_listener_init(void **epp, nng_url *url, nni_listener *nlistener)
 }
 
 static void
+inproc_ep_stop(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
+static void
 inproc_ep_fini(void *arg)
 {
 	inproc_ep *ep = arg;
@@ -669,6 +675,7 @@ static nni_sp_dialer_ops inproc_dialer_ops = {
 	.d_fini    = inproc_ep_fini,
 	.d_connect = inproc_ep_connect,
 	.d_close   = inproc_ep_close,
+	.d_stop    = inproc_ep_stop,
 	.d_getopt  = inproc_ep_getopt,
 	.d_setopt  = inproc_ep_setopt,
 };
@@ -679,6 +686,7 @@ static nni_sp_listener_ops inproc_listener_ops = {
 	.l_bind   = inproc_ep_bind,
 	.l_accept = inproc_ep_accept,
 	.l_close  = inproc_ep_close,
+	.l_stop   = inproc_ep_stop,
 	.l_getopt = inproc_ep_getopt,
 	.l_setopt = inproc_ep_setopt,
 };
