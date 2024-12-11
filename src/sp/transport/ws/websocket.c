@@ -247,7 +247,7 @@ wstran_pipe_peer(void *arg)
 }
 
 static int
-ws_listener_bind(void *arg, nng_url *url)
+wstran_listener_bind(void *arg, nng_url *url)
 {
 	ws_listener *l = arg;
 	int          rv;
@@ -263,7 +263,7 @@ ws_listener_bind(void *arg, nng_url *url)
 }
 
 static void
-ws_listener_cancel(nni_aio *aio, void *arg, int rv)
+wstran_listener_cancel(nni_aio *aio, void *arg, int rv)
 {
 	ws_listener *l = arg;
 
@@ -288,7 +288,7 @@ wstran_listener_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&l->mtx);
-	if ((rv = nni_aio_schedule(aio, ws_listener_cancel, l)) != 0) {
+	if ((rv = nni_aio_schedule(aio, wstran_listener_cancel, l)) != 0) {
 		nni_mtx_unlock(&l->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -368,11 +368,18 @@ static nni_sp_pipe_ops ws_pipe_ops = {
 };
 
 static void
-wstran_dialer_fini(void *arg)
+wstran_dialer_stop(void *arg)
 {
 	ws_dialer *d = arg;
 
 	nni_aio_stop(&d->connaio);
+}
+
+static void
+wstran_dialer_fini(void *arg)
+{
+	ws_dialer *d = arg;
+
 	nng_stream_dialer_free(d->dialer);
 	nni_aio_fini(&d->connaio);
 	nni_mtx_fini(&d->mtx);
@@ -380,11 +387,18 @@ wstran_dialer_fini(void *arg)
 }
 
 static void
-wstran_listener_fini(void *arg)
+wstran_listener_stop(void *arg)
 {
 	ws_listener *l = arg;
 
 	nni_aio_stop(&l->accaio);
+}
+
+static void
+wstran_listener_fini(void *arg)
+{
+	ws_listener *l = arg;
+
 	nng_stream_listener_free(l->listener);
 	nni_aio_fini(&l->accaio);
 	nni_mtx_fini(&l->mtx);
@@ -656,6 +670,7 @@ static nni_sp_dialer_ops ws_dialer_ops = {
 	.d_fini    = wstran_dialer_fini,
 	.d_connect = wstran_dialer_connect,
 	.d_close   = wstran_dialer_close,
+	.d_stop    = wstran_dialer_stop,
 	.d_setopt  = wstran_dialer_setopt,
 	.d_getopt  = wstran_dialer_getopt,
 	.d_get_tls = wstran_dialer_get_tls,
@@ -665,9 +680,10 @@ static nni_sp_dialer_ops ws_dialer_ops = {
 static nni_sp_listener_ops ws_listener_ops = {
 	.l_init    = wstran_listener_init,
 	.l_fini    = wstran_listener_fini,
-	.l_bind    = ws_listener_bind,
+	.l_bind    = wstran_listener_bind,
 	.l_accept  = wstran_listener_accept,
 	.l_close   = wstran_listener_close,
+	.l_stop    = wstran_listener_stop,
 	.l_setopt  = wstran_listener_set,
 	.l_getopt  = wstran_listener_get,
 	.l_get_tls = wstran_listener_get_tls,

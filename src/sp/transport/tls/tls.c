@@ -641,8 +641,6 @@ tlstran_ep_fini(void *arg)
 		return;
 	}
 	nni_mtx_unlock(&ep->mtx);
-	nni_aio_stop(ep->timeaio);
-	nni_aio_stop(ep->connaio);
 	nng_stream_dialer_free(ep->dialer);
 	nng_stream_listener_free(ep->listener);
 	nni_aio_free(ep->timeaio);
@@ -650,6 +648,15 @@ tlstran_ep_fini(void *arg)
 
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
+}
+
+static void
+tlstran_ep_stop(void *arg)
+{
+	tlstran_ep *ep = arg;
+
+	nni_aio_stop(ep->timeaio);
+	nni_aio_stop(ep->connaio);
 }
 
 static void
@@ -1147,6 +1154,7 @@ static nni_sp_dialer_ops tlstran_dialer_ops = {
 	.d_fini    = tlstran_ep_fini,
 	.d_connect = tlstran_ep_connect,
 	.d_close   = tlstran_ep_close,
+	.d_stop    = tlstran_ep_stop,
 	.d_getopt  = tlstran_dialer_getopt,
 	.d_setopt  = tlstran_dialer_setopt,
 	.d_get_tls = tlstran_dialer_get_tls,
@@ -1159,6 +1167,7 @@ static nni_sp_listener_ops tlstran_listener_ops = {
 	.l_bind    = tlstran_ep_bind,
 	.l_accept  = tlstran_ep_accept,
 	.l_close   = tlstran_ep_close,
+	.l_stop    = tlstran_ep_stop,
 	.l_getopt  = tlstran_listener_get,
 	.l_setopt  = tlstran_listener_set,
 	.l_set_tls = tlstran_listener_set_tls,

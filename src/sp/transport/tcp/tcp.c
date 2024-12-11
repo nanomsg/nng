@@ -668,6 +668,15 @@ tcptran_pipe_start(tcptran_pipe *p, nng_stream *conn, tcptran_ep *ep)
 }
 
 static void
+tcptran_ep_stop(void *arg)
+{
+	tcptran_ep *ep = arg;
+
+	nni_aio_stop(ep->timeaio);
+	nni_aio_stop(ep->connaio);
+}
+
+static void
 tcptran_ep_fini(void *arg)
 {
 	tcptran_ep *ep = arg;
@@ -679,8 +688,6 @@ tcptran_ep_fini(void *arg)
 		return;
 	}
 	nni_mtx_unlock(&ep->mtx);
-	nni_aio_stop(ep->timeaio);
-	nni_aio_stop(ep->connaio);
 	nng_stream_dialer_free(ep->dialer);
 	nng_stream_listener_free(ep->listener);
 	nni_aio_free(ep->timeaio);
@@ -1139,6 +1146,7 @@ static nni_sp_dialer_ops tcptran_dialer_ops = {
 	.d_fini    = tcptran_ep_fini,
 	.d_connect = tcptran_ep_connect,
 	.d_close   = tcptran_ep_close,
+	.d_stop    = tcptran_ep_stop,
 	.d_getopt  = tcptran_dialer_getopt,
 	.d_setopt  = tcptran_dialer_setopt,
 };
@@ -1149,6 +1157,7 @@ static nni_sp_listener_ops tcptran_listener_ops = {
 	.l_bind   = tcptran_ep_bind,
 	.l_accept = tcptran_ep_accept,
 	.l_close  = tcptran_ep_close,
+	.l_stop   = tcptran_ep_stop,
 	.l_getopt = tcptran_listener_getopt,
 	.l_setopt = tcptran_listener_setopt,
 };
