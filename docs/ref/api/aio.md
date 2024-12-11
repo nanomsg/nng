@@ -100,7 +100,7 @@ then [`nng_aio_result`] will return _err_.
 The {{i:`nng_aio_cancel`}} function acts like `nng_aio_abort`, but uses the error code
 [`NNG_ECANCELED`]{{hi:`NNG_ECANCELED`}}.
 
-The {{i:`nng_aio_stop`}} function aborts the _aio_ operation with [`NNG_ECANCELED`],
+The {{i:`nng_aio_stop`}} function aborts the _aio_ operation with [`NNG_ECLOSED`],
 and then waits the operation and any associated callback to complete.
 This function also marks _aio_ itself permanently stopped, so that any
 new operations scheduled by I/O providers using [`nng_aio_begin`]
@@ -186,6 +186,12 @@ Operations that do not transfer data, or do not keep a count, may return zero fo
 > The return value from these functions is undefined if the operation has not completed yet.
 > Either call these from the handle's completion callback, or after waiting for the
 > operation to complete with [`nng_aio_wait`].
+
+> [!IMPORTANT]
+> If the return value from `nng_aio_result` is [`NNG_ECLOSED`], then the underlyng object
+> or the _aio_ has been closed, and any further attempts to submit operations against it
+> will fail immediately with `NNG_ECLOSED`, resulting in an infinite loop. To prevent this,
+> do not resubmit an operation once the `NNG_ECLOSED` status is obtained.
 
 ## Messages
 
