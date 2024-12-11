@@ -2102,10 +2102,16 @@ zt_pipe_start_ping(zt_pipe *p)
 }
 
 static void
-zt_ep_fini(void *arg)
+zt_ep_stop(void *arg)
 {
 	zt_ep *ep = arg;
 	nni_aio_stop(ep->ze_creq_aio);
+}
+
+static void
+zt_ep_fini(void *arg)
+{
+	zt_ep *ep = arg;
 	nni_aio_free(ep->ze_creq_aio);
 	NNI_FREE_STRUCT(ep);
 }
@@ -3177,6 +3183,7 @@ static nni_sp_dialer_ops zt_dialer_ops = {
 	.d_fini    = zt_ep_fini,
 	.d_connect = zt_ep_connect,
 	.d_close   = zt_ep_close,
+	.d_stop    = zt_ep_fini,
 	.d_options = zt_dialer_options,
 };
 
@@ -3186,6 +3193,7 @@ static nni_sp_listener_ops zt_listener_ops = {
 	.l_bind    = zt_ep_bind,
 	.l_accept  = zt_ep_accept,
 	.l_close   = zt_ep_close,
+	.l_stop    = zt_ep_stop,
 	.l_options = zt_listener_options,
 };
 
