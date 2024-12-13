@@ -1183,12 +1183,9 @@ ws_close_error(nni_ws *ws, uint16_t code)
 }
 
 static void
-ws_fini(void *arg)
+ws_stop(void *arg)
 {
-	nni_ws   *ws = arg;
-	ws_frame *frame;
-	nng_aio  *aio;
-
+	nni_ws *ws = arg;
 	ws_close_error(ws, WS_CLOSE_NORMAL_CLOSE);
 
 	// Give a chance for the close frame to drain.
@@ -1198,7 +1195,6 @@ ws_fini(void *arg)
 	nni_aio_stop(&ws->txaio);
 	nni_aio_stop(&ws->closeaio);
 	nni_aio_stop(&ws->httpaio);
-	nni_aio_stop(&ws->connaio);
 
 	if (nni_list_node_active(&ws->node)) {
 		nni_ws_dialer *d;
@@ -1210,6 +1206,16 @@ ws_fini(void *arg)
 			nni_mtx_unlock(&d->mtx);
 		}
 	}
+}
+
+static void
+ws_fini(void *arg)
+{
+	nni_ws   *ws = arg;
+	ws_frame *frame;
+	nng_aio  *aio;
+
+	ws_stop(ws);
 
 	nni_mtx_lock(&ws->mtx);
 	while ((frame = nni_list_first(&ws->rxq)) != NULL) {
@@ -1450,6 +1456,7 @@ ws_init(nni_ws **wsp)
 
 	ws->ops.s_close = ws_str_close;
 	ws->ops.s_free  = ws_str_free;
+	ws->ops.s_stop  = ws_stop;
 	ws->ops.s_send  = ws_str_send;
 	ws->ops.s_recv  = ws_str_recv;
 	ws->ops.s_get   = ws_str_get;
@@ -1460,10 +1467,11 @@ ws_init(nni_ws **wsp)
 }
 
 static void
-ws_listener_free(void *arg)
+ws_listener_stop(void *arg)
 {
-	nni_ws_listener *l = arg;
-	ws_header       *hdr;
+	nni_ws_listener  *l = arg;
+	nni_http_handler *h;
+	nni_http_server  *s;
 
 	ws_listener_close(l);
 
@@ -1471,16 +1479,27 @@ ws_listener_free(void *arg)
 	while (!nni_list_empty(&l->reply)) {
 		nni_cv_wait(&l->cv);
 	}
+	h          = l->handler;
+	s          = l->server;
+	l->handler = NULL;
+	l->server  = NULL;
 	nni_mtx_unlock(&l->mtx);
 
-	if (l->handler != NULL) {
-		nni_http_handler_fini(l->handler);
-		l->handler = NULL;
+	if (h != NULL) {
+		nni_http_handler_fini(h);
 	}
-	if (l->server != NULL) {
-		nni_http_server_fini(l->server);
-		l->server = NULL;
+	if (s != NULL) {
+		nni_http_server_fini(s);
 	}
+}
+
+static void
+ws_listener_free(void *arg)
+{
+	nni_ws_listener *l = arg;
+	ws_header       *hdr;
+
+	ws_listener_stop(l);
 
 	nni_cv_fini(&l->cv);
 	nni_mtx_fini(&l->mtx);
@@ -2148,6 +2167,7 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 	l->isstream       = true;
 	l->ops.sl_free    = ws_listener_free;
 	l->ops.sl_close   = ws_listener_close;
+	l->ops.sl_stop    = ws_listener_stop;
 	l->ops.sl_accept  = ws_listener_accept;
 	l->ops.sl_listen  = ws_listener_listen;
 	l->ops.sl_set     = ws_listener_set;
@@ -2255,16 +2275,43 @@ err:
 }
 
 static void
-ws_dialer_free(void *arg)
+ws_dialer_close(void *arg)
 {
 	nni_ws_dialer *d = arg;
-	ws_header     *hdr;
+	nni_ws        *ws;
+	nni_mtx_lock(&d->mtx);
+	if (d->closed) {
+		nni_mtx_unlock(&d->mtx);
+		return;
+	}
+	d->closed = true;
+	NNI_LIST_FOREACH (&d->wspend, ws) {
+		nni_aio_close(&ws->connaio);
+		nni_aio_close(&ws->httpaio);
+	}
+	nni_mtx_unlock(&d->mtx);
+}
 
+static void
+ws_dialer_stop(void *arg)
+{
+	nni_ws_dialer *d = arg;
+
+	ws_dialer_close(d);
 	nni_mtx_lock(&d->mtx);
 	while (!nni_list_empty(&d->wspend)) {
 		nni_cv_wait(&d->cv);
 	}
 	nni_mtx_unlock(&d->mtx);
+}
+
+static void
+ws_dialer_free(void *arg)
+{
+	nni_ws_dialer *d = arg;
+	ws_header     *hdr;
+
+	ws_dialer_stop(d);
 
 	nni_strfree(d->proto);
 	while ((hdr = nni_list_first(&d->headers)) != NULL) {
@@ -2282,24 +2329,6 @@ ws_dialer_free(void *arg)
 	nni_cv_fini(&d->cv);
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
-}
-
-static void
-ws_dialer_close(void *arg)
-{
-	nni_ws_dialer *d = arg;
-	nni_ws        *ws;
-	nni_mtx_lock(&d->mtx);
-	if (d->closed) {
-		nni_mtx_unlock(&d->mtx);
-		return;
-	}
-	d->closed = true;
-	NNI_LIST_FOREACH (&d->wspend, ws) {
-		nni_aio_close(&ws->connaio);
-		nni_aio_close(&ws->httpaio);
-	}
-	nni_mtx_unlock(&d->mtx);
 }
 
 static void
@@ -2679,6 +2708,7 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 
 	d->ops.sd_free    = ws_dialer_free;
 	d->ops.sd_close   = ws_dialer_close;
+	d->ops.sd_stop    = ws_dialer_stop;
 	d->ops.sd_dial    = ws_dialer_dial;
 	d->ops.sd_set     = ws_dialer_set;
 	d->ops.sd_get     = ws_dialer_get;

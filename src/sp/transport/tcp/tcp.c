@@ -124,6 +124,7 @@ tcptran_pipe_stop(void *arg)
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
 	nni_aio_stop(p->negoaio);
+	nng_stream_stop(p->conn);
 }
 
 static int
@@ -674,6 +675,8 @@ tcptran_ep_stop(void *arg)
 
 	nni_aio_stop(ep->timeaio);
 	nni_aio_stop(ep->connaio);
+	nng_stream_dialer_stop(ep->dialer);
+	nng_stream_listener_stop(ep->listener);
 }
 
 static void

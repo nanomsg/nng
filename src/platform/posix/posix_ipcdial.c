@@ -41,12 +41,20 @@ ipc_dialer_close(void *arg)
 				c->dial_aio = NULL;
 				nni_aio_set_prov_data(aio, NULL);
 				nng_stream_close(&c->stream);
+				nng_stream_stop(&c->stream);
 				nng_stream_free(&c->stream);
 			}
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 	}
 	nni_mtx_unlock(&d->mtx);
+}
+
+static void
+ipc_dialer_stop(void *arg)
+{
+	nni_ipc_dialer *d = arg;
+	ipc_dialer_close(d);
 }
 
 static void
@@ -61,7 +69,7 @@ ipc_dialer_free(void *arg)
 {
 	ipc_dialer *d = arg;
 
-	ipc_dialer_close(d);
+	ipc_dialer_stop(d);
 	nni_atomic_set_bool(&d->fini, true);
 	nni_posix_ipc_dialer_rele(d);
 }
@@ -94,6 +102,7 @@ ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&d->mtx);
 
 	nni_aio_finish_error(aio, rv);
+	nng_stream_stop(&c->stream);
 	nng_stream_free(&c->stream);
 }
 
@@ -138,6 +147,7 @@ ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 
 	if (rv != 0) {
 		nng_stream_close(&c->stream);
+		nng_stream_stop(&c->stream);
 		nng_stream_free(&c->stream);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -236,6 +246,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 error:
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
+	nng_stream_stop(&c->stream);
 	nng_stream_free(&c->stream);
 	nni_aio_finish_error(aio, rv);
 }
@@ -319,6 +330,7 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->closed      = false;
 	d->sd.sd_free  = ipc_dialer_free;
 	d->sd.sd_close = ipc_dialer_close;
+	d->sd.sd_stop  = ipc_dialer_stop;
 	d->sd.sd_dial  = ipc_dialer_dial;
 	d->sd.sd_get   = ipc_dialer_get;
 	d->sd.sd_set   = ipc_dialer_set;

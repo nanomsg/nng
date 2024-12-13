@@ -183,6 +183,7 @@ wstran_pipe_stop(void *arg)
 
 	nni_aio_stop(&p->rxaio);
 	nni_aio_stop(&p->txaio);
+	nng_stream_stop(p->ws);
 }
 
 static int
@@ -214,9 +215,7 @@ wstran_pipe_close(void *arg)
 	nni_aio_close(&p->rxaio);
 	nni_aio_close(&p->txaio);
 
-	nni_mtx_lock(&p->mtx);
 	nng_stream_close(p->ws);
-	nni_mtx_unlock(&p->mtx);
 }
 
 static int
@@ -373,6 +372,7 @@ wstran_dialer_stop(void *arg)
 	ws_dialer *d = arg;
 
 	nni_aio_stop(&d->connaio);
+	nng_stream_dialer_stop(d->dialer);
 }
 
 static void
@@ -392,6 +392,7 @@ wstran_listener_stop(void *arg)
 	ws_listener *l = arg;
 
 	nni_aio_stop(&l->accaio);
+	nng_stream_listener_stop(l->listener);
 }
 
 static void
@@ -421,6 +422,7 @@ wstran_connect_cb(void *arg)
 	}
 	if ((uaio = nni_list_first(&d->aios)) == NULL) {
 		// The client stopped caring about this!
+		nng_stream_stop(ws);
 		nng_stream_free(ws);
 		nni_mtx_unlock(&d->mtx);
 		return;
@@ -430,6 +432,7 @@ wstran_connect_cb(void *arg)
 	if ((rv = nni_aio_result(caio)) != 0) {
 		nni_aio_finish_error(uaio, rv);
 	} else if ((rv = wstran_pipe_alloc(&p, ws)) != 0) {
+		nng_stream_stop(ws);
 		nng_stream_free(ws);
 		nni_aio_finish_error(uaio, rv);
 	} else {

@@ -57,6 +57,7 @@ test_tls_conn_refused(void)
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECONNREFUSED);
 
 	nng_aio_free(aio);
+	nng_stream_dialer_stop(dialer);
 	nng_stream_dialer_free(dialer);
 }
 
@@ -133,6 +134,10 @@ test_tls_large_message(void)
 
 	nng_free(buf1, size);
 	nng_free(buf2, size);
+	nng_stream_stop(s1);
+	nng_stream_stop(s2);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
 	nng_stream_free(s1);
 	nng_stream_free(s2);
 	nng_stream_dialer_free(d);
@@ -214,8 +219,10 @@ test_tls_ecdsa(void)
 	NUTS_PASS(nuts_stream_wait(t2));
 	NUTS_TRUE(memcmp(buf1, buf2, size) == 0);
 
-	nng_free(buf1, size);
-	nng_free(buf2, size);
+	nng_stream_stop(s1);
+	nng_stream_stop(s2);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
 	nng_stream_free(s1);
 	nng_stream_free(s2);
 	nng_stream_dialer_free(d);
@@ -224,6 +231,8 @@ test_tls_ecdsa(void)
 	nng_tls_config_free(c2);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
+	nng_free(buf1, size);
+	nng_free(buf2, size);
 }
 
 void
@@ -241,6 +250,7 @@ test_tls_garbled_cert(void)
 	              c1, nuts_garbled_crt, nuts_server_key, NULL),
 	    NNG_ECRYPTO);
 
+	nng_stream_listener_stop(l);
 	nng_stream_listener_free(l);
 	nng_tls_config_free(c1);
 }
@@ -318,8 +328,10 @@ test_tls_psk(void)
 	NUTS_PASS(nuts_stream_wait(t2));
 	NUTS_TRUE(memcmp(buf1, buf2, size) == 0);
 
-	nng_free(buf1, size);
-	nng_free(buf2, size);
+	nng_stream_stop(s1);
+	nng_stream_stop(s2);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
 	nng_stream_free(s1);
 	nng_stream_free(s2);
 	nng_stream_dialer_free(d);
@@ -328,6 +340,8 @@ test_tls_psk(void)
 	nng_tls_config_free(c2);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
+	nng_free(buf1, size);
+	nng_free(buf2, size);
 }
 
 void
@@ -408,8 +422,10 @@ test_tls_psk_server_identities(void)
 	NUTS_PASS(nuts_stream_wait(t2));
 	NUTS_TRUE(memcmp(buf1, buf2, size) == 0);
 
-	nng_free(buf1, size);
-	nng_free(buf2, size);
+	nng_stream_stop(s1);
+	nng_stream_stop(s2);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
 	nng_stream_free(s1);
 	nng_stream_free(s2);
 	nng_stream_dialer_free(d);
@@ -418,6 +434,8 @@ test_tls_psk_server_identities(void)
 	nng_tls_config_free(c2);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
+	nng_free(buf1, size);
+	nng_free(buf2, size);
 }
 
 void
@@ -495,8 +513,10 @@ test_tls_psk_bad_identity(void)
 	NUTS_ASSERT(nuts_stream_wait(t1) != 0);
 	NUTS_ASSERT(nuts_stream_wait(t2) != 0);
 
-	nng_free(buf1, size);
-	nng_free(buf2, size);
+	nng_stream_stop(s1);
+	nng_stream_stop(s2);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
 	nng_stream_free(s1);
 	nng_stream_free(s2);
 	nng_stream_dialer_free(d);
@@ -505,6 +525,8 @@ test_tls_psk_bad_identity(void)
 	nng_tls_config_free(c2);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
+	nng_free(buf1, size);
+	nng_free(buf2, size);
 }
 
 void
@@ -543,6 +565,7 @@ test_tls_psk_config_busy(void)
 	NUTS_FAIL(
 	    nng_tls_config_psk(c1, "identity2", key, sizeof(key)), NNG_EBUSY);
 
+	nng_stream_listener_stop(l);
 	nng_stream_listener_free(l);
 	nng_aio_free(aio);
 	nng_tls_config_free(c1);

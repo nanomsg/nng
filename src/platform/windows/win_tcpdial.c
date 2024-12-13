@@ -95,9 +95,16 @@ static nni_reap_list tcp_dialer_reap_list = {
 };
 
 void
-nni_tcp_dialer_fini(nni_tcp_dialer *d)
+nni_tcp_dialer_stop(nni_tcp_dialer *d)
 {
 	nni_tcp_dialer_close(d);
+	// TODO: wait for conn_io.olpd?
+}
+
+void
+nni_tcp_dialer_fini(nni_tcp_dialer *d)
+{
+	nni_tcp_dialer_stop(d);
 	nni_mtx_lock(&d->mtx);
 	if (!nni_list_empty(&d->aios)) {
 		nni_mtx_unlock(&d->mtx);
@@ -155,6 +162,8 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 	nni_mtx_unlock(&d->mtx);
 
 	if (rv != 0) {
+		nng_stream_close(&c->ops);
+		nng_stream_stop(&c->ops);
 		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 	} else {

@@ -200,16 +200,26 @@ sfd_close(void *arg)
 	nni_mtx_unlock(&c->mtx);
 }
 
+static void
+sfd_stop(void *arg)
+{
+	nni_sfd_conn *c = arg;
+	sfd_close(c);
+
+	// ideally this would *stop* without freeing the pfd
+	if (c->pfd != NULL) {
+		nni_posix_pfd_fini(c->pfd);
+		c->pfd = NULL;
+	}
+}
+
 // sfd_fini may block briefly waiting for the pollq thread.
 // To get that out of our context, we simply reap this.
 static void
 sfd_fini(void *arg)
 {
 	nni_sfd_conn *c = arg;
-	sfd_close(c);
-	if (c->pfd != NULL) {
-		nni_posix_pfd_fini(c->pfd);
-	}
+	sfd_stop(c);
 	nni_mtx_fini(&c->mtx);
 
 	NNI_FREE_STRUCT(c);
@@ -475,6 +485,7 @@ nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 
 	c->stream.s_free  = sfd_free;
 	c->stream.s_close = sfd_close;
+	c->stream.s_stop  = sfd_stop;
 	c->stream.s_recv  = sfd_recv;
 	c->stream.s_send  = sfd_send;
 	c->stream.s_get   = sfd_get;

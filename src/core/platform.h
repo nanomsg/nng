@@ -293,6 +293,7 @@ extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
 // Further operations on it should return NNG_ECLOSED.
 // Any in-progress connection will be aborted.
 extern void nni_tcp_dialer_close(nni_tcp_dialer *);
+extern void nni_tcp_dialer_stop(nni_tcp_dialer *);
 
 // nni_tcp_dial attempts to create an outgoing connection,
 // asynchronously, to the address in the aio. On success, the first (and only)
@@ -317,6 +318,10 @@ extern void nni_tcp_listener_fini(nni_tcp_listener *);
 // nni_tcp_listener_close closes the listener.  This will unbind
 // any bound socket, and further operations will result in NNG_ECLOSED.
 extern void nni_tcp_listener_close(nni_tcp_listener *);
+
+// nni_tcp_listener_stop is close + waits for any operations to stop,
+// so there won't be any further accepts after this.
+extern void nni_tcp_listener_stop(nni_tcp_listener *);
 
 // nni_tcp_listener_listen creates the socket in listening mode, bound
 // to the specified address.

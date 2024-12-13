@@ -178,6 +178,13 @@ static nni_reap_list tcp_listener_reap_list = {
 };
 
 void
+nni_tcp_listener_stop(nni_tcp_listener *l)
+{
+	nni_tcp_listener_close(l);
+	// TODO: maybe wait for l->l_accept_io.olpd to finish?
+}
+
+void
 nni_tcp_listener_fini(nni_tcp_listener *l)
 {
 	nni_tcp_listener_close(l);

@@ -116,7 +116,17 @@ static struct {
 void
 nng_stream_close(nng_stream *s)
 {
-	s->s_close(s);
+	if (s != NULL) {
+		s->s_close(s);
+	}
+}
+
+void
+nng_stream_stop(nng_stream *s)
+{
+	if (s != NULL) {
+		s->s_stop(s);
+	}
 }
 
 void
@@ -149,7 +159,17 @@ nni_stream_get(
 void
 nng_stream_dialer_close(nng_stream_dialer *d)
 {
-	d->sd_close(d);
+	if (d != NULL) {
+		d->sd_close(d);
+	}
+}
+
+void
+nng_stream_dialer_stop(nng_stream_dialer *d)
+{
+	if (d != NULL) {
+		d->sd_stop(d);
+	}
 }
 
 void
@@ -226,8 +246,19 @@ nni_stream_dialer_set_tls(nng_stream_dialer *d, nng_tls_config *cfg)
 void
 nng_stream_listener_close(nng_stream_listener *l)
 {
-	l->sl_close(l);
+	if (l != NULL) {
+		l->sl_close(l);
+	}
 }
+
+void
+nng_stream_listener_stop(nng_stream_listener *l)
+{
+	if (l != NULL) {
+		l->sl_stop(l);
+	}
+}
+
 void
 nng_stream_listener_free(nng_stream_listener *l)
 {

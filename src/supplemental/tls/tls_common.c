@@ -126,6 +126,14 @@ tls_dialer_free(void *arg)
 	}
 }
 
+static void
+tls_dialer_stop(void *arg)
+{
+	tls_dialer *d = arg;
+
+	nng_stream_dialer_stop(d->d);
+}
+
 // For dialing, we need to have our own completion callback, instead of
 // the user's completion callback.
 
@@ -281,6 +289,7 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 
 	d->ops.sd_close   = tls_dialer_close;
 	d->ops.sd_free    = tls_dialer_free;
+	d->ops.sd_stop    = tls_dialer_stop;
 	d->ops.sd_dial    = tls_dialer_dial;
 	d->ops.sd_get     = tls_dialer_get;
 	d->ops.sd_set     = tls_dialer_set;
@@ -301,6 +310,13 @@ typedef struct {
 
 static void
 tls_listener_close(void *arg)
+{
+	tls_listener *l = arg;
+	nng_stream_listener_close(l->l);
+}
+
+static void
+tls_listener_stop(void *arg)
 {
 	tls_listener *l = arg;
 	nng_stream_listener_close(l->l);
@@ -436,6 +452,7 @@ nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	}
 	l->ops.sl_free    = tls_listener_free;
 	l->ops.sl_close   = tls_listener_close;
+	l->ops.sl_stop    = tls_listener_stop;
 	l->ops.sl_accept  = tls_listener_accept;
 	l->ops.sl_listen  = tls_listener_listen;
 	l->ops.sl_get     = tls_listener_get;
@@ -524,6 +541,18 @@ tls_close(void *arg)
 	tls_tcp_error(conn, NNG_ECLOSED);
 	nni_mtx_unlock(&conn->lock);
 	nng_stream_close(conn->tcp);
+}
+
+static void
+tls_stop(void *arg)
+{
+	tls_conn *conn = arg;
+
+	tls_close(conn);
+	nng_stream_stop(conn->tcp);
+	nni_aio_stop(&conn->conn_aio);
+	nni_aio_stop(&conn->tcp_send);
+	nni_aio_stop(&conn->tcp_recv);
 }
 
 static int
@@ -624,6 +653,7 @@ tls_alloc(tls_conn **conn_p, nng_tls_config *cfg, nng_aio *user_aio)
 
 	conn->stream.s_close = tls_close;
 	conn->stream.s_free  = tls_free;
+	conn->stream.s_stop  = tls_stop;
 	conn->stream.s_send  = tls_send;
 	conn->stream.s_recv  = tls_recv;
 	conn->stream.s_get   = tls_get;
@@ -638,14 +668,7 @@ tls_reap(void *arg)
 {
 	tls_conn *conn = arg;
 
-	// Shut it all down first.  We should be freed.
-	if (conn->tcp != NULL) {
-		nng_stream_close(conn->tcp);
-	}
-	nni_aio_stop(&conn->conn_aio);
-	nni_aio_stop(&conn->tcp_send);
-	nni_aio_stop(&conn->tcp_recv);
-
+	tls_stop(conn);
 	conn->ops.fini((void *) (conn + 1));
 	nni_aio_fini(&conn->conn_aio);
 	nni_aio_fini(&conn->tcp_send);

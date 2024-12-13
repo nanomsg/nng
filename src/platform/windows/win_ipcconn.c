@@ -352,7 +352,7 @@ ipc_close(void *arg)
 }
 
 static void
-ipc_free(void *arg)
+ipc_stop(void *arg)
 {
 	ipc_conn *c = arg;
 	nni_aio  *aio;
@@ -381,6 +381,14 @@ ipc_free(void *arg)
 		DisconnectNamedPipe(f);
 		CloseHandle(f);
 	}
+}
+
+static void
+ipc_free(void *arg)
+{
+	ipc_conn *c = arg;
+
+	ipc_stop(c);
 
 	nni_cv_fini(&c->cv);
 	nni_mtx_fini(&c->mtx);
@@ -460,6 +468,7 @@ nni_win_ipc_init(
 	c->sa             = *sa;
 	c->stream.s_free  = ipc_free;
 	c->stream.s_close = ipc_close;
+	c->stream.s_stop  = ipc_stop;
 	c->stream.s_send  = ipc_send;
 	c->stream.s_recv  = ipc_recv;
 	c->stream.s_get   = ipc_get;

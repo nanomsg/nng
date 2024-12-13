@@ -55,7 +55,7 @@ int
 client(const char *url)
 {
 	nng_stream_dialer *dialer;
-	nng_aio *          aio;
+	nng_aio           *aio;
 	nng_iov            iov;
 	int                rv;
 
@@ -102,6 +102,11 @@ client(const char *url)
 
 	// Send ELCOSE to send/recv associated wit this stream
 	free(iov.iov_buf);
+
+	// stop everything before freeing
+	nng_stream_stop(c1);
+	nng_stream_dialer_stop(dialer);
+
 	nng_stream_free(c1);
 	nng_aio_free(aio);
 	nng_stream_dialer_free(dialer);

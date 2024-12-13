@@ -77,9 +77,15 @@ tcp_dialer_fini(nni_tcp_dialer *d)
 }
 
 void
-nni_tcp_dialer_fini(nni_tcp_dialer *d)
+nni_tcp_dialer_stop(nni_tcp_dialer *d)
 {
 	nni_tcp_dialer_close(d);
+}
+
+void
+nni_tcp_dialer_fini(nni_tcp_dialer *d)
+{
+	nni_tcp_dialer_stop(d);
 	nni_atomic_set_bool(&d->fini, true);
 	nni_posix_tcp_dialer_rele(d);
 }
@@ -112,6 +118,8 @@ tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&d->mtx);
 
 	nni_aio_finish_error(aio, rv);
+	nng_stream_close(&c->stream);
+	nng_stream_stop(&c->stream);
 	nng_stream_free(&c->stream);
 }
 
@@ -263,6 +271,8 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 error:
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
+	nng_stream_close(&c->stream);
+	nng_stream_stop(&c->stream);
 	nng_stream_free(&c->stream);
 	nni_aio_finish_error(aio, rv);
 }

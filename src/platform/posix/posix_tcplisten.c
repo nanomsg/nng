@@ -150,6 +150,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 
 		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
 			close(newfd);
+			nng_stream_stop(&c->stream);
 			nng_stream_free(&c->stream);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
@@ -280,18 +281,25 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 }
 
 void
-nni_tcp_listener_fini(nni_tcp_listener *l)
+nni_tcp_listener_stop(nni_tcp_listener *l)
 {
 	nni_posix_pfd *pfd;
 
 	nni_mtx_lock(&l->mtx);
 	tcp_listener_doclose(l);
-	pfd = l->pfd;
+	pfd    = l->pfd;
+	l->pfd = NULL;
 	nni_mtx_unlock(&l->mtx);
 
 	if (pfd != NULL) {
 		nni_posix_pfd_fini(pfd);
 	}
+}
+
+void
+nni_tcp_listener_fini(nni_tcp_listener *l)
+{
+	nni_tcp_listener_stop(l);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }

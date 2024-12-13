@@ -116,8 +116,10 @@ test_tcp_stream(void)
 	NUTS_TRUE(sa2.s_in.sa_port == sa.s_in.sa_port);
 
 	nng_stream_listener_close(l);
-	nng_stream_listener_free(l);
 	nng_stream_dialer_close(d);
+	nng_stream_listener_stop(l);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_free(l);
 	nng_stream_dialer_free(d);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
@@ -125,8 +127,10 @@ test_tcp_stream(void)
 	nng_aio_free(laio);
 	nng_aio_free(maio);
 	nng_stream_close(c1);
-	nng_stream_free(c1);
 	nng_stream_close(c2);
+	nng_stream_stop(c1);
+	nng_stream_stop(c2);
+	nng_stream_free(c1);
 	nng_stream_free(c2);
 }
 

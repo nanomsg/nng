@@ -1137,6 +1137,7 @@ typedef struct nng_stream_listener nng_stream_listener;
 
 NNG_DECL void nng_stream_free(nng_stream *);
 NNG_DECL void nng_stream_close(nng_stream *);
+NNG_DECL void nng_stream_stop(nng_stream *);
 NNG_DECL void nng_stream_send(nng_stream *, nng_aio *);
 NNG_DECL void nng_stream_recv(nng_stream *, nng_aio *);
 NNG_DECL int  nng_stream_get_bool(nng_stream *, const char *, bool *);
@@ -1152,6 +1153,7 @@ NNG_DECL int nng_stream_dialer_alloc_url(
     nng_stream_dialer **, const nng_url *);
 NNG_DECL void nng_stream_dialer_free(nng_stream_dialer *);
 NNG_DECL void nng_stream_dialer_close(nng_stream_dialer *);
+NNG_DECL void nng_stream_dialer_stop(nng_stream_dialer *);
 NNG_DECL void nng_stream_dialer_dial(nng_stream_dialer *, nng_aio *);
 NNG_DECL int  nng_stream_dialer_get_bool(
      nng_stream_dialer *, const char *, bool *);
@@ -1193,6 +1195,7 @@ NNG_DECL int nng_stream_listener_alloc_url(
     nng_stream_listener **, const nng_url *);
 NNG_DECL void nng_stream_listener_free(nng_stream_listener *);
 NNG_DECL void nng_stream_listener_close(nng_stream_listener *);
+NNG_DECL void nng_stream_listener_stop(nng_stream_listener *);
 NNG_DECL int  nng_stream_listener_listen(nng_stream_listener *);
 NNG_DECL void nng_stream_listener_accept(nng_stream_listener *, nng_aio *);
 NNG_DECL int  nng_stream_listener_get_bool(

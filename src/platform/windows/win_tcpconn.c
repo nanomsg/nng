@@ -180,6 +180,7 @@ tcp_send_start(nni_tcp_conn *c)
 			return;
 		}
 	}
+	nni_cv_wake(&c->cv);
 }
 
 static void
@@ -265,17 +266,6 @@ tcp_close(void *arg)
 			shutdown(s, SD_BOTH);
 			closesocket(s);
 		}
-	}
-	now = nni_clock();
-	// wait up to a maximum of 10 seconds before assuming something is
-	// badly amiss. from what we can tell, this doesn't happen, and we do
-	// see the timer expire properly, but this safeguard can prevent a
-	// hang.
-	while ((c->recving || c->sending) &&
-	    ((nni_clock() - now) < (NNI_SECOND * 10))) {
-		nni_mtx_unlock(&c->mtx);
-		nni_msleep(1);
-		nni_mtx_lock(&c->mtx);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -369,21 +359,28 @@ tcp_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 }
 
 static void
-tcp_free(void *arg)
+tcp_stop(void *arg)
 {
 	nni_tcp_conn *c = arg;
 	tcp_close(c);
 
 	nni_mtx_lock(&c->mtx);
-	while ((!nni_list_empty(&c->recv_aios)) ||
+	while (c->recving || c->sending || (!nni_list_empty(&c->recv_aios)) ||
 	    (!nni_list_empty(&c->send_aios))) {
 		nni_cv_wait(&c->cv);
 	}
 	nni_mtx_unlock(&c->mtx);
-
 	if (c->s != INVALID_SOCKET) {
 		closesocket(c->s);
 	}
+}
+
+static void
+tcp_free(void *arg)
+{
+	nni_tcp_conn *c = arg;
+	tcp_stop(c);
+
 	nni_cv_fini(&c->cv);
 	nni_mtx_fini(&c->mtx);
 	NNI_FREE_STRUCT(c);
@@ -410,6 +407,7 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
 	nni_aio_list_init(&c->send_aios);
 	c->conn_aio    = NULL;
 	c->ops.s_close = tcp_close;
+	c->ops.s_stop  = tcp_stop;
 	c->ops.s_free  = tcp_free;
 	c->ops.s_send  = tcp_send;
 	c->ops.s_recv  = tcp_recv;

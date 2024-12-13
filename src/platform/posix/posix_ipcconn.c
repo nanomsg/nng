@@ -386,15 +386,29 @@ nni_posix_ipc_start(nni_ipc_conn *c)
 }
 
 static void
+ipc_stop(void *arg)
+{
+	ipc_conn      *c = arg;
+	nni_posix_pfd *pfd;
+
+	ipc_close(c);
+	nni_mtx_lock(&c->mtx);
+	pfd    = c->pfd;
+	c->pfd = NULL;
+	nni_mtx_unlock(&c->mtx);
+
+	if (pfd != NULL) {
+		nni_posix_pfd_fini(pfd);
+	}
+}
+
+static void
 ipc_reap(void *arg)
 {
 	ipc_conn *c = arg;
-	ipc_close(c);
-	if (c->pfd != NULL) {
-		nni_posix_pfd_fini(c->pfd);
-	}
-	nni_mtx_fini(&c->mtx);
+	ipc_stop(c);
 
+	nni_mtx_fini(&c->mtx);
 	if (c->dialer != NULL) {
 		nni_posix_ipc_dialer_rele(c->dialer);
 	}
@@ -470,6 +484,7 @@ nni_posix_ipc_alloc(nni_ipc_conn **cp, nni_sockaddr *sa, nni_ipc_dialer *d)
 	c->dialer         = d;
 	c->stream.s_free  = ipc_free;
 	c->stream.s_close = ipc_close;
+	c->stream.s_stop  = ipc_stop;
 	c->stream.s_send  = ipc_send;
 	c->stream.s_recv  = ipc_recv;
 	c->stream.s_get   = ipc_get;

@@ -10,6 +10,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "platform/posix/posix_pollq.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -199,16 +200,30 @@ tcp_close(void *arg)
 	nni_mtx_unlock(&c->mtx);
 }
 
+static void
+tcp_stop(void *arg)
+{
+	nni_tcp_conn  *c = arg;
+	nni_posix_pfd *pfd;
+	tcp_close(c);
+
+	nni_mtx_lock(&c->mtx);
+	pfd    = c->pfd;
+	c->pfd = NULL;
+	nni_mtx_unlock(&c->mtx);
+
+	if (pfd != NULL) {
+		nni_posix_pfd_fini(pfd);
+	}
+}
+
 // tcp_fini may block briefly waiting for the pollq thread.
 // To get that out of our context, we simply reap this.
 static void
 tcp_fini(void *arg)
 {
 	nni_tcp_conn *c = arg;
-	tcp_close(c);
-	if (c->pfd != NULL) {
-		nni_posix_pfd_fini(c->pfd);
-	}
+	tcp_stop(c);
 	nni_mtx_fini(&c->mtx);
 
 	if (c->dialer != NULL) {
@@ -221,6 +236,7 @@ static nni_reap_list tcp_reap_list = {
 	.rl_offset = offsetof(nni_tcp_conn, reap),
 	.rl_func   = tcp_fini,
 };
+
 static void
 tcp_free(void *arg)
 {
@@ -454,6 +470,7 @@ nni_posix_tcp_alloc(nni_tcp_conn **cp, nni_tcp_dialer *d)
 	nni_aio_list_init(&c->writeq);
 
 	c->stream.s_free  = tcp_free;
+	c->stream.s_stop  = tcp_stop;
 	c->stream.s_close = tcp_close;
 	c->stream.s_recv  = tcp_recv;
 	c->stream.s_send  = tcp_send;

@@ -107,9 +107,13 @@ test_websocket_wildcard(void)
 	NUTS_TRUE(memcmp(buf1, buf2, 5) == 0);
 
 	nng_stream_close(c1);
-	nng_stream_free(c1);
 	nng_stream_close(c2);
+	nng_stream_stop(c1);
+	nng_stream_stop(c2);
+	nng_stream_free(c1);
 	nng_stream_free(c2);
+	nng_stream_listener_stop(l);
+	nng_stream_dialer_stop(d);
 	nng_aio_free(daio);
 	nng_aio_free(laio);
 	nng_aio_free(aio1);
@@ -206,9 +210,13 @@ test_websocket_conn_props(void)
 	nng_strfree(str);
 
 	nng_stream_close(c1);
-	nng_stream_free(c1);
 	nng_stream_close(c2);
+	nng_stream_stop(c1);
+	nng_stream_stop(c2);
+	nng_stream_free(c1);
 	nng_stream_free(c2);
+	nng_stream_listener_stop(l);
+	nng_stream_dialer_stop(d);
 	nng_aio_free(daio);
 	nng_aio_free(laio);
 	nng_stream_listener_free(l);
@@ -495,6 +503,7 @@ test_websocket_fragmentation(void)
 
 	nng_aio_free(caio);
 	nng_stream_close(c);
+	nng_stream_stop(c);
 	nng_stream_free(c);
 
 	nng_aio_free(state.aio);
@@ -502,6 +511,8 @@ test_websocket_fragmentation(void)
 	nng_cv_free(state.cv);
 	nng_mtx_free(state.lock);
 
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
 	nng_free(send_buf, state.total);
 	nng_free(recv_buf, state.total);
 	nng_aio_free(daio);

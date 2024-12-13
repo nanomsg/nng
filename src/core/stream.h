@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -43,6 +43,7 @@ extern int nni_stream_listener_get_tls(
 struct nng_stream {
 	void (*s_free)(void *);
 	void (*s_close)(void *);
+	void (*s_stop)(void *);
 	void (*s_recv)(void *, nng_aio *);
 	void (*s_send)(void *, nng_aio *);
 	int (*s_get)(void *, const char *, void *, size_t *, nni_type);
@@ -53,6 +54,7 @@ struct nng_stream {
 struct nng_stream_dialer {
 	void (*sd_free)(void *);
 	void (*sd_close)(void *);
+	void (*sd_stop)(void *);
 	void (*sd_dial)(void *, nng_aio *);
 	int (*sd_get)(void *, const char *, void *, size_t *, nni_type);
 	int (*sd_set)(void *, const char *, const void *, size_t, nni_type);
@@ -65,6 +67,7 @@ struct nng_stream_dialer {
 struct nng_stream_listener {
 	void (*sl_free)(void *);
 	void (*sl_close)(void *);
+	void (*sl_stop)(void *);
 	int (*sl_listen)(void *);
 	void (*sl_accept)(void *, nng_aio *);
 	int (*sl_get)(void *, const char *, void *, size_t *, nni_type);

@@ -895,6 +895,7 @@ http_server_fini(nni_http_server *s)
 	http_error       *epage;
 
 	nni_aio_stop(s->accaio);
+	nng_stream_listener_stop(s->listener);
 
 	nni_mtx_lock(&s->mtx);
 	NNI_ASSERT(nni_list_empty(&s->conns));

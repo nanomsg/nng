@@ -657,6 +657,8 @@ tlstran_ep_stop(void *arg)
 
 	nni_aio_stop(ep->timeaio);
 	nni_aio_stop(ep->connaio);
+	nng_stream_dialer_stop(ep->dialer);
+	nng_stream_listener_stop(ep->listener);
 }
 
 static void

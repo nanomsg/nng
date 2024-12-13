@@ -73,6 +73,23 @@ ipc_listener_close(void *arg)
 }
 
 static void
+ipc_listener_stop(void *arg)
+{
+	ipc_listener  *l = arg;
+	nni_posix_pfd *pfd;
+
+	nni_mtx_lock(&l->mtx);
+	ipc_listener_doclose(l);
+	pfd    = l->pfd;
+	l->pfd = NULL;
+	nni_mtx_unlock(&l->mtx);
+
+	if (pfd != NULL) {
+		nni_posix_pfd_fini(pfd);
+	}
+}
+
+static void
 ipc_listener_doaccept(ipc_listener *l)
 {
 	nni_aio *aio;
@@ -132,6 +149,7 @@ ipc_listener_doaccept(ipc_listener *l)
 		}
 
 		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
+			nng_stream_stop(&c->stream);
 			nng_stream_free(&c->stream);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
@@ -406,17 +424,10 @@ ipc_listener_listen(void *arg)
 static void
 ipc_listener_free(void *arg)
 {
-	ipc_listener  *l = arg;
-	nni_posix_pfd *pfd;
+	ipc_listener *l = arg;
 
-	nni_mtx_lock(&l->mtx);
-	ipc_listener_doclose(l);
-	pfd = l->pfd;
-	nni_mtx_unlock(&l->mtx);
+	ipc_listener_stop(l);
 
-	if (pfd != NULL) {
-		nni_posix_pfd_fini(pfd);
-	}
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
@@ -507,6 +518,7 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	l->perms        = 0;
 	l->sl.sl_free   = ipc_listener_free;
 	l->sl.sl_close  = ipc_listener_close;
+	l->sl.sl_stop   = ipc_listener_stop;
 	l->sl.sl_listen = ipc_listener_listen;
 	l->sl.sl_accept = ipc_listener_accept;
 	l->sl.sl_get    = ipc_listener_get;

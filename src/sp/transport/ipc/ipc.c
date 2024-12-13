@@ -111,6 +111,7 @@ ipc_pipe_stop(void *arg)
 	nni_aio_stop(&p->rx_aio);
 	nni_aio_stop(&p->tx_aio);
 	nni_aio_stop(&p->neg_aio);
+	nng_stream_stop(p->conn);
 	nni_mtx_lock(&ep->mtx);
 	nni_list_node_remove(&p->node);
 	nni_mtx_unlock(&ep->mtx);
@@ -655,6 +656,8 @@ ipc_ep_stop(void *arg)
 
 	nni_aio_stop(&ep->time_aio);
 	nni_aio_stop(&ep->conn_aio);
+	nng_stream_dialer_stop(ep->dialer);
+	nng_stream_listener_stop(ep->listener);
 }
 
 static void

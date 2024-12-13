@@ -89,6 +89,8 @@ http_dial_cb(void *arg)
 void
 nni_http_client_fini(nni_http_client *c)
 {
+	nni_aio_stop(c->aio);
+	nng_stream_dialer_stop(c->dialer);
 	nni_aio_free(c->aio);
 	nng_stream_dialer_free(c->dialer);
 	nni_mtx_fini(&c->mtx);

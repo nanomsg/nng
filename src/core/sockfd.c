@@ -63,6 +63,12 @@ sfd_listener_close(void *arg)
 	nni_mtx_unlock(&l->mtx);
 }
 
+static void
+sfd_listener_stop(void *arg)
+{
+	sfd_listener_close(arg);
+}
+
 static int
 sfd_listener_listen(void *arg)
 {
@@ -222,6 +228,7 @@ nni_sfd_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 
 	l->ops.sl_free   = sfd_listener_free;
 	l->ops.sl_close  = sfd_listener_close;
+	l->ops.sl_stop   = sfd_listener_stop;
 	l->ops.sl_listen = sfd_listener_listen;
 	l->ops.sl_accept = sfd_listener_accept;
 	l->ops.sl_get    = sfd_listener_get;

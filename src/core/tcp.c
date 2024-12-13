@@ -104,6 +104,8 @@ tcp_dial_con_cb(void *arg)
 	if ((d->closed) || ((aio = nni_list_first(&d->conaios)) == NULL)) {
 		if (rv == 0) {
 			// Make sure we discard the underlying connection.
+			nng_stream_close(nni_aio_get_output(d->conaio, 0));
+			nng_stream_stop(nni_aio_get_output(d->conaio, 0));
 			nng_stream_free(nni_aio_get_output(d->conaio, 0));
 			nni_aio_set_output(d->conaio, 0, NULL);
 		}
@@ -127,14 +129,26 @@ tcp_dialer_close(void *arg)
 {
 	tcp_dialer *d = arg;
 	nni_aio    *aio;
-	nni_mtx_lock(&d->mtx);
-	d->closed = true;
-	while ((aio = nni_list_first(&d->conaios)) != NULL) {
-		nni_list_remove(&d->conaios, aio);
-		nni_aio_finish_error(aio, NNG_ECLOSED);
+
+	if (d != NULL) {
+		nni_mtx_lock(&d->mtx);
+		d->closed = true;
+		while ((aio = nni_list_first(&d->conaios)) != NULL) {
+			nni_list_remove(&d->conaios, aio);
+			nni_aio_finish_error(aio, NNG_ECLOSED);
+		}
+		nni_tcp_dialer_close(d->d);
+		nni_mtx_unlock(&d->mtx);
 	}
-	nni_tcp_dialer_close(d->d);
-	nni_mtx_unlock(&d->mtx);
+}
+
+static void
+tcp_dialer_stop(void *arg)
+{
+	tcp_dialer *d = arg;
+	if (d != NULL) {
+		nni_tcp_dialer_stop(d->d);
+	}
 }
 
 static void
@@ -222,6 +236,7 @@ tcp_dialer_alloc(tcp_dialer **dp)
 
 	d->ops.sd_close = tcp_dialer_close;
 	d->ops.sd_free  = tcp_dialer_free;
+	d->ops.sd_stop  = tcp_dialer_stop;
 	d->ops.sd_dial  = tcp_dialer_dial;
 	d->ops.sd_get   = tcp_dialer_get;
 	d->ops.sd_set   = tcp_dialer_set;
@@ -273,6 +288,13 @@ tcp_listener_close(void *arg)
 {
 	tcp_listener *l = arg;
 	nni_tcp_listener_close(l->l);
+}
+
+static void
+tcp_listener_stop(void *arg)
+{
+	tcp_listener *l = arg;
+	nni_tcp_listener_stop(l->l);
 }
 
 static void
@@ -372,6 +394,7 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 
 	l->ops.sl_free   = tcp_listener_free;
 	l->ops.sl_close  = tcp_listener_close;
+	l->ops.sl_stop   = tcp_listener_stop;
 	l->ops.sl_listen = tcp_listener_listen;
 	l->ops.sl_accept = tcp_listener_accept;
 	l->ops.sl_get    = tcp_listener_get;
