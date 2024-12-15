@@ -75,7 +75,7 @@ struct nng_http_server {
 	nni_mtx              mtx;
 	bool                 closed;
 	bool                 fini; // if nni_http_server_fini was called
-	nni_aio             *accaio;
+	nni_aio              accaio;
 	nng_stream_listener *listener;
 	uint32_t             port; // native order
 	char                *hostname;
@@ -851,7 +851,7 @@ static void
 http_server_acccb(void *arg)
 {
 	nni_http_server *s   = arg;
-	nni_aio         *aio = s->accaio;
+	nni_aio         *aio = &s->accaio;
 	nng_stream      *stream;
 	http_sconn      *sc;
 	int              rv;
@@ -860,7 +860,7 @@ http_server_acccb(void *arg)
 	if ((rv = nni_aio_result(aio)) != 0) {
 		if (!s->closed) {
 			// try again?
-			nng_stream_listener_accept(s->listener, s->accaio);
+			nng_stream_listener_accept(s->listener, aio);
 		}
 		nni_mtx_unlock(&s->mtx);
 		return;
@@ -875,7 +875,7 @@ http_server_acccb(void *arg)
 	if (http_sconn_init(&sc, stream) != 0) {
 		// The stream structure is already cleaned up.
 		// Start another accept attempt.
-		nng_stream_listener_accept(s->listener, s->accaio);
+		nng_stream_listener_accept(s->listener, aio);
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
@@ -884,7 +884,7 @@ http_server_acccb(void *arg)
 
 	sc->handler = NULL;
 	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
-	nng_stream_listener_accept(s->listener, s->accaio);
+	nng_stream_listener_accept(s->listener, aio);
 	nni_mtx_unlock(&s->mtx);
 }
 
@@ -894,7 +894,7 @@ http_server_fini(nni_http_server *s)
 	nni_http_handler *h;
 	http_error       *epage;
 
-	nni_aio_stop(s->accaio);
+	nni_aio_stop(&s->accaio);
 	nng_stream_listener_stop(s->listener);
 
 	nni_mtx_lock(&s->mtx);
@@ -914,7 +914,7 @@ http_server_fini(nni_http_server *s)
 	nni_mtx_unlock(&s->errors_mtx);
 	nni_mtx_fini(&s->errors_mtx);
 
-	nni_aio_free(s->accaio);
+	nni_aio_fini(&s->accaio);
 	nni_mtx_fini(&s->mtx);
 	nni_strfree(s->hostname);
 	NNI_FREE_STRUCT(s);
@@ -946,10 +946,7 @@ http_server_init(nni_http_server **serverp, const nng_url *url)
 	nni_mtx_init(&s->errors_mtx);
 	NNI_LIST_INIT(&s->errors, http_error, node);
 
-	if ((rv = nni_aio_alloc(&s->accaio, http_server_acccb, s)) != 0) {
-		http_server_fini(s);
-		return (rv);
-	}
+	nni_aio_init(&s->accaio, http_server_acccb, s);
 
 	s->port = url->u_port;
 
@@ -1011,7 +1008,7 @@ http_server_start(nni_http_server *s)
 		    s->listener, NNG_OPT_TCP_BOUND_PORT, &port);
 		s->port = (uint32_t) port;
 	}
-	nng_stream_listener_accept(s->listener, s->accaio);
+	nng_stream_listener_accept(s->listener, &s->accaio);
 	return (0);
 }
 
@@ -1039,7 +1036,7 @@ http_server_close(nni_http_server *s)
 	}
 	s->closed = true;
 
-	nni_aio_close(s->accaio);
+	nni_aio_close(&s->accaio);
 
 	// Close the TCP endpoint that is listening.
 	if (s->listener) {
@@ -1072,6 +1069,8 @@ nni_http_server_stop(nni_http_server *s)
 		http_server_stop(s);
 	}
 	nni_mtx_unlock(&s->mtx);
+	nni_aio_stop(&s->accaio);
+	nng_stream_listener_stop(s->listener);
 }
 
 void
