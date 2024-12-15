@@ -50,10 +50,10 @@ typedef struct http_sconn {
 	nni_http_handler *release; // set if we dispatched handler
 	bool              close;
 	bool              finished;
-	nni_aio          *cbaio;
-	nni_aio          *rxaio;
-	nni_aio          *txaio;
-	nni_aio          *txdataio;
+	nni_aio           cbaio;
+	nni_aio           rxaio;
+	nni_aio           txaio;
+	nni_aio           txdataio;
 	nni_reap_node     reap;
 	nni_atomic_flag   closed;
 } http_sconn;
@@ -281,20 +281,20 @@ http_sc_reap(void *arg)
 	nni_http_server *s  = sc->server;
 	NNI_ASSERT(!sc->finished);
 	sc->finished = true;
-	nni_aio_stop(sc->rxaio);
-	nni_aio_stop(sc->txaio);
-	nni_aio_stop(sc->txdataio);
-	nni_aio_stop(sc->cbaio);
+	nni_aio_stop(&sc->rxaio);
+	nni_aio_stop(&sc->txaio);
+	nni_aio_stop(&sc->txdataio);
+	nni_aio_stop(&sc->cbaio);
 
 	if (sc->conn != NULL) {
 		nni_http_conn_fini(sc->conn);
 	}
 	nni_http_req_free(sc->req);
 	nni_http_res_free(sc->res);
-	nni_aio_free(sc->rxaio);
-	nni_aio_free(sc->txaio);
-	nni_aio_free(sc->txdataio);
-	nni_aio_free(sc->cbaio);
+	nni_aio_fini(&sc->rxaio);
+	nni_aio_fini(&sc->txaio);
+	nni_aio_fini(&sc->txdataio);
+	nni_aio_fini(&sc->cbaio);
 
 	// Now it is safe to release our reference on the server.
 	nni_mtx_lock(&s->mtx);
@@ -319,10 +319,10 @@ http_sconn_close(http_sconn *sc)
 	}
 	NNI_ASSERT(!sc->finished);
 
-	nni_aio_close(sc->rxaio);
-	nni_aio_close(sc->txaio);
-	nni_aio_close(sc->txdataio);
-	nni_aio_close(sc->cbaio);
+	nni_aio_close(&sc->rxaio);
+	nni_aio_close(&sc->txaio);
+	nni_aio_close(&sc->txdataio);
+	nni_aio_close(&sc->cbaio);
 
 	if ((conn = sc->conn) != NULL) {
 		nni_http_conn_close(conn);
@@ -334,7 +334,7 @@ static void
 http_sconn_txdatdone(void *arg)
 {
 	http_sconn *sc  = arg;
-	nni_aio    *aio = sc->txdataio;
+	nni_aio    *aio = &sc->txdataio;
 
 	if (nni_aio_result(aio) != 0) {
 		http_sconn_close(sc);
@@ -351,14 +351,14 @@ http_sconn_txdatdone(void *arg)
 
 	sc->handler = NULL;
 	nni_http_req_reset(sc->req);
-	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
+	nni_http_read_req(sc->conn, sc->req, &sc->rxaio);
 }
 
 static void
 http_sconn_txdone(void *arg)
 {
 	http_sconn *sc  = arg;
-	nni_aio    *aio = sc->txaio;
+	nni_aio    *aio = &sc->txaio;
 
 	if (nni_aio_result(aio) != 0) {
 		http_sconn_close(sc);
@@ -374,7 +374,7 @@ http_sconn_txdone(void *arg)
 	sc->res     = NULL;
 	sc->handler = NULL;
 	nni_http_req_reset(sc->req);
-	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
+	nni_http_read_req(sc->conn, sc->req, &sc->rxaio);
 }
 
 static char
@@ -478,7 +478,7 @@ http_sconn_error(http_sconn *sc, uint16_t err)
 		}
 	}
 	sc->res = res;
-	nni_http_write_res(sc->conn, res, sc->txaio);
+	nni_http_write_res(sc->conn, res, &sc->txaio);
 }
 
 int
@@ -562,7 +562,7 @@ http_sconn_rxdone(void *arg)
 {
 	http_sconn       *sc  = arg;
 	nni_http_server  *s   = sc->server;
-	nni_aio          *aio = sc->rxaio;
+	nni_aio          *aio = &sc->rxaio;
 	int               rv;
 	nni_http_handler *h    = NULL;
 	nni_http_handler *head = NULL;
@@ -720,7 +720,7 @@ http_sconn_rxdone(void *arg)
 			nng_http_req_get_data(req, &iov.iov_buf, &iov.iov_len);
 			sc->handler = h;
 			nni_mtx_unlock(&s->mtx);
-			nni_aio_set_iov(sc->rxaio, 1, &iov);
+			nni_aio_set_iov(&sc->rxaio, 1, &iov);
 			nni_http_read_full(sc->conn, aio);
 			return;
 		}
@@ -729,29 +729,29 @@ http_sconn_rxdone(void *arg)
 finish:
 	sc->release = h;
 	sc->handler = NULL;
-	nni_aio_set_input(sc->cbaio, 0, sc->req);
-	nni_aio_set_input(sc->cbaio, 1, h);
-	nni_aio_set_input(sc->cbaio, 2, sc->conn);
+	nni_aio_set_input(&sc->cbaio, 0, sc->req);
+	nni_aio_set_input(&sc->cbaio, 1, h);
+	nni_aio_set_input(&sc->cbaio, 2, sc->conn);
 
 	// Set a reference -- this because the callback may be running
 	// asynchronously even after it gets removed from the server.
 	nni_atomic_inc(&h->ref);
 
 	// Documented that we call this on behalf of the callback.
-	if (nni_aio_begin(sc->cbaio) != 0) {
+	if (nni_aio_begin(&sc->cbaio) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
 
 	nni_mtx_unlock(&s->mtx);
-	h->cb(sc->cbaio);
+	h->cb(&sc->cbaio);
 }
 
 static void
 http_sconn_cbdone(void *arg)
 {
 	http_sconn       *sc  = arg;
-	nni_aio          *aio = sc->cbaio;
+	nni_aio          *aio = &sc->cbaio;
 	nni_http_res     *res;
 	nni_http_handler *h;
 	nni_http_server  *s = sc->server;
@@ -803,7 +803,7 @@ http_sconn_cbdone(void *arg)
 		} else if (nni_http_res_is_error(res)) {
 			(void) nni_http_server_res_error(s, res);
 		}
-		nni_http_write_res(sc->conn, res, sc->txaio);
+		nni_http_write_res(sc->conn, res, &sc->txaio);
 	} else if (sc->close) {
 		http_sconn_close(sc);
 	} else {
@@ -811,7 +811,7 @@ http_sconn_cbdone(void *arg)
 		// Wait for another request.
 		sc->handler = NULL;
 		nni_http_req_reset(sc->req);
-		nni_http_read_req(sc->conn, sc->req, sc->rxaio);
+		nni_http_read_req(sc->conn, sc->req, &sc->rxaio);
 	}
 }
 
@@ -826,22 +826,18 @@ http_sconn_init(http_sconn **scp, nng_stream *stream)
 		return (NNG_ENOMEM);
 	}
 
+	nni_aio_init(&sc->rxaio, http_sconn_rxdone, sc);
+	nni_aio_init(&sc->txaio, http_sconn_txdone, sc);
+	nni_aio_init(&sc->txdataio, http_sconn_txdatdone, sc);
+	nni_aio_init(&sc->cbaio, http_sconn_cbdone, sc);
+
 	if (((rv = nni_http_req_alloc(&sc->req, NULL)) != 0) ||
-	    ((rv = nni_aio_alloc(&sc->rxaio, http_sconn_rxdone, sc)) != 0) ||
-	    ((rv = nni_aio_alloc(&sc->txaio, http_sconn_txdone, sc)) != 0) ||
-	    ((rv = nni_aio_alloc(&sc->txdataio, http_sconn_txdatdone, sc)) !=
-	        0) ||
-	    ((rv = nni_aio_alloc(&sc->cbaio, http_sconn_cbdone, sc)) != 0)) {
+	    ((rv = nni_http_conn_init(&sc->conn, stream)) != 0)) {
 		// Can't even accept the incoming request.  Hard close.
 		http_sconn_close(sc);
 		return (rv);
 	}
 
-	rv = nni_http_conn_init(&sc->conn, stream);
-	if (rv != 0) {
-		http_sconn_close(sc);
-		return (rv);
-	}
 	nni_http_conn_set_ctx(sc->conn, sc);
 	*scp = sc;
 	return (0);
@@ -883,7 +879,7 @@ http_server_acccb(void *arg)
 	nni_list_append(&s->conns, sc);
 
 	sc->handler = NULL;
-	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
+	nni_http_read_req(sc->conn, sc->req, &sc->rxaio);
 	nng_stream_listener_accept(s->listener, aio);
 	nni_mtx_unlock(&s->mtx);
 }
