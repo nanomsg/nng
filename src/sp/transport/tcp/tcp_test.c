@@ -171,8 +171,8 @@ test_tcp_keep_alive_option(void)
 void
 test_tcp_recv_max(void)
 {
-	char         msg[256];
-	char         buf[256];
+	char         msg[256] = { 0 };
+	char         buf[256] = { 0 };
 	nng_socket   s0;
 	nng_socket   s1;
 	nng_listener l;
