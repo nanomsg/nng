@@ -687,7 +687,7 @@ error:
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
 	}
-	if (!ep->closed) {
+	if (rv != NNG_ECLOSED) {
 		nng_stream_listener_accept(ep->listener, &ep->connaio);
 	}
 	nni_mtx_unlock(&ep->mtx);
