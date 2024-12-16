@@ -766,9 +766,9 @@ tlstran_ep_init(tlstran_ep *ep, nni_sock *sock, nni_cb conn_cb)
 }
 
 static int
-tlstran_ep_init_dialer(void **dp, nng_url *url, nni_dialer *ndialer)
+tlstran_ep_init_dialer(void *arg, nng_url *url, nni_dialer *ndialer)
 {
-	tlstran_ep *ep = (void *) dp;
+	tlstran_ep *ep = arg;
 	int         rv;
 	nni_sock   *sock = nni_dialer_sock(ndialer);
 
@@ -795,9 +795,9 @@ tlstran_ep_init_dialer(void **dp, nng_url *url, nni_dialer *ndialer)
 }
 
 static int
-tlstran_ep_init_listener(void **lp, nng_url *url, nni_listener *nlistener)
+tlstran_ep_init_listener(void *arg, nng_url *url, nni_listener *nlistener)
 {
-	tlstran_ep *ep = (void *) lp;
+	tlstran_ep *ep = arg;
 	int         rv;
 	nni_sock   *sock = nni_listener_sock(nlistener);
 

@@ -143,8 +143,6 @@ extern void nni_pipe_add(nni_pipe *);
 extern void nni_pipe_remove(nni_pipe *);
 extern bool nni_pipe_is_closed(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);
-extern int  nni_pipe_create_dialer(nni_pipe **, nni_dialer *, void *);
-extern int  nni_pipe_create_listener(nni_pipe **, nni_listener *, void *);
 
 extern void nni_pipe_start(nni_pipe *);
 

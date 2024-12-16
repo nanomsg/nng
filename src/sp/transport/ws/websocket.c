@@ -520,9 +520,9 @@ error:
 }
 
 static int
-wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
+wstran_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 {
-	ws_dialer *d = (void *) dp;
+	ws_dialer *d = arg;
 	nni_sock  *s = nni_dialer_sock(ndialer);
 	int        rv;
 	char       name[64];
@@ -550,9 +550,9 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 }
 
 static int
-wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
+wstran_listener_init(void *arg, nng_url *url, nni_listener *listener)
 {
-	ws_listener *l = (void *) lp;
+	ws_listener *l = arg;
 	int          rv;
 	nni_sock    *s = nni_listener_sock(listener);
 	char         name[64];

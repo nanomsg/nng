@@ -803,9 +803,9 @@ ipc_ep_init(ipc_ep *ep, nni_sock *sock, void (*conn_cb)(void *))
 }
 
 static int
-ipc_ep_init_dialer(void **dp, nng_url *url, nni_dialer *dialer)
+ipc_ep_init_dialer(void *arg, nng_url *url, nni_dialer *dialer)
 {
-	ipc_ep   *ep = (void *) dp;
+	ipc_ep   *ep = arg;
 	int       rv;
 	nni_sock *sock = nni_dialer_sock(dialer);
 
@@ -822,9 +822,9 @@ ipc_ep_init_dialer(void **dp, nng_url *url, nni_dialer *dialer)
 }
 
 static int
-ipc_ep_init_listener(void **dp, nng_url *url, nni_listener *listener)
+ipc_ep_init_listener(void *arg, nng_url *url, nni_listener *listener)
 {
-	ipc_ep   *ep = (void *) dp;
+	ipc_ep   *ep = arg;
 	int       rv;
 	nni_sock *sock = nni_listener_sock(listener);
 

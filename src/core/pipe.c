@@ -240,7 +240,7 @@ pipe_stats_init(nni_pipe *p)
 
 static int
 pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
-    nni_listener *l, void *tran_data)
+    nni_listener *l)
 {
 	nni_pipe              *p;
 	int                    rv1, rv2, rv3;
@@ -253,11 +253,6 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
 	    NNI_ALIGN_UP(tops->p_size);
 
 	if ((p = nni_zalloc(sz)) == NULL) {
-		// TODO: remove when all transports converted
-		// to use p_size.
-		if (tran_data != NULL) {
-			tops->p_fini(tran_data);
-		}
 		return (NNG_ENOMEM);
 	}
 
@@ -279,10 +274,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	uint8_t *proto_data = (uint8_t *) p + NNI_ALIGN_UP(sizeof(*p));
-
-	if (tran_data == NULL) {
-		tran_data = proto_data + NNI_ALIGN_UP(pops->pipe_size);
-	}
+	uint8_t *tran_data  = proto_data + NNI_ALIGN_UP(pops->pipe_size);
 	nni_pipe_add(p);
 
 	p->p_tran_data  = tran_data;
@@ -309,34 +301,6 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
 }
 
 int
-nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
-{
-	int          rv;
-	nni_sp_tran *tran = d->d_tran;
-	nni_pipe    *p;
-
-	if ((rv = pipe_create(&p, d->d_sock, tran, d, NULL, tran_data)) != 0) {
-		return (rv);
-	}
-	*pp = p;
-	return (0);
-}
-
-int
-nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
-{
-	int          rv;
-	nni_sp_tran *tran = l->l_tran;
-	nni_pipe    *p;
-
-	if ((rv = pipe_create(&p, l->l_sock, tran, NULL, l, tran_data)) != 0) {
-		return (rv);
-	}
-	*pp = p;
-	return (0);
-}
-
-int
 nni_pipe_alloc_dialer(void **datap, nni_dialer *d)
 {
 	int          rv;
@@ -344,7 +308,7 @@ nni_pipe_alloc_dialer(void **datap, nni_dialer *d)
 	nni_sock    *s    = d->d_sock;
 	nni_pipe    *p;
 
-	if ((rv = pipe_create(&p, s, tran, d, NULL, NULL)) != 0) {
+	if ((rv = pipe_create(&p, s, tran, d, NULL)) != 0) {
 		return (rv);
 	}
 	*datap = p->p_tran_data;
@@ -359,7 +323,7 @@ nni_pipe_alloc_listener(void **datap, nni_listener *l)
 	nni_sock    *s    = l->l_sock;
 	nni_pipe    *p;
 
-	if ((rv = pipe_create(&p, s, tran, NULL, l, NULL)) != 0) {
+	if ((rv = pipe_create(&p, s, tran, NULL, l)) != 0) {
 		return (rv);
 	}
 	*datap = p->p_tran_data;

@@ -793,9 +793,9 @@ tcptran_ep_init(tcptran_ep *ep, nni_sock *sock, void (*conn_cb)(void *))
 }
 
 static int
-tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
+tcptran_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 {
-	tcptran_ep *ep = (void *) dp;
+	tcptran_ep *ep = arg;
 	int         rv;
 	nni_sock   *sock = nni_dialer_sock(ndialer);
 
@@ -823,9 +823,9 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 }
 
 static int
-tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
+tcptran_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
-	tcptran_ep *ep = (void *) lp;
+	tcptran_ep *ep = arg;
 	int         rv;
 	nni_sock   *sock = nni_listener_sock(nlistener);
 

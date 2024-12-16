@@ -1326,24 +1326,6 @@ dialer_start_pipe(nni_dialer *d, nni_pipe *p)
 }
 
 void
-nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
-{
-	nni_sock *s = d->d_sock;
-	nni_pipe *p;
-
-	if (nni_pipe_create_dialer(&p, d, tpipe) != 0) {
-		return;
-	}
-
-	nni_mtx_lock(&s->s_mx);
-	d->d_pipe     = p;
-	d->d_currtime = d->d_inirtime;
-	nni_mtx_unlock(&s->s_mx);
-
-	dialer_start_pipe(d, p);
-}
-
-void
 nni_dialer_shutdown(nni_dialer *d)
 {
 	nni_sock *s = d->d_sock;
@@ -1450,18 +1432,6 @@ listener_start_pipe(nni_listener *l, nni_pipe *p)
 	// the socket now "owns" the pipe, and a pipe close should immediately
 	// start the process of teardown.
 	nni_pipe_rele(p);
-}
-
-void
-nni_listener_add_pipe(nni_listener *l, void *tpipe)
-{
-	nni_pipe *p;
-
-	if (nni_pipe_create_listener(&p, l, tpipe) != 0) {
-		return;
-	}
-
-	listener_start_pipe(l, p);
 }
 
 void

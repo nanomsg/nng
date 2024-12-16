@@ -1387,9 +1387,9 @@ udp_check_url(nng_url *url, bool listen)
 }
 
 static int
-udp_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
+udp_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 {
-	udp_ep   *ep = (void *) dp;
+	udp_ep   *ep = arg;
 	int       rv;
 	nni_sock *sock = nni_dialer_sock(ndialer);
 
@@ -1406,9 +1406,9 @@ udp_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 }
 
 static int
-udp_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
+udp_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
-	udp_ep   *ep = (void *) lp;
+	udp_ep   *ep = arg;
 	int       rv;
 	nni_sock *sock = nni_listener_sock(nlistener);
 

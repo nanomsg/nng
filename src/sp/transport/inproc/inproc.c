@@ -283,9 +283,9 @@ inproc_ep_init(inproc_ep *ep, nni_sock *sock, const nng_url *url)
 }
 
 static int
-inproc_dialer_init(void **epp, nng_url *url, nni_dialer *ndialer)
+inproc_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 {
-	inproc_ep *ep = (void *) epp;
+	inproc_ep *ep = arg;
 
 	ep->dialer = ndialer;
 	inproc_ep_init(ep, nni_dialer_sock(ndialer), url);
@@ -293,9 +293,9 @@ inproc_dialer_init(void **epp, nng_url *url, nni_dialer *ndialer)
 }
 
 static int
-inproc_listener_init(void **epp, nng_url *url, nni_listener *nlistener)
+inproc_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
-	inproc_ep *ep = (void *) epp;
+	inproc_ep *ep = arg;
 
 	ep->listener = nlistener;
 	inproc_ep_init(ep, nni_listener_sock(nlistener), url);

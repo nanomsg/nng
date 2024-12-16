@@ -22,6 +22,7 @@ void
 nni_sp_tran_register(nni_sp_tran *tran)
 {
 #ifndef NDEBUG
+	NNI_ASSERT(tran->tran_pipe->p_size != 0);
 	NNI_ASSERT(tran->tran_pipe->p_init != NULL);
 	NNI_ASSERT(tran->tran_pipe->p_fini != NULL);
 	NNI_ASSERT(tran->tran_pipe->p_stop != NULL);
@@ -31,6 +32,7 @@ nni_sp_tran_register(nni_sp_tran *tran)
 	NNI_ASSERT(tran->tran_pipe->p_peer != NULL);
 
 	if (tran->tran_dialer != NULL) {
+		NNI_ASSERT(tran->tran_dialer->d_size != 0);
 		NNI_ASSERT(tran->tran_dialer->d_init != NULL);
 		NNI_ASSERT(tran->tran_dialer->d_fini != NULL);
 		NNI_ASSERT(tran->tran_dialer->d_close != NULL);
@@ -41,6 +43,7 @@ nni_sp_tran_register(nni_sp_tran *tran)
 	}
 
 	if (tran->tran_listener != NULL) {
+		NNI_ASSERT(tran->tran_listener->l_size != 0);
 		NNI_ASSERT(tran->tran_listener->l_init != NULL);
 		NNI_ASSERT(tran->tran_listener->l_fini != NULL);
 		NNI_ASSERT(tran->tran_listener->l_bind != NULL);

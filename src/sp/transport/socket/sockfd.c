@@ -694,9 +694,9 @@ error:
 }
 
 static int
-sfd_tran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
+sfd_tran_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
-	sfd_tran_ep *ep = (void *) lp;
+	sfd_tran_ep *ep = arg;
 	int          rv;
 	nni_sock    *sock = nni_listener_sock(nlistener);
 
