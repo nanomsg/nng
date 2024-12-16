@@ -41,6 +41,7 @@ struct ws_listener {
 	nni_listener        *nlistener;
 	nni_list             wait_pipes;
 	bool                 started;
+	bool                 closed;
 };
 
 struct ws_pipe {
@@ -452,11 +453,16 @@ wstran_listener_close(void *arg)
 	ws_listener *l = arg;
 	ws_pipe     *p;
 
-	nni_aio_close(&l->accaio);
-	NNI_LIST_FOREACH (&l->wait_pipes, p) {
-		nni_pipe_close(p->npipe);
+	nni_mtx_lock(&l->mtx);
+	if (!l->closed) {
+		l->closed = true;
+		nni_aio_close(&l->accaio);
+		NNI_LIST_FOREACH (&l->wait_pipes, p) {
+			nni_pipe_close(p->npipe);
+		}
+		nng_stream_listener_close(l->listener);
 	}
-	nng_stream_listener_close(l->listener);
+	nni_mtx_unlock(&l->mtx);
 }
 
 static void
@@ -515,7 +521,9 @@ error:
 		nni_aio_list_remove(uaio);
 		nni_aio_finish_error(uaio, rv);
 	}
-	nng_stream_listener_accept(l->listener, aaio);
+	if (rv != NNG_ECLOSED) {
+		nng_stream_listener_accept(l->listener, aaio);
+	}
 	nni_mtx_unlock(&l->mtx);
 }
 
