@@ -141,9 +141,7 @@ ipc_pipe_fini(void *arg)
 	nni_aio_fini(&p->rx_aio);
 	nni_aio_fini(&p->tx_aio);
 	nni_aio_fini(&p->neg_aio);
-	if (p->rx_msg) {
-		nni_msg_free(p->rx_msg);
-	}
+	nni_msg_free(p->rx_msg);
 	nni_mtx_fini(&p->mtx);
 }
 
