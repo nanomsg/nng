@@ -47,8 +47,8 @@ struct inproc_queue {
 // inproc_pair represents a pair of pipes.  Because we control both
 // sides of the pipes, we can allocate and free this in one structure.
 struct inproc_pair {
-	nni_atomic_int ref;
-	inproc_queue   queues[2];
+	nni_refcnt   ref;
+	inproc_queue queues[2];
 };
 
 struct inproc_ep {
@@ -83,8 +83,9 @@ inproc_fini(void)
 // inproc_pair destroy is called when both pipe-ends of the pipe
 // have been destroyed.
 static void
-inproc_pair_destroy(inproc_pair *pair)
+inproc_pair_destroy(void *arg)
 {
+	inproc_pair *pair = arg;
 	for (int i = 0; i < 2; i++) {
 		nni_mtx_fini(&pair->queues[i].lock);
 	}
@@ -128,9 +129,7 @@ inproc_pipe_fini(void *arg)
 
 	if ((pair = pipe->pair) != NULL) {
 		// If we are the last peer, then toss the pair structure.
-		if (nni_atomic_dec_nv(&pair->ref) == 0) {
-			inproc_pair_destroy(pair);
-		}
+		nni_refcnt_rele(&pair->ref);
 	}
 
 	NNI_FREE_STRUCT(pipe);
@@ -424,8 +423,8 @@ inproc_accept_clients(inproc_ep *srv)
 				nni_aio_list_init(&pair->queues[i].writers);
 				nni_mtx_init(&pair->queues[i].lock);
 			}
-			nni_atomic_init(&pair->ref);
-			nni_atomic_set(&pair->ref, 2);
+			nni_refcnt_init(
+			    &pair->ref, 2, pair, inproc_pair_destroy);
 
 			spipe = cpipe = NULL;
 			if (((rv = inproc_pipe_alloc(&cpipe, cli)) != 0) ||
