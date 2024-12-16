@@ -299,6 +299,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
 	rv2 = tops->p_init(tran_data, p);
 	rv3 = pops->pipe_init(proto_data, p, sock_data);
 	if (rv1 != 0 || rv2 != 0 || rv3 != 0) {
+		nni_panic("HERE");
 		nni_pipe_close(p);
 		nni_pipe_rele(p);
 		return (rv1 ? rv1 : rv2 ? rv2 : rv3);
