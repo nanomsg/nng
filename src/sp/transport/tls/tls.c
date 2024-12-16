@@ -732,7 +732,6 @@ tlstran_dial_cb(void *arg)
 
 error:
 	// Error connecting.  We need to pass this straight back to the user.
-	nni_mtx_lock(&ep->mtx);
 	if ((aio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
