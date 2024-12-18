@@ -15,6 +15,7 @@ nng_check_sym(strnlen string.h NNG_HAVE_STRNLEN)
 nng_check_sym(strcasecmp string.h NNG_HAVE_STRCASECMP)
 nng_check_sym(strncasecmp string.h NNG_HAVE_STRNCASECMP)
 nng_check_sym(localtime_r time.h NNG_HAVE_LOCALTIME_R)
+nng_check_sym(syslog syslog.h NNG_HAVE_SYSLOG)
 
 nng_sources(
         defs.h

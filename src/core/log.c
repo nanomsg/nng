@@ -16,7 +16,7 @@
 #ifdef NNG_PLATFORM_WINDOWS
 #include <io.h>
 #endif
-#ifdef NNG_PLATFORM_POSIX
+#ifdef NNG_HAVE_SYSLOG
 #include <syslog.h>
 #include <unistd.h>
 #endif
@@ -90,7 +90,7 @@ stderr_logger(nng_log_level level, nng_log_facility facility,
 #ifdef NNG_PLATFORM_WINDOWS
 	// NB: We are blithely assuming the user has a modern console.
 	colors = _isatty(_fileno(stderr));
-#elif defined(NNG_PLATFORM_POSIX)
+#elif defined(NNG_HAVE_SYSLOG)
 	// Only assuming we can use colors (and attributes) if stderr is a tty
 	// and $TERM is reasonable. We assume the terminal supports ECMA-48,
 	// which is true on every reasonable system these days.
@@ -186,7 +186,7 @@ void
 nng_system_logger(nng_log_level level, nng_log_facility facility,
     const char *msgid, const char *msg)
 {
-#ifdef NNG_PLATFORM_POSIX
+#ifdef NNG_HAVE_SYSLOG
 	int pri;
 	switch (level) {
 	case NNG_LOG_ERR:
