@@ -240,13 +240,6 @@ nni_posix_poll_thr(void *arg)
 		void            *cbarg;
 		unsigned         revents;
 
-		nni_mtx_lock(&pq->mtx);
-		if (pq->closed) {
-			nni_mtx_unlock(&pq->mtx);
-			nni_posix_pollq_reap(pq);
-			return;
-		}
-		nni_mtx_unlock(&pq->mtx);
 		n = kevent(pq->kq, NULL, 0, evs, NNI_MAX_KQUEUE_EVENTS, NULL);
 
 		for (int i = 0; i < n; i++) {
@@ -261,6 +254,10 @@ nni_posix_poll_thr(void *arg)
 				break;
 			}
 			if (ev->udata == NULL) {
+				if (ev->flags & EV_EOF) {
+					nni_posix_pollq_reap(pq);
+					return;
+				}
 				nni_plat_pipe_clear(pq->wake_rfd);
 				nni_posix_pollq_reap(pq);
 				continue;
@@ -291,8 +288,9 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 	nni_mtx_unlock(&pq->mtx);
 	nni_plat_pipe_raise(pq->wake_wfd);
 
+	(void) close(pq->wake_wfd);
 	nni_thr_fini(&pq->thr);
-	nni_plat_pipe_close(pq->wake_wfd, pq->wake_rfd);
+	(void) close(pq->wake_rfd);
 
 	if (pq->kq >= 0) {
 		close(pq->kq);
