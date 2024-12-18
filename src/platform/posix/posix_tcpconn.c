@@ -310,7 +310,7 @@ tcp_send(void *arg, nni_aio *aio)
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
 		if (nni_list_first(&c->writeq) == aio) {
-			nni_posix_pfd_arm(c->pfd, POLLOUT);
+			nni_posix_pfd_arm(c->pfd, NNI_POLL_OUT);
 		}
 	}
 	nni_mtx_unlock(&c->mtx);
@@ -344,7 +344,7 @@ tcp_recv(void *arg, nni_aio *aio)
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
 		if (nni_list_first(&c->readq) == aio) {
-			nni_posix_pfd_arm(c->pfd, POLLIN);
+			nni_posix_pfd_arm(c->pfd, NNI_POLL_IN);
 		}
 	}
 	nni_mtx_unlock(&c->mtx);

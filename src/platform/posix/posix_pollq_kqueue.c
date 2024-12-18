@@ -198,10 +198,10 @@ nni_posix_pfd_arm(nni_posix_pfd *pf, unsigned events)
 		return (0);
 	}
 
-	if (events & POLLIN) {
+	if (events & NNI_POLL_IN) {
 		EV_SET(&ev[nev++], pf->fd, EVFILT_READ, flags, 0, 0, pf);
 	}
-	if (events & POLLOUT) {
+	if (events & NNI_POLL_OUT) {
 		EV_SET(&ev[nev++], pf->fd, EVFILT_WRITE, flags, 0, 0, pf);
 	}
 	while (kevent(pq->kq, ev, nev, NULL, 0, NULL) != 0) {
@@ -254,10 +254,10 @@ nni_posix_poll_thr(void *arg)
 
 			switch (ev->filter) {
 			case EVFILT_READ:
-				revents = POLLIN;
+				revents = NNI_POLL_IN;
 				break;
 			case EVFILT_WRITE:
-				revents = POLLOUT;
+				revents = NNI_POLL_OUT;
 				break;
 			}
 			if (ev->udata == NULL) {
@@ -267,7 +267,7 @@ nni_posix_poll_thr(void *arg)
 			}
 			pf = (void *) ev->udata;
 			if (ev->flags & EV_ERROR) {
-				revents |= POLLHUP;
+				revents |= NNI_POLL_HUP;
 			}
 
 			nni_mtx_lock(&pf->mtx);

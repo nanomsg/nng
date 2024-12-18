@@ -32,11 +32,20 @@ extern int  nni_posix_pfd_fd(nni_posix_pfd *);
 extern void nni_posix_pfd_close(nni_posix_pfd *);
 extern void nni_posix_pfd_set_cb(nni_posix_pfd *, nni_posix_pfd_cb, void *);
 
+#ifdef POLLIN
 #define NNI_POLL_IN ((unsigned) POLLIN)
 #define NNI_POLL_OUT ((unsigned) POLLOUT)
 #define NNI_POLL_HUP ((unsigned) POLLHUP)
 #define NNI_POLL_ERR ((unsigned) POLLERR)
 #define NNI_POLL_INVAL ((unsigned) POLLNVAL)
+#else
+// maybe using select
+#define NNI_POLL_IN (0x0001)
+#define NNI_POLL_OUT (0x0010)
+#define NNI_POLL_HUP (0x0004)
+#define NNI_POLL_ERR (0x0008)
+#define NNI_POLL_INVAL (0x0020)
+#endif // POLLIN
 
 #endif // NNG_PLATFORM_POSIX
 

@@ -181,22 +181,21 @@ nni_posix_udp_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&udp->udp_mtx);
-	if (events & (unsigned) POLLIN) {
+	if (events & NNI_POLL_IN) {
 		nni_posix_udp_dorecv(udp);
 	}
-	if (events & (unsigned) POLLOUT) {
+	if (events & NNI_POLL_OUT) {
 		nni_posix_udp_dosend(udp);
 	}
-	if (events &
-	    ((unsigned) POLLHUP | (unsigned) POLLERR | (unsigned) POLLNVAL)) {
+	if (events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) {
 		nni_posix_udp_doclose(udp);
 	} else {
 		events = 0;
 		if (!nni_list_empty(&udp->udp_sendq)) {
-			events |= (unsigned) POLLOUT;
+			events |= NNI_POLL_OUT;
 		}
 		if (!nni_list_empty(&udp->udp_recvq)) {
-			events |= (unsigned) POLLIN;
+			events |= NNI_POLL_IN;
 		}
 		if (events) {
 			int rv;
@@ -299,7 +298,7 @@ nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 	}
 	nni_list_append(&udp->udp_recvq, aio);
 	if (nni_list_first(&udp->udp_recvq) == aio) {
-		if ((rv = nni_posix_pfd_arm(udp->udp_pfd, POLLIN)) != 0) {
+		if ((rv = nni_posix_pfd_arm(udp->udp_pfd, NNI_POLL_IN)) != 0) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 		}
@@ -322,7 +321,8 @@ nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 	}
 	nni_list_append(&udp->udp_sendq, aio);
 	if (nni_list_first(&udp->udp_sendq) == aio) {
-		if ((rv = nni_posix_pfd_arm(udp->udp_pfd, POLLOUT)) != 0) {
+		if ((rv = nni_posix_pfd_arm(udp->udp_pfd, NNI_POLL_OUT)) !=
+		    0) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 		}
