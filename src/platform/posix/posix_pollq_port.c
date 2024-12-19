@@ -23,27 +23,14 @@
 #include "platform/posix/posix_pollq.h"
 
 #define NNI_MAX_PORTEV 64
-typedef struct nni_posix_pollq nni_posix_pollq;
 
 // nni_posix_pollq is a work structure that manages state for the port-event
 // based pollq implementation.  We only really need to keep track of the
 // single thread, and the associated port itself.
-struct nni_posix_pollq {
+typedef struct nni_posix_pollq {
 	int     port; // port id (from port_create)
 	nni_thr thr;  // worker thread
-};
-
-struct nni_posix_pfd {
-	nni_posix_pollq *pq;
-	int              fd;
-	nni_mtx          mtx;
-	nni_cv           cv;
-	unsigned         events;
-	bool             closed;
-	bool             closing;
-	nni_posix_pfd_cb cb;
-	void            *data;
-};
+} nni_posix_pollq;
 
 // single global instance for now
 static nni_posix_pollq nni_posix_global_pollq;

@@ -42,9 +42,7 @@
 // (Btw, pfd->fd is not guarded, because it is set at pfd creation and
 // persists until the pfd is destroyed.)
 
-typedef struct nni_posix_pollq nni_posix_pollq;
-
-struct nni_posix_pollq {
+typedef struct nni_posix_pollq {
 	nni_mtx  mtx;
 	int      nfds;
 	int      wakewfd; // write side of waker pipe
@@ -54,18 +52,7 @@ struct nni_posix_pollq {
 	nni_thr  thr;   // worker thread
 	nni_list pollq; // armed nodes
 	nni_list reapq;
-};
-
-struct nni_posix_pfd {
-	nni_posix_pollq *pq;
-	int              fd;
-	nni_list_node    node;
-	nni_cv           cv;
-	nni_mtx          mtx;
-	unsigned         events;
-	nni_posix_pfd_cb cb;
-	void            *arg;
-};
+} nni_posix_pollq;
 
 static nni_posix_pollq nni_posix_global_pollq;
 
@@ -223,11 +210,11 @@ nni_posix_poll_thr(void *arg)
 
 		// The waker pipe is set up so that we will be woken
 		// when it is written (this allows us to be signaled).
-		fds[0].fd      = pq->wakerfd;
-		fds[0].events  = POLLIN;
-		fds[0].revents = 0;
-		pfds[0]        = NULL;
-		nfds           = 1;
+		fds[0].fd         = pq->wakerfd;
+		fds[0].events     = POLLIN;
+		fds[0].revents    = 0;
+		pfds[pq->wakerfd] = NULL;
+		nfds              = 1;
 
 		// Also lets reap anything that was in the reaplist!
 		while ((pfd = nni_list_first(&pq->reapq)) != NULL) {
@@ -255,7 +242,7 @@ nni_posix_poll_thr(void *arg)
 				fds[nfds].fd      = pfd->fd;
 				fds[nfds].events  = events;
 				fds[nfds].revents = 0;
-				pfds[nfds]        = pfd;
+				pfds[pfd->fd]     = pfd;
 				nfds++;
 			}
 		}
@@ -270,18 +257,28 @@ nni_posix_poll_thr(void *arg)
 		(void) poll(fds, nfds, -1);
 
 		// If the waker pipe was signaled, read from it.
-		if (fds[0].revents & POLLIN) {
-			NNI_ASSERT(fds[0].fd == pq->wakerfd);
-			nni_plat_pipe_clear(pq->wakerfd);
-		}
 
-		for (int i = 1; i < nfds; i++) {
-			if ((events = fds[i].revents) != 0) {
+		for (int i = 0; i < nfds; i++) {
+			int fd = fds[i].fd;
+			events = fds[i].revents;
+			pfd    = pfds[fd];
+			if (events == 0) {
+				continue;
+			}
+			if (pfd == NULL || fd == pq->wakerfd) {
+				nni_plat_pipe_clear(pq->wakerfd);
+				if (events & POLLHUP) {
+					return;
+				}
+			} else {
 				nni_posix_pfd_cb cb;
 				void            *arg;
 
-				pfd = pfds[i];
-
+				if ((events & (POLLIN | POLLOUT)) != 0) {
+					// don't emit pollhup yet, we want
+					// to finish reading.
+					events &= ~POLLHUP;
+				}
 				nni_mtx_lock(&pfd->mtx);
 				cb  = pfd->cb;
 				arg = pfd->arg;

@@ -23,8 +23,6 @@
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
 
-typedef struct nni_posix_pollq nni_posix_pollq;
-
 #ifndef EFD_CLOEXEC
 #define EFD_CLOEXEC 0
 #endif
@@ -51,28 +49,14 @@ typedef struct nni_posix_pollq nni_posix_pollq;
 
 // nni_posix_pollq is a work structure that manages state for the epoll-based
 // pollq implementation
-struct nni_posix_pollq {
+typedef struct nni_posix_pollq {
 	nni_mtx  mtx;
 	int      epfd;  // epoll handle
 	int      evfd;  // event fd (to wake us for other stuff)
 	bool     close; // request for worker to exit
 	nni_thr  thr;   // worker thread
 	nni_list reapq;
-};
-
-struct nni_posix_pfd {
-	nni_list_node    node;
-	nni_posix_pollq *pq;
-	int              fd;
-	nni_posix_pfd_cb cb;
-	void            *arg;
-	bool             closed;
-	bool             closing;
-	bool             reap;
-	unsigned         events;
-	nni_mtx          mtx;
-	nni_cv           cv;
-};
+} nni_posix_pollq;
 
 // single global instance for now.
 static nni_posix_pollq nni_posix_global_pollq;

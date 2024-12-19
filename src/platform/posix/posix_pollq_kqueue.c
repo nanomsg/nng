@@ -9,7 +9,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
 #ifdef NNG_HAVE_KQUEUE
 
 #include <errno.h>
@@ -24,11 +23,9 @@
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
 
-typedef struct nni_posix_pollq nni_posix_pollq;
-
 // nni_posix_pollq is a work structure that manages state for the kqueue-based
 // pollq implementation
-struct nni_posix_pollq {
+typedef struct nni_posix_pollq {
 	nni_mtx  mtx;
 	int      wake_wfd; // write side of wake pipe
 	int      wake_rfd; // read side of wake pipe
@@ -36,19 +33,7 @@ struct nni_posix_pollq {
 	int      kq;       // kqueue handle
 	nni_thr  thr;      // worker thread
 	nni_list reapq;    // items to reap
-};
-
-struct nni_posix_pfd {
-	nni_list_node    node; // linkage into the reap list
-	nni_posix_pollq *pq;   // associated pollq
-	int              fd;   // file descriptor to poll
-	void            *arg;  // user data
-	nni_posix_pfd_cb cb;   // user callback on event
-	bool             closed;
-	unsigned         events;
-	nni_cv           cv; // signaled when poller has unregistered
-	nni_mtx          mtx;
-};
+} nni_posix_pollq;
 
 #define NNI_MAX_KQUEUE_EVENTS 64
 

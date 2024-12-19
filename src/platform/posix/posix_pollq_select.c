@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
 
@@ -32,9 +31,7 @@
 // systems that are not likely to have many open files anyway.
 //
 
-typedef struct nni_posix_pollq nni_posix_pollq;
-
-struct nni_posix_pollq {
+typedef struct nni_posix_pollq {
 	nni_mtx               mtx;
 	int                   wakewfd; // write side of waker pipe
 	int                   wakerfd; // read side of waker pipe
@@ -43,18 +40,7 @@ struct nni_posix_pollq {
 	nni_thr               thr; // worker thread
 	int                   maxfd;
 	struct nni_posix_pfd *pfds[FD_SETSIZE];
-};
-
-struct nni_posix_pfd {
-	nni_posix_pollq *pq;
-	int              fd;
-	nni_cv           cv;
-	nni_mtx          mtx;
-	unsigned         events;
-	nni_posix_pfd_cb cb;
-	void            *arg;
-	bool             reap;
-};
+} nni_posix_pollq;
 
 static nni_posix_pollq nni_posix_global_pollq;
 
