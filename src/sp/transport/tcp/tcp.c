@@ -716,15 +716,15 @@ error:
 	}
 	switch (rv) {
 
+	case NNG_ECLOSED:
+		break;
 	case NNG_ENOMEM:
 	case NNG_ENOFILES:
-		nng_sleep_aio(10, &ep->timeaio);
+		nng_sleep_aio(500, &ep->timeaio);
 		break;
 
 	default:
-		if (!ep->closed) {
-			nng_stream_listener_accept(ep->listener, &ep->connaio);
-		}
+		nng_stream_listener_accept(ep->listener, &ep->connaio);
 		break;
 	}
 	nni_mtx_unlock(&ep->mtx);

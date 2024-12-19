@@ -682,19 +682,19 @@ error:
 	}
 	switch (rv) {
 
+	case NNG_ECLOSED:
+		break;
 	case NNG_ENOMEM:
 	case NNG_ENOFILES:
 		// We need to cool down here, to avoid spinning.
-		nng_sleep_aio(10, &ep->timeaio);
+		nng_sleep_aio(500, &ep->timeaio);
 		break;
 
 	default:
 		// Start another accept. This is done because we want to
 		// ensure that TLS negotiations are disconnected from
 		// the upper layer accept logic.
-		if (!ep->closed) {
-			nng_stream_listener_accept(ep->listener, &ep->connaio);
-		}
+		nng_stream_listener_accept(ep->listener, &ep->connaio);
 		break;
 	}
 	nni_mtx_unlock(&ep->mtx);

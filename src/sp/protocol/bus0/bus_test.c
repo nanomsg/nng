@@ -189,12 +189,12 @@ test_bus_aio_stopped(void)
 
 	nng_recv_aio(s1, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 
 	nng_aio_set_msg(aio, msg);
 	nng_send_aio(s1, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 
 	nng_aio_free(aio);
 	nng_msg_free(msg);
