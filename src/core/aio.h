@@ -164,7 +164,16 @@ extern void         nni_aio_bump_count(nni_aio *, size_t);
 // is returned.  (In that case the caller should probably either return an
 // error to its caller, or possibly cause an asynchronous error by calling
 // nni_aio_finish_error on this aio.)
+//
+// NB: This function should be called while holding the lock that will be used
+// to cancel the operation. Otherwise a race can occur where the operation
+// cannot be canceled, which can lead to apparent hangs.
 extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
+
+// nni_aio_defer is just like nni_io_schedule, but it also calls the callback
+// automatically if the operation cannot be started because the AIO is stopped
+// or was canceled before this call (but after nni_aio_begin).
+extern bool nni_aio_defer(nni_aio *, nni_aio_cancel_fn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 
