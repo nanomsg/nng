@@ -21,12 +21,12 @@ struct nni_posix_pfd {
 	int                     fd;
 	nni_posix_pfd_cb        cb;
 	void                   *arg;
-	bool                    closed;
-	bool                    closing;
 	bool                    reap;
 	unsigned                events;
 	nni_mtx                 mtx;
 	nni_cv                  cv;
+	nni_atomic_flag         stopped;
+	nni_atomic_flag         closed;
 };
 
 #define NNI_POLL_IN ((unsigned) POLLIN)

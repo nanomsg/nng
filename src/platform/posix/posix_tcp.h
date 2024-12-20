@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -18,7 +18,7 @@
 
 struct nni_tcp_conn {
 	nng_stream      stream;
-	nni_posix_pfd  *pfd;
+	nni_posix_pfd   pfd;
 	nni_list        readq;
 	nni_list        writeq;
 	bool            closed;
@@ -40,9 +40,9 @@ struct nni_tcp_dialer {
 	nni_atomic_bool         fini;
 };
 
-extern int  nni_posix_tcp_alloc(nni_tcp_conn **, nni_tcp_dialer *);
-extern void nni_posix_tcp_init(nni_tcp_conn *, nni_posix_pfd *);
+extern int  nni_posix_tcp_alloc(nni_tcp_conn **, nni_tcp_dialer *, int);
 extern void nni_posix_tcp_start(nni_tcp_conn *, int, int);
 extern void nni_posix_tcp_dialer_rele(nni_tcp_dialer *);
+extern void nni_posix_tcp_dial_cb(void *, unsigned);
 
 #endif // PLATFORM_POSIX_TCP_H

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -35,17 +35,13 @@ typedef struct nni_posix_pollq {
 // single global instance for now
 static nni_posix_pollq nni_posix_global_pollq;
 
-int
-nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
+void
+nni_posix_pfd_init(nni_posix_pfd *pfdp, int fd, nni_posix_pfd_cb cb, void *arg)
 {
 	nni_posix_pollq *pq;
-	nni_posix_pfd   *pfd;
 
 	pq = &nni_posix_global_pollq;
 
-	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
@@ -55,10 +51,9 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	pfd->closing = false;
 	pfd->fd      = fd;
 	pfd->pq      = pq;
-	pfd->cb      = NULL;
+	pfd->cb      = cb;
+	pfd->arg     = arg;
 	pfd->data    = NULL;
-	*pfdp        = pfd;
-	return (0);
 }
 
 int
@@ -71,6 +66,10 @@ void
 nni_posix_pfd_close(nni_posix_pfd *pfd)
 {
 	nni_posix_pollq *pq = pfd->pq;
+
+	if (pq == NULL) {
+		return;
+	}
 
 	nni_mtx_lock(&pfd->mtx);
 	if (!pfd->closing) {
@@ -86,11 +85,13 @@ nni_posix_pfd_close(nni_posix_pfd *pfd)
 }
 
 void
-nni_posix_pfd_fini(nni_posix_pfd *pfd)
+nni_posix_pfd_stop(nni_posix_pfd *pfd)
 {
 	nni_posix_pollq *pq = pfd->pq;
 
-	nni_posix_pfd_close(pfd);
+	if (pq == NULL) {
+		return;
+	}
 
 	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
 
@@ -101,18 +102,28 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 		}
 		sched_yield(); // try again later...
 	}
-
 	nni_mtx_lock(&pfd->mtx);
 	while (!pfd->closed) {
 		nni_cv_wait(&pfd->cv);
 	}
 	nni_mtx_unlock(&pfd->mtx);
+}
+
+void
+nni_posix_pfd_fini(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	if (pq == NULL) {
+		return;
+	}
+
+	nni_posix_pfd_stop(pfd);
 
 	// We're exclusive now.
 	(void) close(pfd->fd);
 	nni_cv_fini(&pfd->cv);
 	nni_mtx_fini(&pfd->mtx);
-	NNI_FREE_STRUCT(pfd);
 }
 
 int
@@ -219,17 +230,6 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 
 	nni_thr_run(&pq->thr);
 	return (0);
-}
-
-void
-nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
-{
-	NNI_ASSERT(cb != NULL); // must not be null when established.
-
-	nni_mtx_lock(&pfd->mtx);
-	pfd->cb   = cb;
-	pfd->data = arg;
-	nni_mtx_unlock(&pfd->mtx);
 }
 
 int

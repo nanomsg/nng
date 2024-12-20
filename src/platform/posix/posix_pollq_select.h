@@ -22,6 +22,7 @@ struct nni_posix_pfd {
 	nni_posix_pfd_cb        cb;
 	void                   *arg;
 	bool                    reap;
+	bool                    stopped;
 };
 
 #define NNI_POLL_IN (0x0001)

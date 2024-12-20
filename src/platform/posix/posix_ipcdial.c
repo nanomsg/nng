@@ -106,8 +106,8 @@ ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 	nng_stream_free(&c->stream);
 }
 
-static void
-ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
+void
+nni_posix_ipc_dialer_cb(void *arg, unsigned ev)
 {
 	nni_ipc_conn   *c = arg;
 	nni_ipc_dialer *d = c->dialer;
@@ -126,7 +126,7 @@ ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 
 	} else {
 		socklen_t sz = sizeof(int);
-		int       fd = nni_posix_pfd_fd(pfd);
+		int       fd = nni_posix_pfd_fd(&c->pfd);
 		if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
 			rv = errno;
 		}
@@ -153,7 +153,6 @@ ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 		return;
 	}
 
-	nni_posix_ipc_start(c);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 }
@@ -188,23 +187,12 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 
 	nni_atomic_inc(&d->ref);
 
-	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d)) != 0) {
+	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d, fd)) != 0) {
 		(void) close(fd);
 		nni_posix_ipc_dialer_rele(d);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-
-	// This arranges for the fd to be in non-blocking mode, and adds the
-	// poll fd to the list.
-	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
-		// the error label unlocks this
-		nni_mtx_lock(&d->mtx);
-		goto error;
-	}
-
-	nni_posix_ipc_init(c, pfd);
-	nni_posix_pfd_set_cb(pfd, ipc_dialer_cb, c);
 
 	nni_mtx_lock(&d->mtx);
 	if (d->closed) {
@@ -225,10 +213,10 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 			goto error;
 		}
 		// Asynchronous connect.
+		c->dial_aio = aio;
 		if ((rv = nni_posix_pfd_arm(pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
-		c->dial_aio = aio;
 		nni_aio_set_prov_data(aio, c);
 		nni_list_append(&d->connq, aio);
 		nni_mtx_unlock(&d->mtx);
@@ -238,7 +226,6 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	// on loop back, and probably not on every platform.
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
-	nni_posix_ipc_start(c);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 	return;

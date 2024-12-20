@@ -34,13 +34,13 @@
 #include "posix_tcp.h"
 
 struct nni_tcp_listener {
-	nni_posix_pfd *pfd;
-	nni_list       acceptq;
-	bool           started;
-	bool           closed;
-	bool           nodelay;
-	bool           keepalive;
-	nni_mtx        mtx;
+	nni_posix_pfd pfd;
+	nni_list      acceptq;
+	bool          started;
+	bool          closed;
+	bool          nodelay;
+	bool          keepalive;
+	nni_mtx       mtx;
 };
 
 int
@@ -53,7 +53,6 @@ nni_tcp_listener_init(nni_tcp_listener **lp)
 
 	nni_mtx_init(&l->mtx);
 
-	l->pfd     = NULL;
 	l->closed  = false;
 	l->started = false;
 	l->nodelay = true;
@@ -74,9 +73,7 @@ tcp_listener_doclose(nni_tcp_listener *l)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 
-	if (l->pfd != NULL) {
-		nni_posix_pfd_close(l->pfd);
-	}
+	nni_posix_pfd_close(&l->pfd);
 }
 
 void
@@ -93,15 +90,14 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 	nni_aio *aio;
 
 	while ((aio = nni_list_first(&l->acceptq)) != NULL) {
-		int            newfd;
-		int            fd;
-		int            rv;
-		int            nd;
-		int            ka;
-		nni_posix_pfd *pfd;
-		nni_tcp_conn  *c;
+		int           newfd;
+		int           fd;
+		int           rv;
+		int           nd;
+		int           ka;
+		nni_tcp_conn *c;
 
-		fd = nni_posix_pfd_fd(l->pfd);
+		fd = nni_posix_pfd_fd(&l->pfd);
 
 #ifdef NNG_USE_ACCEPT4
 		newfd = accept4(fd, NULL, NULL, SOCK_CLOEXEC);
@@ -119,7 +115,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 			case EWOULDBLOCK:
 #endif
 #endif
-				rv = nni_posix_pfd_arm(l->pfd, NNI_POLL_IN);
+				rv = nni_posix_pfd_arm(&l->pfd, NNI_POLL_IN);
 				if (rv != 0) {
 					nni_aio_list_remove(aio);
 					nni_aio_finish_error(aio, rv);
@@ -141,23 +137,12 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 			}
 		}
 
-		if ((rv = nni_posix_tcp_alloc(&c, NULL)) != 0) {
+		if ((rv = nni_posix_tcp_alloc(&c, NULL, newfd)) != 0) {
 			close(newfd);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 			continue;
 		}
-
-		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
-			close(newfd);
-			nng_stream_stop(&c->stream);
-			nng_stream_free(&c->stream);
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
-			continue;
-		}
-
-		nni_posix_tcp_init(c, pfd);
 
 		ka = l->keepalive ? 1 : 0;
 		nd = l->nodelay ? 1 : 0;
@@ -169,10 +154,9 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 }
 
 static void
-tcp_listener_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
+tcp_listener_cb(void *arg, unsigned events)
 {
 	nni_tcp_listener *l = arg;
-	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&l->mtx);
 	if ((events & NNI_POLL_INVAL) != 0) {
@@ -209,7 +193,6 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 	struct sockaddr_storage ss;
 	int                     rv;
 	int                     fd;
-	nni_posix_pfd          *pfd;
 
 	if (((len = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
 #ifdef NNG_ENABLE_IPV6
@@ -236,12 +219,6 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 		return (nni_plat_errno(errno));
 	}
 
-	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
-		nni_mtx_unlock(&l->mtx);
-		(void) close(fd);
-		return (rv);
-	}
-
 // On the Windows Subsystem for Linux, SO_REUSEADDR behaves like Windows
 // SO_REUSEADDR, which is almost completely different (and wrong!) from
 // traditional SO_REUSEADDR.
@@ -257,8 +234,8 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 
 	if (bind(fd, (struct sockaddr *) &ss, len) < 0) {
 		rv = nni_plat_errno(errno);
+		(void) close(fd);
 		nni_mtx_unlock(&l->mtx);
-		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
 
@@ -266,14 +243,13 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 	// bad things are going to happen.
 	if (listen(fd, 128) != 0) {
 		rv = nni_plat_errno(errno);
+		(void) close(fd);
 		nni_mtx_unlock(&l->mtx);
-		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
 
-	nni_posix_pfd_set_cb(pfd, tcp_listener_cb, l);
+	nni_posix_pfd_init(&l->pfd, fd, tcp_listener_cb, l);
 
-	l->pfd     = pfd;
 	l->started = true;
 	nni_mtx_unlock(&l->mtx);
 
@@ -283,23 +259,18 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 void
 nni_tcp_listener_stop(nni_tcp_listener *l)
 {
-	nni_posix_pfd *pfd;
-
 	nni_mtx_lock(&l->mtx);
 	tcp_listener_doclose(l);
-	pfd    = l->pfd;
-	l->pfd = NULL;
 	nni_mtx_unlock(&l->mtx);
 
-	if (pfd != NULL) {
-		nni_posix_pfd_fini(pfd);
-	}
+	nni_posix_pfd_stop(&l->pfd);
 }
 
 void
 nni_tcp_listener_fini(nni_tcp_listener *l)
 {
 	nni_tcp_listener_stop(l);
+	nni_posix_pfd_fini(&l->pfd);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
@@ -350,7 +321,7 @@ tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 		struct sockaddr_storage ss;
 		socklen_t               len = sizeof(ss);
 		(void) getsockname(
-		    nni_posix_pfd_fd(l->pfd), (void *) &ss, &len);
+		    nni_posix_pfd_fd(&l->pfd), (void *) &ss, &len);
 		(void) nni_posix_sockaddr2nn(&sa, &ss, len);
 	} else {
 		sa.s_family = NNG_AF_UNSPEC;

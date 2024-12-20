@@ -22,7 +22,7 @@
 #include "core/nng_impl.h"
 
 typedef struct nni_posix_pfd nni_posix_pfd;
-typedef void (*nni_posix_pfd_cb)(nni_posix_pfd *, unsigned, void *);
+typedef void (*nni_posix_pfd_cb)(void *, unsigned);
 
 #if defined(NNG_POLLQ_KQUEUE)
 #include "posix_pollq_kqueue.h"
@@ -33,17 +33,17 @@ typedef void (*nni_posix_pfd_cb)(nni_posix_pfd *, unsigned, void *);
 #elif defined(NNG_POLLQ_POLL)
 #include "posix_pollq_epoll.h"
 #elif defined(NNG_POLLQ_SELECT)
-#include "posix_pollq_epoll.h"
+#include "posix_pollq_select.h"
 #else
 #error "No suitable poller defined"
 #endif
 
-extern int  nni_posix_pfd_init(nni_posix_pfd **, int);
+extern void nni_posix_pfd_init(nni_posix_pfd *, int, nni_posix_pfd_cb, void *);
 extern void nni_posix_pfd_fini(nni_posix_pfd *);
+extern void nni_posix_pfd_stop(nni_posix_pfd *);
 extern int  nni_posix_pfd_arm(nni_posix_pfd *, unsigned);
 extern int  nni_posix_pfd_fd(nni_posix_pfd *);
 extern void nni_posix_pfd_close(nni_posix_pfd *);
-extern void nni_posix_pfd_set_cb(nni_posix_pfd *, nni_posix_pfd_cb, void *);
 
 #endif // NNG_PLATFORM_POSIX
 

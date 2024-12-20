@@ -44,10 +44,9 @@ typedef struct nni_posix_pollq {
 
 static nni_posix_pollq nni_posix_global_pollq;
 
-int
-nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
+void
+nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 {
-	nni_posix_pfd   *pfd;
 	nni_posix_pollq *pq = &nni_posix_global_pollq;
 
 	// Set this is as soon as possible (narrow the close-exec race as
@@ -56,43 +55,24 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (fd >= FD_SETSIZE) {
-		return (NNG_EINVAL);
+		return;
 	}
 	nni_mtx_init(&pfd->mtx);
 	nni_cv_init(&pfd->cv, &pq->mtx);
-	pfd->fd     = fd;
-	pfd->events = 0;
-	pfd->cb     = NULL;
-	pfd->arg    = NULL;
-	pfd->pq     = pq;
+	pfd->fd      = fd;
+	pfd->events  = 0;
+	pfd->cb      = cb;
+	pfd->arg     = arg;
+	pfd->pq      = pq;
+	pfd->stopped = false;
+	pfd->reap    = false;
 	nni_mtx_lock(&pq->mtx);
-	if (pq->closing) {
-		nni_mtx_unlock(&pq->mtx);
-		nni_cv_fini(&pfd->cv);
-		nni_mtx_fini(&pfd->mtx);
-		NNI_FREE_STRUCT(pfd);
-		return (NNG_ECLOSED);
-	}
 	pq->pfds[fd] = pfd;
 	if (fd > pq->maxfd) {
 		pq->maxfd = fd;
 	}
 	nni_mtx_unlock(&pq->mtx);
-	*pfdp = pfd;
-	return (0);
-}
-
-void
-nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
-{
-	nni_mtx_lock(&pfd->mtx);
-	pfd->cb  = cb;
-	pfd->arg = arg;
-	nni_mtx_unlock(&pfd->mtx);
 }
 
 int
@@ -104,7 +84,31 @@ nni_posix_pfd_fd(nni_posix_pfd *pfd)
 void
 nni_posix_pfd_close(nni_posix_pfd *pfd)
 {
-	(void) shutdown(pfd->fd, SHUT_RDWR);
+	if (pfd->pq != NULL) {
+		(void) shutdown(pfd->fd, SHUT_RDWR);
+	}
+}
+
+void
+nni_posix_pfd_stop(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+	if (pq == NULL) {
+		return;
+	}
+	nni_posix_pfd_close(pfd);
+	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
+
+	nni_mtx_lock(&pq->mtx);
+	if (!pfd->stopped) {
+		pfd->stopped = true;
+		pfd->reap    = true;
+		nni_plat_pipe_raise(pq->wakewfd);
+		while (pfd->reap) {
+			nni_cv_wait(&pfd->cv);
+		}
+	}
+	nni_mtx_unlock(&pq->mtx);
 }
 
 void
@@ -113,25 +117,17 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 	nni_posix_pollq *pq = pfd->pq;
 	int              fd = pfd->fd;
 
-	nni_posix_pfd_close(pfd);
-
-	nni_mtx_lock(&pq->mtx);
-	if ((!nni_thr_is_self(&pq->thr)) && (!pq->closed)) {
-		pfd->reap = true;
-		nni_plat_pipe_raise(pq->wakewfd);
-		while (pfd->reap) {
-			nni_cv_wait(&pfd->cv);
-		}
-	} else {
-		pq->pfds[fd] = NULL;
+	if (pq == NULL) {
+		return;
 	}
-	nni_mtx_unlock(&pq->mtx);
+
+	nni_posix_pfd_stop(pfd);
+	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
 
 	// We're exclusive now.
 	(void) close(fd);
 	nni_cv_fini(&pfd->cv);
 	nni_mtx_fini(&pfd->mtx);
-	NNI_FREE_STRUCT(pfd);
 }
 
 int
@@ -247,17 +243,11 @@ nni_posix_poll_thr(void *arg)
 				events |= NNI_POLL_HUP;
 			}
 			if (events != 0) {
-				nni_posix_pfd_cb cb = NULL;
-				void            *arg;
 				if ((pfd = pq->pfds[fd]) != NULL) {
-					cb  = pfd->cb;
-					arg = pfd->arg;
 					pfd->events &= ~events;
-				}
 
-				if (cb) {
 					nni_mtx_unlock(&pq->mtx);
-					cb(pfd, events, arg);
+					pfd->cb(pfd->arg, events);
 					nni_mtx_lock(&pq->mtx);
 				}
 			}

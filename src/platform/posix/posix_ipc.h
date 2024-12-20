@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -22,7 +22,7 @@
 
 struct nni_ipc_conn {
 	nng_stream      stream;
-	nni_posix_pfd  *pfd;
+	nni_posix_pfd   pfd;
 	nni_list        readq;
 	nni_list        writeq;
 	bool            closed;
@@ -44,10 +44,9 @@ struct nni_ipc_dialer {
 };
 
 extern int nni_posix_ipc_alloc(
-    nni_ipc_conn **, nni_sockaddr *, nni_ipc_dialer *);
-extern void nni_posix_ipc_init(nni_ipc_conn *, nni_posix_pfd *);
-extern void nni_posix_ipc_start(nni_ipc_conn *);
+    nni_ipc_conn **, nni_sockaddr *, nni_ipc_dialer *, int);
 extern void nni_posix_ipc_dialer_rele(nni_ipc_dialer *);
+extern void nni_posix_ipc_dialer_cb(void *arg, unsigned events);
 
 #endif // NNG_PLATFORM_POSIX
 

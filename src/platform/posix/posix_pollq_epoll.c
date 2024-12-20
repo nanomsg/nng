@@ -61,32 +61,28 @@ typedef struct nni_posix_pollq {
 // single global instance for now.
 static nni_posix_pollq nni_posix_global_pollq;
 
-int
-nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
+void
+nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 {
-	nni_posix_pfd     *pfd;
 	nni_posix_pollq   *pq;
 	struct epoll_event ev;
-	int                rv;
 
 	pq = &nni_posix_global_pollq;
 
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	nni_mtx_init(&pfd->mtx);
 	nni_cv_init(&pfd->cv, &pq->mtx);
+	nni_atomic_flag_reset(&pfd->stopped);
+	nni_atomic_flag_reset(&pfd->closed);
 
-	pfd->pq      = pq;
-	pfd->fd      = fd;
-	pfd->cb      = NULL;
-	pfd->arg     = NULL;
-	pfd->events  = 0;
-	pfd->closing = false;
-	pfd->closed  = false;
+	pfd->pq     = pq;
+	pfd->fd     = fd;
+	pfd->cb     = cb;
+	pfd->arg    = arg;
+	pfd->events = 0;
+	pfd->reap   = false;
 
 	NNI_LIST_NODE_INIT(&pfd->node);
 
@@ -95,16 +91,9 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	ev.events   = 0;
 	ev.data.ptr = pfd;
 
-	if (epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev) != 0) {
-		rv = nni_plat_errno(errno);
-		nni_cv_fini(&pfd->cv);
-		nni_mtx_fini(&pfd->mtx);
-		NNI_FREE_STRUCT(pfd);
-		return (rv);
-	}
-
-	*pfdp = pfd;
-	return (0);
+	// if this fails the system is probably out of memory - it will fail in
+	// arm
+	(void) epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev);
 }
 
 int
@@ -118,20 +107,18 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 	// epoll implementation.
 
 	nni_mtx_lock(&pfd->mtx);
-	if (!pfd->closing) {
-		struct epoll_event ev;
-		pfd->events |= events;
-		events = pfd->events;
+	struct epoll_event ev;
+	pfd->events |= events;
+	events = pfd->events;
 
-		memset(&ev, 0, sizeof(ev));
-		ev.events   = events | NNI_EPOLL_FLAGS;
-		ev.data.ptr = pfd;
+	memset(&ev, 0, sizeof(ev));
+	ev.events   = events | NNI_EPOLL_FLAGS;
+	ev.data.ptr = pfd;
 
-		if (epoll_ctl(pq->epfd, EPOLL_CTL_MOD, pfd->fd, &ev) != 0) {
-			int rv = nni_plat_errno(errno);
-			nni_mtx_unlock(&pfd->mtx);
-			return (rv);
-		}
+	if (epoll_ctl(pq->epfd, EPOLL_CTL_MOD, pfd->fd, &ev) != 0) {
+		int rv = nni_plat_errno(errno);
+		nni_mtx_unlock(&pfd->mtx);
+		return (rv);
 	}
 	nni_mtx_unlock(&pfd->mtx);
 	return (0);
@@ -144,44 +131,44 @@ nni_posix_pfd_fd(nni_posix_pfd *pfd)
 }
 
 void
-nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
-{
-	nni_mtx_lock(&pfd->mtx);
-	pfd->cb  = cb;
-	pfd->arg = arg;
-	nni_mtx_unlock(&pfd->mtx);
-}
-
-void
 nni_posix_pfd_close(nni_posix_pfd *pfd)
 {
-	nni_mtx_lock(&pfd->mtx);
-	if (!pfd->closing) {
-		nni_posix_pollq   *pq = pfd->pq;
-		struct epoll_event ev; // Not actually used.
-		pfd->closing = true;
-
-		(void) shutdown(pfd->fd, SHUT_RDWR);
-		(void) epoll_ctl(pq->epfd, EPOLL_CTL_DEL, pfd->fd, &ev);
+	nni_posix_pollq *pq = pfd->pq;
+	if (pq == NULL) {
+		return;
 	}
+	if (nni_atomic_flag_test_and_set(&pfd->closed)) {
+		return;
+	}
+
+	nni_mtx_lock(&pfd->mtx);
+	struct epoll_event ev; // Not actually used.
+
+	(void) shutdown(pfd->fd, SHUT_RDWR);
+	(void) epoll_ctl(pq->epfd, EPOLL_CTL_DEL, pfd->fd, &ev);
 	nni_mtx_unlock(&pfd->mtx);
 }
 
 void
-nni_posix_pfd_fini(nni_posix_pfd *pfd)
+nni_posix_pfd_stop(nni_posix_pfd *pfd)
 {
-	nni_posix_pollq *pq = pfd->pq;
+	nni_posix_pollq *pq  = pfd->pq;
+	uint64_t         one = 1;
 
-	nni_posix_pfd_close(pfd);
+	if (pq == NULL) {
+		return;
+	}
+	if (nni_atomic_flag_test_and_set(&pfd->stopped)) {
+		return;
+	}
 
 	// We have to synchronize with the pollq thread (unless we are
 	// on that thread!)
 	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
 
-	uint64_t one = 1;
-
 	nni_mtx_lock(&pq->mtx);
 	nni_list_append(&pq->reapq, pfd);
+	pfd->reap = true;
 
 	// Wake the remote side.  For now we assume this always
 	// succeeds.  The only failure modes here occur when we
@@ -195,33 +182,41 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 		nni_panic("BUG! write to epoll fd incorrect!");
 	}
 
-	while (!pfd->closed) {
+	while (pfd->reap) {
 		nni_cv_wait(&pfd->cv);
 	}
 	nni_mtx_unlock(&pq->mtx);
+}
+
+void
+nni_posix_pfd_fini(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+	if (pq == NULL) {
+		return;
+	}
+
+	nni_posix_pfd_stop(pfd);
 
 	// We're exclusive now.
 
 	(void) close(pfd->fd);
 	nni_cv_fini(&pfd->cv);
 	nni_mtx_fini(&pfd->mtx);
-	NNI_FREE_STRUCT(pfd);
 }
 
 static void
 nni_posix_pollq_reap(nni_posix_pollq *pq)
 {
 	nni_posix_pfd *pfd;
-	nni_mtx_lock(&pq->mtx);
 	while ((pfd = nni_list_first(&pq->reapq)) != NULL) {
 		nni_list_remove(&pq->reapq, pfd);
 
 		// Let fini know we're done with it, and it's safe to
 		// remove.
-		pfd->closed = true;
+		pfd->reap = false;
 		nni_cv_wake(&pfd->cv);
 	}
-	nni_mtx_unlock(&pq->mtx);
 }
 
 static void
@@ -249,37 +244,28 @@ nni_posix_poll_thr(void *arg)
 			if ((ev->data.ptr == NULL) &&
 			    (ev->events & (unsigned) POLLIN)) {
 				uint64_t clear;
-				if (read(pq->evfd, &clear, sizeof(clear)) !=
-				    sizeof(clear)) {
-					nni_panic("read from evfd incorrect!");
-				}
+				(void) read(pq->evfd, &clear, sizeof(clear));
 				reap = true;
 			} else {
-				nni_posix_pfd   *pfd = ev->data.ptr;
-				nni_posix_pfd_cb cb;
-				void            *cbarg;
-				unsigned         mask;
+				nni_posix_pfd *pfd = ev->data.ptr;
+				unsigned       mask;
 
 				mask = ev->events &
-				    ((unsigned) EPOLLIN | (unsigned) EPOLLOUT |
-				        (unsigned) EPOLLERR);
+				    ((unsigned) (EPOLLIN | EPOLLOUT |
+				        EPOLLERR));
 
 				nni_mtx_lock(&pfd->mtx);
 				pfd->events &= ~mask;
-				cb    = pfd->cb;
-				cbarg = pfd->arg;
 				nni_mtx_unlock(&pfd->mtx);
 
 				// Execute the callback with lock released
-				if (cb != NULL) {
-					cb(pfd, mask, cbarg);
-				}
+				pfd->cb(pfd->arg, mask);
 			}
 		}
 
 		if (reap) {
-			nni_posix_pollq_reap(pq);
 			nni_mtx_lock(&pq->mtx);
+			nni_posix_pollq_reap(pq);
 			if (pq->close) {
 				nni_mtx_unlock(&pq->mtx);
 				return;

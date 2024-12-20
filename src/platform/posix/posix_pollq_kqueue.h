@@ -19,7 +19,9 @@ struct nni_posix_pfd {
 	int                     fd;   // file descriptor to poll
 	void                   *arg;  // user data
 	nni_posix_pfd_cb        cb;   // user callback on event
-	bool                    closed;
+	nni_atomic_flag         closed;
+	nni_atomic_flag         stopped;
+	bool                    reaped;
 	unsigned                events;
 	nni_cv                  cv; // signaled when poller has unregistered
 	nni_mtx                 mtx;

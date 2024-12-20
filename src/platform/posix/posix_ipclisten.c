@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -31,7 +31,7 @@
 
 typedef struct {
 	nng_stream_listener sl;
-	nni_posix_pfd      *pfd;
+	nni_posix_pfd       pfd;
 	nng_sockaddr        sa;
 	nni_list            acceptq;
 	bool                started;
@@ -53,9 +53,7 @@ ipc_listener_doclose(ipc_listener *l)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 
-	if (l->pfd != NULL) {
-		nni_posix_pfd_close(l->pfd);
-	}
+	nni_posix_pfd_close(&l->pfd);
 	if (l->started && ((path = l->path) != NULL)) {
 		l->path = NULL;
 		(void) unlink(path);
@@ -75,18 +73,13 @@ ipc_listener_close(void *arg)
 static void
 ipc_listener_stop(void *arg)
 {
-	ipc_listener  *l = arg;
-	nni_posix_pfd *pfd;
+	ipc_listener *l = arg;
 
 	nni_mtx_lock(&l->mtx);
 	ipc_listener_doclose(l);
-	pfd    = l->pfd;
-	l->pfd = NULL;
 	nni_mtx_unlock(&l->mtx);
 
-	if (pfd != NULL) {
-		nni_posix_pfd_fini(pfd);
-	}
+	nni_posix_pfd_stop(&l->pfd);
 }
 
 static void
@@ -95,13 +88,12 @@ ipc_listener_doaccept(ipc_listener *l)
 	nni_aio *aio;
 
 	while ((aio = nni_list_first(&l->acceptq)) != NULL) {
-		int            newfd;
-		int            fd;
-		int            rv;
-		nni_posix_pfd *pfd;
-		nni_ipc_conn  *c;
+		int           newfd;
+		int           fd;
+		int           rv;
+		nni_ipc_conn *c;
 
-		fd = nni_posix_pfd_fd(l->pfd);
+		fd = nni_posix_pfd_fd(&l->pfd);
 
 #ifdef NNG_USE_ACCEPT4
 		newfd = accept4(fd, NULL, NULL, SOCK_CLOEXEC);
@@ -119,7 +111,7 @@ ipc_listener_doaccept(ipc_listener *l)
 			case EWOULDBLOCK:
 #endif
 #endif
-				rv = nni_posix_pfd_arm(l->pfd, NNI_POLL_IN);
+				rv = nni_posix_pfd_arm(&l->pfd, NNI_POLL_IN);
 				if (rv != 0) {
 					nni_aio_list_remove(aio);
 					nni_aio_finish_error(aio, rv);
@@ -141,35 +133,23 @@ ipc_listener_doaccept(ipc_listener *l)
 			}
 		}
 
-		if ((rv = nni_posix_ipc_alloc(&c, &l->sa, NULL)) != 0) {
+		if ((rv = nni_posix_ipc_alloc(&c, &l->sa, NULL, newfd)) != 0) {
 			(void) close(newfd);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 			continue;
 		}
 
-		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
-			nng_stream_stop(&c->stream);
-			nng_stream_free(&c->stream);
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
-			continue;
-		}
-
-		nni_posix_ipc_init(c, pfd);
-
 		nni_aio_list_remove(aio);
-		nni_posix_ipc_start(c);
 		nni_aio_set_output(aio, 0, c);
 		nni_aio_finish(aio, 0, 0);
 	}
 }
 
 static void
-ipc_listener_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
+ipc_listener_cb(void *arg, unsigned events)
 {
 	ipc_listener *l = arg;
-	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&l->mtx);
 	if ((events & NNI_POLL_INVAL) != 0) {
@@ -325,7 +305,6 @@ ipc_listener_listen(void *arg)
 	struct sockaddr_storage ss;
 	int                     rv;
 	int                     fd;
-	nni_posix_pfd          *pfd;
 	char                   *path;
 
 	if ((len = nni_posix_nn2sockaddr(&ss, &l->sa)) < sizeof(sa_family_t)) {
@@ -380,7 +359,7 @@ ipc_listener_listen(void *arg)
 	    (listen(fd, 128) != 0)) {
 		rv = nni_plat_errno(errno);
 	}
-	if ((rv != 0) || ((rv = nni_posix_pfd_init(&pfd, fd)) != 0)) {
+	if (rv != 0) {
 		nni_mtx_unlock(&l->mtx);
 		(void) close(fd);
 		if (path != NULL) {
@@ -389,6 +368,8 @@ ipc_listener_listen(void *arg)
 		nni_strfree(path);
 		return (rv);
 	}
+
+	nni_posix_pfd_init(&l->pfd, fd, ipc_listener_cb, l);
 
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 	// If the original address was for a system assigned value,
@@ -411,9 +392,6 @@ ipc_listener_listen(void *arg)
 	}
 #endif
 
-	nni_posix_pfd_set_cb(pfd, ipc_listener_cb, l);
-
-	l->pfd     = pfd;
 	l->started = true;
 	l->path    = path;
 	nni_mtx_unlock(&l->mtx);
@@ -428,6 +406,7 @@ ipc_listener_free(void *arg)
 
 	ipc_listener_stop(l);
 
+	nni_posix_pfd_fini(&l->pfd);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
@@ -512,7 +491,6 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	nni_mtx_init(&l->mtx);
 	nni_aio_list_init(&l->acceptq);
 
-	l->pfd          = NULL;
 	l->closed       = false;
 	l->started      = false;
 	l->perms        = 0;

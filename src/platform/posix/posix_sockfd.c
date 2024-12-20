@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -22,23 +22,23 @@
 #include "platform/posix/posix_peerid.h"
 
 struct nni_sfd_conn {
-	nng_stream     stream;
-	nni_posix_pfd *pfd;
-	int            fd;
-	nni_list       readq;
-	nni_list       writeq;
-	bool           closed;
-	nni_mtx        mtx;
-	nni_reap_node  reap;
+	nng_stream    stream;
+	nni_posix_pfd pfd;
+	int           fd;
+	nni_list      readq;
+	nni_list      writeq;
+	bool          closed;
+	nni_mtx       mtx;
+	nni_reap_node reap;
 };
 
 static void
 sfd_dowrite(nni_sfd_conn *c)
 {
 	nni_aio *aio;
-	int      fd;
+	int      fd = c->fd;
 
-	if (c->closed || ((fd = nni_posix_pfd_fd(c->pfd)) < 0)) {
+	if (c->closed) {
 		return;
 	}
 
@@ -101,9 +101,9 @@ static void
 sfd_doread(nni_sfd_conn *c)
 {
 	nni_aio *aio;
-	int      fd;
+	int      fd = c->fd;
 
-	if (c->closed || ((fd = nni_posix_pfd_fd(c->pfd)) < 0)) {
+	if (c->closed) {
 		return;
 	}
 
@@ -174,9 +174,7 @@ sfd_error(void *arg, int err)
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, err);
 	}
-	if (c->pfd != NULL) {
-		nni_posix_pfd_close(c->pfd);
-	}
+	nni_posix_pfd_close(&c->pfd);
 	nni_mtx_unlock(&c->mtx);
 }
 
@@ -193,9 +191,7 @@ sfd_close(void *arg)
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
-		if (c->pfd != NULL) {
-			nni_posix_pfd_close(c->pfd);
-		}
+		nni_posix_pfd_close(&c->pfd);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -206,11 +202,7 @@ sfd_stop(void *arg)
 	nni_sfd_conn *c = arg;
 	sfd_close(c);
 
-	// ideally this would *stop* without freeing the pfd
-	if (c->pfd != NULL) {
-		nni_posix_pfd_fini(c->pfd);
-		c->pfd = NULL;
-	}
+	nni_posix_pfd_stop(&c->pfd);
 }
 
 // sfd_fini may block briefly waiting for the pollq thread.
@@ -220,6 +212,7 @@ sfd_fini(void *arg)
 {
 	nni_sfd_conn *c = arg;
 	sfd_stop(c);
+	nni_posix_pfd_fini(&c->pfd);
 	nni_mtx_fini(&c->mtx);
 
 	NNI_FREE_STRUCT(c);
@@ -237,7 +230,7 @@ sfd_free(void *arg)
 }
 
 static void
-sfd_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
+sfd_cb(void *arg, unsigned events)
 {
 	struct nni_sfd_conn *c = arg;
 
@@ -260,7 +253,7 @@ sfd_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 		events |= NNI_POLL_IN;
 	}
 	if ((!c->closed) && (events != 0)) {
-		nni_posix_pfd_arm(pfd, events);
+		nni_posix_pfd_arm(&c->pfd, events);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -302,7 +295,7 @@ sfd_send(void *arg, nni_aio *aio)
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
 		if (nni_list_first(&c->writeq) == aio) {
-			nni_posix_pfd_arm(c->pfd, NNI_POLL_OUT);
+			nni_posix_pfd_arm(&c->pfd, NNI_POLL_OUT);
 		}
 	}
 	nni_mtx_unlock(&c->mtx);
@@ -336,7 +329,7 @@ sfd_recv(void *arg, nni_aio *aio)
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
 		if (nni_list_first(&c->readq) == aio) {
-			nni_posix_pfd_arm(c->pfd, NNI_POLL_IN);
+			nni_posix_pfd_arm(&c->pfd, NNI_POLL_IN);
 		}
 	}
 	nni_mtx_unlock(&c->mtx);
@@ -467,14 +460,10 @@ int
 nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 {
 	nni_sfd_conn *c;
-	int           rv;
 	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_posix_pfd_init(&c->pfd, fd)) != 0) {
-		NNI_FREE_STRUCT(c);
-		return (rv);
-	}
+	nni_posix_pfd_init(&c->pfd, fd, sfd_cb, c);
 
 	c->closed = false;
 	c->fd     = fd;
@@ -490,8 +479,6 @@ nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 	c->stream.s_send  = sfd_send;
 	c->stream.s_get   = sfd_get;
 	c->stream.s_set   = sfd_set;
-
-	nni_posix_pfd_set_cb(c->pfd, sfd_cb, c);
 
 	*cp = c;
 	return (0);
