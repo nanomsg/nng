@@ -238,12 +238,12 @@ tcp_cb(void *arg, unsigned events)
 {
 	nni_tcp_conn *c = arg;
 
-	if (events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) {
-		tcp_error(c, NNG_ECONNSHUT);
-		return;
-	}
 	if (c->dial_aio != NULL) {
 		nni_posix_tcp_dial_cb(c, events);
+		return;
+	}
+	if ((events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) != 0) {
+		tcp_error(c, NNG_ECONNSHUT);
 		return;
 	}
 	nni_mtx_lock(&c->mtx);

@@ -229,6 +229,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, tcp_dialer_cancel, d)) != 0) {
 		goto error;
 	}
+	c->dial_aio = aio;
 	if (connect(fd, (void *) &ss, sslen) != 0) {
 		if (errno != EINPROGRESS) {
 			rv = nni_plat_errno(errno);
@@ -238,7 +239,6 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		if ((rv = nni_posix_pfd_arm(&c->pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
-		c->dial_aio = aio;
 		nni_aio_set_prov_data(aio, c);
 		nni_list_append(&d->connq, aio);
 		nni_mtx_unlock(&d->mtx);
@@ -246,6 +246,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	}
 	// Immediate connect, cool!  This probably only happens
 	// on loop back, and probably not on every platform.
+	c->dial_aio = NULL;
 	nni_aio_set_prov_data(aio, NULL);
 	nd = d->nodelay ? 1 : 0;
 	ka = d->keepalive ? 1 : 0;
@@ -256,6 +257,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	return;
 
 error:
+	c->dial_aio = NULL;
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
 	nng_stream_close(&c->stream);

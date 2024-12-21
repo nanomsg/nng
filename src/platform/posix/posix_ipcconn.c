@@ -205,7 +205,7 @@ ipc_cb(void *arg, unsigned events)
 		nni_posix_ipc_dialer_cb(arg, events);
 		return;
 	}
-	if (events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) {
+	if ((events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) != 0) {
 		ipc_error(c, NNG_ECONNSHUT);
 		return;
 	}
