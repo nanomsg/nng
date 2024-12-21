@@ -13,19 +13,18 @@
 
 #include <poll.h>
 
-typedef struct nni_posix_pollq nni_posix_pollq;
-
 // nni_posix_pfd is the handle used by the poller.  It's internals are private
 // to the poller.
 struct nni_posix_pfd {
-	nni_posix_pollq *pq;
-	int              fd;
-	nni_list_node    node;
-	nni_cv           cv;
-	nni_mtx          mtx;
-	unsigned         events;
-	nni_posix_pfd_cb cb;
-	void            *arg;
+	struct nni_posix_pollq *pq;
+	int                     fd;
+	nni_list_node           node;
+	nni_list_node           reap;
+	nni_mtx                 mtx;
+	unsigned                events;
+	nni_posix_pfd_cb        cb;
+	void                   *arg;
+	bool                    reaped;
 };
 
 #define NNI_POLL_IN ((unsigned) POLLIN)

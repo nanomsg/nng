@@ -31,7 +31,7 @@ typedef void (*nni_posix_pfd_cb)(void *, unsigned);
 #elif defined(NNG_POLLQ_EPOLL)
 #include "posix_pollq_epoll.h"
 #elif defined(NNG_POLLQ_POLL)
-#include "posix_pollq_epoll.h"
+#include "posix_pollq_poll.h"
 #elif defined(NNG_POLLQ_SELECT)
 #include "posix_pollq_select.h"
 #else
