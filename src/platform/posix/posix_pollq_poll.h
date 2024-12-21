@@ -21,7 +21,6 @@ struct nni_posix_pfd {
 	nni_posix_pollq *pq;
 	int              fd;
 	nni_list_node    node;
-	nni_cv           cv;
 	nni_mtx          mtx;
 	unsigned         events;
 	nni_posix_pfd_cb cb;
