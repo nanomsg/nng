@@ -11,6 +11,11 @@ jobs:
           - engine: wolf
             pkg: libwolfssl-dev
             dir: build.wolf
+        pollq:
+          - poller: auto
+          - poller: epoll
+          - poller: select
+          - poller: poll
     name: build
     runs-on: [ubuntu-latest]
     steps:
@@ -24,7 +29,7 @@ jobs:
         run: sudo apt-get install ${{ matrix.tls.pkg }}
 
       - name: Configure
-        run: mkdir ${{ matrix.tls.dir }} && cd ${{ matrix.tls.dir }} && cmake -G Ninja -D NNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=${{ matrix.tls.engine }} ..
+        run: mkdir ${{ matrix.tls.dir }} && cd ${{ matrix.tls.dir }} && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -D NNG_ENABLE_TLS=ON -DNNG_POLLQ_POLLER=${{ matrix.pollq.poller }} -DNNG_TLS_ENGINE=${{ matrix.tls.engine }} ..
 
       - name: Build
         run: cd ${{ matrix.tls.dir }} && ninja

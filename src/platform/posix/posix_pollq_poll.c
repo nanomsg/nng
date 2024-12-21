@@ -35,6 +35,7 @@
 
 typedef struct nni_posix_pollq {
 	nni_mtx         mtx;
+	nni_cv          cv;
 	int             wakewfd; // write side of waker pipe
 	int             wakerfd; // read side of waker pipe
 	nni_thr         thr;     // worker thread
@@ -69,7 +70,6 @@ nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 
 	NNI_LIST_NODE_INIT(&pfd->node);
 	nni_mtx_init(&pfd->mtx);
-	nni_cv_init(&pfd->cv, &pq->mtx);
 	pfd->fd     = fd;
 	pfd->events = 0;
 	pfd->cb     = cb;
@@ -115,7 +115,7 @@ nni_posix_pfd_stop(nni_posix_pfd *pfd)
 		nni_list_append(&pq->reapq, pfd);
 		nni_plat_pipe_raise(pq->wakewfd);
 		while (nni_list_active(&pq->reapq, pfd)) {
-			nni_cv_wait(&pfd->cv);
+			nni_cv_wait(&pq->cv);
 		}
 	}
 	nni_mtx_unlock(&pq->mtx);
@@ -133,7 +133,6 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 
 	// We're exclusive now.
 	(void) close(pfd->fd);
-	nni_cv_fini(&pfd->cv);
 	nni_mtx_fini(&pfd->mtx);
 }
 
@@ -175,7 +174,7 @@ posix_poll_reap(nni_posix_pollq *pq, unsigned events)
 	}
 	while ((pfd = nni_list_first(&pq->reapq)) != NULL) {
 		nni_list_remove(&pq->reapq, pfd);
-		nni_cv_wake(&pfd->cv);
+		nni_cv_wake(&pq->cv);
 	}
 }
 
@@ -266,6 +265,7 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 	(void) close(pq->wakewfd);
 	nni_thr_fini(&pq->thr);
 	(void) close(pq->wakerfd);
+	nni_cv_fini(&pq->cv);
 	nni_mtx_fini(&pq->mtx);
 	if (pq->fds != NULL) {
 		NNI_FREE_STRUCTS(pq->fds, pq->nalloc);
@@ -285,6 +285,8 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	NNI_LIST_INIT(&pq->pollq, nni_posix_pfd, node);
 	NNI_LIST_INIT(&pq->reapq, nni_posix_pfd, node);
 	NNI_LIST_INIT(&pq->addq, nni_posix_pfd, node);
+	nni_mtx_init(&pq->mtx);
+	nni_cv_init(&pq->cv, &pq->mtx);
 
 	pq->closed = false;
 #if NNG_MAX_OPEN
@@ -322,7 +324,6 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 		return (rv);
 	}
 	nni_thr_set_name(&pq->thr, "nng:poll:poll");
-	nni_mtx_init(&pq->mtx);
 	nni_thr_run(&pq->thr);
 	return (0);
 }

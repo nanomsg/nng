@@ -20,7 +20,7 @@ jobs:
       - name: Configure
         # TLS on Windows is not good because vcpkg is *old* mbedTLS 2.28, and we don't pass some newer tests.
         # We should explore testing WolfSSL here instead.
-        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -B build
+        run: cmake ${{ steps.vcpkg.outputs.vcpkg-cmake-config }} -B build -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build
         run: cmake --build build
