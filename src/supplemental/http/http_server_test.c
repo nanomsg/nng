@@ -349,6 +349,8 @@ test_server_method_too_long(void)
 	nng_http_handler_set_method(h,
 	    "THISMETHODISFARFARTOOLONGTOBEVALIDASAMETHODASITISLONGER"
 	    "THANTHIRTYTWOBYTES");
+
+	nng_http_handler_free(h);
 }
 
 void
