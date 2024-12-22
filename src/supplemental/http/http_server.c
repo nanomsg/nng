@@ -25,7 +25,7 @@
 struct nng_http_handler {
 	nni_list_node   node;
 	char           *uri;
-	char           *method;
+	char            method[32];
 	char           *host;
 	nng_sockaddr    host_addr;
 	bool            host_ip;
@@ -114,8 +114,7 @@ nni_http_handler_init(
 	if ((uri == NULL) || (strlen(uri) == 0) || (strcmp(uri, "/") == 0)) {
 		uri = "";
 	}
-	if (((h->uri = nni_strdup(uri)) == NULL) ||
-	    ((h->method = nni_strdup("GET")) == NULL)) {
+	if ((h->uri = nni_strdup(uri)) == NULL) {
 		nni_http_handler_fini(h);
 		return (NNG_ENOMEM);
 	}
@@ -126,9 +125,10 @@ nni_http_handler_init(
 	h->host           = NULL;
 	h->tree           = false;
 	h->tree_exclusive = false;
-	h->maxbody = 1024 * 1024; // By default we accept up to 1MB of body
-	h->getbody = true;
-	*hp        = h;
+	h->maxbody        = 1024 * 1024; // Up to 1MB of body
+	h->getbody        = true;
+	strcpy(h->method, "GET");
+	*hp = h;
 	return (0);
 }
 
@@ -145,7 +145,6 @@ nni_http_handler_fini(nni_http_handler *h)
 	}
 	nni_strfree(h->host);
 	nni_strfree(h->uri);
-	nni_strfree(h->method);
 	NNI_FREE_STRUCT(h);
 }
 
@@ -252,21 +251,16 @@ nni_http_handler_set_host(nni_http_handler *h, const char *host)
 int
 nni_http_handler_set_method(nni_http_handler *h, const char *method)
 {
-	char *dup;
-
 	if (nni_atomic_get_bool(&h->busy) != 0) {
 		return (NNG_EBUSY);
 	}
 	if (method == NULL) {
-		nni_strfree(h->method);
-		h->method = NULL;
-		return (0);
+		method = "";
 	}
-	if ((dup = nni_strdup(method)) == NULL) {
-		return (NNG_ENOMEM);
+	if (strlen(method) >= sizeof(h->method)) {
+		return (NNG_EINVAL);
 	}
-	nni_strfree(h->method);
-	h->method = dup;
+	(void) snprintf(h->method, sizeof(h->method), "%s", method);
 	return (0);
 }
 
@@ -663,7 +657,7 @@ http_sconn_rxdone(void *arg)
 			continue; // Some other substring, not matched.
 		}
 
-		if ((h->method == NULL) || (h->method[0] == '\0')) {
+		if (h->method[0] == '\0') {
 			// Handler wants to process *all* methods.
 			break;
 		}
@@ -1220,11 +1214,11 @@ nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 		    ((h->host == NULL) && (h2->host != NULL))) {
 			continue; // Host specified for just one.
 		}
-		if (((h->method == NULL) && (h2->method != NULL)) ||
-		    ((h2->method == NULL) && (h->method != NULL))) {
+		if (((h->method[0] == 0) && (h2->method[0] != 0)) ||
+		    ((h2->method[0] == 0) && (h->method[0] != 0))) {
 			continue; // Method specified for just one.
 		}
-		if ((h->method != NULL) &&
+		if ((h->method[0] != 0) &&
 		    (strcmp(h2->method, h->method) != 0)) {
 			// Different methods, so again we are fine.
 			continue;

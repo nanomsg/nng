@@ -339,6 +339,20 @@ test_server_missing_host(void)
 }
 
 void
+test_server_method_too_long(void)
+{
+	nng_http_handler *h;
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
+
+	NUTS_FAIL(nng_http_handler_set_method(h,
+	              "THISMETHODISFARFARTOOLONGTOBEVALIDASAMETHODASITISLONGER"
+	              "THANTHIRTYTWOBYTES"),
+	    NNG_EINVAL);
+}
+
+void
 test_server_wrong_method(void)
 {
 	struct server_test st;
@@ -898,6 +912,7 @@ NUTS_TESTS = {
 	{ "server bad version", test_server_bad_version },
 	{ "server missing host", test_server_missing_host },
 	{ "server wrong method", test_server_wrong_method },
+	{ "server method too long", test_server_method_too_long },
 	{ "server post handler", test_server_post_handler },
 	{ "server get redirect", test_server_get_redirect },
 	{ "server tree redirect", test_server_tree_redirect },
