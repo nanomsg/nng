@@ -47,7 +47,7 @@ The API frees the programmer from worrying about details like connection
 management, retries, and other common considerations, so that they
 can focus on the application instead of the plumbing.
 
-NNG is implemented in C, requiring only C99 and CMake to build.
+NNG is implemented in C, requiring only a relatively modern C compiler (C11) and CMake to build.
 It can be built as a shared or a static library, and is readily
 embeddable. It is also designed to be easy to port to new platforms
 if your platform is not already supported.
@@ -126,18 +126,24 @@ are involved.)
 
 ## Supported Platforms
 
-NNG supports Linux, macOS, Windows (Vista or better), illumos, Solaris,
-FreeBSD, Android, and iOS. Most other POSIX platforms should work out of
+NNG supports Linux, macOS, Windows, illumos, Solaris,
+FreeBSD, Android, and iOS.
+It is regularly tested against macOS, Windows, OmniOS, Ubuntu, and FreeBSD.
+Most other POSIX platforms should work out of
 the box but have not been tested. Very old versions of otherwise supported
 platforms might not work.
 
 Officially, NNG only supports operating systems that are supported by
 their vendors. For example, Windows versions 8.1 and lower are no longer
-officially supported.
+officially supported, and macOS versions predating Ventura are no longer
+officially supported. Very old versions of systems may or may not work,
+and we will generally expend no effort trying to make an unsupported system
+function.
+We generally only test relatively recent versions of supported systems.
 
 ## Requirements
 
-To build this project, you will need a C99 compatible compiler and
+To build this project, you will need a C11 compatible compiler and
 [CMake](http://www.cmake.org) version 3.15 or newer.
 
 We recommend using the [Ninja](https://ninja-build.org) build
@@ -146,7 +152,7 @@ system (pass `-G Ninja` to CMake) when you can.
 blindingly fast and has made our lives as developers measurably better.)
 
 If you want to build with TLS support you will also need
-[Mbed TLS](https://tls.mbed.org).
+[Mbed TLS](https://tls.mbed.org) or [WolfSSL](https://wolfssl.com).  
 See the [build instructions](docs/BUILD_TLS.md) for details.
 
 ## Quick Start
