@@ -346,10 +346,9 @@ test_server_method_too_long(void)
 	NUTS_PASS(nng_http_handler_alloc_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
-	NUTS_FAIL(nng_http_handler_set_method(h,
-	              "THISMETHODISFARFARTOOLONGTOBEVALIDASAMETHODASITISLONGER"
-	              "THANTHIRTYTWOBYTES"),
-	    NNG_EINVAL);
+	nng_http_handler_set_method(h,
+	    "THISMETHODISFARFARTOOLONGTOBEVALIDASAMETHODASITISLONGER"
+	    "THANTHIRTYTWOBYTES");
 }
 
 void
@@ -393,7 +392,7 @@ test_server_post_handler(void)
 	void              *data;
 
 	NUTS_PASS(nng_http_handler_alloc(&h, "/post", httpecho));
-	NUTS_PASS(nng_http_handler_set_method(h, "POST"));
+	nng_http_handler_set_method(h, "POST");
 
 	server_setup(&st, h);
 

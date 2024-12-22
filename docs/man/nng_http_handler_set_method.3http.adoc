@@ -20,7 +20,7 @@ nng_http_handler_set_method - set HTTP handler method
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-int nng_http_handler_set_method(nng_http_handler *handler, const char *method);
+void nng_http_handler_set_method(nng_http_handler *handler, const char *method);
 ----
 
 == DESCRIPTION
@@ -36,21 +36,10 @@ NOTE: The server will automatically call "GET" handlers if the client
 sends a "HEAD" request, and will suppress HTTP body data in the responses
 sent for such requests.
 
-NOTE: No validation of the _method_ is performed, but HTTP specifications
-insist that the actual method sent over the wire be capitalized.
+NOTE: If _method_ is longer than 32-bytes, it may be truncated silently.
 
 The handler may always examine the actual method used using the
 xref:nng_http_req_get_method.3http.adoc[`nng_http_req_get_method()`] function.
-
-== RETURN VALUES
-
-This function returns 0 on success, and non-zero otherwise.
-
-== ERRORS
-
-[horizontal]
-`NNG_ENOMEM`:: Insufficient free memory exists.
-`NNG_ENOTSUP`:: No support for HTTP in the library.
 
 == SEE ALSO
 

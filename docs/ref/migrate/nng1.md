@@ -229,11 +229,13 @@ they may be silently truncated to the limit:
 - HTTP Method names are limited to 32 bytes (the longest IANA registered method is currently 18 bytes, used for WebDAV.)
 - The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes.
 
-The following API changes are present:
+The following API calls have changed so that they are `void` returns, and cannot fail.
+They may silently truncate data, and the handler methods may not have any effect if the handler is already in use.
 
-- [`nng_http_req_set_method`] no longer returns a value, and cannot fail.
-- [`nng_http_res_set_status`] no longer returns a value, and cannot fail.
-- [`nng_http_handler_set_host`] no longer returns a value and cannot fail.
+- [`nng_http_req_set_method`]
+- [`nng_http_res_set_status`]
+- [`nng_http_handler_set_host`]
+- [`nng_http_handler_set_method`]
 
 ## Security Descriptors (Windows Only)
 

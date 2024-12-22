@@ -355,7 +355,7 @@ NNG_DECL int nng_http_handler_alloc_directory(
 // called for.  By default this is GET.  If NULL is supplied for the
 // method, then the handler is executed regardless of method, and must
 // inspect the method itself.
-NNG_DECL int nng_http_handler_set_method(nng_http_handler *, const char *);
+NNG_DECL void nng_http_handler_set_method(nng_http_handler *, const char *);
 
 // nng_http_handler_set_host sets the Host: that the handler will be
 // called for (to allow for virtual hosts).  If the value is NULL (the

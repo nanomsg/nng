@@ -236,20 +236,14 @@ nni_http_handler_set_host(nni_http_handler *h, const char *host)
 	(void) snprintf(h->host, sizeof(h->host), "%s", host);
 }
 
-int
+void
 nni_http_handler_set_method(nni_http_handler *h, const char *method)
 {
-	if (nni_atomic_get_bool(&h->busy) != 0) {
-		return (NNG_EBUSY);
-	}
+	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	if (method == NULL) {
 		method = "";
 	}
-	if (strlen(method) >= sizeof(h->method)) {
-		return (NNG_EINVAL);
-	}
 	(void) snprintf(h->method, sizeof(h->method), "%s", method);
-	return (0);
 }
 
 static nni_list http_servers =
@@ -1757,9 +1751,9 @@ nni_http_handler_init_redirect(nni_http_handler **hpp, const char *uri,
 		return (rv);
 	}
 
-	if (((rv = nni_http_handler_set_method(h, NULL)) != 0) ||
-	    ((rv = nni_http_handler_set_data(h, hr, http_redirect_free)) !=
-	        0)) {
+	nni_http_handler_set_method(h, NULL);
+
+	if ((rv = nni_http_handler_set_data(h, hr, http_redirect_free)) != 0) {
 		http_redirect_free(hr);
 		nni_http_handler_fini(h);
 		return (rv);

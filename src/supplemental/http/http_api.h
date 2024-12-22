@@ -332,7 +332,7 @@ extern void nni_http_handler_set_host(nni_http_handler *, const char *);
 // is obligated to inspect the method.  (Note: the passed method must be
 // in upper case and should come from a statically allocated string; the
 // server does not make its own copy.)
-extern int nni_http_handler_set_method(nni_http_handler *, const char *);
+extern void nni_http_handler_set_method(nni_http_handler *, const char *);
 
 // nni_http_handler_set_data sets an opaque data element on the handler,
 // which will be available to the callback via nni_http_handler_get_data.

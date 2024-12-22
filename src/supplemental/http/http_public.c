@@ -583,15 +583,14 @@ nng_http_handler_alloc_static(nng_http_handler **hp, const char *uri,
 #endif
 }
 
-int
+void
 nng_http_handler_set_method(nng_http_handler *h, const char *meth)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_set_method(h, meth));
+	nni_http_handler_set_method(h, meth);
 #else
 	NNI_ARG_UNUSED(h);
 	NNI_ARG_UNUSED(meth);
-	return (NNG_ENOTSUP);
 #endif
 }
 
