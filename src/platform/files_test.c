@@ -27,13 +27,13 @@ test_permissions(void)
 	char  *file;
 	void  *data;
 	size_t n;
-	temp = nni_plat_temp_dir();
-	NUTS_TRUE(temp != NULL);
-	file = nni_file_join(temp, "nng_files_perms_test");
 	if (geteuid() == 0) {
 		NUTS_SKIP("Cannot test permissions as root");
 		return;
 	}
+	temp = nni_plat_temp_dir();
+	NUTS_TRUE(temp != NULL);
+	file = nni_file_join(temp, "nng_files_perms_test");
 	NUTS_PASS(nni_file_put(file, "abc", 4));
 	chmod(file, 0);
 	NUTS_FAIL(nni_file_get(file, &data, &n), NNG_EPERM);
