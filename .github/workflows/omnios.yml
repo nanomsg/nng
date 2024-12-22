@@ -1,0 +1,34 @@
+name: omnios
+
+on:
+  push:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: NNG test on OmniOS via Qemu
+    env:
+      NNG_UDP_PASS_RATE: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test NNG in OmniOS
+        id: test
+        uses: vmactions/omnios-vm@v1
+        with:
+          usesh: true
+          sync: rsync
+          copyback: false
+          envs: NNG_UDP_PASS_RATE
+          prepare: |
+            pkg install develeper/clang-19
+            pkg install developer/ninja
+            pkg install developer/cmake
+          run: |
+            mkdir build
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DNNG_TOOLS=OFF ..
+            ninja
+            ctest --output-on-failure
