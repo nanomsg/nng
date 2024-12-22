@@ -87,6 +87,11 @@ enum nng_http_status {
 	NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED    = 511,
 };
 
+#define NNG_HTTP_VERSION_1_0 "HTTP/1.0"
+#define NNG_HTTP_VERSION_1_1 "HTTP/1.1"
+#define NNG_HTTP_VERSION_2 "HTTP/2"
+#define NNG_HTTP_VERSION_3 "HTTP/3"
+
 // nng_http_req represents an HTTP request.
 typedef struct nng_http_req nng_http_req;
 

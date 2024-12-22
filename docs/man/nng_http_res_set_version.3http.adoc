@@ -1,6 +1,6 @@
 = nng_http_res_set_version(3http)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,6 +20,9 @@ nng_http_res_set_version - set HTTP response protocol version
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
+#define NNG_HTTP_VERSION_1_1 "HTTP/1.0"
+#define NNG_HTTP_VERSION_1_1 "HTTP/1.1"
+
 int nng_http_res_set_version(nng_http_res *res, const char *version);
 ----
 
@@ -33,12 +36,8 @@ The default value is "HTTP/1.1".
 
 A local copy of the _version_ is made in the response _res_.
 
-NOTE: No validation of the version supplied is performed.
-
 NOTE: The library does not contain support for versions of HTTP other than
 "HTTP/1.0" and "HTTP/1.1".
-Specifying any other version may result in unspecified behavior.
-
 
 == RETURN VALUES
 
@@ -48,7 +47,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 [horizontal]
 `NNG_ENOMEM`:: Insufficient memory to perform the operation.
-`NNG_ENOTSUP`:: No support for HTTP in the library.
+`NNG_ENOTSUP`:: No support for HTTP in the library, or no support for the version specified.
 
 == SEE ALSO
 
