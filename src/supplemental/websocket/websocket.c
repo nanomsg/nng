@@ -2150,8 +2150,9 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 		return (rv);
 	}
 
-	if (((rv = nni_http_handler_set_host(l->handler, host)) != 0) ||
-	    ((rv = nni_http_handler_set_data(l->handler, l, 0)) != 0) ||
+	nni_http_handler_set_host(l->handler, host);
+
+	if (((rv = nni_http_handler_set_data(l->handler, l, 0)) != 0) ||
 	    ((rv = nni_http_server_init(&l->server, url)) != 0)) {
 		ws_listener_free(l);
 		return (rv);

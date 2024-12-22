@@ -609,15 +609,14 @@ nng_http_handler_collect_body(nng_http_handler *h, bool want, size_t len)
 #endif
 }
 
-int
+void
 nng_http_handler_set_host(nng_http_handler *h, const char *host)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_set_host(h, host));
+	nni_http_handler_set_host(h, host);
 #else
 	NNI_ARG_UNUSED(h);
 	NNI_ARG_UNUSED(host);
-	return (NNG_ENOTSUP);
 #endif
 }
 

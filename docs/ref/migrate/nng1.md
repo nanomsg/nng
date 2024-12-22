@@ -221,8 +221,19 @@ accessors functions are provided:
 
 ## HTTP API
 
-- [`nng_http_req_set_method`] no longer returns a value. It never fails, but it may truncate an unreasonably long value.
+A few limits on string lengths of certain values are now applied, which allows us to preallocate values
+and eliminate certain unreasonable error paths. If values longer than these are supplied in certain APIs
+they may be silently truncated to the limit:
+
+- Hostnames are limited per RFC 1035 to 253 characters (not including terminating "." or zero byte.)
+- HTTP Method names are limited to 32 bytes (the longest IANA registered method is currently 18 bytes, used for WebDAV.)
+- The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes.
+
+The following API changes are present:
+
+- [`nng_http_req_set_method`] no longer returns a value, and cannot fail.
 - [`nng_http_res_set_status`] no longer returns a value, and cannot fail.
+- [`nng_http_handler_set_host`] no longer returns a value and cannot fail.
 
 ## Security Descriptors (Windows Only)
 

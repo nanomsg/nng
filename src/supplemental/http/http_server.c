@@ -26,7 +26,7 @@ struct nng_http_handler {
 	nni_list_node   node;
 	char           *uri;
 	char            method[32];
-	char           *host;
+	char            host[256]; // RFC 1035
 	nng_sockaddr    host_addr;
 	bool            host_ip;
 	bool            tree;
@@ -122,12 +122,12 @@ nni_http_handler_init(
 	h->cb             = cb;
 	h->data           = NULL;
 	h->dtor           = NULL;
-	h->host           = NULL;
 	h->tree           = false;
 	h->tree_exclusive = false;
 	h->maxbody        = 1024 * 1024; // Up to 1MB of body
 	h->getbody        = true;
-	strcpy(h->method, "GET");
+	(void) strcpy(h->method, "GET");
+	(void) strcpy(h->host, "");
 	*hp = h;
 	return (0);
 }
@@ -143,7 +143,6 @@ nni_http_handler_fini(nni_http_handler *h)
 	if (h->dtor != NULL) {
 		h->dtor(h->data);
 	}
-	nni_strfree(h->host);
 	nni_strfree(h->uri);
 	NNI_FREE_STRUCT(h);
 }
@@ -203,19 +202,15 @@ nni_http_handler_set_tree_exclusive(nni_http_handler *h)
 	return (0);
 }
 
-int
+void
 nni_http_handler_set_host(nni_http_handler *h, const char *host)
 {
-	char *dup;
+	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 
-	if (nni_atomic_get_bool(&h->busy) != 0) {
-		return (NNG_EBUSY);
-	}
 	if ((host == NULL) || (strcmp(host, "*") == 0) ||
 	    strcmp(host, "") == 0) {
-		nni_strfree(h->host);
-		h->host = NULL;
-		return (0);
+		(void) strcpy(h->host, "");
+		return;
 	}
 	if (nni_parse_ip(host, &h->host_addr) == 0) {
 		uint8_t wild[16] = { 0 };
@@ -224,28 +219,21 @@ nni_http_handler_set_host(nni_http_handler *h, const char *host)
 		switch (h->host_addr.s_family) {
 		case NNG_AF_INET:
 			if (h->host_addr.s_in.sa_addr == 0) {
-				nni_strfree(h->host);
-				h->host = NULL;
-				return (0);
+				(void) strcpy(h->host, "");
+				return;
 			}
 			break;
 		case NNG_AF_INET6:
 			if (memcmp(h->host_addr.s_in6.sa_addr, wild, 16) ==
 			    0) {
-				nni_strfree(h->host);
-				h->host = NULL;
-				return (0);
+				(void) strcpy(h->host, "");
+				return;
 			}
 			break;
 		}
 		h->host_ip = true;
 	}
-	if ((dup = nni_strdup(host)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	nni_strfree(h->host);
-	h->host = dup;
-	return (0);
+	(void) snprintf(h->host, sizeof(h->host), "%s", host);
 }
 
 int
@@ -499,7 +487,7 @@ http_handler_host_match(nni_http_handler *h, const char *host)
 	nng_sockaddr sa;
 	size_t       len;
 
-	if (h->host == NULL) {
+	if ((len = strlen(h->host)) == '\0') {
 		return (true);
 	}
 	if (host == NULL) {
@@ -528,8 +516,6 @@ http_handler_host_match(nni_http_handler *h, const char *host)
 			return (true);
 		}
 	}
-
-	len = strlen(h->host);
 
 	if ((nni_strncasecmp(host, h->host, len) != 0)) {
 		return (false);
@@ -1205,13 +1191,13 @@ nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 	NNI_LIST_FOREACH (&s->handlers, h2) {
 		size_t len2;
 
-		if ((h2->host != NULL) && (h->host != NULL) &&
+		if ((h2->host[0] != 0) && (h->host[0] != 0) &&
 		    (nni_strcasecmp(h2->host, h->host) != 0)) {
 			// Hosts don't match, so we are safe.
 			continue;
 		}
-		if (((h2->host == NULL) && (h->host != NULL)) ||
-		    ((h->host == NULL) && (h2->host != NULL))) {
+		if (((h2->host[0] == 0) && (h->host[0] != 0)) ||
+		    ((h->host[0] == 0) && (h2->host[0] != 0))) {
 			continue; // Host specified for just one.
 		}
 		if (((h->method[0] == 0) && (h2->method[0] != 0)) ||

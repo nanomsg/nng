@@ -322,7 +322,7 @@ extern int nni_http_handler_set_tree_exclusive(nni_http_handler *);
 // on port number as we assume that clients MUST have gotten that part right
 // as we do not support virtual hosting on multiple separate ports; the
 // server only listens on a single port.
-extern int nni_http_handler_set_host(nni_http_handler *, const char *);
+extern void nni_http_handler_set_host(nni_http_handler *, const char *);
 
 // nni_http_handler_set_method limits the handler to only being called
 // for the given HTTP method.  By default a handler is called for GET

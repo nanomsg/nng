@@ -362,7 +362,7 @@ NNG_DECL int nng_http_handler_set_method(nng_http_handler *, const char *);
 // default, then the Host: header is not considered when matching the
 // handler.)  Note that the Host: header must match *exactly* (except
 // that case is not considered.)
-NNG_DECL int nng_http_handler_set_host(nng_http_handler *, const char *);
+NNG_DECL void nng_http_handler_set_host(nng_http_handler *, const char *);
 
 // nng_http_handler_collect_body is used to indicate the server should
 // check for, and process, data sent by the client, which will be attached

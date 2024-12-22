@@ -1,6 +1,6 @@
 = nng_http_handler_set_host(3http)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,7 +20,7 @@ nng_http_handler_set_host - set host for HTTP handler
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-int nng_http_handler_set_host(nng_http_handler *handler, const char *host);
+void nng_http_handler_set_host(nng_http_handler *handler, const char *host);
 ----
 
 == DESCRIPTION
@@ -41,15 +41,8 @@ ports, the port number can be elided.
 The matching test only considers
 the hostname or IP address, and ignores any trailing port number.
 
-== RETURN VALUES
-
-This function returns 0 on success, and non-zero otherwise.
-
-== ERRORS
-
-[horizontal]
-`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
-`NNG_ENOTSUP`:: No support for HTTP in the library.
+NOTE: This should not be used with an IP address normally, as `Host:` header
+is used with virtual hosts in HTTP/1.1, and not supported for HTTP/1.0.
 
 == SEE ALSO
 
