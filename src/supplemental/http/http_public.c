@@ -348,15 +348,14 @@ nng_http_res_get_reason(const nng_http_res *res)
 #endif
 }
 
-int
+void
 nng_http_res_set_status(nng_http_res *res, uint16_t status)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_res_set_status(res, status));
+	nni_http_res_set_status(res, status);
 #else
 	NNI_ARG_UNUSED(res);
 	NNI_ARG_UNUSED(status);
-	return (NNG_ENOTSUP);
 #endif
 }
 

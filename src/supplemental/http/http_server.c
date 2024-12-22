@@ -1416,7 +1416,6 @@ http_handle_file(nni_aio *aio)
 		return;
 	}
 	if (((rv = nni_http_res_alloc(&res)) != 0) ||
-	    ((rv = nni_http_res_set_status(res, NNG_HTTP_STATUS_OK)) != 0) ||
 	    ((rv = nni_http_res_set_header(res, "Content-Type", ctype)) !=
 	        0) ||
 	    ((rv = nni_http_res_copy_data(res, data, size)) != 0)) {
@@ -1425,6 +1424,8 @@ http_handle_file(nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	nni_http_res_set_status(res, NNG_HTTP_STATUS_OK);
 
 	nni_free(data, size);
 	nni_aio_set_output(aio, 0, res);
@@ -1610,7 +1611,6 @@ http_handle_dir(nni_aio *aio)
 	}
 
 	if (((rv = nni_http_res_alloc(&res)) != 0) ||
-	    ((rv = nni_http_res_set_status(res, NNG_HTTP_STATUS_OK)) != 0) ||
 	    ((rv = nni_http_res_set_header(res, "Content-Type", ctype)) !=
 	        0) ||
 	    ((rv = nni_http_res_copy_data(res, data, size)) != 0)) {
@@ -1619,6 +1619,8 @@ http_handle_dir(nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	nni_http_res_set_status(res, NNG_HTTP_STATUS_OK);
 
 	nni_free(data, size);
 	nni_aio_set_output(aio, 0, res);
@@ -1707,7 +1709,6 @@ http_handle_redirect(nni_aio *aio)
 	// discard it.
 	if ((rv != 0) || ((rv = nni_http_res_alloc(&r)) != 0) ||
 	    ((rv = nni_http_alloc_html_error(&html, hr->code, msg)) != 0) ||
-	    ((rv = nni_http_res_set_status(r, hr->code)) != 0) ||
 	    ((rv = nni_http_res_set_header(r, "Connection", "close")) != 0) ||
 	    ((rv = nni_http_res_set_header(
 	          r, "Content-Type", "text/html; charset=UTF-8")) != 0) ||
@@ -1722,6 +1723,9 @@ http_handle_redirect(nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	nni_http_res_set_status(r, hr->code);
+
 	if (loc != hr->where) {
 		nni_strfree(loc);
 	}
@@ -1807,12 +1811,13 @@ http_handle_static(nni_aio *aio)
 
 	if (((rv = nni_http_res_alloc(&r)) != 0) ||
 	    ((rv = nni_http_res_set_header(r, "Content-Type", ctype)) != 0) ||
-	    ((rv = nni_http_res_set_status(r, NNG_HTTP_STATUS_OK)) != 0) ||
 	    ((rv = nni_http_res_set_data(r, hs->data, hs->size)) != 0)) {
 		nni_http_res_free(r);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	nni_http_res_set_status(r, NNG_HTTP_STATUS_OK);
 
 	nni_aio_set_output(aio, 0, r);
 	nni_aio_finish(aio, 0, 0);

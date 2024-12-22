@@ -139,7 +139,7 @@ extern void        nni_http_req_set_method(nni_http_req *, const char *);
 extern int         nni_http_req_set_version(nni_http_req *, const char *);
 extern int         nni_http_req_set_uri(nni_http_req *, const char *);
 extern uint16_t    nni_http_res_get_status(const nni_http_res *);
-extern int         nni_http_res_set_status(nni_http_res *, uint16_t);
+extern void        nni_http_res_set_status(nni_http_res *, uint16_t);
 extern const char *nni_http_res_get_version(const nni_http_res *);
 extern int         nni_http_res_set_version(nni_http_res *, const char *);
 extern const char *nni_http_res_get_reason(const nni_http_res *);

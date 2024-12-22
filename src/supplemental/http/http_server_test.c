@@ -155,12 +155,12 @@ httpecho(nng_aio *aio)
 	if (((rv = nng_http_res_alloc(&res)) != 0) ||
 	    ((rv = nng_http_res_copy_data(res, body, len)) != 0) ||
 	    ((rv = nng_http_res_set_header(
-	          res, "Content-type", "text/plain")) != 0) ||
-	    ((rv = nng_http_res_set_status(res, NNG_HTTP_STATUS_OK)) != 0)) {
+	          res, "Content-type", "text/plain")) != 0)) {
 		nng_http_res_free(res);
 		nng_aio_finish(aio, rv);
 		return;
 	}
+	nng_http_res_set_status(res, NNG_HTTP_STATUS_OK);
 	nng_aio_set_output(aio, 0, res);
 	nng_aio_finish(aio, 0);
 }

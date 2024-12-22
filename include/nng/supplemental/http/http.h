@@ -183,7 +183,7 @@ NNG_DECL void nng_http_res_free(nng_http_res *);
 NNG_DECL uint16_t nng_http_res_get_status(const nng_http_res *);
 
 // nng_http_res_set_status sets the HTTP status code.
-NNG_DECL int nng_http_res_set_status(nng_http_res *, uint16_t);
+NNG_DECL void nng_http_res_set_status(nng_http_res *, uint16_t);
 
 // nng_http_res_get_reason returns the human readable status message
 // that the server responds (or responded) with.

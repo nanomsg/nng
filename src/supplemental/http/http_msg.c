@@ -746,11 +746,10 @@ nni_http_req_set_method(nni_http_req *req, const char *meth)
 	(void) snprintf(req->meth, sizeof(req->meth), "%s", meth);
 }
 
-int
+void
 nni_http_res_set_status(nni_http_res *res, uint16_t status)
 {
 	res->code = status;
-	return (0);
 }
 
 uint16_t
@@ -849,8 +848,9 @@ http_res_parse_line(nni_http_res *res, uint8_t *line)
 		return (NNG_EPROTO);
 	}
 
-	if (((rv = nni_http_res_set_status(res, (uint16_t) status)) != 0) ||
-	    ((rv = nni_http_res_set_version(res, version)) != 0) ||
+	nni_http_res_set_status(res, (uint16_t) status);
+
+	if (((rv = nni_http_res_set_version(res, version)) != 0) ||
 	    ((rv = nni_http_res_set_reason(res, reason)) != 0)) {
 		return (rv);
 	}

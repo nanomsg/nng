@@ -221,7 +221,8 @@ accessors functions are provided:
 
 ## HTTP API
 
-The [`nng_http_req_set_method`] no longer returns a value. It never fails, but it may truncate an unreasonably long value.
+- [`nng_http_req_set_method`] no longer returns a value. It never fails, but it may truncate an unreasonably long value.
+- [`nng_http_res_set_status`] no longer returns a value, and cannot fail.
 
 ## Security Descriptors (Windows Only)
 

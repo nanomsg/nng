@@ -1604,11 +1604,7 @@ ws_handler(nni_aio *aio)
 		goto err;
 	}
 
-	if (nni_http_res_set_status(res, NNG_HTTP_STATUS_SWITCHING) != 0) {
-		nni_http_res_free(res);
-		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-		goto err;
-	}
+	nni_http_res_set_status(res, NNG_HTTP_STATUS_SWITCHING);
 
 	if ((SETH("Connection", "Upgrade") != 0) ||
 	    (SETH("Upgrade", "websocket") != 0) ||
