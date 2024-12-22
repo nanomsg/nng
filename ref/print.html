@@ -5768,6 +5768,30 @@ accessors functions are provided:</p>
 <li><code>u_host</code> is removed - use [<code>nng_url_hostname</code>] and [<code>nng_url_port</code>] to construct if needed</li>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="migrate//api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
+<h2 id="http-api"><a class="header" href="#http-api">HTTP API</a></h2>
+<p>A few limits on string lengths of certain values are now applied, which allows us to preallocate values
+and eliminate certain unreasonable error paths. If values longer than these are supplied in certain APIs
+they may be silently truncated to the limit:</p>
+<ul>
+<li>Hostnames are limited per RFC 1035 to 253 characters (not including terminating “.” or zero byte.)</li>
+<li>HTTP Method names are limited to 32 bytes (the longest IANA registered method is currently 18 bytes, used for WebDAV.)</li>
+<li>The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes. (Longer URIs may be accepted
+by using [<code>nng_http_handler_set_tree</code>] and matching a parent of the directory component.)</li>
+</ul>
+<p>The following API calls have changed so that they are <code>void</code> returns, and cannot fail.
+They may silently truncate data.</p>
+<ul>
+<li>[<code>nng_http_req_set_method</code>]</li>
+<li>[<code>nng_http_res_set_status</code>]</li>
+<li>[<code>nng_http_handler_collect_body</code>]</li>
+<li>[<code>nng_http_handler_set_data</code>]</li>
+<li>[<code>nng_http_handler_set_host</code>]</li>
+<li>[<code>nng_http_handler_set_method</code>]</li>
+<li>[<code>nng_http_handler_set_tree</code>]</li>
+<li>[<code>nng_http_handler_set_tree_exclusive</code>]</li>
+</ul>
+<p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
+These checks are removed now, but debug builds will assert if an application tries to do so.</p>
 <h2 id="security-descriptors-windows-only"><a class="header" href="#security-descriptors-windows-only">Security Descriptors (Windows Only)</a></h2>
 <p>The <code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code> option is removed, and replaced
 with the functions [<code>nng_listener_get_security_descriptor</code>] and
