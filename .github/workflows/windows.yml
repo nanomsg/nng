@@ -1,5 +1,9 @@
 name: windows
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
 jobs:
   build:
     name: build

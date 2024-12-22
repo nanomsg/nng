@@ -4,7 +4,13 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "docs/**"
+      - ".github/workflows/mdbook.yml"
   pull_request:
+    paths:
+      - "docs/**"
+      - ".github/workflows/mdbook.yml"
 
 jobs:
   deploy:

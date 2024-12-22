@@ -1,5 +1,7 @@
 name: coverage
-on: [push]
+on:
+  push:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
 jobs:
   linux-coverage:
     name: linux

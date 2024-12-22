@@ -1,5 +1,9 @@
 name: sanitize
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
 jobs:
   sanitize:
     env:
@@ -9,8 +13,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        sanitizer: [ address, undefined, thread ]
-        os: [ ubuntu-latest ]
+        sanitizer: [address, undefined, thread]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v1
