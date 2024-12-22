@@ -32,7 +32,12 @@
 #endif
 
 #ifndef NNG_HAVE_INET6
+#ifdef HAVE_NNG_HAVE_INET6_BSD
+#define NNG_HAVE_INET6
+#include <netinet6/in6.h>
+#else
 #undef NNG_ENABLE_IPV6
+#endif
 #endif
 
 // Linux has IPV6_ADD_MEMBERSHIP and IPV6_DROP_MEMBERSHIP

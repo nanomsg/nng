@@ -37,7 +37,12 @@
 #endif
 
 #ifndef NNG_HAVE_INET6
+#ifdef HAVE_NNG_HAVE_INET6_BSD
+#define NNG_HAVE_INET6
+#include <netinet6/in6.h>
+#else
 #undef NNG_ENABLE_IPV6
+#endif
 #endif
 
 static nni_mtx  resolv_mtx  = NNI_MTX_INITIALIZER;
