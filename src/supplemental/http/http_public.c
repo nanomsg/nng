@@ -594,17 +594,15 @@ nng_http_handler_set_method(nng_http_handler *h, const char *meth)
 #endif
 }
 
-int
+void
 nng_http_handler_collect_body(nng_http_handler *h, bool want, size_t len)
 {
 #ifdef NNG_SUPP_HTTP
 	nni_http_handler_collect_body(h, want, len);
-	return (0);
 #else
 	NNI_ARG_UNUSED(h);
 	NNI_ARG_UNUSED(want);
 	NNI_ARG_UNUSED(len);
-	return (NNG_ENOTSUP);
 #endif
 }
 

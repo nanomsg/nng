@@ -234,8 +234,11 @@ They may silently truncate data, and the handler methods may not have any effect
 
 - [`nng_http_req_set_method`]
 - [`nng_http_res_set_status`]
+- [`nng_http_handler_collect_body`]
 - [`nng_http_handler_set_host`]
 - [`nng_http_handler_set_method`]
+- [`nng_http_handler_set_tree`]
+- [`nng_http_handler_set_tree_exclusive`]
 
 ## Security Descriptors (Windows Only)
 

@@ -289,10 +289,8 @@ rest_start(uint16_t port)
 	// the data yourself with another HTTP read transaction by disabling
 	// this, but that's a lot of work, especially if you want to handle
 	// chunked transfers.
-	if ((rv = nng_http_handler_collect_body(handler, true, 1024 * 128)) !=
-	    0) {
-		fatal("nng_http_handler_collect_body", rv);
-	}
+	nng_http_handler_collect_body(handler, true, 1024 * 128);
+
 	if ((rv = nng_http_server_add_handler(server, handler)) != 0) {
 		fatal("nng_http_handler_add_handler", rv);
 	}

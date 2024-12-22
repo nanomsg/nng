@@ -372,7 +372,7 @@ NNG_DECL void nng_http_handler_set_host(nng_http_handler *, const char *);
 // then a 400 Bad Request will be sent back to the client.  To set an
 // unlimited value, use (size_t)-1.  To preclude the client from sending
 // *any* data, use 0.  (The static and file handlers use 0 by default.)
-NNG_DECL int nng_http_handler_collect_body(nng_http_handler *, bool, size_t);
+NNG_DECL void nng_http_handler_collect_body(nng_http_handler *, bool, size_t);
 
 // nng_http_handler_set_tree indicates that the handler is being registered
 // for a hierarchical tree, rather than just a single path, so it will be
