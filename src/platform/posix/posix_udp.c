@@ -258,6 +258,7 @@ nni_plat_udp_close(nni_plat_udp *udp)
 	nni_posix_udp_doclose(udp);
 	nni_mtx_unlock(&udp->udp_mtx);
 
+	nni_posix_pfd_stop(&udp->udp_pfd);
 	nni_posix_pfd_fini(&udp->udp_pfd);
 	(void) close(udp->udp_fd);
 	nni_mtx_fini(&udp->udp_mtx);
