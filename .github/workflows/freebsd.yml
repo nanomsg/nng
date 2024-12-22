@@ -1,0 +1,32 @@
+name: freebsd
+
+on:
+  push:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    name: NNG test on FreeBSD via Qemu
+    env:
+      NNG_UDP_PASS_RATE: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test NNG in FreeBSD
+        id: test
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          envs: NNG_UDP_PASS_RATE
+          prepare: |
+            pkg install -y lang/gcc
+            pkg install -y devel/cmake
+            pkg install -y devel/ninja
+          run: |
+            mkdir build
+            cd build
+            cmake -DCMAKE_BUILD_TYPE=Debug -G Ninja -DNNG_TOOLS=OFF ..
+            ninja
+            ctest --output-on-failure
