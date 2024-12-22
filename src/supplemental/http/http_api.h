@@ -135,7 +135,7 @@ extern int nni_http_res_alloc_data(nni_http_res *, size_t);
 extern const char *nni_http_req_get_method(const nni_http_req *);
 extern const char *nni_http_req_get_version(const nni_http_req *);
 extern const char *nni_http_req_get_uri(const nni_http_req *);
-extern int         nni_http_req_set_method(nni_http_req *, const char *);
+extern void        nni_http_req_set_method(nni_http_req *, const char *);
 extern int         nni_http_req_set_version(nni_http_req *, const char *);
 extern int         nni_http_req_set_uri(nni_http_req *, const char *);
 extern uint16_t    nni_http_res_get_status(const nni_http_res *);

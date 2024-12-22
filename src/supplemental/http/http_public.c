@@ -280,15 +280,14 @@ nng_http_req_get_uri(const nng_http_req *req)
 #endif
 }
 
-int
+void
 nng_http_req_set_method(nng_http_req *req, const char *meth)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_req_set_method(req, meth));
+	nni_http_req_set_method(req, meth);
 #else
 	NNI_ARG_UNUSED(req);
 	NNI_ARG_UNUSED(meth);
-	return (NNG_ENOTSUP);
 #endif
 }
 

@@ -73,11 +73,11 @@ typedef enum {
 } job_state;
 
 typedef struct rest_job {
-	nng_aio *        http_aio; // aio from HTTP we must reply to
-	nng_http_res *   http_res; // HTTP response object
+	nng_aio         *http_aio; // aio from HTTP we must reply to
+	nng_http_res    *http_res; // HTTP response object
 	job_state        state;    // 0 = sending, 1 = receiving
-	nng_msg *        msg;      // request message
-	nng_aio *        aio;      // request flow
+	nng_msg         *msg;      // request message
+	nng_aio         *aio;      // request flow
 	nng_ctx          ctx;      // context on the request socket
 	struct rest_job *next;     // next on the freelist
 } rest_job;
@@ -86,7 +86,7 @@ nng_socket req_sock;
 
 // We maintain a queue of free jobs.  This way we don't have to
 // deallocate them from the callback; we just reuse them.
-nng_mtx * job_lock;
+nng_mtx  *job_lock;
 rest_job *job_freelist;
 
 static void rest_job_cb(void *arg);
@@ -139,7 +139,7 @@ static void
 rest_http_fatal(rest_job *job, const char *fmt, int rv)
 {
 	char          buf[128];
-	nng_aio *     aio = job->http_aio;
+	nng_aio      *aio = job->http_aio;
 	nng_http_res *res = job->http_res;
 
 	job->http_res = NULL;
@@ -156,7 +156,7 @@ static void
 rest_job_cb(void *arg)
 {
 	rest_job *job = arg;
-	nng_aio * aio = job->aio;
+	nng_aio  *aio = job->aio;
 	int       rv;
 
 	switch (job->state) {
@@ -205,13 +205,13 @@ void
 rest_handle(nng_aio *aio)
 {
 	struct rest_job *job;
-	nng_http_req *   req  = nng_aio_get_input(aio, 0);
-	nng_http_conn *  conn = nng_aio_get_input(aio, 2);
-	const char *     clen;
+	nng_http_req    *req  = nng_aio_get_input(aio, 0);
+	nng_http_conn   *conn = nng_aio_get_input(aio, 2);
+	const char      *clen;
 	size_t           sz;
 	nng_iov          iov;
 	int              rv;
-	void *           data;
+	void            *data;
 
 	if ((job = rest_get_job()) == NULL) {
 		nng_aio_finish(aio, NNG_ENOMEM);
@@ -241,10 +241,10 @@ rest_handle(nng_aio *aio)
 void
 rest_start(uint16_t port)
 {
-	nng_http_server * server;
+	nng_http_server  *server;
 	nng_http_handler *handler;
 	char              rest_addr[128];
-	nng_url *         url;
+	nng_url          *url;
 	int               rv;
 
 	if ((rv = nng_mtx_alloc(&job_lock)) != 0) {
@@ -282,9 +282,8 @@ rest_start(uint16_t port)
 		fatal("nng_http_handler_alloc", rv);
 	}
 
-	if ((rv = nng_http_handler_set_method(handler, "POST")) != 0) {
-		fatal("nng_http_handler_set_method", rv);
-	}
+	nng_http_handler_set_method(handler, "POST");
+
 	// We want to collect the body, and we (arbitrarily) limit this to
 	// 128KB.  The default limit is 1MB.  You can explicitly collect
 	// the data yourself with another HTTP read transaction by disabling
@@ -317,7 +316,7 @@ inproc_server(void *arg)
 {
 	nng_socket s;
 	int        rv;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	if (((rv = nng_rep0_open(&s)) != 0) ||
 	    ((rv = nng_listen(s, INPROC_URL, NULL, 0)) != 0)) {

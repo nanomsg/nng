@@ -363,7 +363,7 @@ test_server_wrong_method(void)
 
 	server_setup(&st, h);
 
-	NUTS_PASS(nng_http_req_set_method(st.req, "POST"));
+	nng_http_req_set_method(st.req, "POST");
 	NUTS_PASS(nng_http_req_set_uri(st.req, "/home.html"));
 	nng_http_conn_write_req(st.conn, st.req, st.aio);
 
@@ -400,7 +400,7 @@ test_server_post_handler(void)
 	snprintf(txdata, sizeof(txdata), "1234");
 	nng_http_req_set_uri(st.req, "/post");
 	nng_http_req_set_data(st.req, txdata, strlen(txdata));
-	NUTS_PASS(nng_http_req_set_method(st.req, "POST"));
+	nng_http_req_set_method(st.req, "POST");
 	NUTS_PASS(httpdo(st.url, st.req, st.res, (void **) &rxdata, &size));
 	NUTS_TRUE(nng_http_res_get_status(st.res) == NNG_HTTP_STATUS_OK);
 	NUTS_TRUE(size == strlen(txdata));
@@ -410,7 +410,7 @@ test_server_post_handler(void)
 	server_reset(&st);
 
 	NUTS_PASS(nng_http_req_set_uri(st.req, "/post"));
-	NUTS_PASS(nng_http_req_set_method(st.req, "GET"));
+	nng_http_req_set_method(st.req, "GET");
 	NUTS_PASS(nng_http_req_set_data(st.req, txdata, strlen(txdata)));
 
 	NUTS_PASS(httpdo(st.url, st.req, st.res, &data, &size));
@@ -501,7 +501,7 @@ test_server_post_redirect(void)
 	snprintf(txdata, sizeof(txdata), "1234");
 	NUTS_PASS(nng_http_req_set_uri(st.req, "/here"));
 	nng_http_req_set_data(st.req, txdata, strlen(txdata));
-	NUTS_PASS(nng_http_req_set_method(st.req, "POST"));
+	nng_http_req_set_method(st.req, "POST");
 	NUTS_PASS(httpdo(st.url, st.req, st.res, (void **) &data, &size));
 	NUTS_TRUE(nng_http_res_get_status(st.res) == 301);
 	dest = nng_http_res_get_header(st.res, "Location");
@@ -521,14 +521,14 @@ test_server_post_echo_tree(void)
 	char              *rxdata;
 
 	NUTS_PASS(nng_http_handler_alloc(&h, "/", httpecho));
-	NUTS_PASS(nng_http_handler_set_method(h, "POST"));
+	nng_http_handler_set_method(h, "POST");
 	NUTS_PASS(nng_http_handler_set_tree(h));
 
 	server_setup(&st, h);
 
 	snprintf(txdata, sizeof(txdata), "1234");
 	nng_http_req_set_data(st.req, txdata, strlen(txdata));
-	NUTS_PASS(nng_http_req_set_method(st.req, "POST"));
+	nng_http_req_set_method(st.req, "POST");
 	NUTS_PASS(nng_http_req_set_uri(st.req, "/some_sub/directory"));
 	NUTS_PASS(httpdo(st.url, st.req, st.res, (void **) &rxdata, &size));
 	NUTS_TRUE(nng_http_res_get_status(st.res) == NNG_HTTP_STATUS_OK);
@@ -866,7 +866,7 @@ test_serve_index_not_post(void)
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_req_set_uri(st.req, "/subdir2/index.html"));
-	NUTS_PASS(nng_http_req_set_method(st.req, "POST"));
+	nng_http_req_set_method(st.req, "POST");
 	NUTS_PASS(httpget(&st, &data, &size, &stat, &ctype));
 	NUTS_TRUE(stat == NNG_HTTP_STATUS_METHOD_NOT_ALLOWED);
 	nng_strfree(ctype);

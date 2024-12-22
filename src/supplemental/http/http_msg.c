@@ -38,7 +38,7 @@ typedef struct nni_http_entity {
 struct nng_http_req {
 	nni_list        hdrs;
 	nni_http_entity data;
-	char           *meth;
+	char            meth[32];
 	char           *uri;
 	const char     *vers;
 	char           *buf;
@@ -100,14 +100,14 @@ nni_http_req_reset(nni_http_req *req)
 {
 	http_headers_reset(&req->hdrs);
 	http_entity_reset(&req->data);
-	nni_strfree(req->meth);
 	nni_strfree(req->uri);
-	req->meth = req->uri = NULL;
+	req->uri = NULL;
 	nni_free(req->buf, req->bufsz);
+	nni_http_req_set_method(req, NULL);
+	nni_http_req_set_version(req, NNG_HTTP_VERSION_1_1);
 	req->bufsz  = 0;
 	req->buf    = NULL;
 	req->parsed = false;
-	req->vers   = NNG_HTTP_VERSION_1_1;
 }
 
 void
@@ -532,7 +532,7 @@ http_req_prepare(nni_http_req *req)
 		return (NNG_EINVAL);
 	}
 	rv = http_asprintf(&req->buf, &req->bufsz, &req->hdrs, "%s %s %s\r\n",
-	    req->meth != NULL ? req->meth : "GET", req->uri, req->vers);
+	    req->meth, req->uri, req->vers);
 	return (rv);
 }
 
@@ -611,9 +611,9 @@ nni_http_req_alloc(nni_http_req **reqp, const nng_url *url)
 	req->data.data = NULL;
 	req->data.size = 0;
 	req->data.own  = false;
-	req->vers      = NNG_HTTP_VERSION_1_1;
-	req->meth      = NULL;
 	req->uri       = NULL;
+	nni_http_req_set_version(req, NNG_HTTP_VERSION_1_1);
+	nni_http_req_set_method(req, "GET");
 	if (url != NULL) {
 		const char *host;
 		char        host_buf[264]; // 256 + 8 for port
@@ -673,7 +673,7 @@ nni_http_res_alloc(nni_http_res **resp)
 const char *
 nni_http_req_get_method(const nni_http_req *req)
 {
-	return (req->meth != NULL ? req->meth : "GET");
+	return (req->meth);
 }
 
 const char *
@@ -735,13 +735,15 @@ nni_http_req_set_uri(nni_http_req *req, const char *uri)
 	return (http_set_string(&req->uri, uri));
 }
 
-int
+void
 nni_http_req_set_method(nni_http_req *req, const char *meth)
 {
-	if ((meth != NULL) && (strcmp(meth, "GET") == 0)) {
-		meth = NULL;
+	if (meth == NULL) {
+		meth = "GET";
 	}
-	return (http_set_string(&req->meth, meth));
+	// this may truncate the method, but nobody should be sending
+	// methods so long.
+	(void) snprintf(req->meth, sizeof(req->meth), "%s", meth);
 }
 
 int
@@ -811,8 +813,8 @@ http_req_parse_line(nni_http_req *req, void *line)
 	*version = '\0';
 	version++;
 
-	if (((rv = nni_http_req_set_method(req, method)) != 0) ||
-	    ((rv = nni_http_req_set_uri(req, uri)) != 0) ||
+	nni_http_req_set_method(req, method);
+	if (((rv = nni_http_req_set_uri(req, uri)) != 0) ||
 	    ((rv = nni_http_req_set_version(req, version)) != 0)) {
 		return (rv);
 	}

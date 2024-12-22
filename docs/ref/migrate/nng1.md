@@ -219,6 +219,10 @@ accessors functions are provided:
 - `u_host` is removed - use [`nng_url_hostname`] and [`nng_url_port`] to construct if needed
 - `u_rawurl` is removed - a "cooked" URL can be obtained from the new [`nng_url_sprintf`] function.
 
+## HTTP API
+
+The [`nng_http_req_set_method`] no longer returns a value. It never fails, but it may truncate an unreasonably long value.
+
 ## Security Descriptors (Windows Only)
 
 The `NNG_OPT_IPC_SECURITY_DESCRIPTOR` option is removed, and replaced

@@ -136,7 +136,7 @@ NNG_DECL const char *nng_http_req_get_header(
 // nng_http_req_set_method is used to change the method of a request.
 // The method should be an upper case HTTP method, like POST, or DELETE.
 // Null sets the default ("GET").
-NNG_DECL int nng_http_req_set_method(nng_http_req *, const char *);
+NNG_DECL void nng_http_req_set_method(nng_http_req *, const char *);
 
 // nng_http_req_set_version is used to change the version of a request.
 // Normally the version is "HTTP/1.1".  Note that the framework does
