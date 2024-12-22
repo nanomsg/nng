@@ -220,7 +220,9 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	}
 	switch (bindaddr->s_family) {
 	case NNG_AF_INET:
+#ifdef NNG_ENABLE_IPV6
 	case NNG_AF_INET6:
+#endif
 		break;
 	default:
 		return (NNG_EADDRINVAL);
