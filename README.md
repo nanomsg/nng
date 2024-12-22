@@ -10,7 +10,8 @@
 [![Discord](https://img.shields.io/discord/639573728212156478?label=&logo=discord)](https://discord.gg/Xnac6b9)
 [![Manual](https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue)](https://nng.nanomsg.org/man)
 [![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/main/LICENSE.txt)
-[![Latest Version](https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=)](https://github.com/nanomsg/nng/releases)
+[![Latest Pre-Release](https://img.shields.io/github/v/release/nanomsg/nng.svg?logo=github&label=)](https://github.com/nanomsg/nng/releases)
+[![Latest Release](https://img.shields.io/github/v/release/nanomsg/nng.svg?include_prereleases&logo=github&label=)](https://github.com/nanomsg/nng/releases)
 
 Please see [here](UKRAINE.md) for an important message for the people of Russia.
 
