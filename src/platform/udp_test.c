@@ -267,6 +267,7 @@ test_udp_bogus_bind(void)
 	// Some platforms reject IPC addresses altogether (Windows),
 	// whereas others just say it's not supported with UDP.
 	NUTS_ASSERT((rv == NNG_ENOTSUP) || (rv == NNG_EADDRINVAL));
+	NUTS_MSG("Result was %d %s", rv, nng_strerror(rv));
 
 	// NULL address also bad.
 	NUTS_FAIL(nng_udp_open(&u, NULL), NNG_EADDRINVAL);

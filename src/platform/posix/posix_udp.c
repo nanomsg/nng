@@ -215,9 +215,18 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	struct sockaddr_storage sa;
 	int                     rv;
 
-	if ((salen = nni_posix_nn2sockaddr(&sa, bindaddr)) < 1) {
+	if (bindaddr == NULL) {
 		return (NNG_EADDRINVAL);
 	}
+	switch (bindaddr->s_family) {
+	case NNG_AF_INET:
+	case NNG_AF_INET6:
+		break;
+	default:
+		return (NNG_EADDRINVAL);
+	}
+	salen = nni_posix_nn2sockaddr(&sa, bindaddr);
+	NNI_ASSERT(salen > 1);
 
 	// UDP opens can actually run synchronously.
 	if ((udp = NNI_ALLOC_STRUCT(udp)) == NULL) {
