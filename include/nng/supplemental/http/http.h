@@ -392,7 +392,7 @@ NNG_DECL void nng_http_handler_set_tree_exclusive(nng_http_handler *);
 // a possible clean up routine.  (The clean up is a custom de-allocator and
 // will be called with the supplied data as an argument, when the handler
 // is being de-allocated.)
-NNG_DECL int nng_http_handler_set_data(
+NNG_DECL void nng_http_handler_set_data(
     nng_http_handler *, void *, void (*)(void *));
 
 // nng_http_handler_get_data returns the data that was previously stored.

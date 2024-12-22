@@ -154,15 +154,12 @@ nni_http_handler_collect_body(nni_http_handler *h, bool want, size_t maxbody)
 	h->maxbody = maxbody;
 }
 
-int
+void
 nni_http_handler_set_data(nni_http_handler *h, void *data, nni_cb dtor)
 {
-	if (nni_atomic_get_bool(&h->busy)) {
-		return (NNG_EBUSY);
-	}
+	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	h->data = data;
 	h->dtor = dtor;
-	return (0);
 }
 
 void *
@@ -1448,11 +1445,7 @@ nni_http_handler_init_file_ctype(nni_http_handler **hpp, const char *uri,
 		return (rv);
 	}
 
-	if ((rv = nni_http_handler_set_data(h, hf, http_file_free)) != 0) {
-		http_file_free(hf);
-		nni_http_handler_fini(h);
-		return (rv);
-	}
+	nni_http_handler_set_data(h, hf, http_file_free);
 
 	// We don't permit a body for getting a file.
 	nni_http_handler_collect_body(h, true, 0);
@@ -1624,12 +1617,7 @@ nni_http_handler_init_directory(
 	// We don't permit a body for getting a file.
 	nni_http_handler_collect_body(h, true, 0);
 	nni_http_handler_set_tree_exclusive(h);
-
-	if ((rv = nni_http_handler_set_data(h, hf, http_file_free)) != 0) {
-		http_file_free(hf);
-		nni_http_handler_fini(h);
-		return (rv);
-	}
+	nni_http_handler_set_data(h, hf, http_file_free);
 
 	*hpp = h;
 	return (0);
@@ -1747,11 +1735,7 @@ nni_http_handler_init_redirect(nni_http_handler **hpp, const char *uri,
 
 	nni_http_handler_set_method(h, NULL);
 
-	if ((rv = nni_http_handler_set_data(h, hr, http_redirect_free)) != 0) {
-		http_redirect_free(hr);
-		nni_http_handler_fini(h);
-		return (rv);
-	}
+	nni_http_handler_set_data(h, hr, http_redirect_free);
 
 	// We don't need to collect the body at all, because the handler
 	// just discards the content and closes the connection.
@@ -1833,11 +1817,7 @@ nni_http_handler_init_static(nni_http_handler **hpp, const char *uri,
 		return (rv);
 	}
 
-	if ((rv = nni_http_handler_set_data(h, hs, http_static_free)) != 0) {
-		http_static_free(hs);
-		nni_http_handler_fini(h);
-		return (rv);
-	}
+	nni_http_handler_set_data(h, hs, http_static_free);
 
 	// We don't permit a body for getting static data.
 	nni_http_handler_collect_body(h, true, 0);

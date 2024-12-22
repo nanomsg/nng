@@ -1,6 +1,6 @@
 = nng_http_handler_set_data(3http)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,7 +20,7 @@ nng_http_handler_set_data - set extra data for HTTP handler
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-int nng_http_handler_set_data(nng_http_handler *handler, void *data,
+void nng_http_handler_set_data(nng_http_handler *handler, void *data,
     void (*dtor)(void *));
 ----
 
@@ -35,16 +35,6 @@ Additionally, when the handler is deallocated, if _dtor_ is not `NULL`,
 then it will be called with _data_ as its argument.
 The intended use of
 this function is deallocate any resources associated with _data_.
-
-== RETURN VALUES
-
-This function returns 0 on success, and non-zero otherwise.
-
-== ERRORS
-
-[horizontal]
-`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
-`NNG_ENOTSUP`:: No support for HTTP in the library.
 
 == SEE ALSO
 

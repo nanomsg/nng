@@ -637,16 +637,15 @@ nng_http_handler_set_tree_exclusive(nng_http_handler *h)
 #endif
 }
 
-int
+void
 nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_set_data(h, dat, dtor));
+	nni_http_handler_set_data(h, dat, dtor);
 #else
 	NNI_ARG_UNUSED(h);
 	NNI_ARG_UNUSED(dat);
 	NNI_ARG_UNUSED(dtor);
-	return (NNG_ENOTSUP);
 #endif
 }
 

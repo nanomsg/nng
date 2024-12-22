@@ -338,7 +338,7 @@ extern void nni_http_handler_set_method(nni_http_handler *, const char *);
 // which will be available to the callback via nni_http_handler_get_data.
 // The callback is an optional destructor, and will be called with the
 // data as its argument, when the handler is being destroyed.
-extern int nni_http_handler_set_data(nni_http_handler *, void *, nni_cb);
+extern void nni_http_handler_set_data(nni_http_handler *, void *, nni_cb);
 
 // nni_http_handler_get_data returns the data that was previously stored
 // by nni_http_handler_set_data.

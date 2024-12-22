@@ -230,15 +230,19 @@ they may be silently truncated to the limit:
 - The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes.
 
 The following API calls have changed so that they are `void` returns, and cannot fail.
-They may silently truncate data, and the handler methods may not have any effect if the handler is already in use.
+They may silently truncate data.
 
 - [`nng_http_req_set_method`]
 - [`nng_http_res_set_status`]
 - [`nng_http_handler_collect_body`]
+- [`nng_http_handler_set_data`]
 - [`nng_http_handler_set_host`]
 - [`nng_http_handler_set_method`]
 - [`nng_http_handler_set_tree`]
 - [`nng_http_handler_set_tree_exclusive`]
+
+The HTTP handler objects may not be modified once in use. Previously this would fail with `NNG_EBUSY`.
+These checks are removed now, but debug builds will assert if an application tries to do so.
 
 ## Security Descriptors (Windows Only)
 
