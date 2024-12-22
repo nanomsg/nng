@@ -22,9 +22,13 @@
 
 #include "http_api.h"
 
+#ifndef NNG_HTTP_MAX_URI
+#define NNG_HTTP_MAX_URI 1024
+#endif
+
 struct nng_http_handler {
 	nni_list_node   node;
-	char           *uri;
+	char            uri[NNG_HTTP_MAX_URI];
 	char            method[32];
 	char            host[256]; // RFC 1035
 	nng_sockaddr    host_addr;
@@ -114,10 +118,7 @@ nni_http_handler_init(
 	if ((uri == NULL) || (strlen(uri) == 0) || (strcmp(uri, "/") == 0)) {
 		uri = "";
 	}
-	if ((h->uri = nni_strdup(uri)) == NULL) {
-		nni_http_handler_fini(h);
-		return (NNG_ENOMEM);
-	}
+	(void) snprintf(h->uri, sizeof(h->uri), "%s", uri);
 	NNI_LIST_NODE_INIT(&h->node);
 	h->cb             = cb;
 	h->data           = NULL;
@@ -143,7 +144,6 @@ nni_http_handler_fini(nni_http_handler *h)
 	if (h->dtor != NULL) {
 		h->dtor(h->data);
 	}
-	nni_strfree(h->uri);
 	NNI_FREE_STRUCT(h);
 }
 

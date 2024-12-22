@@ -227,7 +227,8 @@ they may be silently truncated to the limit:
 
 - Hostnames are limited per RFC 1035 to 253 characters (not including terminating "." or zero byte.)
 - HTTP Method names are limited to 32 bytes (the longest IANA registered method is currently 18 bytes, used for WebDAV.)
-- The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes.
+- The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes. (Longer URIs may be accepted
+  by using [`nng_http_handler_set_tree`] and matching a parent of the directory component.)
 
 The following API calls have changed so that they are `void` returns, and cannot fail.
 They may silently truncate data.

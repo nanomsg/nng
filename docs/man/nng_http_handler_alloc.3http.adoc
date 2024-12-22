@@ -51,6 +51,12 @@ by the _path_ argument.
 Only the path component of the Request URI is
 considered when determining whether the handler should be called.
 
+This implementation limits the _path_ length to 1024 bytes, including the
+zero termination byte.  This does not prevent requests with much longer
+URIs from being supported, doing so will require setting the handler
+to matching a parent path in the tree using
+xref:nng_http_handler_set_tree.3http.adoc[`nng_http_handler_set_tree`()].
+
 Additionally each handler has a method it is registered to handle
 (the default is `GET`, see
 xref:nng_http_handler_set_method.3http.adoc[`nng_http_handler_set_method()`]), and
