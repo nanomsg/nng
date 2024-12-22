@@ -619,25 +619,23 @@ nng_http_handler_set_host(nng_http_handler *h, const char *host)
 #endif
 }
 
-int
+void
 nng_http_handler_set_tree(nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_set_tree(h));
+	nni_http_handler_set_tree(h);
 #else
 	NNI_ARG_UNUSED(h);
-	return (NNG_ENOTSUP);
 #endif
 }
 
-int
+void
 nng_http_handler_set_tree_exclusive(nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_set_tree_exclusive(h));
+	nni_http_handler_set_tree_exclusive(h);
 #else
 	NNI_ARG_UNUSED(h);
-	return (NNG_ENOTSUP);
 #endif
 }
 

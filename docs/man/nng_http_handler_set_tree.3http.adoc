@@ -1,6 +1,6 @@
 = nng_http_handler_set_tree(3http)
 
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -20,9 +20,9 @@ nng_http_handler_set_tree - set HTTP handler to match trees
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-int nng_http_handler_set_tree(nng_http_handler *handler);
+void nng_http_handler_set_tree(nng_http_handler *handler);
 
-int nng_http_handler_set_tree_exclusive(nng_http_handler *handler);
+void nng_http_handler_set_tree_exclusive(nng_http_handler *handler);
 ----
 
 == DESCRIPTION
@@ -47,16 +47,6 @@ TIP: The non-exclusive form is also useful for providing a default handler to be
 generated when a more specific child does not exist.
 This can provide a better experience for users than the standard 404 error
 handling.
-
-== RETURN VALUES
-
-This function returns 0 on success, and non-zero otherwise.
-
-== ERRORS
-
-[horizontal]
-`NNG_ENOMEM`:: Insufficient free memory exists.
-`NNG_ENOTSUP`:: No support for HTTP in the library.
 
 == SEE ALSO
 

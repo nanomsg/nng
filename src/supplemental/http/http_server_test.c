@@ -464,7 +464,7 @@ test_server_tree_redirect(void)
 	// We'll use a 303 to ensure codes carry thru
 	NUTS_PASS(nng_http_handler_alloc_redirect(
 	    &h, "/here", 303, "http://127.0.0.1/there"));
-	NUTS_PASS(nng_http_handler_set_tree(h));
+	nng_http_handler_set_tree(h);
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_req_set_uri(st.req, "/here/i/go/again"));
@@ -521,7 +521,7 @@ test_server_post_echo_tree(void)
 
 	NUTS_PASS(nng_http_handler_alloc(&h, "/", httpecho));
 	nng_http_handler_set_method(h, "POST");
-	NUTS_PASS(nng_http_handler_set_tree(h));
+	nng_http_handler_set_tree(h);
 
 	server_setup(&st, h);
 
@@ -587,20 +587,20 @@ test_server_multiple_trees(void)
 	NUTS_PASS(nni_file_put(file2, doc2, strlen(doc2)));
 
 	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", workdir));
-	NUTS_PASS(nng_http_handler_set_tree(h));
+	nng_http_handler_set_tree(h);
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", workdir));
-	NUTS_PASS(nng_http_handler_set_tree(h));
+	nng_http_handler_set_tree(h);
 	NUTS_FAIL(nng_http_server_add_handler(st.s, h), NNG_EADDRINUSE);
 	nng_http_handler_free(h);
 
 	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/subdir", workdir2));
-	NUTS_PASS(nng_http_handler_set_tree(h));
+	nng_http_handler_set_tree(h);
 	NUTS_PASS(nng_http_server_add_handler(st.s, h));
 
 	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/subdir", workdir2));
-	NUTS_PASS(nng_http_handler_set_tree(h));
+	nng_http_handler_set_tree(h);
 	NUTS_FAIL(nng_http_server_add_handler(st.s, h), NNG_EADDRINUSE);
 	nng_http_handler_free(h);
 

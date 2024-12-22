@@ -180,26 +180,20 @@ nni_http_handler_get_uri(nni_http_handler *h)
 	return (h->uri);
 }
 
-int
+void
 nni_http_handler_set_tree(nni_http_handler *h)
 {
-	if (nni_atomic_get_bool(&h->busy) != 0) {
-		return (NNG_EBUSY);
-	}
+	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	h->tree           = true;
 	h->tree_exclusive = false;
-	return (0);
 }
 
-int
+void
 nni_http_handler_set_tree_exclusive(nni_http_handler *h)
 {
-	if (nni_atomic_get_bool(&h->busy) != 0) {
-		return (NNG_EBUSY);
-	}
+	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	h->tree           = true;
 	h->tree_exclusive = true;
-	return (0);
 }
 
 void
@@ -1629,9 +1623,9 @@ nni_http_handler_init_directory(
 	}
 	// We don't permit a body for getting a file.
 	nni_http_handler_collect_body(h, true, 0);
+	nni_http_handler_set_tree_exclusive(h);
 
-	if (((rv = nni_http_handler_set_tree_exclusive(h)) != 0) ||
-	    ((rv = nni_http_handler_set_data(h, hf, http_file_free)) != 0)) {
+	if ((rv = nni_http_handler_set_data(h, hf, http_file_free)) != 0) {
 		http_file_free(hf);
 		nni_http_handler_fini(h);
 		return (rv);
