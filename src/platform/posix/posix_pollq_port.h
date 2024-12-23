@@ -20,11 +20,8 @@ typedef struct nni_posix_pollq nni_posix_pollq;
 struct nni_posix_pfd {
 	nni_posix_pollq *pq;
 	int              fd;
-	nni_mtx          mtx;
-	nni_cv           cv;
-	unsigned         events;
+	nni_atomic_int   events;
 	bool             closed;
-	bool             closing;
 	nni_posix_pfd_cb cb;
 	void            *data;
 };
