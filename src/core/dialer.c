@@ -217,11 +217,14 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 	int   rv;
 	void *dp;
 
-	d->d_closed = false;
-	d->d_data   = NULL;
-	d->d_ref    = 1;
-	d->d_sock   = s;
-	d->d_tran   = tran;
+	d->d_closed   = false;
+	d->d_data     = NULL;
+	d->d_ref      = 1;
+	d->d_sock     = s;
+	d->d_tran     = tran;
+	d->d_inirtime = NNI_SECOND / 100; // 10ms
+	d->d_maxrtime = NNI_SECOND;
+	d->d_currtime = d->d_inirtime;
 	nni_atomic_flag_reset(&d->d_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
