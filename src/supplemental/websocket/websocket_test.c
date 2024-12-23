@@ -137,17 +137,27 @@ test_websocket_conn_props(void)
 	char                 uri[64];
 	bool                 on;
 	char                *str;
-	uint16_t             port = nuts_next_port();
-
-	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
+	uint16_t             port;
+	int                  rv;
 
 	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
 	nng_aio_set_timeout(daio, 5000); // 5 seconds
 	nng_aio_set_timeout(laio, 5000);
 
-	NUTS_PASS(nng_stream_listener_alloc(&l, uri));
-	NUTS_PASS(nng_stream_listener_listen(l));
+	for (int i = 0; i < 256; i++) {
+		port = nuts_next_port();
+		(void) snprintf(
+		    uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
+		NUTS_PASS(nng_stream_listener_alloc(&l, uri));
+		rv = nng_stream_listener_listen(l);
+		if (rv != NNG_EADDRINUSE) {
+			break;
+		}
+		nng_stream_listener_free(l);
+	}
+	NUTS_PASS(rv);
+
 	NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
 
 	NUTS_PASS(nng_stream_dialer_set_string(
@@ -238,10 +248,9 @@ test_websocket_text_mode(void)
 	char                 txb[5];
 	char                 rxb[5];
 	bool                 on;
-	uint16_t             port = nuts_next_port();
+	uint16_t             port;
 	nng_iov              iov;
-
-	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
+	int                  rv;
 
 	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
@@ -252,32 +261,53 @@ test_websocket_text_mode(void)
 	nng_aio_set_timeout(aio1, 5000);
 	nng_aio_set_timeout(aio2, 5000);
 
-	NUTS_PASS(nng_stream_listener_alloc(&l, uri));
-	NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
+	for (int i = 0; i < 256; i++) {
+		port = nuts_next_port();
+		(void) snprintf(
+		    uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
+		NUTS_PASS(nng_stream_listener_alloc(&l, uri));
+		NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
 
-	on = true;
-	NUTS_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_SEND_TEXT, on));
-	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
+		on = true;
+		NUTS_PASS(
+		    nng_stream_dialer_set_bool(d, NNG_OPT_WS_SEND_TEXT, on));
+		NUTS_PASS(
+		    nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
 
-	NUTS_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_SEND_TEXT, &on));
-	NUTS_TRUE(on);
-	NUTS_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
-	NUTS_TRUE(on == false);
+		NUTS_PASS(
+		    nng_stream_dialer_get_bool(d, NNG_OPT_WS_SEND_TEXT, &on));
+		NUTS_TRUE(on);
+		NUTS_PASS(
+		    nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
+		NUTS_TRUE(on == false);
 
-	NUTS_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
-	NUTS_TRUE(on == false);
-	NUTS_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_RECV_TEXT, &on));
-	NUTS_TRUE(on);
+		NUTS_PASS(nng_stream_listener_get_bool(
+		    l, NNG_OPT_WS_SEND_TEXT, &on));
+		NUTS_TRUE(on == false);
+		NUTS_PASS(nng_stream_listener_get_bool(
+		    l, NNG_OPT_WS_RECV_TEXT, &on));
+		NUTS_TRUE(on);
 
-	on = false;
-	NUTS_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_RECV_TEXT, on));
-	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_WS_SEND_TEXT, on));
-	NUTS_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
-	NUTS_TRUE(on == false);
-	NUTS_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
-	NUTS_TRUE(on == false);
+		on = false;
+		NUTS_PASS(
+		    nng_stream_dialer_set_bool(d, NNG_OPT_WS_RECV_TEXT, on));
+		NUTS_PASS(
+		    nng_stream_listener_set_bool(l, NNG_OPT_WS_SEND_TEXT, on));
+		NUTS_PASS(nng_stream_listener_get_bool(
+		    l, NNG_OPT_WS_SEND_TEXT, &on));
+		NUTS_TRUE(on == false);
+		NUTS_PASS(
+		    nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
+		NUTS_TRUE(on == false);
 
-	NUTS_PASS(nng_stream_listener_listen(l));
+		rv = nng_stream_listener_listen(l);
+		if (rv != NNG_EADDRINUSE) {
+			break;
+		}
+		nng_stream_listener_free(l);
+		nng_stream_dialer_free(d);
+	}
+	NUTS_PASS(rv);
 	nng_stream_dialer_dial(d, daio);
 	nng_stream_listener_accept(l, laio);
 
@@ -415,6 +445,7 @@ test_websocket_fragmentation(void)
 	uint8_t             *send_buf;
 	uint8_t             *buf;
 	nng_iov              iov;
+	int                  rv;
 
 	memset(&state, 0, sizeof(state));
 	state.total = 200000; // total to send
@@ -436,20 +467,27 @@ test_websocket_fragmentation(void)
 	nni_sha1(send_buf, state.total, sum1);
 	nni_sha1_init(&state.sum);
 
-	port = nuts_next_port();
-	(void) snprintf(url, sizeof(url), "ws://127.0.0.1:%u", port);
-
-	NUTS_PASS(nng_stream_listener_alloc(&l, url));
-	NUTS_PASS(nng_stream_dialer_alloc(&d, url));
 	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&caio, NULL, NULL));
 
-	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_TCP_NODELAY, true));
-	NUTS_PASS(
-	    nng_stream_listener_set_size(l, NNG_OPT_WS_SENDMAXFRAME, 1000000));
-	NUTS_PASS(nng_stream_listener_listen(l));
+	for (int i = 0; i < 256; i++) {
+		port = nuts_next_port();
+		(void) snprintf(url, sizeof(url), "ws://127.0.0.1:%u", port);
+		NUTS_PASS(nng_stream_listener_alloc(&l, url));
+		NUTS_PASS(nng_stream_listener_set_bool(
+		    l, NNG_OPT_TCP_NODELAY, true));
+		NUTS_PASS(nng_stream_listener_set_size(
+		    l, NNG_OPT_WS_SENDMAXFRAME, 1000000));
+		rv = nng_stream_listener_listen(l);
+		if (rv != NNG_EADDRINUSE) {
+			break;
+		}
+		nng_stream_listener_free(l);
+	}
+	NUTS_PASS(rv);
 
+	NUTS_PASS(nng_stream_dialer_alloc(&d, url));
 	nng_aio_set_timeout(laio, 2000);
 	nng_aio_set_timeout(daio, 2000);
 
