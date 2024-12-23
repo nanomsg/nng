@@ -44,7 +44,7 @@ typedef struct nni_posix_pollq {
 	nni_list        addq;    // list of nodes to add, protected by mtx
 	struct pollfd  *fds;
 	nni_posix_pfd **pfds;
-	int             nalloc;
+	unsigned        nalloc;
 	bool            closed;
 } nni_posix_pollq;
 
@@ -307,12 +307,13 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	struct rlimit limits;
 	pq->nalloc = 0;
 	if (getrlimit(RLIMIT_NOFILE, &limits) == 0) {
-		if (limits.rlim_cur != RLIM_INFINITY) {
-			pq->nalloc = (int) limits.rlim_cur;
-		} else if (limits.rlim_max != RLIM_INFINITY) {
-			pq->nalloc = (int) limits.rlim_max;
+		if (limits.rlim_cur != RLIM_INFINITY &&
+		    limits.rlim_cur < 1U << 20) {
+			pq->nalloc = (unsigned) limits.rlim_cur;
+		} else if (limits.rlim_max != RLIM_INFINITY &&
+		    limits.rlim_max < 1U << 20) {
+			pq->nalloc = (unsigned) limits.rlim_max;
 		}
-		pq->nalloc = (int) limits.rlim_max;
 	}
 #endif
 	if (pq->nalloc == 0) {
@@ -320,7 +321,8 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 		// rlimit properly, or
 		pq->nalloc = 5000;
 	}
-	if (pq->nalloc < 20) { // minimum allowed per POSIX
+	if (pq->nalloc < 128) { // 20 is minimum allowed per POSIX, but we need
+		                // more for testing
 		pq->nalloc = 20;
 	}
 	if (((pq->pfds = NNI_ALLOC_STRUCTS(pq->pfds, pq->nalloc)) == NULL) ||
