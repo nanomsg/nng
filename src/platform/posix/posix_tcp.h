@@ -36,8 +36,7 @@ struct nni_tcp_dialer {
 	struct sockaddr_storage src;
 	size_t                  srclen;
 	nni_mtx                 mtx;
-	nni_atomic_int          ref;
-	nni_atomic_bool         fini;
+	nni_refcnt              ref;
 };
 
 extern int  nni_posix_tcp_alloc(nni_tcp_conn **, nni_tcp_dialer *, int);
