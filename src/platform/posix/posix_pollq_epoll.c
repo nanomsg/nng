@@ -57,17 +57,15 @@ nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	nni_mtx_init(&pfd->mtx);
+	nni_atomic_init(&pfd->events);
 	nni_atomic_flag_reset(&pfd->stopped);
 	nni_atomic_flag_reset(&pfd->closing);
 
-	pfd->pq     = pq;
-	pfd->fd     = fd;
-	pfd->cb     = cb;
-	pfd->arg    = arg;
-	pfd->events = 0;
-	pfd->closed = false;
-	pfd->added  = false;
+	pfd->pq    = pq;
+	pfd->fd    = fd;
+	pfd->cb    = cb;
+	pfd->arg   = arg;
+	pfd->added = false;
 
 	NNI_LIST_NODE_INIT(&pfd->node);
 }
@@ -83,15 +81,8 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 	// forth.  This turns out to be true both for Linux and the illumos
 	// epoll implementation.
 
-	nni_mtx_lock(&pfd->mtx);
 	struct epoll_event ev;
-
-	if (pfd->closed) {
-		nni_mtx_unlock(&pfd->mtx);
-		return (NNG_ECLOSED);
-	}
-	pfd->events |= events;
-	events = pfd->events;
+	events |= nni_atomic_or(&pfd->events, (int) events);
 
 	memset(&ev, 0, sizeof(ev));
 	ev.events   = events | EPOLLONESHOT;
@@ -110,7 +101,6 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 	if (rv != 0) {
 		rv = nni_plat_errno(errno);
 	}
-	nni_mtx_unlock(&pfd->mtx);
 	return (rv);
 }
 
@@ -131,13 +121,10 @@ nni_posix_pfd_close(nni_posix_pfd *pfd)
 		return;
 	}
 
-	nni_mtx_lock(&pfd->mtx);
 	struct epoll_event ev; // Not actually used.
 
 	(void) shutdown(pfd->fd, SHUT_RDWR);
-	pfd->closed = true;
 	(void) epoll_ctl(pq->epfd, EPOLL_CTL_DEL, pfd->fd, &ev);
-	nni_mtx_unlock(&pfd->mtx);
 }
 
 void
@@ -191,7 +178,6 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 	}
 
 	(void) close(pfd->fd);
-	nni_mtx_fini(&pfd->mtx);
 }
 
 static void
@@ -239,9 +225,7 @@ nni_posix_poll_thr(void *arg)
 				    ((unsigned) (EPOLLIN | EPOLLOUT |
 				        EPOLLERR));
 
-				nni_mtx_lock(&pfd->mtx);
-				pfd->events &= ~mask;
-				nni_mtx_unlock(&pfd->mtx);
+				nni_atomic_and(&pfd->events, (int) ~mask);
 
 				// Execute the callback with lock released
 				pfd->cb(pfd->arg, mask);

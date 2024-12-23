@@ -21,10 +21,8 @@ struct nni_posix_pfd {
 	int                     fd;
 	nni_posix_pfd_cb        cb;
 	void                   *arg;
-	unsigned                events;
-	nni_mtx                 mtx;
+	nni_atomic_int          events;
 	bool                    added;
-	bool                    closed;
 	nni_atomic_flag         stopped;
 	nni_atomic_flag         closing;
 };
