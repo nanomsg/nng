@@ -22,9 +22,8 @@ struct nni_posix_pfd {
 	nni_atomic_flag         closed;
 	nni_atomic_flag         stopped;
 	bool                    reaped;
-	unsigned                events;
+	nni_atomic_int          events;
 	nni_cv                  cv; // signaled when poller has unregistered
-	nni_mtx                 mtx;
 };
 
 #define NNI_POLL_IN (0x0001)

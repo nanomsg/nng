@@ -325,6 +325,18 @@ nni_atomic_init(nni_atomic_int *v)
 	InterlockedExchange(&v->v, 0);
 }
 
+int
+nni_atomic_or(nni_atomic_int *v, int mask)
+{
+	return (InterlockedOr(&v->v, mask));
+}
+
+int
+nni_atomic_and(nni_atomic_int *v, int mask)
+{
+	return (InterlockedAnd(&v->v, mask));
+}
+
 void
 nni_atomic_inc(nni_atomic_int *v)
 {

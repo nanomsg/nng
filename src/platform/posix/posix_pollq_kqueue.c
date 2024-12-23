@@ -60,14 +60,13 @@ nni_posix_pfd_init(nni_posix_pfd *pf, int fd, nni_posix_pfd_cb cb, void *arg)
 
 	pq = &nni_posix_global_pollq;
 
-	nni_mtx_init(&pf->mtx);
+	nni_atomic_init(&pf->events);
 	nni_cv_init(&pf->cv, &pq->mtx);
 
-	pf->pq     = pq;
-	pf->fd     = fd;
-	pf->cb     = cb;
-	pf->arg    = arg;
-	pf->events = 0;
+	pf->pq  = pq;
+	pf->fd  = fd;
+	pf->cb  = cb;
+	pf->arg = arg;
 
 	nni_atomic_flag_reset(&pf->closed);
 	nni_atomic_flag_reset(&pf->stopped);
@@ -150,7 +149,6 @@ nni_posix_pfd_fini(nni_posix_pfd *pf)
 
 	(void) close(pf->fd);
 	nni_cv_fini(&pf->cv);
-	nni_mtx_fini(&pf->mtx);
 }
 
 int
@@ -167,15 +165,12 @@ nni_posix_pfd_arm(nni_posix_pfd *pf, unsigned events)
 	unsigned         flags = EV_ENABLE | EV_DISPATCH | EV_CLEAR;
 	nni_posix_pollq *pq    = pf->pq;
 
-	nni_mtx_lock(&pf->mtx);
-	pf->events |= events;
-	events = pf->events;
-	nni_mtx_unlock(&pf->mtx);
-
 	if (events == 0) {
 		// No events, and kqueue is oneshot, so nothing to do.
 		return (0);
 	}
+
+	nni_atomic_or(&pf->events, (int) events);
 
 	if (events & NNI_POLL_IN) {
 		EV_SET(&ev[nev++], pf->fd, EVFILT_READ, flags, 0, 0, pf);
@@ -244,9 +239,7 @@ nni_posix_poll_thr(void *arg)
 				revents |= NNI_POLL_HUP;
 			}
 
-			nni_mtx_lock(&pf->mtx);
-			pf->events &= ~(revents);
-			nni_mtx_unlock(&pf->mtx);
+			nni_atomic_and(&pf->events, (int) (~revents));
 
 			pf->cb(pf->arg, revents);
 		}

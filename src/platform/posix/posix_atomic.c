@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -70,6 +70,21 @@ void
 nni_atomic_sub(nni_atomic_int *v, int bump)
 {
 	(void) atomic_fetch_sub_explicit(&v->v, bump, memory_order_relaxed);
+}
+
+// atomic or is used to set events in the posix pollers.. no other use at
+// present. We use acquire release semantics.
+int
+nni_atomic_or(nni_atomic_int *v, int mask)
+{
+	return (atomic_fetch_or_explicit(&v->v, mask, memory_order_acq_rel));
+}
+
+// and is used in the pollers to clear the events that we have processed
+int
+nni_atomic_and(nni_atomic_int *v, int mask)
+{
+	return (atomic_fetch_and_explicit(&v->v, mask, memory_order_acq_rel));
 }
 
 int
@@ -338,6 +353,18 @@ nni_atomic_dec_nv(nni_atomic_int *v)
 	return (__atomic_sub_fetch(&v->v, 1, __ATOMIC_SEQ_CST));
 }
 
+int
+nni_atomic_or(nni_atomic_int *v, int mask)
+{
+	return (__atomic_fetch_or(&v->v, mask, __ATOMIC_ACQ_REL));
+}
+
+int
+nni_atomic_and(nni_atomic_int *v, int mask)
+{
+	return (__atomic_fetch_and(&v->v, mask, __ATOMIC_ACQ_REL));
+}
+
 bool
 nni_atomic_cas(nni_atomic_int *v, int comp, int new)
 {
@@ -567,6 +594,28 @@ nni_atomic_swap(nni_atomic_int *v, int i)
 	pthread_mutex_lock(&plat_atomic_lock);
 	rv   = v->v;
 	v->v = i;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (rv);
+}
+
+int
+nni_atomic_or(nni_atomic_int *v, int mask)
+{
+	int rv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	rv = v->v;
+	v->v |= mask;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (rv);
+}
+
+int
+nni_atomic_and(nni_atomic_int *v, int mask)
+{
+	int rv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	rv = v->v;
+	v->v &= mask;
 	pthread_mutex_unlock(&plat_atomic_lock);
 	return (rv);
 }

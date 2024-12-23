@@ -217,6 +217,11 @@ extern int  nni_atomic_get(nni_atomic_int *);
 extern void nni_atomic_set(nni_atomic_int *, int);
 extern int  nni_atomic_swap(nni_atomic_int *, int);
 
+// These are used with acquire release semantics.
+// Used for pollers in the POSIX code. They return the previous value.
+extern int nni_atomic_or(nni_atomic_int *, int);
+extern int nni_atomic_and(nni_atomic_int *, int);
+
 // These versions are tuned for use as reference
 // counters. Relaxed order when possible to increase
 // reference count, acquire-release order for dropping

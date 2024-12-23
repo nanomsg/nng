@@ -70,13 +70,12 @@ nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 
 	NNI_LIST_NODE_INIT(&pfd->node);
 	NNI_LIST_NODE_INIT(&pfd->reap);
-	nni_mtx_init(&pfd->mtx);
 	pfd->fd     = fd;
-	pfd->events = 0;
 	pfd->cb     = cb;
 	pfd->arg    = arg;
 	pfd->pq     = pq;
 	pfd->reaped = false;
+	nni_atomic_init(&pfd->events);
 	nni_mtx_lock(&pq->mtx);
 	nni_list_append(&pq->addq, pfd);
 	nni_mtx_unlock(&pq->mtx);
@@ -137,7 +136,6 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 
 	// We're exclusive now.
 	(void) close(pfd->fd);
-	nni_mtx_fini(&pfd->mtx);
 }
 
 int
@@ -145,9 +143,7 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 {
 	nni_posix_pollq *pq = pfd->pq;
 
-	nni_mtx_lock(&pfd->mtx);
-	pfd->events |= events;
-	nni_mtx_unlock(&pfd->mtx);
+	(void) nni_atomic_or(&pfd->events, (int) events);
 
 	// If we're running on the callback, then don't bother to kick
 	// the pollq again.  This is necessary because we cannot modify
@@ -166,7 +162,7 @@ nni_posix_poll_thr(void *arg)
 	nni_posix_pfd  **pfds = pq->pfds;
 	nni_posix_pfd   *pfd;
 	int              nfds;
-	unsigned         events;
+	int              events;
 
 	for (;;) {
 
@@ -181,13 +177,11 @@ nni_posix_poll_thr(void *arg)
 		// Set up the poll list.
 		NNI_LIST_FOREACH (&pq->pollq, pfd) {
 
-			nni_mtx_lock(&pfd->mtx);
-			events = pfd->events;
-			nni_mtx_unlock(&pfd->mtx);
+			events = nni_atomic_get(&pfd->events);
 
 			if (events != 0) {
 				fds[nfds].fd      = pfd->fd;
-				fds[nfds].events  = events;
+				fds[nfds].events  = (unsigned) events;
 				fds[nfds].revents = 0;
 				nfds++;
 			}
@@ -207,7 +201,7 @@ nni_posix_poll_thr(void *arg)
 		bool stop   = false;
 		for (int i = 0; i < nfds; i++) {
 			int fd = fds[i].fd;
-			events = fds[i].revents;
+			events = (int) fds[i].revents;
 			pfd    = pfds[fd];
 			if (events == 0) {
 				continue;
@@ -224,9 +218,7 @@ nni_posix_poll_thr(void *arg)
 					// to finish reading.
 					events &= ~POLLHUP;
 				}
-				nni_mtx_lock(&pfd->mtx);
-				pfd->events &= ~events;
-				nni_mtx_unlock(&pfd->mtx);
+				(void) nni_atomic_and(&pfd->events, ~events);
 
 				pfd->cb(pfd->arg, events);
 			}

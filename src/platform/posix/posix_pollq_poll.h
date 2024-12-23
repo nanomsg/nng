@@ -20,8 +20,7 @@ struct nni_posix_pfd {
 	int                     fd;
 	nni_list_node           node;
 	nni_list_node           reap;
-	nni_mtx                 mtx;
-	unsigned                events;
+	nni_atomic_int          events;
 	nni_posix_pfd_cb        cb;
 	void                   *arg;
 	bool                    reaped;
