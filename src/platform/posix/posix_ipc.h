@@ -39,8 +39,7 @@ struct nni_ipc_dialer {
 	bool              closed;
 	nni_mtx           mtx;
 	nng_sockaddr      sa;
-	nni_atomic_int    ref;
-	nni_atomic_bool   fini;
+	nni_refcnt        ref;
 };
 
 extern int nni_posix_ipc_alloc(

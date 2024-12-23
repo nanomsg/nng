@@ -58,8 +58,9 @@ ipc_dialer_stop(void *arg)
 }
 
 static void
-ipc_dialer_fini(ipc_dialer *d)
+ipc_dialer_fini(void *arg)
 {
+	ipc_dialer *d = arg;
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
 }
@@ -70,18 +71,14 @@ ipc_dialer_free(void *arg)
 	ipc_dialer *d = arg;
 
 	ipc_dialer_stop(d);
-	nni_atomic_set_bool(&d->fini, true);
+
 	nni_posix_ipc_dialer_rele(d);
 }
 
 void
 nni_posix_ipc_dialer_rele(ipc_dialer *d)
 {
-	if (((nni_atomic_dec_nv(&d->ref)) != 0) ||
-	    (!nni_atomic_get_bool(&d->fini))) {
-		return;
-	}
-	ipc_dialer_fini(d);
+	nni_refcnt_rele(&d->ref);
 }
 
 static void
@@ -185,7 +182,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		return;
 	}
 
-	nni_atomic_inc(&d->ref);
+	nni_refcnt_hold(&d->ref);
 
 	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d, fd)) != 0) {
 		(void) close(fd);
@@ -324,9 +321,7 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_dial  = ipc_dialer_dial;
 	d->sd.sd_get   = ipc_dialer_get;
 	d->sd.sd_set   = ipc_dialer_set;
-	nni_atomic_init_bool(&d->fini);
-	nni_atomic_init(&d->ref);
-	nni_atomic_inc(&d->ref);
+	nni_refcnt_init(&d->ref, 1, d, ipc_dialer_fini);
 
 	*dp = (void *) d;
 	return (0);
