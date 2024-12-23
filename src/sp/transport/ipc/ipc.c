@@ -728,7 +728,7 @@ error:
 		break;
 	case NNG_ENOMEM:
 	case NNG_ENOFILES:
-		nng_sleep_aio(10, &ep->time_aio);
+		nng_sleep_aio(500, &ep->time_aio);
 		break;
 
 	default:
