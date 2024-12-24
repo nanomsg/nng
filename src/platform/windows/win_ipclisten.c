@@ -261,23 +261,19 @@ static void
 ipc_listener_accept(void *arg, nni_aio *aio)
 {
 	ipc_listener *l = arg;
-	int           rv;
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&l->mtx);
+	if (!nni_aio_begin_deferred(aio, ipc_accept_cancel, l)) {
+		nni_mtx_unlock(&l->mtx);
 		return;
 	}
-	nni_mtx_lock(&l->mtx);
 	if (!l->started) {
 		nni_mtx_unlock(&l->mtx);
 		nni_aio_finish_error(aio, NNG_ESTATE);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, ipc_accept_cancel, l)) != 0) {
-		nni_aio_finish_error(aio, rv);
-	} else {
-		nni_list_append(&l->aios, aio);
-		if (nni_list_first(&l->aios) == aio) {
-			ipc_accept_start(l);
-		}
+	nni_list_append(&l->aios, aio);
+	if (nni_list_first(&l->aios) == aio) {
+		ipc_accept_start(l);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
