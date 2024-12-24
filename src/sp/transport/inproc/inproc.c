@@ -194,16 +194,8 @@ inproc_pipe_send(void *arg, nni_aio *aio)
 	inproc_pipe  *pipe  = arg;
 	inproc_queue *queue = pipe->send_queue;
 
-	if (nni_aio_begin(aio) != 0) {
-		// No way to give the message back to the protocol, so
-		// we just discard it silently to prevent it from leaking.
-		nni_msg_free(nni_aio_get_msg(aio));
-		nni_aio_set_msg(aio, NULL);
-		return;
-	}
-
 	nni_mtx_lock(&queue->lock);
-	if (!nni_aio_defer(aio, inproc_queue_cancel, queue)) {
+	if (!nni_aio_begin_deferred(aio, inproc_queue_cancel, queue)) {
 		nni_mtx_unlock(&queue->lock);
 		return;
 	}
@@ -218,12 +210,8 @@ inproc_pipe_recv(void *arg, nni_aio *aio)
 	inproc_pipe  *pipe  = arg;
 	inproc_queue *queue = pipe->recv_queue;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 	nni_mtx_lock(&queue->lock);
-	if (!nni_aio_defer(aio, inproc_queue_cancel, queue)) {
+	if (!nni_aio_begin_deferred(aio, inproc_queue_cancel, queue)) {
 		nni_mtx_unlock(&queue->lock);
 		return;
 	}
@@ -460,11 +448,11 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 	inproc_ep *ep = arg;
 	inproc_ep *server;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&nni_inproc.mx);
+	if (!nni_aio_begin_deferred(aio, inproc_ep_cancel, ep)) {
+		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
-
-	nni_mtx_lock(&nni_inproc.mx);
 
 	// Find a server.
 	NNI_LIST_FOREACH (&nni_inproc.servers, server) {
@@ -475,14 +463,6 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 	if (server == NULL) {
 		nni_mtx_unlock(&nni_inproc.mx);
 		nni_aio_finish_error(aio, NNG_ECONNREFUSED);
-		return;
-	}
-
-	// We don't have to worry about the case where a zero timeout
-	// on connect was specified, as there is no option to specify
-	// that in the upper API.
-	if (!nni_aio_defer(aio, inproc_ep_cancel, ep)) {
-		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 
@@ -518,15 +498,11 @@ inproc_ep_accept(void *arg, nni_aio *aio)
 {
 	inproc_ep *ep = arg;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 	nni_mtx_lock(&nni_inproc.mx);
 
 	// We need not worry about the case where a non-blocking
 	// accept was tried -- there is no API to do such a thing.
-	if (!nni_aio_defer(aio, inproc_ep_cancel, ep)) {
+	if (!nni_aio_begin_deferred(aio, inproc_ep_cancel, ep)) {
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
