@@ -36,7 +36,8 @@ struct pair1_sock {
 	bool           raw;
 	pair1_pipe    *p;
 	nni_atomic_int ttl;
-	nni_mtx        mtx;
+	nni_mtx        rd_mtx;
+	nni_mtx        wr_mtx;
 	nni_lmq        wmq;
 	nni_list       waq;
 	nni_lmq        rmq;
@@ -78,7 +79,8 @@ pair1_sock_fini(void *arg)
 	nni_lmq_fini(&s->wmq);
 	nni_pollable_fini(&s->writable);
 	nni_pollable_fini(&s->readable);
-	nni_mtx_fini(&s->mtx);
+	nni_mtx_fini(&s->rd_mtx);
+	nni_mtx_fini(&s->wr_mtx);
 }
 
 #ifdef NNG_ENABLE_STATS
@@ -97,7 +99,8 @@ pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 	pair1_sock *s = arg;
 
 	// Raw mode uses this.
-	nni_mtx_init(&s->mtx);
+	nni_mtx_init(&s->rd_mtx);
+	nni_mtx_init(&s->wr_mtx);
 	s->sock = sock;
 	s->raw  = raw;
 
@@ -199,7 +202,8 @@ pair1_pipe_stop(void *arg)
 	pair1_pipe *p = arg;
 	pair1_sock *s = p->pair;
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->rd_mtx);
+	nni_mtx_lock(&s->wr_mtx);
 	if (s->p == p) {
 		s->p = NULL;
 		if (s->rd_ready) {
@@ -215,7 +219,8 @@ pair1_pipe_stop(void *arg)
 			nni_pollable_clear(&s->readable);
 		}
 	}
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->wr_mtx);
+	nni_mtx_unlock(&s->rd_mtx);
 	nni_aio_stop(&p->aio_send);
 	nni_aio_stop(&p->aio_recv);
 }
@@ -244,16 +249,29 @@ pair1_pipe_init(void *arg, nni_pipe *pipe, void *pair)
 }
 
 static void
-pair1_cancel(nni_aio *aio, void *arg, int rv)
+pair1_cancel_rd(nni_aio *aio, void *arg, int rv)
 {
 	pair1_sock *s = arg;
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->rd_mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
 	}
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->rd_mtx);
+}
+
+static void
+pair1_cancel_wr(nni_aio *aio, void *arg, int rv)
+{
+	pair1_sock *s = arg;
+
+	nni_mtx_lock(&s->wr_mtx);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
+	}
+	nni_mtx_unlock(&s->wr_mtx);
 }
 
 static int
@@ -271,9 +289,9 @@ pair1_pipe_start(void *arg)
 		return (NNG_EPROTO);
 	}
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->rd_mtx);
 	if (s->p != NULL) {
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->rd_mtx);
 		nng_log_warn("NNG-PAIR-BUSY",
 		    "Peer pipe protocol %d is already paired, rejected.",
 		    nni_pipe_peer(p->pipe));
@@ -282,7 +300,7 @@ pair1_pipe_start(void *arg)
 	}
 	s->p        = p;
 	s->rd_ready = false;
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->rd_mtx);
 
 	pair1_send_sched(s);
 
@@ -347,7 +365,7 @@ pair1_pipe_recv_cb(void *arg)
 	// Store the hop count in the header.
 	nni_msg_header_append_u32(msg, hdr);
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->rd_mtx);
 
 	// if anyone is blocking, then the lmq will be empty, and
 	// we should deliver it there.
@@ -355,7 +373,7 @@ pair1_pipe_recv_cb(void *arg)
 		nni_aio_list_remove(a);
 		nni_aio_set_msg(a, msg);
 		nni_pipe_recv(pipe, &p->aio_recv);
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->rd_mtx);
 		nni_aio_finish_sync(a, 0, len);
 		return;
 	}
@@ -369,7 +387,7 @@ pair1_pipe_recv_cb(void *arg)
 		s->rd_ready = true;
 	}
 	nni_pollable_raise(&s->readable);
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->rd_mtx);
 }
 
 static void
@@ -380,10 +398,10 @@ pair1_send_sched(pair1_sock *s)
 	nni_aio    *a = NULL;
 	size_t      l = 0;
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->wr_mtx);
 
 	if ((p = s->p) == NULL) {
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->wr_mtx);
 		return;
 	}
 
@@ -415,7 +433,7 @@ pair1_send_sched(pair1_sock *s)
 		nni_pollable_raise(&s->writable);
 	}
 
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->wr_mtx);
 
 	if (a != NULL) {
 		nni_aio_set_msg(a, NULL);
@@ -450,17 +468,26 @@ pair1_sock_close(void *arg)
 	pair1_sock *s = arg;
 	nni_aio    *a;
 	nni_msg    *m;
-	nni_mtx_lock(&s->mtx);
-	while (((a = nni_list_first(&s->raq)) != NULL) ||
-	    ((a = nni_list_first(&s->waq)) != NULL)) {
+
+	nni_mtx_lock(&s->rd_mtx);
+	while ((a = nni_list_first(&s->raq)) != NULL) {
 		nni_aio_list_remove(a);
 		nni_aio_finish_error(a, NNG_ECLOSED);
 	}
-	while ((nni_lmq_get(&s->rmq, &m) == 0) ||
-	    (nni_lmq_get(&s->wmq, &m) == 0)) {
+	while (nni_lmq_get(&s->rmq, &m) == 0) {
 		nni_msg_free(m);
 	}
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->rd_mtx);
+
+	nni_mtx_lock(&s->wr_mtx);
+	while ((a = nni_list_first(&s->waq)) != NULL) {
+		nni_aio_list_remove(a);
+		nni_aio_finish_error(a, NNG_ECLOSED);
+	}
+	while (nni_lmq_get(&s->wmq, &m) == 0) {
+		nni_msg_free(m);
+	}
+	nni_mtx_unlock(&s->wr_mtx);
 }
 
 static int
@@ -490,9 +517,9 @@ pair1_set_test_inject_header(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	pair1_sock *s = arg;
 	int         rv;
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->wr_mtx);
 	rv = nni_copyin_bool(&s->inject_header, buf, sz, t);
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->wr_mtx);
 	return (rv);
 }
 #endif
@@ -564,7 +591,7 @@ pair1_sock_send(void *arg, nni_aio *aio)
 inject:
 #endif
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->wr_mtx);
 	if (s->wr_ready) {
 		pair1_pipe *p = s->p;
 		if (nni_lmq_full(&s->wmq)) {
@@ -573,7 +600,7 @@ inject:
 		nni_aio_set_msg(aio, NULL);
 		nni_aio_finish(aio, 0, len);
 		pair1_pipe_send(p, m);
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->wr_mtx);
 		return;
 	}
 
@@ -585,17 +612,17 @@ inject:
 		if (nni_lmq_full(&s->wmq)) {
 			nni_pollable_clear(&s->writable);
 		}
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->wr_mtx);
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel, s)) != 0) {
+	if ((rv = nni_aio_schedule(aio, pair1_cancel_wr, s)) != 0) {
 		nni_aio_finish_error(aio, rv);
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->wr_mtx);
 		return;
 	}
 	nni_aio_list_append(&s->waq, aio);
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->wr_mtx);
 }
 
 static void
@@ -604,13 +631,12 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 	pair1_sock *s = arg;
 	pair1_pipe *p;
 	nni_msg    *m;
-	int         rv;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&s->rd_mtx);
+	if (!nni_aio_begin_deferred(aio, pair1_cancel_rd, s)) {
+		nni_mtx_unlock(&s->rd_mtx);
 		return;
 	}
-
-	nni_mtx_lock(&s->mtx);
 	p = s->p;
 
 	// Buffered read.  If there is a message waiting for us, pick
@@ -628,7 +654,7 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 		if (nni_lmq_empty(&s->rmq)) {
 			nni_pollable_clear(&s->readable);
 		}
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->rd_mtx);
 		return;
 	}
 
@@ -641,16 +667,12 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 		nni_aio_finish(aio, 0, nni_msg_len(m));
 		nni_pipe_recv(p->pipe, &p->aio_recv);
 		nni_pollable_clear(&s->readable);
-		nni_mtx_unlock(&s->mtx);
+		nni_mtx_unlock(&s->rd_mtx);
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
-	} else {
-		nni_aio_list_append(&s->raq, aio);
-	}
-	nni_mtx_unlock(&s->mtx);
+	nni_aio_list_append(&s->raq, aio);
+	nni_mtx_unlock(&s->rd_mtx);
 }
 
 static int
@@ -663,7 +685,7 @@ pair1_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != 0) {
 		return (rv);
 	}
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->wr_mtx);
 	rv = nni_lmq_resize(&s->wmq, (size_t) val);
 	// Changing the size of the queue can affect our readiness.
 	if (!nni_lmq_full(&s->wmq)) {
@@ -671,7 +693,7 @@ pair1_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	} else if (!s->wr_ready) {
 		nni_pollable_clear(&s->writable);
 	}
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->wr_mtx);
 	return (rv);
 }
 
@@ -681,9 +703,9 @@ pair1_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	pair1_sock *s = arg;
 	int         val;
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->wr_mtx);
 	val = (int) nni_lmq_cap(&s->wmq);
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->wr_mtx);
 
 	return (nni_copyout_int(val, buf, szp, t));
 }
@@ -698,7 +720,7 @@ pair1_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != 0) {
 		return (rv);
 	}
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->rd_mtx);
 	rv = nni_lmq_resize(&s->rmq, (size_t) val);
 	// Changing the size of the queue can affect our readiness.
 	if (!nni_lmq_empty(&s->rmq)) {
@@ -706,7 +728,7 @@ pair1_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	} else if (!s->rd_ready) {
 		nni_pollable_clear(&s->readable);
 	}
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->rd_mtx);
 	return (rv);
 }
 
@@ -716,9 +738,9 @@ pair1_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	pair1_sock *s = arg;
 	int         val;
 
-	nni_mtx_lock(&s->mtx);
+	nni_mtx_lock(&s->rd_mtx);
 	val = (int) nni_lmq_cap(&s->rmq);
-	nni_mtx_unlock(&s->mtx);
+	nni_mtx_unlock(&s->rd_mtx);
 
 	return (nni_copyout_int(val, buf, szp, t));
 }
