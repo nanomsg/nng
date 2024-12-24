@@ -560,10 +560,6 @@ pair1_sock_send(void *arg, nni_aio *aio)
 	len = nni_msg_len(m);
 	nni_sock_bump_tx(s->sock, len);
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 #ifdef NNG_TEST_LIB
 	if (s->inject_header) {
 		goto inject;
@@ -576,7 +572,9 @@ pair1_sock_send(void *arg, nni_aio *aio)
 		if ((nni_msg_header_len(m) != sizeof(uint32_t)) ||
 		    (nni_msg_header_peek_u32(m) >= 0xff)) {
 			BUMP_STAT(&s->stat_tx_malformed);
-			nni_aio_finish_error(aio, NNG_EPROTO);
+			if (nni_aio_begin(aio)) {
+				nni_aio_finish_error(aio, NNG_EPROTO);
+			}
 			return;
 		}
 
@@ -592,6 +590,10 @@ inject:
 #endif
 
 	nni_mtx_lock(&s->wr_mtx);
+	if (!nni_aio_begin_deferred(aio, pair1_cancel_wr, s)) {
+		nni_mtx_unlock(&s->wr_mtx);
+		return;
+	}
 	if (s->wr_ready) {
 		pair1_pipe *p = s->p;
 		if (nni_lmq_full(&s->wmq)) {
@@ -616,11 +618,6 @@ inject:
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel_wr, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
-		nni_mtx_unlock(&s->wr_mtx);
-		return;
-	}
 	nni_aio_list_append(&s->waq, aio);
 	nni_mtx_unlock(&s->wr_mtx);
 }
