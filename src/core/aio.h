@@ -175,6 +175,11 @@ extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
 // or was canceled before this call (but after nni_aio_begin).
 extern bool nni_aio_defer(nni_aio *, nni_aio_cancel_fn, void *);
 
+// nni_aio_begin_deferred is combines nni_aio_begin and nni_aio_defer into
+// a single action, reducing the lock churn.  It must be called with the
+// caller's scheduling lock held.
+extern bool nni_aio_begin_deferred(nni_aio *, nni_aio_cancel_fn, void *);
+
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 
 // nni_aio_completion_list is used after removing the aio from an

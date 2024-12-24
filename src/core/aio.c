@@ -468,6 +468,85 @@ nni_aio_defer(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	return (true);
 }
 
+// nni_aio_begin_deferred combines the effects of
+// begin and schedule, so reducing over all lock contention.
+// It should be called with the callers scheduling lock held.
+bool
+nni_aio_begin_deferred(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
+{
+	// If any of these triggers then the caller has a defect because
+	// it means that the aio is already in use.  This is always
+	// a bug in the caller.  These checks are not technically thread
+	// safe in the event that they are false.  Users of race detectors
+	// checks may wish ignore or suppress these checks.
+	nni_aio_expire_q *eq = aio->a_expire_q;
+
+	NNI_ASSERT(aio->a_init);
+
+	bool timeout = false;
+
+	if (!aio->a_sleep && !aio->a_use_expire) {
+		// Convert the relative timeout to an absolute timeout.
+		switch (aio->a_timeout) {
+		case NNG_DURATION_ZERO:
+			timeout = true;
+			break;
+		case NNG_DURATION_INFINITE:
+		case NNG_DURATION_DEFAULT:
+			aio->a_expire = NNI_TIME_NEVER;
+			break;
+		default:
+			aio->a_expire = nni_clock() + aio->a_timeout;
+			break;
+		}
+	} else if (aio->a_use_expire && aio->a_expire <= nni_clock()) {
+		timeout = true;
+	}
+
+	nni_mtx_lock(&eq->eq_mtx);
+	NNI_ASSERT(!nni_aio_list_active(aio));
+	NNI_ASSERT(aio->a_cancel_fn == NULL);
+	NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
+
+	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
+		aio->a_outputs[i] = NULL;
+	}
+	aio->a_result    = 0;
+	aio->a_count     = 0;
+	aio->a_cancel_fn = NULL;
+	aio->a_abort     = false;
+	aio->a_expire_ok = false;
+	aio->a_sleep     = false;
+
+	nni_task_prep(&aio->a_task);
+
+	if (timeout) {
+		aio->a_sleep  = false;
+		aio->a_result = NNG_ETIMEDOUT;
+		nni_mtx_unlock(&eq->eq_mtx);
+		nni_task_dispatch(&aio->a_task);
+		return (false);
+	}
+	if (aio->a_stop || eq->eq_stop) {
+		aio->a_sleep  = false;
+		aio->a_result = NNG_ECLOSED;
+		nni_mtx_unlock(&eq->eq_mtx);
+		nni_task_dispatch(&aio->a_task);
+		return (false);
+	}
+
+	aio->a_cancel_fn  = cancel;
+	aio->a_cancel_arg = data;
+
+	// We only schedule expiration if we have a way for the expiration
+	// handler to actively cancel it.
+	if ((aio->a_expire != NNI_TIME_NEVER) && (cancel != NULL)) {
+		nni_aio_expire_add(aio);
+	}
+	nni_mtx_unlock(&eq->eq_mtx);
+	return (true);
+}
+
 // nni_aio_abort is called by a consumer which guarantees that the aio
 // is still valid.
 void
