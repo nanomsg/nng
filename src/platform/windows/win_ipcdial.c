@@ -145,16 +145,10 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 {
 	ipc_dialer    *d = arg;
 	ipc_dial_work *w = &ipc_connector;
-	int            rv;
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 
 	nni_mtx_lock(&w->mtx);
-	if ((rv = nni_aio_schedule(aio, ipc_dial_cancel, d)) != 0) {
+	if (!nni_aio_begin_deferred(aio, ipc_dial_cancel, d)) {
 		nni_mtx_unlock(&w->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 

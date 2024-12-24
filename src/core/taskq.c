@@ -150,13 +150,13 @@ nni_task_exec(nni_task *task)
 	} else {
 		task->task_busy++;
 	}
-	nni_mtx_unlock(&task->task_mtx);
 
 	if (task->task_cb != NULL) {
+		nni_mtx_unlock(&task->task_mtx);
 		task->task_cb(task->task_arg);
+		nni_mtx_lock(&task->task_mtx);
 	}
 
-	nni_mtx_lock(&task->task_mtx);
 	task->task_busy--;
 	if (task->task_busy == 0) {
 		nni_cv_wake(&task->task_cv);
