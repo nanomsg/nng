@@ -363,14 +363,11 @@ http_rd_cancel(nni_aio *aio, void *arg, int rv)
 static void
 http_rd_submit(nni_http_conn *conn, nni_aio *aio, enum read_flavor flavor)
 {
-	if (nni_aio_begin(aio) != 0) {
+	if (!nni_aio_defer(aio, http_rd_cancel, conn)) {
 		return;
 	}
 	if (conn->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if (!nni_aio_defer(aio, http_rd_cancel, conn)) {
 		return;
 	}
 	conn->rd_flavor = flavor;
@@ -480,14 +477,11 @@ http_wr_cancel(nni_aio *aio, void *arg, int rv)
 static void
 http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 {
-	if (nni_aio_begin(aio) != 0) {
+	if (!nni_aio_defer(aio, http_wr_cancel, conn)) {
 		return;
 	}
 	if (conn->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if (!nni_aio_defer(aio, http_wr_cancel, conn)) {
 		return;
 	}
 	conn->wr_flavor = flavor;

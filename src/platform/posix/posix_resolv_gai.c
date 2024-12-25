@@ -231,9 +231,6 @@ nni_resolv_ip(const char *host, uint16_t port, int af, bool passive,
 	resolv_item *item;
 	sa_family_t  fam;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	if (host != NULL) {
 		if ((strlen(host) >= sizeof(item->host)) ||
 		    (strcmp(host, "*") == 0)) {

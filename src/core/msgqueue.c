@@ -213,9 +213,6 @@ nni_msgq_cancel(nni_aio *aio, void *arg, int rv)
 void
 nni_msgq_aio_put(nni_msgq *mq, nni_aio *aio)
 {
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&mq->mq_lock);
 
 	// If this is an instantaneous poll operation, and the queue has
@@ -234,9 +231,6 @@ nni_msgq_aio_put(nni_msgq *mq, nni_aio *aio)
 void
 nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 {
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&mq->mq_lock);
 	if (!nni_aio_defer(aio, nni_msgq_cancel, mq)) {
 		nni_mtx_unlock(&mq->mq_lock);

@@ -337,7 +337,7 @@ test_xsub_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_recv_aio(sub, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	NUTS_CLOSE(sub);
 	nng_aio_free(aio);
 }

@@ -219,13 +219,12 @@ nni_device(nni_aio *aio, nni_sock *s1, nni_sock *s2)
 	device_data *d;
 	int          rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&device_mtx);
 	if ((rv = device_init(&d, s1, s2)) != 0) {
 		nni_mtx_unlock(&device_mtx);
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_defer(aio, NULL, NULL)) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 	if (!nni_aio_defer(aio, device_cancel, d)) {
