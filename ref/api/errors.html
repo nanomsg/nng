@@ -281,6 +281,7 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_EAMBIGUOUS</code><a name="NNG_EAMBIGUOUS"></a></td><td>29</td><td>Ambiguous option. The command line option could not be unambiguously resolved. Only used with <a href="/api/cmd_opts.html#parse-command-line-options"><code>nng_opts_parse</code></a>.</td></tr>
 <tr><td><code>NNG_EBADTYPE</code><a name="NNG_EBADTYPE"></a></td><td>30</td><td>Incorrect type. A type-specific function was used for an object of the wrong type.</td></tr>
 <tr><td><code>NNG_ECONNSHUT</code><a name="NNG_ECONNSHUT"></a></td><td>31</td><td>Connection shutdown. The connection was shut down and cannot be used.</td></tr>
+<tr><td><code>NNG_ESTOPPED</code><a name="NNG_ESTOPPED"></a></td><td>1000</td><td>Operation stopped. The operation was stopped with <a href="/api/aio.html#cancellation"><code>nng_aio_stop</code></a> or [<code>nng_aio_close</code>].</td></tr>
 <tr><td><code>NNG_EINTERNAL</code><a name="NNG_EINTERNAL"></a></td><td>1000</td><td>An unidentifier internal error occurred.</td></tr>
 <tr><td><code>NNG_ESYSERR</code><a name="NNG_ESYSERR"></a></td><td>0x10000000 - 0x1FFFFFFF</td><td>An unidentified system error occurred. These are errors reported by the operating system.</td></tr>
 <tr><td><code>NNG_ETRANERR</code><a name="NNG_ETRANERR"></a></td><td>0x20000000 - 0x2FFFFFFF</td><td>An unidentified transport error occurred.</td></tr>

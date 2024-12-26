@@ -221,14 +221,20 @@
 
 </style>
 <h1 id="migrating-from-nng-1x"><a class="header" href="#migrating-from-nng-1x">Migrating from NNG 1.x</a></h1>
-<p>There are some incompatibities from NNG 1.x.
-This guide should help in migrating applications to use NNG 2.0.</p>
+<p>There are some incompatibities from NNG 1.x, and applications must make certain changes for NNG 2.0.
+This guide should help with this migration.</p>
 <h2 id="nanomsg-compatibility"><a class="header" href="#nanomsg-compatibility">Nanomsg Compatibility</a></h2>
 <p>Applications using the legacy <code>libnanomsg</code> API will have to be updated to native <em>NNG</em> interfaces.
 See the <a href="nanomsg.html">Migrating From libnanomsg</a> chapter for details.</p>
 <h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
 <p>It is now required for applications to initialize the library explicitly before using it.
 This is done using the <a href="/api/init.html#initialization"><code>nng_init</code></a> function.</p>
+<h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
+<p>When an operation fails with [<code>NNG_ESTOPPED</code>], it means that the associated [<code>nni_aio</code>] object has
+been permanently stopped and must not be reused. Applications must watch for this error code, and
+not resubmit an operation that returns it. This is particularly important for callbacks that automatically
+resubmit operations. Failure to observe this rule will lead to an infinite loop
+as any further operations on the object will fail immediately with <code>NNG_ESTOPPED</code>.</p>
 <h2 id="transport-specific-functions"><a class="header" href="#transport-specific-functions">Transport Specific Functions</a></h2>
 <p>Transports have not needed to be registered for a long time now,
 and the functions for doing so have been removed. These functions
