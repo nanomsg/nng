@@ -175,6 +175,11 @@ extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
 // or was canceled before this call (but after nni_aio_begin).
 extern bool nni_aio_defer(nni_aio *, nni_aio_cancel_fn, void *);
 
+// nni_aio_start should be called before any asynchronous operation
+// is filed.  It need not be called for completions that are synchronous
+// at job submission.
+extern bool nni_aio_start(nni_aio *, nni_aio_cancel_fn, void *);
+
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 
 // nni_aio_completion_list is used after removing the aio from an
