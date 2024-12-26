@@ -177,16 +177,15 @@ static void
 tcp_dialer_dial(void *arg, nng_aio *aio)
 {
 	tcp_dialer *d = arg;
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+
+	nni_aio_reset(aio);
 	nni_mtx_lock(&d->mtx);
 	if (d->closed) {
 		nni_mtx_unlock(&d->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if (!nni_aio_defer(aio, tcp_dial_cancel, d)) {
+	if (!nni_aio_start(aio, tcp_dial_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}

@@ -193,9 +193,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	int                     ka;
 	int                     nd;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 
 	if (((sslen = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
 	    ((ss.ss_family != AF_INET) && (ss.ss_family != AF_INET6))) {
@@ -208,15 +206,22 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		return;
 	}
 
-	nni_refcnt_hold(&d->ref);
-
 	if ((rv = nni_posix_tcp_alloc(&c, d, fd)) != 0) {
+		(void) close(fd);
 		nni_aio_finish_error(aio, rv);
-		nni_posix_tcp_dialer_rele(d);
 		return;
 	}
 
+	// hold for the stream
+	nni_refcnt_hold(&d->ref);
+
 	nni_mtx_lock(&d->mtx);
+	if (!nni_aio_start(aio, tcp_dialer_cancel, d)) {
+		nni_mtx_unlock(&d->mtx);
+		nng_stream_free(&c->stream);
+		return;
+	}
+
 	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto error;
@@ -226,9 +231,6 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 			rv = nni_plat_errno(errno);
 			goto error;
 		}
-	}
-	if ((rv = nni_aio_schedule(aio, tcp_dialer_cancel, d)) != 0) {
-		goto error;
 	}
 	c->dial_aio = aio;
 	if (connect(fd, (void *) &ss, sslen) != 0) {

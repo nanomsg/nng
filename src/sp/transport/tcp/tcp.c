@@ -473,19 +473,11 @@ static void
 tcptran_pipe_send(void *arg, nni_aio *aio)
 {
 	tcptran_pipe *p = arg;
-	int           rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		// No way to give the message back to the protocol, so
-		// we just discard it silently to prevent it from leaking.
-		nni_msg_free(nni_aio_get_msg(aio));
-		nni_aio_set_msg(aio, NULL);
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, tcptran_pipe_send_cancel, p)) != 0) {
+	if (!nni_aio_start(aio, tcptran_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&p->sendq, aio);
@@ -549,15 +541,11 @@ static void
 tcptran_pipe_recv(void *arg, nni_aio *aio)
 {
 	tcptran_pipe *p = arg;
-	int           rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, tcptran_pipe_recv_cancel, p)) != 0) {
+	if (!nni_aio_start(aio, tcptran_pipe_recv_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -715,6 +703,9 @@ error:
 		nni_aio_finish_error(aio, rv);
 	}
 	switch (rv) {
+	case NNG_ECLOSED:
+	case NNG_ESTOPPED:
+		break;
 
 	case NNG_ENOMEM:
 	case NNG_ENOFILES:
@@ -867,11 +858,8 @@ static void
 tcptran_ep_connect(void *arg, nni_aio *aio)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
@@ -883,9 +871,8 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
+	if (!nni_aio_start(aio, tcptran_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	ep->useraio = aio;
@@ -946,11 +933,8 @@ static void
 tcptran_ep_accept(void *arg, nni_aio *aio)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
@@ -962,9 +946,8 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
+	if (!nni_aio_start(aio, tcptran_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	ep->useraio = aio;
