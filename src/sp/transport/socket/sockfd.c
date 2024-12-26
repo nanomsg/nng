@@ -453,19 +453,10 @@ static void
 sfd_tran_pipe_send(void *arg, nni_aio *aio)
 {
 	sfd_tran_pipe *p = arg;
-	int            rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		// No way to give the message back to the protocol, so
-		// we just discard it silently to prevent it from leaking.
-		nni_msg_free(nni_aio_get_msg(aio));
-		nni_aio_set_msg(aio, NULL);
-		return;
-	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, sfd_tran_pipe_send_cancel, p)) != 0) {
+	if (!nni_aio_start(aio, sfd_tran_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&p->sendq, aio);
@@ -530,15 +521,10 @@ static void
 sfd_tran_pipe_recv(void *arg, nni_aio *aio)
 {
 	sfd_tran_pipe *p = arg;
-	int            rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, sfd_tran_pipe_recv_cancel, p)) != 0) {
+	if (!nni_aio_start(aio, sfd_tran_pipe_recv_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -687,7 +673,7 @@ error:
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
 	}
-	if (!ep->closed) {
+	if (!ep->closed && rv != NNG_ESTOPPED) {
 		nng_stream_listener_accept(ep->listener, &ep->connaio);
 	}
 	nni_mtx_unlock(&ep->mtx);
@@ -791,11 +777,7 @@ static void
 sfd_tran_ep_accept(void *arg, nni_aio *aio)
 {
 	sfd_tran_ep *ep = arg;
-	int          rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
@@ -807,9 +789,8 @@ sfd_tran_ep_accept(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, sfd_tran_ep_cancel, ep)) != 0) {
+	if (!nni_aio_start(aio, sfd_tran_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	ep->useraio = aio;
