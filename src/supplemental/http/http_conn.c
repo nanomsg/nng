@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -363,14 +363,12 @@ http_rd_cancel(nni_aio *aio, void *arg, int rv)
 static void
 http_rd_submit(nni_http_conn *conn, nni_aio *aio, enum read_flavor flavor)
 {
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	if (conn->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if (!nni_aio_defer(aio, http_rd_cancel, conn)) {
+	if (!nni_aio_start(aio, http_rd_cancel, conn)) {
 		return;
 	}
 	conn->rd_flavor = flavor;
@@ -480,14 +478,12 @@ http_wr_cancel(nni_aio *aio, void *arg, int rv)
 static void
 http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 {
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	if (conn->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if (!nni_aio_defer(aio, http_wr_cancel, conn)) {
+	if (!nni_aio_start(aio, http_wr_cancel, conn)) {
 		return;
 	}
 	conn->wr_flavor = flavor;
