@@ -21,6 +21,18 @@ not resubmit an operation that returns it. This is particularly important for ca
 resubmit operations. Failure to observe this rule will lead to an infinite loop
 as any further operations on the object will fail immediately with `NNG_ESTOPPED`.
 
+## AIO Provider API changes
+
+The API used for providers for asynchronous I/O operations has changed slightly.
+
+- The `nng_aio_begin` function is removed. However a new [`nng_aio_reset`] function should be called
+  instead, before performing any other operations on an _aio_ object. (This simply clears certain fields.)
+- The `nng_aio_defer` function is replaced, with a very [`nng_aio_start`] function. However, this function
+  has slightly different semantics. It will automatically call the callback if the operation cannot be
+  scheduled.
+- Be aware of the new `NNG_ESTOPPED` error code, for operations on a handle that is being torn down by
+  the consumer.
+
 ## Transport Specific Functions
 
 Transports have not needed to be registered for a long time now,

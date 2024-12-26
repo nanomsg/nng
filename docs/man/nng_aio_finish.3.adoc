@@ -52,9 +52,9 @@ None.
 
 [.text-left]
 xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
-xref:nng_aio_begin.3.adoc[nng_aio_begin(3)],
+xref:nng_aio_reset.3.adoc[nng_aio_reset(3)],
 xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
-xref:nng_aio_defer.3.adoc[nng_aio_defer(3)],
+xref:nng_aio_start.3.adoc[nng_aio_start(3)],
 xref:nng_aio_result.3.adoc[nng_aio_result(3)],
 xref:nng_aio.5.adoc[nng_aio(5)],
 xref:nng.7.adoc[nng(7)]

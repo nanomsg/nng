@@ -90,9 +90,9 @@
 [`nng_stream_listener_set_tls`]: /TODO.md
 [`nng_stream_listener_get_tls`]: /TODO.md
 [`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
-[`nng_aio_begin`]: /TODO.md
-[`nng_aio_defer`]: /TODO.md
 [`nng_aio_finish`]: /TODO.md
+[`nng_aio_reset`]: /TODO.md
+[`nng_aio_start`]: /TODO.md
 [`nng_aio_set_output`]: /TODO.md
 [`nng_send`]: /TODO.md
 [`nng_recv`]: /TODO.md

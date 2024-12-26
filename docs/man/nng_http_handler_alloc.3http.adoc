@@ -98,11 +98,7 @@ then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.
 
 The _aio_ may be scheduled for deferred completion using the
-xref:nng_aio_defer.3.adoc[`nng_aio_defer()`] function.
-
-NOTE: The callback function should *NOT* call
-xref:nng_aio_begin.3.adoc[`nng_aio_begin()`],
-as that will already have been done by the server framework.
+xref:nng_aio_start.3.adoc[`nng_aio_start()`] function.
 
 === Directory Handler
 
@@ -181,7 +177,7 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-xref:nng_aio_defer.3.adoc[nng_aio_defer(3)],
+xref:nng_aio_start.3.adoc[nng_aio_start(3)],
 xref:nng_aio_finish.3.adoc[nng_aio_finish(3)],
 xref:nng_aio_get_input.3.adoc[nng_aio_get_input(3)],
 xref:nng_aio_set_output.3.adoc[nng_aio_set_output(3)],

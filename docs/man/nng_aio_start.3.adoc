@@ -1,6 +1,6 @@
-= nng_aio_defer(3)
+= nng_aio_start(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_aio_defer - defer asynchronous I/O operation
+nng_aio_start - start asynchronous I/O operation
 
 == SYNOPSIS
 
@@ -21,18 +21,18 @@ nng_aio_defer - defer asynchronous I/O operation
 
 typedef void (*nng_aio_cancelfn)(nng_aio *aio, void *arg, int err);
 
-void nng_aio_defer(nng_aio *aio, nng_aio_cancelfn fn, void *arg);
+void nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg);
 ----
 
 == DESCRIPTION
 
-The `nng_aio_defer()` function marks operation associated with _aio_ as
+The `nng_aio_started()` function marks operation associated with _aio_ as
 being deferred for asynchronous completion, and also registers a cancellation
 function _fn_ and associated argument _arg_, thereby
 permitting the operation to be canceled.
 
 If the _aio_ is being canceled, the cancellation routine _fn_ will be called
-with the _aio_, the _arg_ specified by `nng_aio_defer()`, and an error
+with the _aio_, the _arg_ specified by `nng_aio_start()`, and an error
 value in _err_, which is the reason that the operation is being canceled.
 
 The operation may not be cancelable; for example it may have already been
@@ -56,16 +56,8 @@ the routine are multi-thread safe; this will usually involve the use
 of locks or other synchronization primitives.
 
 TIP: For operations that complete synchronously, without any need to be
-deferred, the provider should not bother to call `nng_aio_defer()`,
+deferred, the provider should not bother to call `nng_aio_start()`,
 although it is harmless if it does.
-
-== RETURN VALUES
-
-None.
-
-== ERRORS
-
-None.
 
 == SEE ALSO
 

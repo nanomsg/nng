@@ -130,8 +130,7 @@ test_provider_cancel(void)
 	int      rv = 0;
 	// We fake an empty provider that does not do anything.
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	NUTS_TRUE(nng_aio_begin(aio) == true);
-	nng_aio_defer(aio, cancel, &rv);
+	nng_aio_start(aio, cancel, &rv);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	NUTS_TRUE(rv == NNG_ECANCELED);

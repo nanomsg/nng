@@ -103,7 +103,7 @@ The {{i:`nng_aio_cancel`}} function acts like `nng_aio_abort`, but uses the erro
 The {{i:`nng_aio_stop`}} function aborts the _aio_ operation with [`NNG_ESTOPPED`],
 and then waits the operation and any associated callback to complete.
 This function also marks _aio_ itself permanently stopped, so that any
-new operations scheduled by I/O providers using [`nng_aio_begin`]
+new operations scheduled by I/O providers using [`nng_aio_start`]
 return false. Thus this function should be used to teardown operations.
 
 > [!TIP]

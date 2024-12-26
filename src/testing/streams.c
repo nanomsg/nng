@@ -95,7 +95,7 @@ stream_xfr_alloc(nng_stream *s, void (*submit)(nng_stream *, nng_aio *),
 	nng_aio_set_timeout(x->upper_aio, 30000);
 	nng_aio_set_timeout(x->lower_aio, 5000);
 
-	nng_aio_begin(x->upper_aio);
+	(void) nng_aio_start(x->upper_aio, NULL, NULL);
 
 	x->s      = s;
 	x->rem    = size;

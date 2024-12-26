@@ -212,10 +212,9 @@ nng_recv_aio(nng_socket s, nng_aio *aio)
 	nni_sock *sock;
 	int       rv;
 
+	nni_aio_reset(aio);
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
-			nni_aio_finish_error(aio, rv);
-		}
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_sock_recv(sock, aio);
@@ -228,16 +227,13 @@ nng_send_aio(nng_socket s, nng_aio *aio)
 	nni_sock *sock;
 	int       rv;
 
+	nni_aio_reset(aio);
 	if (nni_aio_get_msg(aio) == NULL) {
-		if (nni_aio_begin(aio) == 0) {
-			nni_aio_finish_error(aio, NNG_EINVAL);
-		}
+		nni_aio_finish_error(aio, NNG_EINVAL);
 		return;
 	}
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
-			nni_aio_finish_error(aio, rv);
-		}
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_sock_send(sock, aio);
@@ -326,10 +322,9 @@ nng_ctx_recv(nng_ctx cid, nng_aio *aio)
 	int      rv;
 	nni_ctx *ctx;
 
+	nni_aio_reset(aio);
 	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
-			nni_aio_finish_error(aio, rv);
-		}
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_ctx_recv(ctx, aio);
@@ -342,16 +337,13 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 	int      rv;
 	nni_ctx *ctx;
 
+	nni_aio_reset(aio);
 	if (nni_aio_get_msg(aio) == NULL) {
-		if (nni_aio_begin(aio) == 0) {
-			nni_aio_finish_error(aio, NNG_EINVAL);
-		}
+		nni_aio_finish_error(aio, NNG_EINVAL);
 		return;
 	}
 	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
-			nni_aio_finish_error(aio, rv);
-		}
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_ctx_send(ctx, aio);
@@ -1279,20 +1271,17 @@ nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2)
 	nni_sock *sock1 = NULL;
 	nni_sock *sock2 = NULL;
 
+	nni_aio_reset(aio);
 	if ((s1.id > 0) && (s1.id != (uint32_t) -1)) {
 		if ((rv = nni_sock_find(&sock1, s1.id)) != 0) {
-			if (nni_aio_begin(aio) == 0) {
-				nni_aio_finish_error(aio, rv);
-			}
+			nni_aio_finish_error(aio, rv);
 			return;
 		}
 	}
 	if (((s2.id > 0) && (s2.id != (uint32_t) -1)) && (s2.id != s1.id)) {
 		if ((rv = nni_sock_find(&sock2, s2.id)) != 0) {
 			nni_sock_rele(sock1);
-			if (nni_aio_begin(aio) == 0) {
-				nni_aio_finish_error(aio, rv);
-			}
+			nni_aio_finish_error(aio, rv);
 			return;
 		}
 	}
@@ -2064,18 +2053,15 @@ nng_aio_finish(nng_aio *aio, int rv)
 }
 
 bool
-nng_aio_defer(nng_aio *aio, nng_aio_cancelfn fn, void *arg)
+nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg)
 {
-	return (nni_aio_defer(aio, fn, arg));
+	return (nni_aio_start(aio, fn, arg));
 }
 
-bool
-nng_aio_begin(nng_aio *aio)
+void
+nng_aio_reset(nng_aio *aio)
 {
-	if (nni_aio_begin(aio) != 0) {
-		return (false);
-	}
-	return (true);
+	nni_aio_reset(aio);
 }
 
 #define xstr(a) str(a)

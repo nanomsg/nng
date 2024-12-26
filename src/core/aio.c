@@ -428,69 +428,6 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 }
 
 bool
-nni_aio_defer(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
-{
-	nni_aio_expire_q *eq      = aio->a_expire_q;
-	bool              timeout = false;
-
-	if (!aio->a_sleep && !aio->a_use_expire) {
-		// Convert the relative timeout to an absolute timeout.
-		switch (aio->a_timeout) {
-		case NNG_DURATION_ZERO:
-			timeout = true;
-			break;
-		case NNG_DURATION_INFINITE:
-		case NNG_DURATION_DEFAULT:
-			aio->a_expire = NNI_TIME_NEVER;
-			break;
-		default:
-			aio->a_expire = nni_clock() + aio->a_timeout;
-			break;
-		}
-	} else if (aio->a_use_expire && aio->a_expire <= nni_clock()) {
-		timeout = true;
-	}
-
-	nni_mtx_lock(&eq->eq_mtx);
-	if (aio->a_stop || eq->eq_stop) {
-		aio->a_stop    = true;
-		aio->a_sleep   = false;
-		aio->a_result  = NNG_ESTOPPED;
-		aio->a_stopped = true;
-		nni_mtx_unlock(&eq->eq_mtx);
-		nni_task_dispatch(&aio->a_task);
-		return (false);
-	}
-	if (aio->a_abort) {
-		aio->a_sleep = false;
-		aio->a_abort = false;
-		nni_mtx_unlock(&eq->eq_mtx);
-		nni_task_dispatch(&aio->a_task);
-		return (false);
-	}
-	if (timeout) {
-		aio->a_sleep  = false;
-		aio->a_result = aio->a_expire_ok ? 0 : NNG_ETIMEDOUT;
-		aio->a_abort  = false;
-		nni_mtx_unlock(&eq->eq_mtx);
-		nni_task_dispatch(&aio->a_task);
-		return (false);
-	}
-
-	NNI_ASSERT(aio->a_cancel_fn == NULL);
-	aio->a_cancel_fn  = cancel;
-	aio->a_cancel_arg = data;
-
-	// We only schedule expiration if we have a way for the expiration
-	// handler to actively cancel it.
-	if ((aio->a_expire != NNI_TIME_NEVER) && (cancel != NULL)) {
-		nni_aio_expire_add(aio);
-	}
-	nni_mtx_unlock(&eq->eq_mtx);
-	return (true);
-}
-
-bool
 nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 {
 	nni_aio_expire_q *eq      = aio->a_expire_q;
