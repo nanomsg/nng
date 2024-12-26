@@ -467,7 +467,7 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 			nni_atomic_flag_reset(&d->d_started);
 			return (rv);
 		}
-		nni_aio_begin(aio);
+		nni_aio_start(aio, NULL, NULL);
 	}
 
 	nni_mtx_lock(&d->d_mtx);
