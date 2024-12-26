@@ -167,9 +167,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	int                     fd;
 	int                     rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 
 	if (((len = nni_posix_nn2sockaddr(&ss, &d->sa)) == 0) ||
 	    (ss.ss_family != AF_UNIX)) {
@@ -182,21 +180,24 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		return;
 	}
 
-	nni_refcnt_hold(&d->ref);
-
 	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d, fd)) != 0) {
 		(void) close(fd);
-		nni_posix_ipc_dialer_rele(d);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
+	// hold for the conn
+	nni_refcnt_hold(&d->ref);
+
 	nni_mtx_lock(&d->mtx);
+	if (!nni_aio_start(aio, ipc_dialer_cancel, d)) {
+		nni_mtx_unlock(&d->mtx);
+		nng_stream_free(&c->stream);
+		return;
+	}
+
 	if (d->closed) {
 		rv = NNG_ECLOSED;
-		goto error;
-	}
-	if ((rv = nni_aio_schedule(aio, ipc_dialer_cancel, d)) != 0) {
 		goto error;
 	}
 	c->dial_aio = aio;
