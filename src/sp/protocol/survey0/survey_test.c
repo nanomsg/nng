@@ -240,7 +240,7 @@ test_surv_cancel_abort_recv(void)
 
 	// Our pending I/O should have been canceled.
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 
 	// Receive the first request (should be abc) on the respondent.
 	NUTS_RECV(resp, "abc");

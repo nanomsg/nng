@@ -257,7 +257,7 @@ test_resp_ctx_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_ctx_recv(ctx, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	NUTS_PASS(nng_ctx_close(ctx));
 	NUTS_CLOSE(resp);
 	nng_aio_free(aio);

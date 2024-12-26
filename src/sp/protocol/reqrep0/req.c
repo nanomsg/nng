@@ -610,7 +610,6 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 
 	nni_mtx_lock(&s->mtx);
 	if (!nni_aio_defer(aio, req0_ctx_cancel_recv, ctx)) {
-		;
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
