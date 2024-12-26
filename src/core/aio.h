@@ -175,6 +175,11 @@ extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
 // or was canceled before this call (but after nni_aio_begin).
 extern bool nni_aio_defer(nni_aio *, nni_aio_cancel_fn, void *);
 
+// nni_aio_reset is called by providers before doing any work -- it resets
+// counts other fields to their initial state.  It will not reset the closed
+// state if the aio has been stopped or closed.
+extern void nni_aio_reset(nni_aio *);
+
 // nni_aio_start should be called before any asynchronous operation
 // is filed.  It need not be called for completions that are synchronous
 // at job submission.
@@ -230,6 +235,7 @@ struct nng_aio {
 	bool         a_use_expire; // Use expire instead of timeout
 	bool         a_abort;      // Task was aborted
 	bool         a_init;       // Initialized this
+	bool         a_stopped;    // Debug - set when we finish stopped
 	nni_task     a_task;
 
 	// Read/write operations.

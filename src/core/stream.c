@@ -140,12 +140,14 @@ nng_stream_free(nng_stream *s)
 void
 nng_stream_send(nng_stream *s, nng_aio *aio)
 {
+	nni_aio_reset(aio);
 	s->s_send(s, aio);
 }
 
 void
 nng_stream_recv(nng_stream *s, nng_aio *aio)
 {
+	nni_aio_reset(aio);
 	s->s_recv(s, aio);
 }
 
