@@ -213,7 +213,7 @@ nng_recv_aio(nng_socket s, nng_aio *aio)
 	int       rv;
 
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
+		if (nni_aio_defer(aio, NULL, NULL)) {
 			nni_aio_finish_error(aio, rv);
 		}
 		return;
@@ -229,13 +229,13 @@ nng_send_aio(nng_socket s, nng_aio *aio)
 	int       rv;
 
 	if (nni_aio_get_msg(aio) == NULL) {
-		if (nni_aio_begin(aio) == 0) {
+		if (nni_aio_defer(aio, NULL, NULL)) {
 			nni_aio_finish_error(aio, NNG_EINVAL);
 		}
 		return;
 	}
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
+		if (nni_aio_defer(aio, NULL, NULL)) {
 			nni_aio_finish_error(aio, rv);
 		}
 		return;
@@ -327,7 +327,7 @@ nng_ctx_recv(nng_ctx cid, nng_aio *aio)
 	nni_ctx *ctx;
 
 	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
+		if (nni_aio_defer(aio, NULL, NULL)) {
 			nni_aio_finish_error(aio, rv);
 		}
 		return;
@@ -343,13 +343,13 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 	nni_ctx *ctx;
 
 	if (nni_aio_get_msg(aio) == NULL) {
-		if (nni_aio_begin(aio) == 0) {
+		if (nni_aio_defer(aio, NULL, NULL)) {
 			nni_aio_finish_error(aio, NNG_EINVAL);
 		}
 		return;
 	}
 	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
-		if (nni_aio_begin(aio) == 0) {
+		if (nni_aio_defer(aio, NULL, NULL)) {
 			nni_aio_finish_error(aio, rv);
 		}
 		return;
@@ -1281,7 +1281,7 @@ nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2)
 
 	if ((s1.id > 0) && (s1.id != (uint32_t) -1)) {
 		if ((rv = nni_sock_find(&sock1, s1.id)) != 0) {
-			if (nni_aio_begin(aio) == 0) {
+			if (nni_aio_defer(aio, NULL, NULL)) {
 				nni_aio_finish_error(aio, rv);
 			}
 			return;
@@ -1290,7 +1290,7 @@ nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2)
 	if (((s2.id > 0) && (s2.id != (uint32_t) -1)) && (s2.id != s1.id)) {
 		if ((rv = nni_sock_find(&sock2, s2.id)) != 0) {
 			nni_sock_rele(sock1);
-			if (nni_aio_begin(aio) == 0) {
+			if (nni_aio_defer(aio, NULL, NULL)) {
 				nni_aio_finish_error(aio, rv);
 			}
 			return;

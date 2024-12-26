@@ -183,16 +183,14 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 	int         rv;
 	tls_conn   *conn;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	if ((rv = tls_alloc(&conn, d->cfg, aio)) != 0) {
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_defer(aio, NULL, NULL)) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, tls_conn_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_defer(aio, tls_conn_cancel, conn)) {
 		tls_free(conn);
 		return;
 	}
@@ -352,16 +350,14 @@ tls_listener_accept(void *arg, nng_aio *aio)
 	int           rv;
 	tls_conn     *conn;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	if ((rv = tls_alloc(&conn, l->cfg, aio)) != 0) {
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_defer(aio, NULL, NULL)) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, tls_conn_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_defer(aio, tls_conn_cancel, conn)) {
 		tls_free(conn);
 		return;
 	}
@@ -483,21 +479,16 @@ tls_cancel(nni_aio *aio, void *arg, int rv)
 static void
 tls_send(void *arg, nni_aio *aio)
 {
-	int       rv;
 	tls_conn *conn = arg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&conn->lock);
+	if (!nni_aio_defer(aio, tls_cancel, conn)) {
+		nni_mtx_unlock(&conn->lock);
 		return;
 	}
-	nni_mtx_lock(&conn->lock);
 	if (conn->closed) {
 		nni_mtx_unlock(&conn->lock);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if ((rv = nni_aio_schedule(aio, tls_cancel, conn)) != 0) {
-		nni_mtx_unlock(&conn->lock);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&conn->send_queue, aio);
@@ -508,24 +499,18 @@ tls_send(void *arg, nni_aio *aio)
 static void
 tls_recv(void *arg, nni_aio *aio)
 {
-	int       rv;
 	tls_conn *conn = arg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&conn->lock);
+	if (!nni_aio_defer(aio, tls_cancel, conn)) {
+		nni_mtx_unlock(&conn->lock);
 		return;
 	}
-	nni_mtx_lock(&conn->lock);
 	if (conn->closed) {
 		nni_mtx_unlock(&conn->lock);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tls_cancel, conn)) != 0) {
-		nni_mtx_unlock(&conn->lock);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-
 	nni_list_append(&conn->recv_queue, aio);
 	tls_do_recv(conn);
 	nni_mtx_unlock(&conn->lock);

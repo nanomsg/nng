@@ -269,16 +269,15 @@ push0_sock_send(void *arg, nni_aio *aio)
 	push0_pipe *p;
 	nni_msg    *m;
 	size_t      l;
-	int         rv;
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 
 	m = nni_aio_get_msg(aio);
 	l = nni_msg_len(m);
 
 	nni_mtx_lock(&s->m);
+	if (!nni_aio_defer(aio, push0_cancel, s)) {
+		nni_mtx_unlock(&s->m);
+		return;
+	}
 
 	// First we want to see if we can send it right now.
 	// Note that we don't block the sender until the read is complete,
@@ -312,11 +311,6 @@ push0_sock_send(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, push0_cancel, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
-		nni_mtx_unlock(&s->m);
-		return;
-	}
 	nni_aio_list_append(&s->aq, aio);
 	nni_mtx_unlock(&s->m);
 }

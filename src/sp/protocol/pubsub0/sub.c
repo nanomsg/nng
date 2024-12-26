@@ -97,20 +97,14 @@ sub0_ctx_recv(void *arg, nni_aio *aio)
 	sub0_sock *sock = ctx->sock;
 	nni_msg   *msg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&sock->lk);
+	if (!nni_aio_defer(aio, sub0_ctx_cancel, ctx)) {
+		nni_mtx_unlock(&sock->lk);
 		return;
 	}
 
-	nni_mtx_lock(&sock->lk);
-
 again:
 	if (nni_lmq_empty(&ctx->lmq)) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, sub0_ctx_cancel, ctx)) != 0) {
-			nni_mtx_unlock(&sock->lk);
-			nni_aio_finish_error(aio, rv);
-			return;
-		}
 		nni_list_append(&ctx->recv_queue, aio);
 		nni_mtx_unlock(&sock->lk);
 		return;

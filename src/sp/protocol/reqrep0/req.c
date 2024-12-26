@@ -608,10 +608,12 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	req0_sock *s   = ctx->sock;
 	nni_msg   *msg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&s->mtx);
+	if (!nni_aio_defer(aio, req0_ctx_cancel_recv, ctx)) {
+		;
+		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-	nni_mtx_lock(&s->mtx);
 	if ((ctx->recv_aio != NULL) ||
 	    ((ctx->req_msg == NULL) && (ctx->rep_msg == NULL))) {
 		// We have already got a pending receive or have not
@@ -630,13 +632,6 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	}
 
 	if ((msg = ctx->rep_msg) == NULL) {
-		int rv;
-		rv = nni_aio_schedule(aio, req0_ctx_cancel_recv, ctx);
-		if (rv != 0) {
-			nni_mtx_unlock(&s->mtx);
-			nni_aio_finish_error(aio, rv);
-			return;
-		}
 		ctx->recv_aio = aio;
 		nni_mtx_unlock(&s->mtx);
 		return;
@@ -692,10 +687,11 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	nng_msg   *msg = nni_aio_get_msg(aio);
 	int        rv;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&s->mtx);
+	if (!nni_aio_defer(aio, req0_ctx_cancel_send, ctx)) {
+		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-	nni_mtx_lock(&s->mtx);
 	if (s->closed) {
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -728,15 +724,6 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	nni_msg_header_clear(msg);
 	nni_msg_header_append_u32(msg, ctx->request_id);
 
-	// If no pipes are ready, and the request was a poll (no background
-	// schedule), then fail it.  Should be NNG_ETIMEDOUT.
-	rv = nni_aio_schedule(aio, req0_ctx_cancel_send, ctx);
-	if ((rv != 0) && (nni_list_empty(&s->ready_pipes))) {
-		nni_id_remove(&s->requests, ctx->request_id);
-		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
 	ctx->req_len  = nni_msg_len(msg);
 	ctx->req_msg  = msg;
 	ctx->send_aio = aio;

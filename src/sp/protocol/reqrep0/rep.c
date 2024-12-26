@@ -139,11 +139,12 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 	msg = nni_aio_get_msg(aio);
 	nni_msg_header_clear(msg);
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&s->lk);
+	if (!nni_aio_defer(aio, rep0_ctx_cancel_send, ctx)) {
+		nni_mtx_unlock(&s->lk);
 		return;
 	}
 
-	nni_mtx_lock(&s->lk);
 	len  = ctx->btrace_len;
 	p_id = ctx->pipe_id;
 
@@ -188,12 +189,6 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 
 		nni_aio_set_msg(aio, NULL);
 		nni_aio_finish(aio, 0, len);
-		return;
-	}
-
-	if ((rv = nni_aio_schedule(aio, rep0_ctx_cancel_send, ctx)) != 0) {
-		nni_mtx_unlock(&s->lk);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -424,17 +419,12 @@ rep0_ctx_recv(void *arg, nni_aio *aio)
 	size_t     len;
 	nni_msg   *msg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&s->lk);
+	if (!nni_aio_defer(aio, rep0_cancel_recv, ctx)) {
+		nni_mtx_unlock(&s->lk);
 		return;
 	}
-	nni_mtx_lock(&s->lk);
 	if ((p = nni_list_first(&s->recvpipes)) == NULL) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, rep0_cancel_recv, ctx)) != 0) {
-			nni_mtx_unlock(&s->lk);
-			nni_aio_finish_error(aio, rv);
-			return;
-		}
 		if (ctx->raio != NULL) {
 			// Cannot have a second receive operation pending.
 			// This could be ESTATE, or we could cancel the first

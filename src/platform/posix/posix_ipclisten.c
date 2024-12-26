@@ -415,16 +415,16 @@ static void
 ipc_listener_accept(void *arg, nni_aio *aio)
 {
 	ipc_listener *l = arg;
-	int           rv;
 
 	// Accept is simpler than the connect case.  With accept we just
 	// need to wait for the socket to be readable to indicate an incoming
 	// connection is ready for us.  There isn't anything else for us to
 	// do really, as that will have been done in listen.
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&l->mtx);
+	if (!nni_aio_defer(aio, ipc_listener_cancel, l)) {
+		nni_mtx_unlock(&l->mtx);
 		return;
 	}
-	nni_mtx_lock(&l->mtx);
 
 	if (!l->started) {
 		nni_mtx_unlock(&l->mtx);
@@ -434,11 +434,6 @@ ipc_listener_accept(void *arg, nni_aio *aio)
 	if (l->closed) {
 		nni_mtx_unlock(&l->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if ((rv = nni_aio_schedule(aio, ipc_listener_cancel, l)) != 0) {
-		nni_mtx_unlock(&l->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_aio_list_append(&l->acceptq, aio);
