@@ -702,11 +702,7 @@ finish:
 	// asynchronously even after it gets removed from the server.
 	nni_atomic_inc(&h->ref);
 
-	// Documented that we call this on behalf of the callback.
-	if (nni_aio_begin(&sc->cbaio) != 0) {
-		nni_mtx_unlock(&s->mtx);
-		return;
-	}
+	nni_aio_reset(&sc->cbaio);
 
 	nni_mtx_unlock(&s->mtx);
 	h->cb(&sc->cbaio);
