@@ -122,9 +122,7 @@ nni_plat_udp_send(nni_plat_udp *u, nni_aio *aio)
 	int              rv;
 	DWORD            nsent;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	sa = nni_aio_get_input(aio, 0);
 	if ((tolen = nni_win_nn2sockaddr(&to, sa)) < 0) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
@@ -280,19 +278,15 @@ again:
 void
 nni_plat_udp_recv(nni_plat_udp *u, nni_aio *aio)
 {
-	int rv;
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&u->lk);
 	if (u->closed) {
 		nni_mtx_unlock(&u->lk);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, udp_recv_cancel, u)) != 0) {
+	if (!nni_aio_start(aio, udp_recv_cancel, u)) {
 		nni_mtx_unlock(&u->lk);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&u->rxq, aio);
