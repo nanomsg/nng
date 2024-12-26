@@ -127,11 +127,9 @@ wstran_pipe_recv(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&p->mtx);
-	if (!nni_aio_defer(aio, wstran_pipe_recv_cancel, p)) {
+	if (!nni_aio_start(aio, wstran_pipe_recv_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
@@ -160,15 +158,9 @@ wstran_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
 
-	if (nni_aio_begin(aio) != 0) {
-		// No way to give the message back to the protocol, so
-		// we just discard it silently to prevent it from leaking.
-		nni_msg_free(nni_aio_get_msg(aio));
-		nni_aio_set_msg(aio, NULL);
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&p->mtx);
-	if (!nni_aio_defer(aio, wstran_pipe_send_cancel, p)) {
+	if (!nni_aio_start(aio, wstran_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
@@ -271,11 +263,9 @@ wstran_listener_accept(void *arg, nni_aio *aio)
 	// We already bound, so we just need to look for an available
 	// pipe (created by the handler), and match it.
 	// Otherwise we stick the AIO in the accept list.
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&l->mtx);
-	if (!nni_aio_defer(aio, wstran_listener_cancel, l)) {
+	if (!nni_aio_start(aio, wstran_listener_cancel, l)) {
 		nni_mtx_unlock(&l->mtx);
 		return;
 	}
@@ -306,12 +296,10 @@ wstran_dialer_connect(void *arg, nni_aio *aio)
 {
 	ws_dialer *d = arg;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 
 	nni_mtx_lock(&d->mtx);
-	if (!nni_aio_defer(aio, wstran_dialer_cancel, d)) {
+	if (!nni_aio_start(aio, wstran_dialer_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}
