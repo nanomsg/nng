@@ -63,6 +63,7 @@ typedef struct {
 	nni_aio                 conn_aio; // system aio for connect/accept
 	nni_mtx                 lock;
 	bool                    closed;
+	nni_atomic_flag         did_close;
 	bool                    hs_done;
 	nni_list                send_queue;
 	nni_list                recv_queue;
@@ -180,19 +181,16 @@ static void
 tls_dialer_dial(void *arg, nng_aio *aio)
 {
 	tls_dialer *d = arg;
-	int         rv;
 	tls_conn   *conn;
+	int         rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	if ((rv = tls_alloc(&conn, d->cfg, aio)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, tls_conn_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_start(aio, tls_conn_cancel, conn)) {
 		tls_free(conn);
 		return;
 	}
@@ -352,16 +350,13 @@ tls_listener_accept(void *arg, nng_aio *aio)
 	int           rv;
 	tls_conn     *conn;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	if ((rv = tls_alloc(&conn, l->cfg, aio)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, tls_conn_cancel, conn)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_start(aio, tls_conn_cancel, conn)) {
 		tls_free(conn);
 		return;
 	}
@@ -483,21 +478,17 @@ tls_cancel(nni_aio *aio, void *arg, int rv)
 static void
 tls_send(void *arg, nni_aio *aio)
 {
-	int       rv;
 	tls_conn *conn = arg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_aio_reset(aio);
+	nni_mtx_lock(&conn->lock);
+	if (!nni_aio_start(aio, tls_cancel, conn)) {
+		nni_mtx_unlock(&conn->lock);
 		return;
 	}
-	nni_mtx_lock(&conn->lock);
 	if (conn->closed) {
 		nni_mtx_unlock(&conn->lock);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if ((rv = nni_aio_schedule(aio, tls_cancel, conn)) != 0) {
-		nni_mtx_unlock(&conn->lock);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&conn->send_queue, aio);
@@ -508,21 +499,17 @@ tls_send(void *arg, nni_aio *aio)
 static void
 tls_recv(void *arg, nni_aio *aio)
 {
-	int       rv;
 	tls_conn *conn = arg;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_aio_reset(aio);
+	nni_mtx_lock(&conn->lock);
+	if (!nni_aio_start(aio, tls_cancel, conn)) {
+		nni_mtx_unlock(&conn->lock);
 		return;
 	}
-	nni_mtx_lock(&conn->lock);
 	if (conn->closed) {
 		nni_mtx_unlock(&conn->lock);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if ((rv = nni_aio_schedule(aio, tls_cancel, conn)) != 0) {
-		nni_mtx_unlock(&conn->lock);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -536,11 +523,13 @@ tls_close(void *arg)
 {
 	tls_conn *conn = arg;
 
-	nni_mtx_lock(&conn->lock);
-	conn->ops.close((void *) (conn + 1));
-	tls_tcp_error(conn, NNG_ECLOSED);
-	nni_mtx_unlock(&conn->lock);
-	nng_stream_close(conn->tcp);
+	if (!nni_atomic_flag_test_and_set(&conn->did_close)) {
+		nni_mtx_lock(&conn->lock);
+		conn->ops.close((void *) (conn + 1));
+		tls_tcp_error(conn, NNG_ECLOSED);
+		nni_mtx_unlock(&conn->lock);
+		nng_stream_close(conn->tcp);
+	}
 }
 
 static void
@@ -650,6 +639,7 @@ tls_alloc(tls_conn **conn_p, nng_tls_config *cfg, nng_aio *user_aio)
 	nni_aio_set_timeout(&conn->conn_aio, NNG_DURATION_INFINITE);
 	nni_aio_set_timeout(&conn->tcp_send, NNG_DURATION_INFINITE);
 	nni_aio_set_timeout(&conn->tcp_recv, NNG_DURATION_INFINITE);
+	nni_atomic_flag_reset(&conn->did_close);
 
 	conn->stream.s_close = tls_close;
 	conn->stream.s_free  = tls_free;
