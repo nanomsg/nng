@@ -955,7 +955,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 	nng_msg    *msg;
 	size_t      count = 0;
 
-	if (nni_aio_begin(aio) != 0) {
+	if (!nni_aio_defer(aio, NULL, NULL)) {
 		// No way to give the message back to the  protocol,
 		// so we just discard it silently to prevent it from leaking.
 		nni_msg_free(nni_aio_get_msg(aio));
@@ -1019,20 +1019,15 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 {
 	udp_pipe *p  = arg;
 	udp_ep   *ep = p->ep;
-	int       rv;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&ep->mtx);
+	if (!nni_aio_defer(aio, udp_pipe_recv_cancel, p)) {
+		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	nni_mtx_lock(&ep->mtx);
 	if (p->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if ((rv = nni_aio_schedule(aio, udp_pipe_recv_cancel, p)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -1106,6 +1101,9 @@ udp_ep_fini(void *arg)
 	nni_aio_fini(&ep->resaio);
 	nni_aio_fini(&ep->tx_aio);
 	nni_aio_fini(&ep->rx_aio);
+	if (ep->udp != NULL) {
+		nni_udp_close(ep->udp);
+	}
 
 	for (int i = 0; i < ep->tx_ring.size; i++) {
 		nni_msg_free(ep->tx_ring.descs[i].payload);
@@ -1166,10 +1164,6 @@ udp_ep_stop(void *arg)
 
 	// finally close the tx channel
 	nni_aio_stop(&ep->tx_aio);
-
-	if (ep->udp != NULL) {
-		nni_udp_close(ep->udp);
-	}
 }
 
 // timer handler - sends out additional creqs as needed,
@@ -1507,12 +1501,13 @@ static void
 udp_ep_connect(void *arg, nni_aio *aio)
 {
 	udp_ep *ep = arg;
-	int     rv;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&ep->mtx);
+	if (!nni_aio_defer(aio, udp_ep_cancel, ep)) {
+		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	nni_mtx_lock(&ep->mtx);
+
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -1525,12 +1520,6 @@ udp_ep_connect(void *arg, nni_aio *aio)
 	}
 	NNI_ASSERT(nni_list_empty(&ep->connaios));
 	ep->dialer = true;
-
-	if ((rv = nni_aio_schedule(aio, udp_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
 
 	nni_list_append(&ep->connaios, aio);
 
@@ -1736,20 +1725,15 @@ static void
 udp_ep_accept(void *arg, nni_aio *aio)
 {
 	udp_ep *ep = arg;
-	int     rv;
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&ep->mtx);
+	if (!nni_aio_defer(aio, udp_ep_cancel, ep)) {
+		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		return;
-	}
-	if ((rv = nni_aio_schedule(aio, udp_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_aio_list_append(&ep->connaios, aio);

@@ -297,18 +297,14 @@ nni_plat_udp_cancel(nni_aio *aio, void *arg, int rv)
 void
 nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 {
-	int rv;
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&udp->udp_mtx);
-	if ((rv = nni_aio_schedule(aio, nni_plat_udp_cancel, udp)) != 0) {
+	if (!nni_aio_defer(aio, nni_plat_udp_cancel, udp)) {
 		nni_mtx_unlock(&udp->udp_mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&udp->udp_recvq, aio);
 	if (nni_list_first(&udp->udp_recvq) == aio) {
+		int rv;
 		if ((rv = nni_posix_pfd_arm(&udp->udp_pfd, NNI_POLL_IN)) !=
 		    0) {
 			nni_aio_list_remove(aio);
@@ -321,18 +317,14 @@ nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 void
 nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 {
-	int rv;
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&udp->udp_mtx);
-	if ((rv = nni_aio_schedule(aio, nni_plat_udp_cancel, udp)) != 0) {
+	if (!nni_aio_defer(aio, nni_plat_udp_cancel, udp)) {
 		nni_mtx_unlock(&udp->udp_mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&udp->udp_sendq, aio);
 	if (nni_list_first(&udp->udp_sendq) == aio) {
+		int rv;
 		if ((rv = nni_posix_pfd_arm(&udp->udp_pfd, NNI_POLL_OUT)) !=
 		    0) {
 			nni_aio_list_remove(aio);

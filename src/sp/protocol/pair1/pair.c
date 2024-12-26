@@ -527,13 +527,14 @@ pair1_sock_send(void *arg, nni_aio *aio)
 	pair1_sock *s = arg;
 	nni_msg    *m;
 	size_t      len;
-	int         rv;
 
 	m   = nni_aio_get_msg(aio);
 	len = nni_msg_len(m);
 	nni_sock_bump_tx(s->sock, len);
 
-	if (nni_aio_begin(aio) != 0) {
+	nni_mtx_lock(&s->mtx);
+	if (!nni_aio_defer(aio, pair1_cancel, s)) {
+		nni_mtx_unlock(&s->mtx);
 		return;
 	}
 
@@ -549,6 +550,7 @@ pair1_sock_send(void *arg, nni_aio *aio)
 		if ((nni_msg_header_len(m) != sizeof(uint32_t)) ||
 		    (nni_msg_header_peek_u32(m) >= 0xff)) {
 			BUMP_STAT(&s->stat_tx_malformed);
+			nni_mtx_unlock(&s->mtx);
 			nni_aio_finish_error(aio, NNG_EPROTO);
 			return;
 		}
@@ -564,7 +566,6 @@ pair1_sock_send(void *arg, nni_aio *aio)
 inject:
 #endif
 
-	nni_mtx_lock(&s->mtx);
 	if (s->wr_ready) {
 		pair1_pipe *p = s->p;
 		if (nni_lmq_full(&s->wmq)) {
@@ -589,11 +590,6 @@ inject:
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
-		nni_mtx_unlock(&s->mtx);
-		return;
-	}
 	nni_aio_list_append(&s->waq, aio);
 	nni_mtx_unlock(&s->mtx);
 }
@@ -604,14 +600,14 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 	pair1_sock *s = arg;
 	pair1_pipe *p;
 	nni_msg    *m;
-	int         rv;
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 
 	nni_mtx_lock(&s->mtx);
 	p = s->p;
+
+	if (!nni_aio_defer(aio, pair1_cancel, s)) {
+		nni_mtx_unlock(&s->mtx);
+		return;
+	}
 
 	// Buffered read.  If there is a message waiting for us, pick
 	// it up.  We might need to post another read request as well.
@@ -645,11 +641,7 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
-	} else {
-		nni_aio_list_append(&s->raq, aio);
-	}
+	nni_aio_list_append(&s->raq, aio);
 	nni_mtx_unlock(&s->mtx);
 }
 
