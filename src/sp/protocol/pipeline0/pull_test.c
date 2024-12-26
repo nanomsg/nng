@@ -175,6 +175,23 @@ test_pull_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_recv_aio(s, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_CLOSE(s);
+	nng_aio_free(aio);
+}
+
+static void
+test_pull_recv_aio_canceled(void)
+{
+	nng_socket s;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_pull0_open(&s));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	nng_recv_aio(s, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	NUTS_CLOSE(s);
 	nng_aio_free(aio);
@@ -216,7 +233,7 @@ test_pull_recv_nonblock(void)
 }
 
 static void
-test_pull_recv_cancel(void)
+test_pull_recv_abort(void)
 {
 	nng_socket s;
 	nng_aio   *aio;
@@ -226,10 +243,10 @@ test_pull_recv_cancel(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_recv_aio(s, aio);
-	nng_aio_abort(aio, NNG_ECANCELED);
+	nng_aio_abort(aio, NNG_EAMBIGUOUS);
 
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EAMBIGUOUS);
 	NUTS_CLOSE(s);
 	nng_aio_free(aio);
 }
@@ -255,9 +272,10 @@ TEST_LIST = {
 	{ "pull close pending", test_pull_close_pending },
 	{ "pull validate peer", test_pull_validate_peer },
 	{ "pull recv aio stopped", test_pull_recv_aio_stopped },
+	{ "pull recv aio canceled", test_pull_recv_aio_canceled },
 	{ "pull close recv", test_pull_close_recv },
 	{ "pull recv nonblock", test_pull_recv_nonblock },
-	{ "pull recv cancel", test_pull_recv_cancel },
+	{ "pull recv abort", test_pull_recv_abort },
 	{ "pull cooked", test_pull_cooked },
 	{ NULL, NULL },
 };

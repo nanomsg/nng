@@ -168,7 +168,28 @@ test_xreq_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_recv_aio(req, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_CLOSE(req);
+	nng_aio_free(aio);
+}
+
+static void
+test_xreq_send_aio_canceled(void)
+{
+	nng_socket req;
+	nng_aio   *aio;
+	nng_msg   *msg;
+
+	NUTS_PASS(nng_msg_alloc(&msg, 64));
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	nng_aio_set_msg(aio, msg);
+	nng_send_aio(req, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	nng_msg_free(msg);
 	NUTS_CLOSE(req);
 	nng_aio_free(aio);
 }
@@ -348,6 +369,7 @@ NUTS_TESTS = {
 	{ "xreq poll writable", test_xreq_poll_writeable },
 	{ "xreq validate peer", test_xreq_validate_peer },
 	{ "xreq recv aio stopped", test_xreq_recv_aio_stopped },
+	{ "xreq send aio canceled", test_xreq_send_aio_canceled },
 	{ "xreq recv garbage", test_xreq_recv_garbage },
 	{ "xreq recv header", test_xreq_recv_header },
 	{ "xreq close during recv", test_xreq_close_during_recv },

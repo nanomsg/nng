@@ -1,7 +1,7 @@
 # Migrating from NNG 1.x
 
-There are some incompatibities from NNG 1.x.
-This guide should help in migrating applications to use NNG 2.0.
+There are some incompatibities from NNG 1.x, and applications must make certain changes for NNG 2.0.
+This guide should help with this migration.
 
 ## Nanomsg Compatibility
 
@@ -12,6 +12,14 @@ See the [Migrating From libnanomsg](nanomsg.md) chapter for details.
 
 It is now required for applications to initialize the library explicitly before using it.
 This is done using the [`nng_init`] function.
+
+## New AIO Error Code NNG_ESTOPPED
+
+When an operation fails with [`NNG_ESTOPPED`], it means that the associated [`nni_aio`] object has
+been permanently stopped and must not be reused. Applications must watch for this error code, and
+not resubmit an operation that returns it. This is particularly important for callbacks that automatically
+resubmit operations. Failure to observe this rule will lead to an infinite loop
+as any further operations on the object will fail immediately with `NNG_ESTOPPED`.
 
 ## Transport Specific Functions
 

@@ -262,6 +262,23 @@ test_xresp_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_recv_aio(resp, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_CLOSE(resp);
+	nng_aio_free(aio);
+}
+
+static void
+test_xresp_recv_aio_canceled(void)
+{
+	nng_socket resp;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_respondent0_open_raw(&resp));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	nng_recv_aio(resp, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	NUTS_CLOSE(resp);
 	nng_aio_free(aio);
@@ -418,6 +435,7 @@ NUTS_TESTS = {
 	    test_xresp_close_pipe_during_send },
 	{ "xrespond close during recv", test_xresp_close_during_recv },
 	{ "xrespond recv aio stopped", test_xresp_recv_aio_stopped },
+	{ "xrespond recv aio canceled", test_xresp_recv_aio_canceled },
 	{ "xrespond send no header", test_xresp_send_no_header },
 	{ "xrespond recv garbage", test_xresp_recv_garbage },
 	{ "xrespond ttl option", test_xresp_ttl_option },

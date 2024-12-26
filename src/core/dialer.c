@@ -421,6 +421,7 @@ dialer_connect_cb(void *arg)
 		break;
 	case NNG_ECLOSED:   // No further action.
 	case NNG_ECANCELED: // No further action.
+	case NNG_ESTOPPED:  // No further action.
 		nni_dialer_bump_error(d, rv);
 		break;
 	case NNG_ECONNREFUSED:

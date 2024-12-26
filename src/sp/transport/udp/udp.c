@@ -869,6 +869,7 @@ udp_rx_cb(void *arg)
 		switch (nni_aio_result(aio)) {
 		case NNG_ECLOSED:
 		case NNG_ECANCELED:
+		case NNG_ESTOPPED:
 			nni_mtx_unlock(&ep->mtx);
 			return;
 		case NNG_ETIMEDOUT:
@@ -1183,9 +1184,18 @@ udp_timer_cb(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nni_aio_result(&ep->timeaio);
-	if ((rv == NNG_ECLOSED) || (rv == NNG_ECANCELED) || ep->closed) {
+	switch (rv) {
+	case NNG_ECLOSED:
+	case NNG_ECANCELED:
+	case NNG_ESTOPPED:
 		nni_mtx_unlock(&ep->mtx);
 		return;
+	default:
+		if (ep->closed) {
+			nni_mtx_unlock(&ep->mtx);
+			return;
+		}
+		break;
 	}
 
 	uint32_t     cursor  = 0;

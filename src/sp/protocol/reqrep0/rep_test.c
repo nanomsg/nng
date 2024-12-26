@@ -369,6 +369,26 @@ test_rep_ctx_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_ctx_recv(ctx, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_PASS(nng_ctx_close(ctx));
+	NUTS_CLOSE(rep);
+	nng_aio_free(aio);
+}
+
+void
+test_rep_ctx_recv_aio_canceled(void)
+{
+	nng_socket rep;
+	nng_ctx    ctx;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_ctx_open(&ctx, rep));
+
+	nng_ctx_recv(ctx, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	NUTS_PASS(nng_ctx_close(ctx));
 	NUTS_CLOSE(rep);
@@ -755,6 +775,7 @@ NUTS_TESTS = {
 	{ "rep close pipe before send", test_rep_close_pipe_before_send },
 	{ "rep close pipe during send", test_rep_close_pipe_during_send },
 	{ "rep recv aio ctx stopped", test_rep_ctx_recv_aio_stopped },
+	{ "rep recv aio ctx canceled", test_rep_ctx_recv_aio_canceled },
 	{ "rep close pipe context send", test_rep_close_pipe_context_send },
 	{ "rep close context send", test_rep_close_context_send },
 	{ "rep close recv", test_rep_close_recv },

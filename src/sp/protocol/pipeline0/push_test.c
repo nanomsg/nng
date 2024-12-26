@@ -252,7 +252,7 @@ test_push_send_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_send_aio(s, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	NUTS_CLOSE(s);
 	nng_aio_free(aio);
 	nng_msg_free(m);

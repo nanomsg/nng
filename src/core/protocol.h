@@ -46,7 +46,7 @@ struct nni_proto_pipe_ops {
 	// pipe_close is an idempotent, non-blocking, operation, called
 	// when the pipe is being closed.  Any operations pending on the
 	// pipe should be canceled with NNG_ECLOSED.  (Best option is to
-	// use nng_aio_close() on them)
+	// use nni_aio_close() on them)
 	void (*pipe_close)(void *);
 
 	// pipe_stop is called during finalization, to ensure that

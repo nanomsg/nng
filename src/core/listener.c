@@ -417,6 +417,7 @@ listener_accept_cb(void *arg)
 		nni_listener_bump_error(l, rv);
 		listener_accept_start(l);
 		break;
+	case NNG_ESTOPPED:  // no further action
 	case NNG_ECLOSED:   // no further action
 	case NNG_ECANCELED: // no further action
 		nni_listener_bump_error(l, rv);

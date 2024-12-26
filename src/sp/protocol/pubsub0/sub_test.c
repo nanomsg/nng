@@ -223,6 +223,26 @@ test_sub_ctx_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_ctx_recv(ctx, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_PASS(nng_ctx_close(ctx));
+	NUTS_CLOSE(sub);
+	nng_aio_free(aio);
+}
+
+static void
+test_sub_ctx_recv_aio_canceled(void)
+{
+	nng_socket sub;
+	nng_ctx    ctx;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_sub0_open(&sub));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_ctx_open(&ctx, sub));
+
+	nng_ctx_recv(ctx, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	NUTS_PASS(nng_ctx_close(ctx));
 	NUTS_CLOSE(sub);
@@ -270,7 +290,7 @@ test_sub_ctx_recv_nonblock(void)
 }
 
 static void
-test_sub_ctx_recv_cancel(void)
+test_sub_ctx_recv_abort(void)
 {
 	nng_socket sub;
 	nng_ctx    ctx;
@@ -282,10 +302,10 @@ test_sub_ctx_recv_cancel(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_ctx_recv(ctx, aio);
-	nng_aio_abort(aio, NNG_ECANCELED);
+	nng_aio_abort(aio, NNG_EAMBIGUOUS);
 
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EAMBIGUOUS);
 	NUTS_CLOSE(sub);
 	nng_aio_free(aio);
 }
@@ -593,9 +613,10 @@ TEST_LIST = {
 	{ "sub recv late", test_sub_recv_late },
 	{ "sub recv ctx closed", test_sub_recv_ctx_closed },
 	{ "sub recv aio ctx stopped", test_sub_ctx_recv_aio_stopped },
+	{ "sub recv aio ctx canceled", test_sub_ctx_recv_aio_canceled },
 	{ "sub close context recv", test_sub_close_context_recv },
 	{ "sub context recv nonblock", test_sub_ctx_recv_nonblock },
-	{ "sub context recv cancel", test_sub_ctx_recv_cancel },
+	{ "sub context recv abort", test_sub_ctx_recv_abort },
 	{ "sub recv buf option", test_sub_recv_buf_option },
 	{ "sub subscribe option", test_sub_subscribe_option },
 	{ "sub unsubscribe option", test_sub_unsubscribe_option },

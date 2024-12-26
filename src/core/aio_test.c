@@ -76,8 +76,8 @@ static void
 sleep_reap(void *arg)
 {
 	nng_aio *aio = *(nng_aio **) arg;
-	if (nng_aio_result(aio) != NNG_ECANCELED) {
-		NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	if (nng_aio_result(aio) != NNG_ESTOPPED) {
+		NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	}
 	nng_aio_reap(aio);
 }

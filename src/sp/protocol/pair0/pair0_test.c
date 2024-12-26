@@ -199,7 +199,7 @@ test_raw_exchange(void)
 }
 
 void
-test_pair0_send_closed_aio(void)
+test_pair0_send_stopped_aio(void)
 {
 	nng_socket s1;
 	nng_aio   *aio;
@@ -212,12 +212,63 @@ test_pair0_send_closed_aio(void)
 	nng_aio_stop(aio);
 	nng_send_aio(s1, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_msg_free(msg);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
+}
+
+void
+test_pair0_send_canceled_aio(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+	nng_msg   *msg;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_pair0_open(&s1));
+	nng_aio_set_msg(aio, msg);
+	nng_send_aio(s1, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	nng_msg_free(msg);
 	nng_aio_free(aio);
 	NUTS_PASS(nng_close(s1));
 }
 
+void
+test_pair0_recv_stopped_aio(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_pair0_open(&s1));
+	nng_aio_stop(aio);
+	nng_recv_aio(s1, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
+}
+
+void
+test_pair0_recv_canceled_aio(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_pair0_open(&s1));
+	nng_recv_aio(s1, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
+}
 void
 test_pair0_raw(void)
 {
@@ -417,7 +468,10 @@ NUTS_TESTS = {
 	{ "pair0 back pressure", test_back_pressure },
 	{ "pair0 send no peer", test_send_no_peer },
 	{ "pair0 raw exchange", test_raw_exchange },
-	{ "pair0 send closed aio", test_pair0_send_closed_aio },
+	{ "pair0 send stopped aio", test_pair0_send_stopped_aio },
+	{ "pair0 send canceled aio", test_pair0_send_canceled_aio },
+	{ "pair0 recv stopped aio", test_pair0_recv_stopped_aio },
+	{ "pair0 recv canceled aio", test_pair0_recv_canceled_aio },
 	{ "pair0 raw", test_pair0_raw },
 	{ "pair0 validate peer", test_pair0_validate_peer },
 	{ "pair0 no context", test_pair0_no_context },

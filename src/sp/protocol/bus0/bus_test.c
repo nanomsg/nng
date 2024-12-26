@@ -189,10 +189,31 @@ test_bus_aio_stopped(void)
 
 	nng_recv_aio(s1, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 
 	nng_aio_set_msg(aio, msg);
 	nng_send_aio(s1, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+
+	nng_aio_free(aio);
+	nng_msg_free(msg);
+	NUTS_CLOSE(s1);
+}
+
+static void
+test_bus_aio_canceled(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+	nng_msg   *msg;
+
+	NUTS_PASS(nng_bus0_open(&s1));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	nng_recv_aio(s1, aio);
+	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 
@@ -393,6 +414,7 @@ TEST_LIST = {
 	{ "bus recv cancel", test_bus_recv_cancel },
 	{ "bus close recv abort", test_bus_close_recv_abort },
 	{ "bus aio stopped", test_bus_aio_stopped },
+	{ "bus aio canceled", test_bus_aio_canceled },
 	{ "bus recv buf option", test_bus_recv_buf_option },
 	{ "bus send buf option", test_bus_send_buf_option },
 	{ "bus cooked", test_bus_cooked },

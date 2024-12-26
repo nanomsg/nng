@@ -160,103 +160,6 @@ test_pub_send_queued(void)
 	NUTS_CLOSE(pub);
 	NUTS_CLOSE(sub);
 }
-static void
-test_sub_recv_ctx_closed(void)
-{
-	nng_socket sub;
-	nng_ctx    ctx;
-	nng_aio   *aio;
-	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_ctx_open(&ctx, sub));
-	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nng_ctx_close(ctx);
-	nng_ctx_recv(ctx, aio);
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
-	nng_aio_free(aio);
-	NUTS_CLOSE(sub);
-}
-
-static void
-test_sub_ctx_recv_aio_stopped(void)
-{
-	nng_socket sub;
-	nng_ctx    ctx;
-	nng_aio   *aio;
-
-	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	NUTS_PASS(nng_ctx_open(&ctx, sub));
-
-	nng_aio_stop(aio);
-	nng_ctx_recv(ctx, aio);
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
-	NUTS_PASS(nng_ctx_close(ctx));
-	NUTS_CLOSE(sub);
-	nng_aio_free(aio);
-}
-
-static void
-test_sub_close_context_recv(void)
-{
-	nng_socket sub;
-	nng_ctx    ctx;
-	nng_aio   *aio;
-
-	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_ctx_open(&ctx, sub));
-	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nng_aio_set_timeout(aio, 1000);
-	nng_ctx_recv(ctx, aio);
-	NUTS_PASS(nng_ctx_close(ctx));
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
-
-	NUTS_CLOSE(sub);
-	nng_aio_free(aio);
-}
-
-static void
-test_sub_ctx_recv_nonblock(void)
-{
-	nng_socket sub;
-	nng_ctx    ctx;
-	nng_aio   *aio;
-
-	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_ctx_open(&ctx, sub));
-	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-
-	nng_aio_set_timeout(aio, 0); // Instant timeout
-	nng_ctx_recv(ctx, aio);
-
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
-	NUTS_CLOSE(sub);
-	nng_aio_free(aio);
-}
-
-static void
-test_sub_ctx_recv_cancel(void)
-{
-	nng_socket sub;
-	nng_ctx    ctx;
-	nng_aio   *aio;
-
-	NUTS_PASS(nng_sub0_open(&sub));
-	NUTS_PASS(nng_ctx_open(&ctx, sub));
-	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-
-	nng_aio_set_timeout(aio, 1000);
-	nng_ctx_recv(ctx, aio);
-	nng_aio_abort(aio, NNG_ECANCELED);
-
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
-	NUTS_CLOSE(sub);
-	nng_aio_free(aio);
-}
 
 static void
 test_pub_send_buf_option(void)
@@ -308,11 +211,6 @@ NUTS_TESTS = {
 	{ "pub validate peer", test_pub_validate_peer },
 	{ "pub send queued", test_pub_send_queued },
 	{ "pub send no pipes", test_pub_send_no_pipes },
-	{ "sub recv ctx closed", test_sub_recv_ctx_closed },
-	{ "sub recv aio ctx stopped", test_sub_ctx_recv_aio_stopped },
-	{ "sub close context recv", test_sub_close_context_recv },
-	{ "sub context recv nonblock", test_sub_ctx_recv_nonblock },
-	{ "sub context recv cancel", test_sub_ctx_recv_cancel },
 	{ "pub send buf option", test_pub_send_buf_option },
 	{ "pub cooked", test_pub_cooked },
 	{ NULL, NULL },

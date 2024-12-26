@@ -86,7 +86,8 @@ fatal(const char *msg, int rv)
 void
 error(test_case *c, const char *msg, int rv)
 {
-	if ((rv == NNG_ECLOSED) || (rv == NNG_ECANCELED)) {
+	if ((rv == NNG_ECLOSED) || (rv == NNG_ECANCELED) ||
+	    (rv == NNG_ESTOPPED)) {
 		return;
 	}
 	fprintf(

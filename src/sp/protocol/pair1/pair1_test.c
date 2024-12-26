@@ -265,7 +265,7 @@ test_mono_raw_header(void)
 }
 
 void
-test_pair1_send_closed_aio(void)
+test_pair1_send_stopped_aio(void)
 {
 	nng_socket s1;
 	nng_aio   *aio;
@@ -278,8 +278,60 @@ test_pair1_send_closed_aio(void)
 	nng_aio_stop(aio);
 	nng_send_aio(s1, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_msg_free(msg);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
+}
+
+void
+test_pair1_send_canceled_aio(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+	nng_msg   *msg;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_pair1_open(&s1));
+	nng_aio_set_msg(aio, msg);
+	nng_send_aio(s1, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	nng_msg_free(msg);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
+}
+
+void
+test_pair1_recv_stopped_aio(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_pair1_open(&s1));
+	nng_aio_stop(aio);
+	nng_recv_aio(s1, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
+}
+
+void
+test_pair1_recv_canceled_aio(void)
+{
+	nng_socket s1;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_pair1_open(&s1));
+	nng_recv_aio(s1, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	nng_aio_free(aio);
 	NUTS_PASS(nng_close(s1));
 }
@@ -601,7 +653,10 @@ NUTS_TESTS = {
 	{ "pair1 send no peer", test_send_no_peer },
 	{ "pair1 mono raw exchange", test_mono_raw_exchange },
 	{ "pair1 mono raw header", test_mono_raw_header },
-	{ "pair1 send closed aio", test_pair1_send_closed_aio },
+	{ "pair1 send stopped aio", test_pair1_send_stopped_aio },
+	{ "pair1 send canceled aio", test_pair1_send_canceled_aio },
+	{ "pair1 recv stopped aio", test_pair1_recv_stopped_aio },
+	{ "pair1 recv canceled aio", test_pair1_recv_canceled_aio },
 	{ "pair1 raw", test_pair1_raw },
 	{ "pair1 ttl", test_pair1_ttl },
 	{ "pair1 validate peer", test_pair1_validate_peer },

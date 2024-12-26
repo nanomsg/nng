@@ -337,6 +337,23 @@ test_xsub_recv_aio_stopped(void)
 	nng_aio_stop(aio);
 	nng_recv_aio(sub, aio);
 	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_CLOSE(sub);
+	nng_aio_free(aio);
+}
+
+static void
+test_xsub_recv_aio_canceled(void)
+{
+	nng_socket sub;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_sub0_open_raw(&sub));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	nng_recv_aio(sub, aio);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	NUTS_CLOSE(sub);
 	nng_aio_free(aio);
@@ -358,6 +375,7 @@ TEST_LIST = {
 	{ "xsub no context", test_xsub_no_context },
 	{ "xsub raw", test_xsub_raw },
 	{ "xsub recv aio stopped", test_xsub_recv_aio_stopped },
+	{ "xsub recv aio canceled", test_xsub_recv_aio_canceled },
 	{ "xsub close during recv ", test_xsub_close_during_recv },
 	{ "xsub close during pipe recv", test_xsub_close_during_pipe_recv },
 	{ NULL, NULL },
