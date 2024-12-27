@@ -11,6 +11,7 @@
 
 #include "core/defs.h"
 #include "core/nng_impl.h"
+#include "nng/nng.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -453,32 +454,31 @@ dialer_connect_start(nni_dialer *d)
 int
 nni_dialer_start(nni_dialer *d, unsigned flags)
 {
-	int      rv  = 0;
-	nni_aio *aio = NULL;
+	int      rv = 0;
+	nni_aio  aio;
+	nni_aio *aiop = NULL;
 
 	if (nni_atomic_flag_test_and_set(&d->d_started)) {
 		return (NNG_ESTATE);
 	}
 
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
-		aio = NULL;
+		aiop = NULL;
 	} else {
-		if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
-			nni_atomic_flag_reset(&d->d_started);
-			return (rv);
-		}
-		nni_aio_start(aio, NULL, NULL);
+		nni_aio_init(&aio, NULL, NULL);
+		aiop = &aio;
+		nni_aio_start(aiop, NULL, NULL);
 	}
 
 	nni_mtx_lock(&d->d_mtx);
-	d->d_user_aio = aio;
+	d->d_user_aio = aiop;
 	dialer_connect_start(d);
 	nni_mtx_unlock(&d->d_mtx);
 
-	if (aio != NULL) {
-		nni_aio_wait(aio);
-		rv = nni_aio_result(aio);
-		nni_aio_free(aio);
+	if (aiop != NULL) {
+		nni_aio_wait(aiop);
+		rv = nni_aio_result(aiop);
+		nni_aio_fini(aiop);
 	}
 
 	nng_log_info("NNG-DIAL", "Starting dialer for socket<%u>",
