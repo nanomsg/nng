@@ -56,10 +56,9 @@ extern void nni_aio_free(nni_aio *aio);
 extern void nni_aio_stop(nni_aio *);
 
 // nni_aio_close closes the aio for further activity. It aborts any in-progress
-// transaction (if it can), and future calls nni_aio_begin or nni_aio_schedule
-// with both result in NNG_ECLOSED. The expectation is that protocols call this
-// for all their aio objects in a stop routine, before calling fini on any of
-// them.
+// transaction (if it can), and future calls nni_aio_start will result in
+// NNG_ECLOSED. The expectation is that protocols call this for all their aio
+// objects in a stop routine, before calling fini on any of them.
 extern void nni_aio_close(nni_aio *);
 
 // nni_set_input sets input parameters on the AIO.  The semantic details
@@ -129,14 +128,6 @@ extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 // with the indicated result (NNG_ECLOSED or NNG_ECANCELED is recommended.)
 extern void nni_aio_abort(nni_aio *, int rv);
 
-// nni_aio_begin is called by a provider to indicate it is starting the
-// operation, and to check that the aio has not already been marked for
-// teardown.  It returns 0 on success, or NNG_ECANCELED if the aio is being
-// torn down.  (In that case, no operation should be aborted without any
-// call to any other functions on this AIO, most especially not the
-// nng_aio_finish family of functions.)
-extern int nni_aio_begin(nni_aio *);
-
 extern void *nni_aio_get_prov_data(nni_aio *);
 extern void  nni_aio_set_prov_data(nni_aio *, void *);
 // nni_aio_advance_iov moves up the iov, reflecting that some I/O as
@@ -156,20 +147,6 @@ extern void         nni_aio_get_iov(nni_aio *, unsigned *, nni_iov **);
 extern void         nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void         nni_aio_bump_count(nni_aio *, size_t);
 
-// nni_aio_schedule indicates that the AIO has begun, and is scheduled for
-// asynchronous completion. This also starts the expiration timer. Note that
-// prior to this, the aio cannot be canceled.  If the operation has a zero
-// timeout (NNG_FLAG_NONBLOCK) then NNG_ETIMEDOUT is returned.  If the
-// operation has already been canceled, or should not be run, then an error
-// is returned.  (In that case the caller should probably either return an
-// error to its caller, or possibly cause an asynchronous error by calling
-// nni_aio_finish_error on this aio.)
-//
-// NB: This function should be called while holding the lock that will be used
-// to cancel the operation. Otherwise a race can occur where the operation
-// cannot be canceled, which can lead to apparent hangs.
-extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
-
 // nni_aio_reset is called by providers before doing any work -- it resets
 // counts other fields to their initial state.  It will not reset the closed
 // state if the aio has been stopped or closed.
@@ -177,7 +154,12 @@ extern void nni_aio_reset(nni_aio *);
 
 // nni_aio_start should be called before any asynchronous operation
 // is filed.  It need not be called for completions that are synchronous
-// at job submission.
+// at job submission.  It also starts the expiration timer, is the aio
+// has an expiration.  If this returns false, the caller should cease
+// operating with the aio, and simply return.  The callback for the aio
+// will be executed by this function, if one is set, with an error such
+// as NNG_ESTOPPED or NNG_ETIMEDTOUT.  Until this function is called,
+// the operation is not cancelable.
 extern bool nni_aio_start(nni_aio *, nni_aio_cancel_fn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);

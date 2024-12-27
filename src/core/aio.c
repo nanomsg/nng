@@ -54,16 +54,16 @@ static int                nni_aio_expire_q_cnt;
 // equal to the aio) before destroying it.
 //
 // The aio framework is tightly bound up with the task framework. We
-// "prepare" the task for an aio when a caller marks an aio as starting
-// (with nni_aio_begin), and that marks the task as busy. Then, all we have
+// "start" the task for an aio when a caller marks an aio as starting
+// (with nni_aio_start), and that marks the task as busy. Then, all we have
 // to do is wait for the task to complete (the busy flag to be cleared)
 // when we want to know if the operation itself is complete.
 //
 // In order to guard against aio reuse during teardown, we set the a_stop
 // flag.  Any attempt to submit new operation after that point will fail with
 // the status NNG_ESTOPPED indicating this.  The provider that calls
-// nni_aio_begin() MUST check the return value, and if it comes back
-// NNG_ESTOPPED then it must simply discard the request and // return.
+// nni_aio_start() MUST check the return value, and if it comes back
+// false then it must simply discard the request and return.
 //
 // Calling nni_aio_wait waits for the current outstanding operation to
 // complete, but does not block another one from being started on the
@@ -175,7 +175,7 @@ nni_aio_set_iov(nni_aio *aio, unsigned nio, const nni_iov *iov)
 
 // nni_aio_stop cancels any outstanding operation, and waits for the
 // callback to complete, if still running.  It also marks the AIO as
-// stopped, preventing further calls to nni_aio_begin from succeeding.
+// stopped, preventing further calls to nni_aio_start from succeeding.
 // To correctly tear down an AIO, call stop, and make sure any other
 // callers are not also stopped, before calling nni_aio_free to release
 // actual memory.
@@ -322,50 +322,6 @@ nni_aio_busy(nni_aio *aio)
 	return (nni_task_busy(&aio->a_task));
 }
 
-int
-nni_aio_begin(nni_aio *aio)
-{
-	// If any of these triggers then the caller has a defect because
-	// it means that the aio is already in use.  This is always
-	// a bug in the caller.  These checks are not technically thread
-	// safe in the event that they are false.  Users of race detectors
-	// checks may wish ignore or suppress these checks.
-	nni_aio_expire_q *eq = aio->a_expire_q;
-
-	NNI_ASSERT(aio->a_init);
-	nni_mtx_lock(&eq->eq_mtx);
-	NNI_ASSERT(!nni_aio_list_active(aio));
-	NNI_ASSERT(aio->a_cancel_fn == NULL);
-	NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
-
-	// Some initialization can be done outside the lock, because
-	// we must have exclusive access to the aio.
-	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
-		aio->a_outputs[i] = NULL;
-	}
-	aio->a_result    = 0;
-	aio->a_count     = 0;
-	aio->a_cancel_fn = NULL;
-	aio->a_abort     = false;
-	aio->a_expire_ok = false;
-	aio->a_sleep     = false;
-
-	// We should not reschedule anything at this point.
-	if (aio->a_stop || eq->eq_stop) {
-		aio->a_result    = NNG_ESTOPPED;
-		aio->a_cancel_fn = NULL;
-		aio->a_expire    = NNI_TIME_NEVER;
-		aio->a_stop      = true;
-		aio->a_stopped   = true;
-		nni_mtx_unlock(&eq->eq_mtx);
-
-		return (NNG_ESTOPPED);
-	}
-	nni_task_prep(&aio->a_task);
-	nni_mtx_unlock(&eq->eq_mtx);
-	return (0);
-}
-
 void
 nni_aio_reset(nni_aio *aio)
 {
@@ -378,53 +334,6 @@ nni_aio_reset(nni_aio *aio)
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
 	}
-}
-
-int
-nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
-{
-	nni_aio_expire_q *eq = aio->a_expire_q;
-
-	if ((!aio->a_sleep) && (!aio->a_use_expire)) {
-		// Convert the relative timeout to an absolute timeout.
-		switch (aio->a_timeout) {
-		case NNG_DURATION_ZERO:
-			return (NNG_ETIMEDOUT);
-		case NNG_DURATION_INFINITE:
-		case NNG_DURATION_DEFAULT:
-			aio->a_expire = NNI_TIME_NEVER;
-			break;
-		default:
-			aio->a_expire = nni_clock() + aio->a_timeout;
-			break;
-		}
-	}
-
-	nni_mtx_lock(&eq->eq_mtx);
-	if (aio->a_stop || eq->eq_stop) {
-		aio->a_stop    = true;
-		aio->a_stopped = true;
-		nni_mtx_unlock(&eq->eq_mtx);
-		return (NNG_ESTOPPED);
-	}
-	if (aio->a_abort) {
-		int rv = aio->a_result;
-		nni_mtx_unlock(&eq->eq_mtx);
-		NNI_ASSERT(rv != 0);
-		return (rv);
-	}
-
-	NNI_ASSERT(aio->a_cancel_fn == NULL);
-	aio->a_cancel_fn  = cancel;
-	aio->a_cancel_arg = data;
-
-	// We only schedule expiration if we have a way for the expiration
-	// handler to actively cancel it.
-	if ((aio->a_expire != NNI_TIME_NEVER) && (cancel != NULL)) {
-		nni_aio_expire_add(aio);
-	}
-	nni_mtx_unlock(&eq->eq_mtx);
-	return (0);
 }
 
 bool
