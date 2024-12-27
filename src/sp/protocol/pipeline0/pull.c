@@ -223,17 +223,11 @@ pull0_sock_recv(void *arg, nni_aio *aio)
 	pull0_sock *s = arg;
 	pull0_pipe *p;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 	nni_mtx_lock(&s->m);
 	if ((p = nni_list_first(&s->pl)) == NULL) {
 
-		int rv;
-		if ((rv = nni_aio_schedule(aio, pull0_cancel, s)) != 0) {
+		if (!nni_aio_start(aio, pull0_cancel, s)) {
 			nni_mtx_unlock(&s->m);
-			nni_aio_finish_error(aio, rv);
 			return;
 		}
 
