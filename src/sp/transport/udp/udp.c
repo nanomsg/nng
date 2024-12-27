@@ -956,14 +956,6 @@ udp_pipe_send(void *arg, nni_aio *aio)
 	nng_msg    *msg;
 	size_t      count = 0;
 
-	if (nni_aio_begin(aio) != 0) {
-		// No way to give the message back to the  protocol,
-		// so we just discard it silently to prevent it from leaking.
-		nni_msg_free(nni_aio_get_msg(aio));
-		nni_aio_set_msg(aio, NULL);
-		return;
-	}
-
 	msg = nni_aio_get_msg(aio);
 	ep  = p->ep;
 
@@ -971,6 +963,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 		count = nni_msg_len(msg) + nni_msg_header_len(msg);
 	}
 
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if ((nni_msg_len(msg) + nni_msg_header_len(msg)) > p->sndmax) {
 		nni_mtx_unlock(&ep->mtx);
@@ -1020,20 +1013,16 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 {
 	udp_pipe *p  = arg;
 	udp_ep   *ep = p->ep;
-	int       rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if (p->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, udp_pipe_recv_cancel, p)) != 0) {
+	if (!nni_aio_start(aio, udp_pipe_recv_cancel, p)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -1740,20 +1729,16 @@ static void
 udp_ep_accept(void *arg, nni_aio *aio)
 {
 	udp_ep *ep = arg;
-	int     rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, udp_ep_cancel, ep)) != 0) {
+	if (!nni_aio_start(aio, udp_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_aio_list_append(&ep->connaios, aio);

@@ -223,14 +223,32 @@ test_udp_multi_send_recv(void)
 	NUTS_PASS(nng_dialer_start(d, 0));
 	nng_msleep(100);
 
-	for (int i = 0; i < 1000; i++) {
-		NUTS_PASS(nng_send(s1, msg, 95, 0));
-		NUTS_PASS(nng_recv(s0, buf, &sz, 0));
-		NUTS_TRUE(sz == 95);
-		NUTS_PASS(nng_send(s0, msg, 95, 0));
-		NUTS_PASS(nng_recv(s1, buf, &sz, 0));
-		NUTS_TRUE(sz == 95);
+	int rv;
+	int i;
+	for (i = 0; i < 1000; i++) {
+		if ((rv = nng_send(s1, msg, 95, 0)) != 0) {
+			;
+			break;
+		}
+		if ((rv = nng_recv(s0, buf, &sz, 0)) != 0) {
+			break;
+		}
+		if (sz != 95) {
+			break;
+		}
+		if ((rv = nng_send(s0, msg, 95, 0)) != 0) {
+			break;
+		}
+		if ((rv = nng_recv(s1, buf, &sz, 0)) != 0) {
+			break;
+		}
+		if (sz != 95) {
+			break;
+		}
 	}
+	NUTS_PASS(rv);
+	NUTS_TRUE(i == 1000);
+	NUTS_TRUE(sz == 95);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 }
@@ -255,6 +273,7 @@ udp_recv_count_cb(void *arg)
 	switch (rv) {
 	case NNG_ECLOSED:
 	case NNG_ECANCELED:
+	case NNG_ESTOPPED:
 		c->fail++;
 		return;
 	case NNG_ETIMEDOUT:
