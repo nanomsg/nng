@@ -527,15 +527,10 @@ pair1_sock_send(void *arg, nni_aio *aio)
 	pair1_sock *s = arg;
 	nni_msg    *m;
 	size_t      len;
-	int         rv;
 
 	m   = nni_aio_get_msg(aio);
 	len = nni_msg_len(m);
 	nni_sock_bump_tx(s->sock, len);
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 
 #ifdef NNG_TEST_LIB
 	if (s->inject_header) {
@@ -589,8 +584,7 @@ inject:
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
+	if (!nni_aio_start(aio, pair1_cancel, s)) {
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
@@ -604,11 +598,6 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 	pair1_sock *s = arg;
 	pair1_pipe *p;
 	nni_msg    *m;
-	int         rv;
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 
 	nni_mtx_lock(&s->mtx);
 	p = s->p;
@@ -645,11 +634,11 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_aio_schedule(aio, pair1_cancel, s)) != 0) {
-		nni_aio_finish_error(aio, rv);
-	} else {
-		nni_aio_list_append(&s->raq, aio);
+	if (!nni_aio_start(aio, pair1_cancel, s)) {
+		nni_mtx_unlock(&s->mtx);
+		return;
 	}
+	nni_aio_list_append(&s->raq, aio);
 	nni_mtx_unlock(&s->mtx);
 }
 
