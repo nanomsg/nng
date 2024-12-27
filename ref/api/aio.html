@@ -313,7 +313,7 @@ then <a href="/api/aio.html#result-of-operation"><code>nng_aio_result</code></a>
 <p>The <a name="a011"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with [<code>NNG_ESTOPPED</code>],
 and then waits the operation and any associated callback to complete.
 This function also marks <em>aio</em> itself permanently stopped, so that any
-new operations scheduled by I/O providers using <a href="/TODO.html"><code>nng_aio_begin</code></a>
+new operations scheduled by I/O providers using <a href="/TODO.html"><code>nng_aio_start</code></a>
 return false. Thus this function should be used to teardown operations.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">

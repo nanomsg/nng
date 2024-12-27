@@ -235,6 +235,17 @@ been permanently stopped and must not be reused. Applications must watch for thi
 not resubmit an operation that returns it. This is particularly important for callbacks that automatically
 resubmit operations. Failure to observe this rule will lead to an infinite loop
 as any further operations on the object will fail immediately with <code>NNG_ESTOPPED</code>.</p>
+<h2 id="aio-provider-api-changes"><a class="header" href="#aio-provider-api-changes">AIO Provider API changes</a></h2>
+<p>The API used for providers for asynchronous I/O operations has changed slightly.</p>
+<ul>
+<li>The <code>nng_aio_begin</code> function is removed. However a new <a href="/TODO.html"><code>nng_aio_reset</code></a> function should be called
+instead, before performing any other operations on an <em>aio</em> object. (This simply clears certain fields.)</li>
+<li>The <code>nng_aio_defer</code> function is replaced, with a very <a href="/TODO.html"><code>nng_aio_start</code></a> function. However, this function
+has slightly different semantics. It will automatically call the callback if the operation cannot be
+scheduled.</li>
+<li>Be aware of the new <code>NNG_ESTOPPED</code> error code, for operations on a handle that is being torn down by
+the consumer.</li>
+</ul>
 <h2 id="transport-specific-functions"><a class="header" href="#transport-specific-functions">Transport Specific Functions</a></h2>
 <p>Transports have not needed to be registered for a long time now,
 and the functions for doing so have been removed. These functions
