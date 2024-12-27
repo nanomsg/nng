@@ -25,7 +25,7 @@ struct nng_http_client {
 	nni_list           aios;
 	nni_mtx            mtx;
 	bool               closed;
-	nni_aio           *aio;
+	nni_aio            aio;
 	nng_stream_dialer *dialer;
 };
 
@@ -35,7 +35,7 @@ http_dial_start(nni_http_client *c)
 	if (nni_list_empty(&c->aios)) {
 		return;
 	}
-	nng_stream_dialer_dial(c->dialer, c->aio);
+	nng_stream_dialer_dial(c->dialer, &c->aio);
 }
 
 static void
@@ -48,13 +48,13 @@ http_dial_cb(void *arg)
 	nni_http_conn   *conn;
 
 	nni_mtx_lock(&c->mtx);
-	rv = nni_aio_result(c->aio);
+	rv = nni_aio_result(&c->aio);
 
 	if ((aio = nni_list_first(&c->aios)) == NULL) {
 		// User abandoned request, and no residuals left.
 		nni_mtx_unlock(&c->mtx);
 		if (rv == 0) {
-			stream = nni_aio_get_output(c->aio, 0);
+			stream = nni_aio_get_output(&c->aio, 0);
 			nng_stream_free(stream);
 		}
 		return;
@@ -69,7 +69,7 @@ http_dial_cb(void *arg)
 	}
 
 	nni_aio_list_remove(aio);
-	stream = nni_aio_get_output(c->aio, 0);
+	stream = nni_aio_get_output(&c->aio, 0);
 	NNI_ASSERT(stream != NULL);
 
 	rv = nni_http_conn_init(&conn, stream);
@@ -89,9 +89,9 @@ http_dial_cb(void *arg)
 void
 nni_http_client_fini(nni_http_client *c)
 {
-	nni_aio_stop(c->aio);
+	nni_aio_stop(&c->aio);
 	nng_stream_dialer_stop(c->dialer);
-	nni_aio_free(c->aio);
+	nni_aio_fini(&c->aio);
 	nng_stream_dialer_free(c->dialer);
 	nni_mtx_fini(&c->mtx);
 	NNI_FREE_STRUCT(c);
@@ -122,13 +122,9 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 	}
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->aios);
+	nni_aio_init(&c->aio, http_dial_cb, c);
 
 	if ((rv = nng_stream_dialer_alloc_url(&c->dialer, &my_url)) != 0) {
-		nni_http_client_fini(c);
-		return (rv);
-	}
-
-	if ((rv = nni_aio_alloc(&c->aio, http_dial_cb, c)) != 0) {
 		nni_http_client_fini(c);
 		return (rv);
 	}
@@ -174,7 +170,7 @@ http_dial_cancel(nni_aio *aio, void *arg, int rv)
 		nni_aio_finish_error(aio, rv);
 	}
 	if (nni_list_empty(&c->aios)) {
-		nni_aio_abort(c->aio, rv);
+		nni_aio_abort(&c->aio, rv);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
