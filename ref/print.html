@@ -5634,8 +5634,6 @@ can be simply removed from your application:</p>
 </ul>
 <p>Additionally, the header files containing these functions have been removed, such as
 <code>nng/transport/ipc/ipc.h</code>. Simply remove <code>#include</code> references to those files.</p>
-<p>(Special exception: The options for ZeroTier are still located in the
-<code>nng/transport/zerotier/zerotier.h</code>.)</p>
 <p>The <code>NNG_OPT_WSS_REQUEST_HEADERS</code> and <code>NNG_OPT_WSS_RESPONSE_HEADERS</code> aliases for
 <code>NNG_OPT_WS_OPT_WS_REQUEST_HEADERS</code> and <code>NNG_OPT_WS_RESPONSE_HEADERS</code> have been removed.
 Just convert any use of them to <code>NNG_OPT_WS_REQUEST_HEADERS</code> or
@@ -5818,6 +5816,10 @@ with the functions [<code>nng_listener_get_security_descriptor</code>] and
 and is presently only supported for IPC when Named Pipes are used.
 Planned future changes to switch to UNIX domain sockets may eliminate
 support for security descriptors altogether in NNG.</p>
+<h2 id="zerotier-support-removed"><a class="header" href="#zerotier-support-removed">ZeroTier Support Removed</a></h2>
+<p>The Layer 2 special ZeroTier transport has been removed.
+It is possible to use NNG with ZeroTier using TCP/IP, and a future update
+is planned to provided coexistence between ZeroTier &amp; the native stack’s TCP/IP using lwIP.</p>
 <!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->
