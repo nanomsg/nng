@@ -269,13 +269,12 @@ bus0_sock_send(void *arg, nni_aio *aio)
 	uint32_t   sender = 0;
 	size_t     len;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 	msg = nni_aio_get_msg(aio);
 	len = nni_msg_len(msg);
 	nni_aio_set_msg(aio, NULL);
+
+	// this test is so that we detect when the aio itself is terminated,
+	// otherwise we could loop forever.
 
 	if (s->raw) {
 		// In raw mode, we look for the message header, to see if it
@@ -290,6 +289,12 @@ bus0_sock_send(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&s->mtx);
+
+	if (!nni_aio_start(aio, NULL, NULL)) {
+		nni_mtx_unlock(&s->mtx);
+		return;
+	}
+
 	NNI_LIST_FOREACH (&s->pipes, pipe) {
 
 		if (s->raw && nni_pipe_id(pipe->pipe) == sender) {
@@ -331,17 +336,11 @@ bus0_sock_recv(void *arg, nni_aio *aio)
 	bus0_sock *s = arg;
 	nni_msg   *msg;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 	nni_mtx_lock(&s->mtx);
 again:
 	if (nni_lmq_empty(&s->recv_msgs)) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, bus0_recv_cancel, s)) != 0) {
+		if (!nni_aio_start(aio, bus0_recv_cancel, s)) {
 			nni_mtx_unlock(&s->mtx);
-			nni_aio_finish_error(aio, rv);
 			return;
 		}
 		nni_list_append(&s->recv_wait, aio);

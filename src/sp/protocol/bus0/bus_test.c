@@ -179,24 +179,28 @@ static void
 test_bus_aio_stopped(void)
 {
 	nng_socket s1;
-	nng_aio   *aio;
+	nng_aio   *aio1;
+	nng_aio   *aio2;
 	nng_msg   *msg;
 
 	NUTS_PASS(nng_bus0_open(&s1));
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
-	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nng_aio_stop(aio);
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	nng_aio_stop(aio1);
+	nng_aio_stop(aio2);
 
-	nng_recv_aio(s1, aio);
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_recv_aio(s1, aio1);
+	nng_aio_wait(aio1);
+	NUTS_FAIL(nng_aio_result(aio1), NNG_ESTOPPED);
 
-	nng_aio_set_msg(aio, msg);
-	nng_send_aio(s1, aio);
-	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_aio_set_msg(aio2, msg);
+	nng_send_aio(s1, aio2);
+	nng_aio_wait(aio2);
+	NUTS_FAIL(nng_aio_result(aio2), NNG_ESTOPPED);
 
-	nng_aio_free(aio);
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
 	nng_msg_free(msg);
 	NUTS_CLOSE(s1);
 }
