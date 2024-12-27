@@ -170,7 +170,10 @@ sfd_tran_pipe_nego_cb(void *arg)
 	int            rv;
 
 	nni_mtx_lock(&ep->mtx);
-
+	if (ep->closed) {
+		rv = NNG_ECLOSED;
+		goto error;
+	}
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
