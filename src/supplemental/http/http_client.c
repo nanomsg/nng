@@ -182,14 +182,10 @@ http_dial_cancel(nni_aio *aio, void *arg, int rv)
 void
 nni_http_client_connect(nni_http_client *c, nni_aio *aio)
 {
-	int rv;
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	nni_mtx_lock(&c->mtx);
-	if ((rv = nni_aio_schedule(aio, http_dial_cancel, c)) != 0) {
+	if (!nni_aio_start(aio, http_dial_cancel, c)) {
 		nni_mtx_unlock(&c->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&c->aios, aio);
@@ -377,9 +373,7 @@ nni_http_transact_conn(
 	http_txn *txn;
 	int       rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	if ((txn = NNI_ALLOC_STRUCT(txn)) == NULL) {
 		nni_aio_finish_error(aio, NNG_ENOMEM);
 		return;
@@ -397,9 +391,8 @@ nni_http_transact_conn(
 	txn->state  = HTTP_SENDING;
 
 	nni_mtx_lock(&http_txn_lk);
-	if ((rv = nni_aio_schedule(aio, http_txn_cancel, txn)) != 0) {
+	if (!nni_aio_start(aio, http_txn_cancel, txn)) {
 		nni_mtx_unlock(&http_txn_lk);
-		nni_aio_finish_error(aio, rv);
 		http_txn_fini(txn);
 		return;
 	}
@@ -420,9 +413,7 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 	http_txn *txn;
 	int       rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
+	nni_aio_reset(aio);
 	if ((txn = NNI_ALLOC_STRUCT(txn)) == NULL) {
 		nni_aio_finish_error(aio, NNG_ENOMEM);
 		return;
@@ -447,9 +438,8 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 	txn->state  = HTTP_CONNECTING;
 
 	nni_mtx_lock(&http_txn_lk);
-	if ((rv = nni_aio_schedule(aio, http_txn_cancel, txn)) != 0) {
+	if (!nni_aio_start(aio, http_txn_cancel, txn)) {
 		nni_mtx_unlock(&http_txn_lk);
-		nni_aio_finish_error(aio, rv);
 		http_txn_fini(txn);
 		return;
 	}

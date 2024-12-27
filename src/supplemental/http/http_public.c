@@ -401,9 +401,7 @@ nng_http_conn_read(nng_http_conn *conn, nng_aio *aio)
 	nni_http_read(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -414,9 +412,7 @@ nng_http_conn_read_all(nng_http_conn *conn, nng_aio *aio)
 	nni_http_read_full(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -427,9 +423,7 @@ nng_http_conn_write(nng_http_conn *conn, nng_aio *aio)
 	nni_http_write(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -452,9 +446,7 @@ nng_http_conn_write_req(nng_http_conn *conn, nng_http_req *req, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(req);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -466,9 +458,7 @@ nng_http_conn_write_res(nng_http_conn *conn, nng_http_res *res, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(res);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -480,9 +470,7 @@ nng_http_conn_read_req(nng_http_conn *conn, nng_http_req *req, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(req);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -494,9 +482,7 @@ nng_http_conn_read_res(nng_http_conn *conn, nng_http_res *res, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(res);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -871,9 +857,7 @@ nng_http_client_connect(nng_http_client *cli, nng_aio *aio)
 	nni_http_client_connect(cli, aio);
 #else
 	NNI_ARG_UNUSED(cli);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -887,9 +871,7 @@ nng_http_client_transact(
 	NNI_ARG_UNUSED(cli);
 	NNI_ARG_UNUSED(req);
 	NNI_ARG_UNUSED(res);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
@@ -903,9 +885,7 @@ nng_http_conn_transact(
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(req);
 	NNI_ARG_UNUSED(res);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
 
