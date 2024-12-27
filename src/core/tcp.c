@@ -27,8 +27,8 @@ typedef struct {
 	bool              closed;
 	nng_sockaddr      sa;
 	nni_tcp_dialer   *d;      // platform dialer implementation
-	nni_aio          *resaio; // resolver aio
-	nni_aio          *conaio; // platform connection aio
+	nni_aio           resaio; // resolver aio
+	nni_aio           conaio; // platform connection aio
 	nni_list          conaios;
 	nni_mtx           mtx;
 } tcp_dialer;
@@ -44,8 +44,8 @@ tcp_dial_cancel(nni_aio *aio, void *arg, int rv)
 		nni_aio_finish_error(aio, rv);
 
 		if (nni_list_empty(&d->conaios)) {
-			nni_aio_abort(d->conaio, NNG_ECANCELED);
-			nni_aio_abort(d->resaio, NNG_ECANCELED);
+			nni_aio_abort(&d->conaio, NNG_ECANCELED);
+			nni_aio_abort(&d->resaio, NNG_ECANCELED);
 		}
 	}
 	nni_mtx_unlock(&d->mtx);
@@ -57,7 +57,7 @@ tcp_dial_start_next(tcp_dialer *d)
 	if (nni_list_empty(&d->conaios)) {
 		return;
 	}
-	nni_resolv_ip(d->host, d->port, d->af, false, &d->sa, d->resaio);
+	nni_resolv_ip(d->host, d->port, d->af, false, &d->sa, &d->resaio);
 }
 
 static void
@@ -78,7 +78,7 @@ tcp_dial_res_cb(void *arg)
 		return;
 	}
 
-	if ((rv = nni_aio_result(d->resaio)) != 0) {
+	if ((rv = nni_aio_result(&d->resaio)) != 0) {
 		nni_list_remove(&d->conaios, aio);
 		nni_aio_finish_error(aio, rv);
 
@@ -86,7 +86,7 @@ tcp_dial_res_cb(void *arg)
 		tcp_dial_start_next(d);
 
 	} else {
-		nni_tcp_dial(d->d, &d->sa, d->conaio);
+		nni_tcp_dial(d->d, &d->sa, &d->conaio);
 	}
 
 	nni_mtx_unlock(&d->mtx);
@@ -100,14 +100,14 @@ tcp_dial_con_cb(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&d->mtx);
-	rv = nni_aio_result(d->conaio);
+	rv = nni_aio_result(&d->conaio);
 	if ((d->closed) || ((aio = nni_list_first(&d->conaios)) == NULL)) {
 		if (rv == 0) {
 			// Make sure we discard the underlying connection.
-			nng_stream_close(nni_aio_get_output(d->conaio, 0));
-			nng_stream_stop(nni_aio_get_output(d->conaio, 0));
-			nng_stream_free(nni_aio_get_output(d->conaio, 0));
-			nni_aio_set_output(d->conaio, 0, NULL);
+			nng_stream_close(nni_aio_get_output(&d->conaio, 0));
+			nng_stream_stop(nni_aio_get_output(&d->conaio, 0));
+			nng_stream_free(nni_aio_get_output(&d->conaio, 0));
+			nni_aio_set_output(&d->conaio, 0, NULL);
 		}
 		nni_mtx_unlock(&d->mtx);
 		return;
@@ -116,7 +116,7 @@ tcp_dial_con_cb(void *arg)
 	if (rv != 0) {
 		nni_aio_finish_error(aio, rv);
 	} else {
-		nni_aio_set_output(aio, 0, nni_aio_get_output(d->conaio, 0));
+		nni_aio_set_output(aio, 0, nni_aio_get_output(&d->conaio, 0));
 		nni_aio_finish(aio, 0, 0);
 	}
 
@@ -160,10 +160,10 @@ tcp_dialer_free(void *arg)
 		return;
 	}
 
-	nni_aio_stop(d->resaio);
-	nni_aio_stop(d->conaio);
-	nni_aio_free(d->resaio);
-	nni_aio_free(d->conaio);
+	nni_aio_stop(&d->resaio);
+	nni_aio_stop(&d->conaio);
+	nni_aio_fini(&d->resaio);
+	nni_aio_fini(&d->conaio);
 
 	if (d->d != NULL) {
 		nni_tcp_dialer_close(d->d);
@@ -223,10 +223,10 @@ tcp_dialer_alloc(tcp_dialer **dp)
 
 	nni_mtx_init(&d->mtx);
 	nni_aio_list_init(&d->conaios);
+	nni_aio_init(&d->resaio, tcp_dial_res_cb, d);
+	nni_aio_init(&d->conaio, tcp_dial_con_cb, d);
 
-	if (((rv = nni_aio_alloc(&d->resaio, tcp_dial_res_cb, d)) != 0) ||
-	    ((rv = nni_aio_alloc(&d->conaio, tcp_dial_con_cb, d)) != 0) ||
-	    ((rv = nni_tcp_dialer_init(&d->d)) != 0)) {
+	if ((rv = nni_tcp_dialer_init(&d->d)) != 0) {
 		tcp_dialer_free(d);
 		return (rv);
 	}
