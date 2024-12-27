@@ -50,9 +50,6 @@ can be simply removed from your application:
 Additionally, the header files containing these functions have been removed, such as
 `nng/transport/ipc/ipc.h`. Simply remove `#include` references to those files.
 
-(Special exception: The options for ZeroTier are still located in the
-`nng/transport/zerotier/zerotier.h`.)
-
 The `NNG_OPT_WSS_REQUEST_HEADERS` and `NNG_OPT_WSS_RESPONSE_HEADERS` aliases for
 `NNG_OPT_WS_OPT_WS_REQUEST_HEADERS` and `NNG_OPT_WS_RESPONSE_HEADERS` have been removed.
 Just convert any use of them to `NNG_OPT_WS_REQUEST_HEADERS` or
@@ -275,5 +272,11 @@ Security descriptor support is only relevant to Windows,
 and is presently only supported for IPC when Named Pipes are used.
 Planned future changes to switch to UNIX domain sockets may eliminate
 support for security descriptors altogether in NNG.
+
+## ZeroTier Support Removed
+
+The Layer 2 special ZeroTier transport has been removed.
+It is possible to use NNG with ZeroTier using TCP/IP, and a future update
+is planned to provided coexistence between ZeroTier & the native stack's TCP/IP using lwIP.
 
 {{#include ../xref.md}}

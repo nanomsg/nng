@@ -25,7 +25,6 @@ typedef union nng_sockaddr {
     nng_sockaddr_inproc   s_inproc;
     nng_sockaddr_in       s_in;
     nng_sockaddr_in6      s_in6;
-    nng_sockaddr_zt       s_zt;
     nng_sockaddr_abstract s_abstract;
 } nng_sockaddr;
 
@@ -35,8 +34,7 @@ enum sockaddr_family {
     NNG_AF_IPC      = 2,
     NNG_AF_INET     = 3,
     NNG_AF_INET6    = 4,
-    NNG_AF_ZT       = 5,
-    NNG_AF_ABSTRACT = 6
+    NNG_AF_ABSTRACT = 5
 };
 ----
 
@@ -71,7 +69,6 @@ The values of `s_family` are as follows:
 `NNG_AF_IPC`:: Address for interprocess communication (xref:nng_ipc.7.adoc[nng_ipc(7)]).  The `s_path` member is valid.
 `NNG_AF_INET`:: Address for TCP/IP (v4) communication.  The `s_in` member is valid.
 `NNG_AF_INET6`:: Address for TCP/IP (v6) communication.  The `s_in6` member is valid.
-`NNG_AF_ZT`:: Address for ZeroTier transport (xref:nng_zerotier.7.adoc[nng_zerotier(7)]).  The `s_zt` member is valid.
 `NNG_AF_ABSTRACT`:: Address for an abstract UNIX domain socket.  The `s_abstract` member is valid.
 
 Please see the manual pages for each individual type for more information.
@@ -84,5 +81,4 @@ xref:nng_sockaddr_in.5.adoc[nng_sockaddr_in(5)],
 xref:nng_sockaddr_in6.5.adoc[nng_sockaddr_in6(5)],
 xref:nng_sockaddr_inproc.5.adoc[nng_sockaddr_inproc(5)],
 xref:nng_sockaddr_ipc.5.adoc[nng_sockaddr_ipc(5)],
-xref:nng_sockaddr_zt.5.adoc[nng_sockaddr_zt(5)],
 xref:nng.7.adoc[nng(7)]

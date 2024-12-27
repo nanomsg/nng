@@ -149,17 +149,11 @@ struct nng_sockaddr_in6 {
 	uint8_t  sa_addr[16];
 	uint32_t sa_scope;
 };
+
 struct nng_sockaddr_in {
 	uint16_t sa_family;
 	uint16_t sa_port;
 	uint32_t sa_addr;
-};
-
-struct nng_sockaddr_zt {
-	uint16_t sa_family;
-	uint64_t sa_nwid;
-	uint64_t sa_nodeid;
-	uint32_t sa_port;
 };
 
 struct nng_sockaddr_abstract {
@@ -181,7 +175,6 @@ typedef struct nng_sockaddr_path     nng_sockaddr_path;
 typedef struct nng_sockaddr_path     nng_sockaddr_ipc;
 typedef struct nng_sockaddr_in       nng_sockaddr_in;
 typedef struct nng_sockaddr_in6      nng_sockaddr_in6;
-typedef struct nng_sockaddr_zt       nng_sockaddr_zt;
 typedef struct nng_sockaddr_abstract nng_sockaddr_abstract;
 typedef struct nng_sockaddr_storage  nng_sockaddr_storage;
 
@@ -191,7 +184,6 @@ typedef union nng_sockaddr {
 	nng_sockaddr_inproc   s_inproc;
 	nng_sockaddr_in6      s_in6;
 	nng_sockaddr_in       s_in;
-	nng_sockaddr_zt       s_zt;
 	nng_sockaddr_abstract s_abstract;
 	nng_sockaddr_storage  s_storage;
 } nng_sockaddr;
@@ -202,8 +194,7 @@ enum nng_sockaddr_family {
 	NNG_AF_IPC      = 2,
 	NNG_AF_INET     = 3,
 	NNG_AF_INET6    = 4,
-	NNG_AF_ZT       = 5, // ZeroTier
-	NNG_AF_ABSTRACT = 6
+	NNG_AF_ABSTRACT = 5
 };
 
 // Scatter/gather I/O.

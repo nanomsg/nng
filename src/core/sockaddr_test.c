@@ -147,20 +147,6 @@ test_sa_inet6_net(void)
 	NUTS_ASSERT(strcmp(addr, "[fc00::]:80") == 0);
 }
 
-void
-test_sa_zt(void)
-{
-	nng_sockaddr sa;
-	char         addr[NNG_MAXADDRSTRLEN];
-	sa.s_zt.sa_family = NNG_AF_ZT;
-	sa.s_zt.sa_nodeid = 0xa;
-	sa.s_zt.sa_nwid   = 0xb;
-	sa.s_zt.sa_port   = 1 << 20;
-	nng_str_sockaddr(&sa, addr, sizeof(addr));
-	nng_log_debug(NULL, "address is %s", addr);
-	NUTS_ASSERT(strcmp(addr, "ZT[a:b:1048576]") == 0);
-}
-
 TEST_LIST = {
 	{ "nng_sockaddr_ipc", test_sa_ipc },
 	{ "nng_sockaddr_abstract", test_sa_abstract },
@@ -171,6 +157,5 @@ TEST_LIST = {
 	{ "nng_sockaddr_in6 link local", test_sa_inet6_ll },
 	{ "nng_sockaddr_in6 zero", test_sa_inet6_zero },
 	{ "nng_sockaddr_in6 subnet", test_sa_inet6_net },
-	{ "nng_sockaddr_zt", test_sa_zt },
 	{ NULL, NULL },
 };

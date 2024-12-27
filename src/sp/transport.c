@@ -108,9 +108,6 @@ extern void nni_sp_ws_register(void);
 #ifdef NNG_TRANSPORT_WSS
 extern void nni_sp_wss_register(void);
 #endif
-#ifdef NNG_TRANSPORT_ZEROTIER
-extern void nni_sp_zt_register(void);
-#endif
 #ifdef NNG_TRANSPORT_FDC
 extern void nni_sp_sfd_register(void);
 #endif
@@ -138,9 +135,6 @@ nni_sp_tran_sys_init(void)
 #endif
 #ifdef NNG_TRANSPORT_WSS
 	nni_sp_wss_register();
-#endif
-#ifdef NNG_TRANSPORT_ZEROTIER
-	nni_sp_zt_register();
 #endif
 #ifdef NNG_TRANSPORT_FDC
 	nni_sp_sfd_register();

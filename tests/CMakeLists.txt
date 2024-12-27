@@ -126,7 +126,6 @@ endif ()
 
 add_nng_test1(httpclient 60 NNG_SUPP_HTTP)
 add_nng_test(wss 30)
-add_nng_test1(zt 60 NNG_TRANSPORT_ZEROTIER)
 
 # c++ tests
 add_nng_cpp_test(cplusplus_pair 5)

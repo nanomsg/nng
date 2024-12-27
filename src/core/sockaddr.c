@@ -133,15 +133,6 @@ str_sa_abstract(const nng_sockaddr_abstract *sa, char *buf, size_t bufsz)
 	return (buf);
 }
 
-static const char *
-str_sa_zt(const nng_sockaddr_zt *sa, char *buf, size_t bufsz)
-{
-	snprintf(buf, bufsz, "ZT[%llx:%llx:%u]",
-	    (unsigned long long) sa->sa_nodeid,
-	    (unsigned long long) sa->sa_nwid, sa->sa_port);
-	return (buf);
-}
-
 const char *
 nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz)
 {
@@ -156,8 +147,6 @@ nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz)
 		return (str_sa_ipc(&sa->s_ipc, buf, bufsz));
 	case NNG_AF_ABSTRACT:
 		return (str_sa_abstract(&sa->s_abstract, buf, bufsz));
-	case NNG_AF_ZT:
-		return (str_sa_zt(&sa->s_zt, buf, bufsz));
 	case NNG_AF_UNSPEC:
 	default:
 		return ("unknown");
@@ -175,8 +164,6 @@ nng_sockaddr_port(const nng_sockaddr *sa)
 	case NNG_AF_INET6:
 		NNI_GET16(&sa->s_in6.sa_port, port16);
 		return (port16);
-	case NNG_AF_ZT:
-		return (sa->s_zt.sa_port);
 	default:
 		return (0);
 	}
