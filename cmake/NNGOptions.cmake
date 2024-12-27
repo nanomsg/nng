@@ -18,7 +18,7 @@ else ()
 endif ()
 
 # Global options.
-option(BUILD_SHARED_LIBS "Build shared library" ${BUILD_SHARED_LIBS})
+option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 # We only build command line tools and tests if we are not in a
 # cross-compile situation.  Cross-compiling users who still want to
