@@ -154,10 +154,6 @@ surv0_ctx_recv(void *arg, nni_aio *aio)
 	nni_time     now;
 	nni_duration timeout;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-
 	now = nni_clock();
 
 	nni_mtx_lock(&sock->mtx);
@@ -175,11 +171,8 @@ surv0_ctx_recv(void *arg, nni_aio *aio)
 
 again:
 	if (nni_lmq_get(&ctx->recv_lmq, &msg) != 0) {
-		int rv;
-		if ((rv = nni_aio_schedule(aio, &surv0_ctx_cancel, ctx)) !=
-		    0) {
+		if (!nni_aio_start(aio, &surv0_ctx_cancel, ctx)) {
 			nni_mtx_unlock(&sock->mtx);
-			nni_aio_finish_error(aio, rv);
 			return;
 		}
 		nni_list_append(&ctx->recv_queue, aio);
@@ -207,10 +200,6 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 	size_t       len = nni_msg_len(msg);
 	nng_duration survey_time;
 	int          rv;
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 
 	survey_time = nni_atomic_get(&ctx->survey_time);
 
