@@ -214,9 +214,7 @@ static void
 pub0_sock_recv(void *arg, nni_aio *aio)
 {
 	NNI_ARG_UNUSED(arg);
-	if (nni_aio_begin(aio) == 0) {
-		nni_aio_finish_error(aio, NNG_ENOTSUP);
-	}
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
 }
 
 static void
