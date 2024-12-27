@@ -608,9 +608,6 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	req0_sock *s   = ctx->sock;
 	nni_msg   *msg;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&s->mtx);
 	if ((ctx->recv_aio != NULL) ||
 	    ((ctx->req_msg == NULL) && (ctx->rep_msg == NULL))) {
@@ -630,11 +627,8 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	}
 
 	if ((msg = ctx->rep_msg) == NULL) {
-		int rv;
-		rv = nni_aio_schedule(aio, req0_ctx_cancel_recv, ctx);
-		if (rv != 0) {
+		if (!nni_aio_start(aio, req0_ctx_cancel_recv, ctx)) {
 			nni_mtx_unlock(&s->mtx);
-			nni_aio_finish_error(aio, rv);
 			return;
 		}
 		ctx->recv_aio = aio;
@@ -692,9 +686,6 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	nng_msg   *msg = nni_aio_get_msg(aio);
 	int        rv;
 
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
 	nni_mtx_lock(&s->mtx);
 	if (s->closed) {
 		nni_mtx_unlock(&s->mtx);
@@ -728,13 +719,13 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	nni_msg_header_clear(msg);
 	nni_msg_header_append_u32(msg, ctx->request_id);
 
-	// If no pipes are ready, and the request was a poll (no background
-	// schedule), then fail it.  Should be NNG_ETIMEDOUT.
-	rv = nni_aio_schedule(aio, req0_ctx_cancel_send, ctx);
-	if ((rv != 0) && (nni_list_empty(&s->ready_pipes))) {
+	// only do asynch if we're going to defer -- this is somewhat subtle
+	// because we can have been submitted for a non-blocking operation and
+	// in that case we would not like to timeout the operation instantly.
+	if (nni_list_empty(&s->ready_pipes) &&
+	    !nni_aio_start(aio, req0_ctx_cancel_send, ctx)) {
 		nni_id_remove(&s->requests, ctx->request_id);
 		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	ctx->req_len  = nni_msg_len(msg);

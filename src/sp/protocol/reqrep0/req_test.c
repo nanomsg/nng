@@ -513,7 +513,7 @@ test_req_poll_writeable(void)
 
 	// Submit a bunch of jobs.  Note that we have to stall a bit
 	// between each message to let it queue up.
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < 100; i++) {
 		int rv = nng_send(req, "", 0, NNG_FLAG_NONBLOCK);
 		if (rv == NNG_EAGAIN) {
 			break;
