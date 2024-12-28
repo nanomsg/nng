@@ -38,37 +38,20 @@
 
 #include "posix_tcp.h"
 
-struct nni_tcp_listener {
-	nni_posix_pfd pfd;
-	nni_list      acceptq;
-	bool          started;
-	bool          closed;
-	bool          nodelay;
-	bool          keepalive;
-	nni_mtx       mtx;
-};
-
-int
-nni_tcp_listener_init(nni_tcp_listener **lp)
-{
-	nni_tcp_listener *l;
-	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
-	nni_mtx_init(&l->mtx);
-
-	l->closed  = false;
-	l->started = false;
-	l->nodelay = true;
-
-	nni_aio_list_init(&l->acceptq);
-	*lp = l;
-	return (0);
-}
+typedef struct tcp_listener {
+	nng_stream_listener ops;
+	nng_sockaddr        sa;
+	nni_posix_pfd       pfd;
+	nni_list            acceptq;
+	bool                started;
+	bool                closed;
+	bool                nodelay;
+	bool                keepalive;
+	nni_mtx             mtx;
+} tcp_listener;
 
 static void
-tcp_listener_doclose(nni_tcp_listener *l)
+tcp_listener_doclose(tcp_listener *l)
 {
 	nni_aio *aio;
 
@@ -82,15 +65,16 @@ tcp_listener_doclose(nni_tcp_listener *l)
 }
 
 void
-nni_tcp_listener_close(nni_tcp_listener *l)
+tcp_listener_close(void *arg)
 {
+	tcp_listener *l = arg;
 	nni_mtx_lock(&l->mtx);
 	tcp_listener_doclose(l);
 	nni_mtx_unlock(&l->mtx);
 }
 
 static void
-tcp_listener_doaccept(nni_tcp_listener *l)
+tcp_listener_doaccept(tcp_listener *l)
 {
 	nni_aio *aio;
 
@@ -161,7 +145,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 static void
 tcp_listener_cb(void *arg, unsigned events)
 {
-	nni_tcp_listener *l = arg;
+	tcp_listener *l = arg;
 
 	nni_mtx_lock(&l->mtx);
 	if ((events & NNI_POLL_INVAL) != 0) {
@@ -178,7 +162,7 @@ tcp_listener_cb(void *arg, unsigned events)
 static void
 tcp_listener_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_listener *l = arg;
+	tcp_listener *l = arg;
 
 	// This is dead easy, because we'll ignore the completion if there
 	// isn't anything to do the accept on!
@@ -191,15 +175,16 @@ tcp_listener_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&l->mtx);
 }
 
-int
-nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
+static int
+tcp_listener_listen(void *arg)
 {
+	tcp_listener           *l = arg;
 	socklen_t               len;
 	struct sockaddr_storage ss;
 	int                     rv;
 	int                     fd;
 
-	if (((len = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
+	if (((len = nni_posix_nn2sockaddr(&ss, &l->sa)) == 0) ||
 #ifdef NNG_ENABLE_IPV6
 	    ((ss.ss_family != AF_INET) && (ss.ss_family != AF_INET6))
 #else
@@ -261,9 +246,10 @@ nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 	return (0);
 }
 
-void
-nni_tcp_listener_stop(nni_tcp_listener *l)
+static void
+tcp_listener_stop(void *arg)
 {
+	tcp_listener *l = arg;
 	nni_mtx_lock(&l->mtx);
 	tcp_listener_doclose(l);
 	nni_mtx_unlock(&l->mtx);
@@ -271,18 +257,21 @@ nni_tcp_listener_stop(nni_tcp_listener *l)
 	nni_posix_pfd_stop(&l->pfd);
 }
 
-void
-nni_tcp_listener_fini(nni_tcp_listener *l)
+static void
+tcp_listener_free(void *arg)
 {
-	nni_tcp_listener_stop(l);
+	tcp_listener *l = arg;
+
 	nni_posix_pfd_fini(&l->pfd);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
 
-void
-nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
+static void
+tcp_listener_accept(void *arg, nni_aio *aio)
 {
+	tcp_listener *l = arg;
+
 	// Accept is simpler than the connect case.  With accept we just
 	// need to wait for the socket to be readable to indicate an incoming
 	// connection is ready for us.  There isn't anything else for us to
@@ -314,8 +303,8 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 static int
 tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_tcp_listener *l = arg;
-	nng_sockaddr      sa;
+	tcp_listener *l = arg;
+	nng_sockaddr  sa;
 	nni_mtx_lock(&l->mtx);
 	if (l->started) {
 		struct sockaddr_storage ss;
@@ -333,9 +322,9 @@ tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 static int
 tcp_listener_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
 {
-	nni_tcp_listener *l = arg;
-	int               rv;
-	bool              b;
+	tcp_listener *l = arg;
+	int           rv;
+	bool          b;
 
 	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (l == NULL)) {
 		return (rv);
@@ -349,8 +338,8 @@ tcp_listener_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
 static int
 tcp_listener_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	bool              b;
-	nni_tcp_listener *l = arg;
+	bool          b;
+	tcp_listener *l = arg;
 	nni_mtx_lock(&l->mtx);
 	b = l->nodelay;
 	nni_mtx_unlock(&l->mtx);
@@ -360,9 +349,9 @@ tcp_listener_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 static int
 tcp_listener_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
 {
-	nni_tcp_listener *l = arg;
-	int               rv;
-	bool              b;
+	tcp_listener *l = arg;
+	int           rv;
+	bool          b;
 
 	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (l == NULL)) {
 		return (rv);
@@ -376,12 +365,50 @@ tcp_listener_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
 static int
 tcp_listener_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	bool              b;
-	nni_tcp_listener *l = arg;
+	bool          b;
+	tcp_listener *l = arg;
 	nni_mtx_lock(&l->mtx);
 	b = l->keepalive;
 	nni_mtx_unlock(&l->mtx);
 	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static int
+tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	tcp_listener *l = arg;
+	int           rv;
+	nng_sockaddr  sa;
+	size_t        sz;
+	int           port;
+	uint8_t      *paddr;
+
+	sz = sizeof(sa);
+	rv = tcp_listener_get_locaddr(l, &sa, &sz, NNI_TYPE_SOCKADDR);
+	if (rv != 0) {
+		return (rv);
+	}
+
+	switch (sa.s_family) {
+	case NNG_AF_INET:
+		paddr = (void *) &sa.s_in.sa_port;
+		break;
+
+	case NNG_AF_INET6:
+		paddr = (void *) &sa.s_in6.sa_port;
+		break;
+
+	default:
+		paddr = NULL;
+		break;
+	}
+
+	if (paddr == NULL) {
+		return (NNG_ESTATE);
+	}
+
+	NNI_GET16(paddr, port);
+	return (nni_copyout_int(port, buf, szp, t));
 }
 
 static const nni_option tcp_listener_options[] = {
@@ -400,20 +427,66 @@ static const nni_option tcp_listener_options[] = {
 	    .o_get  = tcp_listener_get_keepalive,
 	},
 	{
+	    .o_name = NNG_OPT_TCP_BOUND_PORT,
+	    .o_get  = tcp_listener_get_port,
+	},
+	{
 	    .o_name = NULL,
 	},
 };
 
-int
-nni_tcp_listener_get(
-    nni_tcp_listener *l, const char *name, void *buf, size_t *szp, nni_type t)
+static int
+tcp_listener_get(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_getopt(tcp_listener_options, name, l, buf, szp, t));
+	return (nni_getopt(tcp_listener_options, name, arg, buf, szp, t));
+}
+
+static int
+tcp_listener_set(
+    void *arg, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	return (nni_setopt(tcp_listener_options, name, arg, buf, sz, t));
+}
+
+static int
+tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
+{
+	tcp_listener *l;
+
+	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	nni_mtx_init(&l->mtx);
+	nni_aio_list_init(&l->acceptq);
+
+	l->closed  = false;
+	l->started = false;
+	l->nodelay = true;
+	l->sa      = *sa;
+
+	l->ops.sl_free   = tcp_listener_free;
+	l->ops.sl_close  = tcp_listener_close;
+	l->ops.sl_stop   = tcp_listener_stop;
+	l->ops.sl_listen = tcp_listener_listen;
+	l->ops.sl_accept = tcp_listener_accept;
+	l->ops.sl_get    = tcp_listener_get;
+	l->ops.sl_set    = tcp_listener_set;
+
+	*lp = (void *) l;
+	return (0);
 }
 
 int
-nni_tcp_listener_set(nni_tcp_listener *l, const char *name, const void *buf,
-    size_t sz, nni_type t)
+nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
-	return (nni_setopt(tcp_listener_options, name, l, buf, sz, t));
+	int          rv;
+	nng_sockaddr sa;
+
+	if ((rv = nni_url_to_address(&sa, url)) != 0) {
+		return (rv);
+	}
+
+	return (tcp_listener_alloc_addr(lp, &sa));
 }

@@ -17,27 +17,27 @@
 #include "core/nng_impl.h"
 
 struct nni_tcp_conn {
-	nng_stream        ops;
-	SOCKET            s;
-	nni_win_io        recv_io;
-	nni_win_io        send_io;
-	nni_win_io        conn_io;
-	nni_list          recv_aios;
-	nni_list          send_aios;
-	nni_aio          *conn_aio;
-	SOCKADDR_STORAGE  sockname;
-	SOCKADDR_STORAGE  peername;
-	nni_tcp_dialer   *dialer;
-	nni_tcp_listener *listener;
-	int               recv_rv;
-	int               send_rv;
-	int               conn_rv;
-	bool              closed;
-	char              buf[512]; // to hold acceptex results
-	bool              sending;
-	bool              recving;
-	nni_mtx           mtx;
-	nni_cv            cv;
+	nng_stream       ops;
+	SOCKET           s;
+	nni_win_io       recv_io;
+	nni_win_io       send_io;
+	nni_win_io       conn_io;
+	nni_list         recv_aios;
+	nni_list         send_aios;
+	nni_aio         *conn_aio;
+	SOCKADDR_STORAGE sockname;
+	SOCKADDR_STORAGE peername;
+	nni_tcp_dialer  *dialer;
+	void            *listener;
+	int              recv_rv;
+	int              send_rv;
+	int              conn_rv;
+	bool             closed;
+	char             buf[512]; // to hold acceptex results
+	bool             sending;
+	bool             recving;
+	nni_mtx          mtx;
+	nni_cv           cv;
 };
 
 extern int nni_win_tcp_init(nni_tcp_conn **, SOCKET);
