@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -104,9 +104,9 @@ struct nni_pipe {
 	nni_listener      *p_listener;
 	nni_atomic_bool    p_closed;
 	nni_atomic_flag    p_stop;
-	bool               p_cbs;
 	nni_reap_node      p_reap;
 	nni_refcnt         p_refcnt;
+	nng_pipe_ev        p_last_event;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_root;
@@ -125,7 +125,6 @@ extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
 extern void nni_sock_remove_listener(nni_listener *);
 extern void nni_sock_remove_dialer(nni_dialer *);
 
-extern void nni_dialer_add_pipe(nni_dialer *, void *);
 extern void nni_dialer_shutdown(nni_dialer *);
 extern void nni_dialer_reap(nni_dialer *);
 extern void nni_dialer_destroy(nni_dialer *);
@@ -133,7 +132,6 @@ extern void nni_dialer_timer_start(nni_dialer *);
 extern void nni_dialer_stop(nni_dialer *);
 
 extern void nni_listener_start_pipe(nni_listener *, nni_pipe *);
-extern void nni_listener_add_pipe(nni_listener *, void *);
 extern void nni_listener_shutdown(nni_listener *);
 extern void nni_listener_reap(nni_listener *);
 extern void nni_listener_destroy(nni_listener *);

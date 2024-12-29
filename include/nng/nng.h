@@ -271,6 +271,7 @@ uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
 // Only one callback can be set on a given socket, and there is no way
 // to retrieve the old value.
 typedef enum {
+	NNG_PIPE_EV_NONE,     // Used internally, must be first, never posted
 	NNG_PIPE_EV_ADD_PRE,  // Called just before pipe added to socket
 	NNG_PIPE_EV_ADD_POST, // Called just after pipe added to socket
 	NNG_PIPE_EV_REM_POST, // Called just after pipe removed from socket

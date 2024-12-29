@@ -256,13 +256,13 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
 		return (NNG_ENOMEM);
 	}
 
-	p->p_size      = sz;
-	p->p_proto_ops = *pops;
-	p->p_tran_ops  = *tops;
-	p->p_sock      = sock;
-	p->p_cbs       = false;
-	p->p_dialer    = d;
-	p->p_listener  = l;
+	p->p_size       = sz;
+	p->p_proto_ops  = *pops;
+	p->p_tran_ops   = *tops;
+	p->p_sock       = sock;
+	p->p_dialer     = d;
+	p->p_listener   = l;
+	p->p_last_event = NNG_PIPE_EV_NONE;
 
 	// Two references - one for our caller, and
 	// one to be dropped when the pipe is closed.
