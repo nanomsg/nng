@@ -233,7 +233,8 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nni_aio_list_append(&d->aios, aio);
 
 	// dialing is concurrent.
-	if (!nni_win_connectex(s, &c->peername, len, &c->conn_io.olpd)) {
+	if (!nni_win_connectex(
+	        s, (SOCKADDR *) &c->peername, len, &c->conn_io.olpd)) {
 		if ((rv = GetLastError()) != ERROR_IO_PENDING) {
 			nni_aio_list_remove(aio);
 			nni_mtx_unlock(&d->mtx);
