@@ -410,10 +410,7 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 	uint8_t      *paddr;
 
 	sz = sizeof(sa);
-	rv = tcp_listener_get_locaddr(l, &sa, &sz, NNI_TYPE_SOCKADDR);
-	if (rv != 0) {
-		return (rv);
-	}
+	(void) tcp_listener_get_locaddr(l, &sa, &sz, NNI_TYPE_SOCKADDR);
 
 	switch (sa.s_family) {
 	case NNG_AF_INET:
@@ -425,11 +422,6 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 		break;
 
 	default:
-		paddr = NULL;
-		break;
-	}
-
-	if (paddr == NULL) {
 		return (NNG_ESTATE);
 	}
 

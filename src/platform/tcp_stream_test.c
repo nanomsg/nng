@@ -155,8 +155,27 @@ test_tcp_listen_accept_cancel(void)
 	nng_stream_listener_free(l);
 }
 
+void
+test_tcp_listen_port_zero_not_bound(void)
+{
+	nng_stream_listener *l;
+	char                *addr;
+	int                  p;
+
+	nng_log_set_logger(nng_stderr_logger);
+	NUTS_ADDR_ZERO(addr, "tcp");
+
+	// start a listening stream listener but do not call accept
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_FAIL(nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &p),
+	    NNG_ESTATE);
+	nng_stream_listener_free(l);
+}
+
 NUTS_TESTS = {
 	{ "tcp stream", test_tcp_stream },
-	{ "tcp stream listen accept cancel", test_tcp_listen_accept_cancel },
+	{ "tcp listen accept cancel", test_tcp_listen_accept_cancel },
+	{ "tcp listen port zero not bound",
+	    test_tcp_listen_port_zero_not_bound },
 	{ NULL, NULL },
 };
