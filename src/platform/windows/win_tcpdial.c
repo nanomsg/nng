@@ -307,7 +307,7 @@ tcp_dialer_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 	nng_sockaddr    sa;
 
 	nni_mtx_lock(&d->mtx);
-	if (nni_win_sockaddr2nn(&sa, &d->src) != 0) {
+	if (nni_win_sockaddr2nn(&sa, &d->src, sizeof(d->src)) != 0) {
 		sa.s_family = NNG_AF_UNSPEC;
 	}
 	nni_mtx_unlock(&d->mtx);

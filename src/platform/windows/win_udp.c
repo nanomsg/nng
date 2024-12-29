@@ -204,7 +204,7 @@ udp_recv_cb(nni_win_io *io, int rv, size_t num)
 
 	// convert address from Windows form...
 	if ((sa = nni_aio_get_input(aio, 0)) != NULL) {
-		if (nni_win_sockaddr2nn(sa, &u->rxsa) != 0) {
+		if (nni_win_sockaddr2nn(sa, &u->rxsa, sizeof(u->rxsa)) != 0) {
 			rv  = NNG_EADDRINVAL;
 			num = 0;
 		}
@@ -306,7 +306,7 @@ nni_plat_udp_sockname(nni_plat_udp *udp, nni_sockaddr *sa)
 	if (getsockname(udp->s, (SOCKADDR *) &ss, &sz) < 0) {
 		return (nni_win_error(GetLastError()));
 	}
-	return (nni_win_sockaddr2nn(sa, &ss));
+	return (nni_win_sockaddr2nn(sa, &ss, sz));
 }
 
 // Joining a multicast group is different than binding to a multicast

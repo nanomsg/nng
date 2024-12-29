@@ -268,7 +268,7 @@ tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
 	nni_tcp_conn *c = arg;
 	nng_sockaddr  sa;
 
-	if (nni_win_sockaddr2nn(&sa, &c->peername) < 0) {
+	if (nni_win_sockaddr2nn(&sa, &c->peername, sizeof(c->peername)) < 0) {
 		return (NNG_EADDRINVAL);
 	}
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
@@ -280,7 +280,7 @@ tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 	nni_tcp_conn *c = arg;
 	nng_sockaddr  sa;
 
-	if (nni_win_sockaddr2nn(&sa, &c->sockname) < 0) {
+	if (nni_win_sockaddr2nn(&sa, &c->sockname, sizeof(c->sockname)) < 0) {
 		return (NNG_EADDRINVAL);
 	}
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));

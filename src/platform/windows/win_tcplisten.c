@@ -337,7 +337,7 @@ tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 	nng_sockaddr  sa;
 	nni_mtx_lock(&l->mtx);
 	if (l->started) {
-		nni_win_sockaddr2nn(&sa, &l->ss);
+		nni_win_sockaddr2nn(&sa, &l->ss, sizeof(l->ss));
 	} else {
 		sa.s_family = NNG_AF_UNSPEC;
 	}

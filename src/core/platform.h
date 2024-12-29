@@ -347,6 +347,17 @@ extern int nni_tcp_listener_set(
 extern int nni_tcp_listener_get(
     nni_tcp_listener *, const char *, void *, size_t *, nni_type);
 
+typedef struct nni_resolv_item {
+	int           ri_family;
+	bool          ri_passive;
+	const char   *ri_host;
+	uint16_t      ri_port;
+	nng_sockaddr *ri_sa; // where result will be written
+
+} nni_resolv_item;
+
+extern void nni_resolv(nni_resolv_item *, nni_aio *);
+
 // nni_resolv_ip resolves a DNS host and service name asynchronously.
 // The family should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.
 // The first two constrain the name to those families, while the third will

@@ -38,12 +38,18 @@ has_v6(void)
 void
 test_google_dns(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
+
+	item.ri_host    = "google-public-dns-a.google.com";
+	item.ri_port    = 80;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	item.ri_family  = NNG_AF_INET;
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip(
-	    "google-public-dns-a.google.com", 80, NNG_AF_INET, true, &sa, aio);
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
@@ -55,14 +61,20 @@ test_google_dns(void)
 void
 test_hostname_too_long(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
-	char         buffer[512];
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	char            buffer[512];
+	nni_resolv_item item = { 0 };
 
 	memset(buffer, 'a', sizeof(buffer) - 1);
 	buffer[sizeof(buffer) - 1] = '\0';
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip(buffer, 80, NNG_AF_INET, true, &sa, aio);
+	item.ri_family  = NNG_AF_INET;
+	item.ri_passive = true;
+	item.ri_host    = buffer;
+	item.ri_port    = 80;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_EADDRINVAL);
 	nng_aio_free(aio);
@@ -71,11 +83,17 @@ test_hostname_too_long(void)
 void
 test_numeric_addr(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip("8.8.4.4", 69, NNG_AF_INET, true, &sa, aio);
+	item.ri_family  = NNG_AF_INET;
+	item.ri_host    = "8.8.4.4";
+	item.ri_port    = 69;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
@@ -88,15 +106,21 @@ test_numeric_addr(void)
 void
 test_numeric_v6(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
 
 	if (!has_v6()) {
 		return;
 	}
 	NUTS_MSG("IPV6 support present");
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip("::1", 80, NNG_AF_INET6, true, &sa, aio);
+	item.ri_family  = NNG_AF_INET6;
+	item.ri_host    = "::1";
+	item.ri_port    = 80;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(sa.s_in6.sa_family == NNG_AF_INET6);
@@ -109,12 +133,18 @@ test_numeric_v6(void)
 void
 test_service_names(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
-	uint32_t     port;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	uint32_t        port;
+	nni_resolv_item item = { 0 };
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip("8.8.4.4", 80, NNG_AF_INET, true, &sa, aio);
+	item.ri_family  = NNG_AF_INET;
+	item.ri_host    = "8.8.4.4";
+	item.ri_port    = 80;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
@@ -131,11 +161,17 @@ test_service_names(void)
 void
 test_localhost_v4(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip("localhost", 80, NNG_AF_INET, true, &sa, aio);
+	item.ri_family  = NNG_AF_INET;
+	item.ri_host    = "localhost";
+	item.ri_port    = 80;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
@@ -147,11 +183,17 @@ test_localhost_v4(void)
 void
 test_localhost_unspecified(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip("localhost", 80, NNG_AF_UNSPEC, true, &sa, aio);
+	item.ri_family  = NNG_AF_UNSPEC;
+	item.ri_host    = "localhost";
+	item.ri_port    = 80;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(
@@ -174,11 +216,17 @@ test_localhost_unspecified(void)
 void
 test_null_passive(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip(NULL, 80, NNG_AF_INET, true, &sa, aio);
+	item.ri_family  = NNG_AF_INET;
+	item.ri_host    = NULL;
+	item.ri_port    = 80;
+	item.ri_passive = true;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
@@ -190,11 +238,17 @@ test_null_passive(void)
 void
 test_null_not_passive(void)
 {
-	nng_aio     *aio;
-	nng_sockaddr sa;
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
 
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nni_resolv_ip(NULL, 80, NNG_AF_INET, false, &sa, aio);
+	item.ri_family  = NNG_AF_INET;
+	item.ri_host    = NULL;
+	item.ri_port    = 80;
+	item.ri_passive = false;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
 	nng_aio_wait(aio);
 	// We can either get invalid address, or a loopback address.
 	// Most systems do the former, but Linux does the latter.

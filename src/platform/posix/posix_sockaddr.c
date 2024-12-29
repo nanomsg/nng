@@ -122,7 +122,7 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa, size_t sz)
 	nng_sockaddr_in6          *nsin6;
 #endif
 
-	switch (((struct sockaddr *) sa)->sa_family) {
+	switch (((const struct sockaddr *) sa)->sa_family) {
 	case AF_INET:
 		if (sz < sizeof(*sin)) {
 			return (-1);

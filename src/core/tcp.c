@@ -31,6 +31,7 @@ typedef struct {
 	nni_aio           conaio; // platform connection aio
 	nni_list          conaios;
 	nni_mtx           mtx;
+	nni_resolv_item   resolv;
 } tcp_dialer;
 
 static void
@@ -57,7 +58,14 @@ tcp_dial_start_next(tcp_dialer *d)
 	if (nni_list_empty(&d->conaios)) {
 		return;
 	}
-	nni_resolv_ip(d->host, d->port, d->af, false, &d->sa, &d->resaio);
+	memset(&d->resolv, 0, sizeof(d->resolv));
+	d->resolv.ri_family  = d->af;
+	d->resolv.ri_passive = false;
+	d->resolv.ri_host    = d->host;
+	d->resolv.ri_port    = d->port;
+	d->resolv.ri_sa      = &d->sa;
+
+	nni_resolv(&d->resolv, &d->resaio);
 }
 
 static void

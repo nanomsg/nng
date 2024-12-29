@@ -47,19 +47,24 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 }
 
 int
-nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
+nni_win_sockaddr2nn(nni_sockaddr *sa, const void *s, size_t sz)
 {
-	SOCKADDR_IN *sin;
+	SOCKADDR_IN     *sin;
+	nng_sockaddr_in *nsin;
 #ifdef NNG_ENABLE_IPV6
-	SOCKADDR_IN6 *sin6;
+	SOCKADDR_IN6     *sin6;
+	nng_sockaddr_in6 *nsin6;
 #endif
 
-	if ((ss == NULL) || (sa == NULL)) {
+	if ((s == NULL) || (sa == NULL)) {
 		return (-1);
 	}
-	switch (ss->ss_family) {
+	switch (((const SOCKADDR *) s)->sa_family) {
 	case PF_INET:
-		sin                = (void *) ss;
+		if (sz < sizeof(*sin)) {
+			return -1;
+		}
+		sin                = (void *) s;
 		sa->s_in.sa_family = NNG_AF_INET;
 		sa->s_in.sa_port   = sin->sin_port;
 		sa->s_in.sa_addr   = sin->sin_addr.s_addr;
@@ -67,7 +72,10 @@ nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 
 #ifdef NNG_ENABLE_IPV6
 	case PF_INET6:
-		sin6                = (void *) ss;
+		if (sz < sizeof(*sin6)) {
+			return (-1);
+		}
+		sin6                = (void *) s;
 		sa->s_in6.sa_family = NNG_AF_INET6;
 		sa->s_in6.sa_port   = sin6->sin6_port;
 		sa->s_in6.sa_scope  = sin6->sin6_scope_id;

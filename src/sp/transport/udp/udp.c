@@ -220,6 +220,7 @@ struct udp_ep {
 	udp_txring    tx_ring;
 	nni_time      next_wake;
 	nni_aio_completions complq;
+	nni_resolv_item     resolv;
 
 	nni_stat_item st_rcv_max;
 	nni_stat_item st_rcv_reorder;
@@ -1529,9 +1530,14 @@ udp_ep_connect(void *arg, nni_aio *aio)
 
 	// lookup the IP address
 
+	memset(&ep->resolv, 0, sizeof(ep->resolv));
+	ep->resolv.ri_family  = ep->af;
+	ep->resolv.ri_host    = ep->url->u_hostname;
+	ep->resolv.ri_port    = ep->url->u_port;
+	ep->resolv.ri_passive = false;
+	ep->resolv.ri_sa      = &ep->peer_sa;
 	nni_aio_set_timeout(&ep->resaio, NNI_SECOND * 5);
-	nni_resolv_ip(ep->url->u_hostname, ep->url->u_port, ep->af, false,
-	    &ep->peer_sa, &ep->resaio);
+	nni_resolv(&ep->resolv, &ep->resaio);
 
 	// wake up for retries
 	nni_aio_abort(&ep->timeaio, NNG_EINTR);

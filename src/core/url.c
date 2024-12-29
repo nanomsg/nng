@@ -678,10 +678,11 @@ nng_url_clone(nng_url **dstp, const nng_url *src)
 int
 nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
 {
-	int         af;
-	nni_aio     aio;
-	const char *h;
-	int         rv;
+	int             af;
+	nni_aio         aio;
+	const char     *h;
+	int             rv;
+	nni_resolv_item ri;
 
 	// This assumes the scheme is one that uses TCP/IP addresses.
 
@@ -700,7 +701,13 @@ nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
 		h = NULL;
 	}
 
-	nni_resolv_ip(h, url->u_port, af, true, sa, &aio);
+	memset(&ri, 0, sizeof(ri));
+	ri.ri_family  = af;
+	ri.ri_passive = true;
+	ri.ri_host    = h;
+	ri.ri_port    = url->u_port;
+	ri.ri_sa      = sa;
+	nni_resolv(&ri, &aio);
 	nni_aio_wait(&aio);
 	rv = nni_aio_result(&aio);
 	nni_aio_fini(&aio);

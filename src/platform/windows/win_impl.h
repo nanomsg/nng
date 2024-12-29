@@ -126,7 +126,7 @@ extern void nni_win_io_init(nni_win_io *, nni_win_io_cb, void *);
 
 extern int nni_win_io_register(HANDLE);
 
-extern int nni_win_sockaddr2nn(nni_sockaddr *, const SOCKADDR_STORAGE *);
+extern int nni_win_sockaddr2nn(nni_sockaddr *, const void *, size_t);
 extern int nni_win_nn2sockaddr(SOCKADDR_STORAGE *, const nni_sockaddr *);
 
 #define NNG_PLATFORM_DIR_SEP "\\"
