@@ -17,8 +17,7 @@
 #include <stdio.h>
 
 struct nni_tcp_dialer {
-	LPFN_CONNECTEX   connectex; // looked up name via ioctl
-	nni_list         aios;      // in flight connections
+	nni_list         aios; // in flight connections
 	bool             closed;
 	bool             nodelay;   // initial value for child conns
 	bool             keepalive; // initial value for child conns
@@ -40,30 +39,9 @@ nni_tcp_dialer_init(nni_tcp_dialer **dp)
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	ZeroMemory(d, sizeof(*d));
 	nni_mtx_init(&d->mtx);
 	nni_aio_list_init(&d->aios);
 	d->nodelay = true;
-
-	// Create a scratch socket for use with ioctl.
-	s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-	if (s == INVALID_SOCKET) {
-		rv = nni_win_error(GetLastError());
-		nni_tcp_dialer_fini(d);
-		return (rv);
-	}
-
-	// Look up the function pointer.
-	if (WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid,
-	        sizeof(guid), &d->connectex, sizeof(d->connectex), &nbytes,
-	        NULL, NULL) == SOCKET_ERROR) {
-		rv = nni_win_error(GetLastError());
-		closesocket(s);
-		nni_tcp_dialer_fini(d);
-		return (rv);
-	}
-
-	closesocket(s);
 
 	*dp = d;
 	return (0);
@@ -255,8 +233,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nni_aio_list_append(&d->aios, aio);
 
 	// dialing is concurrent.
-	if (!d->connectex(s, (struct sockaddr *) &c->peername, len, NULL, 0,
-	        NULL, &c->conn_io.olpd)) {
+	if (!nni_win_connectex(s, &c->peername, len, &c->conn_io.olpd)) {
 		if ((rv = GetLastError()) != ERROR_IO_PENDING) {
 			nni_aio_list_remove(aio);
 			nni_mtx_unlock(&d->mtx);

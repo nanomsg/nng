@@ -42,4 +42,13 @@ struct nni_tcp_conn {
 
 extern int nni_win_tcp_init(nni_tcp_conn **, SOCKET);
 
+// Following functions are wrappers around Windows functions that have to be
+// looked up by pointer/GUID.
+extern int nni_win_acceptex(
+    SOCKET listen, SOCKET child, void *buf, LPOVERLAPPED olpd);
+extern void nni_win_get_acceptex_sockaddrs(
+    void *buf, SOCKADDR_STORAGE *self, SOCKADDR_STORAGE *peer);
+extern int nni_win_connectex(
+    SOCKET s, SOCKADDR *peer, int peer_len, LPOVERLAPPED olpd);
+
 #endif // NNG_PLATFORM_WIN_WINTCP_H

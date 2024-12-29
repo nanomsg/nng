@@ -18,71 +18,22 @@
 #include "win_tcp.h"
 
 typedef struct tcp_listener {
-	nng_stream_listener       ops;
-	nng_sockaddr              sa;
-	SOCKET                    s;
-	nni_list                  aios;
-	bool                      closed;
-	bool                      started;
-	bool                      nodelay;   // initial value for child conns
-	bool                      keepalive; // initial value for child conns
-	bool                      running;
-	LPFN_ACCEPTEX             acceptex;
-	LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
-	SOCKADDR_STORAGE          ss;
-	nni_mtx                   mtx;
-	nni_reap_node             reap;
-	nni_win_io                accept_io;
-	int                       accept_rv;
-	nni_tcp_conn             *pend_conn;
+	nng_stream_listener ops;
+	nng_sockaddr        sa;
+	SOCKET              s;
+	nni_list            aios;
+	bool                closed;
+	bool                started;
+	bool                nodelay;   // initial value for child conns
+	bool                keepalive; // initial value for child conns
+	bool                running;
+	SOCKADDR_STORAGE    ss;
+	nni_mtx             mtx;
+	nni_reap_node       reap;
+	nni_win_io          accept_io;
+	int                 accept_rv;
+	nni_tcp_conn       *pend_conn;
 } tcp_listener;
-
-// tcp_listener_funcs looks up function pointers we need for advanced accept
-// functionality on Windows.  Windows is weird.
-static int
-tcp_listener_funcs(tcp_listener *l)
-{
-	static SRWLOCK                   lock = SRWLOCK_INIT;
-	static LPFN_ACCEPTEX             acceptex;
-	static LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
-
-	AcquireSRWLockExclusive(&lock);
-	if (acceptex == NULL) {
-		int    rv;
-		DWORD  nbytes;
-		GUID   guid1 = WSAID_ACCEPTEX;
-		GUID   guid2 = WSAID_GETACCEPTEXSOCKADDRS;
-		SOCKET s     = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-
-		if (s == INVALID_SOCKET) {
-			rv = nni_win_error(GetLastError());
-			ReleaseSRWLockExclusive(&lock);
-			return (rv);
-		}
-
-		// Look up the function pointer.
-		if ((WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid1,
-		         sizeof(guid1), &acceptex, sizeof(acceptex), &nbytes,
-		         NULL, NULL) == SOCKET_ERROR) ||
-		    (WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid2,
-		         sizeof(guid2), &getacceptexsockaddrs,
-		         sizeof(getacceptexsockaddrs), &nbytes, NULL,
-		         NULL) == SOCKET_ERROR)) {
-			rv                   = nni_win_error(GetLastError());
-			acceptex             = NULL;
-			getacceptexsockaddrs = NULL;
-			ReleaseSRWLockExclusive(&lock);
-			closesocket(s);
-			return (rv);
-		}
-		closesocket(s);
-	}
-	ReleaseSRWLockExclusive(&lock);
-
-	l->acceptex             = acceptex;
-	l->getacceptexsockaddrs = getacceptexsockaddrs;
-	return (0);
-}
 
 static void tcp_listener_accepted(tcp_listener *l);
 static void tcp_listener_doaccept(tcp_listener *l);
@@ -269,10 +220,6 @@ tcp_accept_cancel(nni_aio *aio, void *arg, int rv)
 static void
 tcp_listener_accepted(tcp_listener *l)
 {
-	int           len1;
-	int           len2;
-	SOCKADDR     *sa1;
-	SOCKADDR     *sa2;
 	BOOL          nd;
 	BOOL          ka;
 	nni_tcp_conn *c;
@@ -281,15 +228,11 @@ tcp_listener_accepted(tcp_listener *l)
 	aio          = nni_list_first(&l->aios);
 	c            = l->pend_conn;
 	l->pend_conn = NULL;
-	len1         = (int) sizeof(c->sockname);
-	len2         = (int) sizeof(c->peername);
 	ka           = l->keepalive;
 	nd           = l->nodelay;
 
 	nni_aio_list_remove(aio);
-	l->getacceptexsockaddrs(c->buf, 0, 256, 256, &sa1, &len1, &sa2, &len2);
-	memcpy(&c->sockname, sa1, len1);
-	memcpy(&c->peername, sa2, len2);
+	nni_win_get_acceptex_sockaddrs(c->buf, &c->sockname, &c->peername);
 
 	(void) setsockopt(c->s, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 	    (char *) &l->s, sizeof(l->s));
@@ -337,8 +280,7 @@ tcp_listener_doaccept(tcp_listener *l)
 		}
 		c->listener  = l;
 		l->pend_conn = c;
-		if (l->acceptex(l->s, s, c->buf, 0, 256, 256, &cnt,
-		        &l->accept_io.olpd)) {
+		if (nni_win_acceptex(l->s, s, c->buf, &l->accept_io.olpd)) {
 			// completed synchronously
 			tcp_listener_accepted(l);
 			continue;
@@ -546,10 +488,6 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 	nni_mtx_init(&l->mtx);
 	nni_aio_list_init(&l->aios);
 	nni_win_io_init(&l->accept_io, tcp_accept_cb, l);
-	if ((rv = tcp_listener_funcs(l)) != 0) {
-		NNI_FREE_STRUCT(l);
-		return (rv);
-	}
 
 	// We assume these defaults -- not everyone will agree, but anyone
 	// can change them.
