@@ -33,7 +33,7 @@ extern void nni_tls_sys_fini(void);
 #endif
 
 #ifndef NNG_RESOLV_CONCURRENCY
-#define NNG_RESOLV_CONCURRENCY 4
+#define NNG_RESOLV_CONCURRENCY 1
 #endif
 
 #ifndef NNG_MAX_TASKQ_THREADS
