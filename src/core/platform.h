@@ -313,40 +313,6 @@ extern int nni_tcp_dialer_set(
 extern int nni_tcp_dialer_get(
     nni_tcp_dialer *, const char *, void *, size_t *, nni_type);
 
-// nni_tcp_listener_init creates a new listener object, unbound.
-extern int nni_tcp_listener_init(nni_tcp_listener **);
-
-// nni_tcp_listener_fini frees the listener and all associated resources.
-// It implicitly closes the listener as well.
-extern void nni_tcp_listener_fini(nni_tcp_listener *);
-
-// nni_tcp_listener_close closes the listener.  This will unbind
-// any bound socket, and further operations will result in NNG_ECLOSED.
-extern void nni_tcp_listener_close(nni_tcp_listener *);
-
-// nni_tcp_listener_stop is close + waits for any operations to stop,
-// so there won't be any further accepts after this.
-extern void nni_tcp_listener_stop(nni_tcp_listener *);
-
-// nni_tcp_listener_listen creates the socket in listening mode, bound
-// to the specified address.
-extern int nni_tcp_listener_listen(nni_tcp_listener *, const nni_sockaddr *);
-
-// nni_tcp_listener_accept accepts in incoming connect, asynchronously.
-// On success, the first (and only) output will be an nni_tcp_conn *
-// associated with the remote peer.
-extern void nni_tcp_listener_accept(nni_tcp_listener *, nni_aio *);
-
-// nni_tcp_listener_set sets an option on the listener.
-extern int nni_tcp_listener_set(
-    nni_tcp_listener *, const char *, const void *, size_t, nni_type);
-
-// nni_tcp_listener_get gets an option from the listener.  The most common
-// use for this is to retrieve the setting of the NNG_OPT_TCP_LOCADDR
-// address after binding to wild card port (0).
-extern int nni_tcp_listener_get(
-    nni_tcp_listener *, const char *, void *, size_t *, nni_type);
-
 // nni_resolv_item (and nni_resolv) are used to perform a DNS lookup.
 // The item is just a container for common arguments to the resolver.
 // The host and sockaddr pointers need to remain valid until the
