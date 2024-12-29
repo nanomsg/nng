@@ -347,27 +347,20 @@ extern int nni_tcp_listener_set(
 extern int nni_tcp_listener_get(
     nni_tcp_listener *, const char *, void *, size_t *, nni_type);
 
+// nni_resolv_item (and nni_resolv) are used to perform a DNS lookup.
+// The item is just a container for common arguments to the resolver.
+// The host and sockaddr pointers need to remain valid until the
+// resolution is complete (as indicated by completion of the aio.)
 typedef struct nni_resolv_item {
-	int           ri_family;
-	bool          ri_passive;
-	const char   *ri_host;
-	uint16_t      ri_port;
-	nng_sockaddr *ri_sa; // where result will be written
+	int           ri_family;  // address family, NNG_AF_INET/NNG_AF_INET6
+	bool          ri_passive; // used for bind, permits ri_host to be NULL
+	const char   *ri_host;    // hostname, may be NULL only if ri_passive
+	uint16_t      ri_port;    // port number, native byte order
+	nng_sockaddr *ri_sa;      // where result will be written
 
 } nni_resolv_item;
 
 extern void nni_resolv(nni_resolv_item *, nni_aio *);
-
-// nni_resolv_ip resolves a DNS host and service name asynchronously.
-// The family should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.
-// The first two constrain the name to those families, while the third will
-// return names of either family.  The passive flag indicates that the
-// name will be used for bind(), otherwise the name will be used with
-// connect().  The host part may be NULL only if passive is true.
-// Symbolic service names will be looked up assuming SOCK_STREAM, so
-// they may not work with UDP.
-extern void nni_resolv_ip(
-    const char *, uint16_t, int, bool, nng_sockaddr *sa, nni_aio *);
 
 // nni_parse_ip parses an IP address, without a port.
 extern int nni_parse_ip(const char *, nng_sockaddr *);
