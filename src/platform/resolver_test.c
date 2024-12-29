@@ -262,6 +262,45 @@ test_null_not_passive(void)
 	nng_aio_free(aio);
 }
 
+void
+test_bad_family(void)
+{
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	item.ri_family  = NNG_AF_INPROC;
+	item.ri_host    = "/abcdef";
+	item.ri_port    = 80;
+	item.ri_passive = false;
+	item.ri_sa      = &sa;
+	nni_resolv(&item, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ENOTSUP);
+	nng_aio_free(aio);
+}
+
+void
+test_aio_stopped(void)
+{
+	nng_aio        *aio;
+	nng_sockaddr    sa;
+	nni_resolv_item item = { 0 };
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	item.ri_family  = NNG_AF_INPROC;
+	item.ri_host    = "/abcdef";
+	item.ri_port    = 80;
+	item.ri_passive = false;
+	item.ri_sa      = &sa;
+	nng_aio_stop(aio);
+	nni_resolv(&item, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	nng_aio_free(aio);
+}
+
 NUTS_TESTS = {
 	{ "resolve google dns", test_google_dns },
 	{ "resolve hostname too long", test_hostname_too_long },
@@ -274,5 +313,7 @@ NUTS_TESTS = {
 	{ "resolve localhost unspecified", test_localhost_unspecified },
 	{ "resolve null passive", test_null_passive },
 	{ "resolve null not passive", test_null_not_passive },
+	{ "resolve bad family", test_bad_family },
+	{ "resolve aio stopped", test_bad_family },
 	{ NULL, NULL },
 };

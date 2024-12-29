@@ -238,7 +238,7 @@ resolv_worker(void *index)
 		if ((aio = resolv_active[tid]) == NULL) {
 			// no more interest (canceled), so ignore the result
 			// and carry on
-			if (results != NULL) {
+			if (rv == 0) {
 				freeaddrinfo(results);
 			}
 			continue;
@@ -248,16 +248,12 @@ resolv_worker(void *index)
 		if (rv != 0) {
 			rv = posix_gai_errno(rv);
 			nni_aio_finish_error(aio, rv);
-			if (results != NULL) {
-				freeaddrinfo(results);
-			}
 			continue;
 		}
 
 		// We only take the first matching address.  Presumably
 		// DNS load balancing is done by the resolver/server.
 
-		rv = NNG_EADDRINVAL;
 		for (probe = results; probe != NULL; probe = probe->ai_next) {
 			if (probe->ai_addr->sa_family == AF_INET) {
 				break;
@@ -271,10 +267,8 @@ resolv_worker(void *index)
 
 		if (probe == NULL) {
 			// no match
-			nni_aio_finish_error(aio, rv);
-			if (results != NULL) {
-				freeaddrinfo(results);
-			}
+			nni_aio_finish_error(aio, NNG_EADDRINVAL);
+			freeaddrinfo(results);
 			continue;
 		}
 
