@@ -40,6 +40,9 @@ struct nni_ipc_dialer {
 	nni_mtx           mtx;
 	nng_sockaddr      sa;
 	nni_refcnt        ref;
+#ifdef NNG_TEST_LIB
+	bool no_connect; // don't actually connect, for testing cancellation,
+#endif
 };
 
 extern int nni_posix_ipc_alloc(

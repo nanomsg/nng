@@ -108,6 +108,37 @@ test_ipc_stream(void)
 }
 
 void
+test_ipc_no_connect(void)
+{
+#ifdef NNG_PLATFORM_POSIX
+	nng_stream_dialer   *d = NULL;
+	nng_stream_listener *l = NULL;
+	char                *url;
+	nng_aio             *daio = NULL;
+
+	NUTS_ADDR(url, "ipc");
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+
+	NUTS_PASS(nng_stream_listener_alloc(&l, url));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	nng_aio_set_timeout(daio, 100);
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, url));
+	NUTS_PASS(nng_stream_dialer_set_bool(d, "test-no-connect", true));
+	nng_stream_dialer_dial(d, daio);
+
+	nng_aio_wait(daio);
+	NUTS_FAIL(nng_aio_result(daio), NNG_ETIMEDOUT);
+
+	nng_aio_free(daio);
+	nng_stream_dialer_free(d);
+	nng_stream_listener_free(l);
+#else
+	NUTS_SKIP("Not POSIX");
+#endif
+}
+
+void
 test_ipc_listen_activation(void)
 {
 #if defined(NNG_PLATFORM_POSIX)
@@ -290,6 +321,7 @@ test_ipc_listen_activation_bad_arg(void)
 
 NUTS_TESTS = {
 	{ "ipc stream", test_ipc_stream },
+	{ "ipc no connect", test_ipc_no_connect },
 	{ "ipc socket activation", test_ipc_listen_activation },
 	{ "ipc socket activation busy", test_ipc_listen_activation_busy },
 	{ "ipc socket activation closed", test_ipc_listen_activation_closed },

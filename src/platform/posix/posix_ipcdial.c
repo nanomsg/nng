@@ -161,7 +161,6 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 {
 	ipc_dialer             *d = arg;
 	nni_ipc_conn           *c;
-	nni_posix_pfd          *pfd = NULL;
 	struct sockaddr_storage ss;
 	size_t                  len;
 	int                     fd;
@@ -201,7 +200,19 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		goto error;
 	}
 	c->dial_aio = aio;
-	if (connect(fd, (void *) &ss, len) != 0) {
+#ifdef NNG_TEST_LIB
+	// this stanza exists for testing, because IPC doesn't normally
+	// exhibit a delayed connection.  But it could, and we need to try
+	// to test it as much as possible.
+	if (d->no_connect) {
+		errno = EINPROGRESS;
+	}
+	if (d->no_connect || (connect(fd, (void *) &ss, len) != 0))
+#else
+	if (connect(fd, (void *) &ss, len) != 0)
+#endif
+
+	{
 		if (errno != EINPROGRESS && errno != EAGAIN) {
 			if (errno == ENOENT) {
 				// No socket present means nobody listening.
@@ -212,7 +223,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 			goto error;
 		}
 		// Asynchronous connect.
-		if ((rv = nni_posix_pfd_arm(pfd, NNI_POLL_OUT)) != 0) {
+		if ((rv = nni_posix_pfd_arm(&c->pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
 		c->dial_aio = NULL;
@@ -221,8 +232,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}
-	// Immediate connect, cool!  This probably only happens
-	// on loop back, and probably not on every platform.
+	// Immediate connect, cool! For IPC this is typical.
 	c->dial_aio = NULL;
 	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&d->mtx);
@@ -247,11 +257,33 @@ ipc_dialer_get_remaddr(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_sockaddr(&d->sa, buf, szp, t));
 }
 
+#ifdef NNG_TEST_LIB
+static int
+ipc_dialer_set_test_no_connect(
+    void *arg, const void *buf, size_t sz, nni_type t)
+{
+	ipc_dialer *d          = arg;
+	bool        no_connect = false;
+
+	(void) nni_copyin_bool(&no_connect, buf, sz, t);
+	nni_mtx_lock(&d->mtx);
+	d->no_connect = no_connect;
+	nni_mtx_unlock(&d->mtx);
+	return (0);
+}
+#endif
+
 static const nni_option ipc_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_REMADDR,
 	    .o_get  = ipc_dialer_get_remaddr,
 	},
+#ifdef NNG_TEST_LIB
+	{
+	    .o_name = "test-no-connect",
+	    .o_set  = ipc_dialer_set_test_no_connect,
+	},
+#endif
 	{
 	    .o_name = NULL,
 	},
