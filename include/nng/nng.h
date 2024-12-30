@@ -1105,19 +1105,19 @@ NNG_DECL uint32_t nng_url_port(const nng_url *);
 NNG_DECL void nng_url_resolve_port(nng_url *url, uint32_t port);
 
 // hostname part of URL, can be NULL if irerelvant to scheme
-const char *nng_url_hostname(const nng_url *);
+NNG_DECL const char *nng_url_hostname(const nng_url *);
 
 // user info part (thing before '@') of URL, NULL if absent.
-const char *nng_url_userinfo(const nng_url *);
+NNG_DECL const char *nng_url_userinfo(const nng_url *);
 
 // path portion of URL, will always non-NULL, but may be empty.
-const char *nng_url_path(const nng_url *);
+NNG_DECL const char *nng_url_path(const nng_url *);
 
 // query info part of URL, not including '?, NULL if absent'
-const char *nng_url_query(const nng_url *);
+NNG_DECL const char *nng_url_query(const nng_url *);
 
 // fragment part of URL, not including '#', NULL if absent.
-const char *nng_url_fragment(const nng_url *);
+NNG_DECL const char *nng_url_fragment(const nng_url *);
 
 // nng_version returns the library version as a human readable string.
 NNG_DECL const char *nng_version(void);
