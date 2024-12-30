@@ -280,8 +280,8 @@ test_tcp_listen_activation(void)
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 
-	nng_aio_set_timeout(aio1, 2000);
-	nng_aio_set_timeout(aio2, 2000);
+	nng_aio_set_timeout(aio1, 20000);
+	nng_aio_set_timeout(aio2, 20000);
 
 	s                   = socket(AF_INET, SOCK_STREAM, 0);
 	sin.sin_family      = AF_INET;

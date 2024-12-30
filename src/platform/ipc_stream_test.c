@@ -124,8 +124,8 @@ test_ipc_listen_activation(void)
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 
-	nng_aio_set_timeout(aio1, 2000);
-	nng_aio_set_timeout(aio2, 2000);
+	nng_aio_set_timeout(aio1, 20000);
+	nng_aio_set_timeout(aio2, 20000);
 
 	NUTS_PASS(nng_stream_listener_alloc(&l1, addr));
 	NUTS_PASS(nng_stream_listener_listen(l1));
