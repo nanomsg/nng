@@ -194,7 +194,7 @@ test_ipc_listen_activation_busy(void)
 	char                *addr;
 
 	NUTS_ADDR(addr, "ipc");
-	NUTS_PASS(nng_stream_listener_alloc(&l1, "tcp://"));
+	NUTS_PASS(nng_stream_listener_alloc(&l1, addr));
 	NUTS_PASS(nng_stream_listener_listen(l1));
 	NUTS_PASS(nng_stream_listener_get_int(l1, NNG_OPT_LISTEN_FD, &fd));
 	NUTS_FAIL(
@@ -267,14 +267,31 @@ test_ipc_listen_activation_bogus_fd(void)
 #endif
 }
 
+void
+test_ipc_listen_activation_bad_arg(void)
+{
+#if defined(NNG_PLATFORM_POSIX)
+	nng_stream_listener *l1;
+
+	NUTS_PASS(nng_stream_listener_alloc(&l1, "ipc:///"));
+	NUTS_FAIL(nng_stream_listener_set_bool(l1, NNG_OPT_LISTEN_FD, false),
+	    NNG_EBADTYPE);
+	nng_stream_listener_free(l1);
+#else
+	NUTS_SKIP("Not POSIX");
+#endif
+}
+
 NUTS_TESTS = {
 	{ "ipc stream", test_ipc_stream },
 	{ "ipc socket activation", test_ipc_listen_activation },
 	{ "ipc socket activation busy", test_ipc_listen_activation_busy },
-	{ "pc socket activation closed", test_ipc_listen_activation_closed },
+	{ "ipc socket activation closed", test_ipc_listen_activation_closed },
 	{ "ipc socket activation wrong family",
 	    test_ipc_listen_activation_wrong_family },
 	{ "ipc socket activation bogus fd",
 	    test_ipc_listen_activation_bogus_fd },
+	{ "ipc socket activation bad arg",
+	    test_ipc_listen_activation_bad_arg },
 	{ NULL, NULL },
 };

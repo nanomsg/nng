@@ -415,6 +415,17 @@ test_tcp_listen_activation_bogus_fd(void)
 	nng_stream_listener_free(l1);
 }
 
+void
+test_tcp_listen_activation_bad_arg(void)
+{
+	nng_stream_listener *l1;
+
+	NUTS_PASS(nng_stream_listener_alloc(&l1, "tcp://"));
+	NUTS_FAIL(nng_stream_listener_set_bool(l1, NNG_OPT_LISTEN_FD, false),
+	    NNG_EBADTYPE);
+	nng_stream_listener_free(l1);
+}
+
 NUTS_TESTS = {
 	{ "tcp stream", test_tcp_stream },
 	{ "tcp listen accept cancel", test_tcp_listen_accept_cancel },
@@ -428,5 +439,7 @@ NUTS_TESTS = {
 	    test_tcp_listen_activation_wrong_family },
 	{ "tcp socket activation bogus fd",
 	    test_tcp_listen_activation_bogus_fd },
+	{ "tcp socket activation bad arg",
+	    test_tcp_listen_activation_bad_arg },
 	{ NULL, NULL },
 };
