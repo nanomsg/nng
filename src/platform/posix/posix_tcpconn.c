@@ -39,23 +39,19 @@ tcp_dowrite(nni_tcp_conn *c)
 	}
 
 	while ((aio = nni_list_first(&c->writeq)) != NULL) {
-		unsigned      i;
-		int           n;
-		int           niov;
-		unsigned      naiov;
-		nni_iov      *aiov;
-		struct msghdr hdr;
-		struct iovec  iovec[16];
+		int      n;
+		unsigned naiov;
+		nni_iov *aiov;
 
-		memset(&hdr, 0, sizeof(hdr));
 		nni_aio_get_iov(aio, &naiov, &aiov);
 
-		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_EINVAL);
-			continue;
-		}
+		NNI_ASSERT(naiov <= NNI_AIO_MAX_IOV);
 
+#ifdef NNG_HAVE_SENDMSG
+		struct msghdr hdr = { 0 };
+		struct iovec  iovec[NNI_AIO_MAX_IOV];
+		int           niov;
+		unsigned      i;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
 				iovec[niov].iov_len  = aiov[i].iov_len;
@@ -67,7 +63,12 @@ tcp_dowrite(nni_tcp_conn *c)
 		hdr.msg_iovlen = niov;
 		hdr.msg_iov    = iovec;
 
-		if ((n = sendmsg(fd, &hdr, MSG_NOSIGNAL)) < 0) {
+		n = sendmsg(fd, &hdr, MSG_NOSIGNAL);
+#else
+		// We have to send a bit at a time.
+		n = send(fd, aiov[0].iov_buf, aiov[0].iov_len, MSG_NOSIGNAL);
+#endif
+		if (n < 0) {
 			switch (errno) {
 			case EINTR:
 				continue;
@@ -87,8 +88,6 @@ tcp_dowrite(nni_tcp_conn *c)
 		}
 
 		nni_aio_bump_count(aio, n);
-		// We completed the entire operation on this aio.
-		// (Sendmsg never returns a partial result.)
 		nni_aio_list_remove(aio);
 		nni_aio_finish(aio, 0, nni_aio_count(aio));
 
