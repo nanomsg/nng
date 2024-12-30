@@ -133,6 +133,11 @@ test_ipc_listen_activation(void)
 	NUTS_PASS(nng_stream_dialer_alloc(&d, addr));
 
 	NUTS_PASS(nng_stream_listener_get_int(l1, NNG_OPT_LISTEN_FD, &fd));
+	fd = dup(fd);
+	// dupe this because we need to separate the file descriptors to
+	// prevent confusion when we clean up (only one FD can be registered at
+	// a time!)
+	NUTS_ASSERT(fd >= -1);
 	NUTS_PASS(nng_stream_listener_alloc(&l2, addr));
 	NUTS_PASS(nng_stream_listener_set_int(l2, NNG_OPT_LISTEN_FD, fd));
 	nng_stream_dialer_dial(d, aio2);
