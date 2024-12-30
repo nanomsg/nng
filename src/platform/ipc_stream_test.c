@@ -176,6 +176,7 @@ test_ipc_listen_activation(void)
 
 	nng_stream_listener_free(l1);
 	nng_stream_listener_free(l2);
+	nng_stream_dialer_free(d);
 	nng_stream_free(c1);
 	nng_stream_free(c2);
 	nng_aio_free(aio1);
