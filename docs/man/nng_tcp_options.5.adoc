@@ -101,6 +101,16 @@ system.
 While the value is of type `int`, it will be a legal TCP port number, that
 is a value between 1 and 65535, inclusive.
 
+[[NNG_OPT_LISTEN_FD]]
+((`NNG_OPT_LISTEN_FD`)):
+(`int`)
+This option is a write-only option for listeners, that can be used on a
+listener that has not yet been started.  It is used to pass in a file descriptor
+(or for Windows, a `SOCKET`) that has already been set up for listening.
+The intended use for this is with configurations such as socket activation,
+where some system service pre-establishes the listening sockets before starting
+the application.
+
 === Inherited Options
 
 Generally, the following option values are also available for TCP objects,

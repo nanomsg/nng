@@ -252,6 +252,60 @@ ipc_listener_set_perms(void *arg, const void *buf, size_t sz, nni_type t)
 	return (0);
 }
 
+static int
+ipc_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	ipc_listener           *l = arg;
+	int                     fd;
+	struct sockaddr_storage ss;
+	socklen_t               len = sizeof(ss);
+	int                     rv;
+
+	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != 0) {
+		return (rv);
+	}
+
+	if (getsockname(fd, (void *) &ss, &len) != 0) {
+		return (nni_plat_errno(errno));
+	}
+
+	if (((nni_posix_sockaddr2nn(&l->sa, &ss, len)) != 0) ||
+	    (ss.ss_family != AF_UNIX)) {
+		return (NNG_EADDRINVAL);
+	}
+
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_EBUSY);
+	}
+	if (l->closed) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_ECLOSED);
+	}
+	nni_posix_pfd_init(&l->pfd, fd, ipc_listener_cb, l);
+	l->started = true;
+	nni_mtx_unlock(&l->mtx);
+	return (0);
+}
+
+#ifdef NNG_TEST_LIB
+// this is readable only for test code -- user code should never rely on this
+static int
+ipc_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	int           rv;
+	ipc_listener *l = arg;
+
+	nni_mtx_lock(&l->mtx);
+	NNI_ASSERT(l->started);
+	NNI_ASSERT(!l->closed);
+	rv = nni_copyout_int(nni_posix_pfd_fd(&l->pfd), buf, szp, t);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
+}
+#endif
+
 static const nni_option ipc_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
@@ -260,6 +314,13 @@ static const nni_option ipc_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_IPC_PERMISSIONS,
 	    .o_set  = ipc_listener_set_perms,
+	},
+	{
+	    .o_name = NNG_OPT_LISTEN_FD,
+	    .o_set  = ipc_listener_set_listen_fd,
+#ifdef NNG_TEST_LIB
+	    .o_get = ipc_listener_get_listen_fd,
+#endif
 	},
 	{
 	    .o_name = NULL,

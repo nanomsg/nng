@@ -429,6 +429,75 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(port, buf, szp, t));
 }
 
+static int
+tcp_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	tcp_listener    *l = arg;
+	int              fd;
+	SOCKADDR_STORAGE ss;
+	int              len = sizeof(ss);
+	int              rv;
+
+	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != 0) {
+		return (rv);
+	}
+
+	if (getsockname(fd, (void *) &ss, &len) != 0) {
+		return (nni_win_error(GetLastError()));
+	}
+
+	if (((nni_win_sockaddr2nn(&l->sa, &ss, len)) != 0) ||
+#ifdef NNG_ENABLE_IPV6
+	    ((ss.ss_family != AF_INET) && (ss.ss_family != AF_INET6))
+#else
+	    (ss.ss_family != AF_INET)
+#endif
+	) {
+		return (NNG_EADDRINVAL);
+	}
+
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_EBUSY);
+	}
+	if (l->closed) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_ECLOSED);
+	}
+
+	int yes = 1;
+	(void) setsockopt(
+	    l->s, IPPROTO_TCP, TCP_NODELAY, (char *) &yes, sizeof(yes));
+
+	l->ss = ss;
+	l->s  = (SOCKET) fd;
+	if ((rv = nni_win_io_register((HANDLE) l->s)) != 0) {
+		l->s = INVALID_SOCKET;
+		nni_mtx_unlock(&l->mtx);
+		return (rv);
+	}
+	l->started = true;
+	nni_mtx_unlock(&l->mtx);
+	return (0);
+}
+
+#ifdef NNG_TEST_LIB
+// this is readable only for test code -- user code should never rely on this
+static int
+tcp_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	int           rv;
+	tcp_listener *l = arg;
+	nni_mtx_lock(&l->mtx);
+	NNI_ASSERT(l->started);
+	NNI_ASSERT(!l->closed);
+	rv = nni_copyout_int((int) l->s, buf, szp, t);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
+}
+#endif
+
 static const nni_option tcp_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
@@ -447,6 +516,13 @@ static const nni_option tcp_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_TCP_BOUND_PORT,
 	    .o_get  = tcp_listener_get_port,
+	},
+	{
+	    .o_name = NNG_OPT_LISTEN_FD,
+	    .o_set  = tcp_listener_set_listen_fd,
+#ifdef NNG_TEST_LIB
+	    .o_get = tcp_listener_get_listen_fd,
+#endif
 	},
 	{
 	    .o_name = NULL,

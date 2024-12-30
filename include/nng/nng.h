@@ -894,6 +894,13 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // are not supported.
 #define NNG_OPT_SOCKET_FD "socket:fd"
 
+// NNG_OPT_LISTEN_FD is a write-only integer property that can be used
+// with some transports to pass a file descriptor that is already listening
+// for inbound connections.  The transport will then call accept on it.
+// The file descriptor has to be of a suitable type.  The intended use
+// for this is socket activation.  Not all transports support this.
+#define NNG_OPT_LISTEN_FD "listen-fd"
+
 // XXX: TBD: priorities, ipv4only
 
 // Statistics. These are for informational purposes only, and subject

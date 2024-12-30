@@ -90,6 +90,9 @@ static struct {
 	{ ENFILE,	   NNG_ENOFILES	    },
 	{ EMFILE,	   NNG_ENOFILES	    },
 	{ EEXIST,	   NNG_EEXIST	    },
+#ifdef ENOTSOCK
+	{ ENOTSOCK,	   NNG_EINVAL	    },
+#endif
 	// must be last
 	{		0,		  0 },
 	// clang-format on

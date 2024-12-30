@@ -83,6 +83,7 @@ where supported by the underlying platform.
 - [`NNG_OPT_PEER_PID`][NNG_OPT_PEER_PID]
 - [`NNG_OPT_PEER_UID`][NNG_OPT_PEER_UID]
 - [`NNG_OPT_PEER_ZONEID`][NNG_OPT_PEER_ZONEID]
+- [`NNG_OPT_LISTEN_FD`][NNG_OPT_LISTEN_FD]
 
 ### Other Configuration Parameters
 
