@@ -86,6 +86,75 @@ test_udp_pair(void)
 }
 
 void
+test_udp_scatter_gather(void)
+{
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
+	nng_udp     *u1;
+	nng_udp     *u2;
+	uint32_t     loopback;
+	nng_aio     *aio1;
+	nng_aio     *aio2;
+	nng_iov      iov1[2], iov2[2];
+	char         rbuf[1024];
+	nng_sockaddr to;
+	nng_sockaddr from;
+
+	loopback = htonl(0x7f000001); // 127.0.0.1
+
+	sa1.s_in.sa_family = NNG_AF_INET;
+	sa1.s_in.sa_addr   = loopback;
+	sa1.s_in.sa_port   = 0; // wild card port binding
+
+	sa2.s_in.sa_family = NNG_AF_INET;
+	sa2.s_in.sa_addr   = loopback;
+	sa2.s_in.sa_port   = 0;
+
+	NUTS_PASS(nng_udp_open(&u1, &sa1));
+	NUTS_PASS(nng_udp_open(&u2, &sa2));
+
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u2, &sa2));
+
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+
+	to              = sa2;
+	iov1[0].iov_buf = "abc";
+	iov1[0].iov_len = 3;
+	iov1[1].iov_buf = "def";
+	iov1[1].iov_len = 4; // include nul
+	NUTS_PASS(nng_aio_set_iov(aio1, 2, iov1));
+	NUTS_PASS(nng_aio_set_input(aio1, 0, &to));
+
+	iov2[0].iov_buf = rbuf;
+	iov2[0].iov_len = 4;
+	iov2[1].iov_len = 1020;
+	iov2[1].iov_buf = rbuf + 4;
+
+	NUTS_PASS(nng_aio_set_iov(aio2, 2, iov2));
+	NUTS_PASS(nng_aio_set_input(aio2, 0, &from));
+
+	nng_udp_recv(u2, aio2);
+	nng_udp_send(u1, aio1);
+	nng_aio_wait(aio1);
+	nng_aio_wait(aio2);
+
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_PASS(nng_aio_result(aio2));
+	NUTS_TRUE(nng_aio_count(aio2) == strlen("abcdef") + 1);
+	NUTS_TRUE(strcmp(rbuf, "abcdef") == 0);
+	NUTS_TRUE(from.s_in.sa_family == sa1.s_in.sa_family);
+	NUTS_TRUE(from.s_in.sa_addr == sa1.s_in.sa_addr);
+	NUTS_TRUE(from.s_in.sa_port == sa1.s_in.sa_port);
+
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
+	nng_udp_close(u1);
+	nng_udp_close(u2);
+}
+
+void
 test_udp_multi_send_recv(void)
 {
 	nng_sockaddr sa1, sa2, sa3, sa4;
@@ -411,6 +480,7 @@ test_udp_send_v6_from_v4(void)
 
 NUTS_TESTS = {
 	{ "udp pair", test_udp_pair },
+	{ "udp scatter gather", test_udp_scatter_gather },
 	{ "udp send recv multi", test_udp_multi_send_recv },
 	{ "udp send no address", test_udp_send_no_addr },
 	{ "udp send ipc address", test_udp_send_ipc },

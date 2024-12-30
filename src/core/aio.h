@@ -194,6 +194,8 @@ extern void nni_aio_sys_fini(void);
 
 typedef struct nni_aio_expire_q nni_aio_expire_q;
 
+#define NNI_AIO_MAX_IOV 8
+
 // nng_aio is an async I/O handle.  The details of this aio structure
 // are private to the AIO framework.  The structure has the public name
 // (nng_aio) so that we minimize the pollution in the public API namespace.
@@ -216,7 +218,7 @@ struct nng_aio {
 	nni_task     a_task;
 
 	// Read/write operations.
-	nni_iov  a_iov[8];
+	nni_iov  a_iov[NNI_AIO_MAX_IOV];
 	unsigned a_nio;
 
 	// Message operations.

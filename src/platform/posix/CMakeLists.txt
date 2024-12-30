@@ -29,6 +29,8 @@ if (NNG_PLATFORM_POSIX)
     nng_check_func(getentropy NNG_HAVE_GETENTROPY)
     nng_check_func(getrandom NNG_HAVE_GETRANDOM)
     nng_check_func(arc4random_buf NNG_HAVE_ARC4RANDOM)
+    nng_check_func(recvmsg NNG_HAVE_RECVMSG)
+    nng_check_func(sendmsg NNG_HAVE_SENDMSG)
 
     nng_check_func(clock_gettime NNG_HAVE_CLOCK_GETTIME_LIBC)
     if (NNG_HAVE_CLOCK_GETTIME_LIBC)

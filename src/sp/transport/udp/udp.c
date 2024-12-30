@@ -214,7 +214,7 @@ struct udp_ep {
 	nni_list      connaios;   // aios from accept waiting for a client peer
 	nni_list      connpipes;  // pipes waiting to be connected
 	nng_duration  refresh; // refresh interval for connections in seconds
-	udp_sp_msg    rx_msg;  // contains the received message header
+	udp_sp_msg   *rx_msg;  // contains the received message header
 	uint16_t      rcvmax;  // max payload, trimmed to uint16_t
 	uint16_t      copymax;
 	udp_txring    tx_ring;
@@ -385,14 +385,20 @@ udp_pipe_schedule(udp_pipe *p)
 static void
 udp_start_rx(udp_ep *ep)
 {
-	nni_iov iov[2];
+	nni_iov iov;
 
-	iov[0].iov_buf = &ep->rx_msg;
-	iov[0].iov_len = sizeof(ep->rx_msg);
-	iov[1].iov_buf = nni_msg_body(ep->rx_payload);
-	iov[1].iov_len = nni_msg_len(ep->rx_payload);
+	// We use this trick to collect the message header so that we can
+	// do the entire message in a single iov, which avoids the need to
+	// scatter/gather (which can be problematic for platforms that cannot
+	// do scatter/gather due to missing recvmsg.)
+	(void) nni_msg_insert(ep->rx_payload, NULL, sizeof(udp_sp_msg));
+	iov.iov_buf = nni_msg_body(ep->rx_payload);
+	iov.iov_len = nni_msg_len(ep->rx_payload);
+	ep->rx_msg  = nni_msg_body(ep->rx_payload);
+	nni_msg_trim(ep->rx_payload, sizeof(udp_sp_msg));
+
 	nni_aio_set_input(&ep->rx_aio, 0, &ep->rx_sa);
-	nni_aio_set_iov(&ep->rx_aio, 2, iov);
+	nni_aio_set_iov(&ep->rx_aio, 1, &iov);
 	nni_udp_recv(ep->udp, &ep->rx_aio);
 }
 
@@ -678,8 +684,7 @@ udp_recv_data(udp_ep *ep, udp_sp_data *dreq, size_t len, nng_sockaddr *sa)
 		nni_stat_inc(&ep->st_rcv_nocopy, 1);
 		// Message size larger than copy break, do zero copy
 		msg = ep->rx_payload;
-		if (nng_msg_alloc(&ep->rx_payload,
-		        ep->rcvmax + sizeof(ep->rx_msg)) != 0) {
+		if (nng_msg_alloc(&ep->rx_payload, ep->rcvmax) != 0) {
 			ep->rx_payload = msg; // make sure we put it back
 			if (p->npipe != NULL) {
 				nni_pipe_bump_error(p->npipe, NNG_ENOMEM);
@@ -892,7 +897,7 @@ udp_rx_cb(void *arg)
 	}
 
 	// Received message will be in the ep rx header.
-	hdr = &ep->rx_msg;
+	hdr = ep->rx_msg;
 	sa  = &ep->rx_sa;
 	n   = nng_aio_count(aio);
 
@@ -1281,8 +1286,7 @@ udp_ep_init(
 	ep->refresh          = NNG_UDP_REFRESH; // one minute by default
 	ep->rcvmax           = NNG_UDP_RECVMAX;
 	ep->copymax          = NNG_UDP_COPYMAX;
-	if ((rv = nni_msg_alloc(&ep->rx_payload,
-	              ep->rcvmax + sizeof(ep->rx_msg)) != 0)) {
+	if ((rv = nni_msg_alloc(&ep->rx_payload, ep->rcvmax) != 0)) {
 		NNI_FREE_STRUCTS(ep->tx_ring.descs, NNG_UDP_TXQUEUE_LEN);
 		return (rv);
 	}

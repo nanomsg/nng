@@ -78,6 +78,54 @@ nni_posix_udp_doclose(nni_plat_udp *udp)
 	nni_posix_udp_doerror(udp, NNG_ECLOSED);
 }
 
+// If we need to do sendmsg or recvmsg, then we do this fairly
+// awful thing to do a "pull" up.  It is important that in such a
+// case we must have only a single poller, because we have only
+// this single buffer.  Performance will be worse, as data copies
+// are involved.
+#if !defined(NNG_HAVE_RECVMSG) || !defined(NNG_HAVE_SENDMSG)
+static uint8_t bouncebuf[65536];
+#endif
+
+#if !defined(NNG_HAVE_RECVMSG)
+static int
+copy_to_bounce(nng_iov *iov, int niov)
+{
+	int      room = sizeof(bouncebuf);
+	uint8_t *buf  = bouncebuf;
+	int      len  = 0;
+
+	for (int i = 0; i < niov && room; i++) {
+		int n = iov[i].iov_len;
+		if (n > room) {
+			n = room;
+		}
+		memcpy(buf, iov[i].iov_buf, n);
+		room -= n;
+		buf += n;
+		len += n;
+	}
+	return (len);
+}
+#endif
+
+#if !defined(NNG_HAVE_SENDMSG)
+static void
+copy_from_bounce(nng_iov *iov, int niov, int len)
+{
+	uint8_t *buf = bouncebuf;
+	for (int i = 0; i < niov && len; i++) {
+		int n = iov[i].iov_len;
+		if (n > len) {
+			n = len;
+		}
+		memcpy(iov[i].iov_buf, buf, n);
+		len -= n;
+		buf += n;
+	}
+}
+#endif
+
 static void
 nni_posix_udp_dorecv(nni_plat_udp *udp)
 {
@@ -85,16 +133,19 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 	nni_list *q = &udp->udp_recvq;
 	// While we're able to recv, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
-		struct iovec            iov[4];
 		unsigned                niov;
-		nni_iov                *aiov;
+		nng_iov                *aiov;
 		struct sockaddr_storage ss;
 		nng_sockaddr           *sa;
-		struct msghdr           hdr = { .msg_name = NULL };
 		int                     rv  = 0;
 		int                     cnt = 0;
 
 		nni_aio_get_iov(aio, &niov, &aiov);
+		NNI_ASSERT(niov <= NNI_AIO_MAX_IOV);
+
+#ifdef NNG_HAVE_RECVMSG
+		struct iovec  iov[NNI_AIO_MAX_IOV];
+		struct msghdr hdr = { .msg_name = NULL };
 
 		for (unsigned i = 0; i < niov; i++) {
 			iov[i].iov_base = aiov[i].iov_buf;
@@ -119,6 +170,32 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 			nni_posix_sockaddr2nn(
 			    sa, (void *) &ss, hdr.msg_namelen);
 		}
+#else // !NNG_HAVE_RECVMSG
+      // Here we have to use a bounce buffer
+		uint8_t  *buf;
+		size_t    len;
+		socklen_t salen;
+		if (niov == 1) {
+			buf = aiov[0].iov_buf;
+			len = aiov[0].iov_len;
+		} else {
+			buf = bouncebuf;
+			len = sizeof(bouncebuf);
+		}
+		salen = sizeof(ss);
+		if ((cnt = recvfrom(udp->udp_fd, buf, len, 0, (void *) &ss,
+		         &salen)) < 0) {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				return;
+			}
+			rv = nni_plat_errno(errno);
+		} else if ((sa = nni_aio_get_input(aio, 0)) != NULL) {
+			nni_posix_sockaddr2nn(sa, (void *) &ss, salen);
+		}
+		if (niov != 1) {
+			copy_from_bounce(aiov, niov, cnt);
+		}
+#endif
 		nni_list_remove(q, aio);
 		nni_aio_finish(aio, rv, cnt);
 	}
@@ -134,43 +211,61 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 	while ((aio = nni_list_first(q)) != NULL) {
 		struct sockaddr_storage ss;
 
-		int len;
-		int rv  = 0;
-		int cnt = 0;
+		int      salen;
+		int      rv  = 0;
+		int      cnt = 0;
+		unsigned niov;
+		nni_iov *aiov;
 
-		len = nni_posix_nn2sockaddr(&ss, nni_aio_get_input(aio, 0));
-		if (len < 1) {
+		nni_aio_get_iov(aio, &niov, &aiov);
+		NNI_ASSERT(niov <= NNI_AIO_MAX_IOV);
+		if ((salen = nni_posix_nn2sockaddr(
+		         &ss, nni_aio_get_input(aio, 0))) < 1) {
 			rv = NNG_EADDRINVAL;
 		} else {
-			unsigned     niov;
-			nni_iov     *aiov;
-			struct iovec iov[16];
+#ifdef NNG_HAVE_SENDMSG
 
-			nni_aio_get_iov(aio, &niov, &aiov);
-			if (niov > NNI_NUM_ELEMENTS(iov)) {
-				rv = NNG_EINVAL;
+			struct iovec  iov[NNI_AIO_MAX_IOV];
+			struct msghdr hdr = { .msg_name = NULL };
+			for (unsigned i = 0; i < niov; i++) {
+				iov[i].iov_base = aiov[i].iov_buf;
+				iov[i].iov_len  = aiov[i].iov_len;
 			}
-			if (rv == 0) {
-				struct msghdr hdr = { .msg_name = NULL };
-				for (unsigned i = 0; i < niov; i++) {
-					iov[i].iov_base = aiov[i].iov_buf;
-					iov[i].iov_len  = aiov[i].iov_len;
-				}
-				hdr.msg_iov     = iov;
-				hdr.msg_iovlen  = niov;
-				hdr.msg_name    = &ss;
-				hdr.msg_namelen = len;
+			hdr.msg_iov     = iov;
+			hdr.msg_iovlen  = niov;
+			hdr.msg_name    = &ss;
+			hdr.msg_namelen = salen;
 
-				cnt = sendmsg(udp->udp_fd, &hdr, MSG_NOSIGNAL);
-				if (cnt < 0) {
-					if ((errno == EAGAIN) ||
-					    (errno == EWOULDBLOCK)) {
-						// Cannot send now, leave.
-						return;
-					}
-					rv = nni_plat_errno(errno);
+			cnt = sendmsg(udp->udp_fd, &hdr, MSG_NOSIGNAL);
+			if (cnt < 0) {
+				if ((errno == EAGAIN) ||
+				    (errno == EWOULDBLOCK)) {
+					// Cannot send now, leave.
+					return;
 				}
+				rv = nni_plat_errno(errno);
 			}
+#else // !NNG_HAVE_SENDMSG
+			uint8_t *buf;
+			size_t   len;
+			if (niov == 1) {
+				buf = aiov[0].iov_buf;
+				len = aiov[0].iov_len;
+			} else {
+				len = copy_to_bounce(aiov, niov);
+				buf = bouncebuf;
+			}
+			cnt = sendto(
+			    udp->udp_fd, buf, len, 0, (void *) &ss, salen);
+			if (cnt < 0) {
+				if ((errno == EAGAIN) ||
+				    (errno == EWOULDBLOCK)) {
+					// Cannot send now, leave.
+					return;
+				}
+				rv = nni_plat_errno(errno);
+			}
+#endif
 		}
 
 		nni_list_remove(q, aio);
