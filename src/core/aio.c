@@ -749,6 +749,8 @@ nni_aio_iov_advance(nni_aio *aio, size_t n)
 		for (unsigned i = 0; i < aio->a_nio; i++) {
 			aio->a_iov[i] = aio->a_iov[i + 1];
 		}
+		aio->a_iov[aio->a_nio].iov_buf = NULL; // serves as indicator
+		aio->a_iov[aio->a_nio].iov_len = 0;    // serves as indicator
 	}
 	return (residual); // we might not have used all of n for this iov
 }
