@@ -53,7 +53,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		sin  = (void *) sa;
 		nsin = &na->s_in;
 		memset(sin, 0, sizeof(*sin));
-		sin->sin_family      = PF_INET;
+		sin->sin_family      = AF_INET;
 		sin->sin_port        = nsin->sa_port;
 		sin->sin_addr.s_addr = nsin->sa_addr;
 		return (sizeof(*sin));
@@ -66,7 +66,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 #ifdef SIN6_LEN
 		sin6->sin6_len = sizeof(*sin6);
 #endif
-		sin6->sin6_family   = PF_INET6;
+		sin6->sin6_family   = AF_INET6;
 		sin6->sin6_port     = nsin6->sa_port;
 		sin6->sin6_scope_id = nsin6->sa_scope;
 		memcpy(sin6->sin6_addr.s6_addr, nsin6->sa_addr, 16);
@@ -82,7 +82,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		if (nni_strlcpy(spath->sun_path, nspath->sa_path, sz) >= sz) {
 			return (0);
 		}
-		spath->sun_family = PF_UNIX;
+		spath->sun_family = AF_UNIX;
 		return (sizeof(*spath));
 
 	case NNG_AF_ABSTRACT:
@@ -92,7 +92,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 			return (0);
 		}
 		memset(spath, 0, sizeof(*spath));
-		spath->sun_family  = PF_UNIX;
+		spath->sun_family  = AF_UNIX;
 		spath->sun_path[0] = '\0'; // abstract starts with nul
 
 		// We support auto-bind with an empty string.  There is
