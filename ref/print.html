@@ -1210,17 +1210,47 @@ To obtain asynchronous behavior, consider using <a href="api//TODO.html">context
 <li><a name="a031"></a><code>nng_sub0_open_raw</code> - <a href="api//proto/sub.html">SUB</a> version 0, raw mode</li>
 <li><a name="a032"></a><code>nng_surveyor0_open_raw</code> - <a href="api//proto/surveyor.html">SURVEYOR</a> version 0, raw mode</li>
 </ul>
+<h2 id="closing-a-socket"><a class="header" href="#closing-a-socket">Closing a Socket</a></h2>
+<pre><code class="language-c">int nng_socket_close(nng_socket s);
+</code></pre>
+<p>The <a name="a033"></a><code>nng_socket_close</code> function closes a socket, releasing all resources
+associated with it. Any operations that are in progress will be terminated with
+a result of <a href="api//api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Closing a socket also invalidates any <a href="api//TODO.html">dialers</a>, <a href="api//TODO.html">listeners</a>,
+<a href="api//TODO.html">pipes</a>, or <a href="api//TODO.html">contexts</a> associated with it.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>This function will wait for any outstanding operations to be aborted, or to complete,
+before returning. Consequently it is not safe to call this from contexts that cannot
+block.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Closing the socket may be disruptive to transfers that are still in progress.</p>
+</div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
 </code></pre>
 <p>Sometimes it is necessary to integrate a socket into a <code>poll</code> or <code>select</code> driven
-<a name="a033"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
+<a name="a034"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
 <p>For these occasions, a suitable file descriptor for polling is provided
 by these two functions.</p>
-<p>The <a name="a034"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a035"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
 that will poll as readable when a message is ready for receiving for the socket.</p>
-<p>The <a name="a035"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a036"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
 that will poll as readable when the socket can accept a message for sending.</p>
 <p>These file descriptors should only be polled for readability, and no
 other operation performed on them. The socket will read from, or write to,
@@ -5851,6 +5881,9 @@ See the <a href="migrate/nanomsg.html">Migrating From libnanomsg</a> chapter for
 <h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
 <p>It is now required for applications to initialize the library explicitly before using it.
 This is done using the <a href="migrate//api/init.html#initialization"><code>nng_init</code></a> function.</p>
+<h2 id="socket-close-function-renamed"><a class="header" href="#socket-close-function-renamed">Socket Close Function Renamed</a></h2>
+<p>The <code>nng_close</code> function has been renamed to <a href="migrate//api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> to make it clearer that
+the object being closed is a socket.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
 <p>When an operation fails with <a href="migrate//api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
@@ -6166,7 +6199,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_strerror</code></td><td><a href="migrate//api/errors.html#human-readable-error-message"><code>nng_strerror</code></a></td><td></td></tr>
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
-<tr><td><code>nn_close</code></td><td><code>nng_close</code></td><td></td></tr>
+<tr><td><code>nn_close</code></td><td><code>nng_socket_close</code></td><td></td></tr>
 <tr><td><code>nn_bind</code></td><td><code>nng_listen</code>, <code>nng_listener_create</code></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
 <tr><td><code>nn_connect</code></td><td><code>nng_dial</code>, <code>nng_dialer_create</code></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
 <tr><td><code>nn_shutdown</code></td><td><code>nng_lister_close</code>, <code>nng_dialer_close</code></td><td></td></tr>
@@ -6279,7 +6312,7 @@ condition variable, <a href="api/synch.html#a009">1</a><br/>
 CPU-bound, <a href="api/thread.html#a003">1</a><br/>
 duration, <a href="api/time.html#a003">1</a><br/>
 error message, <a href="api/errors.html#a002">1</a><br/>
-event loop, <a href="api/sock.html#a033">1</a><br/>
+event loop, <a href="api/sock.html#a034">1</a><br/>
 flow control, <a href="proto/index.html#a006">1</a><br/>
 gather, <a href="api/aio.html#a024">1</a><br/>
 <code>getopt</code>, <a href="api/cmd_opts.html#a003">1</a><br/>
@@ -6417,8 +6450,9 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_respondent0_open_raw</code>, <a href="api/sock.html#a030">1</a><br/>
 <code>nng_sleep_aio</code>, <a href="api/time.html#a011">1</a><br/>
 <code>nng_socket</code>, <a href="api/sock.html#a002">1</a><br/>
-<code>nng_socket_get_recv_poll_fd</code>, <a href="api/sock.html#a034">1</a><br/>
-<code>nng_socket_get_send_poll_fd</code>, <a href="api/sock.html#a035">1</a><br/>
+<code>nng_socket_close</code>, <a href="api/sock.html#a033">1</a><br/>
+<code>nng_socket_get_recv_poll_fd</code>, <a href="api/sock.html#a035">1</a><br/>
+<code>nng_socket_get_send_poll_fd</code>, <a href="api/sock.html#a036">1</a><br/>
 <code>nng_socket_id</code>, <a href="api/sock.html#a003">1</a><br/>
 <code>nng_socket_peer_id</code>, <a href="api/sock.html#a005">1</a><br/>
 <code>nng_socket_peer_name</code>, <a href="api/sock.html#a007">1</a><br/>

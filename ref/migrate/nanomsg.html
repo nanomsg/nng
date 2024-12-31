@@ -245,7 +245,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_strerror</code></td><td><a href="/api/errors.html#human-readable-error-message"><code>nng_strerror</code></a></td><td></td></tr>
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
-<tr><td><code>nn_close</code></td><td><code>nng_close</code></td><td></td></tr>
+<tr><td><code>nn_close</code></td><td><code>nng_socket_close</code></td><td></td></tr>
 <tr><td><code>nn_bind</code></td><td><code>nng_listen</code>, <code>nng_listener_create</code></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
 <tr><td><code>nn_connect</code></td><td><code>nng_dial</code>, <code>nng_dialer_create</code></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
 <tr><td><code>nn_shutdown</code></td><td><code>nng_lister_close</code>, <code>nng_dialer_close</code></td><td></td></tr>

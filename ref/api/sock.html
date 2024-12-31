@@ -328,17 +328,47 @@ To obtain asynchronous behavior, consider using <a href="/TODO.html">contexts</a
 <li><a name="a031"></a><code>nng_sub0_open_raw</code> - <a href="/proto/sub.html">SUB</a> version 0, raw mode</li>
 <li><a name="a032"></a><code>nng_surveyor0_open_raw</code> - <a href="/proto/surveyor.html">SURVEYOR</a> version 0, raw mode</li>
 </ul>
+<h2 id="closing-a-socket"><a class="header" href="#closing-a-socket">Closing a Socket</a></h2>
+<pre><code class="language-c">int nng_socket_close(nng_socket s);
+</code></pre>
+<p>The <a name="a033"></a><code>nng_socket_close</code> function closes a socket, releasing all resources
+associated with it. Any operations that are in progress will be terminated with
+a result of <a href="/api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Closing a socket also invalidates any <a href="/TODO.html">dialers</a>, <a href="/TODO.html">listeners</a>,
+<a href="/TODO.html">pipes</a>, or <a href="/TODO.html">contexts</a> associated with it.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>This function will wait for any outstanding operations to be aborted, or to complete,
+before returning. Consequently it is not safe to call this from contexts that cannot
+block.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Closing the socket may be disruptive to transfers that are still in progress.</p>
+</div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
 </code></pre>
 <p>Sometimes it is necessary to integrate a socket into a <code>poll</code> or <code>select</code> driven
-<a name="a033"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
+<a name="a034"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
 <p>For these occasions, a suitable file descriptor for polling is provided
 by these two functions.</p>
-<p>The <a name="a034"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a035"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
 that will poll as readable when a message is ready for receiving for the socket.</p>
-<p>The <a name="a035"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a036"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
 that will poll as readable when the socket can accept a message for sending.</p>
 <p>These file descriptors should only be polled for readability, and no
 other operation performed on them. The socket will read from, or write to,
