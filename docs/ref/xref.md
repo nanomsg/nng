@@ -31,6 +31,16 @@
 [`nng_url_parse`]: /api/url.md#parse-a-url
 [`nng_url_free`]: /api/url.md#destroy-a-url
 [`nng_url_sprintf`]: /api/url.md#format-a-url
+[`nng_url_scheme`]: /api/url.md#url-fields
+[`nng_url_userinfo`]: /api/url.md#url-fields
+[`nng_url_hostname`]: /api/url.md#url-fields
+[`nng_url_port`]: /api/url.md#url-fields
+[`nng_url_path`]: /api/url.md#url-fields
+[`nng_url_query`]: /api/url.md#url-fields
+[`nng_url_fragment`]: /api/url.md#url-fields
+[`nng_url_clone`]: /api/url.md#clone-a-url
+[`nng_url_free`]: /api/url.md#destroy-a-url
+[`nng_url_resolve_port`]: /api/url.md#update-a-url-port
 [`nng_socket_pair`]: /api/misc.md#create-socket-pair
 [`nng_random`]: /api/misc.md#get-random-number
 [`nng_version`]: /api/misc.md#report-library-version
