@@ -109,6 +109,14 @@
 [`nng_stream_close`]: /api/stream.md#closing-a-stream
 [`nng_stream_stop`]: /api/stream.md#closing-a-stream
 [`nng_stream_free`]: /api/stream.md#closing-a-stream
+[`nng_stream_get`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_bool`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_int`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_ms`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_size`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_addr`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_string`]: /api/stream.md#getting-stream-options
+[`nng_stream_get_uint64`]: /api/stream.md#getting-stream-options
 [`nng_init`]: /api/init.md#initialization
 [`nng_fini`]: /api/init.md#finalization
 [`nng_sub0_ctx_subscribe`]: /TODO.md

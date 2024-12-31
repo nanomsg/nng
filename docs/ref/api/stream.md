@@ -76,4 +76,32 @@ stream itself.
 > or be aborted, these functions are unsafe to call from functions that may not block, such as the
 > completion function registered with an [`nng_aio`] when it is created.
 
+## Getting Stream Options
+
+```c
+int nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
+int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
+int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
+int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
+int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
+```
+
+{{hi:`nng_stream_get_bool`}}
+{{hi:`nng_stream_get_int`}}
+{{hi:`nng_stream_get_ms`}}
+{{hi:`nng_stream_get_size`}}
+{{hi:`nng_stream_get_addr`}}
+{{hi:`nng_stream_get_string`}}
+{{hi:`nng_stream_get_uint64`}}
+These functions are used to obtain value of an option named _opt_ from the stream _s_, and store it in the location
+referenced by _valp_.
+
+These functions access an option as a specific type. The transport layer will have details about which options
+are available, and which type they may be accessed using.
+
+In the case of `nng_stream_get_string`, the string is created as if by [`nng_strdup`], and must be freed by
+the caller using [`nng_strfree`] when no longer needed.
+
 {{#include ../xref.md}}
