@@ -14,19 +14,21 @@
 static void
 test_ws_url_path_filters(void)
 {
-	nng_socket s1;
-	nng_socket s2;
-	char       addr[NNG_MAXADDRLEN];
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_listener l;
+	char         addr[NNG_MAXADDRLEN];
+	int          port;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 
-	nuts_scratch_addr("ws", sizeof(addr), addr);
-	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
+	snprintf(addr, sizeof(addr), "ws://127.0.0.1:0/ws-url-path-filters");
+	NUTS_PASS(nng_listen(s1, addr, &l, 0));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
 
-	// Now try we just remove the last character for now.
-	// This will make the path different.
-	addr[strlen(addr) - 1] = '\0';
+	snprintf(
+	    addr, sizeof(addr), "ws://127.0.0.1:%d/some-other-location", port);
 	NUTS_FAIL(nng_dial(s2, addr, NULL, 0), NNG_ECONNREFUSED);
 
 	NUTS_CLOSE(s1);
@@ -114,19 +116,19 @@ test_wild_card_host(void)
 static void
 test_empty_host(void)
 {
-	nng_socket s1;
-	nng_socket s2;
-	char       addr[NNG_MAXADDRLEN];
-	uint16_t   port;
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_listener l;
+	char         addr[NNG_MAXADDRLEN];
+	int          port;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 
-	port = nuts_next_port();
-
 	// we use ws4 to ensure 127.0.0.1 binding
-	snprintf(addr, sizeof(addr), "ws4://:%u/test", port);
-	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
+	snprintf(addr, sizeof(addr), "ws4://:0/test");
+	NUTS_PASS(nng_listen(s1, addr, &l, 0));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
 	nng_msleep(100);
 
 	snprintf(addr, sizeof(addr), "ws://127.0.0.1:%u/test", port);
@@ -147,23 +149,28 @@ test_ws_recv_max(void)
 	nng_dialer   d;
 	size_t       sz;
 	char        *addr;
+	char         url[256];
+	int          port;
 
 	memset(msg, 0, sizeof(msg)); // required to silence valgrind
 
-	NUTS_ADDR(addr, "ws");
+	addr = "ws://127.0.0.1:%d/ws_recv_max";
+	snprintf(url, sizeof(url), addr, 0);
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
-	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_create(&l, s0, url));
 	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 200);
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
 	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 100);
 	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
 
 	NUTS_OPEN(s1);
-	NUTS_PASS(nng_dial(s1, addr, &d, 0));
+	snprintf(url, sizeof(url), addr, port);
+	NUTS_PASS(nng_dial(s1, url, &d, 0));
 	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 256));
 	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_PASS(nng_send(s1, msg, 95, 0));
