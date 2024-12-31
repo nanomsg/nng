@@ -255,18 +255,90 @@ names of the socket’s protocol, and of the protocol peers of the socket use.
 The value stored in <em>name</em> is a fixed string located in program text, and must not be freed
 or altered. It is guaranteed to remain valid while this library is present.</p>
 <p>The <a name="a008"></a><code>nng_socket_raw</code> function determines whether the socket is in
-<a href="/TODO.html">raw mode</a> or not, storing <code>true</code> in <em>raw</em> if it is, or <code>false</code> if it is not.</p>
+<a href="/api/sock.html#raw-mode-sockets">raw mode</a> or not, storing <code>true</code> in <em>raw</em> if it is, or <code>false</code> if it is not.</p>
+<h2 id="opening-a-socket"><a class="header" href="#opening-a-socket">Opening a Socket</a></h2>
+<pre><code class="language-c">int nng_bus0_open(nng_socket *s);
+int nng_pub0_open(nng_socket *s);
+int nng_pull0_open(nng_socket *s);
+int nng_push0_open(nng_socket *s);
+int nng_rep0_open(nng_socket *s);
+int nng_req0_open(nng_socket *s);
+int nng_respondent0_open(nng_socket *s);
+int nng_sub0_open(nng_socket *s);
+int nng_surveyor0_open(nng_socket *s);
+</code></pre>
+<p>These functions open a socket, returning it in <em>s</em>.
+The constructors for sockets are protocol specific so please refer to protocol documentation
+for more specific information.</p>
+<p>The following functions open a socket in normal mode:</p>
+<ul>
+<li><a name="a009"></a><code>nng_bus0_open</code> - <a href="/proto/bus.html">BUS</a> version 0</li>
+<li><a name="a010"></a><code>nng_pair0_open</code> - <a href="/proto/pair.html">PAIR</a> version 0</li>
+<li><a name="a011"></a><code>nng_pair1_open</code> - <a href="/proto/pair.html">PAIR</a> version 1</li>
+<li><a name="a012"></a><code>nng_pair1_open_poly</code> - <a href="/proto/pair.html">PAIR</a> version 1, <a href="/proto/pair.html#polyamorous-mode">polyamorous</a> mode</li>
+<li><a name="a013"></a><code>nng_pub0_open</code> - <a href="/proto/pub.html">PUB</a> version 0</li>
+<li><a name="a014"></a><code>nng_pull0_open</code> - <a href="/proto/pull.html">PULL</a> version 0</li>
+<li><a name="a015"></a><code>nng_push0_open</code> - <a href="/proto/push.html">PUSH</a> version 0</li>
+<li><a name="a016"></a><code>nng_rep0_open</code> - <a href="/proto/rep.html">REP</a> version 0</li>
+<li><a name="a017"></a><code>nng_req0_open</code> - <a href="/proto/req.html">REQ</a> version 0</li>
+<li><a name="a018"></a><code>nng_respondent0_open</code> - <a href="/proto/respondent.html">RESPONDENT</a> version 0</li>
+<li><a name="a019"></a><code>nng_sub0_open</code> - <a href="/proto/sub.html">SUB</a> version 0</li>
+<li><a name="a020"></a><code>nng_surveyor0_open</code> - <a href="/proto/surveyor.html">SURVEYOR</a> version 0</li>
+</ul>
+<h2 id="raw-mode-sockets"><a class="header" href="#raw-mode-sockets">Raw Mode Sockets</a></h2>
+<pre><code class="language-c">int nng_bus0_open_raw(nng_socket *s);
+int nng_pub0_open_raw(nng_socket *s);
+int nng_pull0_open_raw(nng_socket *s);
+int nng_push0_open_raw(nng_socket *s);
+int nng_rep0_open_raw(nng_socket *s);
+int nng_req0_open_raw(nng_socket *s);
+int nng_respondent0_open_raw(nng_socket *s);
+int nng_sub0_open_raw(nng_socket *s);
+int nng_surveyor0_open_raw(nng_socket *s);
+</code></pre>
+<p><a name="a021"></a>
+Raw mode sockets are used in circumstances when the application needs direct access
+to the message headers to control the protocol details.</p>
+<p>Such sockets require greater sophistication on the part of the application to use,
+as the application must process the protocol headers specifically.
+The details of the protocol headers, and requirements, are described in the protocol
+documentation for each protocol.</p>
+<p>Raw mode sockets do not have any kind of state machine associated with them, as all of
+the protocol specific processing must be performed by the application.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Most applications do not need to use raw sockets.
+The notable exception is when using <a href="/TODO.html"><code>nng_device</code></a>, which requires raw sockets.
+To obtain asynchronous behavior, consider using <a href="/TODO.html">contexts</a> instead.</p>
+</div>
+<p>The following functions open a socket in <a href="/api/sock.html#raw-mode-sockets">raw</a> mode:</p>
+<ul>
+<li><a name="a022"></a><code>nng_bus0_open_raw</code> - <a href="/proto/bus.html">BUS</a> version 0, raw mode</li>
+<li><a name="a023"></a><code>nng_pair0_open_raw</code> - <a href="/proto/pair.html">PAIR</a> version 0, raw mode</li>
+<li><a name="a024"></a><code>nng_pair1_open_raw</code> - <a href="/proto/pair.html">PAIR</a> version 1, raw mode</li>
+<li><a name="a025"></a><code>nng_pub0_open_raw</code> - <a href="/proto/pub.html">PUB</a> version 0, raw mode</li>
+<li><a name="a026"></a><code>nng_pull0_open_raw</code> - <a href="/proto/pull.html">PULL</a> version 0, raw mode</li>
+<li><a name="a027"></a><code>nng_push0_open_raw</code> - <a href="/proto/push.html">PUSH</a> version 0, raw mode</li>
+<li><a name="a028"></a><code>nng_rep0_open_raw</code> - <a href="/proto/rep.html">REP</a> version 0, raw mode</li>
+<li><a name="a029"></a><code>nng_req0_open_raw</code> - <a href="/proto/req.html">REP</a> version 0, raw mode</li>
+<li><a name="a030"></a><code>nng_respondent0_open_raw</code> - <a href="/proto/respondent.html">RESPONDENT</a> version 0, raw mode</li>
+<li><a name="a031"></a><code>nng_sub0_open_raw</code> - <a href="/proto/sub.html">SUB</a> version 0, raw mode</li>
+<li><a name="a032"></a><code>nng_surveyor0_open_raw</code> - <a href="/proto/surveyor.html">SURVEYOR</a> version 0, raw mode</li>
+</ul>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
 </code></pre>
 <p>Sometimes it is necessary to integrate a socket into a <code>poll</code> or <code>select</code> driven
-<a name="a009"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
+<a name="a033"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
 <p>For these occasions, a suitable file descriptor for polling is provided
 by these two functions.</p>
-<p>The <a name="a010"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a034"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
 that will poll as readable when a message is ready for receiving for the socket.</p>
-<p>The <a name="a011"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a035"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
 that will poll as readable when the socket can accept a message for sending.</p>
 <p>These file descriptors should only be polled for readability, and no
 other operation performed on them. The socket will read from, or write to,
