@@ -1608,6 +1608,23 @@ NNG_DECL int nng_tls_config_psk(
 NNG_DECL int nng_tls_config_version(
     nng_tls_config *, nng_tls_version, nng_tls_version);
 
+// These transition macros may help with migration from NNG1.
+// Applications should try to avoid depending on these any longer than
+// necessary, as they may be removed in a future update.  This is far from a
+// sufficient set for a transition.
+#ifdef NNG1_TRANSITION
+#define nng_nop() \
+	do {      \
+	} while (0)
+#define nng_close(s) nng_socket_close(s)
+#define nng_inproc_register() nng_nop()
+#define nng_ipc_register() nng_nop()
+#define nng_tls_register() nng_nop()
+#define nng_ws_register() nng_nop()
+#define nng_wss_register() nng_nop()
+#define nng_zt_register() nng_nop()
+#endif
+
 #ifdef __cplusplus
 }
 #endif

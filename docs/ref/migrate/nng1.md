@@ -13,10 +13,11 @@ See the [Migrating From libnanomsg](nanomsg.md) chapter for details.
 It is now required for applications to initialize the library explicitly before using it.
 This is done using the [`nng_init`] function.
 
-## Socket Close Function Renamed
+## Renamed Functions
 
 The `nng_close` function has been renamed to [`nng_socket_close`] to make it clearer that
-the object being closed is a socket.
+the object being closed is a socket. A compatible `nng_close` macro is available by defining `NNG1_TRANSITION`
+in your compilation environment.
 
 ## New AIO Error Code NNG_ESTOPPED
 
