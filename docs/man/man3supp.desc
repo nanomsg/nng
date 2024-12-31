@@ -1,7 +1,0 @@
-This section documents supplemental functions that are available.
-These functions are not intrinsic to building Scalability Protocols
-applications with this library.
-
-However, their use may facilitate writing portable applications by
-providing uniform functions for common application needs such as
-mutual exclusion locks, threading, time keeping, and similar needs.

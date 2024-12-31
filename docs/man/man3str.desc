@@ -1,7 +1,0 @@
-This section documents supplemental byte stream functions that
-are available.
-
-These functions are made available to facilitate using raw byte stream
-connections with the NNG asynchronous I/O API.
-These byte streams may be useful for applications that need to
-communicate with raw TCP/IP or IPC streams instead of Scalability Protocols.

@@ -1,6 +1,0 @@
-This section documents core libary functions supporting Scalability
-Protocols.
-
-Most Scalability Protocols applications can be written using just
-the functions documented in this section, as this represents the
-primary API for building such applications.
