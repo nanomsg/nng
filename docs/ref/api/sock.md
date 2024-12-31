@@ -49,6 +49,84 @@ or altered. It is guaranteed to remain valid while this library is present.
 The {{i:`nng_socket_raw`}} function determines whether the socket is in
 [raw mode][raw] or not, storing `true` in _raw_ if it is, or `false` if it is not.
 
+## Opening a Socket
+
+```c
+int nng_bus0_open(nng_socket *s);
+int nng_pub0_open(nng_socket *s);
+int nng_pull0_open(nng_socket *s);
+int nng_push0_open(nng_socket *s);
+int nng_rep0_open(nng_socket *s);
+int nng_req0_open(nng_socket *s);
+int nng_respondent0_open(nng_socket *s);
+int nng_sub0_open(nng_socket *s);
+int nng_surveyor0_open(nng_socket *s);
+```
+
+These functions open a socket, returning it in _s_.
+The constructors for sockets are protocol specific so please refer to protocol documentation
+for more specific information.
+
+The following functions open a socket in normal mode:
+
+- {{i:`nng_bus0_open`}} - [BUS][bus] version 0
+- {{i:`nng_pair0_open`}} - [PAIR][pair] version 0
+- {{i:`nng_pair1_open`}} - [PAIR][pair] version 1
+- {{i:`nng_pair1_open_poly`}} - [PAIR][pair] version 1, [polyamorous] mode
+- {{i:`nng_pub0_open`}} - [PUB][pub] version 0
+- {{i:`nng_pull0_open`}} - [PULL][pull] version 0
+- {{i:`nng_push0_open`}} - [PUSH][push] version 0
+- {{i:`nng_rep0_open`}} - [REP][rep] version 0
+- {{i:`nng_req0_open`}} - [REQ][req] version 0
+- {{i:`nng_respondent0_open`}} - [RESPONDENT][respondent] version 0
+- {{i:`nng_sub0_open`}} - [SUB][sub] version 0
+- {{i:`nng_surveyor0_open`}} - [SURVEYOR][surveyor] version 0
+
+## Raw Mode Sockets
+
+```c
+int nng_bus0_open_raw(nng_socket *s);
+int nng_pub0_open_raw(nng_socket *s);
+int nng_pull0_open_raw(nng_socket *s);
+int nng_push0_open_raw(nng_socket *s);
+int nng_rep0_open_raw(nng_socket *s);
+int nng_req0_open_raw(nng_socket *s);
+int nng_respondent0_open_raw(nng_socket *s);
+int nng_sub0_open_raw(nng_socket *s);
+int nng_surveyor0_open_raw(nng_socket *s);
+```
+
+{{hi:raw mode}}
+Raw mode sockets are used in circumstances when the application needs direct access
+to the message headers to control the protocol details.
+
+Such sockets require greater sophistication on the part of the application to use,
+as the application must process the protocol headers specifically.
+The details of the protocol headers, and requirements, are described in the protocol
+documentation for each protocol.
+
+Raw mode sockets do not have any kind of state machine associated with them, as all of
+the protocol specific processing must be performed by the application.
+
+> [!TIP]
+> Most applications do not need to use raw sockets.
+> The notable exception is when using [`nng_device`], which requires raw sockets.
+> To obtain asynchronous behavior, consider using [contexts][context] instead.
+
+The following functions open a socket in [raw] mode:
+
+- {{i:`nng_bus0_open_raw`}} - [BUS][bus] version 0, raw mode
+- {{i:`nng_pair0_open_raw`}} - [PAIR][pair] version 0, raw mode
+- {{i:`nng_pair1_open_raw`}} - [PAIR][pair] version 1, raw mode
+- {{i:`nng_pub0_open_raw`}} - [PUB][pub] version 0, raw mode
+- {{i:`nng_pull0_open_raw`}} - [PULL][pull] version 0, raw mode
+- {{i:`nng_push0_open_raw`}} - [PUSH][push] version 0, raw mode
+- {{i:`nng_rep0_open_raw`}} - [REP][rep] version 0, raw mode
+- {{i:`nng_req0_open_raw`}} - [REP][req] version 0, raw mode
+- {{i:`nng_respondent0_open_raw`}} - [RESPONDENT][respondent] version 0, raw mode
+- {{i:`nng_sub0_open_raw`}} - [SUB][sub] version 0, raw mode
+- {{i:`nng_surveyor0_open_raw`}} - [SURVEYOR][surveyor] version 0, raw mode
+
 ## Polling Socket Events
 
 ```c

@@ -290,7 +290,7 @@ void nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
 ```
 
 {{hi:`nng_iov`}}
-Some asynchronous operations, such as those dealing with [streams], use {{i:scatter}} or {{i:gather}}
+Some asynchronous operations, such as those dealing with [streams][stream], use {{i:scatter}} or {{i:gather}}
 vectors, where data to be transferred is either gathered from multiple separate regions of memory, or
 scattered into separate regions of memory. For example a message may have a header located at one location
 in memory, and a payload located in another.
@@ -310,7 +310,7 @@ and if necessary resubmit the operation with a suitably updated vector of `nng_i
 
 [Synchronization][synchronization],
 [Threads][thread],
-[Streams][streams],
+[Streams][stream],
 [Time][time]
 
 {{#include ../xref.md}}

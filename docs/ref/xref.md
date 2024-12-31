@@ -114,6 +114,28 @@
 [`nng_sub0_ctx_unsubscribe`]: /TODO.md
 [`nng_sub0_socket_subscribe`]: /TODO.md
 [`nng_sub0_socket_unsubscribe`]: /TODO.md
+[`nng_bus0_open`]: /api/sock.md#opening-a-socket
+[`nng_pair0_open`]: /api/sock.md#opening-a-socket
+[`nng_pair1_open`]: /api/sock.md#opening-a-socket
+[`nng_pair1_poly_open`]: /api/sock.md#opening-a-socket
+[`nng_pub0_open`]: /api/sock.md#opening-a-socket
+[`nng_pull0_open`]: /api/sock.md#opening-a-socket
+[`nng_push0_open`]: /api/sock.md#opening-a-socket
+[`nng_rep0_open`]: /api/sock.md#opening-a-socket
+[`nng_req0_open`]: /api/sock.md#opening-a-socket
+[`nng_respondent0_open`]: /api/sock.md#opening-a-socket
+[`nng_sub0_open`]: /api/sock.md#opening-a-socket
+[`nng_surveyor0_open`]: /api/sock.md#opening-a-socket
+[`nng_bus0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_pub0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_pair0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_pair1_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_pull0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_push0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_rep0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_req0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_sub0_open_raw`]: /api/sock.md#raw-mode-sockets
+[`nng_surveyor0_open_raw`]: /api/sock.md#raw-mode-sockets
 [`nng_dialer_set_tls`]: /TODO.md
 [`nng_dialer_get_tls`]: /TODO.md
 [`nng_listener_set_tls`]: /TODO.md
@@ -134,6 +156,7 @@
 [`nng_tls_config`]: /TODO.md
 [`nng_tls_config_own_cert`]: /TODO.md
 [`nng_listener_set_security_descriptor`]: /TODO.md
+[`nng_device`]: /TODO.md
 
 <!-- Macros -->
 
@@ -214,14 +237,14 @@
 <!-- Concept index -->
 
 [aio]: /api/aio.md
-[raw]: /TODO.md
+[raw]: /api/sock.md#raw-mode-sockets
 [pipe]: /TODO.md
 [socket]: /TODO.md
 [context]: /TODO.md
 [dialer]: /TODO.md
 [listener]: /TODO.md
 [message]: /api/msg.md
-[streams]: /api/stream.md
+[stream]: /api/stream.md
 [message-body]: /api/msg.md#message-body
 [message-header]: /api/msg.md#message-header
 [synchronization]: /api/synch.md
@@ -232,3 +255,4 @@
 [time]: /api/time.md
 [error]: /api/errors.md
 [duration]: /api/time.md#duration-type
+[polyamorous]: /proto/pair.md#polyamorous-mode
