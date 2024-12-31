@@ -30,6 +30,8 @@
 
   - [Errors](./api/errors.md)
 
+  - [Streams](./api/stream.md)
+
   - [Miscellaneous](./api/misc.md)
 
   - [ID Map](./api/id_map.md)

@@ -278,10 +278,39 @@ results.
 > It is an error to call this function while the _aio_ is currently
 > in use by an active asynchronous operation.
 
+## Scatter Gather Vectors
+
+```c
+typedef struct nng_iov {
+	void  *iov_buf;
+	size_t iov_len;
+} nng_iov;
+
+void nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
+```
+
+{{hi:`nng_iov`}}
+Some asynchronous operations, such as those dealing with [streams], use {{i:scatter}} or {{i:gather}}
+vectors, where data to be transferred is either gathered from multiple separate regions of memory, or
+scattered into separate regions of memory. For example a message may have a header located at one location
+in memory, and a payload located in another.
+
+The {{i:`nng_aio_set_iov`}} function configures the _aio_ to use _nio_ separate segments, described by
+the elements in _iov_. For each of these, the segment of size _iov_len_ located at _iov_buf_ will be used.
+
+The elements of _iov_ will be copied into _aio_, so the vector may be located
+on the stack or another temporary location. The locations referenced by it, _must_ remain valid for
+the duration of the operation, of course.
+
+Note that many of these operations are not guaranteed to perform a full transfer of data, so even a
+successful operation should check the amount of data actually transferred using [`nng_aio_count`],
+and if necessary resubmit the operation with a suitably updated vector of `nng_iov` using this function.
+
 ## See Also
 
 [Synchronization][synchronization],
 [Threads][thread],
+[Streams][streams],
 [Time][time]
 
 {{#include ../xref.md}}

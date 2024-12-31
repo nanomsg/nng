@@ -171,10 +171,10 @@ nng_cv_wake(cv);
 nng_mtx_unlock(m);
 ```
 
-{{#include ../xref.md}}
-
 ## See Also
 
 [Threads][thread],
 [Time][time],
 [Asynchronous I/O][aio]
+
+{{#include ../xref.md}}

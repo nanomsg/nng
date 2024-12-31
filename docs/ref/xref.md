@@ -88,8 +88,12 @@
 [`nng_aio_wait`]: /api/aio.md#wait-for-completion
 [`nng_aio_busy`]: /api/aio.md#test-for-completion
 [`nng_aio_result`]: /api/aio.md#result-of-operation
+[`nng_aio_get_msg`]: /api/aio.md#messages
+[`nng_aio_set_msg`]: /api/aio.md#messages
 [`nng_aio_count`]: /api/aio.md#result-of-operation
 [`nng_aio_set_timeout`]: /api/aio.md#set-timeout
+[`nng_aio_set_iov`]: /api/aio.md#scatter-gather-vectors
+[`nng_iov`]: /api/aio.md#scatter-gather-vectors
 [`nng_socket_id`]: /api/sock.md#socket-identity
 [`nng_socket_raw`]: /api/sock.md#socket-identity
 [`nng_socket_proto_id`]: /api/sock.md#socket-identity
@@ -98,6 +102,12 @@
 [`nng_socket_peer_name`]: /api/sock.md#socket-identity
 [`nng_socket_get_recv_poll_fd`]: /api/sock.md#polling-socket-events
 [`nng_socket_get_send_poll_fd`]: /api/sock.md#polling-socket-events
+[`nng_stream`]: /api/stream.md#stream-type
+[`nng_stream_send`]: /api/stream.md#sending-and-receiving-data
+[`nng_stream_recv`]: /api/stream.md#sending-and-receiving-data
+[`nng_stream_close`]: /api/stream.md#closing-a-stream
+[`nng_stream_stop`]: /api/stream.md#closing-a-stream
+[`nng_stream_free`]: /api/stream.md#closing-a-stream
 [`nng_init`]: /api/init.md#initialization
 [`nng_fini`]: /api/init.md#finalization
 [`nng_sub0_ctx_subscribe`]: /TODO.md
@@ -159,6 +169,7 @@
 [`NNG_EBADTYPE`]: /api/errors.md#NNG_EBADTYPE
 [`NNG_ECONNSHUT`]: /api/errors.md#NNG_ECONNSHUT
 [`NNG_EINTERNAL`]: /api/errors.md#NNG_EINTERNAL
+[`NNG_ESTOPPED`]: /api/errors.md#NNG_ESTOPPED
 [`NNG_ESYSERR`]: /api/errors.md#NNG_ESYSERR
 [`NNG_ETRANERR`]: /api/errors.md#NNG_ETRANERR
 [`NNG_DURATION_INFINITE`]: /api/time.md#duration-type
@@ -210,6 +221,7 @@
 [dialer]: /TODO.md
 [listener]: /TODO.md
 [message]: /api/msg.md
+[streams]: /api/stream.md
 [message-body]: /api/msg.md#message-body
 [message-header]: /api/msg.md#message-header
 [synchronization]: /api/synch.md
