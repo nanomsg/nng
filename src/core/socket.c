@@ -448,7 +448,7 @@ sock_stats_init(nni_sock *s)
 	};
 	static const nni_stat_info rx_bytes_info = {
 		.si_name   = "rx_bytes",
-		.si_desc   = "received messages",
+		.si_desc   = "received bytes",
 		.si_type   = NNG_STAT_COUNTER,
 		.si_unit   = NNG_UNIT_BYTES,
 		.si_atomic = true,
