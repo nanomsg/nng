@@ -5881,9 +5881,10 @@ See the <a href="migrate/nanomsg.html">Migrating From libnanomsg</a> chapter for
 <h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
 <p>It is now required for applications to initialize the library explicitly before using it.
 This is done using the <a href="migrate//api/init.html#initialization"><code>nng_init</code></a> function.</p>
-<h2 id="socket-close-function-renamed"><a class="header" href="#socket-close-function-renamed">Socket Close Function Renamed</a></h2>
+<h2 id="renamed-functions"><a class="header" href="#renamed-functions">Renamed Functions</a></h2>
 <p>The <code>nng_close</code> function has been renamed to <a href="migrate//api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> to make it clearer that
-the object being closed is a socket.</p>
+the object being closed is a socket. A compatible <code>nng_close</code> macro is available by defining <code>NNG1_TRANSITION</code>
+in your compilation environment.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
 <p>When an operation fails with <a href="migrate//api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
