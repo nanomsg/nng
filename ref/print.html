@@ -586,18 +586,28 @@ loss of revenue, or other undesirable conditions.</p>
 </style>
 <h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
 <p>This section is a reference guide for the <em>NNG</em> programming interfaces.
-It is meant to serve as a refernce, rather than as a tutorial.</p>
+It is meant to serve as a reference, rather than as a tutorial.</p>
 <p>The material here is organized by major areas of functionality.</p>
 <p>Note that unless indicated otherwise, consumers of these interfaces must
 include the <code>nng/nng.h</code> header file like so:</p>
 <pre><code class="language-c">#include &lt;nng/nng.h&gt;
 </code></pre>
-<h2 id="chapters"><a class="header" href="#chapters">Chapters</a></h2>
+<h2 id="sections"><a class="header" href="#sections">Sections</a></h2>
 <ul>
-<li><a href="api/msg/">Messages</a></li>
-<li><a href="api/thr/">Threading and Synchronization</a></li>
+<li><a href="api/init.html">Initialization</a></li>
+<li><a href="api/msg.html">Messages</a></li>
+<li><a href="api/sock.html">Sockets</a></li>
+<li><a href="api/memory.html">Memory</a></li>
+<li><a href="api/time.html">Time</a></li>
+<li><a href="api/url.html">URLs</a></li>
+<li><a href="api/synch.html">Synchronization</a></li>
+<li><a href="api/thr.html">Threads</a></li>
 <li><a href="api/logging.html">Logging</a></li>
-<li><a href="api/util/">Utility Functions</a></li>
+<li><a href="api/stats.html">Statistics</a></li>
+<li><a href="api/misc.html">Miscellaneous</a></li>
+<li><a href="api/errors.html">Errors</a></li>
+<li><a href="api/id_map.html">ID Map</a></li>
+<li><a href="api/cmd_opts.html">Command Options</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
@@ -1529,20 +1539,12 @@ and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3968</a>.</p>
 <p>In Scalability Protocols, this concept is extended, although it includes schemes
 that are not part of the IETF standards.</p>
 <h2 id="url-structure"><a class="header" href="#url-structure">URL Structure</a></h2>
-<pre><code class="language-c">typedef struct nng_url {
-    const char *u_scheme;
-    char       *u_userinfo;
-    char       *u_hostname;
-    uint16_t   u_port;
-    char       *u_path;
-    char       *u_query;
-    char       *u_fragment;
-} nng_url;
+<pre><code class="language-c">typedef struct nng_url nng_url;
 
 const char *nng_url_scheme(const nng_url *url);
 const char *nng_url_userinfo(const nng_url *url);
 const char *nng_url_hostname(const nng_url *url);
-uint16_t    nng_url_port(const nng_url *url);
+uint32_t    nng_url_port(const nng_url *url);
 const char *nng_url_path(const nng_url *url);
 const char *nng_url_query(const nng_url *url);
 const char *nng_url_fragment(const nng_url *url):
@@ -1611,7 +1613,7 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <p>Only <a href="api//api/url.html#destroy-a-url"><code>nng_url_free</code></a> should be used to deallocate <code>nng_url</code> objects.</p>
 </div>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
-<pre><code class="language-c">int nng_url_clone(nng_url **dup, nng_url *url);
+<pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
 </code></pre>
 <p>The <a name="a012"></a><code>nng_url_clone</code> function creates a copy of <em>url</em>, and returns it in <em>dup</em>.</p>
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>
@@ -1620,6 +1622,14 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <p>The <a name="a013"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
 either <a href="api//api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="api//api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
 <p>This is the only correct way to destroy an <a href="api//api/url.html#url-structure"><code>nng_url</code></a> object.</p>
+<h2 id="update-a-url-port"><a class="header" href="#update-a-url-port">Update a URL Port</a></h2>
+<pre><code class="language-c">void nng_url_resolve_port(nng_url *url, uint32_t port);
+</code></pre>
+<p>In order to use dynamic port allocation, some transports and schemes allow a port number of zero
+to be specified. When this is done, the system will allocate a free port when the port is bound
+while starting a listener. Once this is done, the port number may need to be updated so that the
+URL can be used to configure a client. The <a name="a014"></a><code>nng_url_resolve_port</code> function updates such
+a URL with a new port. This will have no effect if the URL already has a non-zero port number.</p>
 <h2 id="see-also-1"><a class="header" href="#see-also-1">See Also</a></h2>
 <p>More information about Universal Resource Locators can be found in
 <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>.</p>
@@ -2638,6 +2648,7 @@ through <em>statsp</em> using the function <code>nng_stats_get</code>.</p>
 <h2 id="traversing-the-tree"><a class="header" href="#traversing-the-tree">Traversing the Tree</a></h2>
 <pre><code class="language-c">const nng_stat *nng_stat_child(const nng_stat *stat);
 const nng_stat *nng_stat_next(const nng_stat *stat);
+const nng_stat *nng_stat_parent(const nng_stat *stat);
 </code></pre>
 <p>Traversing the tree of statistics is done using the <a name="a005"></a><code>nng_stat_child</code> and
 <a name="a006"></a><code>nng_stat_next</code> functions.</p>
@@ -2645,6 +2656,8 @@ const nng_stat *nng_stat_next(const nng_stat *stat);
 or <code>NULL</code> if the <em>stat</em> has no children.</p>
 <p>The <code>nng_stat_next</code> function returns the nearest sibling to the right of <em>stat</em>,
 or <code>NULL</code> if <em>stat</em> has no more siblings to the right.</p>
+<p>The <a name="a007"></a><code>nng_stat_parent</code> function returns the parent of <em>stat</em>, or <code>NULL</code> if
+<em>stat</em> is the root of the statistics tree.</p>
 <h2 id="finding-a-statistic"><a class="header" href="#finding-a-statistic">Finding a Statistic</a></h2>
 <pre><code class="language-c">const nng_stat *nng_stat_find(const nng_stat *stat, const char *name);
 const nng_stat *nng_stat_find_dialer(const nng_stat *stat, nng_dialer dialer);
@@ -2655,10 +2668,10 @@ const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 or possibly to find the tree of statistics associated iwth a specific <a href="api//TODO.html">socket</a>,
 <a href="api//TODO.html">dialer</a>, or <a href="api//TODO.html">listener</a>.</p>
 <p>The <code>nng_stat_find</code> functions are provided for this purpose.</p>
-<p>The <a name="a007"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
+<p>The <a name="a008"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
 statistics <em>stat</em>, with the given <em>name</em>. If no such statistic can be found, <code>NULL</code>
 is returned.</p>
-<p>The <a name="a008"></a><code>nng_stat_find_dialer</code>, <a name="a009"></a><code>nng_stat_find_listener</code>, and <a name="a010"></a><code>nng_stat_find_socket</code>
+<p>The <a name="a009"></a><code>nng_stat_find_dialer</code>, <a name="a010"></a><code>nng_stat_find_listener</code>, and <a name="a011"></a><code>nng_stat_find_socket</code>
 return the statistics subtree for the given dialer, listener, or socket object. If no such
 statistic can be found, then they return <code>NULL</code>.
 These functions should be provided the root of the statistic tree, in order to ensure
@@ -2667,23 +2680,23 @@ that they can find the desired object.</p>
 <pre><code class="language-c">const char *nng_stat_name(const nng_stat *stat);
 const char *nng_stat_desc(const nng_stat *stat);
 </code></pre>
-<p>Every statistic has a name, returned by <a name="a011"></a><code>nng_stat_name</code>, and a description, returned by
-<a name="a012"></a><code>nng_stat_desc</code>. Descriptions are human-readable text, which might be useful for display.</p>
+<p>Every statistic has a name, returned by <a name="a012"></a><code>nng_stat_name</code>, and a description, returned by
+<a name="a013"></a><code>nng_stat_desc</code>. Descriptions are human-readable text, which might be useful for display.</p>
 <h2 id="statistic-type"><a class="header" href="#statistic-type">Statistic Type</a></h2>
 <pre><code class="language-c">int nng_stat_type(const nng_stat *stat);
 </code></pre>
-<p>The function <a name="a013"></a><code>nng_stat_type</code> returns the type of the statistic.
+<p>The function <a name="a014"></a><code>nng_stat_type</code> returns the type of the statistic.
 The type of a statistic determines the nature of the value, and which
 function can be used to obtain that value.</p>
 <ul>
 <li>
-<p><a name="a014"></a><code>NNG_STAT_SCOPE</code>: <a name="NNG_STAT_SCOPE"></a>
+<p><a name="a015"></a><code>NNG_STAT_SCOPE</code>: <a name="NNG_STAT_SCOPE"></a>
 The statistic does not carry any real value, but is
 used for grouping related statistics together. This is a nexus in the
 statistics tree.</p>
 </li>
 <li>
-<p><a name="a015"></a><code>NNG_STAT_COUNTER</code>: <a name="NNG_STAT_COUNTER"></a>
+<p><a name="a016"></a><code>NNG_STAT_COUNTER</code>: <a name="NNG_STAT_COUNTER"></a>
 The statistic is a counter that only increments.
 Usually the change in the value of the statistic is more interesting
 (as a rate) than the absolute value at any given time. The value should
@@ -2691,7 +2704,7 @@ be obtained using <a href="api//api/stats.html#statistic-value"><code>nng_stat_v
 The units will be given by the value returned from <a href="api//api/stats.html#statistic-units"><code>nng_stat_unit</code></a>.</p>
 </li>
 <li>
-<p><a name="a016"></a><code>NNG_STAT_LEVEL</code>: <a name="NNG_STAT_LEVEL"></a>
+<p><a name="a017"></a><code>NNG_STAT_LEVEL</code>: <a name="NNG_STAT_LEVEL"></a>
 The statistic represnts a measured value which corresponds
 to a specific value at a specific time. For example, this may represent the
 number of messages currently queued for some operation, or the link speed
@@ -2701,19 +2714,19 @@ than the change in the value over time. Again the value can be obtained with
 with <a href="api//api/stats.html#statistic-units"><code>nng_stat_unit</code></a>.</p>
 </li>
 <li>
-<p><a name="a017"></a><code>NNG_STAT_STRING</code>: <a name="NNG_STAT_STRING"></a>
+<p><a name="a018"></a><code>NNG_STAT_STRING</code>: <a name="NNG_STAT_STRING"></a>
 The statistic is a string, such as a name. The value
 of the string can be obtained with <a href="api//api/stats.html#statistic-value"><code>nng_stat_string</code></a>.
 The value of this string
 will remain valid until the snapshot is deallocated with <a href="api//api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>.</p>
 </li>
 <li>
-<p><a name="a018"></a><code>NNG_STAT_BOOLEAN</code>: <a name="NNG_STAT_BOOLEAN"></a>
+<p><a name="a019"></a><code>NNG_STAT_BOOLEAN</code>: <a name="NNG_STAT_BOOLEAN"></a>
 The value of the statistic is a truth value (either <code>true</code>
 or <code>false</code>) and can be obtained with <a href="api//api/stats.html#statistic-value"><code>nng_stat_bool</code></a>.</p>
 </li>
 <li>
-<p><a name="a019"></a><code>NNG_STAT_ID</code>: <a name="NNG_STAT_ID"></a>
+<p><a name="a020"></a><code>NNG_STAT_ID</code>: <a name="NNG_STAT_ID"></a>
 The value of the statistic is a numeric identifier, such as a socket
 identifier. The value can be obtained with <a href="api//api/stats.html#statistic-value"><code>nng_stat_value</code></a>,
 and will be fixed for the life of the statistic.</p>
@@ -2725,12 +2738,12 @@ const char *nng_stat_string(const nng_stat *stat);
 bool nng_stat_bool(const nng_stat *stat);
 </code></pre>
 <p>These functions return the value associated with the statistic.</p>
-<p>The <a name="a020"></a><code>nng_stat_value</code> function returns the the numeric value for the statistic <em>stat</em>
+<p>The <a name="a021"></a><code>nng_stat_value</code> function returns the the numeric value for the statistic <em>stat</em>
 of type <a href="api//api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a>, <a href="api//api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>, or <a href="api//api/stats.html#NNG_STAT_ID"><code>NNG_STAT_ID</code></a>.
 If <em>stat</em> is not one of these types, then it returns zero.</p>
-<p>The <a name="a021"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
+<p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
 type <a href="api//api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistics is not of this type, then it returns <code>false</code>.</p>
-<p>The <a name="a022"></a><code>nng_stat_string</code> function returns a pointer to a string value for the statistic <em>stat</em>,
+<p>The <a name="a023"></a><code>nng_stat_string</code> function returns a pointer to a string value for the statistic <em>stat</em>,
 of type <a href="api//api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valud until the snapshot that
 <em>stat</em> was collected with is deallocated with <a href="api//api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>. If the statistic
 is not of type <code>NNG_STAT_STRING</code>, then <code>NULL</code> is returned.</p>
@@ -2739,19 +2752,19 @@ is not of type <code>NNG_STAT_STRING</code>, then <code>NULL</code> is returned.
 </code></pre>
 <p>For statistics of type <a href="api//api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a> or <a href="api//api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>,
 it is often useful to know what that quantity being reported measures.
-The following units may be returned from <a name="a023"></a><code>nng_stat_unit</code> for such a statistic:</p>
+The following units may be returned from <a name="a024"></a><code>nng_stat_unit</code> for such a statistic:</p>
 <ul>
-<li><a name="a024"></a><code>NNG_UNIT_NONE</code>: No unit is known or applies.</li>
-<li><a name="a025"></a><code>NNG_UNIT_BYTES</code>: A count of bytes.</li>
-<li><a name="a026"></a><code>NNG_UNIT_MESSAGES</code>: A count of messages.</li>
-<li><a name="a027"></a><code>NNG_UNIT_MILLIS</code>: A count of milliseconds.</li>
-<li><a name="a028"></a><code>NNG_UNIT_EVENTS</code>: A count of events of some type.</li>
+<li><a name="a025"></a><code>NNG_UNIT_NONE</code>: No unit is known or applies.</li>
+<li><a name="a026"></a><code>NNG_UNIT_BYTES</code>: A count of bytes.</li>
+<li><a name="a027"></a><code>NNG_UNIT_MESSAGES</code>: A count of messages.</li>
+<li><a name="a028"></a><code>NNG_UNIT_MILLIS</code>: A count of milliseconds.</li>
+<li><a name="a029"></a><code>NNG_UNIT_EVENTS</code>: A count of events of some type.</li>
 </ul>
 <h2 id="statistic-timestamp"><a class="header" href="#statistic-timestamp">Statistic Timestamp</a></h2>
 <pre><code class="language-c">uint64_t nng_stat_timestamp(const nng_stat *stat);
 </code></pre>
 <p>Statistics have a timestamp indicating when the value was sampled,
-obtained via <a name="a029"></a><code>nng_stat_timestamp</code>. The timestamp is given in
+obtained via <a name="a030"></a><code>nng_stat_timestamp</code>. The timestamp is given in
 in milliseconds since a reference time, and the reference time used
 here is the same reference time used for <a href="api//api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
 <h2 id="see-also-6"><a class="header" href="#see-also-6">See Also</a></h2>
@@ -5774,15 +5787,15 @@ structure instead of a string.</p>
 access of the structure is no longer permitted. Intead new
 accessors functions are provided:</p>
 <ul>
-<li><code>u_scheme</code> is replaced by [<code>nng_url_scheme</code>].</li>
-<li><code>u_port</code> is replaced by [<code>nng_url_port</code>], but this returns a <code>uint16_t</code>.</li>
-<li><code>u_hostname</code> is replaced by [<code>nng_url_hostname</code>].</li>
-<li><code>u_path</code> is replaced by [<code>nng_url_path</code>].</li>
-<li><code>u_query</code> is replaced by [<code>nng_url_query</code>].</li>
-<li><code>u_fragment</code> is replaced by [<code>nng_url_fragment</code>].</li>
-<li><code>u_userinfo</code> is replaced by [<code>nng_url_userinfo</code>].</li>
+<li><code>u_scheme</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_scheme</code></a>.</li>
+<li><code>u_port</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_port</code></a>, but this returns a <code>uint16_t</code>.</li>
+<li><code>u_hostname</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_hostname</code></a>.</li>
+<li><code>u_path</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_path</code></a>.</li>
+<li><code>u_query</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_query</code></a>.</li>
+<li><code>u_fragment</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_fragment</code></a>.</li>
+<li><code>u_userinfo</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_userinfo</code></a>.</li>
 <li><code>u_requri</code> is removed - it can be easily formulated from the other fields.</li>
-<li><code>u_host</code> is removed - use [<code>nng_url_hostname</code>] and [<code>nng_url_port</code>] to construct if needed</li>
+<li><code>u_host</code> is removed - use <a href="migrate//api/url.html#url-fields"><code>nng_url_hostname</code></a> and <a href="migrate//api/url.html#url-fields"><code>nng_url_port</code></a> to construct if needed</li>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="migrate//api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
 <h2 id="http-api"><a class="header" href="#http-api">HTTP API</a></h2>
@@ -6158,26 +6171,27 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_socket_proto_name</code>, <a href="api/sock.html#a006">1</a><br/>
 <code>nng_socket_raw</code>, <a href="api/sock.html#a008">1</a><br/>
 <code>nng_stat</code>, <a href="api/stats.html#a002">1</a><br/>
-<code>nng_stat_bool</code>, <a href="api/stats.html#a021">1</a><br/>
-<code>NNG_STAT_BOOLEAN</code>, <a href="api/stats.html#a018">1</a><br/>
+<code>nng_stat_bool</code>, <a href="api/stats.html#a022">1</a><br/>
+<code>NNG_STAT_BOOLEAN</code>, <a href="api/stats.html#a019">1</a><br/>
 <code>nng_stat_child</code>, <a href="api/stats.html#a005">1</a><br/>
-<code>NNG_STAT_COUNTER</code>, <a href="api/stats.html#a015">1</a><br/>
-<code>nng_stat_desc</code>, <a href="api/stats.html#a012">1</a><br/>
-<code>nng_stat_find</code>, <a href="api/stats.html#a007">1</a><br/>
-<code>nng_stat_find_dialer</code>, <a href="api/stats.html#a008">1</a><br/>
-<code>nng_stat_find_listener</code>, <a href="api/stats.html#a009">1</a><br/>
-<code>nng_stat_find_socket</code>, <a href="api/stats.html#a010">1</a><br/>
-<code>NNG_STAT_ID</code>, <a href="api/stats.html#a019">1</a><br/>
-<code>NNG_STAT_LEVEL</code>, <a href="api/stats.html#a016">1</a><br/>
-<code>nng_stat_name</code>, <a href="api/stats.html#a011">1</a><br/>
+<code>NNG_STAT_COUNTER</code>, <a href="api/stats.html#a016">1</a><br/>
+<code>nng_stat_desc</code>, <a href="api/stats.html#a013">1</a><br/>
+<code>nng_stat_find</code>, <a href="api/stats.html#a008">1</a><br/>
+<code>nng_stat_find_dialer</code>, <a href="api/stats.html#a009">1</a><br/>
+<code>nng_stat_find_listener</code>, <a href="api/stats.html#a010">1</a><br/>
+<code>nng_stat_find_socket</code>, <a href="api/stats.html#a011">1</a><br/>
+<code>NNG_STAT_ID</code>, <a href="api/stats.html#a020">1</a><br/>
+<code>NNG_STAT_LEVEL</code>, <a href="api/stats.html#a017">1</a><br/>
+<code>nng_stat_name</code>, <a href="api/stats.html#a012">1</a><br/>
 <code>nng_stat_next</code>, <a href="api/stats.html#a006">1</a><br/>
-<code>NNG_STAT_SCOPE</code>, <a href="api/stats.html#a014">1</a><br/>
-<code>NNG_STAT_STRING</code>, <a href="api/stats.html#a017">1</a><br/>
-<code>nng_stat_string</code>, <a href="api/stats.html#a022">1</a><br/>
-<code>nng_stat_timestamp</code>, <a href="api/stats.html#a029">1</a><br/>
-<code>nng_stat_type</code>, <a href="api/stats.html#a013">1</a><br/>
-<code>nng_stat_unit</code>, <a href="api/stats.html#a023">1</a><br/>
-<code>nng_stat_value</code>, <a href="api/stats.html#a020">1</a><br/>
+<code>nng_stat_parent</code>, <a href="api/stats.html#a007">1</a><br/>
+<code>NNG_STAT_SCOPE</code>, <a href="api/stats.html#a015">1</a><br/>
+<code>NNG_STAT_STRING</code>, <a href="api/stats.html#a018">1</a><br/>
+<code>nng_stat_string</code>, <a href="api/stats.html#a023">1</a><br/>
+<code>nng_stat_timestamp</code>, <a href="api/stats.html#a030">1</a><br/>
+<code>nng_stat_type</code>, <a href="api/stats.html#a014">1</a><br/>
+<code>nng_stat_unit</code>, <a href="api/stats.html#a024">1</a><br/>
+<code>nng_stat_value</code>, <a href="api/stats.html#a021">1</a><br/>
 <code>nng_stats_free</code>, <a href="api/stats.html#a004">1</a><br/>
 <code>nng_stats_get</code>, <a href="api/stats.html#a003">1</a><br/>
 <code>nng_stderr_logger</code>, <a href="api/logging.html#a011">1</a><br/>
@@ -6190,11 +6204,11 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_thread_destroy</code>, <a href="api/thread.html#a006">1</a><br/>
 <code>nng_thread_set_name</code>, <a href="api/thread.html#a007">1</a><br/>
 <code>nng_time</code>, <a href="api/time.html#a001">1</a><br/>
-<code>NNG_UNIT_BYTES</code>, <a href="api/stats.html#a025">1</a><br/>
-<code>NNG_UNIT_EVENTS</code>, <a href="api/stats.html#a028">1</a><br/>
-<code>NNG_UNIT_MESSAGES</code>, <a href="api/stats.html#a026">1</a><br/>
-<code>NNG_UNIT_MILLIS</code>, <a href="api/stats.html#a027">1</a><br/>
-<code>NNG_UNIT_NONE</code>, <a href="api/stats.html#a024">1</a><br/>
+<code>NNG_UNIT_BYTES</code>, <a href="api/stats.html#a026">1</a><br/>
+<code>NNG_UNIT_EVENTS</code>, <a href="api/stats.html#a029">1</a><br/>
+<code>NNG_UNIT_MESSAGES</code>, <a href="api/stats.html#a027">1</a><br/>
+<code>NNG_UNIT_MILLIS</code>, <a href="api/stats.html#a028">1</a><br/>
+<code>NNG_UNIT_NONE</code>, <a href="api/stats.html#a025">1</a><br/>
 <code>nng_url_clone</code>, <a href="api/url.html#a012">1</a><br/>
 <code>nng_url_fragment</code>, <a href="api/url.html#a009">1</a><br/>
 <code>nng_url_free</code>, <a href="api/url.html#a013">1</a><br/>
@@ -6203,6 +6217,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_url_path</code>, <a href="api/url.html#a007">1</a><br/>
 <code>nng_url_port</code>, <a href="api/url.html#a006">1</a><br/>
 <code>nng_url_query</code>, <a href="api/url.html#a008">1</a><br/>
+<code>nng_url_resolve_port</code>, <a href="api/url.html#a014">1</a><br/>
 <code>nng_url_scheme</code>, <a href="api/url.html#a003">1</a><br/>
 <code>nng_url_sprintf</code>, <a href="api/url.html#a010">1</a><br/>
 <code>nng_url_userinfo</code>, <a href="api/url.html#a004">1</a><br/>

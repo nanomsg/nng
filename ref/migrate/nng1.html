@@ -400,15 +400,15 @@ structure instead of a string.</p>
 access of the structure is no longer permitted. Intead new
 accessors functions are provided:</p>
 <ul>
-<li><code>u_scheme</code> is replaced by [<code>nng_url_scheme</code>].</li>
-<li><code>u_port</code> is replaced by [<code>nng_url_port</code>], but this returns a <code>uint16_t</code>.</li>
-<li><code>u_hostname</code> is replaced by [<code>nng_url_hostname</code>].</li>
-<li><code>u_path</code> is replaced by [<code>nng_url_path</code>].</li>
-<li><code>u_query</code> is replaced by [<code>nng_url_query</code>].</li>
-<li><code>u_fragment</code> is replaced by [<code>nng_url_fragment</code>].</li>
-<li><code>u_userinfo</code> is replaced by [<code>nng_url_userinfo</code>].</li>
+<li><code>u_scheme</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_scheme</code></a>.</li>
+<li><code>u_port</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_port</code></a>, but this returns a <code>uint16_t</code>.</li>
+<li><code>u_hostname</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_hostname</code></a>.</li>
+<li><code>u_path</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_path</code></a>.</li>
+<li><code>u_query</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_query</code></a>.</li>
+<li><code>u_fragment</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_fragment</code></a>.</li>
+<li><code>u_userinfo</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_userinfo</code></a>.</li>
 <li><code>u_requri</code> is removed - it can be easily formulated from the other fields.</li>
-<li><code>u_host</code> is removed - use [<code>nng_url_hostname</code>] and [<code>nng_url_port</code>] to construct if needed</li>
+<li><code>u_host</code> is removed - use <a href="/api/url.html#url-fields"><code>nng_url_hostname</code></a> and <a href="/api/url.html#url-fields"><code>nng_url_port</code></a> to construct if needed</li>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="/api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
 <h2 id="http-api"><a class="header" href="#http-api">HTTP API</a></h2>

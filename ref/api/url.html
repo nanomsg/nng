@@ -228,20 +228,12 @@ and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3968</a>.</p>
 <p>In Scalability Protocols, this concept is extended, although it includes schemes
 that are not part of the IETF standards.</p>
 <h2 id="url-structure"><a class="header" href="#url-structure">URL Structure</a></h2>
-<pre><code class="language-c">typedef struct nng_url {
-    const char *u_scheme;
-    char       *u_userinfo;
-    char       *u_hostname;
-    uint16_t   u_port;
-    char       *u_path;
-    char       *u_query;
-    char       *u_fragment;
-} nng_url;
+<pre><code class="language-c">typedef struct nng_url nng_url;
 
 const char *nng_url_scheme(const nng_url *url);
 const char *nng_url_userinfo(const nng_url *url);
 const char *nng_url_hostname(const nng_url *url);
-uint16_t    nng_url_port(const nng_url *url);
+uint32_t    nng_url_port(const nng_url *url);
 const char *nng_url_path(const nng_url *url);
 const char *nng_url_query(const nng_url *url);
 const char *nng_url_fragment(const nng_url *url):
@@ -310,7 +302,7 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <p>Only <a href="/api/url.html#destroy-a-url"><code>nng_url_free</code></a> should be used to deallocate <code>nng_url</code> objects.</p>
 </div>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
-<pre><code class="language-c">int nng_url_clone(nng_url **dup, nng_url *url);
+<pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
 </code></pre>
 <p>The <a name="a012"></a><code>nng_url_clone</code> function creates a copy of <em>url</em>, and returns it in <em>dup</em>.</p>
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>
@@ -319,6 +311,14 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <p>The <a name="a013"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
 either <a href="/api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="/api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
 <p>This is the only correct way to destroy an <a href="/api/url.html#url-structure"><code>nng_url</code></a> object.</p>
+<h2 id="update-a-url-port"><a class="header" href="#update-a-url-port">Update a URL Port</a></h2>
+<pre><code class="language-c">void nng_url_resolve_port(nng_url *url, uint32_t port);
+</code></pre>
+<p>In order to use dynamic port allocation, some transports and schemes allow a port number of zero
+to be specified. When this is done, the system will allocate a free port when the port is bound
+while starting a listener. Once this is done, the port number may need to be updated so that the
+URL can be used to configure a client. The <a name="a014"></a><code>nng_url_resolve_port</code> function updates such
+a URL with a new port. This will have no effect if the URL already has a non-zero port number.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
 <p>More information about Universal Resource Locators can be found in
 <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>.</p>
