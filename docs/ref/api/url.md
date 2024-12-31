@@ -11,20 +11,12 @@ that are not part of the IETF standards.
 ## URL Structure
 
 ```c
-typedef struct nng_url {
-    const char *u_scheme;
-    char       *u_userinfo;
-    char       *u_hostname;
-    uint16_t   u_port;
-    char       *u_path;
-    char       *u_query;
-    char       *u_fragment;
-} nng_url;
+typedef struct nng_url nng_url;
 
 const char *nng_url_scheme(const nng_url *url);
 const char *nng_url_userinfo(const nng_url *url);
 const char *nng_url_hostname(const nng_url *url);
-uint16_t    nng_url_port(const nng_url *url);
+uint32_t    nng_url_port(const nng_url *url);
 const char *nng_url_path(const nng_url *url);
 const char *nng_url_query(const nng_url *url);
 const char *nng_url_fragment(const nng_url *url):
@@ -101,7 +93,7 @@ and creates a dynamically allocated `nng_url`, returning it in _urlp_.
 ## Clone a URL
 
 ```c
-int nng_url_clone(nng_url **dup, nng_url *url);
+int nng_url_clone(nng_url **dup, const nng_url *url);
 ```
 
 The {{i:`nng_url_clone`}} function creates a copy of _url_, and returns it in _dup_.
@@ -116,6 +108,18 @@ The {{i:`nng_url_free`}} function destroy an `nng_url` object created with
 either [`nng_url_parse`] or [`nng_url_free`].
 
 This is the only correct way to destroy an [`nng_url`] object.
+
+## Update a URL Port
+
+```c
+void nng_url_resolve_port(nng_url *url, uint32_t port);
+```
+
+In order to use dynamic port allocation, some transports and schemes allow a port number of zero
+to be specified. When this is done, the system will allocate a free port when the port is bound
+while starting a listener. Once this is done, the port number may need to be updated so that the
+URL can be used to configure a client. The {{i:`nng_url_resolve_port`}} function updates such
+a URL with a new port. This will have no effect if the URL already has a non-zero port number.
 
 ## See Also
 
