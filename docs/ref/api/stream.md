@@ -15,7 +15,7 @@ Scalability Protocols, in a way that is both portable and agnostic about the spe
 ## Stream Type
 
 ```c
-typedef struct nng_stream nng_stream`
+typedef struct nng_stream nng_stream
 ```
 
 The base {{i:`nng_stream`}} type represents a bidirectional, byte-oriented, reliable connection.
