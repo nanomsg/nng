@@ -63,9 +63,6 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		sin6  = (void *) sa;
 		nsin6 = &na->s_in6;
 		memset(sin6, 0, sizeof(*sin6));
-#ifdef SIN6_LEN
-		sin6->sin6_len = sizeof(*sin6);
-#endif
 		sin6->sin6_family   = AF_INET6;
 		sin6->sin6_port     = nsin6->sa_port;
 		sin6->sin6_scope_id = nsin6->sa_scope;
