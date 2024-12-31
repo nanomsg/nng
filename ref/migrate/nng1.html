@@ -230,7 +230,7 @@ See the <a href="nanomsg.html">Migrating From libnanomsg</a> chapter for details
 <p>It is now required for applications to initialize the library explicitly before using it.
 This is done using the <a href="/api/init.html#initialization"><code>nng_init</code></a> function.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
-<p>When an operation fails with [<code>NNG_ESTOPPED</code>], it means that the associated [<code>nni_aio</code>] object has
+<p>When an operation fails with <a href="/api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
 not resubmit an operation that returns it. This is particularly important for callbacks that automatically
 resubmit operations. Failure to observe this rule will lead to an infinite loop
