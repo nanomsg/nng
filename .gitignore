@@ -9,4 +9,8 @@ build.*
 etc/nng.sublime-workspace
 cmake-build-*
 docs/**/*.html
+compile_commands.txt
+compile_flags.txt
+.zed
+.nova
 *~
