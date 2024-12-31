@@ -46,12 +46,25 @@
 [`nng_cv_wait`]: /api/synch.md#waiting-for-the-condition
 [`nng_cv_wake`]: /api/synch.md#signaling-the-condition
 [`nng_cv_wake1`]: /api/synch.md#signaling-the-condition
+[`nng_stat`]: /api/stats.md#statistic-structure
+[`nng_stats_get`]: /api/stats.md#collecting-a-snapshot
+[`nng_stats_free`]: /api/stats.md#freeing-a-snapshot
+[`nng_stat_find`]: /api/stats.md#finding-a-statistic
+[`nng_stat_find_dialer`]: /api/stats.md#finding-a-statistic
+[`nng_stat_find_listener`]: /api/stats.md#finding-a-statistic
+[`nng_stat_find_socket`]: /api/stats.md#finding-a-statistic
+[`nng_stat_name`]: /api/stats.md#statistic-identification
+[`nng_stat_desc`]: /api/stats.md#statistic-identification
 [`nng_stat_type`]: /api/stats.md#statistic-type
 [`nng_stats_free`]: /api/stats.md#freeing-a-snapshot
 [`nng_stat_value`]: /api/stats.md#statistic-value
 [`nng_stat_bool`]: /api/stats.md#statistic-value
 [`nng_stat_string`]: /api/stats.md#statistic-value
 [`nng_stat_unit`]: /api/stats.md#statistic-units
+[`nng_stat_next`]: /api/stats.md#traversing-the-three
+[`nng_stat_child`]: /api/stats.md#traversing-the-tree
+[`nng_stat_parent`]: /api/stats.md#traversing-the-tree
+[`nng_stat_timestamp`]: /api/stats.md#statistic-timestamp
 [`nng_id_set`]: /api/id_map.md#store-a-value
 [`nng_strerror`]: /api/errors.md#human-readable-error-message
 [`nng_aio`]: /api/aio.md#asynchronous-io-handle
@@ -150,6 +163,11 @@
 [`NNG_STAT_SCOPE`]: /api/stats.md#NNG_STAT_SCOPE
 [`NNG_STAT_STRING`]: /api/stats.md#NNG_STAT_STRING
 [`NNG_STAT_BOOLEAN`]: /api/stats.md#NNG_STAT_BOOLEAN
+[`NNG_UNIT_NONE`]: /api/stats.md#statistic-units
+[`NNG_UNIT_BYTES`]: /api/stats.md#statistic-units
+[`NNG_UNIT_MESSAGES`]: /api/stats.md#statistic-units
+[`NNG_UNIT_MILLIS`]: /api/stats.md#statistic-units
+[`NNG_UNIT_EVENTS`]: /api/stats.md#statistic-units
 
 <!-- Protocols -->
 

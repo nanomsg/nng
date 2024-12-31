@@ -56,6 +56,7 @@ The {{i:`nng_stats_free`}} function deallocates the snapshot referenced by _stat
 ```c
 const nng_stat *nng_stat_child(const nng_stat *stat);
 const nng_stat *nng_stat_next(const nng_stat *stat);
+const nng_stat *nng_stat_parent(const nng_stat *stat);
 ```
 
 Traversing the tree of statistics is done using the {{i:`nng_stat_child`}} and
@@ -66,6 +67,9 @@ or `NULL` if the _stat_ has no children.
 
 The `nng_stat_next` function returns the nearest sibling to the right of _stat_,
 or `NULL` if _stat_ has no more siblings to the right.
+
+The {{i:`nng_stat_parent`}} function returns the parent of _stat_, or `NULL` if
+_stat_ is the root of the statistics tree.
 
 ## Finding a Statistic
 
