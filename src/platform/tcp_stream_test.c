@@ -428,6 +428,131 @@ test_tcp_listen_activation_bad_arg(void)
 	nng_stream_listener_free(l1);
 }
 
+void
+test_tcp_dialer_local_bind(void)
+{
+	nng_stream_dialer *d;
+	nng_sockaddr       sa = { 0 };
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
+
+	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_addr   = nuts_be32(0x7F000001); // loopback
+	sa.s_in.sa_port   = 0;
+	NUTS_PASS(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa));
+	memset(&sa, 0, sizeof(sa));
+	NUTS_PASS(nng_stream_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7F000001));
+	NUTS_TRUE(sa.s_in.sa_port == 0);
+	nng_stream_dialer_free(d);
+}
+
+void
+test_tcp_dialer_local_bind_v6(void)
+{
+#ifdef NNG_ENABLE_IPV6
+	nng_stream_dialer *d;
+	nng_sockaddr       sa = { 0 };
+	uint8_t loopback[16]  = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+		 1 };
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://[::1]:80"));
+
+	sa.s_in6.sa_family = NNG_AF_INET6;
+	memcpy(sa.s_in6.sa_addr, loopback, 16);
+	sa.s_in6.sa_addr[15] = 1;
+	sa.s_in6.sa_port     = 0;
+	NUTS_PASS(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa));
+	memset(&sa, 0, sizeof(sa));
+	NUTS_PASS(nng_stream_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa));
+	NUTS_TRUE(sa.s_in6.sa_family == NNG_AF_INET6);
+	NUTS_TRUE(memcmp(sa.s_in6.sa_addr, loopback, 16) == 0);
+	NUTS_TRUE(sa.s_in6.sa_port == 0);
+	nng_stream_dialer_free(d);
+#else
+	NUTS_SKIP("No IPv6 support");
+#endif
+}
+
+void
+test_tcp_dialer_local_bind_no_port(void)
+{
+	nng_stream_dialer *d;
+	nng_sockaddr       sa = { 0 };
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
+
+	memset(&sa, 0, sizeof(sa));
+	sa.s_family = NNG_AF_INPROC;
+	NUTS_PASS(nng_stream_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa));
+
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_UNSPEC);
+	nng_stream_dialer_free(d);
+}
+
+void
+test_tcp_dialer_local_bind_bad_family(void)
+{
+	nng_stream_dialer *d;
+	nng_sockaddr       sa = { 0 };
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
+
+	memset(&sa, 0, sizeof(sa));
+	sa.s_family = NNG_AF_INPROC;
+	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
+	    NNG_EADDRINVAL);
+
+	memset(&sa, 0, sizeof(sa));
+	sa.s_ipc.sa_family = NNG_AF_IPC;
+	snprintf(sa.s_ipc.sa_path, sizeof(sa.s_ipc.sa_path), "%s", "/bogus");
+	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
+	    NNG_EADDRINVAL);
+
+	nng_stream_dialer_free(d);
+}
+
+void
+test_tcp_dialer_local_unbound(void)
+{
+	nng_stream_dialer *d;
+	nng_sockaddr       sa = { 0 };
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
+
+	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_addr   = nuts_be32(0x7F000001); // loopback
+	sa.s_in.sa_port   = nuts_be16(1212);
+	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
+	    NNG_EADDRINVAL);
+
+#ifdef NNG_ENABLE_IPV6
+	memset(&sa, 0, sizeof(sa));
+	sa.s_in6.sa_family = NNG_AF_INET6;
+	sa.s_in6.sa_port   = nuts_be16(1212);
+	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
+	    NNG_EADDRINVAL);
+#endif
+
+	nng_stream_dialer_free(d);
+}
+
+void
+test_tcp_dialer_local_bind_bad_type(void)
+{
+	nng_stream_dialer *d;
+	nng_sockaddr       sa = { 0 };
+
+	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
+
+	memset(&sa, 0, sizeof(sa));
+	sa.s_family = NNG_AF_INPROC;
+	NUTS_FAIL(nng_stream_dialer_set_bool(d, NNG_OPT_LOCADDR, false),
+	    NNG_EBADTYPE);
+	nng_stream_dialer_free(d);
+}
+
 NUTS_TESTS = {
 	{ "tcp stream", test_tcp_stream },
 	{ "tcp listen accept cancel", test_tcp_listen_accept_cancel },
@@ -443,5 +568,13 @@ NUTS_TESTS = {
 	    test_tcp_listen_activation_bogus_fd },
 	{ "tcp socket activation bad arg",
 	    test_tcp_listen_activation_bad_arg },
+	{ "tcp dialer local bind", test_tcp_dialer_local_bind },
+	{ "tcp dialer local bind v6", test_tcp_dialer_local_bind_v6 },
+	{ "tcp dialer local bind no port",
+	    test_tcp_dialer_local_bind_no_port },
+	{ "tcp dialer local unbound", test_tcp_dialer_local_unbound },
+	{ "tcp dialer local bad family",
+	    test_tcp_dialer_local_bind_bad_family },
+	{ "tcp dialer local bad type", test_tcp_dialer_local_bind_bad_type },
 	{ NULL, NULL },
 };
