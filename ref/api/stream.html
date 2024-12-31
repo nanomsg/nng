@@ -235,7 +235,7 @@ Scalability Protocols, in a way that is both portable and agnostic about the spe
 using these Streams APIs.</p>
 </div>
 <h2 id="stream-type"><a class="header" href="#stream-type">Stream Type</a></h2>
-<pre><code class="language-c">typedef struct nng_stream nng_stream`
+<pre><code class="language-c">typedef struct nng_stream nng_stream
 </code></pre>
 <p>The base <a name="a002"></a><code>nng_stream</code> type represents a bidirectional, byte-oriented, reliable connection.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
@@ -245,7 +245,7 @@ using these Streams APIs.</p>
 </p>
 <p>The <code>nng_stream</code> object is used for raw byte stream connections, and
 should not be confused with a <a href="/TODO.html">pipe</a> object created on a <a href="/TODO.html">socket</a> using
-the [<code>nng_listen</code>], [<code>nng_dial</code>] or related functions.</p>
+the <a href="/TODO.html"><code>nng_listen</code></a>, <a href="/TODO.html"><code>nng_dial</code></a> or related functions.</p>
 </div>
 <h2 id="sending-and-receiving-data"><a class="header" href="#sending-and-receiving-data">Sending and Receiving Data</a></h2>
 <pre><code class="language-c">void nng_stream_send(nng_stream *s, nng_aio *aio);
@@ -289,6 +289,28 @@ stream itself.</p>
 or be aborted, these functions are unsafe to call from functions that may not block, such as the
 completion function registered with an <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> when it is created.</p>
 </div>
+<h2 id="getting-stream-options"><a class="header" href="#getting-stream-options">Getting Stream Options</a></h2>
+<pre><code class="language-c">int nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
+int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
+int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
+int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
+int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
+</code></pre>
+<p><a name="a008"></a>
+<a name="a009"></a>
+<a name="a010"></a>
+<a name="a011"></a>
+<a name="a012"></a>
+<a name="a013"></a>
+<a name="a014"></a>
+These functions are used to obtain value of an option named <em>opt</em> from the stream <em>s</em>, and store it in the location
+referenced by <em>valp</em>.</p>
+<p>These functions access an option as a specific type. The transport layer will have details about which options
+are available, and which type they may be accessed using.</p>
+<p>In the case of <code>nng_stream_get_string</code>, the string is created as if by <a href="/api/memory.html#duplicate-string"><code>nng_strdup</code></a>, and must be freed by
+the caller using <a href="/api/memory.html#free-string"><code>nng_strfree</code></a> when no longer needed.</p>
 <!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->

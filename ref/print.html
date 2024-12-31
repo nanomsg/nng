@@ -3122,7 +3122,7 @@ Scalability Protocols, in a way that is both portable and agnostic about the spe
 using these Streams APIs.</p>
 </div>
 <h2 id="stream-type"><a class="header" href="#stream-type">Stream Type</a></h2>
-<pre><code class="language-c">typedef struct nng_stream nng_stream`
+<pre><code class="language-c">typedef struct nng_stream nng_stream
 </code></pre>
 <p>The base <a name="a002"></a><code>nng_stream</code> type represents a bidirectional, byte-oriented, reliable connection.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
@@ -3132,7 +3132,7 @@ using these Streams APIs.</p>
 </p>
 <p>The <code>nng_stream</code> object is used for raw byte stream connections, and
 should not be confused with a <a href="api//TODO.html">pipe</a> object created on a <a href="api//TODO.html">socket</a> using
-the [<code>nng_listen</code>], [<code>nng_dial</code>] or related functions.</p>
+the <a href="api//TODO.html"><code>nng_listen</code></a>, <a href="api//TODO.html"><code>nng_dial</code></a> or related functions.</p>
 </div>
 <h2 id="sending-and-receiving-data"><a class="header" href="#sending-and-receiving-data">Sending and Receiving Data</a></h2>
 <pre><code class="language-c">void nng_stream_send(nng_stream *s, nng_aio *aio);
@@ -3176,6 +3176,28 @@ stream itself.</p>
 or be aborted, these functions are unsafe to call from functions that may not block, such as the
 completion function registered with an <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> when it is created.</p>
 </div>
+<h2 id="getting-stream-options"><a class="header" href="#getting-stream-options">Getting Stream Options</a></h2>
+<pre><code class="language-c">int nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
+int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
+int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
+int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
+int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
+</code></pre>
+<p><a name="a008"></a>
+<a name="a009"></a>
+<a name="a010"></a>
+<a name="a011"></a>
+<a name="a012"></a>
+<a name="a013"></a>
+<a name="a014"></a>
+These functions are used to obtain value of an option named <em>opt</em> from the stream <em>s</em>, and store it in the location
+referenced by <em>valp</em>.</p>
+<p>These functions access an option as a specific type. The transport layer will have details about which options
+are available, and which type they may be accessed using.</p>
+<p>In the case of <code>nng_stream_get_string</code>, the string is created as if by <a href="api//api/memory.html#duplicate-string"><code>nng_strdup</code></a>, and must be freed by
+the caller using <a href="api//api/memory.html#free-string"><code>nng_strfree</code></a> when no longer needed.</p>
 <!-- Symbol cross reference -->
 <!-- Macros -->
 <!-- Protocols -->
@@ -6200,32 +6222,32 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_strerror</code></td><td><a href="migrate//api/errors.html#human-readable-error-message"><code>nng_strerror</code></a></td><td></td></tr>
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
-<tr><td><code>nn_close</code></td><td><code>nng_socket_close</code></td><td></td></tr>
-<tr><td><code>nn_bind</code></td><td><code>nng_listen</code>, <code>nng_listener_create</code></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_connect</code></td><td><code>nng_dial</code>, <code>nng_dialer_create</code></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_shutdown</code></td><td><code>nng_lister_close</code>, <code>nng_dialer_close</code></td><td></td></tr>
+<tr><td><code>nn_close</code></td><td><a href="migrate//api/sock.html#closing-a-socket"><code>nng_socket_close</code> </a></td><td></td></tr>
+<tr><td><code>nn_bind</code></td><td><a href="migrate//TODO.html"><code>nng_listen</code></a>, <a href="migrate//TODO.html"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_connect</code></td><td><a href="migrate//TODO.html"><code>nng_dial</code></a>, <a href="migrate//TODO.html"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_shutdown</code></td><td><a href="migrate//TODO.html"><code>nng_listener_close</code></a>, <a href="migrate//TODO.html"><code>nng_dialer_close</code></a></td><td></td></tr>
 <tr><td><code>nn_allocmsg</code></td><td><a href="migrate//api/msg.html#create-a-message"><code>nng_msg_alloc</code></a></td><td>There are significant semantic differences.</td></tr>
 <tr><td><code>nn_freemsg</code></td><td><a href="migrate//api/msg.html#destroy-a-message"><code>nng_msg_free</code></a></td><td></td></tr>
 <tr><td><code>nn_reallocmsg</code></td><td><a href="migrate//api/msg.html#message-size-and-capacity"><code>nng_msg_realloc</code></a></td><td></td></tr>
-<tr><td><code>nn_send</code></td><td><code>nng_send</code></td><td></td></tr>
-<tr><td><code>nn_recv</code></td><td><code>nng_recv</code></td><td></td></tr>
-<tr><td><code>nn_sendmsg</code></td><td><code>nng_sendmsg</code></td><td></td></tr>
-<tr><td><code>nn_getsockopt</code></td><td><code>nng_socket_get</code></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
-<tr><td><code>nn_setsockopt</code></td><td><code>nng_socket_set</code></td><td></td></tr>
-<tr><td><code>nn_device</code></td><td><code>nng_device</code></td><td></td></tr>
+<tr><td><code>nn_send</code></td><td><a href="migrate//TODO.html"><code>nng_send</code></a></td><td></td></tr>
+<tr><td><code>nn_recv</code></td><td><a href="migrate//TODO.html"><code>nng_recv</code></a></td><td></td></tr>
+<tr><td><code>nn_sendmsg</code></td><td><a href="migrate//TODO.html"><code>nng_sendmsg</code></a></td><td></td></tr>
+<tr><td><code>nn_getsockopt</code></td><td><a href="migrate//TODO.html"><code>nng_socket_get</code></a></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
+<tr><td><code>nn_setsockopt</code></td><td><a href="migrate//TODO.html"><code>nng_socket_set</code></a></td><td></td></tr>
+<tr><td><code>nn_device</code></td><td><a href="migrate//TODO.html"><code>nng_device</code></a></td><td></td></tr>
 <tr><td><code>nn_poll</code></td><td>None</td><td>Can be constructed using <code>nng_aio</code>. Few if any applications ever used this API.</td></tr>
-<tr><td><code>nn_term</code></td><td>None</td><td>The <code>nng_fini</code> API can do this, but is not recommended except when debugging memory leaks.</td></tr>
-<tr><td><code>nn_get_statistic</code></td><td><code>nng_stats_get</code></td><td>The statistics in NNG are completely different, with different semantics and no stability guarantees.</td></tr>
+<tr><td><code>nn_term</code></td><td><a href="migrate//api/init.html#finalization"><code>nng_fini</code></a></td><td>The <code>nng_fini</code> API can do this, but is not recommended except when debugging memory leaks.</td></tr>
+<tr><td><code>nn_get_statistic</code></td><td><a href="migrate//api/stats.html#collecting-a-snapshot"><code>nng_stats_get</code></a></td><td>The statistics in NNG are completely different, with different semantics and no stability guarantees.</td></tr>
 <tr><td><code>NN_POLLIN</code></td><td>None</td><td>Used only with <code>nn_poll</code>.</td></tr>
 <tr><td><code>NN_POLLOUT</code></td><td>None</td><td>Used only with <code>nn_poll</code>.</td></tr>
-<tr><td><code>NN_MSG</code></td><td><code>NNG_FLAG_ALLOC</code></td><td>See <code>nng_send</code> and <code>nng_recv</code> for details.</td></tr>
+<tr><td><code>NN_MSG</code></td><td><a href="migrate//TODO.html"><code>NNG_FLAG_ALLOC</code></a></td><td>See <code>nng_send</code> and <code>nng_recv</code> for details.</td></tr>
 <tr><td><code>NN_CMSG_ALIGN</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_FIRSTHDR</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_NXTHDR</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_DATA</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_LEN</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_SPACE</code></td><td>None</td><td></td></tr>
-<tr><td><code>struct nn_iovec</code></td><td><code>nng_iov</code></td><td></td></tr>
+<tr><td><code>struct nn_iovec</code></td><td><a href="migrate//api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a></td><td></td></tr>
 <tr><td><code>struct nn_msghdr</code></td><td><a href="migrate//api/msg.html#message-structure"><code>nng_msg</code></a></td><td></td></tr>
 <tr><td><code>struct nn_cmsghdr</code></td><td><a href="migrate//api/msg.html#message-structure"><code>nng_msg</code></a> and <a href="migrate//api/msg.html#message-header"><code>nng_msg_header</code></a></td><td></td></tr>
 </tbody></table>
@@ -6234,12 +6256,12 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <p>The following options are changed.</p>
 <div class="table-wrapper"><table><thead><tr><th>Nanomsg Option</th><th>NNG Eqvaivalent</th><th>Notes</th></tr></thead><tbody>
 <tr><td><code>NN_LINGER</code></td><td>None</td><td>NNG does not support tuning this.</td></tr>
-<tr><td><code>NN_SNDBUF</code></td><td><code>NNG_OPT_SENDBUF</code></td><td>NNG value is given in messages, not bytes.</td></tr>
-<tr><td><code>NN_RCVBUF</code></td><td><code>NNG_OPT_RECVBUF</code></td><td>NNG value is given in messages, not bytes.</td></tr>
-<tr><td><code>NN_SNDTIMEO</code></td><td><code>NNG_OPT_SENDTIMEO</code></td><td></td></tr>
-<tr><td><code>NN_RCVTIMEO</code></td><td><code>NNG_OPT_RECVTIMEO</code></td><td></td></tr>
-<tr><td><code>NN_RECONNECT_IVL</code></td><td><code>NNG_OPT_RECONNMINT</code></td><td></td></tr>
-<tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><code>NNG_OPT_RECONNMAXT</code></td><td></td></tr>
+<tr><td><code>NN_SNDBUF</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_SENDBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
+<tr><td><code>NN_RCVBUF</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECVBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
+<tr><td><code>NN_SNDTIMEO</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_SENDTIMEO</code></a></td><td></td></tr>
+<tr><td><code>NN_RCVTIMEO</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECVTIMEO</code></a></td><td></td></tr>
+<tr><td><code>NN_RECONNECT_IVL</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECONNMINT</code></a></td><td></td></tr>
+<tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECONNMAXT</code></a></td><td></td></tr>
 <tr><td><code>NN_SNDPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
 <tr><td><code>NN_RCVPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
 <tr><td><code>NN_RCVFD</code></td><td><a href="migrate//api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a></td><td>No longer an option, use a function call.</td></tr>
@@ -6248,7 +6270,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>NN_PROTOCOL</code></td><td><a href="migrate//api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a></td><td>No longer an option. See also <code>nng_socket_proto_name</code>.</td></tr>
 <tr><td><code>NN_IPV4ONLY</code></td><td>None</td><td>Use URL such as <code>tcp4://</code> to obtain this functionality.</td></tr>
 <tr><td><code>NN_SOCKET_NAME</code></td><td>None</td><td>Removed from NNG.</td></tr>
-<tr><td><code>NN_MAXTTL</code></td><td><code>NNG_OPT_MAXTTL</code></td><td></td></tr>
+<tr><td><code>NN_MAXTTL</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_MAXTTL</code></a></td><td></td></tr>
 <tr><td><code>NN_SUB_SUBSCRIBE</code></td><td><a href="migrate//TODO.html"><code>nng_sub0_socket_subscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
 <tr><td><code>NN_SUB_UNSUBSCRIBE</code></td><td><a href="migrate//TODO.html"><code>nng_sub0_socket_unsubscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
 </tbody></table>
@@ -6281,7 +6303,7 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 </tbody></table>
 </div>
 <h2 id="local-addresses-for-dialing"><a class="header" href="#local-addresses-for-dialing">Local Addresses for Dialing</a></h2>
-<p>The ability to specify the source address in the UROL,to use when
+<p>The ability to specify the source address in the URL,to use when
 using <code>nn_dial</code> inside the URL is not present in NNG. The correct
 way to specify the local address is using the <code>NNG_OPT_LOCADDR</code> option on the
 dialer before starting to dial.</p>
@@ -6489,6 +6511,13 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_stream</code>, <a href="api/stream.html#a002">1</a><br/>
 <code>nng_stream_close</code>, <a href="api/stream.html#a005">1</a><br/>
 <code>nng_stream_free</code>, <a href="api/stream.html#a007">1</a><br/>
+<code>nng_stream_get_addr</code>, <a href="api/stream.html#a012">1</a><br/>
+<code>nng_stream_get_bool</code>, <a href="api/stream.html#a008">1</a><br/>
+<code>nng_stream_get_int</code>, <a href="api/stream.html#a009">1</a><br/>
+<code>nng_stream_get_ms</code>, <a href="api/stream.html#a010">1</a><br/>
+<code>nng_stream_get_size</code>, <a href="api/stream.html#a011">1</a><br/>
+<code>nng_stream_get_string</code>, <a href="api/stream.html#a013">1</a><br/>
+<code>nng_stream_get_uint64</code>, <a href="api/stream.html#a014">1</a><br/>
 <code>nng_stream_recv</code>, <a href="api/stream.html#a004">1</a><br/>
 <code>nng_stream_send</code>, <a href="api/stream.html#a003">1</a><br/>
 <code>nng_stream_stop</code>, <a href="api/stream.html#a006">1</a><br/>
