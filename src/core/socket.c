@@ -1528,16 +1528,21 @@ nni_pipe_add(nni_pipe *p)
 
 // nni_pipe_start attempts to start the pipe, adding it to the socket and
 // endpoints and calling callbacks, etc.  The pipe should already have finished
-// any negotiation needed at the transport layer.
+// any negotiation needed at the transport layer.  Note carefully that the pipe
+// may be destroyed before this function returns, as a result of work done by
+// this function.
 void
 nni_pipe_start(nni_pipe *p)
 {
+	// exactly one of these must be set.
+	NNI_ASSERT(p->p_listener == NULL || p->p_dialer == NULL);
+	NNI_ASSERT(p->p_listener != NULL || p->p_dialer != NULL);
+
+	// NB: starting the pipe can actually cause the pipe
+	// to be deallocated before this returns (if it is rejected)
 	if (p->p_listener) {
-		NNI_ASSERT(p->p_dialer == NULL);
 		listener_start_pipe(p->p_listener, p);
-	}
-	if (p->p_dialer) {
-		NNI_ASSERT(p->p_listener == NULL);
+	} else if (p->p_dialer) {
 		dialer_start_pipe(p->p_dialer, p);
 	}
 }
