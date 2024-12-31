@@ -158,6 +158,18 @@
 [`nng_tls_config_own_cert`]: /TODO.md
 [`nng_listener_set_security_descriptor`]: /TODO.md
 [`nng_device`]: /TODO.md
+[`nng_dial`]: /TODO.md
+[`nng_dialer_create`]: /TODO.md
+[`nng_dialer_close`]: /TODO.md
+[`nng_listen`]: /TODO.md
+[`nng_listener_create`]: /TODO.md
+[`nng_listener_close`]: /TODO.md
+[`nng_socket_set`]: /TODO.md
+[`nng_socket_get`]: /TODO.md
+[`nng_send`]: /TODO.md
+[`nng_recv`]: /TODO.md
+[`nng_sendmsg`]: /TODO.md
+[`nng_recvmsg`]: /TODO.md
 
 <!-- Macros -->
 
@@ -213,6 +225,15 @@
 [`NNG_UNIT_MESSAGES`]: /api/stats.md#statistic-units
 [`NNG_UNIT_MILLIS`]: /api/stats.md#statistic-units
 [`NNG_UNIT_EVENTS`]: /api/stats.md#statistic-units
+[`NNG_FLAG_ALLOC`]: /TODO.md
+[`NNG_FLAG_NONBLOCK`]: /TODO.md
+[`NNG_OPT_MAXTTL`]: /TODO.md
+[`NNG_OPT_RECONNMAXT`]: /TODO.md
+[`NNG_OPT_RECONNMINT`]: /TODO.md
+[`NNG_OPT_SENDTIMEO`]: /TODO.md
+[`NNG_OPT_RECVTIMEO`]: /TODO.md
+[`NNG_OPT_SENDBUF`]: /TODO.md
+[`NNG_OPT_RECVBUF`]: /TODO.md
 
 <!-- Protocols -->
 

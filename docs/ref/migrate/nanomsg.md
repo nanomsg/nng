@@ -33,39 +33,39 @@ NNG approach to messages. Likewise there is no `struct nn_cmsghdr` equivalent.
 
 ## API Conversions
 
-| Nanomsg API         | NNG Equivalent                         | Notes                                                                                                 |
-| ------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `nn_strerror`       | [`nng_strerror`]                       |
-| `nn_errno`          | None                                   | Errors are returned directly rather than through `errno`.                                             |
-| `nn_socket`         | Various                                | Use the appropriate protocol constructor, such as `nng_req0_open`.                                    |
-| `nn_close`          | `nng_socket_close`                     |
-| `nn_bind`           | `nng_listen`, `nng_listener_create`    | Allocating a listener with `nng_lister_create` and configuring it offers more capabilities.           |
-| `nn_connect`        | `nng_dial`, `nng_dialer_create`        | Allocating a dialer with `nng_dialer_create` and configuring it offers more capabilities.             |
-| `nn_shutdown`       | `nng_lister_close`, `nng_dialer_close` |
-| `nn_allocmsg`       | [`nng_msg_alloc`]                      | There are significant semantic differences.                                                           |
-| `nn_freemsg`        | [`nng_msg_free`]                       |
-| `nn_reallocmsg`     | [`nng_msg_realloc`]                    |
-| `nn_send`           | `nng_send`                             |
-| `nn_recv`           | `nng_recv`                             |
-| `nn_sendmsg`        | `nng_sendmsg`                          |
-| `nn_getsockopt`     | `nng_socket_get`                       | NNG has typed accessors for options, and also separate functions for dialers and listeners.           |
-| `nn_setsockopt`     | `nng_socket_set`                       |
-| `nn_device`         | `nng_device`                           |
-| `nn_poll`           | None                                   | Can be constructed using `nng_aio`. Few if any applications ever used this API.                       |
-| `nn_term`           | None                                   | The `nng_fini` API can do this, but is not recommended except when debugging memory leaks.            |
-| `nn_get_statistic`  | `nng_stats_get`                        | The statistics in NNG are completely different, with different semantics and no stability guarantees. |
-| `NN_POLLIN`         | None                                   | Used only with `nn_poll`.                                                                             |
-| `NN_POLLOUT`        | None                                   | Used only with `nn_poll`.                                                                             |
-| `NN_MSG`            | `NNG_FLAG_ALLOC`                       | See `nng_send` and `nng_recv` for details.                                                            |
-| `NN_CMSG_ALIGN`     | None                                   |
-| `NN_CMSG_FIRSTHDR`  | None                                   |
-| `NN_CMSG_NXTHDR`    | None                                   |
-| `NN_CMSG_DATA`      | None                                   |
-| `NN_CMSG_LEN`       | None                                   |
-| `NN_CMSG_SPACE`     | None                                   |
-| `struct nn_iovec`   | `nng_iov`                              |
-| `struct nn_msghdr`  | [`nng_msg`]                            |
-| `struct nn_cmsghdr` | [`nng_msg`] and [`nng_msg_header`]     |
+| Nanomsg API         | NNG Equivalent                               | Notes                                                                                                 |
+| ------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `nn_strerror`       | [`nng_strerror`]                             |
+| `nn_errno`          | None                                         | Errors are returned directly rather than through `errno`.                                             |
+| `nn_socket`         | Various                                      | Use the appropriate protocol constructor, such as `nng_req0_open`.                                    |
+| `nn_close`          | [`nng_socket_close` ]                        |
+| `nn_bind`           | [`nng_listen`], [`nng_listener_create`]      | Allocating a listener with `nng_lister_create` and configuring it offers more capabilities.           |
+| `nn_connect`        | [`nng_dial`], [`nng_dialer_create`]          | Allocating a dialer with `nng_dialer_create` and configuring it offers more capabilities.             |
+| `nn_shutdown`       | [`nng_listener_close`], [`nng_dialer_close`] |
+| `nn_allocmsg`       | [`nng_msg_alloc`]                            | There are significant semantic differences.                                                           |
+| `nn_freemsg`        | [`nng_msg_free`]                             |
+| `nn_reallocmsg`     | [`nng_msg_realloc`]                          |
+| `nn_send`           | [`nng_send`]                                 |
+| `nn_recv`           | [`nng_recv`]                                 |
+| `nn_sendmsg`        | [`nng_sendmsg`]                              |
+| `nn_getsockopt`     | [`nng_socket_get`]                           | NNG has typed accessors for options, and also separate functions for dialers and listeners.           |
+| `nn_setsockopt`     | [`nng_socket_set`]                           |
+| `nn_device`         | [`nng_device`]                               |
+| `nn_poll`           | None                                         | Can be constructed using `nng_aio`. Few if any applications ever used this API.                       |
+| `nn_term`           | [`nng_fini`]                                 | The `nng_fini` API can do this, but is not recommended except when debugging memory leaks.            |
+| `nn_get_statistic`  | [`nng_stats_get`]                            | The statistics in NNG are completely different, with different semantics and no stability guarantees. |
+| `NN_POLLIN`         | None                                         | Used only with `nn_poll`.                                                                             |
+| `NN_POLLOUT`        | None                                         | Used only with `nn_poll`.                                                                             |
+| `NN_MSG`            | [`NNG_FLAG_ALLOC`]                           | See `nng_send` and `nng_recv` for details.                                                            |
+| `NN_CMSG_ALIGN`     | None                                         |
+| `NN_CMSG_FIRSTHDR`  | None                                         |
+| `NN_CMSG_NXTHDR`    | None                                         |
+| `NN_CMSG_DATA`      | None                                         |
+| `NN_CMSG_LEN`       | None                                         |
+| `NN_CMSG_SPACE`     | None                                         |
+| `struct nn_iovec`   | [`nng_iov`]                                  |
+| `struct nn_msghdr`  | [`nng_msg`]                                  |
+| `struct nn_cmsghdr` | [`nng_msg`] and [`nng_msg_header`]           |
 
 ## Options
 
@@ -74,12 +74,12 @@ The following options are changed.
 | Nanomsg Option         | NNG Eqvaivalent                 | Notes                                                   |
 | ---------------------- | ------------------------------- | ------------------------------------------------------- |
 | `NN_LINGER`            | None                            | NNG does not support tuning this.                       |
-| `NN_SNDBUF`            | `NNG_OPT_SENDBUF`               | NNG value is given in messages, not bytes.              |
-| `NN_RCVBUF`            | `NNG_OPT_RECVBUF`               | NNG value is given in messages, not bytes.              |
-| `NN_SNDTIMEO`          | `NNG_OPT_SENDTIMEO`             |
-| `NN_RCVTIMEO`          | `NNG_OPT_RECVTIMEO`             |
-| `NN_RECONNECT_IVL`     | `NNG_OPT_RECONNMINT`            |
-| `NN_RECONNECT_IVL_MAX` | `NNG_OPT_RECONNMAXT`            |
+| `NN_SNDBUF`            | [`NNG_OPT_SENDBUF`]             | NNG value is given in messages, not bytes.              |
+| `NN_RCVBUF`            | [`NNG_OPT_RECVBUF`]             | NNG value is given in messages, not bytes.              |
+| `NN_SNDTIMEO`          | [`NNG_OPT_SENDTIMEO`]           |
+| `NN_RCVTIMEO`          | [`NNG_OPT_RECVTIMEO`]           |
+| `NN_RECONNECT_IVL`     | [`NNG_OPT_RECONNMINT`]          |
+| `NN_RECONNECT_IVL_MAX` | [`NNG_OPT_RECONNMAXT`]          |
 | `NN_SNDPRIO`           | None                            | Not supported in NNG yet.                               |
 | `NN_RCVPRIO`           | None                            | Not supported in NNG yet.                               |
 | `NN_RCVFD`             | [`nng_socket_get_recv_poll_fd`] | No longer an option, use a function call.               |
@@ -88,7 +88,7 @@ The following options are changed.
 | `NN_PROTOCOL`          | [`nng_socket_proto_id`]         | No longer an option. See also `nng_socket_proto_name`.  |
 | `NN_IPV4ONLY`          | None                            | Use URL such as `tcp4://` to obtain this functionality. |
 | `NN_SOCKET_NAME`       | None                            | Removed from NNG.                                       |
-| `NN_MAXTTL`            | `NNG_OPT_MAXTTL`                |
+| `NN_MAXTTL`            | [`NNG_OPT_MAXTTL`]              |
 | `NN_SUB_SUBSCRIBE`     | [`nng_sub0_socket_subscribe`]   | No longer an option, use a function call.               |
 | `NN_SUB_UNSUBSCRIBE`   | [`nng_sub0_socket_unsubscribe`] | No longer an option, use a function call.               |
 
@@ -123,7 +123,7 @@ There are some exceptions. Be aware that the numeric values are _not_ the same.
 
 ## Local Addresses for Dialing
 
-The ability to specify the source address in the UROL,to use when
+The ability to specify the source address in the URL,to use when
 using `nn_dial` inside the URL is not present in NNG. The correct
 way to specify the local address is using the `NNG_OPT_LOCADDR` option on the
 dialer before starting to dial.
