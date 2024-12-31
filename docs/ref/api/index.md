@@ -1,7 +1,7 @@
 # API Reference
 
 This section is a reference guide for the _NNG_ programming interfaces.
-It is meant to serve as a refernce, rather than as a tutorial.
+It is meant to serve as a reference, rather than as a tutorial.
 
 The material here is organized by major areas of functionality.
 
@@ -12,9 +12,19 @@ include the `nng/nng.h` header file like so:
 #include <nng/nng.h>
 ```
 
-## Chapters
+## Sections
 
-- [Messages](msg/)
-- [Threading and Synchronization](thr/)
+- [Initialization](init.md)
+- [Messages](msg.md)
+- [Sockets](sock.md)
+- [Memory](memory.md)
+- [Time](time.md)
+- [URLs](url.md)
+- [Synchronization](synch.md)
+- [Threads](thr.md)
 - [Logging](logging.md)
-- [Utility Functions](util/)
+- [Statistics](stats.md)
+- [Miscellaneous](misc.md)
+- [Errors](errors.md)
+- [ID Map](id_map.md)
+- [Command Options](cmd_opts.md)
