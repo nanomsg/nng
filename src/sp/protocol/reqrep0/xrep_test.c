@@ -142,8 +142,8 @@ test_xrep_validate_peer(void)
 	NUTS_TRUE(nng_stat_type(reject) == NNG_STAT_COUNTER);
 	NUTS_TRUE(nng_stat_value(reject) > 0);
 
-	NUTS_PASS(nng_close(s1));
-	NUTS_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 	nng_stats_free(stats);
 }
 
@@ -353,7 +353,7 @@ test_xrep_ttl_option(void)
 	NUTS_TRUE(nng_socket_set_bool(rep, opt, true) == NNG_EBADTYPE);
 	NUTS_TRUE(nng_socket_get_bool(rep, opt, &b) == NNG_EBADTYPE);
 
-	NUTS_TRUE(nng_close(rep) == 0);
+	NUTS_CLOSE(rep);
 }
 
 static void

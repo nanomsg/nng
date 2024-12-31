@@ -48,7 +48,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-xref:nng_close.3.adoc[nng_close(3)],
+xref:nng_socket_close.3.adoc[nng_socket_close(3)],
 xref:nng_dial.3.adoc[nng_dial(3)],
 xref:nng_dialer_create.3.adoc[nng_dialer_create(3)]
 xref:nng_strerror.3.adoc[nng_strerror(3)],

@@ -698,7 +698,7 @@ nni_sock_shutdown(nni_sock *sock)
 
 	// At this point, there are no threads blocked inside of us
 	// that are referencing socket state.  User code should call
-	// nng_close to release the last resources.
+	// nng_socket_close to release the last resources.
 	return (0);
 }
 

@@ -26,7 +26,7 @@
 #include <string.h>
 
 int
-nng_close(nng_socket s)
+nng_socket_close(nng_socket s)
 {
 	int       rv;
 	nni_sock *sock;

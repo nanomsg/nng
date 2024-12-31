@@ -114,10 +114,10 @@ test_nonblocking(void)
 	}
 
 	nng_msleep(15000);
-	nng_close(rep);
+	nng_socket_close(rep);
 	nng_thread_destroy(server);
 	for (int i = 0; i < NCLIENTS; i++) {
-		nng_close(reqs[i]);
+		nng_socket_close(reqs[i]);
 		nng_thread_destroy(clients[i]);
 	}
 }

@@ -23,7 +23,7 @@ extern void nuts_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Call nng_fini during test finalization -- this avoids leak warnings.
-// We add a 20 millisecond delay as a hack to allow for other subsytems to
+/// We add a 20 millisecond delay as a hack to allow for other subsytems to
 // drain first. (Notably the HTTP framework can fail if we shut down too
 // quickly.  These bugs should be fixed and then the sleep can be removed.)
 #ifndef TEST_FINI
@@ -285,7 +285,7 @@ extern const char *nuts_ecdsa_client_crt;
 
 #define NUTS_OPEN(sock) NUTS_PASS(nng_pair1_open(&(sock)))
 
-#define NUTS_CLOSE(sock) NUTS_PASS(nng_close(sock))
+#define NUTS_CLOSE(sock) NUTS_PASS(nng_socket_close(sock))
 
 #define NUTS_SLEEP(ms) nuts_sleep(ms)
 

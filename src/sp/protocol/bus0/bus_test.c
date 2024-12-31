@@ -378,7 +378,7 @@ test_bus_cooked(void)
 	NUTS_PASS(nng_bus0_open(&s));
 	NUTS_PASS(nng_socket_raw(s, &b));
 	NUTS_TRUE(!b);
-	NUTS_PASS(nng_close(s));
+	NUTS_CLOSE(s);
 
 	// raw pub only differs in the option setting
 	NUTS_PASS(nng_bus0_open_raw(&s));

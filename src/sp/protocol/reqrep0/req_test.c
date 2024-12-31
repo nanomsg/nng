@@ -932,7 +932,7 @@ test_req_ctx_recv_close_socket(void)
 	NUTS_PASS(nng_aio_result(aio));
 
 	nng_ctx_recv(ctx, aio);
-	nng_close(req);
+	nng_socket_close(req);
 
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);

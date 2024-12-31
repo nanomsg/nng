@@ -126,8 +126,8 @@ trantest_init(trantest *tt, const char *addr)
 void
 trantest_fini(trantest *tt)
 {
-	nng_close(tt->reqsock);
-	nng_close(tt->repsock);
+	nng_socket_close(tt->reqsock);
+	nng_socket_close(tt->repsock);
 }
 
 int

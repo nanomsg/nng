@@ -127,6 +127,28 @@ The following functions open a socket in [raw] mode:
 - {{i:`nng_sub0_open_raw`}} - [SUB][sub] version 0, raw mode
 - {{i:`nng_surveyor0_open_raw`}} - [SURVEYOR][surveyor] version 0, raw mode
 
+## Closing a Socket
+
+```c
+int nng_socket_close(nng_socket s);
+```
+
+The {{i:`nng_socket_close`}} function closes a socket, releasing all resources
+associated with it. Any operations that are in progress will be terminated with
+a result of [`NNG_ECLOSED`].
+
+> [!NOTE]
+> Closing a socket also invalidates any [dialers][dialer], [listeners][listener],
+> [pipes][pipe], or [contexts][context] associated with it.
+
+> [!NOTE]
+> This function will wait for any outstanding operations to be aborted, or to complete,
+> before returning. Consequently it is not safe to call this from contexts that cannot
+> block.
+
+> [!NOTE]
+> Closing the socket may be disruptive to transfers that are still in progress.
+
 ## Polling Socket Events
 
 ```c

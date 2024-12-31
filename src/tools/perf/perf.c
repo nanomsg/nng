@@ -499,7 +499,7 @@ latency_client(const char *addr, size_t msgsize, int trips)
 	end = nng_clock();
 
 	nng_msg_free(msg);
-	nng_close(s);
+	nng_socket_close(s);
 
 	total   = (float) ((end - start)) / 1000;
 	latency = ((float) ((total * 1000000)) / (float) (trips * 2));
@@ -544,7 +544,7 @@ latency_server(const char *addr, size_t msgsize, int trips)
 	// Wait a bit for things to drain... linger should do this.
 	// 100ms ought to be enough.
 	nng_msleep(100);
-	nng_close(s);
+	nng_socket_close(s);
 }
 
 // Our throughput story is quite a mess.  Mostly I think because of the poor
@@ -598,7 +598,7 @@ throughput_server(const char *addr, size_t msgsize, int count)
 	// and wait a bit to make sure it goes out the wire.
 	nng_send(s, "", 0, 0);
 	nng_msleep(200);
-	nng_close(s);
+	nng_socket_close(s);
 	total     = (float) ((end - start)) / 1000;
 	msgpersec = (float) (count) / total;
 	mbps      = (float) (msgpersec * 8 * msgsize) / (1024 * 1024);
@@ -664,5 +664,5 @@ throughput_client(const char *addr, size_t msgsize, int count)
 		nng_msg_free(msg);
 	}
 
-	nng_close(s);
+	nng_socket_close(s);
 }

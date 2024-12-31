@@ -208,10 +208,10 @@ typedef struct nng_iov {
 #define NNG_DURATION_DEFAULT (-2)
 #define NNG_DURATION_ZERO (0)
 
-// nng_close closes the socket, terminating all activity and
+// nng_socket_close closes the socket, terminating all activity and
 // closing any underlying connections and releasing any associated
 // resources.
-NNG_DECL int nng_close(nng_socket);
+NNG_DECL int nng_socket_close(nng_socket);
 
 // nng_socket_id returns the positive socket id for the socket, or -1
 // if the socket is not valid.
@@ -435,8 +435,9 @@ NNG_DECL void nng_recv_aio(nng_socket, nng_aio *);
 // without resorting to raw mode sockets.  See the protocol specific
 // documentation for further details.  (Note that at this time, only
 // asynchronous send/recv are supported for contexts, but its easy enough
-// to make synchronous versions with nng_aio_wait().)  Note that nng_close
-// of the parent socket will *block* as long as any contexts are open.
+// to make synchronous versions with nng_aio_wait().)  Note that
+// nng_socket_close of the parent socket will *block* as long as any contexts
+// are open.
 
 // nng_ctx_open creates a context.  This returns NNG_ENOTSUP if the
 // protocol implementation does not support separate contexts.

@@ -207,7 +207,7 @@ test_pull_close_recv(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_aio_set_timeout(aio, 1000);
 	nng_recv_aio(s, aio);
-	NUTS_PASS(nng_close(s));
+	NUTS_CLOSE(s);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 

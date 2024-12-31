@@ -179,7 +179,7 @@ pub_server(void *arg)
 	end = nng_clock();
 
 	nng_msleep(1000); // drain the queue
-	nng_close(sock);
+	nng_socket_close(sock);
 
 	nng_mtx_lock(pa->mtx);
 	pa->beg = start;

@@ -96,6 +96,7 @@
 [`nng_iov`]: /api/aio.md#scatter-gather-vectors
 [`nng_socket_id`]: /api/sock.md#socket-identity
 [`nng_socket_raw`]: /api/sock.md#socket-identity
+[`nng_socket_close`]: /api/sock.md#closing-a-socket
 [`nng_socket_proto_id`]: /api/sock.md#socket-identity
 [`nng_socket_proto_name`]: /api/sock.md#socket-identity
 [`nng_socket_peer_id`]: /api/sock.md#socket-identity

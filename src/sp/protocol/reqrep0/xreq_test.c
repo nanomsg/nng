@@ -358,7 +358,7 @@ test_xreq_ttl_option(void)
 	NUTS_TRUE(nng_socket_set_bool(rep, opt, true) == NNG_EBADTYPE);
 	NUTS_TRUE(nng_socket_get_bool(rep, opt, &b) == NNG_EBADTYPE);
 
-	NUTS_TRUE(nng_close(rep) == 0);
+	NUTS_CLOSE(rep);
 }
 
 NUTS_TESTS = {

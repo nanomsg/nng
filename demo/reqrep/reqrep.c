@@ -173,7 +173,7 @@ client(const char *url)
 
 	// This assumes that buf is ASCIIZ (zero terminated).
 	nng_free(buf, sz);
-	nng_close(sock);
+	nng_socket_close(sock);
 	return (0);
 }
 

@@ -43,7 +43,7 @@ test_buffer_options(void)
 		// Buffer sizes are limited to sane levels
 		NUTS_FAIL(nng_socket_set_int(s1, opt, 0x100000), NNG_EINVAL);
 	}
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 
 NUTS_TESTS = {

@@ -502,7 +502,7 @@ test_surv_ctx_recv_close_socket(void)
 	NUTS_PASS(nng_aio_result(aio));
 
 	nng_ctx_recv(ctx, aio);
-	nng_close(surv);
+	nng_socket_close(surv);
 
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
@@ -594,8 +594,8 @@ test_surv_validate_peer(void)
 	NUTS_TRUE(nng_stat_type(reject) == NNG_STAT_COUNTER);
 	NUTS_TRUE(nng_stat_value(reject) > 0);
 
-	NUTS_PASS(nng_close(s1));
-	NUTS_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 	nng_stats_free(stats);
 }
 

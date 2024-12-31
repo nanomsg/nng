@@ -42,7 +42,7 @@ client(const char *url, const char *msecstr)
 {
 	nng_socket sock;
 	int        rv;
-	nng_msg *  msg;
+	nng_msg   *msg;
 	nng_time   start;
 	nng_time   end;
 	unsigned   msec;
@@ -76,9 +76,9 @@ client(const char *url, const char *msecstr)
 	}
 	end = nng_clock();
 	nng_msg_free(msg);
-	nng_close(sock);
+	nng_socket_close(sock);
 
-	printf("Request took %u milliseconds.\n", (uint32_t)(end - start));
+	printf("Request took %u milliseconds.\n", (uint32_t) (end - start));
 	return (0);
 }
 

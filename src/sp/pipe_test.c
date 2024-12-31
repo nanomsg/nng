@@ -143,8 +143,8 @@ init_cases(char *addr, struct testcase *push, struct testcase *pull)
 static void
 fini_cases(struct testcase *push, struct testcase *pull)
 {
-	nng_close(push->s);
-	nng_close(pull->s);
+	nng_socket_close(push->s);
+	nng_socket_close(pull->s);
 	nng_cv_free(push->cv);
 	nng_cv_free(pull->cv);
 	nng_mtx_free(push->lk);

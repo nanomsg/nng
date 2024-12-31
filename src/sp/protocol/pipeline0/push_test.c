@@ -271,7 +271,7 @@ test_push_close_send(void)
 	nng_aio_set_timeout(aio, 1000);
 	nng_aio_set_msg(aio, m);
 	nng_send_aio(s, aio);
-	NUTS_PASS(nng_close(s));
+	NUTS_CLOSE(s);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 

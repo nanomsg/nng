@@ -101,8 +101,8 @@ test_invalid_verify(void)
 	NUTS_TRUE((rv == NNG_EPEERAUTH) || (rv == NNG_ECLOSED) ||
 	    (rv == NNG_ECRYPTO));
 
-	NUTS_PASS(nng_close(s1));
-	NUTS_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 }
 
 static void
@@ -202,8 +202,8 @@ test_verify_works(void)
 	NUTS_TRUE(b == true);
 
 	nng_msg_free(msg);
-	NUTS_PASS(nng_close(s1));
-	NUTS_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 }
 
 static void
@@ -271,8 +271,8 @@ test_tls_config(void)
 	NUTS_TRUE((rv == NNG_EPEERAUTH) || (rv == NNG_ECLOSED) ||
 	    (rv == NNG_ECRYPTO));
 
-	NUTS_PASS(nng_close(s1));
-	NUTS_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 }
 
 #endif

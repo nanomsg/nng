@@ -215,7 +215,7 @@ test_pair0_send_stopped_aio(void)
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	nng_msg_free(msg);
 	nng_aio_free(aio);
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 
 void
@@ -235,7 +235,7 @@ test_pair0_send_canceled_aio(void)
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	nng_msg_free(msg);
 	nng_aio_free(aio);
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 
 void
@@ -251,7 +251,7 @@ test_pair0_recv_stopped_aio(void)
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	nng_aio_free(aio);
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 
 void
@@ -267,7 +267,7 @@ test_pair0_recv_canceled_aio(void)
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
 	nng_aio_free(aio);
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 void
 test_pair0_raw(void)
@@ -278,12 +278,12 @@ test_pair0_raw(void)
 	NUTS_PASS(nng_pair0_open(&s1));
 	NUTS_PASS(nng_socket_raw(s1, &raw));
 	NUTS_TRUE(raw == false);
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 
 	NUTS_PASS(nng_pair0_open_raw(&s1));
 	NUTS_PASS(nng_socket_raw(s1, &raw));
 	NUTS_TRUE(raw == true);
-	NUTS_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 
 void

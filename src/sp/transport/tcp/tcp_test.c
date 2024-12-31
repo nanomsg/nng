@@ -198,7 +198,7 @@ test_tcp_recv_max(void)
 	NUTS_TRUE(sz == 95);
 	NUTS_PASS(nng_send(s1, msg, 150, 0));
 	NUTS_FAIL(nng_recv(s0, buf, &sz, 0), NNG_ETIMEDOUT);
-	NUTS_PASS(nng_close(s0));
+	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 }
 

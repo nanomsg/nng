@@ -34,7 +34,7 @@ Threads waiting for operations on the context when this
 call is executed may also return with an `NNG_ECLOSED` result.
 
 NOTE: Closing the socket associated with _ctx_
-(using xref:nng_close.3.adoc[`nng_close()`]) also closes this context.
+(using xref:nng_socket_close.3.adoc[`nng_socket_close()`]) also closes this context.
 
 == RETURN VALUES
 

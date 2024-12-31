@@ -62,10 +62,10 @@ main(int argc, char **argv)
 	if ((sz != 4) || (memcmp(buf, "DEF", 4) != 0)) {
 		throw "Contents did not match";
 	}
-	if ((rv = nng_close(s1)) != 0) {
+	if ((rv = nng_socket_close(s1)) != 0) {
 		throw nng_strerror(rv);
 	}
-	if ((rv = nng_close(s2)) != 0) {
+	if ((rv = nng_socket_close(s2)) != 0) {
 		throw nng_strerror(rv);
 	}
 

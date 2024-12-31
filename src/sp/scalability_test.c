@@ -38,7 +38,7 @@ serve(void *arg)
 	if (msg != NULL) {
 		nng_msg_free(msg);
 	}
-	nng_close(rep);
+	nng_socket_close(rep);
 }
 
 int
