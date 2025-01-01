@@ -540,6 +540,9 @@ static int
 http_res_prepare(nni_http_res *res)
 {
 	int rv;
+	if (res->code == 0) {
+		res->code = NNG_HTTP_STATUS_OK;
+	}
 	rv = http_asprintf(&res->buf, &res->bufsz, &res->hdrs, "%s %d %s\r\n",
 	    res->vers, nni_http_res_get_status(res),
 	    nni_http_res_get_reason(res));
