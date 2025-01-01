@@ -358,17 +358,105 @@ block.</p>
 </p>
 <p>Closing the socket may be disruptive to transfers that are still in progress.</p>
 </div>
+<h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
+<pre><code class="language-c">int nng_send(nng_socket s, void *data, size_t size, int flags);
+int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
+void nng_send_aio(nng_socket s, nng_aio *aio);
+</code></pre>
+<p>These functions (<a name="a034"></a><code>nng_send</code>, <a name="a035"></a><code>nng_sendmsg</code>, and <a name="a036"></a><code>nng_send_aio</code>) send
+messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The semantics of what sending a message means varies from protocol to
+protocol, so examination of the protocol documentation is encouraged.
+Additionally, some protocols may not support sending at all or may require other pre-conditions first.
+(For example, <a href="/proto/rep.html">REP</a> sockets cannot normally send data until they have first received a request,
+while <a href="/proto/sub.html">SUB</a> sockets can only receive data and never send it.)</p>
+</div>
+<h3 id="nng_send"><a class="header" href="#nng_send">nng_send</a></h3>
+<p>The <code>nng_send</code> function is the simplest to use, but is the least efficient.
+It sends the content in <em>data</em>, as a message of <em>size</em> bytes. The <em>flags</em> is a bit mask
+made up of zero or more of the following values:</p>
+<ul>
+<li>
+<p><a name="a037"></a><code>NNG_FLAG_NONBLOCK</code>: <a name="NNG_FLAG_NONBLOCK"></a>
+If the socket cannot accept more data at this time, it does not block, but returns immediately
+with a status of <a href="/api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be sent.</p>
+</li>
+<li>
+<p><a name="a038"></a><code>NNG_FLAG_ALLOC</code>: <a name="NNG_FLAG_ALLOC"></a>
+The <em>data</em> was allocated using <a href="/api/memory.html#allocate-memory"><code>nng_alloc</code></a> or was obtained from a call to <a href="/TODO.html"><code>nng_recv</code></a> also with
+the <code>NNG_FLAG_ALLOC</code> flag. If this function succeeds, then it will dispose of the <em>data</em>, deallocating it
+once the transmission is complete. If this function returns a non-zero status, the caller retains the responsibility
+of disposing the data. The benefit of this flag is that it can eliminate a data copy and allocation. Without the flag
+the socket will make a duplicate copy of <em>data</em> for use by the operation, before returning to the caller.</p>
+</li>
+</ul>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Regardless of the presence or absence of <code>NNG_FLAG_NONBLOCK</code>, there may
+be queues between the sender and the receiver.
+Furthermore, there is no guarantee that the message has actually been delivered.
+Finally, with some protocols, the semantic is implicitly <code>NNG_FLAG_NONBLOCK</code>,
+such as with <a href="/proto/pub.html">PUB</a> sockets, which are best-effort delivery only.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-important">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  important
+</p>
+<p>When using <code>NNG_FLAG_ALLOC</code>, it is important that the value of <em>size</em> match the actual allocated size of the data.
+Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
+or other undesirable effects.</p>
+</div>
+<h3 id="nng_sendmsg"><a class="header" href="#nng_sendmsg">nng_sendmsg</a></h3>
+<p>The <code>nng_sendmsg</code> function sends the <em>msg</em> over the socket <em>s</em>.</p>
+<p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
+If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
+<p>The <em>flags</em> can contain the value <a href="/TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+cannot accept more data for sending. In such a case, it will return <a href="/api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>This function is preferred over <a href="/api/sock.html#nng_send"><code>nng_send</code></a>, as it gives access to the message structure and eliminates both
+a data copy and allocation.</p>
+</div>
+<h3 id="nng_send_aio"><a class="header" href="#nng_send_aio">nng_send_aio</a></h3>
+<p>The <code>nng_send_aio</code> function sends a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+The message to send must have been set on <em>aio</em> using the <a href="/api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
+<p>If the operation completes successfully, then the socket will have disposed of the message.
+However, if it fails, then callback of <em>aio</em> should arrange for a final disposition of the message.
+(The message can be retrieved from <em>aio</em> with <a href="/api/aio.html#messages"><code>nng_aio_get_msg</code></a>.)</p>
+<p>Note that callback associated with <em>aio</em> may be called <em>before</em> the message is finally delivered to the recipient.
+For example, the message may be sitting in queue, or located in TCP buffers, or even in flight.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>This is the preferred function to use for sending data on a socket. While it does require a few extra
+steps on the part of the application, the lowest latencies and highest performance will be achieved by using
+this function instead of <a href="/api/sock.html#nng_send"><code>nng_send</code></a> or <a href="/api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>.</p>
+</div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
 </code></pre>
 <p>Sometimes it is necessary to integrate a socket into a <code>poll</code> or <code>select</code> driven
-<a name="a034"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
+<a name="a039"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
 <p>For these occasions, a suitable file descriptor for polling is provided
 by these two functions.</p>
-<p>The <a name="a035"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a040"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
 that will poll as readable when a message is ready for receiving for the socket.</p>
-<p>The <a name="a036"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a041"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
 that will poll as readable when the socket can accept a message for sending.</p>
 <p>These file descriptors should only be polled for readability, and no
 other operation performed on them. The socket will read from, or write to,
@@ -404,6 +492,56 @@ when possible.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <h3 id="example-1-initializing-a-socket"><a class="header" href="#example-1-initializing-a-socket">Example 1: Initializing a Socket</a></h3>
 <pre><code class="language-c">nng_socket s = NNG_SOCKET_INITIALIZER;
+</code></pre>
+<h3 id="example-2-publishing-a-timestamp"><a class="header" href="#example-2-publishing-a-timestamp">Example 2: Publishing a Timestamp</a></h3>
+<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="/api/sock.html#nng_send_aio"><code>nng_send_aio</code></a>, and <a href="/api/time.html"><code>nng_sleep_aio</code></a> to
+build a service that publishes a timestamp at one second intervals. Error handling is elided for the
+sake of clarity.</p>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+#include &lt;nng/nng.h&gt;
+#include &lt;nng/protocol/pubsub0/pub.h&gt;
+
+struct state {
+    nng_socket s;
+    bool sleeping;
+    nng_aio *aio;
+};
+
+static struct state state;
+
+void callback(void *arg) {
+    nng_msg *msg;
+    nng_time now;
+    struct state *state = arg;
+    if (nng_aio_result(state-&gt;aio) != 0) {
+        nng_log_err("Error %s occurred", nng_strerror(nng_aio_result(state-&gt;aio)));
+        return; // terminate the callback loop
+    }
+    if (state-&gt;sleeping) {
+        state-&gt;sleeping = false;
+        nng_msg_alloc(&amp;msg, sizeof (nng_time));
+        now = nng_clock();
+        nng_msg_append(msg, &amp;now, sizeof (now)); // note: native endian
+        nng_aio_set_msg(state-&gt;aio, msg);
+        nng_send_aio(state-&gt;s, state-&gt;aio);
+    } else {
+        state-&gt;sleeping = true;
+        nng_sleep_aio(1000, state-&gt;aio); // 1000 ms == 1 second
+    }
+}
+
+int main(int argc, char **argv) {
+    const char *url = argv[1]; // should check this
+
+    nng_aio_alloc(&amp;state.aio, NULL, NULL);
+    nng_pub0_open(&amp;state.s);
+    nng_listen(state.s, url, NULL, 0);
+    state.sleeping = 0;
+    nng_sleep_aio(1, state.aio); // kick it off right away
+    for(;;) {
+        nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
+    }
+}
 </code></pre>
 <!-- Symbol cross reference -->
 <!-- Macros -->

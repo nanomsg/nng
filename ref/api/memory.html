@@ -235,7 +235,7 @@ Note that the memory may have random data in it, just like with <code>malloc</co
 <p>If memory cannot be allocated for any reason, then <code>NULL</code> will be returned.
 Applications that experience this should treat this like <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
 <p>Memory returned by <code>nng_alloc</code> can be used to hold message buffers, in which
-case it can be directly passed to <a href="/TODO.html"><code>nng_send</code></a> using the flag <code>NNG_FLAG_ALLOC</code>.
+case it can be directly passed to <a href="/api/sock.html#nng_send"><code>nng_send</code></a> using the flag <code>NNG_FLAG_ALLOC</code>.
 Alternatively, it can be freed when no longer needed using <a href="/api/memory.html#deallocate-memory"><code>nng_free</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
