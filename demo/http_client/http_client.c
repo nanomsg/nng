@@ -49,15 +49,15 @@ int
 main(int argc, char **argv)
 {
 	nng_http_client *client;
-	nng_http_conn *  conn;
-	nng_url *        url;
-	nng_aio *        aio;
-	nng_http_req *   req;
-	nng_http_res *   res;
-	const char *     hdr;
+	nng_http_conn   *conn;
+	nng_url         *url;
+	nng_aio         *aio;
+	nng_http_req    *req;
+	nng_http_res    *res;
+	const char      *hdr;
 	int              rv;
 	int              len;
-	void *           data;
+	void            *data;
 	nng_iov          iov;
 
 	if (argc < 2) {
@@ -65,7 +65,8 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (((rv = nng_url_parse(&url, argv[1])) != 0) ||
+	if (((rv = nng_init(NULL)) != 0) ||
+	    ((rv = nng_url_parse(&url, argv[1])) != 0) ||
 	    ((rv = nng_http_client_alloc(&client, url)) != 0) ||
 	    ((rv = nng_http_req_alloc(&req, url)) != 0) ||
 	    ((rv = nng_http_res_alloc(&res)) != 0) ||
