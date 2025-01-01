@@ -19,6 +19,27 @@ The `nng_close` function has been renamed to [`nng_socket_close`] to make it cle
 the object being closed is a socket. A compatible `nng_close` macro is available by defining `NNG1_TRANSITION`
 in your compilation environment.
 
+## Removed Protocol Aliases
+
+The following macro aliases are removed, unless `NNG1_TRANSITION` is defined in your compilation environment.
+
+- `nng_bus_open`
+- `nng_pair_open`
+- `nng_pub_open`
+- `nng_pull_open`
+- `nng_push_open`
+- `nng_rep_open`
+- `nng_req_open`
+- `nng_respondent_open`
+- `nng_sub_open`
+- `nng_surveyor_open`
+
+Just add either `0` or `1` (in the case of PAIRv1) to get the protocol desired. (Forcing the version number to
+be supplied should avoid surprises later as new versions of protocols are added.)
+
+Additionally, the header files for protocols are now empty, as all of their content has been moved to `nng/nng.h`.
+Please remove `#include` references to protocol headers as we anticipate removing them in the future.
+
 ## New AIO Error Code NNG_ESTOPPED
 
 When an operation fails with [`NNG_ESTOPPED`], it means that the associated [`nni_aio`] object has

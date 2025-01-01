@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,8 @@
 #
 
 if (NNG_SUPP_WEBSOCKET)
-    nng_sources(websocket.c websocket.h)
+    nng_sources(sha1.c sha1.h websocket.c websocket.h)
+    nng_test(sha1_test)
 else ()
     nng_sources(stub.c)
 endif ()

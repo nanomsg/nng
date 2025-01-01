@@ -11,7 +11,7 @@
 
 #include <nng/nng.h>
 
-#include "../sha1/sha1.h"
+#include "sha1.h"
 
 #include <nuts.h>
 
