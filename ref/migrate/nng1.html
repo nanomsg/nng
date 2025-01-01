@@ -276,8 +276,8 @@ Just convert any use of them to <code>NNG_OPT_WS_REQUEST_HEADERS</code> or
 a <code>nng_tls_config</code> object, and then setting fields on it using the appropriate functions,
 after which it may be configured on a listener or dialer using the <a href="/TODO.html"><code>nng_listener_set_tls</code></a>
 or <a href="/TODO.html"><code>nng_dialer_set_tls</code></a> functions.</p>
-<p>Likewise, when using the streams API, use the <a href="/TODO.html"><code>nng_stream_listener_set_tls</code></a> or
-<a href="/TODO.html"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
+<p>Likewise, when using the streams API, use the <a href="/api/stream.html#tls-configuration"><code>nng_stream_listener_set_tls</code></a> or
+<a href="/api/stream.html#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
 <p>Note that the declarations needed for TLS configuration are now available in <code>&lt;nng/nng.h&gt;</code>,
 rather than the supplemental header.</p>
 <h2 id="old-tls-versions-removed"><a class="header" href="#old-tls-versions-removed">Old TLS Versions Removed</a></h2>
