@@ -72,9 +72,7 @@ install(DIRECTORY ../include/nng
         COMPONENT Headers)
 
 # These are promoted for testing
-set(NNG_SUPP_BASE64 ${NNG_SUPP_BASE64} PARENT_SCOPE)
 set(NNG_SUPP_HTTP ${NNG_SUPP_HTTP} PARENT_SCOPE)
-set(NNG_SUPP_SHA1 ${NNG_SUPP_SHA1} PARENT_SCOPE)
 set(NNG_SUPP_WEBSOCKET ${NNG_SUPP_WEBSOCKET} PARENT_SCOPE)
 
 # Configure files

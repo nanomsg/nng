@@ -142,6 +142,4 @@ if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     # Make sure things we *MUST* have are enabled.
     set(NNG_SUPP_WEBSOCKET ON)
     set(NNG_SUPP_HTTP ON)
-    set(NNG_SUPP_BASE64 ON)
-    set(NNG_SUPP_SHA1 ON)
 endif()

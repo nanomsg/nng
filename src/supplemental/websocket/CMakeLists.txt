@@ -9,8 +9,9 @@
 #
 
 if (NNG_SUPP_WEBSOCKET)
-    nng_sources(sha1.c sha1.h websocket.c websocket.h)
+    nng_sources(base64.c base64.h sha1.c sha1.h websocket.c websocket.h)
     nng_test(sha1_test)
+    nng_test(base64_test)
 else ()
     nng_sources(stub.c)
 endif ()

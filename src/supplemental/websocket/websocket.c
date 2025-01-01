@@ -16,8 +16,7 @@
 #include "core/nng_impl.h"
 #include "supplemental/http/http_api.h"
 
-#include "supplemental/base64/base64.h"
-
+#include "base64.h"
 #include "sha1.h"
 #include "websocket.h"
 

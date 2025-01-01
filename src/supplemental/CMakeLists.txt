@@ -9,7 +9,6 @@
 
 nng_directory(supplemental)
 
-add_subdirectory(base64)
 add_subdirectory(http)
 add_subdirectory(tls)
 add_subdirectory(util)
