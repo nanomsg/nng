@@ -352,6 +352,7 @@ sake of clarity.
 
 ```c
 #include <stdlib.h>
+#include <stdio.h>
 #include <nng/nng.h>
 #include <nng/protocol/pubsub0/pub.h>
 
@@ -368,7 +369,7 @@ void callback(void *arg) {
     nng_time now;
     struct state *state = arg;
     if (nng_aio_result(state->aio) != 0) {
-        nng_log_err("Error %s occurred", nng_strerror(nng_aio_result(state->aio)));
+        fprintf(stderr, "Error %s occurred", nng_strerror(nng_aio_result(state->aio)));
         return; // terminate the callback loop
     }
     if (state->sleeping) {
@@ -392,6 +393,56 @@ int main(int argc, char **argv) {
     nng_listen(state.s, url, NULL, 0);
     state.sleeping = 0;
     nng_sleep_aio(1, state.aio); // kick it off right away
+    for(;;) {
+        nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
+    }
+}
+```
+
+### Example 3: Watching a Periodic Timestamp
+
+This example demonstrates the use of [`nng_aio`], [`nng_recv_aio`], to build a client to
+watch for messages received from the service created in Example 2.
+Error handling is elided for the sake of clarity.
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>>
+#include <nng/nng.h>
+#include <nng/protocol/pubsub0/sub.h>
+
+struct state {
+    nng_socket s;
+    nng_aio *aio;
+};
+
+static struct state state;
+
+void callback(void *arg) {
+    nng_msg *msg;
+    nng_time now;
+    struct state *state = arg;
+    if (nng_aio_result(state->aio) != 0) {
+        fprintf(stderr, "Error %s occurred", nng_strerror(nng_aio_result(state->aio)));
+        return; // terminate the callback loop
+    }
+    msg = nng_aio_get_msg(state->aio);
+    memcpy(&now, nng_msg_body(msg), sizeof (now)); // should check the length!
+    printf("Timestamp is %lu\n", (unsigned long)now);
+    nng_msg_free(msg);
+    nng_aio_set_msg(state->aio, NULL);
+    nng_recv_aio(state->s, state->aio);
+}
+
+int main(int argc, char **argv) {
+    const char *url = argv[1]; // should check this
+
+    nng_aio_alloc(&state.aio, NULL, NULL);
+    nng_sub0_open(&state.s);
+    nng_sub0_socket_subscribe(state.s, NULL, 0); // subscribe to everything
+    nng_dial(state.s, url, NULL, 0);
+    nng_recv_aio(state.s, state.aio); // kick it off right away
     for(;;) {
         nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
     }
