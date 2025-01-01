@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,6 +14,11 @@
 
 #define SECOND 1000
 
+#define BUS0_SELF 0x70
+#define BUS0_PEER 0x70
+#define BUS0_SELF_NAME "bus"
+#define BUS0_PEER_NAME "bus"
+
 void
 test_bus_identity(void)
 {
@@ -23,13 +28,13 @@ test_bus_identity(void)
 
 	NUTS_PASS(nng_bus0_open(&s));
 	NUTS_PASS(nng_socket_proto_id(s, &p));
-	NUTS_TRUE(p == NNG_BUS0_SELF);
+	NUTS_TRUE(p == BUS0_SELF);
 	NUTS_PASS(nng_socket_peer_id(s, &p));
-	NUTS_TRUE(p == NNG_BUS0_PEER); // 49
+	NUTS_TRUE(p == BUS0_PEER); // 49
 	NUTS_PASS(nng_socket_proto_name(s, &n));
-	NUTS_MATCH(n, NNG_BUS0_SELF_NAME);
+	NUTS_MATCH(n, BUS0_SELF_NAME);
 	NUTS_PASS(nng_socket_peer_name(s, &n));
-	NUTS_MATCH(n, NNG_BUS0_PEER_NAME);
+	NUTS_MATCH(n, BUS0_PEER_NAME);
 	NUTS_CLOSE(s);
 }
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/pubsub0/pub.h"
 
 // Publish protocol.  The PUB protocol simply sends messages out, as
 // a broadcast.  It has nothing more sophisticated because it does not

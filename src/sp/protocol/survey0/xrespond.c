@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/survey0/respond.h"
 
 // Respondent protocol.  The RESPONDENT protocol is the "replier" side of
 // the surveyor pattern.  This is useful for building service discovery, or

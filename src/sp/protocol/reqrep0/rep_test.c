@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,6 +9,11 @@
 
 #include "nng/nng.h"
 #include <nuts.h>
+
+#define REP0_SELF 0x31
+#define REP0_PEER 0x30
+#define REP0_SELF_NAME "rep"
+#define REP0_PEER_NAME "req"
 
 static void
 test_rep_identity(void)
@@ -24,10 +29,10 @@ test_rep_identity(void)
 	NUTS_PASS(nng_socket_proto_name(s, &n1));
 	NUTS_PASS(nng_socket_peer_name(s, &n2));
 	NUTS_CLOSE(s);
-	NUTS_TRUE(p1 == NNG_REP0_SELF);
-	NUTS_TRUE(p2 == NNG_REP0_PEER);
-	NUTS_MATCH(n1, NNG_REP0_SELF_NAME);
-	NUTS_MATCH(n2, NNG_REP0_PEER_NAME);
+	NUTS_TRUE(p1 == REP0_SELF);
+	NUTS_TRUE(p2 == REP0_PEER);
+	NUTS_MATCH(n1, REP0_SELF_NAME);
+	NUTS_MATCH(n2, REP0_PEER_NAME);
 }
 
 void
@@ -179,8 +184,8 @@ test_rep_huge_send(void)
 	nng_msg   *d;
 	nng_aio   *aio;
 
-	NUTS_PASS(nng_rep_open(&rep));
-	NUTS_PASS(nng_req_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
@@ -234,8 +239,8 @@ test_rep_huge_send_socket(void)
 	nng_msg   *d;
 	nng_aio   *aio;
 
-	NUTS_PASS(nng_rep_open(&rep));
-	NUTS_PASS(nng_req_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,6 +10,11 @@
 #include "nng/nng.h"
 #include <nuts.h>
 
+#define RESPONDENT0_SELF 0x63
+#define RESPONDENT0_PEER 0x62
+#define RESPONDENT0_SELF_NAME "respondent"
+#define RESPONDENT0_PEER_NAME "surveyor"
+
 void
 test_resp_identity(void)
 {
@@ -19,13 +24,13 @@ test_resp_identity(void)
 
 	NUTS_PASS(nng_respondent0_open(&s));
 	NUTS_PASS(nng_socket_proto_id(s, &p));
-	NUTS_TRUE(p == NNG_RESPONDENT0_SELF);
+	NUTS_TRUE(p == RESPONDENT0_SELF);
 	NUTS_TRUE(nng_socket_peer_id(s, &p) == 0);
-	NUTS_TRUE(p == NNG_RESPONDENT0_PEER);
+	NUTS_TRUE(p == RESPONDENT0_PEER);
 	NUTS_TRUE(nng_socket_proto_name(s, &n) == 0);
-	NUTS_MATCH(n, NNG_RESPONDENT0_SELF_NAME);
+	NUTS_MATCH(n, RESPONDENT0_SELF_NAME);
 	NUTS_TRUE(nng_socket_peer_name(s, &n) == 0);
-	NUTS_MATCH(n, NNG_RESPONDENT0_PEER_NAME);
+	NUTS_MATCH(n, RESPONDENT0_PEER_NAME);
 	NUTS_CLOSE(s);
 }
 

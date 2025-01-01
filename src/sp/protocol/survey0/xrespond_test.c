@@ -10,6 +10,11 @@
 #include "nng/nng.h"
 #include <nuts.h>
 
+#define RESPONDENT0_SELF 0x63
+#define RESPONDENT0_PEER 0x62
+#define RESPONDENT0_SELF_NAME "respondent"
+#define RESPONDENT0_PEER_NAME "surveyor"
+
 static void
 test_xresp_identity(void)
 {
@@ -24,10 +29,10 @@ test_xresp_identity(void)
 	NUTS_PASS(nng_socket_proto_name(s, &n1));
 	NUTS_PASS(nng_socket_peer_name(s, &n2));
 	NUTS_CLOSE(s);
-	NUTS_TRUE(p1 == NNG_RESPONDENT0_SELF);
-	NUTS_TRUE(p2 == NNG_RESPONDENT0_PEER);
-	NUTS_MATCH(n1, NNG_RESPONDENT0_SELF_NAME);
-	NUTS_MATCH(n2, NNG_RESPONDENT0_PEER_NAME);
+	NUTS_TRUE(p1 == RESPONDENT0_SELF);
+	NUTS_TRUE(p2 == RESPONDENT0_PEER);
+	NUTS_MATCH(n1, RESPONDENT0_SELF_NAME);
+	NUTS_MATCH(n2, RESPONDENT0_PEER_NAME);
 }
 
 static void
@@ -187,7 +192,7 @@ test_xresp_close_pipe_during_send(void)
 	nng_pipe   p;
 	nng_msg   *m;
 
-	NUTS_PASS(nng_respondent_open_raw(&resp));
+	NUTS_PASS(nng_respondent0_open_raw(&resp));
 	NUTS_PASS(nng_surveyor0_open_raw(&surv));
 	NUTS_PASS(nng_socket_set_ms(resp, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(resp, NNG_OPT_SENDTIMEO, 200));

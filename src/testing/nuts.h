@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -49,19 +49,7 @@ extern void nuts_logger(
 #include <string.h>
 
 // The following headers are provided for test code convenience.
-#include <nng/protocol/bus0/bus.h>
-#include <nng/protocol/pair0/pair.h>
-#include <nng/protocol/pair1/pair.h>
-#include <nng/protocol/pipeline0/pull.h>
-#include <nng/protocol/pipeline0/push.h>
-#include <nng/protocol/pubsub0/pub.h>
-#include <nng/protocol/pubsub0/sub.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/protocol/survey0/respond.h>
-#include <nng/protocol/survey0/survey.h>
 #include <nng/supplemental/tls/tls.h>
-#include <supplemental/sha1/sha1.h>
 
 #ifdef __cplusplus
 extern "C" {

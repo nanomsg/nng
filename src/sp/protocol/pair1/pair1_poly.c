@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,11 @@
 #include <stdlib.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/pair1/pair.h"
+
+#define PAIR1_SELF_NAME "pair1"
+#define PAIR1_PEER_NAME "pair1"
+#define PAIR1_SELF 0x11
+#define PAIR1_PEER 0x11
 
 // Pair1 poly-amorous mode.  The PAIRv1 protocol is normally a simple 1:1
 // messaging pattern, but this mode offers the ability to use a best-effort
@@ -229,13 +233,13 @@ pair1poly_pipe_start(void *arg)
 	int             rv;
 
 	nni_mtx_lock(&s->mtx);
-	if (nni_pipe_peer(p->pipe) != NNG_PAIR1_PEER) {
+	if (nni_pipe_peer(p->pipe) != PAIR1_PEER) {
 		// Peer protocol mismatch.
 		nni_mtx_unlock(&s->mtx);
 		BUMP_STAT(&s->stat_reject_mismatch);
 		nng_log_warn("NNG-PEER-MISMATCH",
 		    "Peer protocol mismatch: %d != %d, rejected.",
-		    nni_pipe_peer(p->pipe), NNG_PAIR1_PEER);
+		    nni_pipe_peer(p->pipe), PAIR1_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -522,8 +526,8 @@ static nni_proto_sock_ops pair1poly_sock_ops = {
 
 static nni_proto pair1poly_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PAIR1_SELF, NNG_PAIR1_SELF_NAME },
-	.proto_peer     = { NNG_PAIR1_PEER, NNG_PAIR1_PEER_NAME },
+	.proto_self     = { PAIR1_SELF, PAIR1_SELF_NAME },
+	.proto_peer     = { PAIR1_PEER, PAIR1_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &pair1poly_sock_ops,
 	.proto_pipe_ops = &pair1poly_pipe_ops,

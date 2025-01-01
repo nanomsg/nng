@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Nathan Kent <nate@nkent.net>
 //
@@ -13,8 +13,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "core/socket.h"
-#include "nng/protocol/pubsub0/sub.h"
 
 // Subscriber protocol.  The SUB protocol receives messages sent to
 // it from publishers, and filters out those it is not interested in,

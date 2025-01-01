@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,6 +9,11 @@
 
 #include "nng/nng.h"
 #include <nuts.h>
+
+#define REQ0_SELF 0x30
+#define REQ0_PEER 0x31
+#define REQ0_SELF_NAME "req"
+#define REQ0_PEER_NAME "rep"
 
 static void
 test_xreq_identity(void)
@@ -24,10 +29,10 @@ test_xreq_identity(void)
 	NUTS_PASS(nng_socket_proto_name(s, &n1));
 	NUTS_PASS(nng_socket_peer_name(s, &n2));
 	NUTS_CLOSE(s);
-	NUTS_TRUE(p1 == NNG_REQ0_SELF);
-	NUTS_TRUE(p2 == NNG_REQ0_PEER);
-	NUTS_MATCH(n1, NNG_REQ0_SELF_NAME);
-	NUTS_MATCH(n2, NNG_REQ0_PEER_NAME);
+	NUTS_TRUE(p1 == REQ0_SELF);
+	NUTS_TRUE(p2 == REQ0_PEER);
+	NUTS_MATCH(n1, REQ0_SELF_NAME);
+	NUTS_MATCH(n2, REQ0_PEER_NAME);
 }
 
 static void

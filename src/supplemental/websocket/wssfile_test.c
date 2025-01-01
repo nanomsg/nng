@@ -77,8 +77,8 @@ test_invalid_verify(void)
 
 	(void) snprintf(addr, sizeof(addr), "wss4://:0/test");
 
-	NUTS_PASS(nng_pair_open(&s1));
-	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
 	NUTS_PASS(nng_listener_start(l, 0));
@@ -119,8 +119,8 @@ test_no_verify(void)
 	int          port;
 
 	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
-	NUTS_PASS(nng_pair_open(&s1));
-	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
 
@@ -170,8 +170,8 @@ test_verify_works(void)
 	bool         b;
 	int          port;
 
-	NUTS_PASS(nng_pair_open(&s1));
-	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
 	port = nuts_next_port();
@@ -231,8 +231,8 @@ test_tls_config(void)
 
 	(void) snprintf(addr, sizeof(addr), "wss4://:0/test");
 
-	NUTS_PASS(nng_pair_open(&s1));
-	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	NUTS_PASS(nng_listener_get_tls(l, &cfg));
 	nng_tls_config_hold(cfg);

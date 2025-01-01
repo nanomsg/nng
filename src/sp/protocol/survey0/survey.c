@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,13 +11,17 @@
 #include <stdlib.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/survey0/survey.h"
 
 // Surveyor protocol.  The SURVEYOR protocol is the "survey" side of the
 // survey pattern.  This is useful for building service discovery, voting, etc.
 // Note that this pattern is not optimized for extreme low latency, as it makes
 // multiple use of queues for simplicity.  Typically this is used in cases
 // where a few dozen extra microseconds does not matter.
+
+#define SURVEYOR0_SELF 0x62
+#define SURVEYOR0_PEER 0x63
+#define SURVEYOR0_SELF_NAME "surveyor"
+#define SURVEYOR0_PEER_NAME "respondent"
 
 typedef struct surv0_pipe surv0_pipe;
 typedef struct surv0_sock surv0_sock;
@@ -348,10 +352,10 @@ surv0_pipe_start(void *arg)
 	surv0_pipe *p = arg;
 	surv0_sock *s = p->sock;
 
-	if (nni_pipe_peer(p->pipe) != NNG_SURVEYOR0_PEER) {
+	if (nni_pipe_peer(p->pipe) != SURVEYOR0_PEER) {
 		nng_log_warn("NNG-PEER-MISMATCH",
 		    "Peer protocol mismatch: %d != %d, rejected.",
-		    nni_pipe_peer(p->pipe), NNG_SURVEYOR0_PEER);
+		    nni_pipe_peer(p->pipe), SURVEYOR0_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -598,8 +602,8 @@ static nni_proto_sock_ops surv0_sock_ops = {
 
 static nni_proto surv0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_SURVEYOR0_SELF, NNG_SURVEYOR0_SELF_NAME },
-	.proto_peer     = { NNG_SURVEYOR0_PEER, NNG_SURVEYOR0_PEER_NAME },
+	.proto_self     = { SURVEYOR0_SELF, SURVEYOR0_SELF_NAME },
+	.proto_peer     = { SURVEYOR0_PEER, SURVEYOR0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &surv0_sock_ops,
 	.proto_pipe_ops = &surv0_pipe_ops,

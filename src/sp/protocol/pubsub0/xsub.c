@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/pubsub0/sub.h"
 
 // Subscriber protocol.  The SUB protocol receives messages sent to
 // it from publishers, and filters out those it is not interested in,

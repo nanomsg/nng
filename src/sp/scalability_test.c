@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,8 +11,6 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
 
 #include <nuts.h>
 
@@ -49,7 +47,7 @@ openclients(nng_socket *clients, int num)
 	for (i = 0; i < num; i++) {
 		t = 100; // 100ms
 		nng_socket c;
-		NUTS_PASS(nng_req_open(&c));
+		NUTS_PASS(nng_req0_open(&c));
 		NUTS_PASS(nng_socket_set_ms(c, NNG_OPT_RECVTIMEO, t));
 		NUTS_PASS(nng_socket_set_ms(c, NNG_OPT_SENDTIMEO, t));
 		NUTS_PASS(nng_dial(c, addr, NULL, 0));
@@ -89,7 +87,7 @@ test_scalability(void)
 	clients = calloc(nclients, sizeof(nng_socket));
 	results = calloc(nclients, sizeof(int));
 
-	NUTS_PASS(nng_rep_open(&rep));
+	NUTS_PASS(nng_rep0_open(&rep));
 	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_RECVBUF, 256));
 	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_SENDBUF, 256));
 	NUTS_PASS(nng_listen(rep, addr, NULL, 0));

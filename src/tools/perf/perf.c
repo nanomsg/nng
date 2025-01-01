@@ -32,61 +32,39 @@ typedef int (*open_func)(nng_socket *);
 static open_func open_server = no_open;
 static open_func open_client = no_open;
 
-#if defined(NNG_HAVE_PAIR1)
-#include <nng/protocol/pair1/pair.h>
-#else
+#if !defined(NNG_HAVE_PAIR1)
 #define nng_pair1_open no_open
 #endif
 
-#if defined(NNG_HAVE_PAIR0)
-#include <nng/protocol/pair0/pair.h>
-#else
+#if !defined(NNG_HAVE_PAIR0)
 #define nng_pair0_open no_open
 #endif
 
-#if !defined(NNG_HAVE_PAIR0) && !defined(NNG_HAVE_PAIR1)
-#define nng_pair_open no_open
-#endif
-
-#if defined(NNG_HAVE_REQ0)
-#include <nng/protocol/reqrep0/req.h>
-#else
+#if !defined(NNG_HAVE_REQ0)
 #define nng_req0_open no_open
 #endif
 
-#if defined(NNG_HAVE_REP0)
-#include <nng/protocol/reqrep0/rep.h>
-#else
+#if !defined(NNG_HAVE_REP0)
 #define nng_rep0_open no_open
 #endif
 
-#if defined(NNG_HAVE_BUS0)
-#include <nng/protocol/bus0/bus.h>
-#else
+#if !defined(NNG_HAVE_BUS0)
 #define nng_bus0_open no_open
 #endif
 
-#if defined(NNG_HAVE_PULL0)
-#include <nng/protocol/pipeline0/pull.h>
-#else
+#if !defined(NNG_HAVE_PULL0)
 #define nng_pull0_open no_open
 #endif
 
-#if defined(NNG_HAVE_PUSH0)
-#include <nng/protocol/pipeline0/push.h>
-#else
+#if !defined(NNG_HAVE_PUSH0)
 #define nng_push0_open no_open
 #endif
 
-#if defined(NNG_HAVE_PUB0)
-#include <nng/protocol/pubsub0/pub.h>
-#else
+#if !defined(NNG_HAVE_PUB0)
 #define nng_pub0_open no_open
 #endif
 
-#if defined(NNG_HAVE_SUB0)
-#include <nng/protocol/pubsub0/sub.h>
-#else
+#if !defined(NNG_HAVE_SUB0)
 #define nng_sub0_open no_open
 #endif
 
@@ -561,7 +539,7 @@ throughput_server(const char *addr, size_t msgsize, int count)
 	uint64_t   start, end;
 	float      msgpersec, mbps, total;
 
-	if ((rv = nng_pair_open(&s)) != 0) {
+	if ((rv = nng_pair1_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
 	rv = nng_socket_set_int(s, NNG_OPT_RECVBUF, 128);
@@ -620,7 +598,7 @@ throughput_client(const char *addr, size_t msgsize, int count)
 	// We send one extra zero length message to start the timer.
 	count++;
 
-	if ((rv = nng_pair_open(&s)) != 0) {
+	if ((rv = nng_pair1_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
 

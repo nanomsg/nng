@@ -11,6 +11,11 @@
 #include "nng/nng.h"
 #include <nuts.h>
 
+#define SURVEYOR0_SELF 0x62
+#define SURVEYOR0_PEER 0x63
+#define SURVEYOR0_SELF_NAME "surveyor"
+#define SURVEYOR0_PEER_NAME "respondent"
+
 static void
 test_surv_identity(void)
 {
@@ -20,13 +25,13 @@ test_surv_identity(void)
 
 	NUTS_PASS(nng_surveyor0_open(&s));
 	NUTS_PASS(nng_socket_proto_id(s, &p));
-	NUTS_TRUE(p == NNG_SURVEYOR0_SELF);
+	NUTS_TRUE(p == SURVEYOR0_SELF);
 	NUTS_PASS(nng_socket_peer_id(s, &p));
-	NUTS_TRUE(p == NNG_SURVEYOR0_PEER); // 49
+	NUTS_TRUE(p == SURVEYOR0_PEER); // 49
 	NUTS_PASS(nng_socket_proto_name(s, &n));
-	NUTS_MATCH(n, NNG_SURVEYOR0_SELF_NAME);
+	NUTS_MATCH(n, SURVEYOR0_SELF_NAME);
 	NUTS_PASS(nng_socket_peer_name(s, &n));
-	NUTS_MATCH(n, NNG_SURVEYOR0_PEER_NAME);
+	NUTS_MATCH(n, SURVEYOR0_PEER_NAME);
 	NUTS_CLOSE(s);
 }
 

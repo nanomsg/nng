@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,7 +12,6 @@
 
 #include "core/nng_impl.h"
 #include "core/pipe.h"
-#include "nng/protocol/pair0/pair.h"
 
 // Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
 // While a peer is connected to the server, all other peer connection

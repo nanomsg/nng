@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/reqrep0/rep.h"
 
 // Response protocol.  The REP protocol is the "reply" side of a
 // request-reply pair.  This is useful for building RPC servers, for
@@ -20,6 +19,11 @@
 typedef struct rep0_pipe rep0_pipe;
 typedef struct rep0_sock rep0_sock;
 typedef struct rep0_ctx  rep0_ctx;
+
+#define REP0_SELF 0x31
+#define REP0_PEER 0x30
+#define REP0_SELF_NAME "rep"
+#define REP0_PEER_NAME "req"
 
 static void rep0_pipe_send_cb(void *);
 static void rep0_pipe_recv_cb(void *);
@@ -293,11 +297,11 @@ rep0_pipe_start(void *arg)
 	rep0_sock *s = p->rep;
 	int        rv;
 
-	if (nni_pipe_peer(p->pipe) != NNG_REP0_PEER) {
+	if (nni_pipe_peer(p->pipe) != REP0_PEER) {
 		// Peer protocol mismatch.
 		nng_log_warn("NNG-PEER-MISMATCH",
 		    "Peer protocol mismatch: %d != %d, rejected.",
-		    nni_pipe_peer(p->pipe), NNG_REP0_PEER);
+		    nni_pipe_peer(p->pipe), REP0_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -662,8 +666,8 @@ static nni_proto_sock_ops rep0_sock_ops = {
 
 static nni_proto rep0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_REP0_SELF, NNG_REP0_SELF_NAME },
-	.proto_peer     = { NNG_REP0_PEER, NNG_REP0_PEER_NAME },
+	.proto_self     = { REP0_SELF, REP0_SELF_NAME },
+	.proto_peer     = { REP0_PEER, REP0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &rep0_sock_ops,
 	.proto_pipe_ops = &rep0_pipe_ops,

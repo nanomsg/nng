@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,6 +11,11 @@
 #include "nng/nng.h"
 #include <nuts.h>
 
+#define REQ0_SELF 0x30
+#define REQ0_PEER 0x31
+#define REQ0_SELF_NAME "req"
+#define REQ0_PEER_NAME "rep"
+
 static void
 test_req_identity(void)
 {
@@ -20,13 +25,13 @@ test_req_identity(void)
 
 	NUTS_PASS(nng_req0_open(&s));
 	NUTS_PASS(nng_socket_proto_id(s, &p));
-	NUTS_TRUE(p == NNG_REQ0_SELF);
+	NUTS_TRUE(p == REQ0_SELF);
 	NUTS_PASS(nng_socket_peer_id(s, &p));
-	NUTS_TRUE(p == NNG_REQ0_PEER); // 49
+	NUTS_TRUE(p == REQ0_PEER); // 49
 	NUTS_PASS(nng_socket_proto_name(s, &n));
-	NUTS_MATCH(n, NNG_REQ0_SELF_NAME);
+	NUTS_MATCH(n, REQ0_SELF_NAME);
 	NUTS_PASS(nng_socket_peer_name(s, &n));
-	NUTS_MATCH(n, NNG_REQ0_PEER_NAME);
+	NUTS_MATCH(n, REQ0_PEER_NAME);
 	NUTS_CLOSE(s);
 }
 
@@ -354,8 +359,8 @@ test_req_cancel(void)
 	nng_socket   req;
 	nng_socket   rep;
 
-	NUTS_PASS(nng_rep_open(&rep));
-	NUTS_PASS(nng_req_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open(&req));
 
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_RECVTIMEO, SECOND));
 	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, SECOND));
@@ -408,8 +413,8 @@ test_req_cancel_abort_recv(void)
 	nng_socket   req;
 	nng_socket   rep;
 
-	NUTS_PASS(nng_rep_open(&rep));
-	NUTS_PASS(nng_req_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open(&req));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, retry));

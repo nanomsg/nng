@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -1608,6 +1608,57 @@ NNG_DECL int nng_tls_config_psk(
 NNG_DECL int nng_tls_config_version(
     nng_tls_config *, nng_tls_version, nng_tls_version);
 
+// Protocol specific values.  These were formerly located in protocol specific
+// headers, but we are bringing them here for ease of use.
+
+// BUS0
+NNG_DECL int nng_bus0_open(nng_socket *);
+NNG_DECL int nng_bus0_open_raw(nng_socket *);
+
+// PAIR0
+NNG_DECL int nng_pair0_open(nng_socket *);
+NNG_DECL int nng_pair0_open_raw(nng_socket *);
+
+// PAIR1
+NNG_DECL int nng_pair1_open(nng_socket *);
+NNG_DECL int nng_pair1_open_raw(nng_socket *);
+NNG_DECL int nng_pair1_open_poly(nng_socket *);
+#define NNG_OPT_PAIR1_POLY "pair1:polyamorous"
+
+// PIPELINE0
+NNG_DECL int nng_pull0_open(nng_socket *);
+NNG_DECL int nng_pull0_open_raw(nng_socket *);
+NNG_DECL int nng_push0_open(nng_socket *);
+NNG_DECL int nng_push0_open_raw(nng_socket *);
+
+// PUBSUB0
+NNG_DECL int nng_pub0_open(nng_socket *);
+NNG_DECL int nng_pub0_open_raw(nng_socket *);
+NNG_DECL int nng_sub0_open(nng_socket *);
+NNG_DECL int nng_sub0_open_raw(nng_socket *);
+NNG_DECL int nng_sub0_socket_subscribe(
+    nng_socket id, const void *buf, size_t sz);
+NNG_DECL int nng_sub0_socket_unsubscribe(
+    nng_socket id, const void *buf, size_t sz);
+NNG_DECL int nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz);
+NNG_DECL int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
+#define NNG_OPT_SUB_PREFNEW "sub:prefnew"
+
+// REQREP0
+NNG_DECL int nng_rep0_open(nng_socket *);
+NNG_DECL int nng_rep0_open_raw(nng_socket *);
+NNG_DECL int nng_req0_open(nng_socket *);
+NNG_DECL int nng_req0_open_raw(nng_socket *);
+#define NNG_OPT_REQ_RESENDTIME "req:resend-time"
+#define NNG_OPT_REQ_RESENDTICK "req:resend-tick"
+
+// SURVEY0
+NNG_DECL int nng_respondent0_open(nng_socket *);
+NNG_DECL int nng_respondent0_open_raw(nng_socket *);
+NNG_DECL int nng_surveyor0_open(nng_socket *);
+NNG_DECL int nng_surveyor0_open_raw(nng_socket *);
+#define NNG_OPT_SURVEYOR_SURVEYTIME "surveyor:survey-time"
+
 // These transition macros may help with migration from NNG1.
 // Applications should try to avoid depending on these any longer than
 // necessary, as they may be removed in a future update.  This is far from a
@@ -1623,7 +1674,31 @@ NNG_DECL int nng_tls_config_version(
 #define nng_ws_register() nng_nop()
 #define nng_wss_register() nng_nop()
 #define nng_zt_register() nng_nop()
-#endif
+
+// protocol "wrappers" -- applications should just be using the version
+// specific macros
+#define nng_bus_open nng_bus0_open
+#define nng_bus_open_raw nng_bus0_open_raw
+#define nng_pair_open nng_pair1_open
+#define nng_pair_open_raw nng_pair1_open_raw
+#define nng_pull_open nng_pull0_open
+#define nng_pull_open_raw nng_pull0_open_raw
+#define nng_push_open nng_push0_open
+#define nng_push_open_raw nng_push0_open_raw
+#define nng_pub_open nng_pub0_open
+#define nng_pub_open_raw nng_pub0_open_raw
+#define nng_sub_open nng_sub0_open
+#define nng_sub_open_raw nng_sub0_open_raw
+#define nng_rep_open nng_rep0_open
+#define nng_rep_open_raw nng_rep0_open_raw
+#define nng_req_open nng_req0_open
+#define nng_req_open_raw nng_req0_open_raw
+#define nng_respondent_open nng_respondent0_open
+#define nng_respondent_open_raw nng_respondent0_open_raw
+#define nng_surveyor_open nng_surveyor0_open
+#define nng_surveyor_open_raw nng_surveyor0_open_raw
+
+#endif // NNG1_TRANSITION
 
 #ifdef __cplusplus
 }

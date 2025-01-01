@@ -13,9 +13,6 @@
 #include <time.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/bus0/bus.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
 
 #include <nuts.h>
 

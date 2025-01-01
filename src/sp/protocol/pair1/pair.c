@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,6 @@
 #include <stdlib.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/pair1/pair.h"
 
 // Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern.
 
@@ -20,6 +19,11 @@
 #else
 #define BUMP_STAT(x)
 #endif
+
+#define PAIR1_SELF_NAME "pair1"
+#define PAIR1_PEER_NAME "pair1"
+#define PAIR1_SELF 0x11
+#define PAIR1_PEER 0x11
 
 typedef struct pair1_pipe pair1_pipe;
 typedef struct pair1_sock pair1_sock;
@@ -262,12 +266,12 @@ pair1_pipe_start(void *arg)
 	pair1_pipe *p = arg;
 	pair1_sock *s = p->pair;
 
-	if (nni_pipe_peer(p->pipe) != NNG_PAIR1_PEER) {
+	if (nni_pipe_peer(p->pipe) != PAIR1_PEER) {
 		BUMP_STAT(&s->stat_reject_mismatch);
 		// Peer protocol mismatch.
 		nng_log_warn("NNG-PEER-MISMATCH",
 		    "Peer protocol mismatch: %d != %d, rejected.",
-		    nni_pipe_peer(p->pipe), NNG_PAIR1_PEER);
+		    nni_pipe_peer(p->pipe), PAIR1_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -782,8 +786,8 @@ static nni_proto_sock_ops pair1_sock_ops = {
 
 static nni_proto pair1_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PAIR1_SELF, NNG_PAIR1_SELF_NAME },
-	.proto_peer     = { NNG_PAIR1_PEER, NNG_PAIR1_PEER_NAME },
+	.proto_self     = { PAIR1_SELF, PAIR1_SELF_NAME },
+	.proto_peer     = { PAIR1_PEER, PAIR1_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &pair1_sock_ops,
 	.proto_pipe_ops = &pair1_pipe_ops,
@@ -810,8 +814,8 @@ static nni_proto_sock_ops pair1_sock_ops_raw = {
 
 static nni_proto pair1_proto_raw = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PAIR1_SELF, NNG_PAIR1_SELF_NAME },
-	.proto_peer     = { NNG_PAIR1_PEER, NNG_PAIR1_PEER_NAME },
+	.proto_self     = { PAIR1_SELF, PAIR1_SELF_NAME },
+	.proto_peer     = { PAIR1_PEER, PAIR1_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
 	.proto_sock_ops = &pair1_sock_ops_raw,
 	.proto_pipe_ops = &pair1_pipe_ops,

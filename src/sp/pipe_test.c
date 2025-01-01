@@ -113,8 +113,8 @@ init_cases(char *addr, struct testcase *push, struct testcase *pull)
 	NUTS_PASS(nng_mtx_alloc(&pull->lk));
 	NUTS_PASS(nng_cv_alloc(&pull->cv, pull->lk));
 
-	NUTS_PASS(nng_push_open(&push->s));
-	NUTS_PASS(nng_pull_open(&pull->s));
+	NUTS_PASS(nng_push0_open(&push->s));
+	NUTS_PASS(nng_pull0_open(&pull->s));
 
 	NUTS_PASS(nng_socket_set_ms(push->s, NNG_OPT_RECONNMINT, 10));
 	NUTS_PASS(nng_socket_set_ms(push->s, NNG_OPT_RECONNMAXT, 10));

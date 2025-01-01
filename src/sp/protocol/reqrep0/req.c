@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,10 +10,14 @@
 #include <stdio.h>
 
 #include "core/nng_impl.h"
-#include "nng/protocol/reqrep0/req.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
 // request-reply pair.  This is useful for building RPC clients, for example.
+
+#define REQ0_SELF 0x30
+#define REQ0_PEER 0x31
+#define REQ0_SELF_NAME "req"
+#define REQ0_PEER_NAME "rep"
 
 typedef struct req0_pipe req0_pipe;
 typedef struct req0_sock req0_sock;
@@ -196,10 +200,10 @@ req0_pipe_start(void *arg)
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
 
-	if (nni_pipe_peer(p->pipe) != NNG_REQ0_PEER) {
+	if (nni_pipe_peer(p->pipe) != REQ0_PEER) {
 		nng_log_warn("NNG-PEER-MISMATCH",
 		    "Peer protocol mismatch: %d != %d, rejected.",
-		    nni_pipe_peer(p->pipe), NNG_REQ0_PEER);
+		    nni_pipe_peer(p->pipe), REQ0_PEER);
 		return (NNG_EPROTO);
 	}
 
@@ -911,8 +915,8 @@ static nni_proto_sock_ops req0_sock_ops = {
 
 static nni_proto req0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_REQ0_SELF, NNG_REQ0_SELF_NAME },
-	.proto_peer     = { NNG_REQ0_PEER, NNG_REQ0_PEER_NAME },
+	.proto_self     = { REQ0_SELF, REQ0_SELF_NAME },
+	.proto_peer     = { REQ0_PEER, REQ0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &req0_sock_ops,
 	.proto_pipe_ops = &req0_pipe_ops,

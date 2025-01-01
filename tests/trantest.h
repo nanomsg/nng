@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,8 +12,6 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
 
 #include "convey.h"
 #include "core/nng_impl.h"
@@ -113,8 +111,8 @@ trantest_init(trantest *tt, const char *addr)
 {
 	trantest_next_address(tt->addr, addr);
 
-	So(nng_req_open(&tt->reqsock) == 0);
-	So(nng_rep_open(&tt->repsock) == 0);
+	So(nng_req0_open(&tt->reqsock) == 0);
+	So(nng_rep0_open(&tt->repsock) == 0);
 
 	nng_url *url;
 	tt->tran = nni_sp_tran_find(addr);

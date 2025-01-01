@@ -1,6 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -8,32 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+// Content moved to nng/nng.h
 #ifndef NNG_PROTOCOL_BUS0_BUS_H
 #define NNG_PROTOCOL_BUS0_BUS_H
-
-#ifdef __cplusplus
-extern "C" {
 #endif
-
-NNG_DECL int nng_bus0_open(nng_socket *);
-
-NNG_DECL int nng_bus0_open_raw(nng_socket *);
-
-#ifndef nng_bus_open
-#define nng_bus_open nng_bus0_open
-#endif
-
-#ifndef nng_bus_open_raw
-#define nng_bus_open_raw nng_bus0_open_raw
-#endif
-
-#define NNG_BUS0_SELF 0x70
-#define NNG_BUS0_PEER 0x70
-#define NNG_BUS0_SELF_NAME "bus"
-#define NNG_BUS0_PEER_NAME "bus"
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // NNG_PROTOCOL_BUS0_BUS_H

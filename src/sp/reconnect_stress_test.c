@@ -1,4 +1,5 @@
 //
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2024 Aleksei Solovev <solovalex@gmail.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,10 +11,6 @@
 #include <assert.h>
 #include <core/nng_impl.h>
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/protocol/survey0/respond.h>
-#include <nng/protocol/survey0/survey.h>
 
 #include <nuts.h>
 
@@ -187,7 +184,7 @@ void
 surveyor_open(struct work *w)
 {
 	w->start = ping_start;
-	NUTS_PASS(nng_surveyor_open(&w->socket));
+	NUTS_PASS(nng_surveyor0_open(&w->socket));
 	NUTS_PASS(nng_socket_set_ms(
 	    w->socket, NNG_OPT_SURVEYOR_SURVEYTIME, SURVEY_TIMEOUT_MS));
 	NUTS_PASS(nng_aio_alloc(&w->aio, ping_cb, w));
@@ -198,7 +195,7 @@ void
 respondent_open(struct work *w)
 {
 	w->start = echo_start;
-	NUTS_PASS(nng_respondent_open(&w->socket));
+	NUTS_PASS(nng_respondent0_open(&w->socket));
 	NUTS_PASS(nng_aio_alloc(&w->aio, echo_cb, w));
 	nni_atomic_init(&w->received);
 }
@@ -207,7 +204,7 @@ void
 req_open(struct work *w)
 {
 	w->start = ping_start;
-	NUTS_PASS(nng_req_open(&w->socket));
+	NUTS_PASS(nng_req0_open(&w->socket));
 	NUTS_PASS(nng_aio_alloc(&w->aio, ping_cb, w));
 	nni_atomic_init(&w->received);
 }
@@ -216,7 +213,7 @@ void
 rep_open(struct work *w)
 {
 	w->start = echo_start;
-	NUTS_PASS(nng_rep_open(&w->socket));
+	NUTS_PASS(nng_rep0_open(&w->socket));
 	NUTS_PASS(nng_aio_alloc(&w->aio, echo_cb, w));
 	nni_atomic_init(&w->received);
 }
