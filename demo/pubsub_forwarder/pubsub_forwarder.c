@@ -28,8 +28,6 @@
 #include <stdlib.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/pubsub0/pub.h>
-#include <nng/protocol/pubsub0/sub.h>
 
 #define PROXY_FRONT_URL "tcp://localhost:3327"
 #define PROXY_BACK_URL "tcp://localhost:3328"
@@ -47,16 +45,22 @@ panic_on_error(int should_panic, const char *format, ...)
 }
 
 int
-main()
+main(int argc, char **argv)
 {
 	nng_socket sock_front_end = NNG_SOCKET_INITIALIZER;
 	nng_socket sock_back_end  = NNG_SOCKET_INITIALIZER;
 	int        ret            = 0;
 
+	(void) argc;
+	(void) argv;
+
 	//
 	//  First we need some nng sockets. Not to be confused with network
 	//  sockets
 	//
+	ret = nng_init(NULL);
+	panic_on_error(ret, "Failed to init library\n");
+
 	ret = nng_sub0_open_raw(&sock_front_end);
 	panic_on_error(ret, "Failed to open front end socket\n");
 
@@ -92,5 +96,6 @@ main()
 	    ret, "nng_device returned %d: %s\n", ret, nng_strerror(ret));
 
 	printf("done");
+	nng_fini();
 	return 0;
 }
