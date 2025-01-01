@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -147,6 +147,7 @@ rest_http_fatal(rest_job *job, const char *fmt, int rv)
 	snprintf(buf, sizeof(buf), fmt, nng_strerror(rv));
 	nng_http_res_set_status(res, NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR);
 	nng_http_res_set_reason(res, buf);
+
 	nng_aio_set_output(aio, 0, res);
 	nng_aio_finish(aio, 0);
 	rest_recycle_job(job);
@@ -277,7 +278,7 @@ rest_start(uint16_t port)
 
 	// Allocate the handler - we use a dynamic handler for REST
 	// using the function "rest_handle" declared above.
-	rv = nng_http_handler_alloc(&handler, url->u_path, rest_handle);
+	rv = nng_http_handler_alloc(&handler, nng_url_path(url), rest_handle);
 	if (rv != 0) {
 		fatal("nng_http_handler_alloc", rv);
 	}
@@ -353,6 +354,9 @@ main(int argc, char **argv)
 	nng_thread *inproc_thr;
 	uint16_t    port = 0;
 
+	if ((rv = nng_init(NULL)) != 0) {
+		fatal("cannot init NNG", rv);
+	}
 	rv = nng_thread_create(&inproc_thr, inproc_server, NULL);
 	if (rv != 0) {
 		fatal("cannot start inproc server", rv);
@@ -366,4 +370,5 @@ main(int argc, char **argv)
 	// This runs forever.  The inproc_thr never exits, so we
 	// just block behind its condition variable.
 	nng_thread_destroy(inproc_thr);
+	nng_fini();
 }
