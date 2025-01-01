@@ -149,6 +149,84 @@ a result of [`NNG_ECLOSED`].
 > [!NOTE]
 > Closing the socket may be disruptive to transfers that are still in progress.
 
+## Sending Messages
+
+```c
+int nng_send(nng_socket s, void *data, size_t size, int flags);
+int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
+void nng_send_aio(nng_socket s, nng_aio *aio);
+```
+
+These functions ({{i:`nng_send`}}, {{i:`nng_sendmsg`}}, and {{i:`nng_send_aio`}}) send
+messages over the socket _s_. The differences in their behaviors are as follows.
+
+> [!NOTE]
+> The semantics of what sending a message means varies from protocol to
+> protocol, so examination of the protocol documentation is encouraged.
+> Additionally, some protocols may not support sending at all or may require other pre-conditions first.
+> (For example, [REP][rep] sockets cannot normally send data until they have first received a request,
+> while [SUB][sub] sockets can only receive data and never send it.)
+
+### nng_send
+
+The `nng_send` function is the simplest to use, but is the least efficient.
+It sends the content in _data_, as a message of _size_ bytes. The _flags_ is a bit mask
+made up of zero or more of the following values:
+
+- {{i:`NNG_FLAG_NONBLOCK`}}: <a name="NNG_FLAG_NONBLOCK"></a>
+  If the socket cannot accept more data at this time, it does not block, but returns immediately
+  with a status of [`NNG_EAGAIN`]. If this flag is absent, the function will wait until data can be sent.
+
+- {{i:`NNG_FLAG_ALLOC`}}: <a name="NNG_FLAG_ALLOC"></a>
+  The _data_ was allocated using [`nng_alloc`] or was obtained from a call to [`nng_recv`] also with
+  the `NNG_FLAG_ALLOC` flag. If this function succeeds, then it will dispose of the _data_, deallocating it
+  once the transmission is complete. If this function returns a non-zero status, the caller retains the responsibility
+  of disposing the data. The benefit of this flag is that it can eliminate a data copy and allocation. Without the flag
+  the socket will make a duplicate copy of _data_ for use by the operation, before returning to the caller.
+
+> [!NOTE]
+> Regardless of the presence or absence of `NNG_FLAG_NONBLOCK`, there may
+> be queues between the sender and the receiver.
+> Furthermore, there is no guarantee that the message has actually been delivered.
+> Finally, with some protocols, the semantic is implicitly `NNG_FLAG_NONBLOCK`,
+> such as with [PUB][pub] sockets, which are best-effort delivery only.
+
+> [!IMPORTANT]
+> When using `NNG_FLAG_ALLOC`, it is important that the value of _size_ match the actual allocated size of the data.
+> Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
+> or other undesirable effects.
+
+### nng_sendmsg
+
+The `nng_sendmsg` function sends the _msg_ over the socket _s_.
+
+If this function returns zero, then the socket will dispose of _msg_ when the transmission is complete.
+If the function returns a non-zero status, then the call retains the responsibility for disposing of _msg_.
+
+The _flags_ can contain the value [`NNG_FLAG_NONBLOCK`], indicating that the function should not wait if the socket
+cannot accept more data for sending. In such a case, it will return [`NNG_EAGAIN`].
+
+> [!TIP]
+> This function is preferred over [`nng_send`], as it gives access to the message structure and eliminates both
+> a data copy and allocation.
+
+### nng_send_aio
+
+The `nng_send_aio` function sends a message asynchronously, using the [`nng_aio`] _aio_, over the socket _s_.
+The message to send must have been set on _aio_ using the [`nng_aio_set_msg`] function.
+
+If the operation completes successfully, then the socket will have disposed of the message.
+However, if it fails, then callback of _aio_ should arrange for a final disposition of the message.
+(The message can be retrieved from _aio_ with [`nng_aio_get_msg`].)
+
+Note that callback associated with _aio_ may be called _before_ the message is finally delivered to the recipient.
+For example, the message may be sitting in queue, or located in TCP buffers, or even in flight.
+
+> [!TIP]
+> This is the preferred function to use for sending data on a socket. While it does require a few extra
+> steps on the part of the application, the lowest latencies and highest performance will be achieved by using
+> this function instead of [`nng_send`] or [`nng_sendmsg`].
+
 ## Polling Socket Events
 
 ```c
@@ -196,6 +274,60 @@ were available in previous versions of NNG.
 
 ```c
 nng_socket s = NNG_SOCKET_INITIALIZER;
+```
+
+### Example 2: Publishing a Timestamp
+
+This example demonstrates the use of [`nng_aio`], [`nng_send_aio`], and [`nng_sleep_aio`] to
+build a service that publishes a timestamp at one second intervals. Error handling is elided for the
+sake of clarity.
+
+```c
+#include <stdlib.h>
+#include <nng/nng.h>
+#include <nng/protocol/pubsub0/pub.h>
+
+struct state {
+    nng_socket s;
+    bool sleeping;
+    nng_aio *aio;
+};
+
+static struct state state;
+
+void callback(void *arg) {
+    nng_msg *msg;
+    nng_time now;
+    struct state *state = arg;
+    if (nng_aio_result(state->aio) != 0) {
+        nng_log_err("Error %s occurred", nng_strerror(nng_aio_result(state->aio)));
+        return; // terminate the callback loop
+    }
+    if (state->sleeping) {
+        state->sleeping = false;
+        nng_msg_alloc(&msg, sizeof (nng_time));
+        now = nng_clock();
+        nng_msg_append(msg, &now, sizeof (now)); // note: native endian
+        nng_aio_set_msg(state->aio, msg);
+        nng_send_aio(state->s, state->aio);
+    } else {
+        state->sleeping = true;
+        nng_sleep_aio(1000, state->aio); // 1000 ms == 1 second
+    }
+}
+
+int main(int argc, char **argv) {
+    const char *url = argv[1]; // should check this
+
+    nng_aio_alloc(&state.aio, NULL, NULL);
+    nng_pub0_open(&state.s);
+    nng_listen(state.s, url, NULL, 0);
+    state.sleeping = 0;
+    nng_sleep_aio(1, state.aio); // kick it off right away
+    for(;;) {
+        nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
+    }
+}
 ```
 
 {{#include ../xref.md}}

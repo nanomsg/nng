@@ -158,7 +158,6 @@
 [`nng_aio_reset`]: /TODO.md
 [`nng_aio_start`]: /TODO.md
 [`nng_aio_set_output`]: /TODO.md
-[`nng_send`]: /TODO.md
 [`nng_recv`]: /TODO.md
 [`nng_listener_get_url`]: /TODO.md
 [`nng_dialer_get_url`]: /TODO.md
@@ -174,9 +173,10 @@
 [`nng_listener_close`]: /TODO.md
 [`nng_socket_set`]: /TODO.md
 [`nng_socket_get`]: /TODO.md
-[`nng_send`]: /TODO.md
+[`nng_send`]: /api/sock.md#nng_send
+[`nng_sendmsg`]: /api/sock.md#nng_sendmsg
+[`nng_send_aio`]: /api/sock.md#nng_send_aio
 [`nng_recv`]: /TODO.md
-[`nng_sendmsg`]: /TODO.md
 [`nng_recvmsg`]: /TODO.md
 
 <!-- Macros -->
