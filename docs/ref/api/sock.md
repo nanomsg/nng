@@ -227,6 +227,74 @@ For example, the message may be sitting in queue, or located in TCP buffers, or 
 > steps on the part of the application, the lowest latencies and highest performance will be achieved by using
 > this function instead of [`nng_send`] or [`nng_sendmsg`].
 
+## Receiving Messages
+
+```c
+int nng_recv(nng_socket s, void *data, size_t *sizep, int flags);
+int nng_recvmsg(nng_socket s, nng_msg **msgp, int flags);
+void nng_recv_aio(nng_socket s, nng_aio *aio);
+```
+
+These functions ({{i:`nng_recv`}}, {{i:`nng_recvmsg`}}, and {{i:`nng_recv_aio`}}) receive
+messages over the socket _s_. The differences in their behaviors are as follows.
+
+> [!NOTE]
+> The semantics of what receving a message means varies from protocol to
+> protocol, so examination of the protocol documentation is encouraged.
+> Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
+> (For example, [REQ][req] sockets cannot normally receive data until they have first sent a request,
+> while [PUB][pub] sockets can only send data and never receive it.)
+
+### nng_recv
+
+The `nng_recv` function is the simplest to use, but is the least efficient.
+It receives the content in _data_, as a message size (in bytes) of up to the value stored in _sizep_,
+unless the `NNG_FLAG_ALLOC` flag is set in _flags_ (see below.)
+
+Upon success, the size of the message received will be stored in _sizep_.
+
+The _flags_ is a bit mask made up of zero or more of the following values:
+
+- {{i:`NNG_FLAG_NONBLOCK`}}:
+  If the socket has no messages pending for reception at this time, it does not block, but returns immediately
+  with a status of [`NNG_EAGAIN`]. If this flag is absent, the function will wait until data can be received.
+
+- {{i:`NNG_FLAG_ALLOC`}}:
+  Instead of receiving the message into _data_, a new buffer will be allocated exactly large enough to hold
+  the message. A pointer to that buffer will be stored at the location specified by _data_. This provides a form
+  of zero-copy operation. The caller should dispose of the buffer using [`nng_free`] or by sending using
+  [`nng_send`] with the [`NNG_FLAG_ALLOC`] flag.
+
+> [!IMPORTANT]
+> When using `NNG_FLAG_ALLOC`, it is important that the value of _size_ match the actual allocated size of the data.
+> Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
+> or other undesirable effects.
+
+### nng_recvmsg
+
+The `nng_recvmsg` function receives a message and stores a pointer to the [`nng_msg`] for that message in _msgp_.
+
+The _flags_ can contain the value [`NNG_FLAG_NONBLOCK`], indicating that the function should not wait if the socket
+has no messages available to receive. In such a case, it will return [`NNG_EAGAIN`].
+
+> [!TIP]
+> This function is preferred over [`nng_recv`], as it gives access to the message structure and eliminates both
+> a data copy and allocation, even when `nng_recv` is using `NNG_FLAG_ALLOC`.
+
+### nng_recv_aio
+
+The `nng_send_aio` function receives a message asynchronously, using the [`nng_aio`] _aio_, over the socket _s_.
+On success, the received message can be retrieved from the _aio_ using the [`nng_aio_get_msg`] function.
+
+> [!NOTE]
+> It is important that the application retrieves the message, and disposes of it accordingly.
+> Failure to do so will leak the memory.
+
+> [!TIP]
+> This is the preferred function to use for receiving data on a socket. While it does require a few extra
+> steps on the part of the application, the lowest latencies and highest performance will be achieved by using
+> this function instead of [`nng_recv`] or [`nng_recvmsg`].
+
 ## Polling Socket Events
 
 ```c
