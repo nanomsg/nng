@@ -22,10 +22,7 @@ The following functions operate on sockets.
 
 |===
 |xref:nng_dial.3.adoc[nng_dial()]|create and start dialer
-|xref:nng_get.3.adoc[nng_get()]|get socket option
 |xref:nng_listen.3.adoc[nng_listen()]|create and start listener
-|xref:nng_recv.3.adoc[nng_recv()]|receive data
-|xref:nng_send.3.adoc[nng_send()]|send data
 |xref:nng_socket_get.3.adoc[nng_socket_get()]|get socket option
 |xref:nng_socket_set.3.adoc[nng_socket_set()]|set socket option
 |===
@@ -59,37 +56,6 @@ Listeners accept incoming connection requests, and dialers make them.
 |xref:nng_pipe_socket.3.adoc[nng_pipe_socket()]|return owning socket for pipe
 |===
 
-=== Message Handling Functions
-
-Applications desiring to use the richest part of _libnng_ will want to
-use the message API, where a message structure is passed between functions.
-This API provides the most power support for zero-copy.
-
-Messages are divided into a header and body, where the body generally carries
-user-payload and the header carries protocol specific header information.
-Most applications will only interact with the body.
-
-|===
-|xref:nng_recvmsg.3.adoc[nng_recvmsg()]|receive a message
-|xref:nng_sendmsg.3.adoc[nng_sendmsg()]|send a message
-|===
-
-==== Message Header Handling
-
-TIP: Few applications will need these functions, as message headers are only
-used to carry protocol-specific content.  However, applications which use raw
-mode may need to access the header of messages.
-
-|===
-|xref:nng_msg_header.3.adoc[nng_msg_header()]|return message header
-|xref:nng_msg_header_append.3.adoc[nng_msg_header_append()]|append to message header
-|xref:nng_msg_header_chop.3.adoc[nng_msg_header_chop()]|remove data from end of message header
-|xref:nng_msg_header_clear.3.adoc[nng_msg_header_clear()]|clear message header
-|xref:nng_msg_header_insert.3.adoc[nng_msg_header_insert()]|prepend to message header
-|xref:nng_msg_header_len.3.adoc[nng_msg_header_len()]|return the message header length
-|xref:nng_msg_header_trim.3.adoc[nng_msg_header_trim()]|remove data from start of message header
-|===
-
 === Asynchronous Operations
 
 Most applications will interact with _NNG_ synchronously; that is that
@@ -120,8 +86,6 @@ The following functions are used in the asynchronous model:
 |xref:nng_aio_finish.3.adoc[nng_aio_finish()]|finish asynchronous I/O operation
 |xref:nng_aio_get_input.3.adoc[nng_aio_get_input()]|return input parameter
 |xref:nng_aio_set_output.3.adoc[nng_aio_set_output()]|set output result
-|xref:nng_recv_aio.3.adoc[nng_recv_aio()]|receive message asynchronously
-|xref:nng_send_aio.3.adoc[nng_send_aio()]|send message asynchronously
 |===
 
 
@@ -151,38 +115,6 @@ that route messages from one socket to another.
 
 |===
 |xref:nng_device.3.adoc[nng_device()]|message forwarding device
-|===
-
-=== Byte Streams
-
-These functions are available for use with byte streams.
-They are considered low-level, for uses where the higher level functions
-using Scalability Protocols are inappropriate.
-
-|===
-|xref:nng_stream_dialer.5.adoc[`nng_stream_dialer`] or
-|xref:nng_stream_listener.5.adoc[`nng_stream_listener`] objects.
-|===
-
-|===
-|xref:nng_stream_close.3str.adoc[nng_stream_close()]|close byte stream
-|xref:nng_stream_dialer_alloc.3str.adoc[nng_stream_dialer_alloc()]|allocate byte stream dialer
-|xref:nng_stream_dialer_close.3str.adoc[nng_stream_dialer_close()]|close byte stream dialer
-|xref:nng_stream_dialer_dial.3str.adoc[nng_stream_dialer_dial()]|initiate outgoing byte stream
-|xref:nng_stream_dialer_free.3str.adoc[nng_stream_dialer_free()]|free byte stream dialer
-|xref:nng_stream_dialer_get.3str.adoc[nng_stream_dialer_get()]|get option from byte stream dialer
-|xref:nng_stream_dialer_set.3str.adoc[nng_stream_dialer_set()]|set option on byte stream dialer
-|xref:nng_stream_free.3str.adoc[nng_stream_free()]|free byte stream
-|xref:nng_stream_get.3str.adoc[nng_stream_get()]|get option from byte stream
-|xref:nng_stream_listener_accept.3str.adoc[nng_stream_listener_accept()]|accept incoming byte stream
-|xref:nng_stream_listener_alloc.3str.adoc[nng_stream_listener_alloc()]|allocate byte stream listener
-|xref:nng_stream_listener_close.3str.adoc[nng_stream_listener_close()]|close byte stream listener
-|xref:nng_stream_listener_free.3str.adoc[nng_stream_listener_free()]|free byte stream listener
-|xref:nng_stream_listener_get.3str.adoc[nng_stream_listener_get()]|get option from byte stream listener
-|xref:nng_stream_listener_listen.3str.adoc[nng_stream_listener_listen()]|bind byte stream listener to address
-|xref:nng_stream_listener_set.3str.adoc[nng_stream_listener_set()]|set option on byte stream listener
-|xref:nng_stream_recv.3str.adoc[nng_stream_recv()]|receive from byte stream
-|xref:nng_stream_send.3str.adoc[nng_stream_send()]|send to byte stream
 |===
 
 === HTTP Support
