@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -32,10 +32,10 @@ if (NNG_TLS_ENGINE STREQUAL "mbed")
         # avoid confounding any other package consumers, and we honor overrides.
         if (NOT (DEFINED CMAKE_FIND_PACKAGE_PREFER_CONFIG))
             set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-            find_package(MbedTLS REQUIRED)
+            nng_find_package(MbedTLS)
             unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
         else()
-            find_package(MbedTLS REQUIRED)
+            nng_find_package(MbedTLS)
         endif()
         nng_link_libraries_public(MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509)
     endif()

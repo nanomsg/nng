@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -24,10 +24,10 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         # We want to prefer config mode over our local find package.
         if (NOT (DEFINED CMAKE_FIND_PACKAGE_PREFER_CONFIG))
             set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-            find_package(wolfSSL REQUIRED)
+            nng_find_package(wolfSSL)
             unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
         else()
-            find_package(wolfSSL REQUIRED)
+            nng_find_package(wolfSSL)
         endif()
         nng_link_libraries_public(wolfssl::wolfssl)
     endif()
