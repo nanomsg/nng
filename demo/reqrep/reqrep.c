@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2021 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -24,9 +24,6 @@
 #include <time.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 
 #define CLIENT "client"
 #define SERVER "server"
@@ -76,6 +73,9 @@ server(const char *url)
 	int          rv;
 	int          count = 0;
 
+	if ((rv = nng_init(NULL)) != 0) {
+		fatal("nng_init", rv);
+	}
 	if ((rv = nng_rep0_open(&sock)) != 0) {
 		fatal("nng_rep0_open", rv);
 	}
@@ -134,6 +134,9 @@ client(const char *url)
 
 	PUT64(cmd, DATECMD);
 
+	if ((rv = nng_init(NULL)) != 0) {
+		fatal("nng_init", rv);
+	}
 	if ((rv = nng_req0_open(&sock)) != 0) {
 		fatal("nng_socket", rv);
 	}
