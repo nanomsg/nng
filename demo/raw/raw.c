@@ -1,4 +1,4 @@
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -30,9 +30,6 @@
 #include <time.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
 
 // Parallel is the maximum number of outstanding requests we can handle.
 // This is *NOT* the number of threads in use, but instead represents
@@ -134,6 +131,10 @@ server(const char *url)
 	int          rv;
 	int          i;
 
+	if ((rv = nng_init(NULL)) != 0) {
+		fatal("nng_init", rv);
+	}
+
 	/*  Create the socket. */
 	rv = nng_rep0_open_raw(&sock);
 	if (rv != 0) {
@@ -170,6 +171,9 @@ client(const char *url, const char *msecstr)
 
 	msec = atoi(msecstr) * 1000;
 
+	if ((rv = nng_init(NULL)) != 0) {
+		fatal("nng_init", rv);
+	}
 	if ((rv = nng_req0_open(&sock)) != 0) {
 		fatal("nng_req0_open", rv);
 	}

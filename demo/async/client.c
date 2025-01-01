@@ -1,4 +1,4 @@
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -26,7 +26,6 @@
 #include <time.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/req.h>
 #include <nng/supplemental/util/platform.h>
 
 void
@@ -48,6 +47,10 @@ client(const char *url, const char *msecstr)
 	unsigned   msec;
 
 	msec = atoi(msecstr);
+
+	if ((rv = nng_init(NULL)) != 0) {
+		fatal("nng_init", rv);
+	}
 
 	if ((rv = nng_req0_open(&sock)) != 0) {
 		fatal("nng_req0_open", rv);

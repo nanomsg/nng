@@ -1,4 +1,4 @@
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -33,8 +33,6 @@
 #include <time.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/supplemental/util/platform.h>
 
 // Parallel is the maximum number of outstanding requests we can handle.
 // This is *NOT* the number of threads in use, but instead represents
@@ -68,7 +66,7 @@ void
 server_cb(void *arg)
 {
 	struct work *work = arg;
-	nng_msg *    msg;
+	nng_msg     *msg;
 	int          rv;
 	uint32_t     when;
 
@@ -140,6 +138,11 @@ server(const char *url)
 	struct work *works[PARALLEL];
 	int          rv;
 	int          i;
+
+	rv = nng_init(NULL);
+	if (rv != 0) {
+		fatal("nng_init", rv);
+	}
 
 	/*  Create the socket. */
 	rv = nng_rep0_open(&sock);
