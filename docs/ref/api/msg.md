@@ -201,6 +201,18 @@ The {{i:`nng_msg_header_clear`}} simply resets the total message header length t
 
 ### Append or Insert Header
 
+```c
+int nng_msg_header_append(nng_msg *msg, const void *val, size_t size);
+int nng_msg_header_append_u16(nng_msg *msg, uint16_t val16);
+int nng_msg_header_append_u32(nng_msg *msg, uint32_t val32);
+int nng_msg_header_append_u64(nng_msg *msg, uint64_t val64);
+
+int nng_msg_header_insert(nng_msg *msg, const void *val, size_t size);
+int nng_msg_header_insert_u16(nng_msg *msg, uint16_t val16);
+int nng_msg_header_insert_u32(nng_msg *msg, uint32_t val32);
+int nng_msg_header_insert_u64(nng_msg *msg, uint64_t val64);
+```
+
 Appending data to a message header is done by using the {{i:`nng_msg_header_append`}} functions,
 and inserting data in the header is done using the {{i:`nng_msg_header_insert`}} functions.
 
@@ -208,6 +220,18 @@ These functions act just like the [`nng_msg_append`] and [`nng_msg_insert`] func
 except that they operate on the message header rather than the message body.
 
 ### Consume from Header
+
+```c
+int nng_msg_header_chop(nng_msg *msg, size_t size);
+int nng_msg_header_chop_u16(nng_msg *msg, uint16_t *val16);
+int nng_msg_header_chop_u32(nng_msg *msg, uint32_t *val32);
+int nng_msg_header_chop_u64(nng_msg *msg, uint64_t *val64);
+
+int nng_msg_header_trim(nng_msg *msg, size_t size);
+int nng_msg_header_trim_u16(nng_msg *msg, uint16_t *val16);
+int nng_msg_header_trim_u32(nng_msg *msg, uint32_t *val32);
+int nng_msg_header_trim_u64(nng_msg *msg, uint64_t *val64);
+```
 
 The {{i:`nng_msg_header_trim`}} functions remove data from the beginning of the message header,
 and the {{i:`nng_msg_header_chop`}} functions remove data from the end of the message header.
@@ -239,26 +263,26 @@ either directly by the application, or when the message was received by the prot
 ### Example 1: Preparing a message for use
 
 ```c
-    #include <nng/nng.h>
+#include <nng/nng.h>
 
-    nng_msg *m;
-    if (nng_msg_alloc(&m, strlen("content") + 1) != 0) {
-       // handle error
-    }
-    strcpy(nng_msg_body(m), "content");
+nng_msg *m;
+if (nng_msg_alloc(&m, strlen("content") + 1) != 0) {
+  // handle error
+}
+strcpy(nng_msg_body(m), "content");
 ```
 
 ### Example 2: Preallocating message content
 
 ```c
-    if (nng_msg_alloc(&m, 1024) != 0) {
-        // handle error
-    }
-    while ((val64 = next_datum()) != 0) P
-        if (nng_msg_append_u64(m, val64) != 0) {
-            // handle error
-        }
-    }
+if (nng_msg_alloc(&m, 1024) != 0) {
+  // handle error
+}
+while ((val64 = next_datum()) != 0) P
+  if (nng_msg_append_u64(m, val64) != 0) {
+      // handle error
+  }
+}
 ```
 
 {{#include ../xref.md}}
