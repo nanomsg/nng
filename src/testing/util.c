@@ -535,7 +535,7 @@ nuts_tran_perf(const char *scheme)
 	nuts_set_logger(NNG_LOG_NOTICE);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
