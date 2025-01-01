@@ -92,5 +92,6 @@ configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config
         PATH_VARS INCLUDE_INSTALL_DIRS)
 
 install(FILES "${project_config}" "${version_config}"
+        ${PROJECT_SOURCE_DIR}/cmake/FindMbedTLS.cmake ${PROJECT_SOURCE_DIR}/cmake/FindWolfSSL.cmake
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
         COMPONENT Library)
