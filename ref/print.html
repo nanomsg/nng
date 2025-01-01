@@ -6431,6 +6431,24 @@ This is done using the <a href="migrate//api/init.html#initialization"><code>nng
 <p>The <code>nng_close</code> function has been renamed to <a href="migrate//api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> to make it clearer that
 the object being closed is a socket. A compatible <code>nng_close</code> macro is available by defining <code>NNG1_TRANSITION</code>
 in your compilation environment.</p>
+<h2 id="removed-protocol-aliases"><a class="header" href="#removed-protocol-aliases">Removed Protocol Aliases</a></h2>
+<p>The following macro aliases are removed, unless <code>NNG1_TRANSITION</code> is defined in your compilation environment.</p>
+<ul>
+<li><code>nng_bus_open</code></li>
+<li><code>nng_pair_open</code></li>
+<li><code>nng_pub_open</code></li>
+<li><code>nng_pull_open</code></li>
+<li><code>nng_push_open</code></li>
+<li><code>nng_rep_open</code></li>
+<li><code>nng_req_open</code></li>
+<li><code>nng_respondent_open</code></li>
+<li><code>nng_sub_open</code></li>
+<li><code>nng_surveyor_open</code></li>
+</ul>
+<p>Just add either <code>0</code> or <code>1</code> (in the case of PAIRv1) to get the protocol desired. (Forcing the version number to
+be supplied should avoid surprises later as new versions of protocols are added.)</p>
+<p>Additionally, the header files for protocols are now empty, as all of their content has been moved to <code>nng/nng.h</code>.
+Please remove <code>#include</code> references to protocol headers as we anticipate removing them in the future.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
 <p>When an operation fails with <a href="migrate//api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
