@@ -30,7 +30,7 @@ nng_fatal(const char *func, int rv)
 	exit(1);
 }
 
-int server(int port);
+int server(const char *url);
 int client(const char *url);
 
 int
@@ -39,15 +39,19 @@ main(int argc, char **argv)
 	int rc;
 
 	if (argc < 3) {
-		fprintf(stderr, "Usage: %s [-s port|-c url]\n", argv[0]);
+		fprintf(stderr, "Usage: %s [-s url|-c url]\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
+	if ((rc = nng_init(NULL)) != 0) {
+		nng_fatal("nng_init", rc);
+	};
 	if (strcmp(argv[1], "-s") == 0) {
-		rc = server(atoi(argv[2]));
+		rc = server(argv[2]);
 	} else {
 		rc = client(argv[2]);
 	}
+	nng_fini();
 	exit(rc == 0 ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 
@@ -110,5 +114,67 @@ client(const char *url)
 	nng_stream_free(c1);
 	nng_aio_free(aio);
 	nng_stream_dialer_free(dialer);
+	return 0;
+}
+
+int
+server(const char *url)
+{
+	nng_stream_listener *listener;
+	nng_aio             *aio;
+	nng_iov              iov;
+	int                  rv;
+
+	// Allocatate dialer and aio assoicated with this connection
+	if ((rv = nng_stream_listener_alloc(&listener, url)) != 0) {
+		nng_fatal("call to nng_stream_listener_alloc failed", rv);
+	}
+
+	if ((rv = nng_aio_alloc(&aio, NULL, NULL)) != 0) {
+		nng_fatal("call to nng_aio_alloc", rv);
+	}
+	nng_aio_set_timeout(aio, 5000); // 5 sec
+
+	iov.iov_buf = "This is a message.";
+	iov.iov_len = strlen(iov.iov_buf);
+
+	if ((rv = nng_aio_set_iov(aio, 1, &iov)) != 0) {
+		nng_fatal("call to nng_aio_alloc", rv);
+	}
+	// Connect to the socket via url provided to alloc
+	if ((rv = nng_stream_listener_listen(listener)) != 0) {
+		nng_fatal("call to nng_stream_listener_listen failed", rv);
+	}
+	nng_stream_listener_accept(listener, aio);
+
+	// Wait for connection
+	nng_aio_wait(aio);
+	if ((rv = nng_aio_result(aio)) != 0) {
+		nng_fatal("waiting for nng_stream_listener_accept failed", rv);
+	}
+
+	// Get the stream (connection) at position 0
+	nng_stream *c1 = (nng_stream *) nng_aio_get_output(aio, 0);
+	nng_stream_send(c1, aio);
+	nng_aio_wait(aio);
+	if ((rv = nng_aio_result(aio)) != 0) {
+		nng_fatal("waiting for nng_stream_recv failed", rv);
+	}
+
+	size_t sent_count = nng_aio_count(aio);
+	if (sent_count <= 0) {
+		nng_fatal("Recv count was 0!", NNG_ECONNABORTED);
+	} else {
+		printf("sent %zu bytes, message: '%s'\n", sent_count,
+		    (char *) iov.iov_buf);
+	}
+
+	// stop everything before freeing
+	nng_stream_stop(c1);
+	nng_stream_listener_stop(listener);
+
+	nng_stream_free(c1);
+	nng_aio_free(aio);
+	nng_stream_listener_free(listener);
 	return 0;
 }
