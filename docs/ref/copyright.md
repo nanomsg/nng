@@ -1,6 +1,6 @@
 <img class="right" height="50px" src="./img/staysail-bw-trans.svg">
 
-Copyright &copy; 2024 Staysail Systems, Inc.\
+Copyright &copy; 2025 Staysail Systems, Inc.\
 San Marcos, California, United States of America
 
 > If you find this book or NNG useful, please consider sponsoring
