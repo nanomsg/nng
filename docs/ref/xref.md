@@ -225,8 +225,16 @@
 [`nng_send`]: /api/sock.md#nng_send
 [`nng_sendmsg`]: /api/sock.md#nng_sendmsg
 [`nng_send_aio`]: /api/sock.md#nng_send_aio
-[`nng_recv`]: /TODO.md
-[`nng_recvmsg`]: /TODO.md
+[`nng_recv`]: /api/sock.md#nng_recv
+[`nng_recvmsg`]: /api/sock.md#nng_recvmsg
+[`nng_recv_aio`]: /api/sock.md#nng_recv_aio
+[`nng_ctx_open`]: /api/ctx.md#creating-a-context
+[`nng_ctx_id`]: /api/ctx.md#context-identity
+[`nng_ctx_close`]: /api/ctx.md#closing-a-context
+[`nng_ctx_sendmsg`]: /api/ctx.md#nng_ctx_sendmsg
+[`nng_ctx_send`]: /api/ctx.md#nng_ctx_send
+[`nng_ctx_recvmsg`]: /api/ctx.md#nng_ctx_recvmsg
+[`nng_ctx_recv`]: /api/ctx.md#nng_ctx_recv
 
 <!-- Macros -->
 
@@ -291,6 +299,8 @@
 [`NNG_OPT_RECVTIMEO`]: /TODO.md
 [`NNG_OPT_SENDBUF`]: /TODO.md
 [`NNG_OPT_RECVBUF`]: /TODO.md
+[`NNG_SOCKET_INITIALIZER`]: /api/sock.md#socket-structure
+[`NNG_CTX_INITIALIZER`]: /api/ctx.md#context-structure
 
 <!-- Protocols -->
 

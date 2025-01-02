@@ -17,6 +17,7 @@ include the `nng/nng.h` header file like so:
 - [Initialization](init.md)
 - [Messages](msg.md)
 - [Sockets](sock.md)
+- [Contexts](ctx.md)
 - [Memory](memory.md)
 - [Time](time.md)
 - [URLs](url.md)

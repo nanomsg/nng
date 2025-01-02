@@ -12,6 +12,8 @@
 
   - [Sockets](./api/sock.md)
 
+  - [Contexts](./api/ctx.md)
+
   - [Memory](./api/memory.md)
 
   - [Time](./api/time.md)
