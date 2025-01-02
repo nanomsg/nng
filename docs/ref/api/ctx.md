@@ -171,13 +171,11 @@ int nng_ctx_get_bool(nng_ctx ctx, const char *opt, bool *valp);
 int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *valp);
 int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *valp);
 int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *valp);
-int nng_ctx_get_uint64(nng_ctx ctx, const char *opt, uint64_t *valp);
 
 int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_int(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration val);
 int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t val);
-int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t val);
 ```
 
 Some protocols support certain options that affect the behavior of a specific context.
@@ -189,7 +187,7 @@ The `nng_ctx_get_` functions retrieve the value from _ctx_, and store it in the 
 The `nng_ctx_set_` functions change the value for the _ctx_, taking it from _val_.
 
 These functions access an option as a specific type. The protocol documentation will have details about which options
-are available for contexts, whether they can be read or written, and which type they may be accessed using.
+are available for contexts, whether they can be read or written, and the appropriate type to use.
 
 ## Examples
 

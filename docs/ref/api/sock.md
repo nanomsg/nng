@@ -278,13 +278,11 @@ int nng_socket_get_bool(nng_socket s, const char *opt, bool *valp);
 int nng_socket_get_int(nng_socket s, const char *opt, int *valp);
 int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *valp);
 int nng_socket_get_size(nng_socket s, const char *opt, size_t *valp);
-int nng_socket_get_uint64(nng_socket s, const char *opt, uint64_t *valp);
 
 int nng_socket_set_bool(nng_socket s, const char *opt, int val);
 int nng_socket_set_int(nng_socket s, const char *opt, int val);
 int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration val);
 int nng_socket_set_size(nng_socket s, const char *opt, size_t val);
-int nng_socket_set_uint64(nng_socket s, const char *opt, uint64_t val);
 ```
 
 Protocols usually have protocol specific behaviors that can be adjusted via options.
@@ -306,11 +304,20 @@ The following options are available for many protocols, and always use the same 
 
 | Option                                              | Type           | Description                                                                                                               |
 | --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `NNG_OPT_RECONNMAXT`                                | `nng_duration` | Maximum time [dialers][dialer] will delay before trying after failing to connect.                                         |
+| `NNG_OPT_RECONNMINT`                                | `nng_duration` | Minimum time [dialers][dialer] will delay before trying after failing to connect.                                         |
 | `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>     | `int`          | Maximum number of messages to buffer locally when receiving.                                                              |
-| `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>     | `int`          | Maximum number of messages to buffer when sending messages.                                                               |
 | `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a> | `size_t`       | Maximum message size acceptable for receiving. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
 | `NNG_OPT_RECVTIMEO`<a name="NNG_OPT_RECVTIMEO"></a> | `nng_duration` | Default timeout (ms) for receiving messages.                                                                              |
+| `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>     | `int`          | Maximum number of messages to buffer when sending messages.                                                               |
 | `NNG_OPT_SENDTIMEO`<a name="NNG_OPT_SENDTIMEO"></a> | `nng_duration` | Default timeout (ms) for sending messages.                                                                                |
+
+&nbsp;
+
+> [!NOTE]
+> The `NNG_OPT_RECONNMAXT`, `NNG_OPT_RECONNMINT`, and `NNG_OPT_RECVMAXSZ` options are just the initial defaults that [dialers][dialer]
+> (and for `NNG_OPT_RECVMAXSZ` also [listeners][listener])
+> will use. After the dialer or listener is created, changes to the socket's value will have no affect on that dialer or listener.
 
 ## Polling Socket Events
 
