@@ -16,7 +16,7 @@ that all messages sent will arrive.
 > [!NOTE]
 > This transport is _experimental_.
 
-## URI Format
+## URL Format
 
 This transport uses URIs using the scheme {{i:`udp://`}}, followed by
 an IP address or hostname, followed by a colon and finally a
@@ -56,20 +56,23 @@ and could be used to listen to port 9999 on the host:
 
 ## Socket Address
 
-When using an [`nng_sockaddr`][nng_sockaddr] structure,
+When using an [`nng_sockaddr`] structure,
 the actual structure is either of type
-[`nng_sockaddr_in`][nng_sockaddr_in] (for IPv4) or
-[`nng_sockaddr_in6`][nng_sockaddr_in6] (for IPv6).
+[`nng_sockaddr_in`] (for IPv4) or
+[`nng_sockaddr_in6`] (for IPv6).
 
 ## Transport Options
 
 The following transport options are supported by this transport,
 where supported by the underlying platform.
 
-- [`NNG_OPT_LOCADDR`][NNG_OPT_LOCADDR]
-- [`NNG_OPT_REMADDR`][NNG_OPT_REMADDR]
-
-TODO: Document other options.
+| Option                                                        | Type             | Description                                                                                                                      |
+| ------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| [`NNG_OPT_LOCADDR`]                                           | [`nng_sockaddr`] | The locally bound address, will be either [`nng_sockaddr_in`] or [`nng_sockaddr_in6`].                                           |
+| [`NNG_OPT_REMADDR`]                                           | [`nng_sockaddr`] | The remote peer address, will be either [`nng_sockaddr_in`] or [`nng_sockaddr_in6`]. Only valid for [pipe] and [dialer] objects. |
+| [`NNG_OPT_RECVMAXSZ`]                                         | `size_t`         | Maximum size of incoming messages, will be limited to at most 65000.                                                             |
+| `NNG_OPT_UDP_COPY_MAX`<a name="NNG_OPT_UDP_COPY_MAX"></a>     | `size_t`         | Threshold above which received messages are "loaned" up, rather than a new message being allocated and copied into.              |
+| `NNG_OPT_UDP_BOUND_PORT`<a name="NNG_OPT_UDP_BOUND_PORT"></a> | `int`            | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                              |
 
 ## Maximum Message Size
 
@@ -82,15 +85,20 @@ very much smaller messages, ideally those that will fit within a single network
 packet without requiring fragmentation and reassembly.
 
 For Ethernet without jumbo frames, this typically means an {{i:MTU}} of a little
-less than 1500 bytes. (Specifically, 1452, which allows 28 bytes for IP and UDP,
-and 20 bytes for the this transport).
-Other link layers may have different MTUs.
+less than 1500 bytes. (Specifically, 1452, which allows 28 bytes for IPv4 and UDP,
+and 20 bytes for the this transport. Reduce by an additional 20 bytes for IPv6.)
+
+Other link layers may have different MTUs, however IPv6 requires a minimum MTU of 1280,
+which after deducting 48 bytes for IPv6 and UDP headers, and 20 bytes for our transport
+header, leaves 1212 bytes for user data. If additional allowances are made for SP protocol
+headers with a default TTL of 8 (resulting in 72 additional bytes for route information),
+the final user accessible payload will be 1140 bytes. Thus this can be likely be viewed
+as a safe maxmimum to employ for SP payload data across all transports.
 
 The maximum message size is negotiated as part of establishing a peering relationship,
 and oversize messages will be dropped by the sender before going to the network.
 
-The maximum message size to receive can be configured with the
-[`NNG_OPT_RECVMAXSZ`][NNG_OPT_RECVMAXSZ] option.
+The maximum message size to receive can be configured with the [`NNG_OPT_RECVMAXSZ`] option.
 
 ## Keep Alive
 
@@ -101,9 +109,4 @@ keep-alive mechanism is implemented.
 
 TODO: Document the tunables for this.
 
-[nng_sockaddr]: [TODO.md]
-[nng_sockaddr_in]: [TODO.md]
-[nng_sockaddr_in6]: [TODO.md]
-[NNG_OPT_LOCADDR]: [TODO.md]
-[NNG_OPT_REMADDR]: [TODO.md]
-[NNG_OPT_RECVMAXSZ]: [TODO.md]
+{{#include ../xref.md}}

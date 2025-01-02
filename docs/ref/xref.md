@@ -241,6 +241,11 @@
 [`nng_ctx_send`]: /api/ctx.md#nng_ctx_send
 [`nng_ctx_recvmsg`]: /api/ctx.md#nng_ctx_recvmsg
 [`nng_ctx_recv`]: /api/ctx.md#nng_ctx_recv
+[`nng_sockaddr`]: /TODO.md
+[`nng_sockaddr_in`]: /TODO.md
+[`nng_sockaddr_in6`]: /TODO.md
+[`nng_sockaddr_ipc`]: /TODO.md
+[`nng_sockaddr_inproc`]: /TODO.md
 
 <!-- Macros -->
 
@@ -306,6 +311,8 @@
 [`NNG_OPT_SENDBUF`]: /api/sock.md#NNG_OPT_SENDBUF
 [`NNG_OPT_RECVBUF`]: /api/sock.md#NNG_OPT_RECVBUF
 [`NNG_OPT_RECVMAXSZ`]: /api/sock.md#NNG_OPT_RECVMAXSZ
+[`NNG_OPT_LOCADDR`]: /api/sock.md#NNG_OPT_LOCADDR
+[`NNG_OPT_REMADDR`]: /api/sock.md#NNG_OPT_REMADDR
 [`NNG_SOCKET_INITIALIZER`]: /api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: /api/ctx.md#context-structure
 
