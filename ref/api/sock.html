@@ -485,7 +485,7 @@ Failure to do so will leak the memory.</p>
 </p>
 <p>This is the preferred function to use for receiving data on a socket. While it does require a few extra
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="/TODO.html"><code>nng_recv</code></a> or <a href="/TODO.html"><code>nng_recvmsg</code></a>.</p>
+this function instead of <a href="/TODO.html"><code>nng_recv</code></a> or <a href="/api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>.</p>
 </div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
@@ -586,7 +586,7 @@ int main(int argc, char **argv) {
 }
 </code></pre>
 <h3 id="example-3-watching-a-periodic-timestamp"><a class="header" href="#example-3-watching-a-periodic-timestamp">Example 3: Watching a Periodic Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, [<code>nng_recv_aio</code>], to build a client to
+<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="/api/sock.html#nng_recv_aio"><code>nng_recv_aio</code></a>, to build a client to
 watch for messages received from the service created in Example 2.
 Error handling is elided for the sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
@@ -645,7 +645,7 @@ int main(int argc, char **argv) {
                                 <i class="fa fa-angle-left"></i>
                             </a>
 
-                            <a rel="next prefetch" href="../api/memory.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../api/ctx.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
 
@@ -659,7 +659,7 @@ int main(int argc, char **argv) {
                         <i class="fa fa-angle-left"></i>
                     </a>
 
-                    <a rel="next prefetch" href="../api/memory.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../api/ctx.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
             </nav>
