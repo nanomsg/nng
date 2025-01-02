@@ -487,6 +487,53 @@ Failure to do so will leak the memory.</p>
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
 this function instead of <a href="/TODO.html"><code>nng_recv</code></a> or <a href="/api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>.</p>
 </div>
+<h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
+<pre><code class="language-c">int nng_socket_get_bool(nng_socket s, const char *opt, bool *valp);
+int nng_socket_get_int(nng_socket s, const char *opt, int *valp);
+int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *valp);
+int nng_socket_get_size(nng_socket s, const char *opt, size_t *valp);
+
+int nng_socket_set_bool(nng_socket s, const char *opt, int val);
+int nng_socket_set_int(nng_socket s, const char *opt, int val);
+int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration val);
+int nng_socket_set_size(nng_socket s, const char *opt, size_t val);
+</code></pre>
+<p>Protocols usually have protocol specific behaviors that can be adjusted via options.</p>
+<p>These functions are used to retrieve or change the value of an option named <em>opt</em> from the context <em>ctx</em>.
+The <code>nng_socket_get_</code> functions retrieve the value from the socket <em>s</em>, and store it in the location <em>valp</em> references.
+The <code>nng_socket_set_</code> functions change the value for the socket <em>s</em>, taking it from <em>val</em>.</p>
+<p>These functions access an option as a specific type. The protocol documentation will have details about which options
+are available, whether they can be read or written, and the appropriate type to use.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
+for an underlying transport, the option should be set on the <a href="/TODO.html">dialer</a> or <a href="/TODO.html">listener</a> instead of the <a href="/TODO.html">socket</a>.</p>
+</div>
+<h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
+<p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>NNG_OPT_RECONNMAXT</code></td><td><code>nng_duration</code></td><td>Maximum time <a href="/TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECONNMINT</code></td><td><code>nng_duration</code></td><td>Minimum time <a href="/TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages to buffer locally when receiving.</td></tr>
+<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Can be tuned independently on <a href="/TODO.html">dialers</a> and <a href="/TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_OPT_RECVTIMEO</code><a name="NNG_OPT_RECVTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for receiving messages.</td></tr>
+<tr><td><code>NNG_OPT_SENDBUF</code><a name="NNG_OPT_SENDBUF"></a></td><td><code>int</code></td><td>Maximum number of messages to buffer when sending messages.</td></tr>
+<tr><td><code>NNG_OPT_SENDTIMEO</code><a name="NNG_OPT_SENDTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for sending messages.</td></tr>
+</tbody></table>
+</div>
+<p> </p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="/TODO.html">dialers</a>
+(and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="/TODO.html">listeners</a>)
+will use. After the dialer or listener is created, changes to the socket’s value will have no affect on that dialer or listener.</p>
+</div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);

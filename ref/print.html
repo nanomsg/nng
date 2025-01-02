@@ -1390,6 +1390,53 @@ Failure to do so will leak the memory.</p>
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
 this function instead of <a href="api//TODO.html"><code>nng_recv</code></a> or <a href="api//api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>.</p>
 </div>
+<h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
+<pre><code class="language-c">int nng_socket_get_bool(nng_socket s, const char *opt, bool *valp);
+int nng_socket_get_int(nng_socket s, const char *opt, int *valp);
+int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *valp);
+int nng_socket_get_size(nng_socket s, const char *opt, size_t *valp);
+
+int nng_socket_set_bool(nng_socket s, const char *opt, int val);
+int nng_socket_set_int(nng_socket s, const char *opt, int val);
+int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration val);
+int nng_socket_set_size(nng_socket s, const char *opt, size_t val);
+</code></pre>
+<p>Protocols usually have protocol specific behaviors that can be adjusted via options.</p>
+<p>These functions are used to retrieve or change the value of an option named <em>opt</em> from the context <em>ctx</em>.
+The <code>nng_socket_get_</code> functions retrieve the value from the socket <em>s</em>, and store it in the location <em>valp</em> references.
+The <code>nng_socket_set_</code> functions change the value for the socket <em>s</em>, taking it from <em>val</em>.</p>
+<p>These functions access an option as a specific type. The protocol documentation will have details about which options
+are available, whether they can be read or written, and the appropriate type to use.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
+for an underlying transport, the option should be set on the <a href="api//TODO.html">dialer</a> or <a href="api//TODO.html">listener</a> instead of the <a href="api//TODO.html">socket</a>.</p>
+</div>
+<h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
+<p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>NNG_OPT_RECONNMAXT</code></td><td><code>nng_duration</code></td><td>Maximum time <a href="api//TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECONNMINT</code></td><td><code>nng_duration</code></td><td>Minimum time <a href="api//TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages to buffer locally when receiving.</td></tr>
+<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Can be tuned independently on <a href="api//TODO.html">dialers</a> and <a href="api//TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_OPT_RECVTIMEO</code><a name="NNG_OPT_RECVTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for receiving messages.</td></tr>
+<tr><td><code>NNG_OPT_SENDBUF</code><a name="NNG_OPT_SENDBUF"></a></td><td><code>int</code></td><td>Maximum number of messages to buffer when sending messages.</td></tr>
+<tr><td><code>NNG_OPT_SENDTIMEO</code><a name="NNG_OPT_SENDTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for sending messages.</td></tr>
+</tbody></table>
+</div>
+<p> </p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="api//TODO.html">dialers</a>
+(and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="api//TODO.html">listeners</a>)
+will use. After the dialer or listener is created, changes to the socket’s value will have no affect on that dialer or listener.</p>
+</div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
 <pre><code class="language-c">int nng_socket_get_recv_poll_fd(nng_socket s, int *fdp);
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
@@ -1759,19 +1806,20 @@ this function instead of <a href="api//api/ctx.html#nng_ctx_recvmsg"><code>nng_c
 int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *valp);
 int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *valp);
 int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *valp);
-int nng_ctx_get_uint64(nng_ctx ctx, const char *opt, uint64_t *valp);
 
 int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_int(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration val);
 int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t val);
-int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t val);
 </code></pre>
+<p>Some protocols support certain options that affect the behavior of a specific context.
+For example, most protocols will let you set the defaults timeouts associated with
+send or receive separately for different contexts.</p>
 <p>These functions are used to retrieve or change the value of an option named <em>opt</em> from the context <em>ctx</em>.
-The <code>nng_ctx_get_</code> functions retrieve the value, and store it in the location <em>valp</em> references.
+The <code>nng_ctx_get_</code> functions retrieve the value from <em>ctx</em>, and store it in the location <em>valp</em> references.
 The <code>nng_ctx_set_</code> functions change the value for the <em>ctx</em>, taking it from <em>val</em>.</p>
-<p>These functions access an option as a specific type. The protocol will have details about which options
-are available for contexts, and which type they may be accessed using.</p>
+<p>These functions access an option as a specific type. The protocol documentation will have details about which options
+are available for contexts, whether they can be read or written, and the appropriate type to use.</p>
 <h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
 <p>These examples show building blocks for a concurrent service based on contexts.</p>
 <h3 id="example-1-context-echo-server"><a class="header" href="#example-1-context-echo-server">Example 1: Context Echo Server</a></h3>
@@ -6790,6 +6838,8 @@ and are thus removed:</p>
 <ul>
 <li><code>nng_ctx_get_string</code></li>
 <li><code>nng_ctx_set_string</code></li>
+<li><code>nng_ctx_get_uint64</code></li>
+<li><code>nng_ctx_set_uint64</code></li>
 <li><code>nng_dialer_get_ptr</code></li>
 <li><code>nng_dialer_set_ptr</code></li>
 <li><code>nng_listener_get_ptr</code></li>
@@ -6798,6 +6848,8 @@ and are thus removed:</p>
 <li><code>nng_socket_set_ptr</code></li>
 <li><code>nng_socket_get_string</code></li>
 <li><code>nng_socket_set_string</code></li>
+<li><code>nng_socket_get_uint64</code></li>
+<li><code>nng_socket_set_uint64</code></li>
 <li><code>nng_stream_get_ptr</code></li>
 <li><code>nng_stream_set_ptr</code></li>
 <li><code>nng_stream_dialer_get_ptr</code></li>
@@ -6851,7 +6903,7 @@ directly:</p>
 <p>The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
 before bringing them into the socket itself.</p>
-<h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
+<h2 id="socket-options-1"><a class="header" href="#socket-options-1">Socket Options</a></h2>
 <p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
 have been replaced by functions instead of options.
 Use <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a>, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_peer_id</code></a>, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_proto_name</code></a>, and <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_peer_name</code></a> instead.
@@ -7040,8 +7092,8 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_send</code></td><td><a href="migrate//api/sock.html#nng_send"><code>nng_send</code></a></td><td></td></tr>
 <tr><td><code>nn_recv</code></td><td><a href="migrate//TODO.html"><code>nng_recv</code></a></td><td></td></tr>
 <tr><td><code>nn_sendmsg</code></td><td><a href="migrate//api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a></td><td></td></tr>
-<tr><td><code>nn_getsockopt</code></td><td><a href="migrate//TODO.html"><code>nng_socket_get</code></a></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
-<tr><td><code>nn_setsockopt</code></td><td><a href="migrate//TODO.html"><code>nng_socket_set</code></a></td><td></td></tr>
+<tr><td><code>nn_getsockopt</code></td><td><a href="migrate//api/sock.html#socket-options"><code>nng_socket_get</code></a></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
+<tr><td><code>nn_setsockopt</code></td><td><a href="migrate//api/sock.html#socket-options"><code>nng_socket_set</code></a></td><td></td></tr>
 <tr><td><code>nn_device</code></td><td><a href="migrate//TODO.html"><code>nng_device</code></a></td><td></td></tr>
 <tr><td><code>nn_poll</code></td><td>None</td><td>Can be constructed using <code>nng_aio</code>. Few if any applications ever used this API.</td></tr>
 <tr><td><code>nn_term</code></td><td><a href="migrate//api/init.html#finalization"><code>nng_fini</code></a></td><td>The <code>nng_fini</code> API can do this, but is not recommended except when debugging memory leaks.</td></tr>
@@ -7064,10 +7116,10 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <p>The following options are changed.</p>
 <div class="table-wrapper"><table><thead><tr><th>Nanomsg Option</th><th>NNG Eqvaivalent</th><th>Notes</th></tr></thead><tbody>
 <tr><td><code>NN_LINGER</code></td><td>None</td><td>NNG does not support tuning this.</td></tr>
-<tr><td><code>NN_SNDBUF</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_SENDBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
-<tr><td><code>NN_RCVBUF</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECVBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
-<tr><td><code>NN_SNDTIMEO</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_SENDTIMEO</code></a></td><td></td></tr>
-<tr><td><code>NN_RCVTIMEO</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECVTIMEO</code></a></td><td></td></tr>
+<tr><td><code>NN_SNDBUF</code></td><td><a href="migrate//api/sock.html#NNG_OPT_SENDBUF"><code>NNG_OPT_SENDBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
+<tr><td><code>NN_RCVBUF</code></td><td><a href="migrate//api/sock.html#NNG_OPT_RECVBUF"><code>NNG_OPT_RECVBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
+<tr><td><code>NN_SNDTIMEO</code></td><td><a href="migrate//api/sock.html#NNG_OPT_SENDTIMEO"><code>NNG_OPT_SENDTIMEO</code></a></td><td></td></tr>
+<tr><td><code>NN_RCVTIMEO</code></td><td><a href="migrate//api/sock.html#NNG_OPT_RECVTIMEO"><code>NNG_OPT_RECVTIMEO</code></a></td><td></td></tr>
 <tr><td><code>NN_RECONNECT_IVL</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECONNMINT</code></a></td><td></td></tr>
 <tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><a href="migrate//TODO.html"><code>NNG_OPT_RECONNMAXT</code></a></td><td></td></tr>
 <tr><td><code>NN_SNDPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>

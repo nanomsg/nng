@@ -373,19 +373,20 @@ this function instead of <a href="/api/ctx.html#nng_ctx_recvmsg"><code>nng_ctx_r
 int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *valp);
 int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *valp);
 int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *valp);
-int nng_ctx_get_uint64(nng_ctx ctx, const char *opt, uint64_t *valp);
 
 int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_int(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration val);
 int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t val);
-int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t val);
 </code></pre>
+<p>Some protocols support certain options that affect the behavior of a specific context.
+For example, most protocols will let you set the defaults timeouts associated with
+send or receive separately for different contexts.</p>
 <p>These functions are used to retrieve or change the value of an option named <em>opt</em> from the context <em>ctx</em>.
-The <code>nng_ctx_get_</code> functions retrieve the value, and store it in the location <em>valp</em> references.
+The <code>nng_ctx_get_</code> functions retrieve the value from <em>ctx</em>, and store it in the location <em>valp</em> references.
 The <code>nng_ctx_set_</code> functions change the value for the <em>ctx</em>, taking it from <em>val</em>.</p>
-<p>These functions access an option as a specific type. The protocol will have details about which options
-are available for contexts, and which type they may be accessed using.</p>
+<p>These functions access an option as a specific type. The protocol documentation will have details about which options
+are available for contexts, whether they can be read or written, and the appropriate type to use.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <p>These examples show building blocks for a concurrent service based on contexts.</p>
 <h3 id="example-1-context-echo-server"><a class="header" href="#example-1-context-echo-server">Example 1: Context Echo Server</a></h3>
