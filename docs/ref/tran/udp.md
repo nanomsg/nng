@@ -47,14 +47,12 @@ be specified as `udp://[::1]:8001`.
 The special value of 0 ({{i:`INADDR_ANY`}})
 can be used for a listener to indicate that it should listen on all
 interfaces on the host.
-A short-hand for this form is to either omit the address, or specify
-the asterisk (`*`) character.
-For example, the following three URIs are all equivalent,
+A short-hand for this form is to omit the IP address entirely.
+For example, the following two URIs are equivalent,
 and could be used to listen to port 9999 on the host:
 
 1. `udp://0.0.0.0:9999`
-2. `udp://*:9999`
-3. `udp://:9999`
+2. `udp://:9999`
 
 ## Socket Address
 
