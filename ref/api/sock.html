@@ -515,13 +515,13 @@ for an underlying transport, the option should be set on the <a href="/TODO.html
 <h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
 <p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="/TODO.html"><code>nng_device</code></a> device.</td></tr>
+<tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="/TODO.html"><code>nng_device</code></a> device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.</td></tr>
 <tr><td><code>NNG_OPT_RECONNMAXT</code><a name="NNG_OPT_RECONNMAXT"></a></td><td><code>nng_duration</code></td><td>Maximum time <a href="/TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
 <tr><td><code>NNG_OPT_RECONNMINT</code><a name="NNG_OPT_RECONNMINT"></a></td><td><code>nng_duration</code></td><td>Minimum time <a href="/TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
-<tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages to buffer locally when receiving.</td></tr>
-<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Can be tuned independently on <a href="/TODO.html">dialers</a> and <a href="/TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer locally when receiving.</td></tr>
+<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on <a href="/TODO.html">dialers</a> and <a href="/TODO.html">listeners</a>.</td></tr>
 <tr><td><code>NNG_OPT_RECVTIMEO</code><a name="NNG_OPT_RECVTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for receiving messages.</td></tr>
-<tr><td><code>NNG_OPT_SENDBUF</code><a name="NNG_OPT_SENDBUF"></a></td><td><code>int</code></td><td>Maximum number of messages to buffer when sending messages.</td></tr>
+<tr><td><code>NNG_OPT_SENDBUF</code><a name="NNG_OPT_SENDBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer when sending messages.</td></tr>
 <tr><td><code>NNG_OPT_SENDTIMEO</code><a name="NNG_OPT_SENDTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for sending messages.</td></tr>
 </tbody></table>
 </div>

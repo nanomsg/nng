@@ -270,13 +270,11 @@ be specified as <code>udp://[::1]:8001</code>.</p>
 <p>The special value of 0 (<a name="a007"></a><code>INADDR_ANY</code>)
 can be used for a listener to indicate that it should listen on all
 interfaces on the host.
-A short-hand for this form is to either omit the address, or specify
-the asterisk (<code>*</code>) character.
-For example, the following three URIs are all equivalent,
+A short-hand for this form is to omit the IP address entirely.
+For example, the following two URIs are equivalent,
 and could be used to listen to port 9999 on the host:</p>
 <ol>
 <li><code>udp://0.0.0.0:9999</code></li>
-<li><code>udp://*:9999</code></li>
 <li><code>udp://:9999</code></li>
 </ol>
 <h2 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h2>
