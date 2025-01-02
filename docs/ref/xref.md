@@ -220,8 +220,18 @@
 [`nng_listen`]: /TODO.md
 [`nng_listener_create`]: /TODO.md
 [`nng_listener_close`]: /TODO.md
-[`nng_socket_set`]: /TODO.md
-[`nng_socket_get`]: /TODO.md
+[`nng_socket_set`]: /api/sock.md#socket-options
+[`nng_socket_set_bool`]: /api/sock.md#socket-options
+[`nng_socket_set_int`]: /api/sock.md#socket-options
+[`nng_socket_set_ms`]: /api/sock.md#socket-options
+[`nng_socket_set_size`]: /api/sock.md#socket-options
+[`nng_socket_set_uint64`]: /api/sock.md#socket-options
+[`nng_socket_get`]: /api/sock.md#socket-options
+[`nng_socket_get_bool`]: /api/sock.md#socket-options
+[`nng_socket_get_int`]: /api/sock.md#socket-options
+[`nng_socket_get_ms`]: /api/sock.md#socket-options
+[`nng_socket_get_size`]: /api/sock.md#socket-options
+[`nng_socket_get_uint64`]: /api/sock.md#socket-options
 [`nng_send`]: /api/sock.md#nng_send
 [`nng_sendmsg`]: /api/sock.md#nng_sendmsg
 [`nng_send_aio`]: /api/sock.md#nng_send_aio
@@ -295,10 +305,11 @@
 [`NNG_OPT_MAXTTL`]: /TODO.md
 [`NNG_OPT_RECONNMAXT`]: /TODO.md
 [`NNG_OPT_RECONNMINT`]: /TODO.md
-[`NNG_OPT_SENDTIMEO`]: /TODO.md
-[`NNG_OPT_RECVTIMEO`]: /TODO.md
-[`NNG_OPT_SENDBUF`]: /TODO.md
-[`NNG_OPT_RECVBUF`]: /TODO.md
+[`NNG_OPT_SENDTIMEO`]: /api/sock.md#NNG_OPT_SENDTIMEO
+[`NNG_OPT_RECVTIMEO`]: /api/sock.md#NNG_OPT_RECVTIMEO
+[`NNG_OPT_SENDBUF`]: /api/sock.md#NNG_OPT_SENDBUF
+[`NNG_OPT_RECVBUF`]: /api/sock.md#NNG_OPT_RECVBUF
+[`NNG_OPT_RECVMAXSZ`]: /api/sock.md#NNG_OPT_RECVMAXSZ
 [`NNG_SOCKET_INITIALIZER`]: /api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: /api/ctx.md#context-structure
 

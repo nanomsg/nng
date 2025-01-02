@@ -15,18 +15,6 @@
 
 libnng - nanomsg next generation library
 
-
-=== Socket Functions
-
-The following functions operate on sockets.
-
-|===
-|xref:nng_dial.3.adoc[nng_dial()]|create and start dialer
-|xref:nng_listen.3.adoc[nng_listen()]|create and start listener
-|xref:nng_socket_get.3.adoc[nng_socket_get()]|get socket option
-|xref:nng_socket_set.3.adoc[nng_socket_set()]|set socket option
-|===
-
 === Connection Management
 
 The following functions are used with either listeners, or dialers.

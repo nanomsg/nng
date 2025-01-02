@@ -180,12 +180,16 @@ int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t val);
 int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t val);
 ```
 
+Some protocols support certain options that affect the behavior of a specific context.
+For example, most protocols will let you set the defaults timeouts associated with
+send or receive separately for different contexts.
+
 These functions are used to retrieve or change the value of an option named _opt_ from the context _ctx_.
-The `nng_ctx_get_` functions retrieve the value, and store it in the location _valp_ references.
+The `nng_ctx_get_` functions retrieve the value from _ctx_, and store it in the location _valp_ references.
 The `nng_ctx_set_` functions change the value for the _ctx_, taking it from _val_.
 
-These functions access an option as a specific type. The protocol will have details about which options
-are available for contexts, and which type they may be accessed using.
+These functions access an option as a specific type. The protocol documentation will have details about which options
+are available for contexts, whether they can be read or written, and which type they may be accessed using.
 
 ## Examples
 

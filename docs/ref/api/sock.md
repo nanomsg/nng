@@ -271,6 +271,47 @@ On success, the received message can be retrieved from the _aio_ using the [`nng
 > steps on the part of the application, the lowest latencies and highest performance will be achieved by using
 > this function instead of [`nng_recv`] or [`nng_recvmsg`].
 
+## Socket Options
+
+```c
+int nng_socket_get_bool(nng_socket s, const char *opt, bool *valp);
+int nng_socket_get_int(nng_socket s, const char *opt, int *valp);
+int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *valp);
+int nng_socket_get_size(nng_socket s, const char *opt, size_t *valp);
+int nng_socket_get_uint64(nng_socket s, const char *opt, uint64_t *valp);
+
+int nng_socket_set_bool(nng_socket s, const char *opt, int val);
+int nng_socket_set_int(nng_socket s, const char *opt, int val);
+int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration val);
+int nng_socket_set_size(nng_socket s, const char *opt, size_t val);
+int nng_socket_set_uint64(nng_socket s, const char *opt, uint64_t val);
+```
+
+Protocols usually have protocol specific behaviors that can be adjusted via options.
+
+These functions are used to retrieve or change the value of an option named _opt_ from the context _ctx_.
+The `nng_socket_get_` functions retrieve the value from the socket _s_, and store it in the location _valp_ references.
+The `nng_socket_set_` functions change the value for the socket _s_, taking it from _val_.
+
+These functions access an option as a specific type. The protocol documentation will have details about which options
+are available, whether they can be read or written, and the appropriate type to use.
+
+> [!NOTE]
+> Socket options are are used to tune the behavior of the higher level protocol. To change the options
+> for an underlying transport, the option should be set on the [dialer] or [listener] instead of the [socket].
+
+### Common Options
+
+The following options are available for many protocols, and always use the same types and semantics described below.
+
+| Option                                              | Type           | Description                                                                                                               |
+| --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>     | `int`          | Maximum number of messages to buffer locally when receiving.                                                              |
+| `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>     | `int`          | Maximum number of messages to buffer when sending messages.                                                               |
+| `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a> | `size_t`       | Maximum message size acceptable for receiving. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
+| `NNG_OPT_RECVTIMEO`<a name="NNG_OPT_RECVTIMEO"></a> | `nng_duration` | Default timeout (ms) for receiving messages.                                                                              |
+| `NNG_OPT_SENDTIMEO`<a name="NNG_OPT_SENDTIMEO"></a> | `nng_duration` | Default timeout (ms) for sending messages.                                                                                |
+
 ## Polling Socket Events
 
 ```c
