@@ -19,9 +19,7 @@ Note that the memory may have random data in it, just like with `malloc`.
 If memory cannot be allocated for any reason, then `NULL` will be returned.
 Applications that experience this should treat this like [`NNG_ENOMEM`].
 
-Memory returned by `nng_alloc` can be used to hold message buffers, in which
-case it can be directly passed to [`nng_send`] using the flag `NNG_FLAG_ALLOC`.
-Alternatively, it can be freed when no longer needed using [`nng_free`].
+Memory returned by `nng_alloc` should be freed when no longer needed using [`nng_free`].
 
 > [!IMPORTANT]
 > Do not use the system `free` function (or the C++ `delete` operator) to release this memory.

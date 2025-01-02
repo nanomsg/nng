@@ -79,35 +79,12 @@ nng_recv(nng_socket s, void *buf, size_t *szp, int flags)
 
 	// Note that while it would be nice to make this a zero copy operation,
 	// its not normally possible if a size was specified.
-	if ((rv = nng_recvmsg(s, &msg, flags & ~(NNG_FLAG_ALLOC))) != 0) {
+	if ((rv = nng_recvmsg(s, &msg, flags)) != 0) {
 		return (rv);
 	}
-	if (!(flags & NNG_FLAG_ALLOC)) {
-		memcpy(buf, nng_msg_body(msg),
-		    *szp > nng_msg_len(msg) ? nng_msg_len(msg) : *szp);
-		*szp = nng_msg_len(msg);
-	} else {
-		// We'd really like to avoid a separate data copy, but since
-		// we have allocated messages with headroom, we can't really
-		// make free() work on the base pointer.  We'd have to have
-		// some other API for this.  Folks that want zero copy had
-		// better use nng_recvmsg() instead.
-		void *nbuf;
-
-		if (nng_msg_len(msg) != 0) {
-			if ((nbuf = nni_alloc(nng_msg_len(msg))) == NULL) {
-				nng_msg_free(msg);
-				return (NNG_ENOMEM);
-			}
-
-			*(void **) buf = nbuf;
-			memcpy(nbuf, nni_msg_body(msg), nni_msg_len(msg));
-			*szp = nng_msg_len(msg);
-		} else {
-			*(void **) buf = NULL;
-			*szp           = 0;
-		}
-	}
+	memcpy(buf, nng_msg_body(msg),
+	    *szp > nng_msg_len(msg) ? nng_msg_len(msg) : *szp);
+	*szp = nng_msg_len(msg);
 	nni_msg_free(msg);
 	return (0);
 }
@@ -159,10 +136,6 @@ nng_send(nng_socket s, void *buf, size_t len, int flags)
 	if ((rv = nng_sendmsg(s, msg, flags)) != 0) {
 		// If nng_sendmsg() succeeded, then it took ownership.
 		nng_msg_free(msg);
-	} else {
-		if (flags & NNG_FLAG_ALLOC) {
-			nni_free(buf, len);
-		}
 	}
 	return (rv);
 }

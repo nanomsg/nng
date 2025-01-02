@@ -102,8 +102,8 @@ test_send_recv(void)
 	int          len;
 	size_t       sz;
 	nng_duration to = 3000; // 3 seconds
-	char        *buf;
-	char        *a = "inproc://t1";
+	char        *a  = "inproc://t1";
+	char         rxbuf[32];
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -124,11 +124,10 @@ test_send_recv(void)
 	NUTS_PASS(nng_dial(s2, a, NULL, 0));
 
 	NUTS_PASS(nng_send(s1, "abc", 4, 0));
-	NUTS_PASS(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC));
-	NUTS_TRUE(buf != NULL);
+	sz = sizeof(rxbuf);
+	NUTS_PASS(nng_recv(s2, rxbuf, &sz, 0));
 	NUTS_TRUE(sz == 4);
-	NUTS_TRUE(memcmp(buf, "abc", 4) == 0);
-	nng_free(buf, sz);
+	NUTS_TRUE(memcmp(rxbuf, "abc", 4) == 0);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
@@ -142,7 +141,7 @@ test_send_recv_zero_length(void)
 	int          len;
 	size_t       sz;
 	nng_duration to = 3000; // 3 seconds
-	char        *buf;
+	char         buf[32];
 	char        *a = "inproc://send-recv-zero-length";
 
 	NUTS_OPEN(s1);
@@ -164,10 +163,9 @@ test_send_recv_zero_length(void)
 	NUTS_PASS(nng_dial(s2, a, NULL, 0));
 
 	NUTS_PASS(nng_send(s1, "", 0, 0));
-	NUTS_PASS(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC));
-	NUTS_TRUE(buf == NULL);
+	sz = sizeof(buf);
+	NUTS_PASS(nng_recv(s2, buf, &sz, 0));
 	NUTS_TRUE(sz == 0);
-	nng_free(buf, sz);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
@@ -186,7 +184,7 @@ test_connection_refused(void)
 void
 test_late_connection(void)
 {
-	char      *buf;
+	char       buf[32];
 	size_t     sz;
 	nng_socket s1;
 	nng_socket s2;
@@ -202,10 +200,10 @@ test_late_connection(void)
 	NUTS_PASS(nng_listen(s2, a, NULL, 0));
 	nng_msleep(100);
 	NUTS_PASS(nng_send(s1, "abc", 4, 0));
-	NUTS_PASS(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC));
+	sz = sizeof(buf);
+	NUTS_PASS(nng_recv(s2, &buf, &sz, 0));
 	NUTS_TRUE(sz == 4);
 	NUTS_TRUE(memcmp(buf, "abc", 4) == 0);
-	nng_free(buf, sz);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);

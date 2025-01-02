@@ -282,7 +282,6 @@
 [`NNG_UNIT_MESSAGES`]: /api/stats.md#statistic-units
 [`NNG_UNIT_MILLIS`]: /api/stats.md#statistic-units
 [`NNG_UNIT_EVENTS`]: /api/stats.md#statistic-units
-[`NNG_FLAG_ALLOC`]: /TODO.md
 [`NNG_FLAG_NONBLOCK`]: /TODO.md
 [`NNG_OPT_LISTEN_FD`]: /api/streams.md#socket-activation
 [`NNG_OPT_MAXTTL`]: /TODO.md

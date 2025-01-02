@@ -40,6 +40,15 @@ be supplied should avoid surprises later as new versions of protocols are added.
 Additionally, the header files for protocols are now empty, as all of their content has been moved to `nng/nng.h`.
 Please remove `#include` references to protocol headers as we anticipate removing them in the future.
 
+## NNG_FLAG_ALLOC Removed
+
+The `NNG_FLAG_ALLOC` flag that allowed a zero copy semantic with [`nng_send`] and [`nng_recv`] is removed.
+This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
+suboptimal in terms of performance.
+
+Modern code should use one of [`nng_sendmsg`], [`nng_recvmsg`], [`nng_send_aio`], or [`nng_recv_aio`] to get the maximum performance benefit.
+Working directly with [`nng_msg`] structures gives more control, reduces copies, and reduces allocation activity.
+
 ## New AIO Error Code NNG_ESTOPPED
 
 When an operation fails with [`NNG_ESTOPPED`], it means that the associated [`nni_aio`] object has

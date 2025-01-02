@@ -177,24 +177,12 @@ made up of zero or more of the following values:
   If the socket cannot accept more data at this time, it does not block, but returns immediately
   with a status of [`NNG_EAGAIN`]. If this flag is absent, the function will wait until data can be sent.
 
-- {{i:`NNG_FLAG_ALLOC`}}: <a name="NNG_FLAG_ALLOC"></a>
-  The _data_ was allocated using [`nng_alloc`] or was obtained from a call to [`nng_recv`] also with
-  the `NNG_FLAG_ALLOC` flag. If this function succeeds, then it will dispose of the _data_, deallocating it
-  once the transmission is complete. If this function returns a non-zero status, the caller retains the responsibility
-  of disposing the data. The benefit of this flag is that it can eliminate a data copy and allocation. Without the flag
-  the socket will make a duplicate copy of _data_ for use by the operation, before returning to the caller.
-
 > [!NOTE]
 > Regardless of the presence or absence of `NNG_FLAG_NONBLOCK`, there may
 > be queues between the sender and the receiver.
 > Furthermore, there is no guarantee that the message has actually been delivered.
 > Finally, with some protocols, the semantic is implicitly `NNG_FLAG_NONBLOCK`,
 > such as with [PUB][pub] sockets, which are best-effort delivery only.
-
-> [!IMPORTANT]
-> When using `NNG_FLAG_ALLOC`, it is important that the value of _size_ match the actual allocated size of the data.
-> Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
-> or other undesirable effects.
 
 ### nng_sendmsg
 
@@ -248,8 +236,7 @@ messages over the socket _s_. The differences in their behaviors are as follows.
 ### nng_recv
 
 The `nng_recv` function is the simplest to use, but is the least efficient.
-It receives the content in _data_, as a message size (in bytes) of up to the value stored in _sizep_,
-unless the `NNG_FLAG_ALLOC` flag is set in _flags_ (see below.)
+It receives the content in _data_, as a message size (in bytes) of up to the value stored in _sizep_.
 
 Upon success, the size of the message received will be stored in _sizep_.
 
@@ -258,17 +245,6 @@ The _flags_ is a bit mask made up of zero or more of the following values:
 - {{i:`NNG_FLAG_NONBLOCK`}}:
   If the socket has no messages pending for reception at this time, it does not block, but returns immediately
   with a status of [`NNG_EAGAIN`]. If this flag is absent, the function will wait until data can be received.
-
-- {{i:`NNG_FLAG_ALLOC`}}:
-  Instead of receiving the message into _data_, a new buffer will be allocated exactly large enough to hold
-  the message. A pointer to that buffer will be stored at the location specified by _data_. This provides a form
-  of zero-copy operation. The caller should dispose of the buffer using [`nng_free`] or by sending using
-  [`nng_send`] with the [`NNG_FLAG_ALLOC`] flag.
-
-> [!IMPORTANT]
-> When using `NNG_FLAG_ALLOC`, it is important that the value of _size_ match the actual allocated size of the data.
-> Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
-> or other undesirable effects.
 
 ### nng_recvmsg
 
@@ -279,7 +255,7 @@ has no messages available to receive. In such a case, it will return [`NNG_EAGAI
 
 > [!TIP]
 > This function is preferred over [`nng_recv`], as it gives access to the message structure and eliminates both
-> a data copy and allocation, even when `nng_recv` is using `NNG_FLAG_ALLOC`.
+> a data copy and allocation.
 
 ### nng_recv_aio
 

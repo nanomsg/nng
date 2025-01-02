@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -46,8 +46,7 @@ repthr(void *arg)
 	for (;;) {
 		fd_set         fset;
 		struct timeval tmo;
-		char          *msgbuf;
-		size_t         msglen;
+		nng_msg       *msg;
 
 		FD_ZERO(&fset);
 		FD_SET(fd, &fset);
@@ -59,14 +58,13 @@ repthr(void *arg)
 
 		for (;;) {
 			int rv;
-			rv = nng_recv(rep, &msgbuf, &msglen,
-			    NNG_FLAG_NONBLOCK | NNG_FLAG_ALLOC);
+			rv = nng_recvmsg(rep, &msg, NNG_FLAG_NONBLOCK);
 			if (rv != 0) {
 				return;
 			}
-			nng_free(msgbuf, msglen);
-			int ok = 0;
-			rv     = nng_send(rep, &ok, 4, NNG_FLAG_NONBLOCK);
+			nng_msg_clear(msg);
+			nng_msg_append_u32(msg, 0);
+			rv = nng_sendmsg(rep, msg, NNG_FLAG_NONBLOCK);
 			if (rv == NNG_ECLOSED) {
 				return;
 			}

@@ -56,7 +56,7 @@ NNG approach to messages. Likewise there is no `struct nn_cmsghdr` equivalent.
 | `nn_get_statistic`  | [`nng_stats_get`]                            | The statistics in NNG are completely different, with different semantics and no stability guarantees. |
 | `NN_POLLIN`         | None                                         | Used only with `nn_poll`.                                                                             |
 | `NN_POLLOUT`        | None                                         | Used only with `nn_poll`.                                                                             |
-| `NN_MSG`            | [`NNG_FLAG_ALLOC`]                           | See `nng_send` and `nng_recv` for details.                                                            |
+| `NN_MSG`            | [`nng_sendmsg`], [`nng_recvmsg`]             | There are differences as a separate [`nng_msg`] structure is involved.                                |
 | `NN_CMSG_ALIGN`     | None                                         |
 | `NN_CMSG_FIRSTHDR`  | None                                         |
 | `NN_CMSG_NXTHDR`    | None                                         |
