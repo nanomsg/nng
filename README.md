@@ -8,7 +8,8 @@
 [![illumos Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/omnios.yml?branch=main&logoColor=grey&logo=accuweather&label=)](https://github.com/nanomsg/nng/actions)
 [![Coverage](https://img.shields.io/codecov/c/github/nanomsg/nng/branch/main?logo=codecov&logoColor=grey&label=)](https://codecov.io/gh/nanomsg/nng/tree/main)
 [![Discord](https://img.shields.io/discord/639573728212156478?label=&logo=discord)](https://discord.gg/Xnac6b9)
-[![Manual](https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue)](https://nng.nanomsg.org/man)
+[![Manual](https://img.shields.io/static/v1?label=&message=docs&logo=mdbook&logoColor=silver&color=blue)](https://nng.nanomsg.org/ref)
+[![AsciiDoc](https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue)](https://nng.nanomsg.org/man)
 [![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/main/LICENSE.txt)
 [![Latest Pre-Release](https://img.shields.io/github/v/release/nanomsg/nng.svg?logo=github&label=)](https://github.com/nanomsg/nng/releases)
 [![Latest Release](https://img.shields.io/github/v/release/nanomsg/nng.svg?include_prereleases&logo=github&label=)](https://github.com/nanomsg/nng/releases)
@@ -152,7 +153,7 @@ system (pass `-G Ninja` to CMake) when you can.
 blindingly fast and has made our lives as developers measurably better.)
 
 If you want to build with TLS support you will also need
-[Mbed TLS](https://tls.mbed.org) or [WolfSSL](https://wolfssl.com).  
+[Mbed TLS](https://tls.mbed.org) or [WolfSSL](https://wolfssl.com).
 See the [build instructions](docs/BUILD_TLS.md) for details.
 
 ## Quick Start
@@ -168,19 +169,17 @@ $ ninja test
 $ ninja install
 ```
 
-## API Documentation
+## Reference Manual
 
-The API documentation is provided in Asciidoc format in the
-`docs/man` subdirectory, and also
-[online](https://nng.nanomsg.org/man).
+The API documentation is currently in transition, as we are converting it from
+Asciidoc to `mdbook`. Most of the content has now been converted, and you can
+see it at [here](https://nng.nanomsg.org/ref). Part of the conversion includes
+a substantial reorganization for improved usability, with major content revisions
+and additions for NNG 2.0.
 
-> [!NOTE]
-> However, an effort to convert the documentation to Markdown using `mdbook`
-> is underway. You can see a preview it [here](https://nng.nanomsg.org/ref).
-
-The [_nng_(7)](docs/man/nng.7.adoc) page provides a conceptual overview and links to
-manuals for various patterns.
-The [_libnng_(3)](docs/man/libnng.3.adoc) page is a good starting point for the API reference.
+The remaining Asciidoc format documentation is in the `docs/man` subdirectory, and also
+[online](https://nng.nanomsg.org/man). It will eventually all be converted before 2.0
+is fully released.
 
 You can also purchase a copy of the
 [**NNG Reference Manual**](http://staysail.tech/books/nng_reference/index.html).
