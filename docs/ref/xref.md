@@ -198,10 +198,6 @@
 [`nng_dialer_get_tls`]: /TODO.md
 [`nng_listener_set_tls`]: /TODO.md
 [`nng_listener_get_tls`]: /TODO.md
-[`nng_stream_dialer_set_tls`]: /TODO.md
-[`nng_stream_dialer_get_tls`]: /TODO.md
-[`nng_stream_listener_set_tls`]: /TODO.md
-[`nng_stream_listener_get_tls`]: /TODO.md
 [`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
 [`nng_aio_finish`]: /TODO.md
 [`nng_aio_reset`]: /TODO.md
@@ -302,9 +298,9 @@
 [`NNG_UNIT_EVENTS`]: /api/stats.md#statistic-units
 [`NNG_FLAG_NONBLOCK`]: /TODO.md
 [`NNG_OPT_LISTEN_FD`]: /api/streams.md#socket-activation
-[`NNG_OPT_MAXTTL`]: /TODO.md
-[`NNG_OPT_RECONNMAXT`]: /TODO.md
-[`NNG_OPT_RECONNMINT`]: /TODO.md
+[`NNG_OPT_MAXTTL`]: /api/sock.md#NNG_OPT_MAXTTL
+[`NNG_OPT_RECONNMAXT`]: /api/sock.md#NNG_OPT_RECONNMAXT
+[`NNG_OPT_RECONNMINT`]: /api/sock.md#NNG_OPT_RECONNMINT
 [`NNG_OPT_SENDTIMEO`]: /api/sock.md#NNG_OPT_SENDTIMEO
 [`NNG_OPT_RECVTIMEO`]: /api/sock.md#NNG_OPT_RECVTIMEO
 [`NNG_OPT_SENDBUF`]: /api/sock.md#NNG_OPT_SENDBUF

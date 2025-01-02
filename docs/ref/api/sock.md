@@ -302,15 +302,16 @@ are available, whether they can be read or written, and the appropriate type to 
 
 The following options are available for many protocols, and always use the same types and semantics described below.
 
-| Option                                              | Type           | Description                                                                                                               |
-| --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `NNG_OPT_RECONNMAXT`                                | `nng_duration` | Maximum time [dialers][dialer] will delay before trying after failing to connect.                                         |
-| `NNG_OPT_RECONNMINT`                                | `nng_duration` | Minimum time [dialers][dialer] will delay before trying after failing to connect.                                         |
-| `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>     | `int`          | Maximum number of messages to buffer locally when receiving.                                                              |
-| `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a> | `size_t`       | Maximum message size acceptable for receiving. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
-| `NNG_OPT_RECVTIMEO`<a name="NNG_OPT_RECVTIMEO"></a> | `nng_duration` | Default timeout (ms) for receiving messages.                                                                              |
-| `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>     | `int`          | Maximum number of messages to buffer when sending messages.                                                               |
-| `NNG_OPT_SENDTIMEO`<a name="NNG_OPT_SENDTIMEO"></a> | `nng_duration` | Default timeout (ms) for sending messages.                                                                                |
+| Option                                                | Type           | Description                                                                                                               |
+| ----------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `NNG_OPT_MAXTTL`<a name="NNG_OPT_MAXTTL"></a>         | `int`          | Maximum number of traversals across an [`nng_device`] device.                                                             |
+| `NNG_OPT_RECONNMAXT`<a name="NNG_OPT_RECONNMAXT"></a> | `nng_duration` | Maximum time [dialers][dialer] will delay before trying after failing to connect.                                         |
+| `NNG_OPT_RECONNMINT`<a name="NNG_OPT_RECONNMINT"></a> | `nng_duration` | Minimum time [dialers][dialer] will delay before trying after failing to connect.                                         |
+| `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>       | `int`          | Maximum number of messages to buffer locally when receiving.                                                              |
+| `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a>   | `size_t`       | Maximum message size acceptable for receiving. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
+| `NNG_OPT_RECVTIMEO`<a name="NNG_OPT_RECVTIMEO"></a>   | `nng_duration` | Default timeout (ms) for receiving messages.                                                                              |
+| `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>       | `int`          | Maximum number of messages to buffer when sending messages.                                                               |
+| `NNG_OPT_SENDTIMEO`<a name="NNG_OPT_SENDTIMEO"></a>   | `nng_duration` | Default timeout (ms) for sending messages.                                                                                |
 
 &nbsp;
 

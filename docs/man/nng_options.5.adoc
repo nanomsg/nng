@@ -42,10 +42,6 @@ nng_options - socket, dialer, listener, and pipe options
 This page documents the various standard options that can be set or
 retrieved on objects.
 
-Sockets (xref:nng_socket.5.adoc[`nng_socket`] objects) use the functions
-xref:nng_socket_get.3.adoc[`nng_socket_get()`]
-and xref:nng_socket_set.3.adoc[`nng_socket_set()`] to set and retrieve option values.
-
 Dialers (xref:nng_dialer.5.adoc[`nng_dialer`] objects) use the functions
 xref:nng_dialer_get.3.adoc[`nng_dialer_get()`] and
 xref:nng_dialer_set.3.adoc[`nng_dialer_set()`] to set and retrieve option
@@ -88,22 +84,6 @@ When used on a TCP dialer, this option is used to configure the source IP
 address that will be used when initiating outgoing connections.
 The specific port number will be ignored, however, and the system will
 choose a random ephemeral port instead.
-
-[[NNG_OPT_RAW]]
-((`NNG_OPT_RAW`))::
-(((raw mode)))
-(((cooked mode)))
-(`bool`)
-This read-only option indicates whether the socket is in raw mode.
-If `true`, the socket is in raw mode, and if `false` the socket is
-in normal mode.
-+
-Raw mode sockets generally do not have any protocol-specific semantics applied
-to them; instead the application is expected to perform such semantics itself.
-(For example, in normal mode a xref:nng_rep.7.adoc[_rep_] socket would
-automatically copy message headers from a received message to the corresponding
-reply, whereas in raw mode this is not done.)
-See xref:nng.7.adoc#raw_mode[Raw Mode] for more details.
 
 [[NNG_OPT_RECONNMINT]]
 ((`NNG_OPT_RECONNMINT`))::
@@ -172,14 +152,6 @@ are established.)
 +
 NOTE: Some transports may have further message size restrictions.
 
-[[NNG_OPT_RECVTIMEO]]
-((`NNG_OPT_RECVTIMEO`))::
-(((receive, timeout)))
-(((timeout, receive)))
-(xref:nng_duration.5.adoc[`nng_duration`])
-This is the socket receive timeout in milliseconds.
-When no message is available for receiving at the socket for this period of
-time, receive operations will fail with a return value of `NNG_ETIMEDOUT`.
 
 [[NNG_OPT_REMADDR]]
 ((`NNG_OPT_REMADDR`))::
@@ -187,30 +159,6 @@ time, receive operations will fail with a return value of `NNG_ETIMEDOUT`.
 This read-only option may be used on dialers and connected pipes, and
 represents the address of a remote peer.
 Not all transports support this option.
-
-[[NNG_OPT_SENDBUF]]
-((`NNG_OPT_SENDBUF`))::
-(((send, buffer)))
-(((buffer, send)))
-(`int`)
-This is the depth of the socket send buffer as a number of messages.
-Messages sent by an application may be buffered by the socket until a
-transport is ready to accept them for delivery.
-This value must be an integer between 0 and 8192, inclusive.
-+
-NOTE: Not all protocols support buffering sent messages.
-For example, xref:nng_req.7.adoc[_req_] can only have a single request
-outstanding at a time (per context).
-
-[[NNG_OPT_SENDTIMEO]]
-((`NNG_OPT_SENDTIMEO`))::
-(((send, timeout)))
-(((timeout, send)))
-(xref:nng_duration.5.adoc[`nng_duration`])
-This is the socket send timeout in milliseconds.
-When a message cannot be queued for delivery by the socket for this period of
-time (such as if send buffers are full), the operation will fail with a
-return value of `NNG_ETIMEDOUT`.
 
 [[NNG_OPT_MAXTTL]]
 ((`NNG_OPT_MAXTTL`))::
