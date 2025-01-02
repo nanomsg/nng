@@ -251,6 +251,12 @@ in your compilation environment.</p>
 be supplied should avoid surprises later as new versions of protocols are added.)</p>
 <p>Additionally, the header files for protocols are now empty, as all of their content has been moved to <code>nng/nng.h</code>.
 Please remove <code>#include</code> references to protocol headers as we anticipate removing them in the future.</p>
+<h2 id="nng_flag_alloc-removed"><a class="header" href="#nng_flag_alloc-removed">NNG_FLAG_ALLOC Removed</a></h2>
+<p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="/api/sock.html#nng_send"><code>nng_send</code></a> and <a href="/TODO.html"><code>nng_recv</code></a> is removed.
+This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
+suboptimal in terms of performance.</p>
+<p>Modern code should use one of <a href="/api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="/TODO.html"><code>nng_recvmsg</code></a>, <a href="/api/sock.html#nng_send_aio"><code>nng_send_aio</code></a>, or [<code>nng_recv_aio</code>] to get the maximum performance benefit.
+Working directly with <a href="/api/msg.html#message-structure"><code>nng_msg</code></a> structures gives more control, reduces copies, and reduces allocation activity.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
 <p>When an operation fails with <a href="/api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and

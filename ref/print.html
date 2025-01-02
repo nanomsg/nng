@@ -1283,19 +1283,9 @@ while <a href="api//proto/sub.html">SUB</a> sockets can only receive data and ne
 It sends the content in <em>data</em>, as a message of <em>size</em> bytes. The <em>flags</em> is a bit mask
 made up of zero or more of the following values:</p>
 <ul>
-<li>
-<p><a name="a037"></a><code>NNG_FLAG_NONBLOCK</code>: <a name="NNG_FLAG_NONBLOCK"></a>
+<li><a name="a037"></a><code>NNG_FLAG_NONBLOCK</code>: <a name="NNG_FLAG_NONBLOCK"></a>
 If the socket cannot accept more data at this time, it does not block, but returns immediately
-with a status of <a href="api//api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be sent.</p>
-</li>
-<li>
-<p><a name="a038"></a><code>NNG_FLAG_ALLOC</code>: <a name="NNG_FLAG_ALLOC"></a>
-The <em>data</em> was allocated using <a href="api//api/memory.html#allocate-memory"><code>nng_alloc</code></a> or was obtained from a call to <a href="api//TODO.html"><code>nng_recv</code></a> also with
-the <code>NNG_FLAG_ALLOC</code> flag. If this function succeeds, then it will dispose of the <em>data</em>, deallocating it
-once the transmission is complete. If this function returns a non-zero status, the caller retains the responsibility
-of disposing the data. The benefit of this flag is that it can eliminate a data copy and allocation. Without the flag
-the socket will make a duplicate copy of <em>data</em> for use by the operation, before returning to the caller.</p>
-</li>
+with a status of <a href="api//api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be sent.</li>
 </ul>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1307,15 +1297,6 @@ be queues between the sender and the receiver.
 Furthermore, there is no guarantee that the message has actually been delivered.
 Finally, with some protocols, the semantic is implicitly <code>NNG_FLAG_NONBLOCK</code>,
 such as with <a href="api//proto/pub.html">PUB</a> sockets, which are best-effort delivery only.</p>
-</div>
-<div class="mdbook-alerts mdbook-alerts-important">
-<p class="mdbook-alerts-title">
-  <span class="mdbook-alerts-icon"></span>
-  important
-</p>
-<p>When using <code>NNG_FLAG_ALLOC</code>, it is important that the value of <em>size</em> match the actual allocated size of the data.
-Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
-or other undesirable effects.</p>
 </div>
 <h3 id="nng_sendmsg"><a class="header" href="#nng_sendmsg">nng_sendmsg</a></h3>
 <p>The <code>nng_sendmsg</code> function sends the <em>msg</em> over the socket <em>s</em>.</p>
@@ -1353,7 +1334,7 @@ this function instead of <a href="api//api/sock.html#nng_send"><code>nng_send</c
 int nng_recvmsg(nng_socket s, nng_msg **msgp, int flags);
 void nng_recv_aio(nng_socket s, nng_aio *aio);
 </code></pre>
-<p>These functions (<a name="a039"></a><code>nng_recv</code>, <a name="a040"></a><code>nng_recvmsg</code>, and <a name="a041"></a><code>nng_recv_aio</code>) receive
+<p>These functions (<a name="a038"></a><code>nng_recv</code>, <a name="a039"></a><code>nng_recvmsg</code>, and <a name="a040"></a><code>nng_recv_aio</code>) receive
 messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1368,33 +1349,14 @@ while <a href="api//proto/pub.html">PUB</a> sockets can only send data and never
 </div>
 <h3 id="nng_recv"><a class="header" href="#nng_recv">nng_recv</a></h3>
 <p>The <code>nng_recv</code> function is the simplest to use, but is the least efficient.
-It receives the content in <em>data</em>, as a message size (in bytes) of up to the value stored in <em>sizep</em>,
-unless the <code>NNG_FLAG_ALLOC</code> flag is set in <em>flags</em> (see below.)</p>
+It receives the content in <em>data</em>, as a message size (in bytes) of up to the value stored in <em>sizep</em>.</p>
 <p>Upon success, the size of the message received will be stored in <em>sizep</em>.</p>
 <p>The <em>flags</em> is a bit mask made up of zero or more of the following values:</p>
 <ul>
-<li>
-<p><a name="a042"></a><code>NNG_FLAG_NONBLOCK</code>:
+<li><a name="a041"></a><code>NNG_FLAG_NONBLOCK</code>:
 If the socket has no messages pending for reception at this time, it does not block, but returns immediately
-with a status of <a href="api//api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be received.</p>
-</li>
-<li>
-<p><a name="a043"></a><code>NNG_FLAG_ALLOC</code>:
-Instead of receiving the message into <em>data</em>, a new buffer will be allocated exactly large enough to hold
-the message. A pointer to that buffer will be stored at the location specified by <em>data</em>. This provides a form
-of zero-copy operation. The caller should dispose of the buffer using <a href="api//api/memory.html#deallocate-memory"><code>nng_free</code></a> or by sending using
-<a href="api//api/sock.html#nng_send"><code>nng_send</code></a> with the <a href="api//TODO.html"><code>NNG_FLAG_ALLOC</code></a> flag.</p>
-</li>
+with a status of <a href="api//api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be received.</li>
 </ul>
-<div class="mdbook-alerts mdbook-alerts-important">
-<p class="mdbook-alerts-title">
-  <span class="mdbook-alerts-icon"></span>
-  important
-</p>
-<p>When using <code>NNG_FLAG_ALLOC</code>, it is important that the value of <em>size</em> match the actual allocated size of the data.
-Using an incorrect size results in unspecified behavior, which may include heap corruption, program crashes,
-or other undesirable effects.</p>
-</div>
 <h3 id="nng_recvmsg"><a class="header" href="#nng_recvmsg">nng_recvmsg</a></h3>
 <p>The <code>nng_recvmsg</code> function receives a message and stores a pointer to the <a href="api//api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
 <p>The <em>flags</em> can contain the value <a href="api//TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
@@ -1405,7 +1367,7 @@ has no messages available to receive. In such a case, it will return <a href="ap
   tip
 </p>
 <p>This function is preferred over <a href="api//TODO.html"><code>nng_recv</code></a>, as it gives access to the message structure and eliminates both
-a data copy and allocation, even when <code>nng_recv</code> is using <code>NNG_FLAG_ALLOC</code>.</p>
+a data copy and allocation.</p>
 </div>
 <h3 id="nng_recv_aio"><a class="header" href="#nng_recv_aio">nng_recv_aio</a></h3>
 <p>The <code>nng_send_aio</code> function receives a message asynchronously, using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
@@ -1432,12 +1394,12 @@ this function instead of <a href="api//TODO.html"><code>nng_recv</code></a> or <
 int nng_socket_get_send_poll_fd(nng_socket s, int *fdp);
 </code></pre>
 <p>Sometimes it is necessary to integrate a socket into a <code>poll</code> or <code>select</code> driven
-<a name="a044"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
+<a name="a042"></a>event loop. (Or, on Linux, <code>epoll</code>, or on BSD derived systems like macOS <code>kqueue</code>).</p>
 <p>For these occasions, a suitable file descriptor for polling is provided
 by these two functions.</p>
-<p>The <a name="a045"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a043"></a><code>nng_socket_get_recv_poll_fd</code> function obtains a file descriptor
 that will poll as readable when a message is ready for receiving for the socket.</p>
-<p>The <a name="a046"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
+<p>The <a name="a044"></a><code>nng_socket_get_send_poll_fd</code> function obtains a file descriptor
 that will poll as readable when the socket can accept a message for sending.</p>
 <p>These file descriptors should only be polled for readability, and no
 other operation performed on them. The socket will read from, or write to,
@@ -1657,9 +1619,7 @@ The memory will be 64-bit aligned.
 Note that the memory may have random data in it, just like with <code>malloc</code>.</p>
 <p>If memory cannot be allocated for any reason, then <code>NULL</code> will be returned.
 Applications that experience this should treat this like <a href="api//api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
-<p>Memory returned by <code>nng_alloc</code> can be used to hold message buffers, in which
-case it can be directly passed to <a href="api//api/sock.html#nng_send"><code>nng_send</code></a> using the flag <code>NNG_FLAG_ALLOC</code>.
-Alternatively, it can be freed when no longer needed using <a href="api//api/memory.html#deallocate-memory"><code>nng_free</code></a>.</p>
+<p>Memory returned by <code>nng_alloc</code> should be freed when no longer needed using <a href="api//api/memory.html#deallocate-memory"><code>nng_free</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -6449,6 +6409,12 @@ in your compilation environment.</p>
 be supplied should avoid surprises later as new versions of protocols are added.)</p>
 <p>Additionally, the header files for protocols are now empty, as all of their content has been moved to <code>nng/nng.h</code>.
 Please remove <code>#include</code> references to protocol headers as we anticipate removing them in the future.</p>
+<h2 id="nng_flag_alloc-removed"><a class="header" href="#nng_flag_alloc-removed">NNG_FLAG_ALLOC Removed</a></h2>
+<p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="migrate//api/sock.html#nng_send"><code>nng_send</code></a> and <a href="migrate//TODO.html"><code>nng_recv</code></a> is removed.
+This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
+suboptimal in terms of performance.</p>
+<p>Modern code should use one of <a href="migrate//api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="migrate//TODO.html"><code>nng_recvmsg</code></a>, <a href="migrate//api/sock.html#nng_send_aio"><code>nng_send_aio</code></a>, or [<code>nng_recv_aio</code>] to get the maximum performance benefit.
+Working directly with <a href="migrate//api/msg.html#message-structure"><code>nng_msg</code></a> structures gives more control, reduces copies, and reduces allocation activity.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
 <p>When an operation fails with <a href="migrate//api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
@@ -6782,7 +6748,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_get_statistic</code></td><td><a href="migrate//api/stats.html#collecting-a-snapshot"><code>nng_stats_get</code></a></td><td>The statistics in NNG are completely different, with different semantics and no stability guarantees.</td></tr>
 <tr><td><code>NN_POLLIN</code></td><td>None</td><td>Used only with <code>nn_poll</code>.</td></tr>
 <tr><td><code>NN_POLLOUT</code></td><td>None</td><td>Used only with <code>nn_poll</code>.</td></tr>
-<tr><td><code>NN_MSG</code></td><td><a href="migrate//TODO.html"><code>NNG_FLAG_ALLOC</code></a></td><td>See <code>nng_send</code> and <code>nng_recv</code> for details.</td></tr>
+<tr><td><code>NN_MSG</code></td><td><a href="migrate//api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="migrate//TODO.html"><code>nng_recvmsg</code></a></td><td>There are differences as a separate <a href="migrate//api/msg.html#message-structure"><code>nng_msg</code></a> structure is involved.</td></tr>
 <tr><td><code>NN_CMSG_ALIGN</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_FIRSTHDR</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_NXTHDR</code></td><td>None</td><td></td></tr>
@@ -6880,7 +6846,7 @@ condition variable, <a href="api/synch.html#a009">1</a><br/>
 CPU-bound, <a href="api/thread.html#a003">1</a><br/>
 duration, <a href="api/time.html#a003">1</a><br/>
 error message, <a href="api/errors.html#a002">1</a><br/>
-event loop, <a href="api/sock.html#a044">1</a><br/>
+event loop, <a href="api/sock.html#a042">1</a><br/>
 flow control, <a href="proto/index.html#a006">1</a><br/>
 gather, <a href="api/aio.html#a024">1</a><br/>
 <code>getopt</code>, <a href="api/cmd_opts.html#a003">1</a><br/>
@@ -6939,8 +6905,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_DURATION_ZERO</code>, <a href="api/time.html#a006">1</a><br/>
 <code>NNG_ECANCELED</code>, <a href="api/aio.html#a010">1</a><br/>
 <code>nng_fini</code>, <a href="api/init.html#a002">1</a><br/>
-<code>NNG_FLAG_ALLOC</code>, <a href="api/sock.html#a038">1</a>, <a href="api/sock.html#a043">2</a><br/>
-<code>NNG_FLAG_NONBLOCK</code>, <a href="api/sock.html#a037">1</a>, <a href="api/sock.html#a042">2</a><br/>
+<code>NNG_FLAG_NONBLOCK</code>, <a href="api/sock.html#a037">1</a>, <a href="api/sock.html#a041">2</a><br/>
 <code>nng_free</code>, <a href="api/memory.html#a004">1</a><br/>
 <code>nng_id_alloc</code>, <a href="api/id_map.html#a006">1</a><br/>
 <code>nng_id_get</code>, <a href="api/id_map.html#a005">1</a><br/>
@@ -7014,9 +6979,9 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_push0_open</code>, <a href="api/sock.html#a015">1</a><br/>
 <code>nng_push0_open_raw</code>, <a href="api/sock.html#a027">1</a><br/>
 <code>nng_random</code>, <a href="api/misc.html#a001">1</a><br/>
-<code>nng_recv</code>, <a href="api/sock.html#a039">1</a><br/>
-<code>nng_recv_aio</code>, <a href="api/sock.html#a041">1</a><br/>
-<code>nng_recvmsg</code>, <a href="api/sock.html#a040">1</a><br/>
+<code>nng_recv</code>, <a href="api/sock.html#a038">1</a><br/>
+<code>nng_recv_aio</code>, <a href="api/sock.html#a040">1</a><br/>
+<code>nng_recvmsg</code>, <a href="api/sock.html#a039">1</a><br/>
 <code>nng_rep0_open</code>, <a href="api/sock.html#a016">1</a><br/>
 <code>nng_rep0_open_raw</code>, <a href="api/sock.html#a028">1</a><br/>
 <code>nng_req0_open</code>, <a href="api/sock.html#a017">1</a><br/>
@@ -7029,8 +6994,8 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_sleep_aio</code>, <a href="api/time.html#a011">1</a><br/>
 <code>nng_socket</code>, <a href="api/sock.html#a002">1</a><br/>
 <code>nng_socket_close</code>, <a href="api/sock.html#a033">1</a><br/>
-<code>nng_socket_get_recv_poll_fd</code>, <a href="api/sock.html#a045">1</a><br/>
-<code>nng_socket_get_send_poll_fd</code>, <a href="api/sock.html#a046">1</a><br/>
+<code>nng_socket_get_recv_poll_fd</code>, <a href="api/sock.html#a043">1</a><br/>
+<code>nng_socket_get_send_poll_fd</code>, <a href="api/sock.html#a044">1</a><br/>
 <code>nng_socket_id</code>, <a href="api/sock.html#a003">1</a><br/>
 <code>nng_socket_peer_id</code>, <a href="api/sock.html#a005">1</a><br/>
 <code>nng_socket_peer_name</code>, <a href="api/sock.html#a007">1</a><br/>
