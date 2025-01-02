@@ -8,23 +8,20 @@ to slower transports when data must be moved within the same process.
 This transport tries hard to avoid copying data, and thus is very
 light-weight.
 
-## URI Format
+## URL Format
 
-This transport uses URIs using the scheme {{i:`inproc://`}}, followed by
+This transport uses URLs using the scheme {{i:`inproc://`}}, followed by
 an arbitrary string of text, terminated by a `NUL` byte.
 
-Multiple URIs can be used within the
+Multiple URLs can be used within the
 same application, and they will not interfere with one another.
 
-Two applications may also use the same URI without interfering with each
-other, and they will be unable to communicate with each other using
-that URI.
+Two applications may also use the same URL without interfering with each other.
+They will however be unable to communicate with each other using that URL.
 
 ## Socket Address
 
-When using an [`nng_sockaddr`][sockaddr] structure,
-the actual structure is of type
-[`nng_sockaddr_inproc`][sockaddr_inproc].
+When using an [`nng_sockaddr`] structure, the actual structure is of type [`nng_sockaddr_inproc`].
 
 ## Transport Options
 
@@ -46,5 +43,4 @@ the _inproc_ transport to communicate across this boundary.
 This limitation also extends to using different instances of the _NNG_
 library within the same process.
 
-[sockaddr]: TODO.md
-[sockaddr_inproc]: TODO.md
+{{#include ../xref.md}}

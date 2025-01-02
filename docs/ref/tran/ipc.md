@@ -24,7 +24,7 @@ name in the file system where the socket or named pipe should be created.
 
 > [!NOTE]
 > When using relative paths on POSIX systems, the address used and returned
-> in properties like `NNG_OPT_LOCADDR` will also be relative.
+> in properties like [`NNG_OPT_LOCADDR`] will also be relative.
 > Consequently, they will only be interpreted the same by processes that have
 > the same working directory.
 > To ensure maximum portability and safety, absolute paths are recommended
@@ -53,7 +53,7 @@ For example, the name `"a\0b"` would be represented as `abstract://a%00b`.
 > [!TIP]
 > An empty name may be used with a listener to request "auto bind" be used to select a name.
 > In this case the system will allocate a free name.
-> The name assigned may be retrieved using [{{i:`NNG_OPT_LOCADDR`}}][NNG_OPT_LOCADDR].
+> The name assigned may be retrieved using [`NNG_OPT_LOCADDR`].
 
 Abstract names do not include the leading `NUL` byte used in the low-level socket address.
 
@@ -61,7 +61,7 @@ Abstract sockets do not have any representation in the file system, and are auto
 the system when no longer in use.
 
 Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
-of the peer with [{{i:`NNG_OPT_PEER_UID`}}][NNG_OPT_PEER_UID], and similar options.
+of the peer with [`NNG_OPT_PEER_UID`], and similar options.
 {{footnote: This property makes it important that names be chosen randomly to
 prevent unauthorized access, or that checks against the peer credentials are made, or ideally, both.}}
 
@@ -76,14 +76,16 @@ except for abstract sockets, which use [`nng_sockaddr_abstract`].
 The following transport options are supported by this transport,
 where supported by the underlying platform.
 
-- [`NNG_OPT_IPC_PERMISSIONS`][NNG_OPT_IPC_PERMISSIONS]
-- [`NNG_OPT_LOCADDR`][NNG_OPT_LOCADDR]
-- [`NNG_OPT_REMADDR`][NNG_OPT_REMADDR]
-- [`NNG_OPT_PEER_GID`][NNG_OPT_PEER_GID]
-- [`NNG_OPT_PEER_PID`][NNG_OPT_PEER_PID]
-- [`NNG_OPT_PEER_UID`][NNG_OPT_PEER_UID]
-- [`NNG_OPT_PEER_ZONEID`][NNG_OPT_PEER_ZONEID]
-- [`NNG_OPT_LISTEN_FD`][NNG_OPT_LISTEN_FD]
+| Option                    | Type             | Description                                                                                                        |
+| ------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `NNG_OPT_IPC_PERMISSIONS` | `int`            | Settable on listeners before they start, this is the UNIX file mode used when creating the socket.                 |
+| `NNG_OPT_LOCADDR`         | [`nng_sockaddr`] | Local socket address, either [`nng_sockaddr_ipc`] or [`nng_sockaddr_abstract`].                                    |
+| `NNG_OPT_REMADDR`         | [`nng_sockaddr`] | Remote socket address, either [`nng_sockaddr_ipc`] or [`nng_sockaddr_abstract`].                                   |
+| `NNG_OPT_PEER_GID`        | `uint64_t`       | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
+| `NNG_OPT_PEER_PID`        | `uint64_t`       | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
+| `NNG_OPT_PEER_UID`        | `uint64_t`       | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
+| `NNG_OPT_PEER_ZONEID`     | `uint64_t`       | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.      |
+| [`NNG_OPT_LISTEN_FD`]     | `int`            | Write only for listeners before they start, use the named socket for accepting (for use with socket activation).   |
 
 ### Other Configuration Parameters
 

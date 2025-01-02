@@ -246,6 +246,7 @@
 [`nng_sockaddr_in6`]: /TODO.md
 [`nng_sockaddr_ipc`]: /TODO.md
 [`nng_sockaddr_inproc`]: /TODO.md
+[`nng_sockaddr_abstract`]: /TODO.md
 
 <!-- Macros -->
 
@@ -313,6 +314,11 @@
 [`NNG_OPT_RECVMAXSZ`]: /api/sock.md#NNG_OPT_RECVMAXSZ
 [`NNG_OPT_LOCADDR`]: /api/sock.md#NNG_OPT_LOCADDR
 [`NNG_OPT_REMADDR`]: /api/sock.md#NNG_OPT_REMADDR
+[`NNG_OPT_PEER_UID`]: /tran/ipc.md#NNG_OPT_PEER_UID
+[`NNG_OPT_PEER_GID`]: /tran/ipc.md#NNG_OPT_PEER_GID
+[`NNG_OPT_PEER_PID`]: /tran/ipc.md#NNG_OPT_PEER_PID
+[`NNG_OPT_PEER_ZONEID`]: /tran/ipc.md#NNG_OPT_PEER_ZONEID
+[`NNG_OPT_IPC_PERMISSIONS`]: /tran/ipc.md#NNG_OPT_IPC_PERMISSIONS
 [`NNG_SOCKET_INITIALIZER`]: /api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: /api/ctx.md#context-structure
 

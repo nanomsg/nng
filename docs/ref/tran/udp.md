@@ -93,7 +93,7 @@ which after deducting 48 bytes for IPv6 and UDP headers, and 20 bytes for our tr
 header, leaves 1212 bytes for user data. If additional allowances are made for SP protocol
 headers with a default TTL of 8 (resulting in 72 additional bytes for route information),
 the final user accessible payload will be 1140 bytes. Thus this can be likely be viewed
-as a safe maxmimum to employ for SP payload data across all transports.
+as a safe maximum to employ for SP payload data across all transports.
 
 The maximum message size is negotiated as part of establishing a peering relationship,
 and oversize messages will be dropped by the sender before going to the network.
