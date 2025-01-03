@@ -223,7 +223,13 @@ NNG_DECL void nng_fini(void);
 // nng_close closes the socket, terminating all activity and
 // closing any underlying connections and releasing any associated
 // resources.
+// We're not eliding this with NNG_ELIDE_DEPRECATED for now, because
+// it would break far too many applications, as nng_socket_close is brand new.
 NNG_DECL int nng_close(nng_socket);
+
+// nng_socket_close is the *new* name for nng_close.  It should be used
+// in new code, as nng_close will be removed in the next major release.
+NNG_DECL int nng_socket_close(nng_socket);
 
 // nng_socket_id returns the positive socket id for the socket, or -1
 // if the socket is not valid.

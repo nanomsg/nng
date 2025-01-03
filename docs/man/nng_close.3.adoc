@@ -1,6 +1,6 @@
 = nng_close(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,13 +20,18 @@ nng_close - close socket
 #include <nng/nng.h>
 
 int nng_close(nng_socket s);
+int nng_socket_close(nng_socket s);
 ----
 
 == DESCRIPTION
 
-The `nng_close()` function closes the supplied socket, _s_.
+The `nng_socket_close()` function closes the supplied socket, _s_.
 Messages that have been submitted for sending may be flushed or delivered,
 depending upon the transport.
+
+The `nng_close()` function also does this, and is the old name for this
+function.  The `nng_close()` function is considered deprecated and may
+be removed in the next major release.
 
 Further attempts to use the socket after this call returns will result
 in `NNG_ECLOSED`.
