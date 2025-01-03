@@ -319,6 +319,9 @@ to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
 compatilibility, and is no longer offered. The correct way to specify a
 local address is by setting <code>NNG_OPT_LOCADDR</code> on the dialer.</p>
+<h2 id="ipc-option-type-changes"><a class="header" href="#ipc-option-type-changes">IPC Option Type Changes</a></h2>
+<p>The types of <a href="/tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="/tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="/tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="/tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
+have changed from <code>uint64_t</code> to <code>int</code>. The underlying platforms all use 32-bit quantities for these.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
 Applications should use <code>nng_pipe_get</code> and related functions instead.</p>
@@ -333,11 +336,14 @@ and are thus removed:</p>
 <li><code>nng_ctx_get_string</code></li>
 <li><code>nng_ctx_set_string</code></li>
 <li><code>nng_ctx_get_uint64</code></li>
-<li><code>nng_ctx_set_uint64</code></li>
 <li><code>nng_dialer_get_ptr</code></li>
 <li><code>nng_dialer_set_ptr</code></li>
+<li><code>nng_dialer_get_uint64</code></li>
+<li><code>nng_dialer_set_uint64</code></li>
 <li><code>nng_listener_get_ptr</code></li>
 <li><code>nng_listener_set_ptr</code></li>
+<li><code>nng_listener_get_uint64</code></li>
+<li><code>nng_listener_set_uint64</code></li>
 <li><code>nng_socket_get_ptr</code></li>
 <li><code>nng_socket_set_ptr</code></li>
 <li><code>nng_socket_get_string</code></li>
@@ -346,10 +352,15 @@ and are thus removed:</p>
 <li><code>nng_socket_set_uint64</code></li>
 <li><code>nng_stream_get_ptr</code></li>
 <li><code>nng_stream_set_ptr</code></li>
+<li><code>nng_stream_get_uint64</code></li>
 <li><code>nng_stream_dialer_get_ptr</code></li>
 <li><code>nng_stream_dialer_set_ptr</code></li>
+<li><code>nng_stream_dialer_get_uint64</code></li>
+<li><code>nng_stream_dialer_set_uint64</code></li>
 <li><code>nng_stream_listener_get_ptr</code></li>
 <li><code>nng_stream_listener_set_ptr</code></li>
+<li><code>nng_stream_listener_get_uint64</code></li>
+<li><code>nng_stream_listener_set_uint64</code></li>
 <li><code>nng_ctx_get_ptr</code> (not documented)</li>
 <li><code>nng_ctx_set_ptr</code> (not documented)</li>
 </ul>

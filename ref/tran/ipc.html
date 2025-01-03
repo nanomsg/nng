@@ -299,10 +299,10 @@ where supported by the underlying platform.</p>
 <tr><td><code>NNG_OPT_IPC_PERMISSIONS</code></td><td><code>int</code></td><td>Settable on listeners before they start, this is the UNIX file mode used when creating the socket.</td></tr>
 <tr><td><code>NNG_OPT_LOCADDR</code></td><td><a href="/TODO.html"><code>nng_sockaddr</code></a></td><td>Local socket address, either <a href="/TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="/TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
 <tr><td><code>NNG_OPT_REMADDR</code></td><td><a href="/TODO.html"><code>nng_sockaddr</code></a></td><td>Remote socket address, either <a href="/TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="/TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
-<tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><a href="/api/streams.html#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write only for listeners before they start, use the named socket for accepting (for use with socket activation).</td></tr>
 </tbody></table>
 </div>

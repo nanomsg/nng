@@ -257,10 +257,10 @@ There are no further socket details available.</p>
 <p>The following transport options are supported by this transport.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="/TODO.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
-<tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>uint64_t</code></td><td>Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
+<tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.</td></tr>
 </tbody></table>
 </div><div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
