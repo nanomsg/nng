@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,9 +12,9 @@
 #include <string.h>
 #include <time.h>
 
-#include <nng/nng.h>
+#include "nng/nng.h"
 
-#include <nuts.h>
+#include "nuts.h"
 
 #ifdef NDEBUG
 #define dprintf(...)
@@ -114,7 +114,7 @@ rep_recv_cb(void *arg)
 	c->nrecv++;
 	nng_aio_set_msg(c->send_aio, nng_aio_get_msg(c->recv_aio));
 	nng_aio_set_msg(c->recv_aio, NULL);
-	nng_send_aio(c->socket, c->send_aio);
+	nng_socket_send(c->socket, c->send_aio);
 }
 
 static void
@@ -130,7 +130,7 @@ rep_send_cb(void *arg)
 		return;
 	}
 	c->nsend++;
-	nng_recv_aio(c->socket, c->recv_aio);
+	nng_socket_recv(c->socket, c->recv_aio);
 }
 
 static void
@@ -153,7 +153,7 @@ req_time_cb(void *arg)
 		return;
 	}
 	nng_aio_set_msg(c->send_aio, msg);
-	nng_send_aio(c->socket, c->send_aio);
+	nng_socket_send(c->socket, c->send_aio);
 }
 
 static void
@@ -196,7 +196,7 @@ req_send_cb(void *arg)
 		return;
 	}
 	c->nsend++;
-	nng_recv_aio(c->socket, c->recv_aio);
+	nng_socket_recv(c->socket, c->recv_aio);
 }
 
 void
@@ -224,7 +224,7 @@ reqrep_test(int ntests)
 		fatal("nng_aio_alloc", rv);
 	}
 
-	nng_recv_aio(srv->socket, srv->recv_aio);
+	nng_socket_recv(srv->socket, srv->recv_aio);
 
 	for (i = 1; i < ntests; i++) {
 		cli = &cases[curcase++];

@@ -170,7 +170,7 @@ test_xsurvey_recv_aio_stopped(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_stop(aio);
-	nng_recv_aio(surv, aio);
+	nng_socket_recv(surv, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	NUTS_CLOSE(surv);

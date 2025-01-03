@@ -15,9 +15,14 @@ This is done using the [`nng_init`] function.
 
 ## Renamed Functions
 
-The `nng_close` function has been renamed to [`nng_socket_close`] to make it clearer that
-the object being closed is a socket. A compatible `nng_close` macro is available by defining `NNG1_TRANSITION`
-in your compilation environment.
+The following functions have been renamed as described by the following table.
+The old names are available by defining the macro `NNG1_TRANSITION` in your compilation environment.
+
+| Old Name       | New Name             |
+| -------------- | -------------------- |
+| `nng_close`    | [`nng_socket_close`] |
+| `nng_recv_aio` | [`nng_socket_recv`]  |
+| `nng_send_aio` | [`nng_socket_send`]  |
 
 ## Removed Protocol Aliases
 
@@ -46,7 +51,7 @@ The `NNG_FLAG_ALLOC` flag that allowed a zero copy semantic with [`nng_send`] an
 This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
 suboptimal in terms of performance.
 
-Modern code should use one of [`nng_sendmsg`], [`nng_recvmsg`], [`nng_send_aio`], or [`nng_recv_aio`] to get the maximum performance benefit.
+Modern code should use one of [`nng_sendmsg`], [`nng_recvmsg`], [`nng_socket_send`], or [`nng_socket_recv`] to get the maximum performance benefit.
 Working directly with [`nng_msg`] structures gives more control, reduces copies, and reduces allocation activity.
 
 ## New AIO Error Code NNG_ESTOPPED

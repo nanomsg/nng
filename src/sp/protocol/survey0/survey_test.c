@@ -232,7 +232,7 @@ test_surv_cancel_abort_recv(void)
 	NUTS_SLEEP(100);
 
 	nng_aio_set_timeout(aio, 5 * SECOND);
-	nng_recv_aio(surv, aio);
+	nng_socket_recv(surv, aio);
 
 	// Give time for this recv to post properly.
 	NUTS_SLEEP(100);

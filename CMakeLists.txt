@@ -90,7 +90,7 @@ endif ()
 add_library(nng)
 
 add_library(nng_testing STATIC EXCLUDE_FROM_ALL)
-target_compile_definitions(nng_testing PUBLIC NNG_STATIC_LIB NNG_TEST_LIB NNG_PRIVATE)
+target_compile_definitions(nng_testing PRIVATE NNG_STATIC_LIB NNG_TEST_LIB NNG_PRIVATE)
 
 add_library(nng_private INTERFACE)
 target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)

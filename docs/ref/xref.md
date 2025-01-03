@@ -223,10 +223,10 @@
 [`nng_socket_get_size`]: /api/sock.md#socket-options
 [`nng_send`]: /api/sock.md#nng_send
 [`nng_sendmsg`]: /api/sock.md#nng_sendmsg
-[`nng_send_aio`]: /api/sock.md#nng_send_aio
+[`nng_socket_send`]: /api/sock.md#nng_socket_send
 [`nng_recv`]: /api/sock.md#nng_recv
 [`nng_recvmsg`]: /api/sock.md#nng_recvmsg
-[`nng_recv_aio`]: /api/sock.md#nng_recv_aio
+[`nng_socket_recv`]: /api/sock.md#nng_socket_recv
 [`nng_ctx_open`]: /api/ctx.md#creating-a-context
 [`nng_ctx_id`]: /api/ctx.md#context-identity
 [`nng_ctx_close`]: /api/ctx.md#closing-a-context

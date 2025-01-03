@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-#include <nuts.h>
+#include "nuts.h"
 
 static void
 cb_done(void *p)
@@ -148,7 +148,7 @@ test_consumer_cancel(void)
 	NUTS_TRUE(nng_aio_alloc(&a, cb_done, &done) == 0);
 
 	nng_aio_set_timeout(a, NNG_DURATION_INFINITE);
-	nng_recv_aio(s1, a);
+	nng_socket_recv(s1, a);
 	nng_aio_cancel(a);
 	nng_aio_wait(a);
 	NUTS_TRUE(done == 1);
@@ -185,10 +185,10 @@ test_traffic(void)
 	NUTS_PASS(nng_msg_alloc(&m, 0));
 	NUTS_PASS(nng_msg_append(m, "hello", strlen("hello")));
 
-	nng_recv_aio(s2, rx_aio);
+	nng_socket_recv(s2, rx_aio);
 
 	nng_aio_set_msg(tx_aio, m);
-	nng_send_aio(s1, tx_aio);
+	nng_socket_send(s1, tx_aio);
 
 	nng_aio_wait(tx_aio);
 	nng_aio_wait(rx_aio);
@@ -221,7 +221,7 @@ test_explicit_timeout(void)
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, 40);
-	nng_recv_aio(s, a);
+	nng_socket_recv(s, a);
 	nng_aio_wait(a);
 	NUTS_TRUE(done == 1);
 	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
@@ -242,7 +242,7 @@ test_explicit_expiration(void)
 	now = nng_clock();
 	now += 40;
 	nng_aio_set_expire(a, now);
-	nng_recv_aio(s, a);
+	nng_socket_recv(s, a);
 	nng_aio_wait(a);
 	NUTS_TRUE(done == 1);
 	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
@@ -260,7 +260,7 @@ test_inherited_timeout(void)
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
 	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 40));
-	nng_recv_aio(s, a);
+	nng_socket_recv(s, a);
 	nng_aio_wait(a);
 	NUTS_TRUE(done == 1);
 	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
@@ -278,7 +278,7 @@ test_zero_timeout(void)
 	NUTS_PASS(nng_pair1_open(&s));
 	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, NNG_DURATION_ZERO);
-	nng_recv_aio(s, a);
+	nng_socket_recv(s, a);
 	nng_aio_wait(a);
 	NUTS_TRUE(done == 1);
 	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);

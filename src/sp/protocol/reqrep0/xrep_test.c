@@ -171,7 +171,7 @@ test_xrep_close_pipe_before_send(void)
 	NUTS_MARRY(req, rep);
 	NUTS_SEND(req, "test");
 
-	nng_recv_aio(rep, aio1);
+	nng_socket_recv(rep, aio1);
 	nng_aio_wait(aio1);
 	NUTS_PASS(nng_aio_result(aio1));
 	NUTS_TRUE((m = nng_aio_get_msg(aio1)) != NULL);
@@ -265,7 +265,7 @@ test_xrep_recv_aio_stopped(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_stop(aio);
-	nng_recv_aio(rep, aio);
+	nng_socket_recv(rep, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	NUTS_CLOSE(rep);
@@ -281,7 +281,7 @@ test_xrep_recv_aio_canceled(void)
 	NUTS_PASS(nng_rep0_open_raw(&rep));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
-	nng_recv_aio(rep, aio);
+	nng_socket_recv(rep, aio);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);

@@ -163,8 +163,8 @@ test_rep_double_recv(void)
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 
-	nng_recv_aio(s1, aio1);
-	nng_recv_aio(s1, aio2);
+	nng_socket_recv(s1, aio1);
+	nng_socket_recv(s1, aio2);
 
 	nng_aio_wait(aio2);
 	NUTS_FAIL(nng_aio_result(aio2), NNG_ESTATE);
@@ -203,12 +203,12 @@ test_rep_huge_send(void)
 	NUTS_SEND(req, "R");
 	NUTS_RECV(rep, "R");
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(rep, aio);
+	nng_socket_send(rep, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	nng_aio_set_msg(aio, NULL);
 	m = NULL;
-	nng_recv_aio(req, aio);
+	nng_socket_recv(req, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	m = nng_aio_get_msg(aio);
@@ -260,12 +260,12 @@ test_rep_huge_send_socket(void)
 	NUTS_SEND(req, "R");
 	NUTS_RECV(rep, "R");
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(rep, aio);
+	nng_socket_send(rep, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	nng_aio_set_msg(aio, NULL);
 	m = NULL;
-	nng_recv_aio(req, aio);
+	nng_socket_recv(req, aio);
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
 	m = nng_aio_get_msg(aio);
@@ -306,7 +306,7 @@ test_rep_close_pipe_before_send(void)
 	NUTS_MARRY(req, rep);
 	NUTS_SEND(req, "test");
 
-	nng_recv_aio(rep, aio1);
+	nng_socket_recv(rep, aio1);
 	nng_aio_wait(aio1);
 	NUTS_PASS(nng_aio_result(aio1));
 	NUTS_TRUE((m = nng_aio_get_msg(aio1)) != NULL);
@@ -531,7 +531,7 @@ test_rep_close_recv(void)
 
 	NUTS_MARRY(req, rep);
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	nng_recv_aio(rep, aio);
+	nng_socket_recv(rep, aio);
 	NUTS_CLOSE(rep);
 	NUTS_CLOSE(req);
 	nng_aio_wait(aio);
@@ -580,7 +580,7 @@ test_rep_close_recv_cb(void)
 
 	NUTS_MARRY(req, rep);
 	NUTS_PASS(nng_aio_alloc(&state.aio, rep_close_recv_cb, &state));
-	nng_recv_aio(rep, state.aio);
+	nng_socket_recv(rep, state.aio);
 	NUTS_CLOSE(rep);
 	NUTS_CLOSE(req);
 	nng_mtx_lock(state.mtx);

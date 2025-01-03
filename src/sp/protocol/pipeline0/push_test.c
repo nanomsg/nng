@@ -250,7 +250,7 @@ test_push_send_aio_stopped(void)
 
 	nng_aio_set_msg(aio, m);
 	nng_aio_stop(aio);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	NUTS_CLOSE(s);
@@ -270,7 +270,7 @@ test_push_close_send(void)
 	NUTS_PASS(nng_msg_alloc(&m, 0));
 	nng_aio_set_timeout(aio, 1000);
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 	NUTS_CLOSE(s);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
@@ -292,7 +292,7 @@ test_push_send_nonblock(void)
 
 	nng_aio_set_timeout(aio, 0); // Instant timeout
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
@@ -314,7 +314,7 @@ test_push_send_timeout(void)
 
 	nng_aio_set_timeout(aio, 10);
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
@@ -336,7 +336,7 @@ test_push_send_cancel(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 	nng_aio_abort(aio, NNG_ECANCELED);
 
 	nng_aio_wait(aio);
@@ -362,7 +362,7 @@ test_push_send_late_unbuffered(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 
 	NUTS_MARRY(s, pull);
 
@@ -391,7 +391,7 @@ test_push_send_late_buffered(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_aio_set_msg(aio, m);
-	nng_send_aio(s, aio);
+	nng_socket_send(s, aio);
 
 	NUTS_MARRY(s, pull);
 

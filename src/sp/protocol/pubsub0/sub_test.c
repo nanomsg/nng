@@ -140,7 +140,7 @@ test_sub_recv_late(void)
 	NUTS_MARRY(pub, sub);
 	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 
 	// But once we send messages, it is.
 	// We have to send a request, in order to send a reply.

@@ -67,17 +67,17 @@ server_cb(void *arg)
 	switch (work->state) {
 	case INIT:
 		work->state = RECV;
-		nng_recv_aio(work->sock, work->aio);
+		nng_socket_recv(work->sock, work->aio);
 		break;
 	case RECV:
 		if ((rv = nng_aio_result(work->aio)) != 0) {
-			fatal("nng_recv_aio", rv);
+			fatal("nng_socket_recv", rv);
 		}
 		msg = nng_aio_get_msg(work->aio);
 		if ((rv = nng_msg_trim_u32(msg, &when)) != 0) {
 			// bad message, just ignore it.
 			nng_msg_free(msg);
-			nng_recv_aio(work->sock, work->aio);
+			nng_socket_recv(work->sock, work->aio);
 			return;
 		}
 		work->msg   = msg;
@@ -89,15 +89,15 @@ server_cb(void *arg)
 		nng_aio_set_msg(work->aio, work->msg);
 		work->msg   = NULL;
 		work->state = SEND;
-		nng_send_aio(work->sock, work->aio);
+		nng_socket_send(work->sock, work->aio);
 		break;
 	case SEND:
 		if ((rv = nng_aio_result(work->aio)) != 0) {
 			nng_msg_free(work->msg);
-			fatal("nng_send_aio", rv);
+			fatal("nng_socket_send", rv);
 		}
 		work->state = RECV;
-		nng_recv_aio(work->sock, work->aio);
+		nng_socket_recv(work->sock, work->aio);
 		break;
 	default:
 		fatal("bad state!", NNG_ESTATE);
