@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -38,10 +38,8 @@
 #define SOL_LOCAL 0
 #endif
 
-
 int
-nni_posix_peerid(int fd, uint64_t *euid, uint64_t *egid, uint64_t *prid,
-    uint64_t *znid)
+nni_posix_peerid(int fd, int *euid, int *egid, int *prid, int *znid)
 {
 #if defined(NNG_HAVE_GETPEEREID) && !defined(NNG_HAVE_LOCALPEERCRED)
 	uid_t uid;
@@ -52,8 +50,8 @@ nni_posix_peerid(int fd, uint64_t *euid, uint64_t *egid, uint64_t *prid,
 	}
 	*euid = uid;
 	*egid = gid;
-	*prid = (uint64_t) -1;
-	*znid = (uint64_t) -1;
+	*prid = -1;
+	*znid = -1;
 	return (0);
 #elif defined(NNG_HAVE_GETPEERUCRED)
 	ucred_t *ucp = NULL;
@@ -75,7 +73,7 @@ nni_posix_peerid(int fd, uint64_t *euid, uint64_t *egid, uint64_t *prid,
 	*euid = uc.uid;
 	*egid = uc.gid;
 	*prid = uc.pid;
-	*znid = (uint64_t) -1;
+	*znid = -1;
 	return (0);
 #elif defined(NNG_HAVE_SOPEERCRED)
 	struct ucred uc;
@@ -86,7 +84,7 @@ nni_posix_peerid(int fd, uint64_t *euid, uint64_t *egid, uint64_t *prid,
 	*euid = uc.uid;
 	*egid = uc.gid;
 	*prid = uc.pid;
-	*znid = (uint64_t) -1;
+	*znid = -1;
 	return (0);
 #elif defined(NNG_HAVE_LOCALPEERCRED)
 	struct xucred xu;
@@ -96,17 +94,14 @@ nni_posix_peerid(int fd, uint64_t *euid, uint64_t *egid, uint64_t *prid,
 	}
 	*euid = xu.cr_uid;
 	*egid = xu.cr_gid;
-	*prid = (uint64_t) -1;
-	*znid = (uint64_t) -1;
+	*prid = -1;
+	*znid = -1;
 #if defined(NNG_HAVE_LOCALPEERPID) // documented on macOS since 10.8
-	{
-		pid_t pid;
-		if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &len) ==
-		    0) {
-			*prid = (uint64_t) pid;
-		}
+	pid_t pid;
+	if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &len) == 0) {
+		*prid = pid;
 	}
-#endif // NNG_HAVE_LOCALPEERPID
+#endif                             // NNG_HAVE_LOCALPEERPID
 	return (0);
 #else
 	if (fd < 0) {
@@ -119,4 +114,3 @@ nni_posix_peerid(int fd, uint64_t *euid, uint64_t *egid, uint64_t *prid,
 	return (NNG_ENOTSUP);
 #endif
 }
-

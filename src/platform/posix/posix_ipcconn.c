@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -304,14 +304,14 @@ ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
 	int       rv;
-	uint64_t  ignore;
-	uint64_t  id = 0;
+	int       ignore;
+	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &id, &ignore,
 	         &ignore, &ignore)) != 0) {
 		return (rv);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int
@@ -319,14 +319,14 @@ ipc_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
 	int       rv;
-	uint64_t  ignore;
-	uint64_t  id = 0;
+	int       ignore;
+	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &ignore, &id,
 	         &ignore, &ignore)) != 0) {
 		return (rv);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int
@@ -334,18 +334,18 @@ ipc_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
 	int       rv;
-	uint64_t  ignore;
-	uint64_t  id = 0;
+	int       ignore;
+	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &ignore, &ignore,
 	         &ignore, &id)) != 0) {
 		return (rv);
 	}
-	if (id == (uint64_t) -1) {
+	if (id == -1) {
 		// NB: -1 is not a legal zone id (illumos/Solaris)
 		return (NNG_ENOTSUP);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int
@@ -353,18 +353,18 @@ ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
 	int       rv;
-	uint64_t  ignore;
-	uint64_t  id = 0;
+	int       ignore;
+	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &ignore, &ignore,
 	         &id, &ignore)) != 0) {
 		return (rv);
 	}
-	if (id == (uint64_t) -1) {
+	if (id == -1) {
 		// NB: -1 is not a legal process id
 		return (NNG_ENOTSUP);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int

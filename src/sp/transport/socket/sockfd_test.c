@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
@@ -425,7 +425,7 @@ test_sockfd_pipe_peer(void)
 	nng_listener l;
 	nng_msg     *msg;
 	nng_pipe     p;
-	uint64_t     id;
+	int          id;
 
 	NUTS_PASS(nng_socket_pair(fds));
 	NUTS_OPEN(s0);
@@ -444,23 +444,22 @@ test_sockfd_pipe_peer(void)
 	p = nng_msg_get_pipe(msg);
 	NUTS_ASSERT(nng_pipe_id(p) != -1);
 #if defined(NNG_PLATFORM_DARWIN) || defined(NNG_PLATFORM_LINUX)
-	NUTS_PASS(nng_pipe_get_uint64(p, NNG_OPT_PEER_PID, &id));
-	NUTS_ASSERT(id == (uint64_t) getpid());
+	NUTS_PASS(nng_pipe_get_int(p, NNG_OPT_PEER_PID, &id));
+	NUTS_ASSERT(id == (int) getpid());
 #endif
 #if defined(NNG_PLATFORM_DARWIN) || defined(NNG_PLATFORM_LINUX)
-	NUTS_PASS(nng_pipe_get_uint64(p, NNG_OPT_PEER_UID, &id));
-	NUTS_ASSERT(id == (uint64_t) getuid());
+	NUTS_PASS(nng_pipe_get_int(p, NNG_OPT_PEER_UID, &id));
+	NUTS_ASSERT(id == (int) getuid());
 #endif
 #if defined(NNG_PLATFORM_DARWIN) || defined(NNG_PLATFORM_LINUX)
-	NUTS_PASS(nng_pipe_get_uint64(p, NNG_OPT_PEER_GID, &id));
-	NUTS_ASSERT(id == (uint64_t) getgid());
+	NUTS_PASS(nng_pipe_get_int(p, NNG_OPT_PEER_GID, &id));
+	NUTS_ASSERT(id == (int) getgid());
 #endif
 #if defined(NNG_PLATFORM_SUNOS)
-	NUTS_PASS(nng_pipe_get_uint64(p, NNG_OPT_PEER_ZONEID, &id));
-	NUTS_ASSERT(id == (uint64_t) getzoneid());
+	NUTS_PASS(nng_pipe_get_int(p, NNG_OPT_PEER_ZONEID, &id));
+	NUTS_ASSERT(id == (int) getzoneid());
 #else
-	NUTS_FAIL(
-	    nng_pipe_get_uint64(p, NNG_OPT_PEER_ZONEID, &id), NNG_ENOTSUP);
+	NUTS_FAIL(nng_pipe_get_int(p, NNG_OPT_PEER_ZONEID, &id), NNG_ENOTSUP);
 #endif
 
 	nng_msg_free(msg);

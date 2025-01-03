@@ -339,14 +339,14 @@ sfd_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
 	int           rv;
-	uint64_t      ignore;
-	uint64_t      id = 0;
+	int           ignore;
+	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &id, &ignore, &ignore, &ignore);
 	if (rv != 0) {
 		return (rv);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int
@@ -354,14 +354,14 @@ sfd_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
 	int           rv;
-	uint64_t      ignore;
-	uint64_t      id = 0;
+	int           ignore;
+	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &ignore, &id, &ignore, &ignore);
 	if (rv != 0) {
 		return (rv);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int
@@ -369,18 +369,18 @@ sfd_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
 	int           rv;
-	uint64_t      ignore;
-	uint64_t      id = 0;
+	int           ignore;
+	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &ignore, &ignore, &ignore, &id);
 	if (rv != 0) {
 		return (rv);
 	}
-	if (id == (uint64_t) -1) {
+	if (id == -1) {
 		// NB: -1 is not a legal zone id (illumos/Solaris)
 		return (NNG_ENOTSUP);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static int
@@ -388,18 +388,18 @@ sfd_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
 	int           rv;
-	uint64_t      ignore;
-	uint64_t      id = 0;
+	int           ignore;
+	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &ignore, &ignore, &id, &ignore);
 	if (rv != 0) {
 		return (rv);
 	}
-	if (id == (uint64_t) -1) {
+	if (id == -1) {
 		// NB: -1 is not a legal process id
 		return (NNG_ENOTSUP);
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	return (nni_copyout_int(id, buf, szp, t));
 }
 
 static const nni_option sfd_options[] = {

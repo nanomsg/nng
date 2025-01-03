@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -407,7 +407,10 @@ ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 			return (nni_win_error(GetLastError()));
 		}
 	}
-	return (nni_copyout_u64(id, buf, szp, t));
+	// While the above APIs take ULONG, the actual process IDs in
+	// Windows are DWORD (i.e. int).  See GetProcessId() that returns an
+	// int.
+	return (nni_copyout_int((int) id, buf, szp, t));
 }
 
 static const nni_option ipc_conn_options[] = {

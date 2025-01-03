@@ -81,10 +81,10 @@ where supported by the underlying platform.
 | `NNG_OPT_IPC_PERMISSIONS` | `int`            | Settable on listeners before they start, this is the UNIX file mode used when creating the socket.                 |
 | `NNG_OPT_LOCADDR`         | [`nng_sockaddr`] | Local socket address, either [`nng_sockaddr_ipc`] or [`nng_sockaddr_abstract`].                                    |
 | `NNG_OPT_REMADDR`         | [`nng_sockaddr`] | Remote socket address, either [`nng_sockaddr_ipc`] or [`nng_sockaddr_abstract`].                                   |
-| `NNG_OPT_PEER_GID`        | `uint64_t`       | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
-| `NNG_OPT_PEER_PID`        | `uint64_t`       | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
-| `NNG_OPT_PEER_UID`        | `uint64_t`       | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
-| `NNG_OPT_PEER_ZONEID`     | `uint64_t`       | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.      |
+| `NNG_OPT_PEER_GID`        | `int`            | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
+| `NNG_OPT_PEER_PID`        | `int`            | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
+| `NNG_OPT_PEER_UID`        | `int`            | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
+| `NNG_OPT_PEER_ZONEID`     | `int`            | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.      |
 | [`NNG_OPT_LISTEN_FD`]     | `int`            | Write only for listeners before they start, use the named socket for accepting (for use with socket activation).   |
 
 ### Other Configuration Parameters

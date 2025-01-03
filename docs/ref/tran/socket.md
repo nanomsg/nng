@@ -37,13 +37,13 @@ There are no further socket details available.
 
 The following transport options are supported by this transport.
 
-| Option                | Type       | Description                                                                                                                                                                          |
-| --------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `NNG_OPT_SOCKET_FD`   | `int`      | Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a [pipe] backed by the given file descriptor passed as an argument. |
-| `NNG_OPT_PEER_GID`    | `uint64_t` | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.                                                                       |
-| `NNG_OPT_PEER_PID`    | `uint64_t` | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.                                                                   |
-| `NNG_OPT_PEER_UID`    | `uint64_t` | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.                                                                        |
-| `NNG_OPT_PEER_ZONEID` | `uint64_t` | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.                                                                        |
+| Option                | Type  | Description                                                                                                                                                                          |
+| --------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NNG_OPT_SOCKET_FD`   | `int` | Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a [pipe] backed by the given file descriptor passed as an argument. |
+| `NNG_OPT_PEER_GID`    | `int` | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.                                                                       |
+| `NNG_OPT_PEER_PID`    | `int` | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.                                                                   |
+| `NNG_OPT_PEER_UID`    | `int` | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.                                                                        |
+| `NNG_OPT_PEER_ZONEID` | `int` | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.                                                                        |
 
 > [!NOTE]
 > The `NNG_OPT_PEER_GID`, `NNG_OPT_PEER_PID`, `NNG_OPT_PEER_UID`, and `NNG_OPT_PEER_ZONEID` options depend on platform support.
