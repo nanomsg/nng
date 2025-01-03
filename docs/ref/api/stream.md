@@ -85,7 +85,6 @@ int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
 int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
 int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
 int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
-int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
 ```
 
 {{hi:`nng_stream_get_bool`}}
@@ -94,7 +93,6 @@ int nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
 {{hi:`nng_stream_get_size`}}
 {{hi:`nng_stream_get_addr`}}
 {{hi:`nng_stream_get_string`}}
-{{hi:`nng_stream_get_uint64`}}
 These functions are used to obtain value of an option named _opt_ from the stream _s_, and store it in the location
 referenced by _valp_.
 
@@ -258,37 +256,33 @@ stream = nng_aio_get_output(aio, 0);
 ## Stream Factory Options
 
 ```c
+int nng_stream_dialer_get_addr(nng_stream_dialer *dialer, const char *opt, nng_sockaddr *valp);
 int nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, bool *valp);
 int nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 int nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 int nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
-int nng_stream_dialer_get_addr(nng_stream_dialer *dialer, const char *opt, nng_sockaddr *valp);
 int nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, char **valp);
-int nng_stream_dialer_get_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t *valp);
 
+int nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
 int nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 int nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 int nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
 int nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
-int nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
 int nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, char **valp);
-int nng_stream_listener_get_uint64(nng_stream_listener *listener, const char *opt, uint64_t *valp);
 
+int nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 int nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
 int nng_stream_dialer_set_int(nng_stream_dialer *dialer, const char *opt, int val);
 int nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng_duration val);
 int nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
 int nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
-int nng_stream_dialer_set_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t val);
-int nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 
+int nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 int nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
 int nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
 int nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
 int nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
 int nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
-int nng_stream_listener_set_uint64(nng_stream_listener *listener, const char *opt, uint64_t val);
-int nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 ```
 
 {{hi:`nng_stream_dialer_get_bool`}}
@@ -297,28 +291,24 @@ int nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt,
 {{hi:`nng_stream_dialer_get_size`}}
 {{hi:`nng_stream_dialer_get_addr`}}
 {{hi:`nng_stream_dialer_get_string`}}
-{{hi:`nng_stream_dialer_get_uint64`}}
 {{hi:`nng_stream_dialer_set_bool`}}
 {{hi:`nng_stream_dialer_set_int`}}
 {{hi:`nng_stream_dialer_set_ms`}}
 {{hi:`nng_stream_dialer_set_size`}}
 {{hi:`nng_stream_dialer_set_addr`}}
 {{hi:`nng_stream_dialer_set_string`}}
-{{hi:`nng_stream_dialer_set_uint64`}}
 {{hi:`nng_stream_listener_get_bool`}}
 {{hi:`nng_stream_listener_get_int`}}
 {{hi:`nng_stream_listener_get_ms`}}
 {{hi:`nng_stream_listener_get_size`}}
 {{hi:`nng_stream_listener_get_addr`}}
 {{hi:`nng_stream_listener_get_string`}}
-{{hi:`nng_stream_listener_get_uint64`}}
 {{hi:`nng_stream_listener_set_bool`}}
 {{hi:`nng_stream_listener_set_int`}}
 {{hi:`nng_stream_listener_set_ms`}}
 {{hi:`nng_stream_listener_set_size`}}
 {{hi:`nng_stream_listener_set_addr`}}
 {{hi:`nng_stream_listener_set_string`}}
-{{hi:`nng_stream_listener_set_uint64`}}
 These functions are used to retrieve or change the value of an option named _opt_ from the stream _dialer_ or _listener_.
 The `nng_stream_dialer_get_` and `nng_stream_listener_get_` function families retrieve the value, and store it in the location _valp_ references.
 The `nng_stream_dialer_set_` and `nng_stream_listener_set_` function families change the value for the _dialer_ or _listener_, taking it from _val_.

@@ -705,12 +705,6 @@ nng_dialer_set_size(nng_dialer id, const char *n, size_t v)
 }
 
 int
-nng_dialer_set_uint64(nng_dialer id, const char *n, uint64_t v)
-{
-	return (dialer_set(id, n, &v, sizeof(v), NNI_TYPE_UINT64));
-}
-
-int
 nng_dialer_set_ms(nng_dialer id, const char *n, nng_duration v)
 {
 	return (dialer_set(id, n, &v, sizeof(v), NNI_TYPE_DURATION));
@@ -759,12 +753,6 @@ int
 nng_dialer_get_size(nng_dialer id, const char *n, size_t *v)
 {
 	return (dialer_get(id, n, v, NULL, NNI_TYPE_SIZE));
-}
-
-int
-nng_dialer_get_uint64(nng_dialer id, const char *n, uint64_t *v)
-{
-	return (dialer_get(id, n, v, NULL, NNI_TYPE_UINT64));
 }
 
 int
@@ -845,12 +833,6 @@ nng_listener_set_size(nng_listener id, const char *n, size_t v)
 }
 
 int
-nng_listener_set_uint64(nng_listener id, const char *n, uint64_t v)
-{
-	return (listener_set(id, n, &v, sizeof(v), NNI_TYPE_UINT64));
-}
-
-int
 nng_listener_set_ms(nng_listener id, const char *n, nng_duration v)
 {
 	return (listener_set(id, n, &v, sizeof(v), NNI_TYPE_DURATION));
@@ -900,12 +882,6 @@ int
 nng_listener_get_size(nng_listener id, const char *n, size_t *v)
 {
 	return (listener_get(id, n, v, NULL, NNI_TYPE_SIZE));
-}
-
-int
-nng_listener_get_uint64(nng_listener id, const char *n, uint64_t *v)
-{
-	return (listener_get(id, n, v, NULL, NNI_TYPE_UINT64));
 }
 
 int

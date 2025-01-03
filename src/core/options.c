@@ -106,18 +106,6 @@ nni_copyin_str(char *s, const void *v, size_t maxsz, nni_type t)
 }
 
 int
-nni_copyin_u64(uint64_t *up, const void *v, size_t sz, nni_type t)
-{
-	NNI_ARG_UNUSED(sz);
-
-	if (t != NNI_TYPE_UINT64) {
-		return (NNG_EBADTYPE);
-	}
-	*up = *(uint64_t *) v;
-	return (0);
-}
-
-int
 nni_copyin_sockaddr(nng_sockaddr *ap, const void *v, nni_type t)
 {
 	if (t != NNI_TYPE_SOCKADDR) {
@@ -180,17 +168,6 @@ nni_copyout_sockaddr(
 		return (NNG_EBADTYPE);
 	}
 	*(nng_sockaddr *) dst = *sap;
-	return (0);
-}
-
-int
-nni_copyout_u64(uint64_t u, void *dst, size_t *szp, nni_type t)
-{
-	NNI_ARG_UNUSED(szp);
-	if (t != NNI_TYPE_UINT64) {
-		return (NNG_EBADTYPE);
-	}
-	*(uint64_t *) dst = u;
 	return (0);
 }
 

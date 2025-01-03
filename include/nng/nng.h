@@ -688,7 +688,6 @@ NNG_DECL int nng_pipe_get_bool(nng_pipe, const char *, bool *);
 NNG_DECL int nng_pipe_get_int(nng_pipe, const char *, int *);
 NNG_DECL int nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL int nng_pipe_get_size(nng_pipe, const char *, size_t *);
-NNG_DECL int nng_pipe_get_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_get_string(nng_pipe, const char *, char **);
 NNG_DECL int nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
 

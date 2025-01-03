@@ -128,6 +128,11 @@ address separated by a semicolon. This was provided for legacy libnanomsg
 compatilibility, and is no longer offered. The correct way to specify a
 local address is by setting `NNG_OPT_LOCADDR` on the dialer.
 
+## IPC Option Type Changes
+
+The types of [`NNG_OPT_PEER_GID`], [`NNG_OPT_PEER_PID`], [`NNG_OPT_PEER_UID`], and [`NNG_OPT_PEER_ZONEID`]
+have changed from `uint64_t` to `int`. The underlying platforms all use 32-bit quantities for these.
+
 ## Option Functions
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.
@@ -146,11 +151,14 @@ and are thus removed:
 - `nng_ctx_get_string`
 - `nng_ctx_set_string`
 - `nng_ctx_get_uint64`
-- `nng_ctx_set_uint64`
 - `nng_dialer_get_ptr`
 - `nng_dialer_set_ptr`
+- `nng_dialer_get_uint64`
+- `nng_dialer_set_uint64`
 - `nng_listener_get_ptr`
 - `nng_listener_set_ptr`
+- `nng_listener_get_uint64`
+- `nng_listener_set_uint64`
 - `nng_socket_get_ptr`
 - `nng_socket_set_ptr`
 - `nng_socket_get_string`
@@ -159,10 +167,15 @@ and are thus removed:
 - `nng_socket_set_uint64`
 - `nng_stream_get_ptr`
 - `nng_stream_set_ptr`
+- `nng_stream_get_uint64`
 - `nng_stream_dialer_get_ptr`
 - `nng_stream_dialer_set_ptr`
+- `nng_stream_dialer_get_uint64`
+- `nng_stream_dialer_set_uint64`
 - `nng_stream_listener_get_ptr`
 - `nng_stream_listener_set_ptr`
+- `nng_stream_listener_get_uint64`
+- `nng_stream_listener_set_uint64`
 - `nng_ctx_get_ptr` (not documented)
 - `nng_ctx_set_ptr` (not documented)
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -33,7 +33,6 @@ extern int nni_copyin_size(
     size_t *, const void *, size_t, size_t, size_t, nni_type);
 extern int nni_copyin_str(char *, const void *, size_t, nni_type);
 extern int nni_copyin_ptr(void **, const void *, size_t, nni_type);
-extern int nni_copyin_u64(uint64_t *, const void *, size_t, nni_type);
 extern int nni_copyin_sockaddr(nng_sockaddr *, const void *, nni_type);
 
 // nni_copyout_xxx copies out a type of the named value.  It assumes that
@@ -46,7 +45,6 @@ extern int nni_copyout_ptr(void *, void *, size_t *, nni_type);
 extern int nni_copyout_size(size_t, void *, size_t *, nni_type);
 extern int nni_copyout_sockaddr(
     const nng_sockaddr *, void *, size_t *, nni_type);
-extern int nni_copyout_u64(uint64_t, void *, size_t *, nni_type);
 
 // nni_copyout_str copies out a string.  If the type is NNI_TYPE_STRING,
 // then it passes through a pointer, created by nni_strdup().
