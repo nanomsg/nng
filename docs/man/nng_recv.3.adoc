@@ -1,6 +1,6 @@
 = nng_recv(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -52,6 +52,10 @@ and must store the size of that buffer at the location pointed to by _sizep_.
 When the function returns, if it is successful, the size at _sizep_ will be
 updated with the actual message body length copied into _data_.
 
+NOTE: The `NNG_FLAG_ALLOC` flag is deprecated and may be removed in a future release.
+Applications should use xref:nng_recvmsg.3.adoc[`nng_recvmsg()`] for zero copy performance
+improvements.
+
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with a xref:nng_req.7.adoc[_req_] socket a message may only be received
@@ -59,10 +63,6 @@ after a request has been sent, and a xref:nng_sub.7.adoc[_sub_] socket
 may only receive messages corresponding to topics to which it has subscribed.)
 Furthermore, some protocols may not support receiving data at all, such as
 xref:nng_pub.7.adoc[_pub_].
-
-TIP: The `NNG_FLAG_ALLOC` flag can be used to reduce data copies, thereby
-increasing performance, particularly if the buffer is reused to send
-a response using the same flag.
 
 == RETURN VALUES
 
