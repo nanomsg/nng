@@ -32,7 +32,7 @@ nng_fini(void)
 }
 
 int
-nng_close(nng_socket s)
+nng_socket_close(nng_socket s)
 {
 	int       rv;
 	nni_sock *sock;
@@ -45,6 +45,12 @@ nng_close(nng_socket s)
 	// No release -- close releases it.
 	nni_sock_close(sock);
 	return (0);
+}
+
+int
+nng_close(nng_socket s)
+{
+	return (nng_socket_close(s));
 }
 
 int
