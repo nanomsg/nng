@@ -1360,12 +1360,6 @@ nng_pipe_get_size(nng_pipe id, const char *n, size_t *v)
 }
 
 int
-nng_pipe_get_uint64(nng_pipe id, const char *n, uint64_t *v)
-{
-	return (pipe_get(id, n, v, NULL, NNI_TYPE_UINT64));
-}
-
-int
 nng_pipe_get_string(nng_pipe id, const char *n, char **v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_STRING));

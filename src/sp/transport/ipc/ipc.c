@@ -172,6 +172,10 @@ ipc_pipe_nego_cb(void *arg)
 	int       rv;
 
 	nni_mtx_lock(&ep->mtx);
+	if (ep->closed) {
+		rv = NNG_ECLOSED;
+		goto error;
+	}
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
@@ -337,9 +341,9 @@ ipc_pipe_recv_cb(void *arg)
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcv_max) && (p->rcv_max > 0)) {
-			uint64_t pid;
-			char     peer[64] = "";
-			if (nng_stream_get_uint64(
+			int  pid;
+			char peer[64] = "";
+			if (nng_stream_get_int(
 			        p->conn, NNG_OPT_PEER_PID, &pid) == 0) {
 				snprintf(peer, sizeof(peer), " from PID %lu",
 				    (unsigned long) pid);
