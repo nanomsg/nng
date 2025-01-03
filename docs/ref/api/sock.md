@@ -154,10 +154,10 @@ a result of [`NNG_ECLOSED`].
 ```c
 int nng_send(nng_socket s, void *data, size_t size, int flags);
 int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
-void nng_send_aio(nng_socket s, nng_aio *aio);
+void nng_socket_send(nng_socket s, nng_aio *aio);
 ```
 
-These functions ({{i:`nng_send`}}, {{i:`nng_sendmsg`}}, and {{i:`nng_send_aio`}}) send
+These functions ({{i:`nng_send`}}, {{i:`nng_sendmsg`}}, and {{i:`nng_socket_send`}}) send
 messages over the socket _s_. The differences in their behaviors are as follows.
 
 > [!NOTE]
@@ -198,9 +198,9 @@ cannot accept more data for sending. In such a case, it will return [`NNG_EAGAIN
 > This function is preferred over [`nng_send`], as it gives access to the message structure and eliminates both
 > a data copy and allocation.
 
-### nng_send_aio
+### nng_socket_send
 
-The `nng_send_aio` function sends a message asynchronously, using the [`nng_aio`] _aio_, over the socket _s_.
+The `nng_socket_send` function sends a message asynchronously, using the [`nng_aio`] _aio_, over the socket _s_.
 The message to send must have been set on _aio_ using the [`nng_aio_set_msg`] function.
 
 If the operation completes successfully, then the socket will have disposed of the message.
@@ -220,10 +220,10 @@ For example, the message may be sitting in queue, or located in TCP buffers, or 
 ```c
 int nng_recv(nng_socket s, void *data, size_t *sizep, int flags);
 int nng_recvmsg(nng_socket s, nng_msg **msgp, int flags);
-void nng_recv_aio(nng_socket s, nng_aio *aio);
+void nng_socket_recv(nng_socket s, nng_aio *aio);
 ```
 
-These functions ({{i:`nng_recv`}}, {{i:`nng_recvmsg`}}, and {{i:`nng_recv_aio`}}) receive
+These functions ({{i:`nng_recv`}}, {{i:`nng_recvmsg`}}, and {{i:`nng_socket_recv`}}) receive
 messages over the socket _s_. The differences in their behaviors are as follows.
 
 > [!NOTE]
@@ -257,9 +257,9 @@ has no messages available to receive. In such a case, it will return [`NNG_EAGAI
 > This function is preferred over [`nng_recv`], as it gives access to the message structure and eliminates both
 > a data copy and allocation.
 
-### nng_recv_aio
+### nng_socket_recv
 
-The `nng_send_aio` function receives a message asynchronously, using the [`nng_aio`] _aio_, over the socket _s_.
+The `nng_socket_send` function receives a message asynchronously, using the [`nng_aio`] _aio_, over the socket _s_.
 On success, the received message can be retrieved from the _aio_ using the [`nng_aio_get_msg`] function.
 
 > [!NOTE]
@@ -371,7 +371,7 @@ nng_socket s = NNG_SOCKET_INITIALIZER;
 
 ### Example 2: Publishing a Timestamp
 
-This example demonstrates the use of [`nng_aio`], [`nng_send_aio`], and [`nng_sleep_aio`] to
+This example demonstrates the use of [`nng_aio`], [`nng_socket_send`], and [`nng_sleep_aio`] to
 build a service that publishes a timestamp at one second intervals. Error handling is elided for the
 sake of clarity.
 
@@ -403,7 +403,7 @@ void callback(void *arg) {
         now = nng_clock();
         nng_msg_append(msg, &now, sizeof (now)); // note: native endian
         nng_aio_set_msg(state->aio, msg);
-        nng_send_aio(state->s, state->aio);
+        nng_socket_send(state->s, state->aio);
     } else {
         state->sleeping = true;
         nng_sleep_aio(1000, state->aio); // 1000 ms == 1 second
@@ -426,7 +426,7 @@ int main(int argc, char **argv) {
 
 ### Example 3: Watching a Periodic Timestamp
 
-This example demonstrates the use of [`nng_aio`], [`nng_recv_aio`], to build a client to
+This example demonstrates the use of [`nng_aio`], [`nng_socket_recv`], to build a client to
 watch for messages received from the service created in Example 2.
 Error handling is elided for the sake of clarity.
 
@@ -457,7 +457,7 @@ void callback(void *arg) {
     printf("Timestamp is %lu\n", (unsigned long)now);
     nng_msg_free(msg);
     nng_aio_set_msg(state->aio, NULL);
-    nng_recv_aio(state->s, state->aio);
+    nng_socket_recv(state->s, state->aio);
 }
 
 int main(int argc, char **argv) {
@@ -467,7 +467,7 @@ int main(int argc, char **argv) {
     nng_sub0_open(&state.s);
     nng_sub0_socket_subscribe(state.s, NULL, 0); // subscribe to everything
     nng_dial(state.s, url, NULL, 0);
-    nng_recv_aio(state.s, state.aio); // kick it off right away
+    nng_socket_recv(state.s, state.aio); // kick it off right away
     for(;;) {
         nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
     }

@@ -150,7 +150,7 @@ The `nng_ctx_recvmsg` function receives a message and stores a pointer to the [`
 The _flags_ can contain the value [`NNG_FLAG_NONBLOCK`], indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return [`NNG_EAGAIN`].
 
-### nng_recv_aio
+### nng_socket_recv
 
 The `nng_ctx_send` function receives a message asynchronously, using the [`nng_aio`] _aio_, over the context _ctx_.
 On success, the received message can be retrieved from the _aio_ using the [`nng_aio_get_msg`] function.

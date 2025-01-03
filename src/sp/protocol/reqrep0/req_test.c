@@ -337,7 +337,7 @@ test_req_disconnect_abort(void)
 	NUTS_MARRY(rep1, req);
 	NUTS_SEND(req, "ping");
 	NUTS_RECV(rep1, "ping");
-	nng_recv_aio(req, aio);
+	nng_socket_recv(req, aio);
 
 	NUTS_MARRY(rep2, req);
 	NUTS_CLOSE(rep1);
@@ -433,7 +433,7 @@ test_req_cancel_abort_recv(void)
 	NUTS_SLEEP(100);
 
 	nng_aio_set_timeout(aio, 5 * SECOND);
-	nng_recv_aio(req, aio);
+	nng_socket_recv(req, aio);
 
 	// Give time for this recv to post properly.
 	NUTS_SLEEP(100);
@@ -565,7 +565,7 @@ test_req_poll_contention(void)
 	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
 	nng_aio_set_msg(aio, msg);
-	nng_send_aio(req, aio);
+	nng_socket_send(req, aio);
 	for (int i = 0; i < 5; i++) {
 		nng_aio_set_msg(ctx_aio[i], ctx_msg[i]);
 		nng_ctx_send(ctx[i], ctx_aio[i]);

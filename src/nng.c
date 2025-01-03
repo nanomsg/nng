@@ -180,7 +180,7 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 }
 
 void
-nng_recv_aio(nng_socket s, nng_aio *aio)
+nng_socket_recv(nng_socket s, nng_aio *aio)
 {
 	nni_sock *sock;
 	int       rv;
@@ -195,7 +195,7 @@ nng_recv_aio(nng_socket s, nng_aio *aio)
 }
 
 void
-nng_send_aio(nng_socket s, nng_aio *aio)
+nng_socket_send(nng_socket s, nng_aio *aio)
 {
 	nni_sock *sock;
 	int       rv;

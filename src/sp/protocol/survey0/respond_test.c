@@ -163,8 +163,8 @@ test_resp_double_recv(void)
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 
-	nng_recv_aio(s1, aio1);
-	nng_recv_aio(s1, aio2);
+	nng_socket_recv(s1, aio1);
+	nng_socket_recv(s1, aio2);
 
 	nng_aio_wait(aio2);
 	NUTS_FAIL(nng_aio_result(aio2), NNG_ESTATE);
@@ -194,7 +194,7 @@ test_resp_close_pipe_before_send(void)
 	NUTS_MARRY(surv, resp);
 	NUTS_SEND(surv, "test");
 
-	nng_recv_aio(resp, aio1);
+	nng_socket_recv(resp, aio1);
 	nng_aio_wait(aio1);
 	NUTS_PASS(nng_aio_result(aio1));
 	NUTS_TRUE((m = nng_aio_get_msg(aio1)) != NULL);

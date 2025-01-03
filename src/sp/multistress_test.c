@@ -124,7 +124,7 @@ rep0_recd(void *arg)
 	c->nrecv++;
 	nng_aio_set_msg(c->sent, nng_aio_get_msg(c->recd));
 	nng_aio_set_msg(c->recd, NULL);
-	nng_send_aio(c->sock, c->sent);
+	nng_socket_send(c->sock, c->sent);
 }
 
 static void
@@ -140,7 +140,7 @@ rep0_sent(void *arg)
 		return;
 	}
 	c->nsend++;
-	nng_recv_aio(c->sock, c->recd);
+	nng_socket_recv(c->sock, c->recd);
 }
 
 static void
@@ -162,7 +162,7 @@ req0_woke(void *arg)
 		return;
 	}
 	nng_aio_set_msg(c->sent, msg);
-	nng_send_aio(c->sock, c->sent);
+	nng_socket_send(c->sock, c->sent);
 }
 
 static void
@@ -205,7 +205,7 @@ req0_sent(void *arg)
 		return;
 	}
 	c->nsend++;
-	nng_recv_aio(c->sock, c->recd);
+	nng_socket_recv(c->sock, c->recd);
 }
 
 void
@@ -233,7 +233,7 @@ reqrep0_test(int ntests)
 		fatal("nng_aio_alloc", rv);
 	}
 
-	nng_recv_aio(srv->sock, srv->recd);
+	nng_socket_recv(srv->sock, srv->recd);
 
 	for (i = 1; i < ntests; i++) {
 		cli       = &cases[curcase++];
@@ -279,7 +279,7 @@ pair0_recd(void *arg)
 	}
 	c->nrecv++;
 	nng_msg_free(nng_aio_get_msg(c->recd));
-	nng_recv_aio(c->sock, c->recd);
+	nng_socket_recv(c->sock, c->recd);
 }
 
 static void
@@ -300,7 +300,7 @@ pair0_woke(void *arg)
 		return;
 	}
 	nng_aio_set_msg(c->sent, msg);
-	nng_send_aio(c->sock, c->sent);
+	nng_socket_send(c->sock, c->sent);
 }
 
 static void
@@ -358,8 +358,8 @@ pair0_test(int ntests)
 		fatal("nng_dial", rv);
 	}
 
-	nng_recv_aio(srv->sock, srv->recd);
-	nng_recv_aio(cli->sock, cli->recd);
+	nng_socket_recv(srv->sock, srv->recd);
+	nng_socket_recv(cli->sock, cli->recd);
 	nng_sleep_aio(1, srv->woke);
 	nng_sleep_aio(1, cli->woke);
 }
@@ -379,7 +379,7 @@ bus0_recd(void *arg)
 	}
 	c->nrecv++;
 	nng_msg_free(nng_aio_get_msg(c->recd));
-	nng_recv_aio(c->sock, c->recd);
+	nng_socket_recv(c->sock, c->recd);
 }
 
 static void
@@ -400,7 +400,7 @@ bus0_woke(void *arg)
 		return;
 	}
 	nng_aio_set_msg(c->sent, msg);
-	nng_send_aio(c->sock, c->sent);
+	nng_socket_send(c->sock, c->sent);
 }
 
 static void
@@ -457,7 +457,7 @@ bus0_test(int ntests)
 
 	for (int i = 0; i < ntests; i++) {
 		test_case *c = &cases[curcase++];
-		nng_recv_aio(c->sock, c->recd);
+		nng_socket_recv(c->sock, c->recd);
 		nng_sleep_aio(1, c->woke);
 	}
 }
@@ -480,7 +480,7 @@ pub0_woke(void *arg)
 		return;
 	}
 	nng_aio_set_msg(c->sent, msg);
-	nng_send_aio(c->sock, c->sent);
+	nng_socket_send(c->sock, c->sent);
 }
 
 void
@@ -511,7 +511,7 @@ sub0_recd(void *arg)
 	c->nrecv++;
 	nng_msg_free(nng_aio_get_msg(c->recd));
 	nng_aio_set_msg(c->recd, NULL);
-	nng_recv_aio(c->sock, c->recd);
+	nng_socket_recv(c->sock, c->recd);
 }
 
 void
@@ -596,7 +596,7 @@ pubsub0_test(int ntests)
 			fatal("nng_dial", rv);
 		}
 
-		nng_recv_aio(cli->sock, cli->recd);
+		nng_socket_recv(cli->sock, cli->recd);
 	}
 
 	nng_sleep_aio(1, srv->woke);
@@ -637,7 +637,7 @@ push0_woke(void *arg)
 		return;
 	}
 	nng_aio_set_msg(c->sent, msg);
-	nng_send_aio(c->sock, c->sent);
+	nng_socket_send(c->sock, c->sent);
 }
 
 void
@@ -653,7 +653,7 @@ pull0_recd(void *arg)
 	c->nrecv++;
 	nng_msg_free(nng_aio_get_msg(c->recd));
 	nng_aio_set_msg(c->recd, NULL);
-	nng_recv_aio(c->sock, c->recd);
+	nng_socket_recv(c->sock, c->recd);
 }
 
 void
@@ -755,7 +755,7 @@ pipeline0_test(int ntests)
 			fatal("nng_dial", rv);
 		}
 
-		nng_recv_aio(cli->sock, cli->recd);
+		nng_socket_recv(cli->sock, cli->recd);
 	}
 
 	nng_sleep_aio(1, srv->woke);

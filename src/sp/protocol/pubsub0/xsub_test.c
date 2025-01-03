@@ -111,7 +111,7 @@ test_xsub_recv_late(void)
 	NUTS_MARRY(pub, sub);
 	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 
 	// But once we send messages, it is.
 	// We have to send a request, in order to send a reply.
@@ -182,7 +182,7 @@ test_xsub_recv_closed(void)
 	NUTS_PASS(nng_sub0_open_raw(&sub));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	NUTS_CLOSE(sub);
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	nng_aio_free(aio);
@@ -197,7 +197,7 @@ test_xsub_close_recv(void)
 	NUTS_PASS(nng_sub0_open_raw(&sub));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_aio_set_timeout(aio, 1000);
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 	NUTS_CLOSE(sub);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
@@ -215,7 +215,7 @@ test_xsub_recv_nonblock(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_set_timeout(aio, 0); // Instant timeout
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
@@ -335,7 +335,7 @@ test_xsub_recv_aio_stopped(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_stop(aio);
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	NUTS_CLOSE(sub);
@@ -351,7 +351,7 @@ test_xsub_recv_aio_canceled(void)
 	NUTS_PASS(nng_sub0_open_raw(&sub));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
-	nng_recv_aio(sub, aio);
+	nng_socket_recv(sub, aio);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);

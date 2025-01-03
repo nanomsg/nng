@@ -53,7 +53,7 @@ work_send(struct work *w, void *data, size_t size)
 	PASS(nng_msg_alloc(&msg, 0));
 	PASS(nng_msg_append(msg, data, size));
 	nng_aio_set_msg(w->aio, msg);
-	nng_send_aio(w->socket, w->aio);
+	nng_socket_send(w->socket, w->aio);
 }
 
 void
@@ -120,7 +120,7 @@ ping_cb(void *arg)
 	switch (w->state) {
 	case SEND:
 		w->state = RECV;
-		nng_recv_aio(w->socket, w->aio);
+		nng_socket_recv(w->socket, w->aio);
 		break;
 	case RECV:
 		msg = nng_aio_get_msg(w->aio);
@@ -138,7 +138,7 @@ void
 echo_start(struct work *w)
 {
 	w->state = RECV;
-	nng_recv_aio(w->socket, w->aio);
+	nng_socket_recv(w->socket, w->aio);
 }
 
 void

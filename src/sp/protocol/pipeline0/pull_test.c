@@ -173,7 +173,7 @@ test_pull_recv_aio_stopped(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_stop(aio);
-	nng_recv_aio(s, aio);
+	nng_socket_recv(s, aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
 	NUTS_CLOSE(s);
@@ -189,7 +189,7 @@ test_pull_recv_aio_canceled(void)
 	NUTS_PASS(nng_pull0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
-	nng_recv_aio(s, aio);
+	nng_socket_recv(s, aio);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
@@ -206,7 +206,7 @@ test_pull_close_recv(void)
 	NUTS_PASS(nng_pull0_open(&s));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_aio_set_timeout(aio, 1000);
-	nng_recv_aio(s, aio);
+	nng_socket_recv(s, aio);
 	NUTS_CLOSE(s);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
@@ -224,7 +224,7 @@ test_pull_recv_nonblock(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_set_timeout(aio, 0); // Instant timeout
-	nng_recv_aio(s, aio);
+	nng_socket_recv(s, aio);
 
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
@@ -242,7 +242,7 @@ test_pull_recv_abort(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_set_timeout(aio, 1000);
-	nng_recv_aio(s, aio);
+	nng_socket_recv(s, aio);
 	nng_aio_abort(aio, NNG_EAMBIGUOUS);
 
 	nng_aio_wait(aio);

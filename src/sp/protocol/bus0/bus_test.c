@@ -153,7 +153,7 @@ test_bus_recv_cancel(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_set_timeout(aio, SECOND);
-	nng_recv_aio(s1, aio);
+	nng_socket_recv(s1, aio);
 	nng_aio_abort(aio, NNG_ECANCELED);
 
 	nng_aio_wait(aio);
@@ -172,7 +172,7 @@ test_bus_close_recv_abort(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_set_timeout(aio, SECOND);
-	nng_recv_aio(s1, aio);
+	nng_socket_recv(s1, aio);
 	NUTS_CLOSE(s1);
 
 	nng_aio_wait(aio);
@@ -195,12 +195,12 @@ test_bus_aio_stopped(void)
 	nng_aio_stop(aio1);
 	nng_aio_stop(aio2);
 
-	nng_recv_aio(s1, aio1);
+	nng_socket_recv(s1, aio1);
 	nng_aio_wait(aio1);
 	NUTS_FAIL(nng_aio_result(aio1), NNG_ESTOPPED);
 
 	nng_aio_set_msg(aio2, msg);
-	nng_send_aio(s1, aio2);
+	nng_socket_send(s1, aio2);
 	nng_aio_wait(aio2);
 	NUTS_FAIL(nng_aio_result(aio2), NNG_ESTOPPED);
 
@@ -221,7 +221,7 @@ test_bus_aio_canceled(void)
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
-	nng_recv_aio(s1, aio);
+	nng_socket_recv(s1, aio);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);

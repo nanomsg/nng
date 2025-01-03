@@ -297,7 +297,7 @@ udp_recv_count_cb(void *arg)
 	}
 
 	nng_aio_set_timeout(c->aio, 1000);
-	nng_recv_aio(c->sock, c->aio);
+	nng_socket_recv(c->sock, c->aio);
 }
 
 // This test uses callbacks above to ensure we
@@ -371,7 +371,7 @@ test_udp_multi_small_burst(void)
 	rc.len    = 95;
 	rc.expect = msg;
 
-	nng_recv_aio(rc.sock, rc.aio);
+	nng_socket_recv(rc.sock, rc.aio);
 
 	// Experimentally at least on Darwin, we see some packet losses
 	// even for loopback.  Loss rates appear depressingly high.
