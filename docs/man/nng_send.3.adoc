@@ -1,6 +1,6 @@
 = nng_send(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -57,8 +57,9 @@ The _flags_ may contain either of (or neither of) the following values:
     In the absence of this flag, the _data_ is copied by the implementation
     before the function returns to the caller.
 
-TIP: The `NNG_FLAG_ALLOC` flag can be used to reduce data copies, thereby
-increasing performance.
+NOTE: The `NNG_FLAG_ALLOC` flag is deprecated and may be removed in a future release.
+Applications should use xref:nng_sendmsg.3.adoc[`nng_sendmsg()`] for zero copy performance
+improvements.
 
 NOTE: Regardless of the presence or absence of `NNG_FLAG_NONBLOCK`, there may
 be queues between the sender and the receiver.
