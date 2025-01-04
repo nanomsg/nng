@@ -1,11 +1,22 @@
 # Migrating from NNG 1.x
 
 There are some incompatibities from NNG 1.x, and applications must make certain changes for NNG 2.0.
-This guide should help with this migration.
+This guide should help with this migration. While we have made reasonable efforts to highlight all
+of the things that applications could run into, this list is not necessarily exhaustive, and undocumented
+interfaces may have changed without notice here.
+
+## Detecting NNG v2
+
+For applications that need to detect NNG v2 versus older code, the `NNG_MAJOR_VERSION` macro
+can be used. This will have numeric value 2 for version 2, and 1 for earlier versions.
+
+> [!NOTE]
+> NNG version 2.0 is not stabilized yet, and while it is in development there is no compatibility guarantee
+> between releases or builds of NNG 2.
 
 ## Nanomsg Compatibility
 
-Applications using the legacy `libnanomsg` API will have to be updated to native _NNG_ interfaces.
+Applications using the legacy `libnanomsg` API will have to be updated to native NNG interfaces.
 See the [Migrating From libnanomsg](nanomsg.md) chapter for details.
 
 ## Library Initialization
@@ -236,7 +247,7 @@ or dialer that creates the stream instead.
 
 A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
-`nng_dialer_set` or `nng_listener_set` option. This likely means that it is necessary
+[`nng_dialer_set`] or [`nng_listener_set`] option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.
 
@@ -246,9 +257,9 @@ changes. It is recommended to set them properly on the socket before
 creating dialers or listeners, or set them explicitly on the dialer or listener
 directly:
 
-- `NNG_OPT_RECONNMINT`
-- `NNG_OPT_RECONNMAXT`
-- `NNG_OPT_RECVMAXSZ`
+- [`NNG_OPT_RECONNMINT`]
+- [`NNG_OPT_RECONNMAXT`]
+- [`NNG_OPT_RECVMAXSZ`]
 
 The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,

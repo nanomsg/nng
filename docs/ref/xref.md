@@ -208,9 +208,11 @@
 [`nng_dial`]: /TODO.md
 [`nng_dialer_create`]: /TODO.md
 [`nng_dialer_close`]: /TODO.md
+[`nng_dialer_set`]: /TODO.md
 [`nng_listen`]: /TODO.md
 [`nng_listener_create`]: /TODO.md
 [`nng_listener_close`]: /TODO.md
+[`nng_listener_set`]: /TODO.md
 [`nng_socket_set`]: /api/sock.md#socket-options
 [`nng_socket_set_bool`]: /api/sock.md#socket-options
 [`nng_socket_set_int`]: /api/sock.md#socket-options
