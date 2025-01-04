@@ -206,12 +206,12 @@ extern const char *nuts_ecdsa_client_crt;
 
 // NUTS_SUCCESS tests for NNG success.  It reports the failure if it
 // did not.
-#define NUTS_PASS(cond)                                              \
-	do {                                                         \
-		int result_ = (cond);                                \
-		TEST_CHECK_(result_ == 0, "%s succeeds", #cond);     \
-		TEST_MSG("%s: expected success, got %s (%d)", #cond, \
-		    nng_strerror(result_), result_);                 \
+#define NUTS_PASS(cond)                                         \
+	do {                                                    \
+		int result_ = (cond);                           \
+		TEST_ASSERT_(result_ == 0,                      \
+		    "%s: expected success, got %s (%d)", #cond, \
+		    nng_strerror(result_), result_);            \
 	} while (0)
 
 // NUTS_ERROR tests for a specific NNG error code.
