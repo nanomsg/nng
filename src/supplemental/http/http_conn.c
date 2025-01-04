@@ -18,8 +18,6 @@
 
 #include "http_api.h"
 
-#include <nng/supplemental/tls/tls.h>
-
 // We insist that individual headers fit in 8K.
 // If you need more than that, you need something we can't do.
 #define HTTP_BUFSIZE 8192

@@ -18,7 +18,6 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/supplemental/tls/tls.h>
 #include <nng/supplemental/util/options.h>
 
 // Globals.  We need this to avoid passing around everything.

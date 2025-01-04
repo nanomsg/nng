@@ -48,9 +48,6 @@ extern void nuts_logger(
 #include <stdint.h>
 #include <string.h>
 
-// The following headers are provided for test code convenience.
-#include <nng/supplemental/tls/tls.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

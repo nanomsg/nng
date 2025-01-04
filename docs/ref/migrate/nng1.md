@@ -40,6 +40,7 @@ Simply remove any references to them.
 - `nng/protocol/reqrep0/req.h`
 - `nng/protocol/survey0/respond.h`
 - `nng/protocol/survey0/survey.h`
+- `nng/supplemental/tls/tls.h`
 - `nng/transport/inproc/inproc.h`
 - `nng/transport/ipc/ipc.h`
 - `nng/transport/tcp/tcp.h`

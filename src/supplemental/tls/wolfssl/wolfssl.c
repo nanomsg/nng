@@ -33,8 +33,8 @@
 
 #include "core/nng_impl.h"
 #include "nng/nng.h"
-#include "nng/supplemental/tls/tls.h"
-#include <nng/supplemental/tls/engine.h>
+
+#include "../tls_engine.h"
 
 struct nng_tls_engine_conn {
 	void        *tls; // parent conn

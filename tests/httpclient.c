@@ -16,7 +16,6 @@
 
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
-#include <nng/supplemental/tls/tls.h>
 
 #include "core/nng_impl.h"
 

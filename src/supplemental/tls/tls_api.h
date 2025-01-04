@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -11,8 +11,6 @@
 
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_API_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_API_H
-
-#include <nng/supplemental/tls/tls.h>
 
 // The implementation supplies this function to create the TLS connection
 // object.  All fields will be zeroed.

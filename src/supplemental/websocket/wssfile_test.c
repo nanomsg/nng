@@ -10,7 +10,6 @@
 
 #include "core/nng_impl.h"
 #include "nng/nng.h"
-#include "nng/supplemental/tls/tls.h"
 
 #include <nuts.h>
 

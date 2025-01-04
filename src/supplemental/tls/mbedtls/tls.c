@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -22,7 +22,8 @@
 #endif
 
 #include "nng/nng.h"
-#include "nng/supplemental/tls/tls.h"
+
+#include "../tls_engine.h"
 
 // mbedTLS renamed this header for 2.4.0.
 #if MBEDTLS_VERSION_MAJOR > 2 || MBEDTLS_VERSION_MINOR >= 4
@@ -35,7 +36,6 @@
 #include "mbedtls/ssl.h"
 
 #include "core/nng_impl.h"
-#include <nng/supplemental/tls/engine.h>
 
 // pair holds a private key and the associated certificate.
 typedef struct {

@@ -13,7 +13,6 @@
 #endif
 
 #include <nng/nng.h>
-#include <nng/supplemental/tls/tls.h>
 
 #include "convey.h"
 #include "stubs.h"

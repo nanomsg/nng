@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -15,8 +15,7 @@
 
 #include "core/nng_impl.h"
 
-#include <nng/supplemental/tls/engine.h>
-#include <nng/supplemental/tls/tls.h>
+#include "tls_engine.h"
 
 // NNG_TLS_MAX_SEND_SIZE limits the amount of data we will buffer for sending,
 // exerting back-pressure if this size is exceeded.  The 16K is aligned to the

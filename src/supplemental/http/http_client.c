@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -14,8 +14,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-
-#include <nng/supplemental/tls/tls.h>
 
 #include "http_api.h"
 

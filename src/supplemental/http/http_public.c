@@ -11,7 +11,6 @@
 #include "core/nng_impl.h"
 #include "http_api.h"
 #include "nng/supplemental/http/http.h"
-#include "nng/supplemental/tls/tls.h"
 
 // Symbols in this file are "public" versions of the HTTP API.
 // These are suitable for exposure to applications.

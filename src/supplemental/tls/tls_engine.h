@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,10 +10,10 @@
 // This file is used to enable external TLS "engines", so
 // that third party TLS libraries can be plugged in
 
-#ifndef NNG_SUPPLEMENTAL_TLS_ENGINE_H
-#define NNG_SUPPLEMENTAL_TLS_ENGINE_H
+#ifndef NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H
+#define NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H
 
-#include <nng/supplemental/tls/tls.h>
+#include "core/defs.h"
 
 // Locking theory statement for TLS engines.  The engine is assumed
 // operate only from the context of threads called by the common
@@ -202,7 +202,7 @@ typedef struct nng_tls_engine_s {
 	bool fips_mode;
 } nng_tls_engine;
 
-NNG_DECL int nng_tls_engine_register(const nng_tls_engine *);
+extern int nng_tls_engine_register(const nng_tls_engine *);
 
 // nng_tls_engine_send is called by the engine to send data over the
 // underlying connection.  It returns zero on success, NNG_EAGAIN if
@@ -210,13 +210,13 @@ NNG_DECL int nng_tls_engine_register(const nng_tls_engine *);
 // accept more data yet), or some other error.  On success the count is
 // updated with the number of bytes actually sent.  The first argument
 // is the context structure passed in when starting the engine.
-NNG_DECL int nng_tls_engine_send(void *, const uint8_t *, size_t *);
+extern int nng_tls_engine_send(void *, const uint8_t *, size_t *);
 
 // nng_tls_engine_recv is called byu the engine to receive data over
 // the underlying connection.  It returns zero on success, NNG_EAGAIN
 // if the operation can't be completed yet (there is no data available
 // for reading), or some other error.  On success the count is updated
 // with the number of bytes actually received.
-NNG_DECL int nng_tls_engine_recv(void *, uint8_t *, size_t *);
+extern int nng_tls_engine_recv(void *, uint8_t *, size_t *);
 
-#endif // NNG_SUPPLEMENTAL_TLS_ENGINE_H
+#endif // NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H

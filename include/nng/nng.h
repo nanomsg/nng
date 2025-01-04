@@ -1593,6 +1593,17 @@ NNG_DECL int nng_tls_config_psk(
 NNG_DECL int nng_tls_config_version(
     nng_tls_config *, nng_tls_version, nng_tls_version);
 
+// nng_tls_engine_name returns the "name" of the TLS engine.  If no
+// TLS engine support is enabled, then "none" is returned.
+NNG_DECL const char *nng_tls_engine_name(void);
+
+// nng_tls_engine_description returns the "description" of the TLS engine.
+// If no TLS engine support is enabled, then an empty string is returned.
+NNG_DECL const char *nng_tls_engine_description(void);
+
+// nng_tls_engine_fips_mode returns true if the engine is in FIPS 140 mode.
+NNG_DECL bool nng_tls_engine_fips_mode(void);
+
 // Protocol specific values.  These were formerly located in protocol specific
 // headers, but we are bringing them here for ease of use.
 
