@@ -222,13 +222,49 @@
 </style>
 <h1 id="migrating-from-nng-1x"><a class="header" href="#migrating-from-nng-1x">Migrating from NNG 1.x</a></h1>
 <p>There are some incompatibities from NNG 1.x, and applications must make certain changes for NNG 2.0.
-This guide should help with this migration.</p>
+This guide should help with this migration. While we have made reasonable efforts to highlight all
+of the things that applications could run into, this list is not necessarily exhaustive, and undocumented
+interfaces may have changed without notice here.</p>
+<h2 id="detecting-nng-v2"><a class="header" href="#detecting-nng-v2">Detecting NNG v2</a></h2>
+<p>For applications that need to detect NNG v2 versus older code, the <code>NNG_MAJOR_VERSION</code> macro
+can be used. This will have numeric value 2 for version 2, and 1 for earlier versions.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>NNG version 2.0 is not stabilized yet, and while it is in development there is no compatibility guarantee
+between releases or builds of NNG 2.</p>
+</div>
 <h2 id="nanomsg-compatibility"><a class="header" href="#nanomsg-compatibility">Nanomsg Compatibility</a></h2>
-<p>Applications using the legacy <code>libnanomsg</code> API will have to be updated to native <em>NNG</em> interfaces.
+<p>Applications using the legacy <code>libnanomsg</code> API will have to be updated to native NNG interfaces.
 See the <a href="nanomsg.html">Migrating From libnanomsg</a> chapter for details.</p>
 <h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
 <p>It is now required for applications to initialize the library explicitly before using it.
 This is done using the <a href="/api/init.html#initialization"><code>nng_init</code></a> function.</p>
+<h2 id="removed-headers"><a class="header" href="#removed-headers">Removed Headers</a></h2>
+<p>The following header files are removed, and the declarations they provided are now provided by including <code>&lt;nng/nng.h&gt;</code>.
+Simply remove any references to them.</p>
+<ul>
+<li><code>nng/protocol/bus0/bus.h</code></li>
+<li><code>nng/protocol/pair0/pair.h</code></li>
+<li><code>nng/protocol/pair1/pair.h</code></li>
+<li><code>nng/protocol/pipeline0/pull.h</code></li>
+<li><code>nng/protocol/pipeline0/push.h</code></li>
+<li><code>nng/protocol/pubsub0/pub.h</code></li>
+<li><code>nng/protocol/pubsub0/sub.h</code></li>
+<li><code>nng/protocol/reqrep0/rep.h</code></li>
+<li><code>nng/protocol/reqrep0/req.h</code></li>
+<li><code>nng/protocol/survey0/respond.h</code></li>
+<li><code>nng/protocol/survey0/survey.h</code></li>
+<li><code>nng/supplemental/tls/tls.h</code></li>
+<li><code>nng/transport/inproc/inproc.h</code></li>
+<li><code>nng/transport/ipc/ipc.h</code></li>
+<li><code>nng/transport/tcp/tcp.h</code></li>
+<li><code>nng/transport/tls/tls.h</code></li>
+<li><code>nng/transport/ws/websocket.h</code></li>
+<li><code>nng/transport/zerotier/zerotier.h</code></li>
+</ul>
 <h2 id="renamed-functions"><a class="header" href="#renamed-functions">Renamed Functions</a></h2>
 <p>The following functions have been renamed as described by the following table.
 The old names are available by defining the macro <code>NNG1_TRANSITION</code> in your compilation environment.</p>
@@ -254,8 +290,6 @@ The old names are available by defining the macro <code>NNG1_TRANSITION</code> i
 </ul>
 <p>Just add either <code>0</code> or <code>1</code> (in the case of PAIRv1) to get the protocol desired. (Forcing the version number to
 be supplied should avoid surprises later as new versions of protocols are added.)</p>
-<p>Additionally, the header files for protocols are now empty, as all of their content has been moved to <code>nng/nng.h</code>.
-Please remove <code>#include</code> references to protocol headers as we anticipate removing them in the future.</p>
 <h2 id="nng_flag_alloc-removed"><a class="header" href="#nng_flag_alloc-removed">NNG_FLAG_ALLOC Removed</a></h2>
 <p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="/api/sock.html#nng_send"><code>nng_send</code></a> and <a href="/TODO.html"><code>nng_recv</code></a> is removed.
 This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
@@ -397,7 +431,7 @@ or dialer that creates the stream instead.</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
-<code>nng_dialer_set</code> or <code>nng_listener_set</code> option. This likely means that it is necessary
+<a href="/TODO.html"><code>nng_dialer_set</code></a> or <a href="/TODO.html"><code>nng_listener_set</code></a> option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.</p>
 <p>The following options are copied from the socket when creating a dialer or listener,
@@ -406,9 +440,9 @@ changes. It is recommended to set them properly on the socket before
 creating dialers or listeners, or set them explicitly on the dialer or listener
 directly:</p>
 <ul>
-<li><code>NNG_OPT_RECONNMINT</code></li>
-<li><code>NNG_OPT_RECONNMAXT</code></li>
-<li><code>NNG_OPT_RECVMAXSZ</code></li>
+<li><a href="/api/sock.html#NNG_OPT_RECONNMINT"><code>NNG_OPT_RECONNMINT</code></a></li>
+<li><a href="/api/sock.html#NNG_OPT_RECONNMAXT"><code>NNG_OPT_RECONNMAXT</code></a></li>
+<li><a href="/api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></li>
 </ul>
 <p>The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
