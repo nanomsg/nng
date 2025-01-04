@@ -41,6 +41,7 @@ Simply remove any references to them.
 - `nng/protocol/survey0/respond.h`
 - `nng/protocol/survey0/survey.h`
 - `nng/supplemental/tls/tls.h`
+- `nng/supplemental/util/idhash.h`
 - `nng/supplemental/util/platform.h`
 - `nng/transport/inproc/inproc.h`
 - `nng/transport/ipc/ipc.h`

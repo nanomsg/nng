@@ -9,9 +9,6 @@ include file to list of includes.
 ## ID Map Structure
 
 ```c
-#include <nng/nng.h>
-#include <nng/supplemental/util/idhash.h>
-
 typedef struct nng_id_map_s nng_id_map;
 ```
 

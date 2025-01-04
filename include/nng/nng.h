@@ -1604,6 +1604,20 @@ NNG_DECL const char *nng_tls_engine_description(void);
 // nng_tls_engine_fips_mode returns true if the engine is in FIPS 140 mode.
 NNG_DECL bool nng_tls_engine_fips_mode(void);
 
+// Public ID map support.
+typedef struct nng_id_map_s nng_id_map;
+
+#define NNG_MAP_RANDOM 1
+
+NNG_DECL int nng_id_map_alloc(
+    nng_id_map **map, uint64_t lo, uint64_t hi, int flags);
+NNG_DECL void  nng_id_map_free(nng_id_map *map);
+NNG_DECL void *nng_id_get(nng_id_map *, uint64_t);
+NNG_DECL int   nng_id_set(nng_id_map *, uint64_t, void *);
+NNG_DECL int   nng_id_alloc(nng_id_map *, uint64_t *, void *);
+NNG_DECL int   nng_id_remove(nng_id_map *, uint64_t);
+NNG_DECL bool  nng_id_visit(nng_id_map *, uint64_t *, void **, uint32_t *);
+
 // Protocol specific values.  These were formerly located in protocol specific
 // headers, but we are bringing them here for ease of use.
 
