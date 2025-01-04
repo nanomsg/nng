@@ -348,7 +348,7 @@ Additionally, some protocols may not support receiving at all or may require oth
 <p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="/api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
 <p>The <em>flags</em> can contain the value <a href="/TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return <a href="/api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
-<h3 id="nng_recv_aio"><a class="header" href="#nng_recv_aio">nng_recv_aio</a></h3>
+<h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
 <p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
 On success, the received message can be retrieved from the <em>aio</em> using the <a href="/api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
 <div class="mdbook-alerts mdbook-alerts-note">

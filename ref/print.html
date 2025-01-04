@@ -1270,9 +1270,9 @@ block.</p>
 <h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
 <pre><code class="language-c">int nng_send(nng_socket s, void *data, size_t size, int flags);
 int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
-void nng_send_aio(nng_socket s, nng_aio *aio);
+void nng_socket_send(nng_socket s, nng_aio *aio);
 </code></pre>
-<p>These functions (<a name="a034"></a><code>nng_send</code>, <a name="a035"></a><code>nng_sendmsg</code>, and <a name="a036"></a><code>nng_send_aio</code>) send
+<p>These functions (<a name="a034"></a><code>nng_send</code>, <a name="a035"></a><code>nng_sendmsg</code>, and <a name="a036"></a><code>nng_socket_send</code>) send
 messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1319,8 +1319,8 @@ cannot accept more data for sending. In such a case, it will return <a href="api
 <p>This function is preferred over <a href="api//api/sock.html#nng_send"><code>nng_send</code></a>, as it gives access to the message structure and eliminates both
 a data copy and allocation.</p>
 </div>
-<h3 id="nng_send_aio"><a class="header" href="#nng_send_aio">nng_send_aio</a></h3>
-<p>The <code>nng_send_aio</code> function sends a message asynchronously, using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+<h3 id="nng_socket_send"><a class="header" href="#nng_socket_send">nng_socket_send</a></h3>
+<p>The <code>nng_socket_send</code> function sends a message asynchronously, using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
 The message to send must have been set on <em>aio</em> using the <a href="api//api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
 <p>If the operation completes successfully, then the socket will have disposed of the message.
 However, if it fails, then callback of <em>aio</em> should arrange for a final disposition of the message.
@@ -1339,9 +1339,9 @@ this function instead of <a href="api//api/sock.html#nng_send"><code>nng_send</c
 <h2 id="receiving-messages"><a class="header" href="#receiving-messages">Receiving Messages</a></h2>
 <pre><code class="language-c">int nng_recv(nng_socket s, void *data, size_t *sizep, int flags);
 int nng_recvmsg(nng_socket s, nng_msg **msgp, int flags);
-void nng_recv_aio(nng_socket s, nng_aio *aio);
+void nng_socket_recv(nng_socket s, nng_aio *aio);
 </code></pre>
-<p>These functions (<a name="a038"></a><code>nng_recv</code>, <a name="a039"></a><code>nng_recvmsg</code>, and <a name="a040"></a><code>nng_recv_aio</code>) receive
+<p>These functions (<a name="a038"></a><code>nng_recv</code>, <a name="a039"></a><code>nng_recvmsg</code>, and <a name="a040"></a><code>nng_socket_recv</code>) receive
 messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1376,8 +1376,8 @@ has no messages available to receive. In such a case, it will return <a href="ap
 <p>This function is preferred over <a href="api//TODO.html"><code>nng_recv</code></a>, as it gives access to the message structure and eliminates both
 a data copy and allocation.</p>
 </div>
-<h3 id="nng_recv_aio"><a class="header" href="#nng_recv_aio">nng_recv_aio</a></h3>
-<p>The <code>nng_send_aio</code> function receives a message asynchronously, using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+<h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
+<p>The <code>nng_socket_send</code> function receives a message asynchronously, using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
 On success, the received message can be retrieved from the <em>aio</em> using the <a href="api//api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1492,7 +1492,7 @@ when possible.</p>
 <pre><code class="language-c">nng_socket s = NNG_SOCKET_INITIALIZER;
 </code></pre>
 <h3 id="example-2-publishing-a-timestamp"><a class="header" href="#example-2-publishing-a-timestamp">Example 2: Publishing a Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="api//api/sock.html#nng_send_aio"><code>nng_send_aio</code></a>, and <a href="api//api/time.html"><code>nng_sleep_aio</code></a> to
+<p>This example demonstrates the use of <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="api//api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, and <a href="api//api/time.html"><code>nng_sleep_aio</code></a> to
 build a service that publishes a timestamp at one second intervals. Error handling is elided for the
 sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
@@ -1522,7 +1522,7 @@ void callback(void *arg) {
         now = nng_clock();
         nng_msg_append(msg, &amp;now, sizeof (now)); // note: native endian
         nng_aio_set_msg(state-&gt;aio, msg);
-        nng_send_aio(state-&gt;s, state-&gt;aio);
+        nng_socket_send(state-&gt;s, state-&gt;aio);
     } else {
         state-&gt;sleeping = true;
         nng_sleep_aio(1000, state-&gt;aio); // 1000 ms == 1 second
@@ -1543,7 +1543,7 @@ int main(int argc, char **argv) {
 }
 </code></pre>
 <h3 id="example-3-watching-a-periodic-timestamp"><a class="header" href="#example-3-watching-a-periodic-timestamp">Example 3: Watching a Periodic Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="api//api/sock.html#nng_recv_aio"><code>nng_recv_aio</code></a>, to build a client to
+<p>This example demonstrates the use of <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="api//api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a>, to build a client to
 watch for messages received from the service created in Example 2.
 Error handling is elided for the sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
@@ -1572,7 +1572,7 @@ void callback(void *arg) {
     printf("Timestamp is %lu\n", (unsigned long)now);
     nng_msg_free(msg);
     nng_aio_set_msg(state-&gt;aio, NULL);
-    nng_recv_aio(state-&gt;s, state-&gt;aio);
+    nng_socket_recv(state-&gt;s, state-&gt;aio);
 }
 
 int main(int argc, char **argv) {
@@ -1582,7 +1582,7 @@ int main(int argc, char **argv) {
     nng_sub0_open(&amp;state.s);
     nng_sub0_socket_subscribe(state.s, NULL, 0); // subscribe to everything
     nng_dial(state.s, url, NULL, 0);
-    nng_recv_aio(state.s, state.aio); // kick it off right away
+    nng_socket_recv(state.s, state.aio); // kick it off right away
     for(;;) {
         nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
     }
@@ -1788,7 +1788,7 @@ Additionally, some protocols may not support receiving at all or may require oth
 <p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="api//api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
 <p>The <em>flags</em> can contain the value <a href="api//TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return <a href="api//api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
-<h3 id="nng_recv_aio-1"><a class="header" href="#nng_recv_aio-1">nng_recv_aio</a></h3>
+<h3 id="nng_socket_recv-1"><a class="header" href="#nng_socket_recv-1">nng_socket_recv</a></h3>
 <p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
 On success, the received message can be retrieved from the <em>aio</em> using the <a href="api//api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
@@ -6748,9 +6748,14 @@ See the <a href="migrate/nanomsg.html">Migrating From libnanomsg</a> chapter for
 <p>It is now required for applications to initialize the library explicitly before using it.
 This is done using the <a href="migrate//api/init.html#initialization"><code>nng_init</code></a> function.</p>
 <h2 id="renamed-functions"><a class="header" href="#renamed-functions">Renamed Functions</a></h2>
-<p>The <code>nng_close</code> function has been renamed to <a href="migrate//api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> to make it clearer that
-the object being closed is a socket. A compatible <code>nng_close</code> macro is available by defining <code>NNG1_TRANSITION</code>
-in your compilation environment.</p>
+<p>The following functions have been renamed as described by the following table.
+The old names are available by defining the macro <code>NNG1_TRANSITION</code> in your compilation environment.</p>
+<div class="table-wrapper"><table><thead><tr><th>Old Name</th><th>New Name</th></tr></thead><tbody>
+<tr><td><code>nng_close</code></td><td><a href="migrate//api/sock.html#closing-a-socket"><code>nng_socket_close</code></a></td></tr>
+<tr><td><code>nng_recv_aio</code></td><td><a href="migrate//api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a></td></tr>
+<tr><td><code>nng_send_aio</code></td><td><a href="migrate//api/sock.html#nng_socket_send"><code>nng_socket_send</code></a></td></tr>
+</tbody></table>
+</div>
 <h2 id="removed-protocol-aliases"><a class="header" href="#removed-protocol-aliases">Removed Protocol Aliases</a></h2>
 <p>The following macro aliases are removed, unless <code>NNG1_TRANSITION</code> is defined in your compilation environment.</p>
 <ul>
@@ -6773,7 +6778,7 @@ Please remove <code>#include</code> references to protocol headers as we anticip
 <p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="migrate//api/sock.html#nng_send"><code>nng_send</code></a> and <a href="migrate//TODO.html"><code>nng_recv</code></a> is removed.
 This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
 suboptimal in terms of performance.</p>
-<p>Modern code should use one of <a href="migrate//api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="migrate//api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>, <a href="migrate//api/sock.html#nng_send_aio"><code>nng_send_aio</code></a>, or <a href="migrate//api/sock.html#nng_recv_aio"><code>nng_recv_aio</code></a> to get the maximum performance benefit.
+<p>Modern code should use one of <a href="migrate//api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="migrate//api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>, <a href="migrate//api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, or <a href="migrate//api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a> to get the maximum performance benefit.
 Working directly with <a href="migrate//api/msg.html#message-structure"><code>nng_msg</code></a> structures gives more control, reduces copies, and reduces allocation activity.</p>
 <h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
 <p>When an operation fails with <a href="migrate//api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
@@ -7364,7 +7369,6 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_push0_open_raw</code>, <a href="api/sock.html#a027">1</a><br/>
 <code>nng_random</code>, <a href="api/misc.html#a001">1</a><br/>
 <code>nng_recv</code>, <a href="api/sock.html#a038">1</a><br/>
-<code>nng_recv_aio</code>, <a href="api/sock.html#a040">1</a><br/>
 <code>nng_recvmsg</code>, <a href="api/sock.html#a039">1</a><br/>
 <code>nng_rep0_open</code>, <a href="api/sock.html#a016">1</a><br/>
 <code>nng_rep0_open_raw</code>, <a href="api/sock.html#a028">1</a><br/>
@@ -7373,7 +7377,6 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_respondent0_open</code>, <a href="api/sock.html#a018">1</a><br/>
 <code>nng_respondent0_open_raw</code>, <a href="api/sock.html#a030">1</a><br/>
 <code>nng_send</code>, <a href="api/sock.html#a034">1</a><br/>
-<code>nng_send_aio</code>, <a href="api/sock.html#a036">1</a><br/>
 <code>nng_sendmsg</code>, <a href="api/sock.html#a035">1</a><br/>
 <code>nng_sleep_aio</code>, <a href="api/time.html#a011">1</a><br/>
 <code>nng_socket</code>, <a href="api/sock.html#a002">1</a><br/>
@@ -7386,6 +7389,8 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_socket_proto_id</code>, <a href="api/sock.html#a004">1</a><br/>
 <code>nng_socket_proto_name</code>, <a href="api/sock.html#a006">1</a><br/>
 <code>nng_socket_raw</code>, <a href="api/sock.html#a008">1</a><br/>
+<code>nng_socket_recv</code>, <a href="api/sock.html#a040">1</a><br/>
+<code>nng_socket_send</code>, <a href="api/sock.html#a036">1</a><br/>
 <code>nng_stat</code>, <a href="api/stats.html#a002">1</a><br/>
 <code>nng_stat_bool</code>, <a href="api/stats.html#a022">1</a><br/>
 <code>NNG_STAT_BOOLEAN</code>, <a href="api/stats.html#a019">1</a><br/>

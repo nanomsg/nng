@@ -361,9 +361,9 @@ block.</p>
 <h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
 <pre><code class="language-c">int nng_send(nng_socket s, void *data, size_t size, int flags);
 int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
-void nng_send_aio(nng_socket s, nng_aio *aio);
+void nng_socket_send(nng_socket s, nng_aio *aio);
 </code></pre>
-<p>These functions (<a name="a034"></a><code>nng_send</code>, <a name="a035"></a><code>nng_sendmsg</code>, and <a name="a036"></a><code>nng_send_aio</code>) send
+<p>These functions (<a name="a034"></a><code>nng_send</code>, <a name="a035"></a><code>nng_sendmsg</code>, and <a name="a036"></a><code>nng_socket_send</code>) send
 messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -410,8 +410,8 @@ cannot accept more data for sending. In such a case, it will return <a href="/ap
 <p>This function is preferred over <a href="/api/sock.html#nng_send"><code>nng_send</code></a>, as it gives access to the message structure and eliminates both
 a data copy and allocation.</p>
 </div>
-<h3 id="nng_send_aio"><a class="header" href="#nng_send_aio">nng_send_aio</a></h3>
-<p>The <code>nng_send_aio</code> function sends a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+<h3 id="nng_socket_send"><a class="header" href="#nng_socket_send">nng_socket_send</a></h3>
+<p>The <code>nng_socket_send</code> function sends a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
 The message to send must have been set on <em>aio</em> using the <a href="/api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
 <p>If the operation completes successfully, then the socket will have disposed of the message.
 However, if it fails, then callback of <em>aio</em> should arrange for a final disposition of the message.
@@ -430,9 +430,9 @@ this function instead of <a href="/api/sock.html#nng_send"><code>nng_send</code>
 <h2 id="receiving-messages"><a class="header" href="#receiving-messages">Receiving Messages</a></h2>
 <pre><code class="language-c">int nng_recv(nng_socket s, void *data, size_t *sizep, int flags);
 int nng_recvmsg(nng_socket s, nng_msg **msgp, int flags);
-void nng_recv_aio(nng_socket s, nng_aio *aio);
+void nng_socket_recv(nng_socket s, nng_aio *aio);
 </code></pre>
-<p>These functions (<a name="a038"></a><code>nng_recv</code>, <a name="a039"></a><code>nng_recvmsg</code>, and <a name="a040"></a><code>nng_recv_aio</code>) receive
+<p>These functions (<a name="a038"></a><code>nng_recv</code>, <a name="a039"></a><code>nng_recvmsg</code>, and <a name="a040"></a><code>nng_socket_recv</code>) receive
 messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -467,8 +467,8 @@ has no messages available to receive. In such a case, it will return <a href="/a
 <p>This function is preferred over <a href="/TODO.html"><code>nng_recv</code></a>, as it gives access to the message structure and eliminates both
 a data copy and allocation.</p>
 </div>
-<h3 id="nng_recv_aio"><a class="header" href="#nng_recv_aio">nng_recv_aio</a></h3>
-<p>The <code>nng_send_aio</code> function receives a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+<h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
+<p>The <code>nng_socket_send</code> function receives a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
 On success, the received message can be retrieved from the <em>aio</em> using the <a href="/api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -583,7 +583,7 @@ when possible.</p>
 <pre><code class="language-c">nng_socket s = NNG_SOCKET_INITIALIZER;
 </code></pre>
 <h3 id="example-2-publishing-a-timestamp"><a class="header" href="#example-2-publishing-a-timestamp">Example 2: Publishing a Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="/api/sock.html#nng_send_aio"><code>nng_send_aio</code></a>, and <a href="/api/time.html"><code>nng_sleep_aio</code></a> to
+<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="/api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, and <a href="/api/time.html"><code>nng_sleep_aio</code></a> to
 build a service that publishes a timestamp at one second intervals. Error handling is elided for the
 sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
@@ -613,7 +613,7 @@ void callback(void *arg) {
         now = nng_clock();
         nng_msg_append(msg, &amp;now, sizeof (now)); // note: native endian
         nng_aio_set_msg(state-&gt;aio, msg);
-        nng_send_aio(state-&gt;s, state-&gt;aio);
+        nng_socket_send(state-&gt;s, state-&gt;aio);
     } else {
         state-&gt;sleeping = true;
         nng_sleep_aio(1000, state-&gt;aio); // 1000 ms == 1 second
@@ -634,7 +634,7 @@ int main(int argc, char **argv) {
 }
 </code></pre>
 <h3 id="example-3-watching-a-periodic-timestamp"><a class="header" href="#example-3-watching-a-periodic-timestamp">Example 3: Watching a Periodic Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="/api/sock.html#nng_recv_aio"><code>nng_recv_aio</code></a>, to build a client to
+<p>This example demonstrates the use of <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="/api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a>, to build a client to
 watch for messages received from the service created in Example 2.
 Error handling is elided for the sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
@@ -663,7 +663,7 @@ void callback(void *arg) {
     printf("Timestamp is %lu\n", (unsigned long)now);
     nng_msg_free(msg);
     nng_aio_set_msg(state-&gt;aio, NULL);
-    nng_recv_aio(state-&gt;s, state-&gt;aio);
+    nng_socket_recv(state-&gt;s, state-&gt;aio);
 }
 
 int main(int argc, char **argv) {
@@ -673,7 +673,7 @@ int main(int argc, char **argv) {
     nng_sub0_open(&amp;state.s);
     nng_sub0_socket_subscribe(state.s, NULL, 0); // subscribe to everything
     nng_dial(state.s, url, NULL, 0);
-    nng_recv_aio(state.s, state.aio); // kick it off right away
+    nng_socket_recv(state.s, state.aio); // kick it off right away
     for(;;) {
         nng_msleep(0x7FFFFFFF); // infinite, could use pause or sigsuspend
     }
