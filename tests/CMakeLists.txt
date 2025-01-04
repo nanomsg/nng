@@ -1,5 +1,5 @@
 #
-#   Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
@@ -59,20 +59,6 @@ if (NNG_TESTS)
         set_tests_properties(nng.${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
         math(EXPR NNG_TEST_PORT "${NNG_TEST_PORT}+20")
     endmacro(add_nng_test)
-
-    # Compatibility tests are only added if all of the legacy protocols
-    # are present.  It's not worth trying to figure out which of these
-    # should work and which shouldn't.
-    macro(add_nng_compat_test NAME TIMEOUT)
-        add_executable(${NAME} ${NAME}.c compat_testutil.c)
-        target_link_libraries(${NAME} nng_testing)
-        target_include_directories(${NAME} PRIVATE
-                ${PROJECT_SOURCE_DIR}/src/compat
-                ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME nng.${NAME} COMMAND ${NAME} ${NNG_TEST_PORT})
-        set_tests_properties(nng.${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-        math(EXPR NNG_TEST_PORT "${NNG_TEST_PORT}+20")
-    endmacro(add_nng_compat_test)
 
     macro(add_nng_cpp_test NAME TIMEOUT)
         if (NOT NNG_ENABLE_COVERAGE)
