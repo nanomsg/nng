@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -12,11 +12,9 @@
 nng_directory(pubsub0)
 
 nng_sources_if(NNG_PROTO_PUB0 pub.c)
-nng_headers_if(NNG_PROTO_PUB0 nng/protocol/pubsub0/pub.h)
 nng_defines_if(NNG_PROTO_PUB0 NNG_HAVE_PUB0)
 
 nng_sources_if(NNG_PROTO_SUB0 sub.c xsub.c)
-nng_headers_if(NNG_PROTO_SUB0 nng/protocol/pubsub0/sub.h)
 nng_defines_if(NNG_PROTO_SUB0 NNG_HAVE_SUB0)
 
 nng_test(pub_test)

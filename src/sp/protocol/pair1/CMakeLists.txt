@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staystail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -11,9 +11,7 @@
 #  PAIRv1 protocol
 nng_directory(pair1)
 
-# XXX: break pair1_poly into an ifdef.
 nng_sources_if(NNG_PROTO_PAIR1 pair.c pair1_poly.c)
-nng_headers_if(NNG_PROTO_PAIR1 nng/protocol/pair1/pair.h)
 nng_defines_if(NNG_PROTO_PAIR1 NNG_HAVE_PAIR1)
 
 nng_test(pair1_test)

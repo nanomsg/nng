@@ -10,8 +10,6 @@
 #include "nng/nng.h"
 #include <nuts.h>
 
-#include <nng/protocol/bus0/bus.h>
-
 #define SECOND 1000
 
 #define BUS0_SELF 0x70

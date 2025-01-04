@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,8 +11,6 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/pair0/pair.h>
-#include <nng/protocol/pair1/pair.h>
 
 #include <nuts.h>
 

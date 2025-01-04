@@ -1,5 +1,5 @@
 //
-//  Copyright 2024 Staysail Systems, Inc.
+//  Copyright 2025 Staysail Systems, Inc.
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -8,7 +8,6 @@
 //
 
 #include "nng/nng.h"
-#include "nng/protocol/pair1/pair.h"
 
 #include <cstdio>
 #include <cstring>

@@ -10,7 +10,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/protocol/pubsub0/sub.h"
 #include <nng/nng.h>
 #include <nuts.h>
 

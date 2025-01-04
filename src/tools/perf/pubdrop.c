@@ -21,9 +21,6 @@
 // etc.  It actually uses a wild card subscription for now.
 
 #if defined(NNG_HAVE_PUB0) && defined(NNG_HAVE_SUB0)
-#include <nng/protocol/pubsub0/pub.h>
-#include <nng/protocol/pubsub0/sub.h>
-
 #else
 
 #define NNG_OPT_SUB_SUBSCRIBE "sub:subscribe"

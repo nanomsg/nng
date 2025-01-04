@@ -13,6 +13,29 @@ See the [Migrating From libnanomsg](nanomsg.md) chapter for details.
 It is now required for applications to initialize the library explicitly before using it.
 This is done using the [`nng_init`] function.
 
+## Removed Headers
+
+The following header files are removed, and the declarations they provided are now provided by including `<nng/nng.h>`.
+Simply remove any references to them.
+
+- `nng/protocol/bus0/bus.h`
+- `nng/protocol/pair0/pair.h`
+- `nng/protocol/pair1/pair.h`
+- `nng/protocol/pipeline0/pull.h`
+- `nng/protocol/pipeline0/push.h`
+- `nng/protocol/pubsub0/pub.h`
+- `nng/protocol/pubsub0/sub.h`
+- `nng/protocol/reqrep0/rep.h`
+- `nng/protocol/reqrep0/req.h`
+- `nng/protocol/survey0/respond.h`
+- `nng/protocol/survey0/survey.h`
+- `nng/transport/inproc/inproc.h`
+- `nng/transport/ipc/ipc.h`
+- `nng/transport/tcp/tcp.h`
+- `nng/transport/tls/tls.h`
+- `nng/transport/ws/websocket.h`
+- `nng/transport/zerotier/zerotier.h`
+
 ## Renamed Functions
 
 The following functions have been renamed as described by the following table.
@@ -41,9 +64,6 @@ The following macro aliases are removed, unless `NNG1_TRANSITION` is defined in 
 
 Just add either `0` or `1` (in the case of PAIRv1) to get the protocol desired. (Forcing the version number to
 be supplied should avoid surprises later as new versions of protocols are added.)
-
-Additionally, the header files for protocols are now empty, as all of their content has been moved to `nng/nng.h`.
-Please remove `#include` references to protocol headers as we anticipate removing them in the future.
 
 ## NNG_FLAG_ALLOC Removed
 

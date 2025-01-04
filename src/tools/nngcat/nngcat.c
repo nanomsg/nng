@@ -18,17 +18,6 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/bus0/bus.h>
-#include <nng/protocol/pair0/pair.h>
-#include <nng/protocol/pair1/pair.h>
-#include <nng/protocol/pipeline0/pull.h>
-#include <nng/protocol/pipeline0/push.h>
-#include <nng/protocol/pubsub0/pub.h>
-#include <nng/protocol/pubsub0/sub.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/protocol/survey0/respond.h>
-#include <nng/protocol/survey0/survey.h>
 #include <nng/supplemental/tls/tls.h>
 #include <nng/supplemental/util/options.h>
 
