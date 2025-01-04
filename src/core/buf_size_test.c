@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,10 +9,6 @@
 //
 
 #include <nuts.h>
-
-#if NNG_ENABLE_COMPAT
-#include <nng/compat/nanomsg/nn.h>
-#endif
 
 void
 test_buffer_options(void)
