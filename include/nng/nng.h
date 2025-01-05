@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -420,18 +420,24 @@ NNG_DECL int nng_sendmsg(nng_socket, nng_msg *, int);
 // can be passed off directly to nng_sendmsg.
 NNG_DECL int nng_recvmsg(nng_socket, nng_msg **, int);
 
-// nng_send_aio sends data on the socket asynchronously.  As with nng_send,
+// nng_sock_send sends data on the socket asynchronously.  As with nng_send,
 // the completion may be executed before the data has actually been delivered,
 // but only when it is accepted for delivery.  The supplied AIO must have
 // been initialized, and have an associated message.  The message will be
 // "owned" by the socket if the operation completes successfully.  Otherwise,
 // the caller is responsible for freeing it.
+NNG_DECL void nng_sock_send(nng_socket, nng_aio *);
+
+// Compatible alias for nng_sock_send.
 NNG_DECL void nng_send_aio(nng_socket, nng_aio *);
 
-// nng_recv_aio receives data on the socket asynchronously.  On a successful
+// nng_sock_recv receives data on the socket asynchronously.  On a successful
 // result, the AIO will have an associated message, that can be obtained
 // with nng_aio_get_msg().  The caller takes ownership of the message at
 // this point.
+NNG_DECL void nng_sock_recv(nng_socket, nng_aio *);
+
+// Compatible alias for nng_sock_recv.
 NNG_DECL void nng_recv_aio(nng_socket, nng_aio *);
 
 // Context support.  User contexts are not supported by all protocols,
@@ -456,7 +462,7 @@ NNG_DECL int nng_ctx_close(nng_ctx);
 // A valid context is not necessarily an *open* context.
 NNG_DECL int nng_ctx_id(nng_ctx);
 
-// nng_ctx_recv receives asynchronously.  It works like nng_recv_aio, but
+// nng_ctx_recv receives asynchronously.  It works like nng_sock_recv, but
 // uses a local context instead of the socket global context.
 NNG_DECL void nng_ctx_recv(nng_ctx, nng_aio *);
 
@@ -465,7 +471,7 @@ NNG_DECL void nng_ctx_recv(nng_ctx, nng_aio *);
 // on a context instead of a socket.
 NNG_DECL int nng_ctx_recvmsg(nng_ctx, nng_msg **, int);
 
-// nng_ctx_send sends asynchronously. It works like nng_send_aio, but
+// nng_ctx_send sends asynchronously. It works like nng_sock_send, but
 // uses a local context instead of the socket global context.
 NNG_DECL void nng_ctx_send(nng_ctx, nng_aio *);
 

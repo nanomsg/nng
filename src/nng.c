@@ -219,7 +219,7 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 }
 
 void
-nng_recv_aio(nng_socket s, nng_aio *aio)
+nng_sock_recv(nng_socket s, nng_aio *aio)
 {
 	nni_sock *sock;
 	int       rv;
@@ -235,7 +235,13 @@ nng_recv_aio(nng_socket s, nng_aio *aio)
 }
 
 void
-nng_send_aio(nng_socket s, nng_aio *aio)
+nng_recv_aio(nng_socket s, nng_aio *aio)
+{
+	nng_sock_recv(s, aio);
+}
+
+void
+nng_sock_send(nng_socket s, nng_aio *aio)
 {
 	nni_sock *sock;
 	int       rv;
@@ -254,6 +260,12 @@ nng_send_aio(nng_socket s, nng_aio *aio)
 	}
 	nni_sock_send(sock, aio);
 	nni_sock_rele(sock);
+}
+
+void
+nng_send_aio(nng_socket s, nng_aio *aio)
+{
+	nng_sock_send(s, aio);
 }
 
 int
