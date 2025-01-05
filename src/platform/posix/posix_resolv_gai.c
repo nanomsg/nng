@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,9 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/defs.h"
 #include "core/init.h"
 #include "core/nng_impl.h"
-#include "nng/nng.h"
 
 #ifdef NNG_USE_POSIX_RESOLV_GAI
 
@@ -45,13 +45,13 @@
 #endif
 #endif
 
-static nni_mtx   resolv_mtx  = NNI_MTX_INITIALIZER;
-static nni_cv    resolv_cv   = NNI_CV_INITIALIZER(&resolv_mtx);
 static bool      resolv_fini = false;
 static nni_list  resolv_aios;
 static nni_thr  *resolv_thrs;
 static nni_aio **resolv_active;
 static int16_t   resolv_num_thr;
+static nni_mtx   resolv_mtx;
+static nni_cv    resolv_cv;
 
 static void
 resolv_cancel(nni_aio *aio, void *arg, int rv)
@@ -434,13 +434,17 @@ nni_posix_resolv_sysfini(void)
 		NNI_FREE_STRUCTS(resolv_thrs, resolv_num_thr);
 	}
 	if (resolv_active != NULL) {
-		NNI_FREE_STRUCTS(resolv_active, resolv_num_thr);
+		nni_free(resolv_active, sizeof(nni_aio *) * resolv_num_thr);
 	}
+	nni_cv_fini(&resolv_cv);
+	nni_mtx_fini(&resolv_mtx);
 }
 
 int
 nni_posix_resolv_sysinit(nng_init_params *params)
 {
+	nni_mtx_init(&resolv_mtx);
+	nni_cv_init(&resolv_cv, &resolv_mtx);
 	resolv_fini = false;
 	nni_aio_list_init(&resolv_aios);
 
@@ -451,7 +455,7 @@ nni_posix_resolv_sysinit(nng_init_params *params)
 	params->num_resolver_threads = resolv_num_thr;
 	// no limit on the maximum for now
 	resolv_thrs   = NNI_ALLOC_STRUCTS(resolv_thrs, resolv_num_thr);
-	resolv_active = NNI_ALLOC_STRUCTS(resolv_active, resolv_num_thr);
+	resolv_active = nni_zalloc(sizeof(nni_aio *) * resolv_num_thr);
 	if (resolv_thrs == NULL || resolv_active == NULL) {
 		nni_posix_resolv_sysfini();
 		return (NNG_ENOMEM);
