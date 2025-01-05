@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,47 +16,8 @@
 
 #include "core/nng_impl.h"
 #include "http_api.h"
+#include "http_msg.h"
 #include "nng/supplemental/http/http.h"
-
-// Note that as we parse headers, the rule is that if a header is already
-// present, then we can append it to the existing header, separated by
-// a comma.  From experience, for example, Firefox uses a Connection:
-// header with two values, "keepalive", and "upgrade".
-typedef struct http_header {
-	char         *name;
-	char         *value;
-	nni_list_node node;
-} http_header;
-
-typedef struct nni_http_entity {
-	char  *data;
-	size_t size; // allocated/expected size
-	size_t len;  // current length
-	bool   own;  // if true, data is "ours", and should be freed
-} nni_http_entity;
-
-struct nng_http_req {
-	nni_list        hdrs;
-	nni_http_entity data;
-	char            meth[32];
-	char           *uri;
-	const char     *vers;
-	char           *buf;
-	size_t          bufsz;
-	bool            parsed;
-};
-
-struct nng_http_res {
-	nni_list        hdrs;
-	nni_http_entity data;
-	uint16_t        code;
-	char           *rsn;
-	const char     *vers;
-	char           *buf;
-	size_t          bufsz;
-	bool            parsed;
-	bool            iserr;
-};
 
 static int
 http_set_string(char **strp, const char *val)
@@ -601,13 +562,9 @@ nni_http_res_get_buf(nni_http_res *res, void **data, size_t *szp)
 	return (0);
 }
 
-int
-nni_http_req_alloc(nni_http_req **reqp, const nng_url *url)
+void
+nni_http_req_init(nni_http_req *req)
 {
-	nni_http_req *req;
-	if ((req = NNI_ALLOC_STRUCT(req)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_INIT(&req->hdrs, http_header, node);
 	req->buf       = NULL;
 	req->bufsz     = 0;
@@ -617,34 +574,56 @@ nni_http_req_alloc(nni_http_req **reqp, const nng_url *url)
 	req->uri       = NULL;
 	nni_http_req_set_version(req, NNG_HTTP_VERSION_1_1);
 	nni_http_req_set_method(req, "GET");
-	if (url != NULL) {
-		const char *host;
-		char        host_buf[264]; // 256 + 8 for port
-		int         rv;
-		rv = nni_asprintf(&req->uri, "%s%s%s%s%s", url->u_path,
-		    url->u_query ? "?" : "", url->u_query ? url->u_query : "",
-		    url->u_fragment ? "#" : "",
-		    url->u_fragment ? url->u_fragment : "");
-		if (rv != 0) {
-			NNI_FREE_STRUCT(req);
-			return (NNG_ENOMEM);
-		}
+}
 
-		// Add a Host: header since we know that from the URL. Also,
-		// only include the :port portion if it isn't the default port.
-		if (nni_url_default_port(url->u_scheme) == url->u_port) {
-			host = url->u_hostname;
+int
+nni_http_req_set_url(nni_http_req *req, const nng_url *url)
+{
+	if (url == NULL) {
+		return (0);
+	}
+	const char *host;
+	char        host_buf[264]; // 256 + 8 for port
+	int         rv;
+	rv = nni_asprintf(&req->uri, "%s%s%s%s%s", url->u_path,
+	    url->u_query ? "?" : "", url->u_query ? url->u_query : "",
+	    url->u_fragment ? "#" : "",
+	    url->u_fragment ? url->u_fragment : "");
+	if (rv != 0) {
+		return (NNG_ENOMEM);
+	}
+
+	// Add a Host: header since we know that from the URL. Also,
+	// only include the :port portion if it isn't the default port.
+	if (nni_url_default_port(url->u_scheme) == url->u_port) {
+		host = url->u_hostname;
+	} else {
+		if (strchr(url->u_hostname, ':')) {
+			snprintf(host_buf, sizeof(host_buf), "[%s]:%u",
+			    url->u_hostname, url->u_port);
 		} else {
-			if (strchr(url->u_hostname, ':')) {
-				snprintf(host_buf, sizeof(host_buf), "[%s]:%u",
-				    url->u_hostname, url->u_port);
-			} else {
-				snprintf(host_buf, sizeof(host_buf), "%s:%u",
-				    url->u_hostname, url->u_port);
-			}
-			host = host_buf;
+			snprintf(host_buf, sizeof(host_buf), "%s:%u",
+			    url->u_hostname, url->u_port);
 		}
-		if ((rv = nni_http_req_add_header(req, "Host", host)) != 0) {
+		host = host_buf;
+	}
+	if ((rv = nni_http_req_set_header(req, "Host", host)) != 0) {
+		return (rv);
+	}
+	return (0);
+}
+
+int
+nni_http_req_alloc(nni_http_req **reqp, const nng_url *url)
+{
+	nni_http_req *req;
+	if ((req = NNI_ALLOC_STRUCT(req)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_http_req_init(req);
+	if (url != NULL) {
+		int rv;
+		if ((rv = nni_http_req_set_url(req, url)) != 0) {
 			nni_http_req_free(req);
 			return (rv);
 		}
@@ -653,13 +632,9 @@ nni_http_req_alloc(nni_http_req **reqp, const nng_url *url)
 	return (0);
 }
 
-int
-nni_http_res_alloc(nni_http_res **resp)
+void
+nni_http_res_init(nni_http_res *res)
 {
-	nni_http_res *res;
-	if ((res = NNI_ALLOC_STRUCT(res)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_INIT(&res->hdrs, http_header, node);
 	res->buf       = NULL;
 	res->bufsz     = 0;
@@ -669,7 +644,17 @@ nni_http_res_alloc(nni_http_res **resp)
 	res->vers      = NNG_HTTP_VERSION_1_1;
 	res->rsn       = NULL;
 	res->code      = 0;
-	*resp          = res;
+}
+
+int
+nni_http_res_alloc(nni_http_res **resp)
+{
+	nni_http_res *res;
+	if ((res = NNI_ALLOC_STRUCT(res)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_http_res_init(res);
+	*resp = res;
 	return (0);
 }
 

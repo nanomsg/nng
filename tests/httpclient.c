@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -136,20 +136,13 @@ TestMain("HTTP Client", {
 		});
 
 		Convey("Connection reuse works", {
+			nng_http_res  *res;
 			nng_http_req  *req;
-			nng_http_res  *res1;
-			nng_http_res  *res2;
 			void          *data;
 			size_t         len;
 			nng_http_conn *conn = NULL;
 
-			So(nng_http_req_alloc(&req, url) == 0);
-			So(nng_http_res_alloc(&res1) == 0);
-			So(nng_http_res_alloc(&res2) == 0);
 			Reset({
-				nng_http_req_free(req);
-				nng_http_res_free(res1);
-				nng_http_res_free(res2);
 				if (conn != NULL) {
 					nng_http_conn_close(conn);
 				}
@@ -160,17 +153,20 @@ TestMain("HTTP Client", {
 			So(nng_aio_result(aio) == 0);
 			conn = nng_aio_get_output(aio, 0);
 
-			nng_http_conn_transact(conn, req, res1, aio);
+			req = nng_http_conn_req(conn);
+			res = nng_http_conn_res(conn);
+			So(nng_http_req_set_url(req, url) == 0);
+			nng_http_conn_transact(conn, aio);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
-			So(nng_http_res_get_status(res1) == 200);
-			nng_http_res_get_data(res1, &data, &len);
+			So(nng_http_res_get_status(res) == 200);
+			nng_http_res_get_data(res, &data, &len);
 
-			nng_http_conn_transact(conn, req, res2, aio);
+			nng_http_conn_transact(conn, aio);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
-			So(nng_http_res_get_status(res2) == 200);
-			nng_http_res_get_data(res2, &data, &len);
+			So(nng_http_res_get_status(res) == 200);
+			nng_http_res_get_data(res, &data, &len);
 		});
 	});
 

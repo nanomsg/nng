@@ -361,8 +361,7 @@ http_txn_cancel(nni_aio *aio, void *arg, int rv)
 // for Chunked Transfer Encoding is missing.  Note that cancelling the aio
 // is generally fatal to the connection.
 void
-nni_http_transact_conn(
-    nni_http_conn *conn, nni_http_req *req, nni_http_res *res, nni_aio *aio)
+nni_http_transact_conn(nni_http_conn *conn, nni_aio *aio)
 {
 	http_txn *txn;
 	int       rv;
@@ -380,9 +379,11 @@ nni_http_transact_conn(
 	nni_aio_list_init(&txn->aios);
 	txn->client = NULL;
 	txn->conn   = conn;
-	txn->req    = req;
-	txn->res    = res;
+	txn->req    = nni_http_conn_req(conn);
+	txn->res    = nni_http_conn_res(conn);
 	txn->state  = HTTP_SENDING;
+
+	nni_http_res_reset(txn->res);
 
 	nni_mtx_lock(&http_txn_lk);
 	if (!nni_aio_start(aio, http_txn_cancel, txn)) {
@@ -392,7 +393,7 @@ nni_http_transact_conn(
 	}
 	nni_http_res_reset(txn->res);
 	nni_list_append(&txn->aios, aio);
-	nni_http_write_req(conn, req, txn->aio);
+	nni_http_write_req(conn, txn->req, txn->aio);
 	nni_mtx_unlock(&http_txn_lk);
 }
 

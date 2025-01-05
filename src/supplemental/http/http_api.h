@@ -34,13 +34,14 @@ typedef struct nng_http_chunks  nni_http_chunks;
 
 extern const char *nni_http_reason(uint16_t);
 
-extern int   nni_http_req_init(nni_http_req **);
+extern void  nni_http_req_init(nni_http_req *);
 extern void  nni_http_req_reset(nni_http_req *);
 extern int   nni_http_req_get_buf(nni_http_req *, void **, size_t *);
 extern int   nni_http_req_parse(nni_http_req *, void *, size_t, size_t *);
 extern char *nni_http_req_headers(nni_http_req *);
 extern void  nni_http_req_get_data(nni_http_req *, void **, size_t *);
 
+extern void  nni_http_res_init(nni_http_res *);
 extern void  nni_http_res_reset(nni_http_res *);
 extern int   nni_http_res_get_buf(nni_http_res *, void **, size_t *);
 extern int   nni_http_res_parse(nni_http_res *, void *, size_t, size_t *);
@@ -73,6 +74,9 @@ extern int nni_http_chunks_parse(nni_http_chunks *, void *, size_t, size_t *);
 
 extern void nni_http_read_chunks(
     nni_http_conn *, nni_http_chunks *, nni_aio *);
+
+extern nni_http_req *nni_http_conn_req(nni_http_conn *);
+extern nni_http_res *nni_http_conn_res(nni_http_conn *);
 
 // Private to the server. (Used to support session hijacking.)
 extern void  nni_http_conn_set_ctx(nni_http_conn *, void *);
@@ -137,6 +141,7 @@ extern const char *nni_http_req_get_uri(const nni_http_req *);
 extern void        nni_http_req_set_method(nni_http_req *, const char *);
 extern int         nni_http_req_set_version(nni_http_req *, const char *);
 extern int         nni_http_req_set_uri(nni_http_req *, const char *);
+extern int         nni_http_req_set_url(nni_http_req *, const nng_url *);
 extern uint16_t    nni_http_res_get_status(const nni_http_res *);
 extern void        nni_http_res_set_status(nni_http_res *, uint16_t);
 extern const char *nni_http_res_get_version(const nni_http_res *);
@@ -375,9 +380,9 @@ extern void nni_http_client_connect(nni_http_client *, nni_aio *);
 // unless some kind of significant error occurs.  The caller should dispose
 // of the connection if the aio does not complete successfully.
 // Note that this will fail with NNG_ENOTSUP if the server attempts to reply
-// with a chunked transfer encoding.
-extern void nni_http_transact_conn(
-    nni_http_conn *, nni_http_req *, nni_http_res *, nni_aio *);
+// with a chunked transfer encoding.  The request and response used are the
+// ones associated with the connection.
+extern void nni_http_transact_conn(nni_http_conn *, nni_aio *);
 
 // nni_http_transact is used to execute a single transaction to a server.
 // The connection is opened, and will be closed when the transaction is

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -143,6 +143,9 @@ NNG_DECL void nng_http_req_set_method(nng_http_req *, const char *);
 // not support HTTP/2 at all.  Null sets the default ("HTTP/1.1").
 NNG_DECL int nng_http_req_set_version(nng_http_req *, const char *);
 
+// nng_http_req_set_url is used to change the URL of a request.
+NNG_DECL int nng_http_req_set_url(nng_http_req *, const nng_url *);
+
 // nng_http_req_set_uri is used to change the URI of a request.  This
 // should be an "abs-uri", that is a path, plus query and fragment if
 // needed.  The scheme, host, and port don't belong here.  The URI should
@@ -238,6 +241,11 @@ NNG_DECL int nng_http_res_copy_data(nng_http_res *, const void *, size_t);
 // a TCP channel, or a TLS channel, but the main thing is that this is
 // normally only used for exchanging HTTP requests and responses.
 typedef struct nng_http_conn nng_http_conn;
+
+// These methods obtain a pointer to the request or response structure
+// that is embedded in the conn structure.
+NNG_DECL nng_http_req *nng_http_conn_req(nng_http_conn *);
+NNG_DECL nng_http_res *nng_http_conn_res(nng_http_conn *);
 
 // nng_http_conn_close closes the underlying channel.  Applications should
 // not use this channel after this operation is performed.
@@ -526,8 +534,7 @@ NNG_DECL void nng_http_client_connect(nng_http_client *, nng_aio *);
 // single HTTP transaction).  It will not automatically close the connection,
 // unless some kind of significant error occurs.  The caller should close
 // the connection if the aio does not complete successfully.
-NNG_DECL void nng_http_conn_transact(
-    nng_http_conn *, nng_http_req *, nng_http_res *, nng_aio *);
+NNG_DECL void nng_http_conn_transact(nng_http_conn *, nng_aio *);
 
 // nng_http_client_transact is used to execute a single transaction to a
 // server. The connection is opened, and will be closed when the transaction is

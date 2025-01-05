@@ -17,6 +17,7 @@
 #include "supplemental/tls/tls_api.h"
 
 #include "http_api.h"
+#include "http_msg.h"
 
 // We insist that individual headers fit in 8K.
 // If you need more than that, you need something we can't do.
@@ -52,6 +53,9 @@ struct nng_http_conn {
 
 	nni_mtx mtx;
 
+	nng_http_req req;
+	nng_http_res res;
+
 	enum read_flavor rd_flavor;
 	uint8_t         *rd_buf;
 	size_t           rd_get;
@@ -61,6 +65,18 @@ struct nng_http_conn {
 
 	enum write_flavor wr_flavor;
 };
+
+nng_http_req *
+nni_http_conn_req(nng_http_conn *conn)
+{
+	return (&conn->req);
+}
+
+nng_http_res *
+nni_http_conn_res(nng_http_conn *conn)
+{
+	return (&conn->res);
+}
 
 void
 nni_http_conn_set_ctx(nni_http_conn *conn, void *ctx)
@@ -651,6 +667,8 @@ nni_http_conn_fini(nni_http_conn *conn)
 
 	nni_aio_fini(&conn->wr_aio);
 	nni_aio_fini(&conn->rd_aio);
+	nni_http_req_reset(&conn->req);
+	nni_http_res_reset(&conn->res);
 	nni_free(conn->rd_buf, conn->rd_bufsz);
 	nni_mtx_fini(&conn->mtx);
 	NNI_FREE_STRUCT(conn);
@@ -667,6 +685,8 @@ http_init(nni_http_conn **connp, nng_stream *data)
 	nni_mtx_init(&conn->mtx);
 	nni_aio_list_init(&conn->rdq);
 	nni_aio_list_init(&conn->wrq);
+	nni_http_req_init(&conn->req);
+	nni_http_res_init(&conn->res);
 
 	if ((conn->rd_buf = nni_alloc(HTTP_BUFSIZE)) == NULL) {
 		nni_http_conn_fini(conn);

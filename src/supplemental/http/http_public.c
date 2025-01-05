@@ -303,6 +303,18 @@ nng_http_req_set_version(nng_http_req *req, const char *vers)
 }
 
 int
+nng_http_req_set_url(nng_http_req *req, const nng_url *url)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_req_set_url(req, url));
+#else
+	NNI_ARG_UNUSED(req);
+	NNI_ARG_UNUSED(url);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
 nng_http_req_set_uri(nng_http_req *req, const char *uri)
 {
 #ifdef NNG_SUPP_HTTP
@@ -379,6 +391,26 @@ nng_http_res_set_reason(nng_http_res *res, const char *rsn)
 	NNI_ARG_UNUSED(res);
 	NNI_ARG_UNUSED(rsn);
 	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_http_req *
+nng_http_conn_req(nng_http_conn *conn)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_req(conn));
+#else
+	return (NULL);
+#endif
+}
+
+nng_http_res *
+nng_http_conn_res(nng_http_conn *conn)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_res(conn));
+#else
+	return (NULL);
 #endif
 }
 
@@ -875,15 +907,12 @@ nng_http_client_transact(
 }
 
 void
-nng_http_conn_transact(
-    nng_http_conn *conn, nng_http_req *req, nng_http_res *res, nng_aio *aio)
+nng_http_conn_transact(nng_http_conn *conn, nng_aio *aio)
 {
 #ifdef NNG_SUPP_HTTP
-	nni_http_transact_conn(conn, req, res, aio);
+	nni_http_transact_conn(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	NNI_ARG_UNUSED(req);
-	NNI_ARG_UNUSED(res);
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
