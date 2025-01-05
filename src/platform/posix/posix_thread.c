@@ -156,53 +156,6 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 }
 
 void
-nni_rwlock_init(nni_rwlock *rwl)
-{
-	while (pthread_rwlock_init(&rwl->rwl, NULL) != 0) {
-		// We must have memory exhaustion -- ENOMEM, or
-		// in some cases EAGAIN.  Wait a bit before we try to
-		// give things a chance to settle down.
-		nni_msleep(10);
-	}
-}
-
-void
-nni_rwlock_fini(nni_rwlock *rwl)
-{
-	int rv;
-	if ((rv = pthread_rwlock_destroy(&rwl->rwl)) != 0) {
-		nni_panic("pthread_rwlock_destroy: %s", strerror(rv));
-	}
-}
-
-void
-nni_rwlock_rdlock(nni_rwlock *rwl)
-{
-	int rv;
-	if ((rv = pthread_rwlock_rdlock(&rwl->rwl)) != 0) {
-		nni_panic("pthread_rwlock_rdlock: %s", strerror(rv));
-	}
-}
-
-void
-nni_rwlock_wrlock(nni_rwlock *rwl)
-{
-	int rv;
-	if ((rv = pthread_rwlock_wrlock(&rwl->rwl)) != 0) {
-		nni_panic("pthread_rwlock_wrlock: %s", strerror(rv));
-	}
-}
-
-void
-nni_rwlock_unlock(nni_rwlock *rwl)
-{
-	int rv;
-	if ((rv = pthread_rwlock_unlock(&rwl->rwl)) != 0) {
-		nni_panic("pthread_rwlock_unlock: %s", strerror(rv));
-	}
-}
-
-void
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 {
 	// See the comments in nni_plat_mtx_init.  Almost everywhere this

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -16,7 +16,6 @@
 
 static nni_list sp_tran_list =
     NNI_LIST_INITIALIZER(sp_tran_list, nni_sp_tran, tran_link);
-static nni_rwlock sp_tran_lk = NNI_RWLOCK_INITIALIZER;
 
 void
 nni_sp_tran_register(nni_sp_tran *tran)
@@ -55,14 +54,12 @@ nni_sp_tran_register(nni_sp_tran *tran)
 	}
 #endif
 
-	nni_rwlock_wrlock(&sp_tran_lk);
 	if (!nni_list_node_active(&tran->tran_link)) {
 		tran->tran_init();
 		nni_list_append(&sp_tran_list, tran);
 		nng_log_info(
 		    "NNG-TRAN", "Registered transport: %s", tran->tran_scheme);
 	}
-	nni_rwlock_unlock(&sp_tran_lk);
 }
 
 nni_sp_tran *
@@ -71,16 +68,13 @@ nni_sp_tran_find(const char *url)
 	// address is of the form "<scheme>://blah..."
 	nni_sp_tran *t;
 
-	nni_rwlock_rdlock(&sp_tran_lk);
 	NNI_LIST_FOREACH (&sp_tran_list, t) {
 		size_t len = strlen(t->tran_scheme);
 		if ((strncmp(url, t->tran_scheme, len) == 0) &&
 		    (url[len] == ':' || url[len] == '\0')) {
-			nni_rwlock_unlock(&sp_tran_lk);
 			return (t);
 		}
 	}
-	nni_rwlock_unlock(&sp_tran_lk);
 	return (NULL);
 }
 

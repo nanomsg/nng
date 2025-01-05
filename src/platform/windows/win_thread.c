@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -76,42 +76,6 @@ void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
 	ReleaseSRWLockExclusive(&mtx->srl);
-}
-
-void
-nni_rwlock_init(nni_rwlock *rwl)
-{
-	InitializeSRWLock(&rwl->rwl);
-}
-
-void
-nni_rwlock_fini(nni_rwlock *rwl)
-{
-	rwl->exclusive = FALSE;
-}
-
-void
-nni_rwlock_rdlock(nni_rwlock *rwl)
-{
-	AcquireSRWLockShared(&rwl->rwl);
-}
-
-void
-nni_rwlock_wrlock(nni_rwlock *rwl)
-{
-	AcquireSRWLockExclusive(&rwl->rwl);
-	rwl->exclusive = TRUE;
-}
-
-void
-nni_rwlock_unlock(nni_rwlock *rwl)
-{
-	if (rwl->exclusive) {
-		rwl->exclusive = FALSE;
-		ReleaseSRWLockExclusive(&rwl->rwl);
-	} else {
-		ReleaseSRWLockShared(&rwl->rwl);
-	}
 }
 
 void

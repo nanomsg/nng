@@ -65,15 +65,6 @@ struct nni_plat_mtx {
 		PTHREAD_MUTEX_INITIALIZER \
 	}
 
-struct nni_rwlock {
-	pthread_rwlock_t rwl;
-};
-
-#define NNI_RWLOCK_INITIALIZER             \
-	{                                  \
-		PTHREAD_RWLOCK_INITIALIZER \
-	}
-
 // No static form of CV initialization because of the need to use
 // attributes to set the clock type.
 struct nni_plat_cv {

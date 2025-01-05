@@ -85,11 +85,9 @@ extern void *nni_zalloc(size_t);
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);
 
-typedef struct nni_plat_mtx    nni_plat_mtx;
-typedef struct nni_plat_rwlock nni_plat_rwlock;
-typedef struct nni_plat_cv     nni_plat_cv;
-typedef struct nni_plat_thr    nni_plat_thr;
-typedef struct nni_rwlock      nni_rwlock;
+typedef struct nni_plat_mtx nni_plat_mtx;
+typedef struct nni_plat_cv  nni_plat_cv;
+typedef struct nni_plat_thr nni_plat_thr;
 
 //
 // Threading & Synchronization Support
@@ -110,15 +108,6 @@ extern void nni_plat_mtx_lock(nni_plat_mtx *);
 // nni_plat_mtx_unlock unlocks the mutex.  This can only be performed by the
 // thread that owned the mutex.
 extern void nni_plat_mtx_unlock(nni_plat_mtx *);
-
-// read/write locks - these work like mutexes except that multiple readers
-// can acquire the lock.  These are not safe for recursive use, and it is
-// unspecified whether any measures are provided to prevent starvation.
-extern void nni_rwlock_init(nni_rwlock *);
-extern void nni_rwlock_fini(nni_rwlock *);
-extern void nni_rwlock_rdlock(nni_rwlock *);
-extern void nni_rwlock_wrlock(nni_rwlock *);
-extern void nni_rwlock_unlock(nni_rwlock *);
 
 // nni_plat_cv_init initializes a condition variable.  We require a mutex be
 // supplied with it, and that mutex must always be held when performing any
