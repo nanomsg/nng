@@ -32,6 +32,17 @@
 #endif
 #endif
 
+struct nni_tcp_dialer {
+	nni_list                connq; // pending connections
+	bool                    closed;
+	bool                    nodelay;
+	bool                    keepalive;
+	struct sockaddr_storage src;
+	size_t                  srclen;
+	nni_mtx                 mtx;
+	nni_refcnt              ref;
+};
+
 static void tcp_dialer_fini(void *arg);
 
 // Dialer stuff.

@@ -28,17 +28,6 @@ struct nni_tcp_conn {
 	nni_reap_node   reap;
 };
 
-struct nni_tcp_dialer {
-	nni_list                connq; // pending connections
-	bool                    closed;
-	bool                    nodelay;
-	bool                    keepalive;
-	struct sockaddr_storage src;
-	size_t                  srclen;
-	nni_mtx                 mtx;
-	nni_refcnt              ref;
-};
-
 extern int  nni_posix_tcp_alloc(nni_tcp_conn **, nni_tcp_dialer *, int);
 extern void nni_posix_tcp_start(nni_tcp_conn *, int, int);
 extern void nni_posix_tcp_dialer_rele(nni_tcp_dialer *);
