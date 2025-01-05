@@ -379,16 +379,14 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 	default:
 		return (NNG_EADDRINVAL);
 	}
-	if (d != NULL) {
-		nni_mtx_lock(&d->mtx);
-		if (d->closed) {
-			nni_mtx_unlock(&d->mtx);
-			return (NNG_ECLOSED);
-		}
-		d->src    = ss;
-		d->srclen = len;
+	nni_mtx_lock(&d->mtx);
+	if (d->closed) {
 		nni_mtx_unlock(&d->mtx);
+		return (NNG_ECLOSED);
 	}
+	d->src    = ss;
+	d->srclen = len;
+	nni_mtx_unlock(&d->mtx);
 	return (0);
 }
 
