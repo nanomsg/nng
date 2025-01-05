@@ -11,6 +11,8 @@
 #ifndef NNG_SUPPLEMENTAL_WEBSOCKET_SHA1_H
 #define NNG_SUPPLEMENTAL_WEBSOCKET_SHA1_H
 
+#include "core/defs.h"
+
 typedef struct {
 	uint32_t digest[5]; // resulting digest
 	uint64_t len;       // length in bits

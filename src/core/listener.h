@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -11,6 +11,9 @@
 
 #ifndef CORE_LISTENER_H
 #define CORE_LISTENER_H
+
+#include "core/defs.h"
+#include "core/stats.h"
 
 extern int      nni_listener_find(nni_listener **, uint32_t);
 extern int      nni_listener_hold(nni_listener *);

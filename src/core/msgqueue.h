@@ -11,7 +11,7 @@
 #ifndef CORE_MSGQUEUE_H
 #define CORE_MSGQUEUE_H
 
-#include "nng_impl.h"
+#include "defs.h"
 #include "pollable.h"
 
 // Message queues.  Message queues work in some ways like Go channels;
@@ -32,7 +32,6 @@ extern int nni_msgq_init(nni_msgq **, unsigned);
 // nni_msgq_fini destroys a message queue.  It will also free any
 // messages that may be in the queue.
 extern void nni_msgq_fini(nni_msgq *);
-
 
 extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);

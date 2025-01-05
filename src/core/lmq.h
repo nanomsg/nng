@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,7 +10,7 @@
 #ifndef CORE_LMQ_H
 #define CORE_LMQ_H
 
-#include "nng_impl.h"
+#include "core/defs.h"
 
 // nni_lmq is a very lightweight message queue.  Defining it this way allows
 // us to share some common code.  Locking must be supplied by the caller.

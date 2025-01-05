@@ -18,8 +18,10 @@
 #include <unistd.h>
 
 #include "core/sockfd.h"
-#include "platform/posix/posix_aio.h"
-#include "platform/posix/posix_peerid.h"
+#include "posix_impl.h"
+
+#include "posix_aio.h"
+#include "posix_peerid.h"
 
 struct nni_sfd_conn {
 	nng_stream    stream;

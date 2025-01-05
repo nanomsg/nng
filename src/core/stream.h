@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -13,7 +13,7 @@
 // This provides an abstraction for byte streams, allowing polymorphic
 // use of them in rather flexible contexts.
 
-#include "core/nng_impl.h"
+#include "defs.h"
 
 // Private property operations (these include the types.)
 extern int nni_stream_get(

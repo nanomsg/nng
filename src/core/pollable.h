@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,8 +10,9 @@
 #ifndef CORE_POLLABLE_H
 #define CORE_POLLABLE_H
 
-#include "core/defs.h"
-#include "core/list.h"
+#include "defs.h"
+#include "list.h"
+#include "platform.h"
 
 typedef struct nni_pollable nni_pollable;
 

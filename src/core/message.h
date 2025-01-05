@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,6 +10,8 @@
 
 #ifndef CORE_MESSAGE_H
 #define CORE_MESSAGE_H
+
+#include "core/defs.h"
 
 // Internally used message API.  Again, this is not part of our public API.
 // "trim" operations work from the front, and "chop" work from the end.

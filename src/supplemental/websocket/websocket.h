@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -13,6 +13,8 @@
 #define NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H
 
 #include <stdbool.h>
+
+#include "core/stream.h"
 
 typedef struct nni_ws          nni_ws;
 typedef struct nni_ws_listener nni_ws_listener;

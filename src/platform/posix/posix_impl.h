@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -32,7 +32,9 @@
 #define NNG_PLATFORM_POSIX_SOCKADDR
 #define NNG_PLATFORM_POSIX_UDP
 
-#include "platform/posix/posix_config.h"
+#include "core/defs.h"
+
+#include "posix_config.h"
 #endif
 
 #ifdef NNG_PLATFORM_POSIX_SOCKADDR

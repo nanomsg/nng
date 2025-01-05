@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,9 +15,10 @@
 // OUTSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 
-#include "core/defs.h"
-#include "core/thread.h"
-#include "nng/nng.h"
+#include "defs.h"
+#include "stats.h"
+#include "thread.h"
+
 #include "sp/transport.h"
 
 // AIO

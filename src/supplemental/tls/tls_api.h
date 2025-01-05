@@ -12,6 +12,8 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_API_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_API_H
 
+#include "core/stream.h"
+
 // The implementation supplies this function to create the TLS connection
 // object.  All fields will be zeroed.
 extern int nni_tls_dialer_alloc(nng_stream_dialer **, const nng_url *);

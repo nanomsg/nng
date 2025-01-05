@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,6 +10,8 @@
 
 #ifndef CORE_FILE_H
 #define CORE_FILE_H
+
+#include "defs.h"
 
 // File/Store Support
 //

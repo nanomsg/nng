@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,6 +10,20 @@
 
 #ifndef CORE_SOCKIMPL_H
 #define CORE_SOCKIMPL_H
+
+#include "defs.h"
+
+#include "aio.h"
+#include "dialer.h"
+#include "list.h"
+#include "listener.h"
+#include "protocol.h"
+#include "reap.h"
+#include "refcnt.h"
+#include "stats.h"
+#include "url.h"
+
+#include "sp/transport.h"
 
 // This file contains stuff shared within the core between sockets, endpoints,
 // and pipes.  This must not be exposed to other subsystems -- these internals

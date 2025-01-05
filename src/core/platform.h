@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -20,6 +20,8 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include "defs.h"
 
 // These are the APIs that a platform must implement to support nng.
 

@@ -13,6 +13,7 @@
 #define PROTOCOL_SP_TRANSPORT_H
 
 #include "core/defs.h"
+#include "core/list.h"
 #include "core/options.h"
 
 // Endpoint operations are called by the socket in a

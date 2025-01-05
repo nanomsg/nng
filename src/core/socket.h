@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,6 +10,10 @@
 
 #ifndef CORE_SOCKET_H
 #define CORE_SOCKET_H
+
+#include "defs.h"
+#include "msgqueue.h"
+#include "stats.h"
 
 extern int         nni_sock_find(nni_sock **, uint32_t);
 extern void        nni_sock_hold(nni_sock *);

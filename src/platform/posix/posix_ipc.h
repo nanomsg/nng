@@ -16,7 +16,7 @@
 #include "core/stream.h"
 
 #ifdef NNG_PLATFORM_POSIX
-#include "platform/posix/posix_aio.h"
+#include "posix_aio.h"
 
 #include <sys/types.h> // For mode_t
 
