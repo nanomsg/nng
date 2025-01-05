@@ -1,0 +1,111 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_http_client_set_tls(3http)
+---
+<h1>nng_http_client_set_tls(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_client_set_tls - set HTTP client TLS configuration</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_http_client_set_tls</span><span class="tok-p">(</span><span class="tok-n">nng_http_client</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">client</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_tls_config</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_client_set_tls()</code> sets the TLS configuration of <em>client</em> to <em>cfg</em>.</p>
+</div>
+<div class="paragraph">
+<p>This change overwrites any previous TLS configuration.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This also invalidates any previously obtained values from
+<a href="nng_http_client_get_tls.3http.html"><code>nng_http_client_get_tls()</code></a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Any connections established with
+<a href="nng_http_client_connect.3http.html"><code>nng_http_client_connect()</code></a>
+will continue to use any TLS configuration that they were started with.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>Either HTTP or TLS not supported.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_client_alloc.3http.html">nng_http_client_alloc(3http)</a>,
+<a href="nng_http_client_connect.3http.html">nng_http_client_connect(3http)</a>,
+<a href="nng_http_client_get_tls.3http.html">nng_http_client_get_tls(3http)</a>,
+<a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

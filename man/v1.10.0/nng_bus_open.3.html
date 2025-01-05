@@ -1,0 +1,86 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_bus_open(3)
+---
+<h1>nng_bus_open(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_bus_open - create bus socket</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/protocol/bus0/bus.h&gt;</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_bus0_open</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span><span class="tok-w"> </span><span class="tok-nf">nng_bus0_open_raw</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_bus0_open()</code> function creates a <a href="nng_bus.7.html"><em>bus</em></a> version 0
+<a href="nng_socket.5.html">socket</a> and returns it at the location pointed to by <em>s</em>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_bus0_open_raw()</code> function creates a <a href="nng_bus.7.html"><em>bus</em></a> version 0
+<a href="nng_socket.5.html">socket</a> in
+<a href="nng.7.html#raw_mode">raw</a> mode, and returns it at the location pointed to by <em>s</em>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions return 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The protocol is not supported.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_socket.5.html">nng_socket(5)</a>,
+<a href="nng_bus.7.html">nng_bus(7)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
