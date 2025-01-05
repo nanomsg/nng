@@ -37,6 +37,8 @@ int nng_dialer_get_string(nng_dialer d, const char *opt, char **strp);
 
 int nng_dialer_get_uint64(nng_dialer d, const char *opt, uint64_t *u64p);
 
+int nng_dialer_get_url(nng_dialer d, const nng_url **url);
+
 ----
 
 == DESCRIPTION
@@ -116,6 +118,9 @@ This function is used to retrieve a 64-bit unsigned value into the value
 referenced by _u64p_.
 This is typically used for options related to identifiers, network
 numbers, and similar.
+
+`nng_dialer_get_url()`::
+This function is used to obtain the URL that dialer is configured for.
 
 == RETURN VALUES
 

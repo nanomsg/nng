@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -25,6 +25,7 @@ extern int nni_dialer_setopt(
     nni_dialer *, const char *, const void *, size_t, nni_type);
 extern int nni_dialer_getopt(
     nni_dialer *, const char *, void *, size_t *, nni_type);
+extern const nng_url *nni_dialer_url(nni_dialer *);
 extern void nni_dialer_add_stat(nni_dialer *, nni_stat_item *);
 extern void nni_dialer_bump_error(nni_dialer *, int);
 

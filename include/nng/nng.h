@@ -1706,6 +1706,10 @@ NNG_DECL void nng_cv_wake(nng_cv *);
 // that no waiter starves forever.
 NNG_DECL void nng_cv_wake1(nng_cv *);
 
+// New URL accessors for endpoints - from NNG 2.0.
+NNG_DECL int nng_dialer_get_url(nng_dialer, const nng_url **);
+NNG_DECL int nng_listener_get_url(nng_listener, const nng_url **);
+
 #ifdef __cplusplus
 }
 #endif

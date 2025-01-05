@@ -507,6 +507,12 @@ nni_listener_getopt(
 	return (nni_sock_getopt(l->l_sock, name, val, szp, t));
 }
 
+const nng_url *
+nni_listener_url(nni_listener *l)
+{
+	return (l->l_url);
+}
+
 void
 nni_listener_add_stat(nni_listener *l, nni_stat_item *item)
 {

@@ -558,6 +558,12 @@ nni_dialer_getopt(
 	return (nni_sock_getopt(d->d_sock, name, valp, szp, t));
 }
 
+const nng_url *
+nni_dialer_url(nni_dialer *d)
+{
+	return (d->d_url);
+}
+
 void
 nni_dialer_add_stat(nni_dialer *d, nni_stat_item *item)
 {

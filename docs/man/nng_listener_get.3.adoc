@@ -1,6 +1,6 @@
 = nng_listener_get(3)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -36,6 +36,8 @@ int nng_listener_get_addr(nng_listener l, const char *opt, nng_sockaddr *sap);
 int nng_listener_get_string(nng_listener l, const char *opt, char **strp);
 
 int nng_listener_get_uint64(nng_listener l, const char *opt, uint64_t *u64p);
+
+int nng_listener_get_url(nng_listener l, const nng_url **url);
 
 ----
 
@@ -114,6 +116,13 @@ This function is used to retrieve a 64-bit unsigned value into the value
 referenced by _u64p_.
 This is typically used for options related to identifiers, network
 numbers, and similar.
+
+`nng_listener_get_url()`::
+This function is used to obtain the URL that listener is configured for.
+This is the actual URL, and may different that what was requested.
+For example, when using TCP, if port 0 was requested, but then the listener
+was started, a real port will have been chosen by the operating system.
+This URL will reflect that final port, so it can be used for dialing.
 
 == RETURN VALUES
 
