@@ -81,6 +81,7 @@ nng_sources(
 )
 
 nng_test(aio_test)
+nng_test(args_test)
 nng_test(buf_size_test)
 nng_test(errors_test)
 nng_test(id_test)

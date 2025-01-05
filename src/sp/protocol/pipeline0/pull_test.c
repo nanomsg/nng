@@ -243,10 +243,10 @@ test_pull_recv_abort(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_socket_recv(s, aio);
-	nng_aio_abort(aio, NNG_EAMBIGUOUS);
+	nng_aio_abort(aio, NNG_ESTATE);
 
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_EAMBIGUOUS);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTATE);
 	NUTS_CLOSE(s);
 	nng_aio_free(aio);
 }

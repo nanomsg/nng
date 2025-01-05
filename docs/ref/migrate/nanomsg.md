@@ -101,7 +101,7 @@ There are some exceptions. Be aware that the numeric values are _not_ the same.
 | -------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `EINTR`        | [`NNG_EINTR`]                                                                            |                                                                                    |
 | `ENOMEM`       | [`NNG_ENOMEM`]                                                                           |                                                                                    |
-| `EINVAL`       | [`NNG_EINVAL`], [`NNG_EADDRINVAL`], [`NNG_EBADTYPE`], [`NNG_EAMBIGUOUS`]                 | NNG discrimates between different types of errors.                                 |
+| `EINVAL`       | [`NNG_EINVAL`], [`NNG_EADDRINVAL`], [`NNG_EBADTYPE`]                                     | NNG discrimates between different types of errors.                                 |
 | `EBUSY`        | [`NNG_EBUSY`]                                                                            |                                                                                    |
 | `ETIMEDOUT`    | [`NNG_ETIMEDOUT`]                                                                        |                                                                                    |
 | `ECONNREFUSED` | [`NNG_ECONNREFUSED`]                                                                     |                                                                                    |

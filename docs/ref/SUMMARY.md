@@ -38,7 +38,7 @@
 
   - [ID Map](./api/id_map.md)
 
-  - [Command Options](./api/cmd_opts.md)
+  - [Arguments Parser](./api/args.md)
 
 - [Protocols](./proto/index.md)
 

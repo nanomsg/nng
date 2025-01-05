@@ -1266,8 +1266,6 @@ static const struct {
 	{ NNG_EWRITEONLY, "Write only resource" },
 	{ NNG_ECRYPTO, "Cryptographic error" },
 	{ NNG_EPEERAUTH, "Peer could not be authenticated" },
-	{ NNG_ENOARG, "Option requires argument" },
-	{ NNG_EAMBIGUOUS, "Ambiguous option" },
 	{ NNG_EBADTYPE, "Incorrect type" },
 	{ NNG_ECONNSHUT, "Connection shutdown" },
 	{ NNG_ESTOPPED, "Operation stopped"},

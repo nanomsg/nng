@@ -1059,8 +1059,6 @@ enum nng_errno_enum {
 	NNG_EWRITEONLY   = 25,
 	NNG_ECRYPTO      = 26,
 	NNG_EPEERAUTH    = 27,
-	NNG_ENOARG       = 28,
-	NNG_EAMBIGUOUS   = 29,
 	NNG_EBADTYPE     = 30,
 	NNG_ECONNSHUT    = 31,
 	NNG_ESTOPPED     = 999,

@@ -88,13 +88,15 @@ suboptimal in terms of performance.
 Modern code should use one of [`nng_sendmsg`], [`nng_recvmsg`], [`nng_socket_send`], or [`nng_socket_recv`] to get the maximum performance benefit.
 Working directly with [`nng_msg`] structures gives more control, reduces copies, and reduces allocation activity.
 
-## New AIO Error Code NNG_ESTOPPED
+## Error Code Changes
 
 When an operation fails with [`NNG_ESTOPPED`], it means that the associated [`nni_aio`] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
 not resubmit an operation that returns it. This is particularly important for callbacks that automatically
 resubmit operations. Failure to observe this rule will lead to an infinite loop
 as any further operations on the object will fail immediately with `NNG_ESTOPPED`.
+
+The error codes `NNG_EAMBIGUOUS` and `NNG_ENOARG` have been removed.
 
 ## AIO Provider API changes
 
@@ -364,6 +366,12 @@ Security descriptor support is only relevant to Windows,
 and is presently only supported for IPC when Named Pipes are used.
 Planned future changes to switch to UNIX domain sockets may eliminate
 support for security descriptors altogether in NNG.
+
+## Command Line Argument Parser Changes
+
+The supplemental function `nng_opts_parse` and supporting definitions have moved.
+This functionality is now supplied by a header only library, available in `nng/args.h`.
+See [`nng_args_parse`] for more information.
 
 ## ZeroTier Support Removed
 

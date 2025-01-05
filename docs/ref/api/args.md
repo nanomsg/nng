@@ -1,31 +1,39 @@
-# Command Options
+# Command Arguments
 
-Some _NNG_ utilities need to parse command line options,
-and the supplementary function here allows applications that
-need the same support to benefit from this.
+Some NNG utilities need to parse command line options,
+and for this purpose a header library is supplied.
 
-To make use of this, the supplemental header `<nng/supplemental/util/options.h>`
-must be included.
+To make use of this, the header `<nng/args.h>` must be included.
 
-## Parse Command Line Options
+> [!TIP]
+> The functionality described here is entirely contained in the
+> `nng/args.h` header file, and may be used without previously
+> initializing the library with [`nng_init`], and may even be used
+> in programs that are not linked against the NNG library.
+
+## Parse Command Line Arguments
 
 ```c
-typedef struct nng_optspec {
-    const char *o_name;  // Long style name (may be NULL for short only)
-    int         o_short; // Short option (no clustering!)
-    int         o_val;   // Value stored on a good parse (>0)
-    bool        o_arg;   // Option takes an argument if true
+typedef struct nng_arg_spec {
+    const char *a_name;  // Long style name (may be NULL for short only)
+    int         a_short; // Short option (no clustering!)
+    int         a_val;   // Value stored on a good parse (>0)
+    bool        a_arg;   // Option takes an argument if true
 } nng_optspec;
 
-int nng_opts_parse(int argc, char *const *argv,
+#define NNG_ARG_END     (-1)
+#define NNG_ARG_INVAL   (-2)
+#define NNG_ARG_AMBIG   (-3)
+#define NNG_ARG_MISSING (-4)
+
+int nng_args_parse(int argc, char *const *argv,
                    const nng_optspec *spec, int *val, char **arg, int *idx);
 ```
 
-The {{i:`nng_opts_parse`}} function is a intended to facilitate parsing
+The {{i:`nng_args_parse`}} function is intended to facilitate parsing
 {{i:command-line arguments}}.
 This function exists largely to stand in for {{i:`getopt`}} from POSIX systems,
-but it is available everywhere that _NNG_ is, and it includes
-some capabilities missing from `getopt`.
+but it is available on all platforms, and it includes some capabilities missing from `getopt`.
 
 The function parses arguments from
 `main`{{footnote: Parsing argument strings from other sources can be done as well,
@@ -34,7 +42,7 @@ although usually then _idx_ will be initialized to zero.}}
 starting at the index referenced by _idx_.
 (New invocations typically set the value pointed to by _idx_ to 1.)
 
-Options are parsed as specified by _spec_ (see [Option Specification](#option-specification).)
+Options are parsed as specified by _spec_ (see [Argument Specification](#argument-specification).)
 The value of the parsed option will be stored at the address indicated by
 _val_, and the value of _idx_ will be incremented to reflect the next
 option to parse.
@@ -52,23 +60,23 @@ returned.
 
 This function may return the following errors:
 
-- [`NNG_EAMBIGUOUS`]: Parsed option matches more than one specification.
-- [`NNG_ENOARG`]: Option requires an argument, but one is not present.
-- [`NNG_EINVAL`]: An invalid (unknown) argument is present.
+- [`NNG_ARG_AMBIGU`]: Parsed option matches more than one specification.
+- [`NNG_ARG_MISSING`]: Option requires an argument, but one is not present.
+- [`NNG_ARG_INVAL`]: An invalid (unknown) argument is present in _argv_.
 
 ### Option Specification
 
-The calling program must first create an array of {{i:`nng_optspec`}} structures
+The calling program must first create an array of {{i:`nng_arg_spec`}} structures
 describing the options to be supported.
 This structure has the following members:
 
-- `o_name`:
+- `a_name`:
 
   The long style name for the option, such as "verbose".
   This will be parsed as a [long option](#long-options) on the command line when it is prefixed with two dashes.
   It may be `NULL` if only a [short option](#short-options) is to be supported.
 
-- `o_short`:
+- `a_short`:
 
   This is a single letter (at present only ASCII letters are supported).
   These options appear as just a single letter, and are prefixed with a single dash on the command line.
@@ -81,10 +89,10 @@ This structure has the following members:
   This value is assigned by the application program, and must be non-zero for a valid option.
   If this is zero, then it indicates the end of the specifications, and the
   rest of this structure is ignored.
-  The value will be returned to the caller in _val_ by `nng_opts_parse` when
+  The value will be returned to the caller in _val_ by `nng_args_parse` when
   this option is parsed from the command line.
 
-- `o_arg`:
+- `a_arg`:
 
   This value should be set to `true` if the option should take an argument.
 
@@ -112,7 +120,7 @@ same element of _argv_, or may appear in the next _argv_ element.
 ### Prefix Matching
 
 When using long options, the parser will match if it is equal to a prefix
-of the `o_name` member of a option specification, provided that it do so
+of the `a_name` member of a option specification, provided that it do so
 unambiguously (meaning it must not match any other option specification.)
 
 ## Example
@@ -124,26 +132,26 @@ The following program fragment demonstrates this function.
     char *logfile; // options to be set
     bool verbose;
 
-    static nng_optspec specs[] = {
+    static nng_arg_spec specs[] = {
         {
-            .o_name = "logfile",
-            .o_short = 'D',
-            .o_val = OPT_LOGFILE,
-            .o_arg = true,
+            .a_name = "logfile",
+            .a_short = 'D',
+            .a_val = OPT_LOGFILE,
+            .a_arg = true,
         }, {
-            .o_name = "verbose",
-            .o_short = 'V',
-            .o_val = OPT_VERBOSE,
-            .o_arg = false,
+            .a_name = "verbose",
+            .a_short = 'V',
+            .a_val = OPT_VERBOSE,
+            .a_arg = false,
         }, {
-            .o_val = 0; // Terminate array
+            .a_val = 0; // Terminate array
         }
     };
 
     for (int idx = 1;;) {
         int rv, opt;
         char *arg;
-        rv = nng_opts_parse(argc, argv, specs, &opt, &arg, &idx);
+        rv = nng_args_parse(argc, argv, specs, &opt, &arg, &idx);
         if (rv != 0) {
             break;
         }
@@ -156,8 +164,18 @@ The following program fragment demonstrates this function.
             break;
         }
     }
-    if (rv != -1) {
-        printf("Options error: %s\n", nng_strerror(rv));
+    if (rv != NNG_ARG_END) {
+        switch (rv) {
+        case NNG_ARG_AMBIG:
+            printf("Options error: ambiguous option\n");
+            break;
+        case NNG_ARG_MISSING:
+            printf("Options error: required option argument missing\n");
+            break;
+        case NNG_ARG_INVAL:
+            printf("Options error: unknown option present\n");
+            break;
+        }
         exit(1);
     }
 ```

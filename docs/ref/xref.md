@@ -193,7 +193,7 @@
 [`nng_dialer_get_tls`]: /TODO.md
 [`nng_listener_set_tls`]: /TODO.md
 [`nng_listener_get_tls`]: /TODO.md
-[`nng_opts_parse`]: /api/cmd_opts.md#parse-command-line-options
+[`nng_args_parse`]: /api/args.md#parse-command-line-arguments
 [`nng_aio_finish`]: /TODO.md
 [`nng_aio_reset`]: /TODO.md
 [`nng_aio_start`]: /TODO.md
@@ -272,8 +272,6 @@
 [`NNG_EWRITEONLY`]: /api/errors.md#NNG_EWRITEONLY
 [`NNG_ECRYPTO`]: /api/errors.md#NNG_ECRYPTO
 [`NNG_EPEERAUTH`]: /api/errors.md#NNG_EPEERAUTH
-[`NNG_ENOARG`]: /api/errors.md#NNG_ENOARG
-[`NNG_EAMBIGUOUS`]: /api/errors.md#NNG_EAMBIGUOUS
 [`NNG_EBADTYPE`]: /api/errors.md#NNG_EBADTYPE
 [`NNG_ECONNSHUT`]: /api/errors.md#NNG_ECONNSHUT
 [`NNG_EINTERNAL`]: /api/errors.md#NNG_EINTERNAL

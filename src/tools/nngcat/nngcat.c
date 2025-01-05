@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Lager Data, Inc. <support@lagerdata.com>
 //
@@ -17,8 +17,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nng/args.h>
 #include <nng/nng.h>
-#include <nng/supplemental/util/options.h>
 
 // Globals.  We need this to avoid passing around everything.
 int          format    = 0;
@@ -91,105 +91,105 @@ enum options {
 	OPT_RECVMAXSZ,
 };
 
-static nng_optspec opts[] = {
-	{ .o_name = "help", .o_short = 'h', .o_val = OPT_HELP },
-	{ .o_name = "verbose", .o_short = 'v', .o_val = OPT_VERBOSE },
-	{ .o_name = "silent", .o_short = 'q', .o_val = OPT_SILENT },
-	{ .o_name = "req0", .o_val = OPT_REQ0 },
-	{ .o_name = "rep0", .o_val = OPT_REP0 },
-	{ .o_name = "push0", .o_val = OPT_PUSH0 },
-	{ .o_name = "pull0", .o_val = OPT_PULL0 },
-	{ .o_name = "pub0", .o_val = OPT_PUB0 },
-	{ .o_name = "sub", .o_val = OPT_SUB0 }, // explicit for alias
-	{ .o_name = "sub0", .o_val = OPT_SUB0 },
-	{ .o_name = "surveyor0", .o_val = OPT_SURVEY0 },
-	{ .o_name = "respondent0", .o_val = OPT_RESPOND0 },
-	{ .o_name = "pair", .o_val = OPT_PAIR },
-	{ .o_name = "pair0", .o_val = OPT_PAIR0 },
-	{ .o_name = "pair1", .o_val = OPT_PAIR1 },
-	{ .o_name = "bus0", .o_val = OPT_BUS0 },
-	{ .o_name = "dial", .o_val = OPT_DIAL, .o_arg = true },
-	{ .o_name = "listen", .o_val = OPT_LISTEN, .o_arg = true },
-	{ .o_name = "data", .o_short = 'D', .o_val = OPT_DATA, .o_arg = true },
-	{ .o_name = "file", .o_short = 'F', .o_val = OPT_FILE, .o_arg = true },
-	{ .o_name = "subscribe", .o_val = OPT_SUBSCRIBE, .o_arg = true },
-	{ .o_name = "format", .o_val = OPT_FORMAT, .o_arg = true },
-	{ .o_name = "ascii", .o_short = 'A', .o_val = OPT_ASCII },
-	{ .o_name = "quoted", .o_short = 'Q', .o_val = OPT_QUOTED },
-	{ .o_name = "raw", .o_val = OPT_RAW },
-	{ .o_name = "hex", .o_val = OPT_HEX },
-	{ .o_name = "compat", .o_val = OPT_COMPAT },
-	{ .o_name = "async", .o_val = OPT_ASYNC },
-	{ .o_name = "msgpack", .o_val = OPT_MSGPACK },
+static nng_arg_spec opts[] = {
+	{ .a_name = "help", .a_short = 'h', .a_val = OPT_HELP },
+	{ .a_name = "verbose", .a_short = 'v', .a_val = OPT_VERBOSE },
+	{ .a_name = "silent", .a_short = 'q', .a_val = OPT_SILENT },
+	{ .a_name = "req0", .a_val = OPT_REQ0 },
+	{ .a_name = "rep0", .a_val = OPT_REP0 },
+	{ .a_name = "push0", .a_val = OPT_PUSH0 },
+	{ .a_name = "pull0", .a_val = OPT_PULL0 },
+	{ .a_name = "pub0", .a_val = OPT_PUB0 },
+	{ .a_name = "sub", .a_val = OPT_SUB0 }, // explicit for alias
+	{ .a_name = "sub0", .a_val = OPT_SUB0 },
+	{ .a_name = "surveyor0", .a_val = OPT_SURVEY0 },
+	{ .a_name = "respondent0", .a_val = OPT_RESPOND0 },
+	{ .a_name = "pair", .a_val = OPT_PAIR },
+	{ .a_name = "pair0", .a_val = OPT_PAIR0 },
+	{ .a_name = "pair1", .a_val = OPT_PAIR1 },
+	{ .a_name = "bus0", .a_val = OPT_BUS0 },
+	{ .a_name = "dial", .a_val = OPT_DIAL, .a_arg = true },
+	{ .a_name = "listen", .a_val = OPT_LISTEN, .a_arg = true },
+	{ .a_name = "data", .a_short = 'D', .a_val = OPT_DATA, .a_arg = true },
+	{ .a_name = "file", .a_short = 'F', .a_val = OPT_FILE, .a_arg = true },
+	{ .a_name = "subscribe", .a_val = OPT_SUBSCRIBE, .a_arg = true },
+	{ .a_name = "format", .a_val = OPT_FORMAT, .a_arg = true },
+	{ .a_name = "ascii", .a_short = 'A', .a_val = OPT_ASCII },
+	{ .a_name = "quoted", .a_short = 'Q', .a_val = OPT_QUOTED },
+	{ .a_name = "raw", .a_val = OPT_RAW },
+	{ .a_name = "hex", .a_val = OPT_HEX },
+	{ .a_name = "compat", .a_val = OPT_COMPAT },
+	{ .a_name = "async", .a_val = OPT_ASYNC },
+	{ .a_name = "msgpack", .a_val = OPT_MSGPACK },
 
 	{
-	    .o_name  = "recv-maxsz",
-	    .o_short = 'Z',
-	    .o_val   = OPT_RECVMAXSZ,
-	    .o_arg   = true,
+	    .a_name  = "recv-maxsz",
+	    .a_short = 'Z',
+	    .a_val   = OPT_RECVMAXSZ,
+	    .a_arg   = true,
 	},
 	{
-	    .o_name  = "count",
-	    .o_short = 'C',
-	    .o_val   = OPT_COUNT,
-	    .o_arg   = true,
+	    .a_name  = "count",
+	    .a_short = 'C',
+	    .a_val   = OPT_COUNT,
+	    .a_arg   = true,
 	},
 	{
-	    .o_name  = "delay",
-	    .o_short = 'd',
-	    .o_val   = OPT_DELAY,
-	    .o_arg   = true,
+	    .a_name  = "delay",
+	    .a_short = 'd',
+	    .a_val   = OPT_DELAY,
+	    .a_arg   = true,
 	},
 	{
-	    .o_name  = "interval",
-	    .o_short = 'i',
-	    .o_val   = OPT_INTERVAL,
-	    .o_arg   = true,
+	    .a_name  = "interval",
+	    .a_short = 'i',
+	    .a_val   = OPT_INTERVAL,
+	    .a_arg   = true,
 	},
-	{ .o_name = "recv-timeout", .o_val = OPT_RCV_TIMEO, .o_arg = true },
-	{ .o_name = "send-timeout", .o_val = OPT_SND_TIMEO, .o_arg = true },
-	{ .o_name = "socket-name", .o_val = OPT_SOCK_NAME, .o_arg = true },
+	{ .a_name = "recv-timeout", .a_val = OPT_RCV_TIMEO, .a_arg = true },
+	{ .a_name = "send-timeout", .a_val = OPT_SND_TIMEO, .a_arg = true },
+	{ .a_name = "socket-name", .a_val = OPT_SOCK_NAME, .a_arg = true },
 
 	// Legacy compatibility with nanocat.
-	{ .o_name = "bind", .o_val = OPT_LISTEN, .o_arg = true },
-	{ .o_name = "connect", .o_val = OPT_DIAL, .o_arg = true },
+	{ .a_name = "bind", .a_val = OPT_LISTEN, .a_arg = true },
+	{ .a_name = "connect", .a_val = OPT_DIAL, .a_arg = true },
 	{
-	    .o_name  = "bind-ipc",
-	    .o_short = 'X',
-	    .o_val   = OPT_LISTEN_IPC,
-	    .o_arg   = true,
+	    .a_name  = "bind-ipc",
+	    .a_short = 'X',
+	    .a_val   = OPT_LISTEN_IPC,
+	    .a_arg   = true,
 	},
 	{
-	    .o_name  = "connect-ipc",
-	    .o_short = 'x',
-	    .o_val   = OPT_DIAL_IPC,
-	    .o_arg   = true,
+	    .a_name  = "connect-ipc",
+	    .a_short = 'x',
+	    .a_val   = OPT_DIAL_IPC,
+	    .a_arg   = true,
 	},
 	{
-	    .o_name  = "bind-local",
-	    .o_short = 'L',
-	    .o_val   = OPT_LISTEN_LOCAL,
-	    .o_arg   = true,
+	    .a_name  = "bind-local",
+	    .a_short = 'L',
+	    .a_val   = OPT_LISTEN_LOCAL,
+	    .a_arg   = true,
 	},
 	{
-	    .o_name  = "connect-local",
-	    .o_short = 'l',
-	    .o_val   = OPT_DIAL_LOCAL,
-	    .o_arg   = true,
+	    .a_name  = "connect-local",
+	    .a_short = 'l',
+	    .a_val   = OPT_DIAL_LOCAL,
+	    .a_arg   = true,
 	},
-	{ .o_name = "insecure", .o_short = 'k', .o_val = OPT_INSECURE },
-	{ .o_name = "cacert", .o_val = OPT_CACERT, .o_arg = true },
-	{ .o_name = "key", .o_val = OPT_KEYFILE, .o_arg = true },
+	{ .a_name = "insecure", .a_short = 'k', .a_val = OPT_INSECURE },
+	{ .a_name = "cacert", .a_val = OPT_CACERT, .a_arg = true },
+	{ .a_name = "key", .a_val = OPT_KEYFILE, .a_arg = true },
 	{
-	    .o_name  = "cert",
-	    .o_short = 'E',
-	    .o_val   = OPT_CERTFILE,
-	    .o_arg   = true,
+	    .a_name  = "cert",
+	    .a_short = 'E',
+	    .a_val   = OPT_CERTFILE,
+	    .a_arg   = true,
 	},
-	{ .o_name = "version", .o_short = 'V', .o_val = OPT_VERSION },
+	{ .a_name = "version", .a_short = 'V', .a_val = OPT_VERSION },
 
 	// Sentinel.
-	{ .o_name = NULL, .o_val = 0 },
+	{ .a_name = NULL, .a_val = 0 },
 };
 
 static void
@@ -705,7 +705,7 @@ main(int ac, char **av)
 	nng_init(NULL);
 	atexit(nng_fini);
 
-	while ((rv = nng_opts_parse(ac, av, opts, &val, &arg, &idx)) == 0) {
+	while ((rv = nng_args_parse(ac, av, opts, &val, &arg, &idx)) == 0) {
 		switch (val) {
 		case OPT_HELP:
 			help();
@@ -860,13 +860,13 @@ main(int ac, char **av)
 		}
 	}
 	switch (rv) {
-	case NNG_EINVAL:
+	case NNG_ARG_INVAL:
 		fatal("Option %s is invalid.", av[idx]);
 		break;
-	case NNG_EAMBIGUOUS:
+	case NNG_ARG_AMBIG:
 		fatal("Option %s is ambiguous (specify in full).", av[idx]);
 		break;
-	case NNG_ENOARG:
+	case NNG_ARG_MISSING:
 		fatal("Option %s requires argument.", av[idx]);
 		break;
 	default:

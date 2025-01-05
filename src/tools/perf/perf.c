@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,8 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nng/args.h>
 #include <nng/nng.h>
-#include <nng/supplemental/util/options.h>
 
 static void die(const char *, ...);
 static int
@@ -80,15 +80,15 @@ enum options {
 };
 
 // These are not universally supported by the variants yet.
-static nng_optspec opts[] = {
-	{ .o_name = "pair1", .o_val = OPT_PAIR1 },
-	{ .o_name = "pair0", .o_val = OPT_PAIR0 },
-	{ .o_name = "reqrep0", .o_val = OPT_REQREP0 },
-	{ .o_name = "bus0", .o_val = OPT_BUS0 },
-	{ .o_name = "pubsub0", .o_val = OPT_PUBSUB0 },
-	{ .o_name = "pipeline0", .o_val = OPT_PIPELINE0 },
-	{ .o_name = "url", .o_val = OPT_URL, .o_arg = true },
-	{ .o_name = NULL, .o_val = 0 },
+static nng_arg_spec opts[] = {
+	{ .a_name = "pair1", .a_val = OPT_PAIR1 },
+	{ .a_name = "pair0", .a_val = OPT_PAIR0 },
+	{ .a_name = "reqrep0", .a_val = OPT_REQREP0 },
+	{ .a_name = "bus0", .a_val = OPT_BUS0 },
+	{ .a_name = "pubsub0", .a_val = OPT_PUBSUB0 },
+	{ .a_name = "pipeline0", .a_val = OPT_PIPELINE0 },
+	{ .a_name = "url", .a_val = OPT_URL, .a_arg = true },
+	{ .a_name = NULL, .a_val = 0 },
 };
 
 static void latency_client(const char *, size_t, int);
@@ -319,7 +319,7 @@ do_inproc_lat(int argc, char **argv)
 	addr = "inproc://latency_test";
 
 	optidx = 0;
-	while ((rv = nng_opts_parse(argc, argv, opts, &val, &arg, &optidx)) ==
+	while ((rv = nng_args_parse(argc, argv, opts, &val, &arg, &optidx)) ==
 	    0) {
 		switch (val) {
 		case OPT_REQREP0:
@@ -381,7 +381,7 @@ do_inproc_thr(int argc, char **argv)
 	char              *addr = "inproc://throughput-test";
 
 	optidx = 0;
-	while ((rv = nng_opts_parse(argc, argv, opts, &val, &arg, &optidx)) ==
+	while ((rv = nng_args_parse(argc, argv, opts, &val, &arg, &optidx)) ==
 	    0) {
 		switch (val) {
 #if 0

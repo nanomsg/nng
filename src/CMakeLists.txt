@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -9,6 +9,7 @@
 #
 
 nng_sources(nng.c nng_legacy.c)
+nng_headers(nng/args.h)
 nng_headers(nng/nng.h)
 
 target_include_directories(nng PRIVATE ${PROJECT_SOURCE_DIR}/src)

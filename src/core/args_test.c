@@ -8,12 +8,11 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
+#include <nng/args.h>
+#include <nng/nng.h>
 #include <nuts.h>
 
-#include <nng/supplemental/util/options.h>
-
-static nng_optspec case1[] = {
+static nng_arg_spec case1[] = {
 	// clang-format off
 	{ "flag", 'f', 1, false },
 	{ "longflag", 0, 2, false },
@@ -37,15 +36,15 @@ test_simple_options(void)
 	av[2] = "-v";
 	av[3] = "123";
 	av[4] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(v == 1);
 	NUTS_NULL(a);
 	NUTS_TRUE(opti == 2);
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 4);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "123");
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 4);
 	NUTS_MATCH(av[opti], "456");
 }
@@ -64,15 +63,15 @@ test_long_options(void)
 	av[2] = "--value";
 	av[3] = "123";
 	av[4] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(v == 1);
 	NUTS_NULL(a);
 	NUTS_TRUE(opti == 2);
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 4);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "123");
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 4);
 	NUTS_MATCH(av[opti], "456");
 }
@@ -89,11 +88,11 @@ test_attached_short(void)
 	av[0] = "program";
 	av[1] = "-v123";
 	av[2] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 2);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "123");
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 2);
 	NUTS_MATCH(av[opti], "456");
 }
@@ -110,11 +109,11 @@ test_attached_long_equals(void)
 	av[0] = "program";
 	av[1] = "--value=123";
 	av[2] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 2);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "123");
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 2);
 	NUTS_MATCH(av[opti], "456");
 }
@@ -131,11 +130,11 @@ test_attached_long_colon(void)
 	av[0] = "program";
 	av[1] = "--value:123";
 	av[2] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 2);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "123");
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 2);
 	NUTS_MATCH(av[opti], "456");
 }
@@ -152,7 +151,7 @@ test_negative_bad_short(void)
 	av[0] = "program";
 	av[1] = "-Z";
 	av[2] = "456";
-	NUTS_FAIL(nng_opts_parse(ac, av, case1, &v, &a, &opti), NNG_EINVAL);
+	NUTS_FAIL(nng_args_parse(ac, av, case1, &v, &a, &opti), NNG_ARG_INVAL);
 	NUTS_TRUE(opti == 1);
 }
 
@@ -168,7 +167,7 @@ test_negative_bad_long(void)
 	av[0] = "program";
 	av[1] = "--something";
 	av[2] = "456";
-	NUTS_FAIL(nng_opts_parse(ac, av, case1, &v, &a, &opti), NNG_EINVAL);
+	NUTS_FAIL(nng_args_parse(ac, av, case1, &v, &a, &opti), NNG_ARG_INVAL);
 	NUTS_TRUE(opti == 1);
 }
 
@@ -186,10 +185,10 @@ test_option_separator_flag(void)
 	av[2] = "-";
 	av[3] = "-v";
 	av[4] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(v == 1);
 	NUTS_TRUE(opti == 2);
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 3);
 }
 
@@ -203,7 +202,7 @@ test_no_options(void)
 	char *a = NULL;
 
 	av[0] = "program";
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 }
 
 void
@@ -217,7 +216,7 @@ test_arg_only(void)
 
 	av[0] = "program";
 	av[1] = "123";
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 1);
 }
 
@@ -237,25 +236,25 @@ test_mixed_long_short(void)
 	av[4] = "-b";
 	av[5] = "-vxyz";
 	av[6] = "456";
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 2);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "123");
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 3);
 	NUTS_TRUE(v == 1);
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 4);
 	NUTS_TRUE(v == 2);
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 5);
 	NUTS_TRUE(v == 4);
-	NUTS_PASS(nng_opts_parse(ac, av, case1, &v, &a, &opti));
+	NUTS_PASS(nng_args_parse(ac, av, case1, &v, &a, &opti));
 	NUTS_TRUE(opti == 6);
 	NUTS_TRUE(v == 3);
 	NUTS_MATCH(a, "xyz");
 	NUTS_MATCH(av[opti], "456");
-	NUTS_TRUE(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
+	NUTS_TRUE(nng_args_parse(ac, av, case1, &v, &a, &opti) == -1);
 	NUTS_TRUE(opti == 6);
 }
 
@@ -268,7 +267,7 @@ test_ambiguous(void)
 	int   v;
 	char *a = NULL;
 
-	nng_optspec spec[] = {
+	nng_arg_spec spec[] = {
 		{ "flag", 'f', 1, false },
 		{ "fluid", 0, 2, false },
 		{ NULL, 0, 0, false },
@@ -276,7 +275,7 @@ test_ambiguous(void)
 
 	av[0] = "program";
 	av[1] = "--fl";
-	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_EAMBIGUOUS);
+	NUTS_FAIL(nng_args_parse(ac, av, spec, &v, &a, &opti), NNG_ARG_AMBIG);
 }
 
 void
@@ -288,18 +287,20 @@ test_missing_arg(void)
 	int   v;
 	char *a = NULL;
 
-	nng_optspec spec[] = {
+	nng_arg_spec spec[] = {
 		{ "flag", 'f', 1, true },
 		{ NULL, 0, 0, false },
 	};
 
 	av[0] = "program";
 	av[1] = "--fl";
-	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_ENOARG);
+	NUTS_FAIL(
+	    nng_args_parse(ac, av, spec, &v, &a, &opti), NNG_ARG_MISSING);
 	av[0] = "program";
 	av[1] = "-f";
 	opti  = 1;
-	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_ENOARG);
+	NUTS_FAIL(
+	    nng_args_parse(ac, av, spec, &v, &a, &opti), NNG_ARG_MISSING);
 }
 
 void
@@ -311,7 +312,7 @@ test_no_clustering(void)
 	int   v;
 	char *a = NULL;
 
-	nng_optspec spec[] = {
+	nng_arg_spec spec[] = {
 		{ "flag", 'f', 1, false },
 		{ "verbose", 'v', 2, false },
 		{ NULL, 0, 0, false },
@@ -319,7 +320,7 @@ test_no_clustering(void)
 
 	av[0] = "program";
 	av[1] = "-fv";
-	NUTS_FAIL(nng_opts_parse(ac, av, spec, &v, &a, &opti), NNG_EINVAL);
+	NUTS_FAIL(nng_args_parse(ac, av, spec, &v, &a, &opti), NNG_ARG_INVAL);
 }
 
 NUTS_TESTS = {

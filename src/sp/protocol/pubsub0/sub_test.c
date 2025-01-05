@@ -301,10 +301,10 @@ test_sub_ctx_recv_abort(void)
 
 	nng_aio_set_timeout(aio, 1000);
 	nng_ctx_recv(ctx, aio);
-	nng_aio_abort(aio, NNG_EAMBIGUOUS);
+	nng_aio_abort(aio, NNG_EINTERNAL);
 
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_EAMBIGUOUS);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EINTERNAL);
 	NUTS_CLOSE(sub);
 	nng_aio_free(aio);
 }
