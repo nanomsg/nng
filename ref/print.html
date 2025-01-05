@@ -4226,10 +4226,7 @@ This feature is also exposed for application use, as a “supplemental” featur
 <p>When using these functions, it is necessary to add the <code>#include &lt;nng/supplemental/util/idhash.h&gt;</code>
 include file to list of includes.</p>
 <h2 id="id-map-structure"><a class="header" href="#id-map-structure">ID Map Structure</a></h2>
-<pre><code class="language-c">#include &lt;nng/nng.h&gt;
-#include &lt;nng/supplemental/util/idhash.h&gt;
-
-typedef struct nng_id_map_s nng_id_map;
+<pre><code class="language-c">typedef struct nng_id_map_s nng_id_map;
 </code></pre>
 <p>The ID map structure, <a name="a001"></a><code>nng_id_map</code> provides a table of identifiers mapping
 to user-supplied pointers (which must not be <code>NULL</code>). The identifiers can be
@@ -6776,6 +6773,8 @@ Simply remove any references to them.</p>
 <li><code>nng/protocol/survey0/respond.h</code></li>
 <li><code>nng/protocol/survey0/survey.h</code></li>
 <li><code>nng/supplemental/tls/tls.h</code></li>
+<li><code>nng/supplemental/util/idhash.h</code></li>
+<li><code>nng/supplemental/util/platform.h</code></li>
 <li><code>nng/transport/inproc/inproc.h</code></li>
 <li><code>nng/transport/ipc/ipc.h</code></li>
 <li><code>nng/transport/tcp/tcp.h</code></li>
