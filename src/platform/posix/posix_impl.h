@@ -77,16 +77,16 @@ struct nni_rwlock {
 // No static form of CV initialization because of the need to use
 // attributes to set the clock type.
 struct nni_plat_cv {
-	pthread_cond_t cv;
-	nni_plat_mtx  *mtx;
+	pthread_cond_t   cv;
+	pthread_mutex_t *mtx;
 };
 
 // NOTE: condition variables initialized with this should *NOT*
 // be used with nni_cv_until -- the clock attributes are not passed
 // and the wake-up times will not be correct.
-#define NNI_CV_INITIALIZER(mxp)                            \
-	{                                                  \
-		.mtx = mxp, .cv = PTHREAD_COND_INITIALIZER \
+#define NNI_CV_INITIALIZER(mxp)                                      \
+	{                                                            \
+		.mtx = &((mxp)->mtx), .cv = PTHREAD_COND_INITIALIZER \
 	}
 
 struct nni_plat_thr {

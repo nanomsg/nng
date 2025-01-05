@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -211,7 +211,7 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 	while (pthread_cond_init(&cv->cv, &nni_cvattr) != 0) {
 		nni_msleep(10);
 	}
-	cv->mtx = mtx;
+	cv->mtx = &mtx->mtx;
 }
 
 void
@@ -229,7 +229,7 @@ nni_plat_cv_wake1(nni_plat_cv *cv)
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
 {
-	nni_pthread_cond_wait(&cv->cv, &cv->mtx->mtx);
+	nni_pthread_cond_wait(&cv->cv, cv->mtx);
 }
 
 int
@@ -241,7 +241,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 	ts.tv_sec  = until / 1000;
 	ts.tv_nsec = (until % 1000) * 1000000;
 
-	return (nni_pthread_cond_timedwait(&cv->cv, &cv->mtx->mtx, &ts));
+	return (nni_pthread_cond_timedwait(&cv->cv, cv->mtx, &ts));
 }
 
 void
