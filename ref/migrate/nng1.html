@@ -298,12 +298,13 @@ This was implemented mostly to aid legacy nanomsg applications, and it was both 
 suboptimal in terms of performance.</p>
 <p>Modern code should use one of <a href="/api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="/api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>, <a href="/api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, or <a href="/api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a> to get the maximum performance benefit.
 Working directly with <a href="/api/msg.html#message-structure"><code>nng_msg</code></a> structures gives more control, reduces copies, and reduces allocation activity.</p>
-<h2 id="new-aio-error-code-nng_estopped"><a class="header" href="#new-aio-error-code-nng_estopped">New AIO Error Code NNG_ESTOPPED</a></h2>
+<h2 id="error-code-changes"><a class="header" href="#error-code-changes">Error Code Changes</a></h2>
 <p>When an operation fails with <a href="/api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
 not resubmit an operation that returns it. This is particularly important for callbacks that automatically
 resubmit operations. Failure to observe this rule will lead to an infinite loop
 as any further operations on the object will fail immediately with <code>NNG_ESTOPPED</code>.</p>
+<p>The error codes <code>NNG_EAMBIGUOUS</code> and <code>NNG_ENOARG</code> have been removed.</p>
 <h2 id="aio-provider-api-changes"><a class="header" href="#aio-provider-api-changes">AIO Provider API changes</a></h2>
 <p>The API used for providers for asynchronous I/O operations has changed slightly.</p>
 <ul>
@@ -527,6 +528,10 @@ with the functions [<code>nng_listener_get_security_descriptor</code>] and
 and is presently only supported for IPC when Named Pipes are used.
 Planned future changes to switch to UNIX domain sockets may eliminate
 support for security descriptors altogether in NNG.</p>
+<h2 id="command-line-argument-parser-changes"><a class="header" href="#command-line-argument-parser-changes">Command Line Argument Parser Changes</a></h2>
+<p>The supplemental function <code>nng_opts_parse</code> and supporting definitions have moved.
+This functionality is now supplied by a header only library, available in <code>nng/args.h</code>.
+See <a href="/api/args.html#parse-command-line-arguments"><code>nng_args_parse</code></a> for more information.</p>
 <h2 id="zerotier-support-removed"><a class="header" href="#zerotier-support-removed">ZeroTier Support Removed</a></h2>
 <p>The Layer 2 special ZeroTier transport has been removed.
 It is possible to use NNG with ZeroTier using TCP/IP, and a future update

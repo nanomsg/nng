@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Command Options - NNG Reference Manual (DRAFT)</title>
+        <title>Arguments Parser - NNG Reference Manual (DRAFT)</title>
 
 
         <!-- Custom HTML head -->
@@ -220,34 +220,46 @@
 }
 
 </style>
-<h1 id="command-options"><a class="header" href="#command-options">Command Options</a></h1>
-<p>Some <em>NNG</em> utilities need to parse command line options,
-and the supplementary function here allows applications that
-need the same support to benefit from this.</p>
-<p>To make use of this, the supplemental header <code>&lt;nng/supplemental/util/options.h&gt;</code>
-must be included.</p>
-<h2 id="parse-command-line-options"><a class="header" href="#parse-command-line-options">Parse Command Line Options</a></h2>
-<pre><code class="language-c">typedef struct nng_optspec {
-    const char *o_name;  // Long style name (may be NULL for short only)
-    int         o_short; // Short option (no clustering!)
-    int         o_val;   // Value stored on a good parse (&gt;0)
-    bool        o_arg;   // Option takes an argument if true
+<h1 id="command-arguments"><a class="header" href="#command-arguments">Command Arguments</a></h1>
+<p>Some NNG utilities need to parse command line options,
+and for this purpose a header library is supplied.</p>
+<p>To make use of this, the header <code>&lt;nng/args.h&gt;</code> must be included.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>The functionality described here is entirely contained in the
+<code>nng/args.h</code> header file, and may be used without previously
+initializing the library with <a href="/api/init.html#initialization"><code>nng_init</code></a>, and may even be used
+in programs that are not linked against the NNG library.</p>
+</div>
+<h2 id="parse-command-line-arguments"><a class="header" href="#parse-command-line-arguments">Parse Command Line Arguments</a></h2>
+<pre><code class="language-c">typedef struct nng_arg_spec {
+    const char *a_name;  // Long style name (may be NULL for short only)
+    int         a_short; // Short option (no clustering!)
+    int         a_val;   // Value stored on a good parse (&gt;0)
+    bool        a_arg;   // Option takes an argument if true
 } nng_optspec;
 
-int nng_opts_parse(int argc, char *const *argv,
+#define NNG_ARG_END     (-1)
+#define NNG_ARG_INVAL   (-2)
+#define NNG_ARG_AMBIG   (-3)
+#define NNG_ARG_MISSING (-4)
+
+int nng_args_parse(int argc, char *const *argv,
                    const nng_optspec *spec, int *val, char **arg, int *idx);
 </code></pre>
-<p>The <a name="a001"></a><code>nng_opts_parse</code> function is a intended to facilitate parsing
+<p>The <a name="a001"></a><code>nng_args_parse</code> function is intended to facilitate parsing
 <a name="a002"></a>command-line arguments.
 This function exists largely to stand in for <a name="a003"></a><code>getopt</code> from POSIX systems,
-but it is available everywhere that <em>NNG</em> is, and it includes
-some capabilities missing from <code>getopt</code>.</p>
+but it is available on all platforms, and it includes some capabilities missing from <code>getopt</code>.</p>
 <p>The function parses arguments from
 <code>main</code><sup><a name="to-footnote-1"><a href="#footnote-1">1</a></a></sup>
 (using <em>argc</em> and <em>argv</em>),
 starting at the index referenced by <em>idx</em>.
 (New invocations typically set the value pointed to by <em>idx</em> to 1.)</p>
-<p>Options are parsed as specified by <em>spec</em> (see <a href="#option-specification">Option Specification</a>.)
+<p>Options are parsed as specified by <em>spec</em> (see <a href="#argument-specification">Argument Specification</a>.)
 The value of the parsed option will be stored at the address indicated by
 <em>val</em>, and the value of <em>idx</em> will be incremented to reflect the next
 option to parse.</p>
@@ -266,23 +278,23 @@ referenced by <em>arg</em>.</p>
 returned.</p>
 <p>This function may return the following errors:</p>
 <ul>
-<li><a href="/api/errors.html#NNG_EAMBIGUOUS"><code>NNG_EAMBIGUOUS</code></a>: Parsed option matches more than one specification.</li>
-<li><a href="/api/errors.html#NNG_ENOARG"><code>NNG_ENOARG</code></a>: Option requires an argument, but one is not present.</li>
-<li><a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>: An invalid (unknown) argument is present.</li>
+<li>[<code>NNG_ARG_AMBIGU</code>]: Parsed option matches more than one specification.</li>
+<li>[<code>NNG_ARG_MISSING</code>]: Option requires an argument, but one is not present.</li>
+<li>[<code>NNG_ARG_INVAL</code>]: An invalid (unknown) argument is present in <em>argv</em>.</li>
 </ul>
 <h3 id="option-specification"><a class="header" href="#option-specification">Option Specification</a></h3>
-<p>The calling program must first create an array of <a name="a004"></a><code>nng_optspec</code> structures
+<p>The calling program must first create an array of <a name="a004"></a><code>nng_arg_spec</code> structures
 describing the options to be supported.
 This structure has the following members:</p>
 <ul>
 <li>
-<p><code>o_name</code>:</p>
+<p><code>a_name</code>:</p>
 <p>The long style name for the option, such as “verbose”.
 This will be parsed as a <a href="#long-options">long option</a> on the command line when it is prefixed with two dashes.
 It may be <code>NULL</code> if only a <a href="#short-options">short option</a> is to be supported.</p>
 </li>
 <li>
-<p><code>o_short</code>:</p>
+<p><code>a_short</code>:</p>
 <p>This is a single letter (at present only ASCII letters are supported).
 These options appear as just a single letter, and are prefixed with a single dash on the command line.
 The use of a slash in lieu of the dash is <em>not</em> supported, in order to avoid confusion with path name arguments.
@@ -294,11 +306,11 @@ This value may be set to 0 if no <a href="#short-options">short option</a> is ne
 This value is assigned by the application program, and must be non-zero for a valid option.
 If this is zero, then it indicates the end of the specifications, and the
 rest of this structure is ignored.
-The value will be returned to the caller in <em>val</em> by <code>nng_opts_parse</code> when
+The value will be returned to the caller in <em>val</em> by <code>nng_args_parse</code> when
 this option is parsed from the command line.</p>
 </li>
 <li>
-<p><code>o_arg</code>:</p>
+<p><code>a_arg</code>:</p>
 <p>This value should be set to <code>true</code> if the option should take an argument.</p>
 </li>
 </ul>
@@ -325,7 +337,7 @@ a single <em>argv</em> element, is not supported by this function (yet).</p>
 </div>
 <h3 id="prefix-matching"><a class="header" href="#prefix-matching">Prefix Matching</a></h3>
 <p>When using long options, the parser will match if it is equal to a prefix
-of the <code>o_name</code> member of a option specification, provided that it do so
+of the <code>a_name</code> member of a option specification, provided that it do so
 unambiguously (meaning it must not match any other option specification.)</p>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <p>The following program fragment demonstrates this function.</p>
@@ -333,26 +345,26 @@ unambiguously (meaning it must not match any other option specification.)</p>
     char *logfile; // options to be set
     bool verbose;
 
-    static nng_optspec specs[] = {
+    static nng_arg_spec specs[] = {
         {
-            .o_name = "logfile",
-            .o_short = 'D',
-            .o_val = OPT_LOGFILE,
-            .o_arg = true,
+            .a_name = "logfile",
+            .a_short = 'D',
+            .a_val = OPT_LOGFILE,
+            .a_arg = true,
         }, {
-            .o_name = "verbose",
-            .o_short = 'V',
-            .o_val = OPT_VERBOSE,
-            .o_arg = false,
+            .a_name = "verbose",
+            .a_short = 'V',
+            .a_val = OPT_VERBOSE,
+            .a_arg = false,
         }, {
-            .o_val = 0; // Terminate array
+            .a_val = 0; // Terminate array
         }
     };
 
     for (int idx = 1;;) {
         int rv, opt;
         char *arg;
-        rv = nng_opts_parse(argc, argv, specs, &amp;opt, &amp;arg, &amp;idx);
+        rv = nng_args_parse(argc, argv, specs, &amp;opt, &amp;arg, &amp;idx);
         if (rv != 0) {
             break;
         }
@@ -365,8 +377,18 @@ unambiguously (meaning it must not match any other option specification.)</p>
             break;
         }
     }
-    if (rv != -1) {
-        printf("Options error: %s\n", nng_strerror(rv));
+    if (rv != NNG_ARG_END) {
+        switch (rv) {
+        case NNG_ARG_AMBIG:
+            printf("Options error: ambiguous option\n");
+            break;
+        case NNG_ARG_MISSING:
+            printf("Options error: required option argument missing\n");
+            break;
+        case NNG_ARG_INVAL:
+            printf("Options error: unknown option present\n");
+            break;
+        }
         exit(1);
     }
 </code></pre>
