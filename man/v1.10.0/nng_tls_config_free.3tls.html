@@ -1,0 +1,62 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_tls_config_free(3tls)
+---
+<h1>nng_tls_config_free(3tls)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_tls_config_free - deallocate a TLS configuration object</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/tls/tls.h&gt;</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_tls_config_free</span><span class="tok-p">(</span><span class="tok-n">nng_tls_config</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_tls_config_free()</code> decrements the reference count on the
+TLS configuration object pointed to by <em>cfg</em>, and if the resulting
+reference count is zero, then deallocates the configuration object.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

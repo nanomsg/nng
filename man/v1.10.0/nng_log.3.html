@@ -1,0 +1,96 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_log(3)
+---
+<h1>nng_log(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_log - log messages</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_err</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">...);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_warn</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">...);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_notice</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">...);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_info</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">...);</span>
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_debug</span><span class="tok-p">(</span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">...);</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_auth</span><span class="tok-p">(</span><span class="tok-n">nng_log_level</span><span class="tok-w"> </span><span class="tok-n">level</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msgid</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-k">const</span><span class="tok-w"> </span><span class="tok-kt">char</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-p">...);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions are used to post a message to system or application logs.</p>
+</div>
+<div class="paragraph">
+<p>The first five forms all post a message at the severity indicated by the function name.
+The <em>msgid</em> should be a short message identifier that should indicate the message in question.
+A <code>NULL</code> value for <em>msgid</em> canbe used as well.</p>
+</div>
+<div class="paragraph">
+<p>Message identifiers can be used to assist in filtering logs.
+These should uniquely identify the nature of the problem, whe possible, to assist in trouble-shooting.
+They should also be short.
+Eight characters or less is ideal, and more than sixteen is strongly discouraged.</p>
+</div>
+<div class="paragraph">
+<p>The message is formatting as if by <code>sprintf</code>, using <code>msg</code> as the format, and remaining arguments as arguments to the format.</p>
+</div>
+<div class="paragraph">
+<p>The final function, <code>nng_log_auth</code>, is used for posting authentication related messages which might be treated specially, such as be storing them in a separate secured log file.
+It takes the severity as a level in <em>level</em>.
+The severity can be one of the following values:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NNG_LOG_ERR</code></p>
+</li>
+<li>
+<p><code>NNG_LOG_WARN</code></p>
+</li>
+<li>
+<p><code>NNG_LOG_NOTICE</code></p>
+</li>
+<li>
+<p><code>NNG_LOG_INFO</code></p>
+</li>
+<li>
+<p><code>NNG_LOG_DEBUG</code></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The message itself is handled according to the logging facility set up with <a href="nng_mg_set_logger.3.html"><code>nng_log_set_logger</code></a>.
+Message delivery is best effort, and messages may be suppressed based on the priority set with <a href="nng_log_set_level.3.html"><code>nng_log_set_level</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>Note that in order to get log messages, a suitable logger must be set using <code>nng_log_set_logger</code>.
+The default logger, <code>nng_null_logger</code> simply discards logged content.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="nng_log_set_facility.3.html">nng_log_set_facility(3)</a>,
+<a href="nng_log_set_level.3.html">nng_log_set_level(3)</a>,
+<a href="nng_log_set_logger.3.html">nng_log_set_logger(3)</a></p>
+</div>
+</div>
+</div>

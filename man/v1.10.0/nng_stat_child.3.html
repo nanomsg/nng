@@ -1,0 +1,79 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_stat_child(3)
+---
+<h1>nng_stat_child(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_stat_child - get child statistic</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">struct</span><span class="tok-w"> </span><span class="tok-nc">nng_stat</span><span class="tok-w"> </span><span class="tok-n">nng_stat</span><span class="tok-p">;</span>
+
+<span class="tok-n">nng_stat</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-nf">nng_stat_child</span><span class="tok-p">(</span><span class="tok-n">nng_stat</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">parent</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_stat_child()</code> function returns the first child statistic of the
+statistic <em>parent</em>.
+If no children are present, then <code>NULL</code> is returned.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Only statistics with type (see <a href="nng_stat_type.3.html"><code>nng_stat_type()</code></a>)
+of <code>NNG_STAT_SCOPE</code> will have children.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The first child statistic of <em>parent</em>, or NULL if <em>parent</em> has no children.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng_stat_next.3.html">nng_stat_next(3)</a>,
+<a href="nng_stats_get.3.html">nng_stats_get(3)</a>,
+<a href="nng_stat.5.html">nng_stat(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

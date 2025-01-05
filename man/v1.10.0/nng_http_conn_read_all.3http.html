@@ -1,0 +1,169 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_http_conn_read_all(3http)
+---
+<h1>nng_http_conn_read_all(3http)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_http_conn_read_all - read all from HTTP connection</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+<span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_http_conn_read_all</span><span class="tok-p">(</span><span class="tok-n">nng_http_conn</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">conn</span><span class="tok-p">,</span><span class="tok-w"> </span><span class="tok-n">nng_aio</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_conn_read_all()</code> function starts an asynchronous read from the
+HTTP connection <em>conn</em>, into the scatter/gather vector located in the
+asynchronous I/O structure <em>aio</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <a href="nng_aio_set_iov.3.html"><code>nng_aio_set_iov()</code></a> function must have been
+called first, to set the scatter/gather vector for <em>aio</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This function returns immediately, with no return value.
+Completion of the operation is signaled via the <em>aio</em>, and the final result
+may be obtained via <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>.
+That result will either be zero or an error code.</p>
+</div>
+<div class="paragraph">
+<p>The I/O operation completes only when the entire amount of data
+requested has been read, or an error has occurred.
+If the operation
+completes successfully, then the entire requested data has been read.</p>
+</div>
+<div class="paragraph">
+<p>It is still possible for a partial read to complete in the event of an error.
+The actual number of bytes read can be determined with
+<a href="nng_aio_count.3.html"><code>nng_aio_count()</code></a>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The main purpose for this function is to facilitate reading HTTP
+body content, after first determining the length of the body content
+from the relevant HTTP headers (typically <code>Content-Length</code>).
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECANCELED</code>
+</td>
+<td class="hdlist2">
+<p>The operation was canceled.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>The connection was closed.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECONNRESET</code>
+</td>
+<td class="hdlist2">
+<p>The peer closed the connection.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The <em>aio</em> does not contain a valid scatter/gather vector.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory to perform the operation.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>HTTP operations are not supported.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>Timeout waiting for data from the connection.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_count.3.html">nng_aio_count(3)</a>,
+<a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
+<a href="nng_aio_set_iov.3.html">nng_aio_set_iov(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_http_client_connect.3http.html">nng_http_client_connect(3)</a>,
+<a href="nng_http_conn_read.3http.html">nng_http_conn_read(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

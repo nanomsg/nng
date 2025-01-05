@@ -1,0 +1,74 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_thread_destroy(3supp)
+---
+<h1>nng_thread_destroy(3supp)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_thread_destroy - reap thread</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_thread_destroy</span><span class="tok-p">(</span><span class="tok-n">nng_thread</span><span class="tok-w"> </span><span class="tok-o">*</span><span class="tok-kr">thread</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_thread_destroy()</code> function reaps the <em>thread</em>.
+It waits for the thread function to return, and then deallocates
+the resources for the thread.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Do not call this function from the thread function itself,
+or a deadlock will occur.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_thread_create.3supp.html">nng_thread_create(3supp)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

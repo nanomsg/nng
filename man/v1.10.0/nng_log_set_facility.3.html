@@ -1,0 +1,60 @@
+---
+version: v1.10.0
+layout: manpage_v2
+title: nng_log_set_facility(3)
+---
+<h1>nng_log_set_facility(3)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_log_set_facility - set facility used for log messages</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span><span class="tok-w"> </span><span class="tok-cpf">&lt;nng/nng.h&gt;</span>
+
+<span class="tok-k">typedef</span><span class="tok-w"> </span><span class="tok-k">enum</span><span class="tok-w"> </span><span class="tok-n">nng_log_facility</span><span class="tok-w"> </span><span class="tok-p">{</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_USER</span><span class="tok-w">   </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">1</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_DAEMON</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">3</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_AUTH</span><span class="tok-w">   </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">10</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL0</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">16</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL1</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">17</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL2</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">18</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL3</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">19</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL4</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">20</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL5</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">21</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL6</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">22</span><span class="tok-p">,</span>
+<span class="tok-w">	</span><span class="tok-n">NNG_LOG_LOCAL7</span><span class="tok-w"> </span><span class="tok-o">=</span><span class="tok-w"> </span><span class="tok-mi">23</span><span class="tok-p">,</span>
+<span class="tok-p">}</span><span class="tok-w"> </span><span class="tok-n">nng_log_facility</span><span class="tok-p">;</span>
+
+<span class="tok-kt">void</span><span class="tok-w"> </span><span class="tok-nf">nng_log_set_facility</span><span class="tok-p">(</span><span class="tok-n">nng_log_facility</span><span class="tok-w"> </span><span class="tok-n">facility</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_log_set_facility</code> is used to set the <em>facility</em> of the application posting logs.
+This is used to assist with directing log content when handled by services such as <code>syslog</code>.</p>
+</div>
+<div class="paragraph">
+<p>Note that while the log levels used here overlap with common levels used by the syslog facility on POSIX systems, applications should not rely on this.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="nng_log_set_level.3.html">nng_log_set_level(3)</a></p>
+</div>
+</div>
+</div>
