@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -14,14 +14,13 @@
 
 #include <stdbool.h>
 
-// New stuff.
 static nni_reap_list *reap_list = NULL;
 static nni_thr        reap_thr;
 static bool           reap_exit = false;
-static nni_mtx        reap_mtx  = NNI_MTX_INITIALIZER;
 static bool           reap_empty;
-static nni_cv         reap_work_cv  = NNI_CV_INITIALIZER(&reap_mtx);
-static nni_cv         reap_empty_cv = NNI_CV_INITIALIZER(&reap_mtx);
+static nni_mtx        reap_mtx;
+static nni_cv         reap_work_cv;
+static nni_cv         reap_empty_cv;
 
 static void
 reap_worker(void *unused)
@@ -109,6 +108,9 @@ nni_reap_sys_init(void)
 	int rv;
 
 	reap_exit = false;
+	nni_mtx_init(&reap_mtx);
+	nni_cv_init(&reap_work_cv, &reap_mtx);
+	nni_cv_init(&reap_empty_cv, &reap_mtx);
 	// If this fails, we don't fail init, instead we will try to
 	// start up at reap time.
 	if ((rv = nni_thr_init(&reap_thr, reap_worker, NULL)) != 0) {
@@ -126,6 +128,10 @@ nni_reap_sys_fini(void)
 	nni_cv_wake1(&reap_work_cv);
 	nni_mtx_unlock(&reap_mtx);
 	nni_thr_fini(&reap_thr);
+
+	nni_cv_fini(&reap_work_cv);
+	nni_cv_fini(&reap_empty_cv);
+	nni_mtx_fini(&reap_mtx);
 
 	// NB: The subsystem linkages remain in place.  We don't need
 	// to reinitialize them across future initializations.
