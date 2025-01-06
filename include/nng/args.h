@@ -8,6 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#ifndef NNG_ARGS_H
+#define NNG_ARGS_H
+
 // This is a relatively simple "command line options parsing" library, used to
 // parse command line options.  We would use getopt(3), but there are
 // two problems with getopt(3).  First, it isn't available on all
@@ -161,3 +164,5 @@ nng_args_parse(int argc, char *const *argv, const nng_arg_spec *specs,
 
 	return (0);
 }
+
+#endif // NNG_ARGS_H
