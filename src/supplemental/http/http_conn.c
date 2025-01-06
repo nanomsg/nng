@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -11,9 +11,12 @@
 
 #include <ctype.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 
+#include "core/list.h"
 #include "core/nng_impl.h"
+#include "nng/http.h"
 #include "supplemental/tls/tls_api.h"
 
 #include "http_api.h"
@@ -62,20 +65,20 @@ struct nng_http_conn {
 	size_t           rd_put;
 	size_t           rd_bufsz;
 	bool             rd_buffered;
-
-	bool res_sent;
+	bool             client; // true if this is a client's connection
+	bool             res_sent;
 
 	enum write_flavor wr_flavor;
 };
 
 nng_http_req *
-nni_http_conn_req(nng_http_conn *conn)
+nni_http_conn_req(nng_http *conn)
 {
 	return (&conn->req);
 }
 
 nng_http_res *
-nni_http_conn_res(nng_http_conn *conn)
+nni_http_conn_res(nng_http *conn)
 {
 	return (&conn->res);
 }
@@ -138,6 +141,20 @@ nni_http_conn_close(nni_http_conn *conn)
 	nni_mtx_unlock(&conn->mtx);
 }
 
+// http_rd_buf_pull_up pulls the content of the read buffer back to the
+// beginning, so that the next read can go at the end.  This avoids the problem
+// of dealing with a read that might wrap.
+static void
+http_rd_buf_pull_up(nni_http_conn *conn)
+{
+	if (conn->rd_get != 0) {
+		memmove(conn->rd_buf, conn->rd_buf + conn->rd_get,
+		    conn->rd_put - conn->rd_get);
+		conn->rd_put -= conn->rd_get;
+		conn->rd_get = 0;
+	}
+}
+
 // http_rd_buf attempts to satisfy the read from data in the buffer.
 static int
 http_rd_buf(nni_http_conn *conn, nni_aio *aio)
@@ -196,34 +213,44 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		return (NNG_EAGAIN);
 
 	case HTTP_RD_REQ:
-		rv = nni_http_req_parse(
-		    nni_aio_get_prov_data(aio), rbuf, cnt, &n);
+		conn->client = true;
+		rv           = nni_http_req_parse(conn, rbuf, cnt, &n);
+		conn->client = false;
 		conn->rd_get += n;
 		if (conn->rd_get == conn->rd_put) {
 			conn->rd_get = conn->rd_put = 0;
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
+			http_rd_buf_pull_up(conn);
 			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
 			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
 			conn->rd_buffered = true;
+			if (iov1.iov_len == 0) {
+				return (NNG_EMSGSIZE);
+			}
 			nni_aio_set_iov(&conn->rd_aio, 1, &iov1);
 			nng_stream_recv(conn->sock, &conn->rd_aio);
 		}
 		return (rv);
 
 	case HTTP_RD_RES:
-		rv = nni_http_res_parse(
-		    nni_aio_get_prov_data(aio), rbuf, cnt, &n);
+		conn->client = false;
+		rv           = nni_http_res_parse(conn, rbuf, cnt, &n);
+		conn->client = true;
 		conn->rd_get += n;
 		if (conn->rd_get == conn->rd_put) {
 			conn->rd_get = conn->rd_put = 0;
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
+			http_rd_buf_pull_up(conn);
 			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
 			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
 			conn->rd_buffered = true;
+			if (iov1.iov_len == 0) {
+				return (NNG_EMSGSIZE);
+			}
 			nni_aio_set_iov(&conn->rd_aio, 1, &iov1);
 			nng_stream_recv(conn->sock, &conn->rd_aio);
 		}
@@ -511,23 +538,29 @@ http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 }
 
 void
+nni_http_conn_reset(nng_http *conn)
+{
+	nni_http_req_reset(&conn->req);
+	nni_http_res_reset(&conn->res);
+	if (strlen(conn->req.host)) {
+		nni_http_set_host(conn, conn->req.host);
+	}
+}
+
+void
 nni_http_read_req(nni_http_conn *conn, nni_aio *aio)
 {
-	nni_aio_set_prov_data(aio, &conn->req);
-
 	// clear the sent flag (used for the server)
 	conn->res_sent = false;
-	nni_http_req_reset(&conn->req);
+	nni_http_conn_reset(conn);
 	nni_mtx_lock(&conn->mtx);
 	http_rd_submit(conn, aio, HTTP_RD_REQ);
 	nni_mtx_unlock(&conn->mtx);
 }
 
 void
-nni_http_read_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
+nni_http_read_res(nni_http_conn *conn, nni_aio *aio)
 {
-	nni_aio_set_prov_data(aio, res);
-
 	nni_mtx_lock(&conn->mtx);
 	http_rd_submit(conn, aio, HTTP_RD_RES);
 	nni_mtx_unlock(&conn->mtx);
@@ -564,28 +597,25 @@ nni_http_read(nni_http_conn *conn, nni_aio *aio)
 }
 
 void
-nni_http_write_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
+nni_http_write_req(nni_http_conn *conn, nni_aio *aio)
 {
 	int     rv;
 	void   *buf;
 	size_t  bufsz;
-	void   *data;
-	size_t  size;
 	nni_iov iov[2];
 	int     niov;
 
-	if ((rv = nni_http_req_get_buf(req, &buf, &bufsz)) != 0) {
+	if ((rv = nni_http_req_get_buf(&conn->req, &buf, &bufsz)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	nni_http_req_get_data(req, &data, &size);
 	niov           = 1;
 	iov[0].iov_len = bufsz;
 	iov[0].iov_buf = buf;
-	if ((size > 0) && (data != NULL)) {
+	iov[1].iov_len = conn->req.data.size;
+	iov[1].iov_buf = conn->req.data.data;
+	if ((iov[1].iov_len > 0) && (iov[1].iov_buf != NULL)) {
 		niov++;
-		iov[1].iov_len = size;
-		iov[1].iov_buf = data;
 	}
 	nni_aio_set_iov(aio, niov, iov);
 
@@ -597,28 +627,24 @@ nni_http_write_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
 void
 nni_http_write_res(nni_http_conn *conn, nni_aio *aio)
 {
-	int           rv;
-	void         *buf;
-	size_t        bufsz;
-	void         *data;
-	size_t        size;
-	nni_iov       iov[2];
-	int           nio;
-	nng_http_res *res = nng_http_conn_res(conn);
+	int     rv;
+	void   *buf;
+	size_t  bufsz;
+	nni_iov iov[2];
+	int     nio;
 
 	conn->res_sent = true;
-	if ((rv = nni_http_res_get_buf(res, &buf, &bufsz)) != 0) {
+	if ((rv = nni_http_res_get_buf(conn, &buf, &bufsz)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	nni_http_res_get_data(res, &data, &size);
 	nio            = 1;
 	iov[0].iov_len = bufsz;
 	iov[0].iov_buf = buf;
-	if ((size > 0) && (data != NULL)) {
+	iov[1].iov_len = conn->res.data.size;
+	iov[1].iov_buf = conn->res.data.data;
+	if ((iov[1].iov_len > 0) && (iov[1].iov_buf != NULL)) {
 		nio++;
-		iov[1].iov_len = size;
-		iov[1].iov_buf = data;
 	}
 	nni_aio_set_iov(aio, nio, iov);
 
@@ -641,6 +667,632 @@ nni_http_write_full(nni_http_conn *conn, nni_aio *aio)
 	nni_mtx_lock(&conn->mtx);
 	http_wr_submit(conn, aio, HTTP_WR_FULL);
 	nni_mtx_unlock(&conn->mtx);
+}
+
+const char *
+nni_http_get_version(nng_http *conn)
+{
+	return (conn->req.vers);
+}
+
+int
+nni_http_set_version(nng_http *conn, const char *vers)
+{
+	static const char *http_versions[] = {
+		// for efficiency, we order in most likely first
+		"HTTP/1.1",
+		"HTTP/2",
+		"HTTP/3",
+		"HTTP/1.0",
+		"HTTP/0.9",
+		NULL,
+	};
+
+	vers = vers != NULL ? vers : NNG_HTTP_VERSION_1_1;
+	for (int i = 0; http_versions[i] != NULL; i++) {
+		if (strcmp(vers, http_versions[i]) == 0) {
+			conn->req.vers = http_versions[i];
+			conn->res.vers = http_versions[i];
+			return (0);
+		}
+	}
+	return (NNG_ENOTSUP);
+}
+
+void
+nni_http_set_method(nng_http *conn, const char *method)
+{
+	if (method == NULL) {
+		method = "GET";
+	}
+	// this may truncate the method, but nobody should be sending
+	// methods so long.
+	(void) snprintf(conn->req.meth, sizeof(conn->req.meth), "%s", method);
+}
+
+const char *
+nni_http_get_method(nng_http *conn)
+{
+	return (conn->req.meth);
+}
+
+uint16_t
+nni_http_get_status(nng_http *conn)
+{
+	return (conn->res.code);
+}
+
+const char *
+nni_http_reason(uint16_t code)
+{
+	static struct {
+		uint16_t    code;
+		const char *mesg;
+	} http_status[] = {
+		// 200, listed first because most likely
+		{ NNG_HTTP_STATUS_OK, "OK" },
+
+		// 100 series -- informational
+		{ NNG_HTTP_STATUS_CONTINUE, "Continue" },
+		{ NNG_HTTP_STATUS_SWITCHING, "Switching Protocols" },
+		{ NNG_HTTP_STATUS_PROCESSING, "Processing" },
+
+		// 200 series -- successful
+		{ NNG_HTTP_STATUS_CREATED, "Created" },
+		{ NNG_HTTP_STATUS_ACCEPTED, "Accepted" },
+		{ NNG_HTTP_STATUS_NOT_AUTHORITATIVE, "Not Authoritative" },
+		{ NNG_HTTP_STATUS_NO_CONTENT, "No Content" },
+		{ NNG_HTTP_STATUS_RESET_CONTENT, "Reset Content" },
+		{ NNG_HTTP_STATUS_PARTIAL_CONTENT, "Partial Content" },
+		{ NNG_HTTP_STATUS_MULTI_STATUS, "Multi-Status" },
+		{ NNG_HTTP_STATUS_ALREADY_REPORTED, "Already Reported" },
+		{ NNG_HTTP_STATUS_IM_USED, "IM Used" },
+
+		// 300 series -- redirection
+		{ NNG_HTTP_STATUS_MULTIPLE_CHOICES, "Multiple Choices" },
+		{ NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY,
+		    "Moved Permanently" },
+		{ NNG_HTTP_STATUS_FOUND, "Found" },
+		{ NNG_HTTP_STATUS_SEE_OTHER, "See Other" },
+		{ NNG_HTTP_STATUS_NOT_MODIFIED, "Not Modified" },
+		{ NNG_HTTP_STATUS_USE_PROXY, "Use Proxy" },
+		{ NNG_HTTP_STATUS_TEMPORARY_REDIRECT, "Temporary Redirect" },
+		{ NNG_HTTP_STATUS_PERMANENT_REDIRECT, "Permanent Redirect" },
+
+		// 400 series -- client errors
+		{ NNG_HTTP_STATUS_BAD_REQUEST, "Bad Request" },
+		{ NNG_HTTP_STATUS_UNAUTHORIZED, "Unauthorized" },
+		{ NNG_HTTP_STATUS_PAYMENT_REQUIRED, "Payment Required" },
+		{ NNG_HTTP_STATUS_FORBIDDEN, "Forbidden" },
+		{ NNG_HTTP_STATUS_NOT_FOUND, "Not Found" },
+		{ NNG_HTTP_STATUS_METHOD_NOT_ALLOWED, "Method Not Allowed" },
+		{ NNG_HTTP_STATUS_NOT_ACCEPTABLE, "Not Acceptable" },
+		{ NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED,
+		    "Proxy Authentication Required" },
+		{ NNG_HTTP_STATUS_REQUEST_TIMEOUT, "Request Timeout" },
+		{ NNG_HTTP_STATUS_CONFLICT, "Conflict" },
+		{ NNG_HTTP_STATUS_GONE, "Gone" },
+		{ NNG_HTTP_STATUS_LENGTH_REQUIRED, "Length Required" },
+		{ NNG_HTTP_STATUS_PRECONDITION_FAILED, "Precondition Failed" },
+		{ NNG_HTTP_STATUS_CONTENT_TOO_LARGE, "Content Too Large" },
+		{ NNG_HTTP_STATUS_URI_TOO_LONG, "URI Too Long" },
+		{ NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE,
+		    "Unsupported Media Type" },
+		{ NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE,
+		    "Range Not Satisfiable" },
+		{ NNG_HTTP_STATUS_EXPECTATION_FAILED, "Expectation Failed" },
+		{ NNG_HTTP_STATUS_TEAPOT, "I Am A Teapot" },
+		{ NNG_HTTP_STATUS_LOCKED, "Locked" },
+		{ NNG_HTTP_STATUS_FAILED_DEPENDENCY, "Failed Dependency" },
+		{ NNG_HTTP_STATUS_UPGRADE_REQUIRED, "Upgrade Required" },
+		{ NNG_HTTP_STATUS_PRECONDITION_REQUIRED,
+		    "Precondition Required" },
+		{ NNG_HTTP_STATUS_TOO_MANY_REQUESTS, "Too Many Requests" },
+		{ NNG_HTTP_STATUS_HEADERS_TOO_LARGE, "Headers Too Large" },
+		{ NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS,
+		    "Unavailable For Legal Reasons" },
+
+		// 500 series -- server errors
+		{ NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR,
+		    "Internal Server Error" },
+		{ NNG_HTTP_STATUS_NOT_IMPLEMENTED, "Not Implemented" },
+		{ NNG_HTTP_STATUS_BAD_REQUEST, "Bad Gateway" },
+		{ NNG_HTTP_STATUS_SERVICE_UNAVAILABLE, "Service Unavailable" },
+		{ NNG_HTTP_STATUS_GATEWAY_TIMEOUT, "Gateway Timeout" },
+		{ NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP,
+		    "HTTP Version Not Supported" },
+		{ NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES,
+		    "Variant Also Negotiates" },
+		{ NNG_HTTP_STATUS_INSUFFICIENT_STORAGE,
+		    "Insufficient Storage" },
+		{ NNG_HTTP_STATUS_LOOP_DETECTED, "Loop Detected" },
+		{ NNG_HTTP_STATUS_NOT_EXTENDED, "Not Extended" },
+		{ NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED,
+		    "Network Authentication Required" },
+
+		// Terminator
+		{ 0, NULL },
+	};
+
+	for (int i = 0; http_status[i].code != 0; i++) {
+		if (http_status[i].code == code) {
+			return (http_status[i].mesg);
+		}
+	}
+	return ("Unknown HTTP Status");
+}
+
+const char *
+nni_http_get_reason(nng_http *conn)
+{
+#ifdef NNG_SUPP_HTTP
+	return (
+	    conn->res.rsn ? conn->res.rsn : nni_http_reason(conn->res.code));
+#else
+	return (NULL);
+#endif
+}
+
+int
+nni_http_set_status(nng_http *conn, uint16_t status, const char *reason)
+{
+	conn->res.code = status;
+	char *dup      = NULL;
+	if ((reason != NULL) &&
+	    (strcmp(reason, nni_http_reason(conn->res.code)) == 0)) {
+		reason = NULL;
+		return (0);
+	}
+	if ((reason != NULL) && (dup = nni_strdup(reason)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if (conn->res.rsn != NULL) {
+		nni_strfree(conn->res.rsn);
+	}
+	conn->res.rsn = dup;
+	return (0);
+}
+
+static int
+http_conn_set_error(nng_http *conn, uint16_t status, const char *reason,
+    const char *body, const char *redirect)
+{
+	int         rv;
+	char        content[1024];
+	const char *prefix = "<!DOCTYPE html>\n"
+	                     "<html><head><title>%d %s</title>\n"
+	                     "<style>"
+	                     "body { font-family: Arial, sans serif; "
+	                     "text-align: center }\n"
+	                     "h1 { font-size: 36px; }"
+	                     "span { background-color: gray; color: white; "
+	                     "padding: 7px; "
+	                     "border-radius: 5px }"
+	                     "h2 { font-size: 24px; }"
+	                     "p { font-size: 20px; }"
+	                     "</style></head>"
+	                     "<body><p>&nbsp;</p>"
+	                     "<h1><span>%d</span></h1>"
+	                     "<h2>%s</h2><p>";
+	const char *suffix = "</p></body></html>";
+
+	conn->res.iserr = true;
+
+	if ((rv = nni_http_set_status(conn, status, reason)) != 0) {
+		return (rv);
+	}
+	reason = nni_http_get_reason(conn);
+
+	if (body == NULL) {
+		snprintf(content, sizeof(content), prefix, status, reason,
+		    status, reason);
+		size_t avail = sizeof(content) - strlen(content);
+
+		if (redirect != NULL && strlen(redirect) > 200 &&
+		    strlen(reason) < 40) {
+			// URL is too long for buffer and unlikely to be useful
+			// to humans anyway.  600 bytes will fit in the 1K
+			// buffer without issue.  (Our prelude and trailer are
+			// less than 400 bytes.)
+			snprintf(content + strlen(content), avail,
+			    "You should be automatically redirected.");
+			avail = sizeof(content) - strlen(content);
+		} else if (redirect != NULL) {
+			// TODO: redirect should be URL encoded.
+			snprintf(content + strlen(content), avail,
+			    "You should be automatically redirected to <a "
+			    "href=\"%s\">%s</a>.",
+			    redirect, redirect);
+			avail = sizeof(content) - strlen(content);
+		}
+		snprintf(content + strlen(content), avail, "%s", suffix);
+		body = content;
+	}
+	if (strlen(body) > 0) {
+		nni_http_set_content_type(conn, "text/html; charset=UTF-8");
+		return (nni_http_copy_body(conn, body, strlen(body)));
+	}
+	return (0);
+}
+
+int
+nni_http_set_error(
+    nng_http *conn, uint16_t status, const char *reason, const char *body)
+{
+	return (http_conn_set_error(conn, status, reason, body, NULL));
+}
+
+int
+nni_http_set_redirect(
+    nng_http *conn, uint16_t status, const char *reason, const char *redirect)
+{
+	char *loc;
+	if ((loc = nni_strdup(redirect)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	(void) nni_http_del_header(conn, "Location");
+	nni_list_node_remove(&conn->res.location.node);
+	nni_http_free_header(&conn->res.location);
+	conn->res.location.name         = "Location";
+	conn->res.location.value        = loc;
+	conn->res.location.static_name  = true;
+	conn->res.location.static_value = false;
+	nni_list_prepend(&conn->res.data.hdrs, &conn->res.location);
+	return (http_conn_set_error(conn, status, reason, NULL, redirect));
+}
+
+void
+nni_http_set_host(nng_http *conn, const char *host)
+{
+	if (host != conn->req.host) {
+		snprintf(conn->req.host, sizeof(conn->req.host), "%s", host);
+	}
+	nni_list_node_remove(&conn->req.host_header.node);
+	conn->req.host_header.name         = "Host";
+	conn->req.host_header.value        = conn->req.host;
+	conn->req.host_header.static_name  = true;
+	conn->req.host_header.static_value = true;
+	conn->req.host_header.alloc_header = false;
+	nni_list_prepend(&conn->req.data.hdrs, &conn->req.host_header);
+}
+
+void
+nni_http_set_content_length(nng_http *conn, size_t size)
+{
+	nni_http_entity *data =
+	    conn->client ? &conn->req.data : &conn->res.data;
+
+	snprintf(data->clen, sizeof(data->clen), "%lu", (unsigned long) size);
+	nni_http_set_static_header(
+	    conn, &data->content_length, "Content-Length", data->clen);
+}
+
+void
+nni_http_set_content_type(nng_http *conn, const char *ctype)
+{
+	nni_http_entity *data =
+	    conn->client ? &conn->req.data : &conn->res.data;
+	snprintf(data->ctype, sizeof(data->ctype), "%s", ctype);
+	nni_http_set_static_header(
+	    conn, &data->content_type, "Content-Type", data->ctype);
+}
+
+const char *
+nni_http_get_uri(nng_http *conn)
+{
+	return (conn->req.uri);
+}
+
+int
+nni_http_set_uri(nng_http *conn, const char *uri, const char *query)
+{
+	size_t      needed;
+	const char *fmt;
+
+	if (query != NULL) {
+		fmt    = strchr(uri, '?') != NULL ? "%s&%s" : "%s?%s";
+		needed = strlen(uri) + strlen(query) + 1;
+	} else {
+		fmt    = "%s%s";
+		query  = "";
+		needed = strlen(uri);
+	}
+
+	if (conn->req.uri != NULL && (strcmp(uri, conn->req.uri) == 0) &&
+	    strlen(query) == 0) {
+		// no change, do nothing
+		return (0);
+	}
+	if (conn->req.uri != NULL && conn->req.uri != conn->req.ubuf) {
+		nni_strfree(conn->req.uri);
+	}
+
+	// fast path, small size URI fits in our buffer
+	if (needed < sizeof(conn->req.ubuf)) {
+		snprintf(
+		    conn->req.ubuf, sizeof(conn->req.ubuf), fmt, uri, query);
+		conn->req.uri = conn->req.ubuf;
+		return (0);
+	}
+
+	// too big, we have to allocate it (slow path)
+	if (nni_asprintf(&conn->req.uri, fmt, uri, query) != 0) {
+		return (NNG_ENOMEM);
+	}
+	return (0);
+}
+
+static int
+http_set_header(nng_http *conn, const char *key, const char *val)
+{
+	nni_http_entity *data =
+	    conn->client ? &conn->req.data : &conn->res.data;
+	http_header *h;
+
+	NNI_LIST_FOREACH (&data->hdrs, h) {
+		if (nni_strcasecmp(key, h->name) == 0) {
+			char *news;
+			if ((news = nni_strdup(val)) == NULL) {
+				return (NNG_ENOMEM);
+			}
+			if (!h->static_value) {
+				nni_strfree(h->value);
+				h->value = NULL;
+			}
+			h->value = news;
+			return (0);
+		}
+	}
+
+	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	h->alloc_header = true;
+	if ((h->name = nni_strdup(key)) == NULL) {
+		NNI_FREE_STRUCT(h);
+		return (NNG_ENOMEM);
+	}
+	if ((h->value = nni_strdup(val)) == NULL) {
+		nni_strfree(h->name);
+		NNI_FREE_STRUCT(h);
+		return (NNG_ENOMEM);
+	}
+	nni_list_append(&data->hdrs, h);
+	return (0);
+}
+
+static int
+http_add_header(nng_http *conn, const char *key, const char *val)
+{
+	nni_http_entity *data =
+	    conn->client ? &conn->req.data : &conn->res.data;
+	http_header *h;
+	NNI_LIST_FOREACH (&data->hdrs, h) {
+		if (nni_strcasecmp(key, h->name) == 0) {
+			char *news;
+			int   rv;
+			rv = nni_asprintf(&news, "%s, %s", h->value, val);
+			if (rv != 0) {
+				return (rv);
+			}
+			if (!h->static_value) {
+				nni_strfree(h->value);
+			}
+			h->value = news;
+			return (0);
+		}
+	}
+
+	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	h->alloc_header = true;
+	if ((h->name = nni_strdup(key)) == NULL) {
+		NNI_FREE_STRUCT(h);
+		return (NNG_ENOMEM);
+	}
+	if ((h->value = nni_strdup(val)) == NULL) {
+		nni_strfree(h->name);
+		NNI_FREE_STRUCT(h);
+		return (NNG_ENOMEM);
+	}
+	nni_list_append(&data->hdrs, h);
+	return (0);
+}
+
+static bool
+http_set_known_header(nng_http *conn, const char *key, const char *val)
+{
+	if (nni_strcasecmp(key, "Content-Type") == 0) {
+		nni_http_set_content_type(conn, val);
+		return (true);
+	}
+	if (nni_strcasecmp(key, "Content-Length") == 0) {
+		nni_http_entity *data =
+		    conn->client ? &conn->req.data : &conn->res.data;
+		snprintf(data->clen, sizeof(data->clen), "%s", val);
+		nni_http_set_static_header(
+		    conn, &data->content_length, "Content-Length", data->clen);
+		return (true);
+	}
+
+	if (conn->client) {
+		if (nni_strcasecmp(key, "Host") == 0) {
+			nni_http_set_host(conn, val);
+			return (true);
+		}
+	}
+	return (false);
+}
+
+int
+nni_http_add_header(nng_http *conn, const char *key, const char *val)
+{
+	if (http_set_known_header(conn, key, val)) {
+		return (0);
+	}
+
+	return (http_add_header(conn, key, val));
+}
+
+void
+nni_http_set_static_header(
+    nng_http *conn, nni_http_header *h, const char *key, const char *val)
+{
+	nni_list *headers;
+	if (conn->client) {
+		headers = &conn->req.data.hdrs;
+	} else {
+		headers = &conn->res.data.hdrs;
+	}
+
+	nni_http_del_header(conn, key);
+	nni_list_node_remove(&h->node);
+	h->alloc_header = false;
+	h->static_name  = true;
+	h->static_value = true;
+	h->name         = (char *) key;
+	h->value        = (char *) val;
+	nni_list_append(headers, h);
+}
+
+int
+nni_http_set_header(nng_http *conn, const char *key, const char *val)
+{
+	if (http_set_known_header(conn, key, val)) {
+		return (0);
+	}
+	return (http_set_header(conn, key, val));
+}
+
+static bool
+http_del_header_one(nni_list *hdrs, const char *key)
+{
+	http_header *h;
+	NNI_LIST_FOREACH (hdrs, h) {
+		if (nni_strcasecmp(key, h->name) == 0) {
+			nni_http_free_header(h);
+			return (true);
+		}
+	}
+	return (false);
+}
+
+void
+nni_http_del_header(nng_http *conn, const char *key)
+{
+	nni_list *hdrs =
+	    conn->client ? &conn->req.data.hdrs : &conn->res.data.hdrs;
+	while (http_del_header_one(hdrs, key)) {
+		continue;
+	}
+}
+
+static const char *
+http_get_header(const nni_list *hdrs, const char *key)
+{
+	http_header *h;
+	NNI_LIST_FOREACH (hdrs, h) {
+		if (nni_strcasecmp(h->name, key) == 0) {
+			return (h->value);
+		}
+	}
+	return (NULL);
+}
+
+const char *
+nni_http_get_header(nng_http *conn, const char *key)
+{
+	if (conn->client) {
+		return (http_get_header(&conn->res.data.hdrs, key));
+	} else {
+		return (http_get_header(&conn->req.data.hdrs, key));
+	}
+}
+
+void
+nni_http_get_body(nng_http *conn, void **datap, size_t *sizep)
+{
+	if (conn->client) {
+		*datap = conn->res.data.data;
+		*sizep = conn->res.data.size;
+	} else {
+		*datap = conn->req.data.data;
+		*sizep = conn->req.data.size;
+	}
+}
+
+static void
+http_set_data(nni_http_entity *entity, const void *data, size_t size)
+{
+	if (entity->own) {
+		nni_free(entity->data, entity->size);
+	}
+	entity->data = (void *) data;
+	entity->size = size;
+	entity->own  = false;
+}
+
+static int
+http_alloc_data(nni_http_entity *entity, size_t size)
+{
+	void *newdata;
+	if (size != 0) {
+		if ((newdata = nni_zalloc(size)) == NULL) {
+			return (NNG_ENOMEM);
+		}
+	}
+	http_set_data(entity, newdata, size);
+	entity->own = true;
+	return (0);
+}
+
+static int
+http_copy_data(nni_http_entity *entity, const void *data, size_t size)
+{
+	int rv;
+	if ((rv = http_alloc_data(entity, size)) == 0) {
+		memcpy(entity->data, data, size);
+	}
+	return (rv);
+}
+
+void
+nni_http_set_body(nng_http *conn, void *data, size_t size)
+{
+	if (conn->client) {
+		http_set_data(&conn->req.data, data, size);
+	} else {
+		http_set_data(&conn->res.data, data, size);
+	}
+	nni_http_set_content_length(conn, size);
+}
+
+void
+nni_http_prune_body(nng_http *conn)
+{
+	// prune body but leave content-length header intact.
+	// This is for HEAD.
+	if (conn->client) {
+		http_set_data(&conn->req.data, NULL, 0);
+	} else {
+		http_set_data(&conn->res.data, NULL, 0);
+	}
+}
+
+int
+nni_http_copy_body(nng_http *conn, const void *data, size_t size)
+{
+	int rv;
+	if (conn->client) {
+		rv = http_copy_data(&conn->req.data, data, size);
+	} else {
+		rv = http_copy_data(&conn->res.data, data, size);
+	}
+	if (rv == 0) {
+		nni_http_set_content_length(conn, size);
+	}
+	return (rv);
 }
 
 int
@@ -674,26 +1326,28 @@ nni_http_conn_fini(nni_http_conn *conn)
 
 	nni_aio_fini(&conn->wr_aio);
 	nni_aio_fini(&conn->rd_aio);
-	nni_http_req_reset(&conn->req);
-	nni_http_res_reset(&conn->res);
+	nni_http_conn_reset(conn);
 	nni_free(conn->rd_buf, conn->rd_bufsz);
 	nni_mtx_fini(&conn->mtx);
 	NNI_FREE_STRUCT(conn);
 }
 
 static int
-http_init(nni_http_conn **connp, nng_stream *data)
+http_init(nni_http_conn **connp, nng_stream *data, bool client)
 {
 	nni_http_conn *conn;
 
 	if ((conn = NNI_ALLOC_STRUCT(conn)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	conn->client = client;
 	nni_mtx_init(&conn->mtx);
 	nni_aio_list_init(&conn->rdq);
 	nni_aio_list_init(&conn->wrq);
 	nni_http_req_init(&conn->req);
 	nni_http_res_init(&conn->res);
+	nni_http_set_version(conn, NNG_HTTP_VERSION_1_1);
+	nni_http_set_method(conn, NULL);
 
 	if ((conn->rd_buf = nni_alloc(HTTP_BUFSIZE)) == NULL) {
 		nni_http_conn_fini(conn);
@@ -712,10 +1366,10 @@ http_init(nni_http_conn **connp, nng_stream *data)
 }
 
 int
-nni_http_conn_init(nni_http_conn **connp, nng_stream *stream)
+nni_http_conn_init(nni_http_conn **connp, nng_stream *stream, bool client)
 {
 	int rv;
-	if ((rv = http_init(connp, stream)) != 0) {
+	if ((rv = http_init(connp, stream, client)) != 0) {
 		nng_stream_free(stream);
 	}
 	return (rv);
@@ -723,7 +1377,13 @@ nni_http_conn_init(nni_http_conn **connp, nng_stream *stream)
 
 // private to the HTTP framework, used on the server
 bool
-nni_http_conn_res_sent(nni_http_conn *conn)
+nni_http_res_sent(nni_http_conn *conn)
 {
 	return (conn->res_sent);
+}
+
+bool
+nni_http_parsed(nng_http *conn)
+{
+	return (conn->client ? conn->res.data.parsed : conn->req.data.parsed);
 }

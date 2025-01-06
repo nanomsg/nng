@@ -18,7 +18,7 @@ nng_http_server_hold - get and hold HTTP server instance
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 int nng_http_server_hold(nng_http_server **serverp, const nng_url *url);
 ----

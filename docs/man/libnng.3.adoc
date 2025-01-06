@@ -99,48 +99,16 @@ The following functions are used to work with HTTP requests, responses,
 and connections.
 
 |===
-|xref:nng_http_conn_close.3http.adoc[nng_http_conn_close()]|close HTTP connection
-|xref:nng_http_conn_read.3http.adoc[nng_http_conn_read()]|read from HTTP connection
-|xref:nng_http_conn_read_all.3http.adoc[nng_http_conn_read_all()]|read all from HTTP connection
 |xref:nng_http_conn_read_req.3http.adoc[nng_http_conn_read_req()]|read HTTP request
 |xref:nng_http_conn_read_res.3http.adoc[nng_http_conn_read_res()]|read HTTP response
-|xref:nng_http_conn_write.3http.adoc[nng_http_conn_write()]|write to HTTP connection
-|xref:nng_http_conn_write_all.3http.adoc[nng_http_conn_write_all()]|write all to HTTP connection
 |xref:nng_http_conn_write_req.3http.adoc[nng_http_conn_write_req()]|write HTTP request
 |xref:nng_http_conn_write_res.3http.adoc[nng_http_conn_write_res()]|write HTTP response
-|xref:nng_http_req_add_header.3http.adoc[nng_http_req_add_header()]|add HTTP request header
-|xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc()]|allocate HTTP request structure
-|xref:nng_http_req_copy_data.3http.adoc[nng_http_req_copy_data()]|copy HTTP request body
-|xref:nng_http_req_del_header.3http.adoc[nng_http_req_del_header()]|delete HTTP request header
-|xref:nng_http_req_free.3http.adoc[nng_http_req_free()]|free HTTP request structure
 |xref:nng_http_req_get_data.3http.adoc[nng_http_req_get_data()]|get HTTP request body
-|xref:nng_http_req_get_header.3http.adoc[nng_http_req_get_header()]|return HTTP request header
-|xref:nng_http_req_get_method.3http.adoc[nng_http_req_get_method()]|return HTTP request method
-|xref:nng_http_req_get_uri.3http.adoc[nng_http_req_get_uri()]|return HTTP request URI
-|xref:nng_http_req_get_version.3http.adoc[nng_http_req_get_version()]|return HTTP request protocol version
-|xref:nng_http_req_reset.3http.adoc[nng_http_req_reset()]|reset HTTP request structure
 |xref:nng_http_req_set_data.3http.adoc[nng_http_req_set_data()]|set HTTP request body
-|xref:nng_http_req_set_header.3http.adoc[nng_http_req_set_header()]|set HTTP request header
-|xref:nng_http_req_set_method.3http.adoc[nng_http_req_set_method()]|set HTTP request method
-|xref:nng_http_req_set_uri.3http.adoc[nng_http_req_set_uri()]|set HTTP request URI
-|xref:nng_http_req_set_version.3http.adoc[nng_http_req_set_version()]|set HTTP request protocol version
-|xref:nng_http_res_add_header.3http.adoc[nng_http_res_add_header()]|add HTTP response header
-|xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc()]|allocate HTTP response structure
-|xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error()]|allocate HTTP error response
 |xref:nng_http_res_copy_data.3http.adoc[nng_http_res_copy_data()]|copy HTTP response body
-|xref:nng_http_res_del_header.3http.adoc[nng_http_res_del_header()]|delete HTTP response header
-|xref:nng_http_res_free.3http.adoc[nng_http_res_free()]|free HTTP response structure
 |xref:nng_http_res_get_data.3http.adoc[nng_http_res_get_data()]|get HTTP response body
 |xref:nng_http_res_get_header.3http.adoc[nng_http_res_get_header()]|return HTTP response header
-|xref:nng_http_res_get_reason.3http.adoc[nng_http_res_get_reason()]|return HTTP response reason
-|xref:nng_http_res_get_status.3http.adoc[nng_http_res_get_status()]|return HTTP response status
-|xref:nng_http_res_get_version.3http.adoc[nng_http_res_get_version()]|return HTTP response protocol version
-|xref:nng_http_res_reset.3http.adoc[nng_http_res_reset()]|reset HTTP response structure
 |xref:nng_http_res_set_data.3http.adoc[nng_http_res_set_data()]|set HTTP response body
-|xref:nng_http_res_set_header.3http.adoc[nng_http_res_set_header()]|set HTTP response header
-|xref:nng_http_res_set_reason.3http.adoc[nng_http_res_set_reason()]|set HTTP response reason
-|xref:nng_http_res_set_status.3http.adoc[nng_http_res_set_status()]|set HTTP response status
-|xref:nng_http_res_set_version.3http.adoc[nng_http_res_set_version()]|set HTTP response protocol version
 |===
 
 ==== HTTP Client Functions
@@ -148,12 +116,6 @@ and connections.
 These functions are intended for use with HTTP client applications.
 
 |===
-|xref:nng_http_client_alloc.3http.adoc[nng_http_client_alloc()]|allocate HTTP client
-|xref:nng_http_client_connect.3http.adoc[nng_http_client_connect()]|establish HTTP client connection
-|xref:nng_http_client_free.3http.adoc[nng_http_client_free()]|free HTTP client
-|xref:nng_http_client_get_tls.3http.adoc[nng_http_client_get_tls()]|get HTTP client TLS configuration
-|xref:nng_http_client_set_tls.3http.adoc[nng_http_client_set_tls()]|set HTTP client TLS configuration
-|xref:nng_http_client_transact.3http.adoc[nng_http_client_transact()]|perform one HTTP transaction
 |xref:nng_http_conn_transact.3http.adoc[nng_http_conn_transact()]|perform one HTTP transaction on connection
 |===
 
@@ -170,7 +132,6 @@ These functions are intended for use with HTTP server applications.
 |xref:nng_http_handler_set_host.3http.adoc[nng_http_handler_set_host()]|set host for HTTP handler
 |xref:nng_http_handler_set_method.3http.adoc[nng_http_handler_set_method()]|set HTTP handler method
 |xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree()]|set HTTP handler to match trees
-|xref:nng_http_hijack.3http.adoc[nng_http_hijack()]|hijack HTTP server connection
 |xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler()]|add HTTP server handler
 |xref:nng_http_server_del_handler.3http.adoc[nng_http_server_del_handler()]|delete HTTP server handler
 |xref:nng_http_server_get_addr.3http.adoc[nng_http_server_get_addr()]|get HTTP server address

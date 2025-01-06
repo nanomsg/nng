@@ -25,6 +25,7 @@ include the `nng/nng.h` header file like so:
 - [Threads](thr.md)
 - [Logging](logging.md)
 - [Statistics](stats.md)
+- [HTTP](http.md)
 - [Miscellaneous](misc.md)
 - [Errors](errors.md)
 - [ID Map](id_map.md)

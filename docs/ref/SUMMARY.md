@@ -34,6 +34,8 @@
 
   - [Streams](./api/stream.md)
 
+  - [HTTP](./api/http.md)
+
   - [Miscellaneous](./api/misc.md)
 
   - [ID Map](./api/id_map.md)

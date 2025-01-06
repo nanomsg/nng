@@ -103,7 +103,6 @@ client(const char *url)
 	nng_socket sock;
 	nng_dialer dialer;
 	int        rv;
-	size_t     sz;
 	int        sleep = 0;
 
 	if ((rv = nng_init(NULL)) != 0) {

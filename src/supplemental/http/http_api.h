@@ -13,7 +13,9 @@
 #define NNG_SUPPLEMENTAL_HTTP_HTTP_API_H
 
 #include "core/nng_impl.h"
-#include <nng/supplemental/http/http.h>
+#include "nng/http.h"
+
+#include "http_msg.h"
 
 // This represents the "internal" HTTP API.  It should not be used
 // or exposed to applications directly.
@@ -32,21 +34,15 @@ typedef struct nng_http_chunks  nni_http_chunks;
 // These functions are private to the internal framework, and really should
 // not be used elsewhere.
 
-extern const char *nni_http_reason(uint16_t);
+extern void nni_http_req_init(nni_http_req *);
+extern void nni_http_req_reset(nni_http_req *);
+extern int  nni_http_req_get_buf(nni_http_req *, void **, size_t *);
+extern int  nni_http_req_parse(nng_http *, void *, size_t, size_t *);
 
-extern void  nni_http_req_init(nni_http_req *);
-extern void  nni_http_req_reset(nni_http_req *);
-extern int   nni_http_req_get_buf(nni_http_req *, void **, size_t *);
-extern int   nni_http_req_parse(nni_http_req *, void *, size_t, size_t *);
-extern char *nni_http_req_headers(nni_http_req *);
-extern void  nni_http_req_get_data(nni_http_req *, void **, size_t *);
-
-extern void  nni_http_res_init(nni_http_res *);
-extern void  nni_http_res_reset(nni_http_res *);
-extern int   nni_http_res_get_buf(nni_http_res *, void **, size_t *);
-extern int   nni_http_res_parse(nni_http_res *, void *, size_t, size_t *);
-extern void  nni_http_res_get_data(nni_http_res *, void **, size_t *);
-extern char *nni_http_res_headers(nni_http_res *);
+extern void nni_http_res_init(nni_http_res *);
+extern void nni_http_res_reset(nni_http_res *);
+extern int  nni_http_res_get_buf(nni_http_conn *, void **, size_t *);
+extern int  nni_http_res_parse(nng_http *, void *, size_t, size_t *);
 
 // Chunked transfer encoding.  For the moment this is not part of our public
 // API.  We can change that later.
@@ -99,12 +95,12 @@ extern void *nni_http_conn_get_ctx(nni_http_conn *);
 // These initialization functions create stream for HTTP transactions.
 // They should only be used by the server or client HTTP implementations,
 // and are not for use by other code.
-extern int nni_http_conn_init(nni_http_conn **, nng_stream *);
+extern int nni_http_conn_init(nng_http **, nng_stream *, bool);
 
-extern void nni_http_conn_close(nni_http_conn *);
+extern void nni_http_conn_close(nng_http *);
 extern void nni_http_conn_fini(nni_http_conn *);
 extern int  nni_http_conn_getopt(
-     nni_http_conn *, const char *, void *, size_t *, nni_type);
+     nng_http *, const char *, void *, size_t *, nni_type);
 
 // Reading messages -- the caller must supply a preinitialized (but otherwise
 // idle) message.  We recommend the caller store this in the aio's user data.
@@ -112,60 +108,39 @@ extern int  nni_http_conn_getopt(
 // must not use them for any other purpose.
 
 extern int  nni_http_req_alloc(nni_http_req **, const nng_url *);
-extern int  nni_http_res_alloc(nni_http_res **);
-extern int  nni_http_res_alloc_error(nni_http_res **, uint16_t);
 extern int  nni_http_res_set_error(nni_http_res *, uint16_t);
 extern void nni_http_req_free(nni_http_req *);
 extern void nni_http_res_free(nni_http_res *);
-extern void nni_http_write_req(nni_http_conn *, nni_http_req *, nni_aio *);
-extern void nni_http_read_res(nni_http_conn *, nni_http_res *, nni_aio *);
+extern void nni_http_write_req(nni_http_conn *, nni_aio *);
+extern void nni_http_read_res(nni_http_conn *, nni_aio *);
 extern void nni_http_read_req(nni_http_conn *, nni_aio *);
 extern void nni_http_write_res(nni_http_conn *, nni_aio *);
 
-extern const char *nni_http_req_get_header(const nni_http_req *, const char *);
-extern const char *nni_http_res_get_header(const nni_http_res *, const char *);
 extern int nni_http_req_add_header(nni_http_req *, const char *, const char *);
-extern int nni_http_res_add_header(nni_http_res *, const char *, const char *);
-extern int nni_http_req_set_header(nni_http_req *, const char *, const char *);
-extern int nni_http_res_set_header(nni_http_res *, const char *, const char *);
 extern int nni_http_req_del_header(nni_http_req *, const char *);
 extern int nni_http_res_del_header(nni_http_res *, const char *);
-extern int nni_http_req_copy_data(nni_http_req *, const void *, size_t);
-extern int nni_http_res_copy_data(nni_http_res *, const void *, size_t);
-extern int nni_http_req_set_data(nni_http_req *, const void *, size_t);
-extern int nni_http_res_set_data(nni_http_res *, const void *, size_t);
 extern int nni_http_req_alloc_data(nni_http_req *, size_t);
 extern int nni_http_res_alloc_data(nni_http_res *, size_t);
-extern const char *nni_http_req_get_method(const nni_http_req *);
-extern const char *nni_http_req_get_version(const nni_http_req *);
-extern const char *nni_http_req_get_uri(const nni_http_req *);
-extern void        nni_http_req_set_method(nni_http_req *, const char *);
-extern int         nni_http_req_set_version(nni_http_req *, const char *);
-extern int         nni_http_req_set_uri(nni_http_req *, const char *);
-extern int         nni_http_req_set_url(nni_http_req *, const nng_url *);
-extern uint16_t    nni_http_res_get_status(const nni_http_res *);
-extern void        nni_http_res_set_status(nni_http_res *, uint16_t);
-extern const char *nni_http_res_get_version(const nni_http_res *);
-extern int         nni_http_res_set_version(nni_http_res *, const char *);
-extern const char *nni_http_res_get_reason(const nni_http_res *);
-extern int         nni_http_res_set_reason(nni_http_res *, const char *);
 
-// nni_http_res_is_error is true if the status was allocated as part of
-// nni_http_res_alloc_error().  This is a hint to the server to replace
-// the HTML body with customized content if it exists.
 extern bool nni_http_res_is_error(nni_http_res *);
-
-// nni_http_alloc_html_error allocates a string corresponding to an
-// HTML error.  This can be set as the body of the res.  The status
-// will be looked up using HTTP status code lookups, but the details
-// will be added if present as further body text.  The result can
-// be freed with nni_strfree() later.
-extern int nni_http_alloc_html_error(char **, uint16_t, const char *);
 
 extern void nni_http_read(nni_http_conn *, nni_aio *);
 extern void nni_http_read_full(nni_http_conn *, nni_aio *);
 extern void nni_http_write(nni_http_conn *, nni_aio *);
 extern void nni_http_write_full(nni_http_conn *, nni_aio *);
+
+extern int         nni_http_add_header(nng_http *, const char *, const char *);
+extern int         nni_http_set_header(nng_http *, const char *, const char *);
+extern void        nni_http_del_header(nng_http *, const char *);
+extern const char *nni_http_get_header(nng_http *, const char *);
+
+extern void nni_http_get_body(nng_http *, void **, size_t *);
+extern void nni_http_set_body(nng_http *, void *, size_t);
+extern int  nni_http_copy_body(nng_http *, const void *, size_t);
+
+// prune body clears the outgoing body (0 bytes), but leaves content-length
+// intact if present for the benefit of HEAD.
+extern void nni_http_prune_body(nng_http *);
 
 // nni_http_server will look for an existing server with the same
 // name and port, or create one if one does not exist.  The servers
@@ -232,14 +207,10 @@ extern void nni_http_server_close(nni_http_server *);
 extern int nni_http_server_set_error_page(
     nni_http_server *, uint16_t, const char *);
 
-// nni_http_server_set_error_page sets an error file for the named status.
-extern int nni_http_server_set_error_file(
-    nni_http_server *, uint16_t, const char *);
-
 // nni_http_server_res_error takes replaces the body of the res with
 // a custom error page previously set for the server, using the status
 // of the res.  The res must have the status set first.
-extern int nni_http_server_res_error(nni_http_server *, nni_http_res *);
+extern int nni_http_server_error(nni_http_server *, nng_http *);
 
 // nni_http_hijack is intended to be called by a handler that wishes to
 // take over the processing of the HTTP session -- usually to change protocols
@@ -390,6 +361,44 @@ extern void nni_http_transact(
 extern const char *nni_http_stream_scheme(const char *);
 
 // Private method used for the server.
-extern bool nni_http_conn_res_sent(nni_http_conn *conn);
+extern bool nni_http_res_sent(nni_http_conn *conn);
+
+extern const char *nni_http_get_version(nng_http *conn);
+extern int         nni_http_set_version(nng_http *conn, const char *vers);
+
+extern void        nni_http_set_method(nng_http *conn, const char *method);
+extern const char *nni_http_get_method(nng_http *conn);
+
+extern int nni_http_set_status(
+    nng_http *conn, uint16_t status, const char *reason);
+
+extern uint16_t    nni_http_get_status(nng_http *);
+extern const char *nni_http_get_reason(nng_http *);
+
+// nni_http_set_error flags an error using the built in HTML page.
+// unless body is not NULL.  To pass no content, pass an empty string for body.
+extern int nni_http_set_error(
+    nng_http *conn, uint16_t status, const char *reason, const char *body);
+
+// nni_http_set_redirect is used to set the redirection.
+// It uses a built-in error page, with a message about the redirection, and
+// sets the response Location: header accordingly.
+extern int nni_http_set_redirect(
+    nng_http *conn, uint16_t status, const char *reason, const char *dest);
+
+extern int nni_http_set_uri(
+    nng_http *conn, const char *uri, const char *query);
+extern const char *nni_http_get_uri(nng_http *conn);
+
+extern void nni_http_set_host(nng_http *conn, const char *);
+extern void nni_http_set_content_type(nng_http *conn, const char *);
+extern void nni_http_conn_reset(nng_http *conn);
+extern int  nni_http_add_header(
+     nng_http *conn, const char *key, const char *val);
+
+extern void nni_http_set_static_header(
+    nng_http *conn, nni_http_header *header, const char *key, const char *val);
+
+extern bool nni_http_parsed(nng_http *conn);
 
 #endif // NNG_SUPPLEMENTAL_HTTP_HTTP_API_H

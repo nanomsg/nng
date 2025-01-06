@@ -231,17 +231,6 @@ check_props_v4(nng_msg *msg)
 
 	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_NODELAY, &b));
 	NUTS_TRUE(b); // default
-
-	// Request Header
-	char *buf = NULL;
-	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_REQUEST_HEADERS, &buf));
-	NUTS_TRUE(strstr(buf, "Sec-WebSocket-Key") != NULL);
-	nng_strfree(buf);
-
-	// Response Header
-	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_RESPONSE_HEADERS, &buf));
-	NUTS_TRUE(strstr(buf, "Sec-WebSocket-Accept") != NULL);
-	nng_strfree(buf);
 }
 
 void

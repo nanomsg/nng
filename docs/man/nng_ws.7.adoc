@@ -107,19 +107,12 @@ setting these must be done before the transport is started.
 NOTE: The TLS specific options (beginning with `NNG_OPT_TLS_`) are
 only available for `wss://` endpoints.
 
-((`NNG_OPT_WS_REQUEST_HEADERS`))::
+((`NNG_OPT_WS_HEADER`))::
 
-(string) Concatenation of multiple lines terminated
-by CRLF sequences, that can be used to add further headers to the
-HTTP request sent when connecting.
-This option can be set on dialers, and retrieved from pipes.
+The actual option is a prefix string, beginning with the the contents of the
+macro `NNG_OPT_WS_HEADER`, followed by the name of header field.
 
-((`NNG_OPT_WS_RESPONSE_HEADERS`))::
-
-(string) Concatenation of multiple lines terminated
-by CRLF sequences, that can be used to add further headers to the
-HTTP response sent when connecting.
-This option can be set on listeners, and retrieved from pipes.
+Such options can be set on dialers and listener, and retrieved from pipes.
 
 ((`NNG_OPT_WS_RECV_TEXT`))::
 

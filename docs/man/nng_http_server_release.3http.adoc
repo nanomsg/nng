@@ -18,7 +18,7 @@ nng_http_server_release - release HTTP server instance
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 void nng_http_server_release(nng_http_server *server);
 ----

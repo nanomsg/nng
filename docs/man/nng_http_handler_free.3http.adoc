@@ -18,7 +18,7 @@ nng_http_handler_free - free HTTP server handler
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 void nng_http_handler_free(nng_http_handler *h);
 ----

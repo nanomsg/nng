@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "nng/http.h"
 #include "supplemental/http/http_api.h"
 
 #include "base64.h"
@@ -21,7 +22,7 @@
 #include "websocket.h"
 
 // This should be removed or handled differently in the future.
-typedef int (*nni_ws_listen_hook)(void *, nng_http_req *, nng_http_res *);
+typedef int (*nni_ws_listen_hook)(void *, nng_http *);
 
 // We have chosen to be a bit more stringent in the size of the frames that
 // we send, while we more generously allow larger incoming frames.  These
@@ -55,6 +56,7 @@ struct nni_ws {
 	bool             inmsg;
 	bool             send_text;
 	bool             recv_text;
+	bool             recv_res;
 	nni_mtx          mtx;
 	nni_list         sendq;
 	nni_list         recvq;
@@ -68,16 +70,21 @@ struct nni_ws {
 	nni_aio          httpaio;
 	nni_aio          connaio; // connect aio
 	nni_aio         *useraio; // user aio, during HTTP negotiation
-	nni_http_conn   *http;
-	nni_http_req    *req;
-	nni_http_res    *res;
-	char            *reqhdrs;
-	char            *reshdrs;
+	nng_http        *http;
 	size_t           maxframe;
 	size_t           fragsize;
 	size_t           recvmax; // largest message size
 	nni_ws_listener *listener;
 	nni_ws_dialer   *dialer;
+	char             keybuf[29]; // key on client, accept on server
+	struct {
+		nni_http_header connection;
+		nni_http_header upgrade;
+		nni_http_header wsaccept;
+		nni_http_header wskey;
+		nni_http_header wsproto;
+		nni_http_header wsversion;
+	} hdrs;
 };
 
 struct nni_ws_listener {
@@ -233,64 +240,6 @@ static int
 ws_set_header(nni_list *l, const char *n, const char *v)
 {
 	return (ws_set_header_ext(l, n, v, true));
-}
-
-static int
-ws_set_headers(nni_list *l, const char *str)
-{
-	char  *dupstr;
-	size_t duplen;
-	char  *n;
-	char  *v;
-	char  *nl;
-	int    rv;
-
-	if ((dupstr = nni_strdup(str)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	duplen = strlen(dupstr) + 1; // so we can free it later
-
-	n = dupstr;
-	for (;;) {
-		if ((v = strchr(n, ':')) == NULL) {
-			// Note that this also means that if
-			// a bare word is present, we ignore it.
-			break;
-		}
-		*v = '\0';
-		v++;
-		while (*v == ' ') {
-			// Skip leading whitespace.  Not strictly
-			// necessary, but still a good idea.
-			v++;
-		}
-		nl = v;
-		// Find the end of the line -- should be CRLF, but can
-		// also be unterminated or just LF if user
-		while ((*nl != '\0') && (*nl != '\r') && (*nl != '\n')) {
-			nl++;
-		}
-		while ((*nl == '\r') || (*nl == '\n')) {
-			*nl = '\0';
-			nl++;
-		}
-
-		// Note that this can lead to a partial failure.  As this
-		// is most likely ENOMEM, don't worry too much about it.
-		// This method does *not* eliminate duplicates.
-		if ((rv = ws_set_header_ext(l, n, v, false)) != 0) {
-			goto done;
-		}
-
-		// Advance to the next name.
-		n = nl;
-	}
-
-	rv = 0;
-
-done:
-	nni_free(dupstr, duplen);
-	return (rv);
 }
 
 // This looks, case independently for a word in a list, which is either
@@ -1244,8 +1193,6 @@ ws_fini(void *arg)
 		nni_http_conn_fini(ws->http);
 	}
 
-	nni_strfree(ws->reqhdrs);
-	nni_strfree(ws->reshdrs);
 	nni_aio_fini(&ws->rxaio);
 	nni_aio_fini(&ws->txaio);
 	nni_aio_fini(&ws->closeaio);
@@ -1325,14 +1272,14 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 
 	// If we have no response structure, then this was completion
 	// of sending the request.  Prepare an empty response, and read it.
-	if (ws->res == NULL) {
-		ws->res = nni_http_conn_res(ws->http);
-		nni_http_read_res(ws->http, ws->res, &ws->httpaio);
+	if (!ws->recv_res) {
+		ws->recv_res = true;
+		nng_http_read_response(ws->http, &ws->httpaio);
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}
 
-	status = nni_http_res_get_status(ws->res);
+	status = nni_http_get_status(ws->http);
 	switch (status) {
 	case NNG_HTTP_STATUS_SWITCHING:
 		break;
@@ -1342,6 +1289,7 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 		goto err;
 	case NNG_HTTP_STATUS_NOT_FOUND:
 	case NNG_HTTP_STATUS_METHOD_NOT_ALLOWED:
+	case NNG_HTTP_STATUS_NOT_IMPLEMENTED:
 		rv = NNG_ECONNREFUSED; // Treat these as refusals.
 		goto err;
 	case NNG_HTTP_STATUS_BAD_REQUEST:
@@ -1351,34 +1299,31 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 		goto err;
 	}
 
-	// Check that the server gave us back the right key.
-	rv = ws_make_accept(
-	    nni_http_req_get_header(ws->req, "Sec-WebSocket-Key"), wskey);
+	rv = ws_make_accept(ws->keybuf, wskey);
 	if (rv != 0) {
 		goto err;
 	}
 
-#define GETH(h) nni_http_res_get_header(ws->res, h)
-
-	if (((ptr = GETH("Sec-WebSocket-Accept")) == NULL) ||
+	if (((ptr = nng_http_get_header(ws->http, "Sec-WebSocket-Accept")) ==
+	        NULL) ||
 	    (strcmp(ptr, wskey) != 0) ||
-	    ((ptr = GETH("Connection")) == NULL) ||
+	    ((ptr = nng_http_get_header(ws->http, "Connection")) == NULL) ||
 	    (!ws_contains_word(ptr, "upgrade")) ||
-	    ((ptr = GETH("Upgrade")) == NULL) ||
+	    ((ptr = nng_http_get_header(ws->http, "Upgrade")) == NULL) ||
 	    (strcmp(ptr, "websocket") != 0)) {
 		ws_close_error(ws, WS_CLOSE_PROTOCOL_ERR);
 		rv = NNG_EPROTO;
 		goto err;
 	}
 	if (d->proto != NULL) {
-		if (((ptr = GETH("Sec-WebSocket-Protocol")) == NULL) ||
+		if (((ptr = nng_http_get_header(
+		          ws->http, "Sec-WebSocket-Protocol")) == NULL) ||
 		    (!ws_contains_word(d->proto, ptr))) {
 			ws_close_error(ws, WS_CLOSE_PROTOCOL_ERR);
 			rv = NNG_EPROTO;
 			goto err;
 		}
 	}
-#undef GETH
 
 	// At this point, we are in business!
 	nni_list_remove(&d->wspend, ws);
@@ -1506,19 +1451,16 @@ ws_listener_free(void *arg)
 }
 
 static void
-ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
+ws_handler(nng_http *conn, void *arg, nng_aio *aio)
 {
 	nni_ws_listener *l = arg;
-	;
-	nni_http_req *req = nng_http_conn_req(conn);
-	nni_http_res *res = nng_http_conn_res(conn);
-	nni_ws       *ws;
-	const char   *ptr;
-	const char   *proto;
-	uint16_t      status;
-	int           rv;
-	char          key[29];
-	ws_header    *hdr;
+	nni_ws          *ws;
+	const char      *ptr;
+	const char      *proto;
+	uint16_t         status;
+	int              rv;
+	char             key[29];
+	ws_header       *hdr;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
@@ -1527,39 +1469,39 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 	}
 
 	// Now check the headers, etc.
-	if (strcmp(nni_http_req_get_version(req), "HTTP/1.1") != 0) {
+	if (strcmp(nng_http_get_version(conn), "HTTP/1.1") != 0) {
 		status = NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP;
 		goto err;
 	}
 
-	if (strcmp(nni_http_req_get_method(req), "GET") != 0) {
+	if (strcmp(nng_http_get_method(conn), "GET") != 0) {
 		// HEAD request.  We can't really deal with it.
 		status = NNG_HTTP_STATUS_BAD_REQUEST;
 		goto err;
 	}
 
-#define GETH(h) nni_http_req_get_header(req, h)
-#define SETH(h, v) nni_http_res_set_header(res, h, v)
-
-	if ((((ptr = GETH("Content-Length")) != NULL) && (atoi(ptr) > 0)) ||
-	    (((ptr = GETH("Transfer-Encoding")) != NULL) &&
+	if ((((ptr = nng_http_get_header(conn, "Content-Length")) != NULL) &&
+	        (atoi(ptr) > 0)) ||
+	    (((ptr = nng_http_get_header(conn, "Transfer-Encoding")) !=
+	         NULL) &&
 	        (nni_strcasestr(ptr, "chunked") != NULL))) {
-		status = NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE;
+		status = NNG_HTTP_STATUS_CONTENT_TOO_LARGE;
 		goto err;
 	}
 
 	// These headers have to be present.
-	if (((ptr = GETH("Upgrade")) == NULL) ||
+	if (((ptr = nng_http_get_header(conn, "Upgrade")) == NULL) ||
 	    (!ws_contains_word(ptr, "websocket")) ||
-	    ((ptr = GETH("Connection")) == NULL) ||
+	    ((ptr = nng_http_get_header(conn, "Connection")) == NULL) ||
 	    (!ws_contains_word(ptr, "upgrade")) ||
-	    ((ptr = GETH("Sec-WebSocket-Version")) == NULL) ||
+	    ((ptr = nng_http_get_header(conn, "Sec-WebSocket-Version")) ==
+	        NULL) ||
 	    (strcmp(ptr, "13") != 0)) {
 		status = NNG_HTTP_STATUS_BAD_REQUEST;
 		goto err;
 	}
 
-	if (((ptr = GETH("Sec-WebSocket-Key")) == NULL) ||
+	if (((ptr = nng_http_get_header(conn, "Sec-WebSocket-Key")) == NULL) ||
 	    (ws_make_accept(ptr, key) != 0)) {
 		status = NNG_HTTP_STATUS_BAD_REQUEST;
 		goto err;
@@ -1569,7 +1511,7 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 	// we need to try to match it to what the handler says we
 	// support. (If no suitable option is found in the handler, we
 	// fail the request.)
-	proto = GETH("Sec-WebSocket-Protocol");
+	proto = nng_http_get_header(conn, "Sec-WebSocket-Protocol");
 	if (proto == NULL) {
 		if (l->proto != NULL) {
 			status = NNG_HTTP_STATUS_BAD_REQUEST;
@@ -1581,23 +1523,13 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 		goto err;
 	}
 
-	nni_http_res_set_status(res, NNG_HTTP_STATUS_SWITCHING);
-
-	if ((SETH("Connection", "Upgrade") != 0) ||
-	    (SETH("Upgrade", "websocket") != 0) ||
-	    (SETH("Sec-WebSocket-Accept", key) != 0)) {
-		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-		goto err;
-	}
-	if ((proto != NULL) && (SETH("Sec-WebSocket-Protocol", proto) != 0)) {
-		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-		goto err;
-	}
+	nng_http_set_status(conn, NNG_HTTP_STATUS_SWITCHING, NULL);
 
 	// Set any user supplied headers.  This is better than using a hook
-	// for most things, because it is loads easier.
+	// for most things, because it is loads easier.  Note that websocket
+	// headers we care about will be overridden below!
 	NNI_LIST_FOREACH (&l->headers, hdr) {
-		if (SETH(hdr->name, hdr->value) != 0) {
+		if (nng_http_set_header(conn, hdr->name, hdr->value) != 0) {
 			status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
 			goto err;
 		}
@@ -1608,32 +1540,24 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 	// need to, because it's much more complex.  But if you want to set
 	// up an HTTP Authorization handler this might be the only choice.
 	if (l->hookfn != NULL) {
-		rv = l->hookfn(l->hookarg, req, res);
+		rv = l->hookfn(l->hookarg, conn);
 		if (rv != 0) {
 			nni_aio_finish_error(aio, rv);
 			nni_mtx_unlock(&l->mtx);
 			return;
 		}
 
-		if (nni_http_res_get_status(res) !=
-		    NNG_HTTP_STATUS_SWITCHING) {
+		if (nng_http_get_status(conn) != NNG_HTTP_STATUS_SWITCHING) {
 			// The hook has decided to give back a
 			// different reply and we are not upgrading
 			// anymore.  For example the Origin might not
 			// be permitted, or another level of
-			// authentication may be required. (Note that
-			// the hook can also give back various other
-			// headers, but it would be bad for it to alter
-			// the websocket mandated headers.)
-			nni_aio_set_output(aio, 0, res);
+			// authentication may be required.
 			nni_aio_finish(aio, 0, 0);
 			nni_mtx_unlock(&l->mtx);
 			return;
 		}
 	}
-
-#undef GETH
-#undef SETH
 
 	// We are good to go, provided we can get the websocket struct,
 	// and send the reply.
@@ -1642,8 +1566,6 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 		goto err;
 	}
 	ws->http      = conn;
-	ws->req       = req;
-	ws->res       = res;
 	ws->server    = true;
 	ws->maxframe  = l->maxframe;
 	ws->fragsize  = l->fragsize;
@@ -1652,9 +1574,23 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 	ws->recv_text = l->recv_text;
 	ws->send_text = l->send_text;
 	ws->listener  = l;
+	memcpy(ws->keybuf, key, sizeof(ws->keybuf));
+
+	nni_http_set_static_header(
+	    conn, &ws->hdrs.connection, "Connection", "Upgrade");
+	nni_http_set_static_header(
+	    conn, &ws->hdrs.upgrade, "Upgrade", "websocket");
+	nni_http_set_static_header(
+	    conn, &ws->hdrs.wsaccept, "Sec-WebSocket-Accept", ws->keybuf);
+	if (proto != NULL) {
+		// NB: we still have the request protocol in the header, so
+		// that should be fine.
+		nni_http_set_static_header(
+		    conn, &ws->hdrs.wsproto, "Sec-WebSocket-Protocol", proto);
+	}
 
 	nni_list_append(&l->reply, ws);
-	nni_http_write_res(conn, &ws->httpaio);
+	nng_http_write_response(conn, &ws->httpaio);
 	(void) nni_http_hijack(conn);
 	nni_aio_set_output(aio, 0, NULL);
 	nni_aio_finish(aio, 0, 0);
@@ -1662,10 +1598,9 @@ ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 	return;
 
 err:
-	if ((rv = nni_http_res_set_error(res, status)) != 0) {
+	if ((rv = nni_http_set_error(conn, status, NULL, NULL)) != 0) {
 		nni_aio_finish_error(aio, rv);
 	} else {
-		nni_aio_set_output(aio, 0, res);
 		nni_aio_finish(aio, 0, 0);
 	}
 	nni_mtx_unlock(&l->mtx);
@@ -1862,20 +1797,6 @@ ws_listener_get_recvmax(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-ws_listener_set_res_headers(void *arg, const void *buf, size_t sz, nni_type t)
-{
-	nni_ws_listener *l = arg;
-	int              rv;
-
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
-		nni_mtx_lock(&l->mtx);
-		rv = ws_set_headers(&l->headers, buf);
-		nni_mtx_unlock(&l->mtx);
-	}
-	return (rv);
-}
-
-static int
 ws_listener_set_proto(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_ws_listener *l = arg;
@@ -1996,11 +1917,6 @@ static const nni_option ws_listener_options[] = {
 	    .o_get  = ws_listener_get_recvmax,
 	},
 	{
-	    .o_name = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .o_set  = ws_listener_set_res_headers,
-	    // XXX: Get not implemented yet; likely of marginal value.
-	},
-	{
 	    .o_name = NNG_OPT_WS_PROTOCOL,
 	    .o_set  = ws_listener_set_proto,
 	    .o_get  = ws_listener_get_proto,
@@ -2025,7 +1941,7 @@ ws_listener_set_header(nni_ws_listener *l, const char *name, const void *buf,
     size_t sz, nni_type t)
 {
 	int rv;
-	name += strlen(NNG_OPT_WS_RESPONSE_HEADER);
+	name += strlen(NNG_OPT_WS_HEADER);
 	if ((rv = ws_check_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&l->mtx);
 		rv = ws_set_header(&l->headers, name, buf);
@@ -2047,7 +1963,7 @@ ws_listener_set(
 	}
 
 	if (rv == NNG_ENOTSUP) {
-		if (startswith(name, NNG_OPT_WS_RESPONSE_HEADER)) {
+		if (startswith(name, NNG_OPT_WS_HEADER)) {
 			rv = ws_listener_set_header(l, name, buf, sz, t);
 		}
 	}
@@ -2147,10 +2063,8 @@ ws_conn_cb(void *arg)
 	nni_ws_dialer *d;
 	nni_ws        *ws;
 	nni_aio       *uaio;
-	nni_http_req  *req = NULL;
 	int            rv;
 	uint8_t        raw[16];
-	char           wskey[25];
 	ws_header     *hdr;
 
 	ws = arg;
@@ -2192,35 +2106,36 @@ ws_conn_cb(void *arg)
 	for (int i = 0; i < 16; i++) {
 		raw[i] = (uint8_t) nni_random();
 	}
-	nni_base64_encode(raw, 16, wskey, 24);
-	wskey[24] = '\0';
+	nni_base64_encode(raw, 16, ws->keybuf, 24);
+	ws->keybuf[24] = '\0';
 
-	req = nni_http_conn_req(ws->http);
-
-#define SETH(h, v) nni_http_req_set_header(req, h, v)
-	if ((rv != 0) || ((rv = nni_http_req_set_url(req, d->url)) != 0) ||
-	    ((rv = SETH("Upgrade", "websocket")) != 0) ||
-	    ((rv = SETH("Connection", "Upgrade")) != 0) ||
-	    ((rv = SETH("Sec-WebSocket-Key", wskey)) != 0) ||
-	    ((rv = SETH("Sec-WebSocket-Version", "13")) != 0)) {
+	if ((rv = nni_http_set_uri(
+	         ws->http, d->url->u_path, d->url->u_query)) != 0) {
 		goto err;
 	}
 
-	if ((d->proto != NULL) &&
-	    ((rv = SETH("Sec-WebSocket-Protocol", d->proto)) != 0)) {
-		goto err;
+	nni_http_set_static_header(
+	    ws->http, &ws->hdrs.connection, "Connection", "Upgrade");
+	nni_http_set_static_header(
+	    ws->http, &ws->hdrs.upgrade, "Upgrade", "websocket");
+	nni_http_set_static_header(
+	    ws->http, &ws->hdrs.wskey, "Sec-WebSocket-Key", ws->keybuf);
+	nni_http_set_static_header(
+	    ws->http, &ws->hdrs.wsversion, "Sec-WebSocket-Version", "13");
+
+	if (d->proto != NULL) {
+		nni_http_set_static_header(ws->http, &ws->hdrs.wsproto,
+		    "Sec-WebSocket-Protocol", d->proto);
 	}
 
 	NNI_LIST_FOREACH (&d->headers, hdr) {
-		if ((rv = SETH(hdr->name, hdr->value)) != 0) {
+		if ((rv = nni_http_set_header(
+		         ws->http, hdr->name, hdr->value)) != 0) {
 			goto err;
 		}
 	}
-#undef SETH
 
-	ws->req = req;
-
-	nni_http_write_req(ws->http, req, &ws->httpaio);
+	nni_http_write_req(ws->http, &ws->httpaio);
 	nni_mtx_unlock(&ws->mtx);
 	return;
 
@@ -2455,20 +2370,6 @@ ws_dialer_get_recvmax(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-ws_dialer_set_req_headers(void *arg, const void *buf, size_t sz, nni_type t)
-{
-	nni_ws_dialer *d = arg;
-	int            rv;
-
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
-		nni_mtx_lock(&d->mtx);
-		rv = ws_set_headers(&d->headers, buf);
-		nni_mtx_unlock(&d->mtx);
-	}
-	return (rv);
-}
-
-static int
 ws_dialer_set_proto(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_ws_dialer *d = arg;
@@ -2544,11 +2445,6 @@ static const nni_option ws_dialer_options[] = {
 	    .o_get  = ws_dialer_get_recvmax,
 	},
 	{
-	    .o_name = NNG_OPT_WS_REQUEST_HEADERS,
-	    .o_set  = ws_dialer_set_req_headers,
-	    // XXX: Get not implemented yet; likely of marginal value.
-	},
-	{
 	    .o_name = NNG_OPT_WS_PROTOCOL,
 	    .o_set  = ws_dialer_set_proto,
 	    .o_get  = ws_dialer_get_proto,
@@ -2574,7 +2470,7 @@ ws_dialer_set_header(
     nni_ws_dialer *d, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	name += strlen(NNG_OPT_WS_REQUEST_HEADER);
+	name += strlen(NNG_OPT_WS_HEADER);
 	if ((rv = ws_check_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&d->mtx);
 		rv = ws_set_header(&d->headers, name, buf);
@@ -2596,7 +2492,7 @@ ws_dialer_set(
 	}
 
 	if (rv == NNG_ENOTSUP) {
-		if (startswith(name, NNG_OPT_WS_REQUEST_HEADER)) {
+		if (startswith(name, NNG_OPT_WS_HEADER)) {
 			rv = ws_dialer_set_header(d, name, buf, sz, t);
 		}
 	}
@@ -2773,34 +2669,10 @@ ws_str_recv(void *arg, nng_aio *aio)
 }
 
 static int
-ws_get_request_headers(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	nni_ws *ws = arg;
-	nni_mtx_lock(&ws->mtx);
-	if (ws->reqhdrs == NULL) {
-		ws->reqhdrs = nni_http_req_headers(ws->req);
-	}
-	nni_mtx_unlock(&ws->mtx);
-	return (nni_copyout_str(ws->reqhdrs, buf, szp, t));
-}
-
-static int
-ws_get_response_headers(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	nni_ws *ws = arg;
-	nni_mtx_lock(&ws->mtx);
-	if (ws->reshdrs == NULL) {
-		ws->reshdrs = nni_http_res_headers(ws->res);
-	}
-	nni_mtx_unlock(&ws->mtx);
-	return (nni_copyout_str(ws->reshdrs, buf, szp, t));
-}
-
-static int
 ws_get_request_uri(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_ws *ws = arg;
-	return (nni_copyout_str(nni_http_req_get_uri(ws->req), buf, szp, t));
+	return (nni_copyout_str(nni_http_get_uri(ws->http), buf, szp, t));
 }
 
 static int
@@ -2829,14 +2701,6 @@ ws_get_send_text(void *arg, void *buf, size_t *szp, nni_type t)
 
 static const nni_option ws_options[] = {
 	{
-	    .o_name = NNG_OPT_WS_REQUEST_HEADERS,
-	    .o_get  = ws_get_request_headers,
-	},
-	{
-	    .o_name = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .o_get  = ws_get_response_headers,
-	},
-	{
 	    .o_name = NNG_OPT_WS_REQUEST_URI,
 	    .o_get  = ws_get_request_uri,
 	},
@@ -2854,25 +2718,11 @@ static const nni_option ws_options[] = {
 };
 
 static int
-ws_get_req_header(
-    nni_ws *ws, const char *nm, void *buf, size_t *szp, nni_type t)
+ws_get_header(nni_ws *ws, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	const char *s;
-	nm += strlen(NNG_OPT_WS_REQUEST_HEADER);
-	s = nni_http_req_get_header(ws->req, nm);
-	if (s == NULL) {
-		return (NNG_ENOENT);
-	}
-	return (nni_copyout_str(s, buf, szp, t));
-}
-
-static int
-ws_get_res_header(
-    nni_ws *ws, const char *nm, void *buf, size_t *szp, nni_type t)
-{
-	const char *s;
-	nm += strlen(NNG_OPT_WS_RESPONSE_HEADER);
-	s = nni_http_res_get_header(ws->res, nm);
+	nm += strlen(NNG_OPT_WS_HEADER);
+	s = nni_http_get_header(ws->http, nm);
 	if (s == NULL) {
 		return (NNG_ENOENT);
 	}
@@ -2897,10 +2747,8 @@ ws_str_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 	}
 	// Check for generic headers...
 	if (rv == NNG_ENOTSUP) {
-		if (startswith(nm, NNG_OPT_WS_REQUEST_HEADER)) {
-			rv = ws_get_req_header(ws, nm, buf, szp, t);
-		} else if (startswith(nm, NNG_OPT_WS_RESPONSE_HEADER)) {
-			rv = ws_get_res_header(ws, nm, buf, szp, t);
+		if (startswith(nm, NNG_OPT_WS_HEADER)) {
+			rv = ws_get_header(ws, nm, buf, szp, t);
 		}
 	}
 	return (rv);

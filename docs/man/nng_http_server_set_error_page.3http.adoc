@@ -18,7 +18,7 @@ nng_http_server_set_error_page - set custom HTTP error page
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 int nng_http_server_set_error_page(nng_http_server *server,
         uint16_t code, const char *html);
@@ -31,10 +31,7 @@ for HTTP status _code_ on the server instance _server_.
 The body content of the HTTP responses will contain _html_.
 
 The custom HTML content will be used when the server is returning an
-internally generated error response, or is returning an error response
-that was allocated with the
-xref:nng_http_res_alloc_error.3http.adoc[`nng_http_res_alloc_error()`]
-function.
+internally generated error response.
 This HTML content will also be used if the application calls the
 xref:nng_http_server_res_error.3http.adoc[`nng_http_server_res_error()`].
 The last custom error page set for _code_ by either this function or
@@ -61,7 +58,6 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error(3http)],
 xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
 xref:nng_http_server_res_error.3http.adoc[nng_http_server_res_error(3http)],
 xref:nng_http_server_set_error_file.3http.adoc[nng_http_server_set_error_file(3http)],

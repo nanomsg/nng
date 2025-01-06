@@ -18,7 +18,7 @@ nng_http_server_get_addr - get HTTP server address
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 int nng_http_server_get_addr(nng_http_server *server, nng_sockaddr *sap);
 ----

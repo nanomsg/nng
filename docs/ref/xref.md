@@ -243,6 +243,44 @@
 [`nng_sockaddr_inproc`]: /TODO.md
 [`nng_sockaddr_abstract`]: /TODO.md
 
+<!-- HTTP -->
+
+[`nng_http_client`]: /api/http.md#client-object
+[`nng_http`]: /api/http.md#connection-object
+[`nng_http_client_alloc`]: /api/http.md#create-a-client
+[`nng_http_client_free`]: /api/http.md#destroy-a-client
+[`nng_http_client_connect`]: /api/http.md#creating-connections
+[`nng_http_client_set_tls`]: /api/http.md#client-tls
+[`nng_http_client_get_tls`]: /api/http.md#client-tls
+[`nng_http_close`]: /api/http.md#closing-the-connection
+[`nng_http_reset`]: /api/http.md#reset-connection-state
+[`nng_http_get_version`]: /api/http.md#http-protocol-versions
+[`nng_http_set_version`]: /api/http.md#http-protocol-versions
+[`nng_http_get_method`]: /api/http.md#http-method
+[`nng_http_set_method`]: /api/http.md#http-method
+[`nng_http_set_url`]: /api/http.md#preparing-a-transaction
+[`nng_http_get_reason`]: /api/http.md#http-status
+[`nng_http_get_status`]: /api/http.md#http-status
+[`nng_http_set_status`]: /api/http.md#http-status
+[`nng_http_get_url`]: /TODO.md
+[`nng_http_hijack`]: /api/http.md#hijacking-connections
+[`nng_http_get_header`]: /api/http.md#retrieving-headers
+[`nng_http_next_header`]: /api/http.md#retrieving-headers
+[`nng_http_add_header`]: /api/http.md#modifying-headers
+[`nng_http_set_header`]: /api/http.md#modifying-headers
+[`nng_http_del_header`]: /api/http.md#modifying-headers
+[`nng_http_set_response_body`]: /TODO.md
+[`nng_http_get_response_body`]: /TODO.md
+[`nng_http_read_response_body`]: /TODO.md
+[`nng_http_read_request_body`]: /TODO.md
+[`nng_http_server_set_error`]: /TODO.md
+[`nng_http_server_set_redirect`]: /TODO.md
+[`nng_http_read`]: /api/http.md#direct-read-and-write
+[`nng_http_read`]: /api/http.md#direct-read-and-write
+[`nng_http_read_all`]: /api/http.md#direct-read-and-write
+[`nng_http_write`]: /api/http.md#direct-read-and-write
+[`nng_http_write_all`]: /api/http.md#direct-read-and-write
+
 <!-- Macros -->
 
 [`NNG_EINTR`]: /api/errors.md#NNG_EINTR

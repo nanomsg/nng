@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -15,7 +15,6 @@ endif()
 mark_as_advanced(NNG_ENABLE_HTTP)
 
 nng_sources(http_public.c http_api.h)
-nng_headers(nng/supplemental/http/http.h)
 
 nng_defines_if(NNG_SUPP_HTTP NNG_SUPP_HTTP)
 nng_sources_if(NNG_SUPP_HTTP

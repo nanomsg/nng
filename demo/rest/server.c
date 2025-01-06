@@ -32,11 +32,8 @@
 // GRFG
 //
 
+#include <nng/http.h>
 #include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/http/http.h>
-#include <nng/supplemental/util/platform.h>
 
 #include <ctype.h>
 #include <stdio.h>
@@ -74,12 +71,12 @@ typedef enum {
 
 typedef struct rest_job {
 	nng_aio         *http_aio; // aio from HTTP we must reply to
-	nng_http_res    *http_res; // HTTP response object
 	job_state        state;    // 0 = sending, 1 = receiving
 	nng_msg         *msg;      // request message
 	nng_aio         *aio;      // request flow
 	nng_ctx          ctx;      // context on the request socket
-	struct rest_job *next;     // next on the freelist
+	nng_http        *conn;
+	struct rest_job *next; // next on the freelist
 } rest_job;
 
 nng_socket req_sock;
@@ -94,10 +91,6 @@ static void rest_job_cb(void *arg);
 static void
 rest_recycle_job(rest_job *job)
 {
-	if (job->http_res != NULL) {
-		nng_http_res_free(job->http_res);
-		job->http_res = NULL;
-	}
 	if (job->msg != NULL) {
 		nng_msg_free(job->msg);
 		job->msg = NULL;
@@ -136,20 +129,13 @@ rest_get_job(void)
 }
 
 static void
-rest_http_fatal(rest_job *job, const char *fmt, int rv)
+rest_http_fatal(rest_job *job, int rv)
 {
-	char          buf[128];
-	nng_aio      *aio = job->http_aio;
-	nng_http_res *res = job->http_res;
+	nng_aio *aio = job->http_aio;
 
-	job->http_res = NULL;
-	job->http_aio = NULL;
-	snprintf(buf, sizeof(buf), fmt, nng_strerror(rv));
-	nng_http_res_set_status(res, NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR);
-	nng_http_res_set_reason(res, buf);
-
-	nng_aio_set_output(aio, 0, res);
-	nng_aio_finish(aio, 0);
+	// let the server give the details, we could have done more here
+	// ourselves if we wanted a detailed message
+	nng_aio_finish(aio, rv);
 	rest_recycle_job(job);
 }
 
@@ -163,7 +149,7 @@ rest_job_cb(void *arg)
 	switch (job->state) {
 	case SEND_REQ:
 		if ((rv = nng_aio_result(aio)) != 0) {
-			rest_http_fatal(job, "send REQ failed: %s", rv);
+			rest_http_fatal(job, rv);
 			return;
 		}
 		job->msg = NULL;
@@ -174,23 +160,20 @@ rest_job_cb(void *arg)
 		break;
 	case RECV_REP:
 		if ((rv = nng_aio_result(aio)) != 0) {
-			rest_http_fatal(job, "recv reply failed: %s", rv);
+			rest_http_fatal(job, rv);
 			return;
 		}
 		job->msg = nng_aio_get_msg(aio);
 		// We got a reply, so give it back to the server.
-		rv = nng_http_res_copy_data(job->http_res,
-		    nng_msg_body(job->msg), nng_msg_len(job->msg));
+		rv = nng_http_copy_body(
+		    job->conn, nng_msg_body(job->msg), nng_msg_len(job->msg));
 		if (rv != 0) {
-			rest_http_fatal(job, "nng_http_res_copy_data: %s", rv);
+			rest_http_fatal(job, rv);
 			return;
 		}
-		// Set the output - the HTTP server will send it back to the
-		// user agent with a 200 response.
-		nng_aio_set_output(job->http_aio, 0, job->http_res);
+		nng_http_set_status(job->conn, NNG_HTTP_STATUS_OK, NULL);
 		nng_aio_finish(job->http_aio, 0);
 		job->http_aio = NULL;
-		job->http_res = NULL;
 		// We are done with the job.
 		rest_recycle_job(job);
 		return;
@@ -203,14 +186,10 @@ rest_job_cb(void *arg)
 // Our rest server just takes the message body, creates a request ID
 // for it, and sends it on.  This runs in raw mode, so
 void
-rest_handle(nng_aio *aio)
+rest_handle(nng_http *conn, void *arg, nng_aio *aio)
 {
 	struct rest_job *job;
-	nng_http_req    *req  = nng_aio_get_input(aio, 0);
-	nng_http_conn   *conn = nng_aio_get_input(aio, 2);
-	const char      *clen;
 	size_t           sz;
-	nng_iov          iov;
 	int              rv;
 	void            *data;
 
@@ -218,18 +197,18 @@ rest_handle(nng_aio *aio)
 		nng_aio_finish(aio, NNG_ENOMEM);
 		return;
 	}
-	if (((rv = nng_http_res_alloc(&job->http_res)) != 0) ||
-	    ((rv = nng_ctx_open(&job->ctx, req_sock)) != 0)) {
+	job->conn = conn;
+	if (((rv = nng_ctx_open(&job->ctx, req_sock)) != 0)) {
 		rest_recycle_job(job);
 		nng_aio_finish(aio, rv);
 		return;
 	}
 
-	nng_http_req_get_data(req, &data, &sz);
+	nng_http_get_body(conn, &data, &sz);
 	job->http_aio = aio;
 
 	if ((rv = nng_msg_alloc(&job->msg, sz)) != 0) {
-		rest_http_fatal(job, "nng_msg_alloc: %s", rv);
+		rest_http_fatal(job, rv);
 		return;
 	}
 
@@ -329,7 +308,7 @@ inproc_server(void *arg)
 			fatal("inproc recvmsg", rv);
 		}
 		body = nng_msg_body(msg);
-		for (int i = 0; i < nng_msg_len(msg); i++) {
+		for (size_t i = 0; i < nng_msg_len(msg); i++) {
 			// Table lookup would be faster, but this works.
 			if (isupper(body[i])) {
 				char base = body[i] - 'A';

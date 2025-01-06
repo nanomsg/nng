@@ -18,7 +18,7 @@ nng_http_handler_collect_body - set HTTP handler to collect request body
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
 ----

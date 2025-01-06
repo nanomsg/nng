@@ -809,23 +809,12 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // WebSocket Options.
 
-// NNG_OPT_WS_REQUEST_HEADERS is a string containing the
-// request headers, formatted as CRLF terminated lines.
-#define NNG_OPT_WS_REQUEST_HEADERS "ws:request-headers"
-
-// NNG_OPT_WS_RESPONSE_HEADERS is a string containing the
-// response headers, formatted as CRLF terminated lines.
-#define NNG_OPT_WS_RESPONSE_HEADERS "ws:response-headers"
-
-// NNG_OPT_WS_REQUEST_HEADER is a prefix, for a dynamic
-// property name.  This allows direct access to any named header.
-// Concatenate this with the name of the property (case is not sensitive).
-// Only the first such header is returned.
-#define NNG_OPT_WS_RESPONSE_HEADER "ws:response-header:"
-
-// NNG_OPT_WS_RESPONSE_HEADER is like NNG_OPT_REQUEST_HEADER, but used for
-// accessing the request headers.
-#define NNG_OPT_WS_REQUEST_HEADER "ws:request-header:"
+// NNG_OPT_WS_HEADER is a prefix, for a dynamic property name.
+// This allows direct access to any named header to set a header on
+// a dialer or listener.  This property can be used to set headers
+// on outgoing dialer or listeners, and can be used to return the
+// headers from the peer on a pipe.
+#define NNG_OPT_WS_HEADER "ws:header:"
 
 // NNG_OPT_WS_REQUEST_URI is used to obtain the URI sent by the client.
 // This can be useful when a handler supports an entire directory tree.

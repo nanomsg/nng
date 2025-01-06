@@ -19,7 +19,7 @@ nng_http_handler_alloc - allocate HTTP server handler
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 typedef struct nng_http_handler nng_http_handler;
 
@@ -184,8 +184,6 @@ xref:nng_http_handler_set_host.3http.adoc[nng_http_handler_set_host(3http)],
 xref:nng_http_handler_set_method.3http.adoc[nng_http_handler_set_method(3http)],
 xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree(3http)],
 xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree_exclusive(3http)],
-xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
-xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error(3http)],
 xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],
 xref:nng_strerror.3.adoc[nng_strerror(3)],
 xref:nng_aio.5.adoc[nng_aio(5)],

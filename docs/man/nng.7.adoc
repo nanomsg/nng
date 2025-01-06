@@ -73,7 +73,6 @@ xref:nng_socket.7.adoc[nng_socket(7)]:: BSD socket transport
 xref:nng_tls.7.adoc[nng_tls(7)]:: TLSv1.2 over TCP transport
 xref:nng_tcp.7.adoc[nng_tcp(7)]:: TCP (and TCPv6) transport
 xref:nng_ws.7.adoc[nng_ws(7)]:: WebSocket transport
-xref:nng_zerotier.7.adoc[nng_zerotier(7)]:: ZeroTier transport
 
 === Conceptual Overview
 

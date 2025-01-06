@@ -18,7 +18,7 @@ nng_http_server_get_tls - get HTTP server TLS configuration
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 int nng_http_server_get_tls(nng_http_server *s, nng_tls_config **cfgp);
 ----

@@ -127,11 +127,6 @@ can be simply removed from your application:
 Additionally, the header files containing these functions have been removed, such as
 `nng/transport/ipc/ipc.h`. Simply remove `#include` references to those files.
 
-The `NNG_OPT_WSS_REQUEST_HEADERS` and `NNG_OPT_WSS_RESPONSE_HEADERS` aliases for
-`NNG_OPT_WS_OPT_WS_REQUEST_HEADERS` and `NNG_OPT_WS_RESPONSE_HEADERS` have been removed.
-Just convert any use of them to `NNG_OPT_WS_REQUEST_HEADERS` or
-`NNG_OPT_WS_RESPONSE_HEADERS` as appropriate.
-
 ## TLS Configuration
 
 The support for configuring TLS via `NNG_OPT_TLS_CONFIG`, `NNG_TLS_AUTH_MODE`, `NNG_OPT_TLS_CA_FILE`,
@@ -332,6 +327,9 @@ accessors functions are provided:
 
 ## HTTP API
 
+The entire HTTP API has been refactored and should be much simpler to use and more efficient.
+Applications directly using the HTTP API will need to be fully modified.
+
 A few limits on string lengths of certain values are now applied, which allows us to preallocate values
 and eliminate certain unreasonable error paths. If values longer than these are supplied in certain APIs
 they may be silently truncated to the limit:
@@ -355,6 +353,19 @@ They may silently truncate data.
 
 The HTTP handler objects may not be modified once in use. Previously this would fail with `NNG_EBUSY`.
 These checks are removed now, but debug builds will assert if an application tries to do so.
+
+## WebSocket API
+
+The `NNG_OPT_WSS_REQUEST_HEADERS`, `NNG_OPT_WSS_RESPONSE_HEADERS` and
+`NNG_OPT_WS_OPT_WS_REQUEST_HEADERS`, `NNG_OPT_WS_RESPONSE_HEADERS` have been removed.
+
+The `NNG_OPT_WS_REQUEST_HEADER` and `NNG_OPT_WS_RESPONSE_HEADER` option prefixes have been
+collapsed into just `NNG_OPT_WS_HEADER`, with slightly different semantics. It still is
+a prefix (append the name of the header of interest), but setting it can only affect
+outbound headers (request header for dialers, response header for listeners), and when
+reading it on a pipe, the value returned is the header sent by the remote peer.
+
+The undocumented hook function signature has changed to reflect changes in the HTTP API.
 
 ## Security Descriptors (Windows Only)
 

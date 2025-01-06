@@ -18,7 +18,7 @@ nng_http_handler_set_data - set extra data for HTTP handler
 [source, c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 void nng_http_handler_set_data(nng_http_handler *handler, void *data,
     void (*dtor)(void *));

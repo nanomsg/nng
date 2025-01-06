@@ -18,7 +18,7 @@ nng_http_handler_set_tree - set HTTP handler to match trees
 [source,c]
 ----
 #include <nng/nng.h>
-#include <nng/supplemental/http/http.h>
+#include <nng/http.h>
 
 void nng_http_handler_set_tree(nng_http_handler *handler);
 
@@ -53,5 +53,5 @@ handling.
 [.text-left]
 xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
 xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],
-xref:nng_http_req_get_method.3http.adoc[nng_http_req_get_method(3http)],
+xref:nng_http_get_method.3http.adoc[nng_http_get_method(3http)],
 xref:nng.7.adoc[nng(7)]
