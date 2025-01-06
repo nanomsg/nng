@@ -263,8 +263,10 @@ static int
 http_entity_alloc_data(nni_http_entity *entity, size_t size)
 {
 	void *newdata;
-	if ((newdata = nni_zalloc(size)) == NULL) {
-		return (NNG_ENOMEM);
+	if (size != 0) {
+		if ((newdata = nni_zalloc(size)) == NULL) {
+			return (NNG_ENOMEM);
+		}
 	}
 	http_entity_set_data(entity, newdata, size);
 	entity->own = true;
@@ -1057,25 +1059,37 @@ nni_http_alloc_html_error(char **html, uint16_t code, const char *details)
 }
 
 int
-nni_http_res_alloc_error(nni_http_res **resp, uint16_t err)
+nni_http_res_set_error(nni_http_res *res, uint16_t err)
 {
-	char         *html = NULL;
-	nni_http_res *res  = NULL;
-	int           rv;
-
-	if (((rv = nni_http_res_alloc(&res)) != 0) ||
-	    ((rv = nni_http_alloc_html_error(&html, err, NULL)) != 0) ||
+	int   rv;
+	char *html = NULL;
+	if (((rv = nni_http_alloc_html_error(&html, err, NULL)) != 0) ||
 	    ((rv = nni_http_res_set_header(
 	          res, "Content-Type", "text/html; charset=UTF-8")) != 0) ||
 	    ((rv = nni_http_res_copy_data(res, html, strlen(html))) != 0)) {
 		nni_strfree(html);
-		nni_http_res_free(res);
-	} else {
-		nni_strfree(html);
-		res->code  = err;
-		res->iserr = true;
-		*resp      = res;
+		return (rv);
 	}
+	nni_strfree(html);
+	res->code  = err;
+	res->iserr = true;
+	return (0);
+}
 
-	return (rv);
+int
+nni_http_res_alloc_error(nni_http_res **resp, uint16_t err)
+{
+	nni_http_res *res;
+	int           rv;
+
+	if ((rv = nni_http_res_alloc(&res)) != 0) {
+		return (rv);
+	}
+	rv = nni_http_res_set_error(res, err);
+	if (rv != 0) {
+		nni_http_res_free(res);
+		return (rv);
+	}
+	*resp = res;
+	return (0);
 }

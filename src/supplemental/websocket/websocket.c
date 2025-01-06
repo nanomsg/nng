@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -1243,12 +1243,6 @@ ws_fini(void *arg)
 	if (ws->http) {
 		nni_http_conn_fini(ws->http);
 	}
-	if (ws->req) {
-		nni_http_req_free(ws->req);
-	}
-	if (ws->res) {
-		nni_http_res_free(ws->res);
-	}
 
 	nni_strfree(ws->reqhdrs);
 	nni_strfree(ws->reshdrs);
@@ -1332,9 +1326,7 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 	// If we have no response structure, then this was completion
 	// of sending the request.  Prepare an empty response, and read it.
 	if (ws->res == NULL) {
-		if ((rv = nni_http_res_alloc(&ws->res)) != 0) {
-			goto err;
-		}
+		ws->res = nni_http_conn_res(ws->http);
 		nni_http_read_res(ws->http, ws->res, &ws->httpaio);
 		nni_mtx_unlock(&d->mtx);
 		return;
@@ -1514,25 +1506,19 @@ ws_listener_free(void *arg)
 }
 
 static void
-ws_handler(nni_aio *aio)
+ws_handler(nng_http_conn *conn, void *arg, nng_aio *aio)
 {
-	nni_ws_listener  *l;
-	nni_ws           *ws;
-	nni_http_conn    *conn;
-	nni_http_req     *req;
-	nni_http_res     *res;
-	nni_http_handler *h;
-	const char       *ptr;
-	const char       *proto;
-	uint16_t          status;
-	int               rv;
-	char              key[29];
-	ws_header        *hdr;
-
-	req  = nni_aio_get_input(aio, 0);
-	h    = nni_aio_get_input(aio, 1);
-	conn = nni_aio_get_input(aio, 2);
-	l    = nni_http_handler_get_data(h);
+	nni_ws_listener *l = arg;
+	;
+	nni_http_req *req = nng_http_conn_req(conn);
+	nni_http_res *res = nng_http_conn_res(conn);
+	nni_ws       *ws;
+	const char   *ptr;
+	const char   *proto;
+	uint16_t      status;
+	int           rv;
+	char          key[29];
+	ws_header    *hdr;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
@@ -1595,24 +1581,16 @@ ws_handler(nni_aio *aio)
 		goto err;
 	}
 
-	if ((rv = nni_http_res_alloc(&res)) != 0) {
-		// Give a chance to reply to client.
-		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-		goto err;
-	}
-
 	nni_http_res_set_status(res, NNG_HTTP_STATUS_SWITCHING);
 
 	if ((SETH("Connection", "Upgrade") != 0) ||
 	    (SETH("Upgrade", "websocket") != 0) ||
 	    (SETH("Sec-WebSocket-Accept", key) != 0)) {
 		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-		nni_http_res_free(res);
 		goto err;
 	}
 	if ((proto != NULL) && (SETH("Sec-WebSocket-Protocol", proto) != 0)) {
 		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-		nni_http_res_free(res);
 		goto err;
 	}
 
@@ -1621,7 +1599,6 @@ ws_handler(nni_aio *aio)
 	NNI_LIST_FOREACH (&l->headers, hdr) {
 		if (SETH(hdr->name, hdr->value) != 0) {
 			status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
-			nni_http_res_free(res);
 			goto err;
 		}
 	}
@@ -1633,7 +1610,6 @@ ws_handler(nni_aio *aio)
 	if (l->hookfn != NULL) {
 		rv = l->hookfn(l->hookarg, req, res);
 		if (rv != 0) {
-			nni_http_res_free(res);
 			nni_aio_finish_error(aio, rv);
 			nni_mtx_unlock(&l->mtx);
 			return;
@@ -1649,7 +1625,6 @@ ws_handler(nni_aio *aio)
 			// the hook can also give back various other
 			// headers, but it would be bad for it to alter
 			// the websocket mandated headers.)
-			nni_http_req_free(req);
 			nni_aio_set_output(aio, 0, res);
 			nni_aio_finish(aio, 0, 0);
 			nni_mtx_unlock(&l->mtx);
@@ -1663,8 +1638,6 @@ ws_handler(nni_aio *aio)
 	// We are good to go, provided we can get the websocket struct,
 	// and send the reply.
 	if ((rv = ws_init(&ws)) != 0) {
-		nni_http_req_free(req);
-		nni_http_res_free(res);
 		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
 		goto err;
 	}
@@ -1681,7 +1654,7 @@ ws_handler(nni_aio *aio)
 	ws->listener  = l;
 
 	nni_list_append(&l->reply, ws);
-	nni_http_write_res(conn, res, &ws->httpaio);
+	nni_http_write_res(conn, &ws->httpaio);
 	(void) nni_http_hijack(conn);
 	nni_aio_set_output(aio, 0, NULL);
 	nni_aio_finish(aio, 0, 0);
@@ -1689,7 +1662,7 @@ ws_handler(nni_aio *aio)
 	return;
 
 err:
-	if ((rv = nni_http_res_alloc_error(&res, status)) != 0) {
+	if ((rv = nni_http_res_set_error(res, status)) != 0) {
 		nni_aio_finish_error(aio, rv);
 	} else {
 		nni_aio_set_output(aio, 0, res);
@@ -2174,7 +2147,6 @@ ws_conn_cb(void *arg)
 	nni_ws_dialer *d;
 	nni_ws        *ws;
 	nni_aio       *uaio;
-	nni_http_conn *http;
 	nni_http_req  *req = NULL;
 	int            rv;
 	uint8_t        raw[16];
@@ -2206,13 +2178,12 @@ ws_conn_cb(void *arg)
 		return;
 	}
 
+	ws->http = nni_aio_get_output(&ws->connaio, 0);
 	nni_mtx_lock(&ws->mtx);
 	uaio = ws->useraio;
-	http = nni_aio_get_output(&ws->connaio, 0);
 	nni_aio_set_output(&ws->connaio, 0, NULL);
 	if (uaio == NULL) {
 		// This request was canceled for some reason.
-		nni_http_conn_fini(http);
 		nni_mtx_unlock(&ws->mtx);
 		ws_reap(ws);
 		return;
@@ -2224,8 +2195,10 @@ ws_conn_cb(void *arg)
 	nni_base64_encode(raw, 16, wskey, 24);
 	wskey[24] = '\0';
 
+	req = nni_http_conn_req(ws->http);
+
 #define SETH(h, v) nni_http_req_set_header(req, h, v)
-	if ((rv != 0) || ((rv = nni_http_req_alloc(&req, d->url)) != 0) ||
+	if ((rv != 0) || ((rv = nni_http_req_set_url(req, d->url)) != 0) ||
 	    ((rv = SETH("Upgrade", "websocket")) != 0) ||
 	    ((rv = SETH("Connection", "Upgrade")) != 0) ||
 	    ((rv = SETH("Sec-WebSocket-Key", wskey)) != 0) ||
@@ -2245,22 +2218,15 @@ ws_conn_cb(void *arg)
 	}
 #undef SETH
 
-	ws->http = http;
-	ws->req  = req;
+	ws->req = req;
 
-	nni_http_write_req(http, req, &ws->httpaio);
+	nni_http_write_req(ws->http, req, &ws->httpaio);
 	nni_mtx_unlock(&ws->mtx);
 	return;
 
 err:
 	nni_aio_finish_error(uaio, rv);
 	nni_mtx_unlock(&ws->mtx);
-	if (http != NULL) {
-		nni_http_conn_fini(http);
-	}
-	if (req != NULL) {
-		nni_http_req_free(req);
-	}
 	ws_reap(ws);
 }
 

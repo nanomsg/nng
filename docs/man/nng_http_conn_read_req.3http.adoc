@@ -1,6 +1,6 @@
 = nng_http_conn_read_req(3http)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,15 +20,15 @@ nng_http_conn_read_req - read HTTP request
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-void nng_http_conn_read_req(nng_http_conn *conn, nng_http_req *req,
-    nng_aio *aio);
+void nng_http_conn_read_req(nng_http_conn *conn, nng_aio *aio);
 ----
 
 == DESCRIPTION
 
 The `nng_http_conn_read_req()` function starts an asynchronous read from the
-HTTP connection _conn_, reading an HTTP request into the _req_, including all
-of the related headers.
+HTTP connection _conn_, reading an HTTP request into the request object
+associated with _conn_, including all of the related headers.
+(The request object can be obtained via `nng_http_conn_req()`.
 
 NOTE: Any HTTP entity/body data associated with the request is *not* read
 automatically.

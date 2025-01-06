@@ -10,6 +10,7 @@
 //
 
 // Basic HTTP server tests.
+#include "core/defs.h"
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
@@ -141,21 +142,20 @@ fail:
 }
 
 static void
-httpecho(nng_aio *aio)
+httpecho(nng_http_conn *conn, void *arg, nng_aio *aio)
 {
-	nng_http_req *req = nng_aio_get_input(aio, 0);
-	nng_http_res *res;
+	nng_http_req *req = nng_http_conn_req(conn);
+	nng_http_res *res = nng_http_conn_res(conn);
 	int           rv;
 	void         *body;
 	size_t        len;
+	NNI_ARG_UNUSED(arg);
 
 	nng_http_req_get_data(req, &body, &len);
 
-	if (((rv = nng_http_res_alloc(&res)) != 0) ||
-	    ((rv = nng_http_res_copy_data(res, body, len)) != 0) ||
+	if (((rv = nng_http_res_copy_data(res, body, len)) != 0) ||
 	    ((rv = nng_http_res_set_header(
 	          res, "Content-type", "text/plain")) != 0)) {
-		nng_http_res_free(res);
 		nng_aio_finish(aio, rv);
 		return;
 	}

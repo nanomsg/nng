@@ -63,6 +63,8 @@ struct nng_http_conn {
 	size_t           rd_bufsz;
 	bool             rd_buffered;
 
+	bool res_sent;
+
 	enum write_flavor wr_flavor;
 };
 
@@ -509,10 +511,13 @@ http_wr_submit(nni_http_conn *conn, nni_aio *aio, enum write_flavor flavor)
 }
 
 void
-nni_http_read_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
+nni_http_read_req(nni_http_conn *conn, nni_aio *aio)
 {
-	nni_aio_set_prov_data(aio, req);
+	nni_aio_set_prov_data(aio, &conn->req);
 
+	// clear the sent flag (used for the server)
+	conn->res_sent = false;
+	nni_http_req_reset(&conn->req);
 	nni_mtx_lock(&conn->mtx);
 	http_rd_submit(conn, aio, HTTP_RD_REQ);
 	nni_mtx_unlock(&conn->mtx);
@@ -590,16 +595,18 @@ nni_http_write_req(nni_http_conn *conn, nni_http_req *req, nni_aio *aio)
 }
 
 void
-nni_http_write_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
+nni_http_write_res(nni_http_conn *conn, nni_aio *aio)
 {
-	int     rv;
-	void   *buf;
-	size_t  bufsz;
-	void   *data;
-	size_t  size;
-	nni_iov iov[2];
-	int     nio;
+	int           rv;
+	void         *buf;
+	size_t        bufsz;
+	void         *data;
+	size_t        size;
+	nni_iov       iov[2];
+	int           nio;
+	nng_http_res *res = nng_http_conn_res(conn);
 
+	conn->res_sent = true;
 	if ((rv = nni_http_res_get_buf(res, &buf, &bufsz)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -712,4 +719,11 @@ nni_http_conn_init(nni_http_conn **connp, nng_stream *stream)
 		nng_stream_free(stream);
 	}
 	return (rv);
+}
+
+// private to the HTTP framework, used on the server
+bool
+nni_http_conn_res_sent(nni_http_conn *conn)
+{
+	return (conn->res_sent);
 }

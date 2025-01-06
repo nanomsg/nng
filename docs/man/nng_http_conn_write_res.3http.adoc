@@ -1,6 +1,6 @@
 = nng_http_conn_write_res(3http)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,14 +20,13 @@ nng_http_conn_write_res - write HTTP response
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-void nng_http_conn_write_res(nng_http_conn *conn, nng_http_res *res,
-    nng_aio *aio);
+void nng_http_conn_write_res(nng_http_conn *conn, nng_aio *aio);
 ----
 
 == DESCRIPTION
 
 The `nng_http_conn_write_res()` function starts an asynchronous write of
-the HTTP response _res_ to the connection _conn_.
+the HTTP response associated with the connection _conn_.
 The entire response is sent,
 including headers, and if present, the response body data.
 (The response body can be set with

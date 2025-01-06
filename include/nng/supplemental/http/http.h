@@ -275,15 +275,13 @@ NNG_DECL void nng_http_conn_write_req(
     nng_http_conn *, nng_http_req *, nng_aio *);
 
 // nng_http_conn_write_res writes the entire response.  It will also write any
-// data that has been attached.
-NNG_DECL void nng_http_conn_write_res(
-    nng_http_conn *, nng_http_res *, nng_aio *);
+// data that has been attached.  It uses the res object in the conn.
+NNG_DECL void nng_http_conn_write_res(nng_http_conn *, nng_aio *);
 
 // nng_http_conn_read_req reads an entire request, EXCEPT for any entity
 // data.  The caller is responsible for processing the headers in the request
 // and reading any submitted entity data itself.
-NNG_DECL void nng_http_conn_read_req(
-    nng_http_conn *, nng_http_req *, nng_aio *);
+NNG_DECL void nng_http_conn_read_req(nng_http_conn *, nng_aio *);
 
 // nng_http_conn_read_res reads an entire response, EXCEPT for any entity
 // data.  The caller is responsible for processing the headers in the response
@@ -310,22 +308,20 @@ typedef struct nng_http_handler nng_http_handler;
 // is registered with the server, and that a handler can only be registered
 // once per server.
 //
-// The callback function will receive the following arguments (via
-// nng_aio_get_input(): nng_http_request *, nng_http_handler *, and
-// nng_http_conn *.  The first is a request object, for convenience.
-// The second is the handler, from which the callback can obtain any other
-// data it has set.  The final is the http connection, which can be used
-// to hijack the session.
-//
-// Upon completion, the handler should store an nng_http_res * as the
-// first output using nng_aio_set_output.  If it does not do so, or supplies
-// NULL, then it must send a response itself.
+// The callback function should obtain the request (if needed), and
+// the response from the connection object using nng_http_conn_req
+// and nng_http_conn_res.  If the connection is hijacked, then the
+// response object will not be used, otherwise the server will send it on
+// behalf of the client.
 //
 // The callback should complete with a result of 0 in most circumstances.
 // If it completes with an error, then the connection is terminated, after
-// possibly sending a 500 error response to the client.
+// possibly sending a 500 error response to the client.  The callback signals
+// completion by nng_aio_finish.  The second argument to this function is the
+// handler data that was optionally set by nng_handler_set_data.
+typedef void (*nng_http_handler_func)(nng_http_conn *, void *, nng_aio *);
 NNG_DECL int nng_http_handler_alloc(
-    nng_http_handler **, const char *, void (*)(nng_aio *));
+    nng_http_handler **, const char *, nng_http_handler_func);
 
 // nng_http_handler_free frees the handler. This actually just drops a
 // reference count on the handler, as it may be in use by an existing

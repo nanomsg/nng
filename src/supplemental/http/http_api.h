@@ -114,12 +114,13 @@ extern int  nni_http_conn_getopt(
 extern int  nni_http_req_alloc(nni_http_req **, const nng_url *);
 extern int  nni_http_res_alloc(nni_http_res **);
 extern int  nni_http_res_alloc_error(nni_http_res **, uint16_t);
+extern int  nni_http_res_set_error(nni_http_res *, uint16_t);
 extern void nni_http_req_free(nni_http_req *);
 extern void nni_http_res_free(nni_http_res *);
 extern void nni_http_write_req(nni_http_conn *, nni_http_req *, nni_aio *);
-extern void nni_http_write_res(nni_http_conn *, nni_http_res *, nni_aio *);
-extern void nni_http_read_req(nni_http_conn *, nni_http_req *, nni_aio *);
 extern void nni_http_read_res(nni_http_conn *, nni_http_res *, nni_aio *);
+extern void nni_http_read_req(nni_http_conn *, nni_aio *);
+extern void nni_http_write_res(nni_http_conn *, nni_aio *);
 
 extern const char *nni_http_req_get_header(const nni_http_req *, const char *);
 extern const char *nni_http_res_get_header(const nni_http_res *, const char *);
@@ -258,15 +259,8 @@ extern int nni_http_hijack(nni_http_conn *);
 // Note that methods which modify a handler cannot be called while the handler
 // is registered with the server, and that a handler can only be registered
 // once per server.
-//
-// The callback function will receive the following arguments (via
-// nng_aio_get_input(): nni_http_request *, nni_http_handler *, and
-// nni_http_conn_t *.  The first is a request object, for convenience.
-// The second is the handler, from which the callback can obtain any other
-// data it has set.  The final is the http context, from which its possible
-// to hijack the session.
 extern int nni_http_handler_init(
-    nni_http_handler **, const char *, void (*)(nni_aio *));
+    nni_http_handler **, const char *, nng_http_handler_func);
 
 // nni_http_handler_init_file creates a handler with a function to serve
 // up a file named in the last argument.
@@ -394,5 +388,8 @@ extern void nni_http_transact(
 // nni_http_stream_scheme returns the underlying stream scheme for a given
 // upper layer scheme.
 extern const char *nni_http_stream_scheme(const char *);
+
+// Private method used for the server.
+extern bool nni_http_conn_res_sent(nni_http_conn *conn);
 
 #endif // NNG_SUPPLEMENTAL_HTTP_HTTP_API_H
