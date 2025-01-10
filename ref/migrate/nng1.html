@@ -331,10 +331,6 @@ can be simply removed from your application:</p>
 </ul>
 <p>Additionally, the header files containing these functions have been removed, such as
 <code>nng/transport/ipc/ipc.h</code>. Simply remove <code>#include</code> references to those files.</p>
-<p>The <code>NNG_OPT_WSS_REQUEST_HEADERS</code> and <code>NNG_OPT_WSS_RESPONSE_HEADERS</code> aliases for
-<code>NNG_OPT_WS_OPT_WS_REQUEST_HEADERS</code> and <code>NNG_OPT_WS_RESPONSE_HEADERS</code> have been removed.
-Just convert any use of them to <code>NNG_OPT_WS_REQUEST_HEADERS</code> or
-<code>NNG_OPT_WS_RESPONSE_HEADERS</code> as appropriate.</p>
 <h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
 <p>The support for configuring TLS via <code>NNG_OPT_TLS_CONFIG</code>, <code>NNG_TLS_AUTH_MODE</code>, <code>NNG_OPT_TLS_CA_FILE</code>,
 <code>NNG_OPT_TLS_SERVER_NAME</code>, and similar has been removed.</p>
@@ -497,6 +493,8 @@ accessors functions are provided:</p>
 <li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="/api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
 <h2 id="http-api"><a class="header" href="#http-api">HTTP API</a></h2>
+<p>The entire HTTP API has been refactored and should be much simpler to use and more efficient.
+Applications directly using the HTTP API will need to be fully modified.</p>
 <p>A few limits on string lengths of certain values are now applied, which allows us to preallocate values
 and eliminate certain unreasonable error paths. If values longer than these are supplied in certain APIs
 they may be silently truncated to the limit:</p>
@@ -520,6 +518,15 @@ They may silently truncate data.</p>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
 These checks are removed now, but debug builds will assert if an application tries to do so.</p>
+<h2 id="websocket-api"><a class="header" href="#websocket-api">WebSocket API</a></h2>
+<p>The <code>NNG_OPT_WSS_REQUEST_HEADERS</code>, <code>NNG_OPT_WSS_RESPONSE_HEADERS</code> and
+<code>NNG_OPT_WS_OPT_WS_REQUEST_HEADERS</code>, <code>NNG_OPT_WS_RESPONSE_HEADERS</code> have been removed.</p>
+<p>The <code>NNG_OPT_WS_REQUEST_HEADER</code> and <code>NNG_OPT_WS_RESPONSE_HEADER</code> option prefixes have been
+collapsed into just <code>NNG_OPT_WS_HEADER</code>, with slightly different semantics. It still is
+a prefix (append the name of the header of interest), but setting it can only affect
+outbound headers (request header for dialers, response header for listeners), and when
+reading it on a pipe, the value returned is the header sent by the remote peer.</p>
+<p>The undocumented hook function signature has changed to reflect changes in the HTTP API.</p>
 <h2 id="security-descriptors-windows-only"><a class="header" href="#security-descriptors-windows-only">Security Descriptors (Windows Only)</a></h2>
 <p>The <code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code> option is removed, and replaced
 with the functions [<code>nng_listener_get_security_descriptor</code>] and
@@ -537,6 +544,7 @@ See <a href="/api/args.html#parse-command-line-arguments"><code>nng_args_parse</
 It is possible to use NNG with ZeroTier using TCP/IP, and a future update
 is planned to provided coexistence between ZeroTier &amp; the native stack’s TCP/IP using lwIP.</p>
 <!-- Symbol cross reference -->
+<!-- HTTP -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

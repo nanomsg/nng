@@ -253,6 +253,40 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_fini</code>, <a href="api/init.html#a002">1</a><br/>
 <code>NNG_FLAG_NONBLOCK</code>, <a href="api/sock.html#a037">1</a>, <a href="api/sock.html#a041">2</a><br/>
 <code>nng_free</code>, <a href="api/memory.html#a004">1</a><br/>
+<code>nng_http</code>, <a href="api/http.html#a001">1</a><br/>
+<code>nng_http_add_header</code>, <a href="api/http.html#a014">1</a><br/>
+<code>nng_http_client</code>, <a href="api/http.html#a027">1</a><br/>
+<code>nng_http_client_alloc</code>, <a href="api/http.html#a028">1</a><br/>
+<code>nng_http_client_connect</code>, <a href="api/http.html#a033">1</a><br/>
+<code>nng_http_client_free</code>, <a href="api/http.html#a029">1</a><br/>
+<code>nng_http_client_get_tls</code>, <a href="api/http.html#a030">1</a><br/>
+<code>nng_http_client_set_tls</code>, <a href="api/http.html#a031">1</a><br/>
+<code>nng_http_close</code>, <a href="api/http.html#a020">1</a><br/>
+<code>nng_http_copy_data</code>, <a href="api/http.html#a019">1</a><br/>
+<code>nng_http_del_header</code>, <a href="api/http.html#a016">1</a><br/>
+<code>nng_http_get_data</code>, <a href="api/http.html#a017">1</a><br/>
+<code>nng_http_get_header</code>, <a href="api/http.html#a012">1</a><br/>
+<code>nng_http_get_method</code>, <a href="api/http.html#a003">1</a><br/>
+<code>nng_http_get_reason</code>, <a href="api/http.html#a010">1</a><br/>
+<code>nng_http_get_status</code>, <a href="api/http.html#a009">1</a><br/>
+<code>nng_http_get_version</code>, <a href="api/http.html#a008">1</a><br/>
+<code>nng_http_hijack</code>, <a href="api/http.html#a026">1</a><br/>
+<code>nng_http_next_header</code>, <a href="api/http.html#a013">1</a><br/>
+<code>nng_http_read</code>, <a href="api/http.html#a022">1</a><br/>
+<code>nng_http_read_all</code>, <a href="api/http.html#a024">1</a><br/>
+<code>nng_http_read_response</code>, <a href="api/http.html#a036">1</a><br/>
+<code>nng_http_reset</code>, <a href="api/http.html#a021">1</a><br/>
+<code>nng_http_set_data</code>, <a href="api/http.html#a018">1</a><br/>
+<code>nng_http_set_header</code>, <a href="api/http.html#a015">1</a><br/>
+<code>nng_http_set_method</code>, <a href="api/http.html#a002">1</a><br/>
+<code>nng_http_set_status</code>, <a href="api/http.html#a011">1</a><br/>
+<code>nng_http_set_uri</code>, <a href="api/http.html#a004">1</a>, <a href="api/http.html#a034">2</a><br/>
+<code>nng_http_set_version</code>, <a href="api/http.html#a007">1</a><br/>
+<code>nng_http_transact</code>, <a href="api/http.html#a037">1</a>, <a href="api/http.html#a038">2</a><br/>
+<code>nng_http_write</code>, <a href="api/http.html#a023">1</a><br/>
+<code>nng_http_write_all</code>, <a href="api/http.html#a025">1</a><br/>
+<code>nng_http_write_request</code>, <a href="api/http.html#a035">1</a><br/>
+<code>nng_http_write_response</code>, <a href="api/http.html#a039">1</a><br/>
 <code>nng_id_alloc</code>, <a href="api/id_map.html#a006">1</a><br/>
 <code>nng_id_get</code>, <a href="api/id_map.html#a005">1</a><br/>
 <code>nng_id_map</code>, <a href="api/id_map.html#a001">1</a><br/>
@@ -454,6 +488,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_url_sprintf</code>, <a href="api/url.html#a010">1</a><br/>
 <code>nng_url_userinfo</code>, <a href="api/url.html#a004">1</a><br/>
 <code>nng_version</code>, <a href="api/misc.html#a004">1</a><br/>
+<code>nni_http_get_uri</code>, <a href="api/http.html#a006">1</a><br/>
 <em>PAIR</em>, <a href="proto/pair.html#a002">1</a><br/>
 <em>PAIR</em> protocol, <a href="proto/pair.html#a001">1</a><br/>
 pipeline pattern, <a href="proto/pull.html#a003">1</a>, <a href="proto/push.html#a003">2</a>, <a href="proto/index.html#a003">3</a><br/>
@@ -498,13 +533,14 @@ synchronization primitives, <a href="api/synch.html#a001">1</a><br/>
 threads, <a href="api/thread.html#a001">1</a><br/>
 thundering herd, <a href="api/synch.html#a016">1</a><br/>
 timeout, <a href="api/aio.html#a012">1</a><br/>
-TLS, <a href="api/stream.html#a062">1</a><br/>
+TLS, <a href="api/stream.html#a062">1</a>, <a href="api/http.html#a032">2</a><br/>
 UDP, <a href="tran/udp.html#a002">1</a><br/>
 <em>udp</em> transport, <a href="tran/udp.html#a001">1</a><br/>
 <code>udp://</code>, <a href="tran/udp.html#a005">1</a><br/>
 Universal Resource Locator, <a href="api/url.html#a001">1</a><br/>
 UNIX domain sockets, <a href="tran/ipc.html#a003">1</a><br/>
 <code>unix://</code>, <a href="tran/ipc.html#a006">1</a><br/>
+URI, <a href="api/http.html#a005">1</a><br/>
 URL, <a href="api/url.html#a002">1</a>, <a href="api/stream.html#a024">2</a><br/>
 version number, <a href="api/misc.html#a005">1</a><br/>
 voting, <a href="proto/surveyor.html#a004">1</a><br/></p>
