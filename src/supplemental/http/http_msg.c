@@ -83,39 +83,6 @@ nni_http_res_reset(nni_http_res *res)
 	res->code = 0;
 }
 
-static int
-http_del_header(nni_list *hdrs, const char *key)
-{
-	http_header *h;
-	NNI_LIST_FOREACH (hdrs, h) {
-		if (nni_strcasecmp(key, h->name) == 0) {
-			nni_http_free_header(h);
-			return (0);
-		}
-	}
-	return (NNG_ENOENT);
-}
-
-int
-nni_http_req_del_header(nni_http_req *req, const char *key)
-{
-	int rv = NNG_ENOENT;
-	while (http_del_header(&req->data.hdrs, key) == 0) {
-		rv = 0;
-	}
-	return (rv);
-}
-
-int
-nni_http_res_del_header(nni_http_res *res, const char *key)
-{
-	int rv = NNG_ENOENT;
-	while (http_del_header(&res->data.hdrs, key) == 0) {
-		rv = 0;
-	}
-	return (rv);
-}
-
 // http_entity_set_data sets the entity, but does not update the
 // content-length header.
 static void
