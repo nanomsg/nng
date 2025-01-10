@@ -349,7 +349,6 @@ They may silently truncate data.
 - [`nng_http_handler_set_host`]
 - [`nng_http_handler_set_method`]
 - [`nng_http_handler_set_tree`]
-- [`nng_http_handler_set_tree_exclusive`]
 
 The HTTP handler objects may not be modified once in use. Previously this would fail with `NNG_EBUSY`.
 These checks are removed now, but debug builds will assert if an application tries to do so.

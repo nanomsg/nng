@@ -1,6 +1,6 @@
 = nng_http_handler_set_tree(3http)
 
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -21,8 +21,6 @@ nng_http_handler_set_tree - set HTTP handler to match trees
 #include <nng/http.h>
 
 void nng_http_handler_set_tree(nng_http_handler *handler);
-
-void nng_http_handler_set_tree_exclusive(nng_http_handler *handler);
 ----
 
 == DESCRIPTION
@@ -31,27 +29,17 @@ The `nng_http_handler_set_tree()` function causes the _handler_ to be matched if
 by the client is a logical child of the path for _handler_, and no more specific
 _handler_ has been registered.
 
-The `nng_http_handler_set_tree_exclusive()` function is similar to `nng_http_server_set_tree()`
-with the distinction that the _handler_ will be considered to *exclusively* handle its request URI.
-Unlike `nng_http_server_set_tree()`, it will not be possible to register additional
-handlers in logical subdirectories of _handler_.
-
 This is useful in cases when the handler would like to examine the entire path
 and possibly behave differently; for example a REST API that uses the rest of
 the path to pass additional parameters.
 
-TIP: These methods are useful when constructing API handlers where a single
+TIP: This function is useful when constructing API handlers where a single
 service address (path) supports dynamically generated children.
-
-TIP: The non-exclusive form is also useful for providing a default handler to be
-generated when a more specific child does not exist.
-This can provide a better experience for users than the standard 404 error
-handling.
+It can also provide a logical fallback instead of relying on a 404 error code.
 
 == SEE ALSO
 
 [.text-left]
 xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
 xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],
-xref:nng_http_get_method.3http.adoc[nng_http_get_method(3http)],
-xref:nng.7.adoc[nng(7)]
+xref:nng_http_get_method.3http.adoc[nng_http_get_method(3http)]

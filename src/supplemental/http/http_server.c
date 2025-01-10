@@ -36,7 +36,6 @@ struct nng_http_handler {
 	nng_sockaddr          host_addr;
 	bool                  host_ip;
 	bool                  tree;
-	bool                  tree_exclusive;
 	nni_atomic_int        ref;
 	nni_atomic_bool       busy;
 	size_t                maxbody;
@@ -121,13 +120,12 @@ nni_http_handler_init(
 	}
 	(void) snprintf(h->uri, sizeof(h->uri), "%s", uri);
 	NNI_LIST_NODE_INIT(&h->node);
-	h->cb             = cb;
-	h->data           = NULL;
-	h->dtor           = NULL;
-	h->tree           = false;
-	h->tree_exclusive = false;
-	h->maxbody        = 1024 * 1024; // Up to 1MB of body
-	h->getbody        = true;
+	h->cb      = cb;
+	h->data    = NULL;
+	h->dtor    = NULL;
+	h->tree    = false;
+	h->maxbody = 1024 * 1024; // Up to 1MB of body
+	h->getbody = true;
 	(void) strcpy(h->method, "GET");
 	(void) strcpy(h->host, "");
 	*hp = h;
@@ -182,16 +180,7 @@ void
 nni_http_handler_set_tree(nni_http_handler *h)
 {
 	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
-	h->tree           = true;
-	h->tree_exclusive = false;
-}
-
-void
-nni_http_handler_set_tree_exclusive(nni_http_handler *h)
-{
-	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
-	h->tree           = true;
-	h->tree_exclusive = true;
+	h->tree = true;
 }
 
 void
@@ -1095,17 +1084,12 @@ int
 nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 {
 	nni_http_handler *h2;
-	size_t            len;
 
 	// Must have a legal method (and not one that is HEAD), path,
 	// and handler.  (The reason HEAD is verboten is that we supply
 	// it automatically as part of GET support.)
-	if ((((len = strlen(h->uri)) > 0) && (h->uri[0] != '/')) ||
-	    (h->cb == NULL)) {
+	if (((h->uri[0] != 0) && (h->uri[0] != '/')) || (h->cb == NULL)) {
 		return (NNG_EINVAL);
-	}
-	while ((len > 0) && (h->uri[len - 1] == '/')) {
-		len--; // ignore trailing '/' (this collapses them)
 	}
 
 	nni_mtx_lock(&s->mtx);
@@ -1114,73 +1098,27 @@ nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 	// collision.  (But only if the methods match, and the host
 	// matches.)  Note that a wild card host matches both.
 	NNI_LIST_FOREACH (&s->handlers, h2) {
-		size_t len2;
 
-		if ((h2->host[0] != 0) && (h->host[0] != 0) &&
-		    (nni_strcasecmp(h2->host, h->host) != 0)) {
+		if (nni_strcasecmp(h2->host, h->host) != 0) {
 			// Hosts don't match, so we are safe.
 			continue;
 		}
-		if (((h2->host[0] == 0) && (h->host[0] != 0)) ||
-		    ((h->host[0] == 0) && (h2->host[0] != 0))) {
-			continue; // Host specified for just one.
-		}
-		if (((h->method[0] == 0) && (h2->method[0] != 0)) ||
-		    ((h2->method[0] == 0) && (h->method[0] != 0))) {
-			continue; // Method specified for just one.
-		}
-		if ((h->method[0] != 0) &&
-		    (strcmp(h2->method, h->method) != 0)) {
+		if (strcmp(h2->method, h->method) != 0) {
 			// Different methods, so again we are fine.
 			continue;
 		}
 
-		len2 = strlen(h2->uri);
-
-		while ((len2 > 0) && (h2->uri[len2 - 1] == '/')) {
-			len2--; // ignore trailing '/'
+		if (strcmp(h->uri, h2->uri) != 0) {
+			continue; // not a duplicate
 		}
 
-		if ((h2->tree && h2->tree_exclusive) ||
-		    (h->tree && h->tree_exclusive)) {
-			// Old behavior
-			if (strncmp(h->uri, h2->uri,
-			        len > len2 ? len2 : len) != 0) {
-				continue; // prefixes don't match.
-			}
-
-			if (len2 > len) {
-				if ((h2->uri[len] == '/') && (h->tree)) {
-					nni_mtx_unlock(&s->mtx);
-					return (NNG_EADDRINUSE);
-				}
-			} else if (len > len2) {
-				if ((h->uri[len2] == '/') && (h2->tree)) {
-					nni_mtx_unlock(&s->mtx);
-					return (NNG_EADDRINUSE);
-				}
-			} else {
-				nni_mtx_unlock(&s->mtx);
-				return (NNG_EADDRINUSE);
-			}
-		} else {
-			if (len != len2) {
-				continue; // length mismatch
-			}
-
-			if (strcmp(h->uri, h2->uri) != 0) {
-				continue; // not a duplicate
-			}
-
-			nni_mtx_unlock(&s->mtx);
-			return (NNG_EADDRINUSE);
-		}
+		nni_mtx_unlock(&s->mtx);
+		return (NNG_EADDRINUSE);
 	}
 
 	// Maintain list of handlers in longest uri first order
 	NNI_LIST_FOREACH (&s->handlers, h2) {
-		size_t len2 = strlen(h2->uri);
-		if (len > len2) {
+		if (strcmp(h->uri, h2->uri) > 0) {
 			nni_list_insert_before(&s->handlers, h, h2);
 			break;
 		}
@@ -1532,8 +1470,8 @@ nni_http_handler_init_directory(
 	if ((hf = NNI_ALLOC_STRUCT(hf)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((hf->path = nni_strdup(path)) == NULL) ||
-	    ((hf->base = nni_strdup(uri)) == NULL)) {
+	if (((hf->path = nng_strdup(path)) == NULL) ||
+	    ((hf->base = nng_strdup(uri)) == NULL)) {
 		http_file_free(hf);
 		return (NNG_ENOMEM);
 	}
@@ -1543,9 +1481,9 @@ nni_http_handler_init_directory(
 		return (rv);
 	}
 	// We don't permit a body for getting a file.
-	nni_http_handler_collect_body(h, true, 0);
-	nni_http_handler_set_tree_exclusive(h);
-	nni_http_handler_set_data(h, hf, http_file_free);
+	nng_http_handler_set_tree(h);
+	nng_http_handler_collect_body(h, true, 0);
+	nng_http_handler_set_data(h, hf, http_file_free);
 
 	*hpp = h;
 	return (0);

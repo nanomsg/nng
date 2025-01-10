@@ -434,16 +434,6 @@ nng_http_handler_set_tree(nng_http_handler *h)
 }
 
 void
-nng_http_handler_set_tree_exclusive(nng_http_handler *h)
-{
-#ifdef NNG_SUPP_HTTP
-	nni_http_handler_set_tree_exclusive(h);
-#else
-	NNI_ARG_UNUSED(h);
-#endif
-}
-
-void
 nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 {
 #ifdef NNG_SUPP_HTTP
