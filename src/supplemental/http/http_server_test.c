@@ -237,6 +237,53 @@ test_server_basic(void)
 }
 
 static void
+test_server_head(void)
+{
+	struct server_test st;
+	void              *ptr;
+	size_t             size;
+	nng_http_handler  *h;
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
+
+	server_setup(&st, h);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/home.html", NULL));
+	nng_http_set_method(st.conn, "HEAD");
+	nng_http_transact(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_TRUE(nng_http_get_status(st.conn) == NNG_HTTP_STATUS_OK);
+
+	ptr = (char *) nng_http_get_header(st.conn, "Content-Length");
+	NUTS_TRUE(ptr != NULL);
+	NUTS_TRUE(atoi(ptr) == (int) strlen(doc1));
+	NUTS_TRUE(nng_http_get_status(st.conn) == NNG_HTTP_STATUS_OK);
+
+	nng_http_get_body(st.conn, &ptr, &size);
+	NUTS_TRUE(size == 0);
+	NUTS_TRUE(ptr == NULL);
+
+	nng_http_reset(st.conn);
+	nng_http_set_uri(st.conn, "/home.html", NULL);
+	nng_http_set_method(st.conn, "GET");
+	nng_http_transact(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+	NUTS_TRUE(nng_http_get_status(st.conn) == NNG_HTTP_STATUS_OK);
+	nng_http_get_body(st.conn, &ptr, &size);
+
+	NUTS_TRUE(size == strlen(doc1));
+	NUTS_TRUE(memcmp(ptr, doc1, strlen(doc1)) == 0);
+
+	server_free(&st);
+}
+
+static void
 test_server_404(void)
 {
 	struct server_test st;
@@ -886,6 +933,7 @@ test_serve_subdir_index(void)
 
 NUTS_TESTS = {
 	{ "server basic", test_server_basic },
+	{ "server head", test_server_head },
 	{ "server 404", test_server_404 },
 	{ "server bad version", test_server_bad_version },
 	{ "server missing host", test_server_missing_host },
