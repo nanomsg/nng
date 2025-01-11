@@ -514,7 +514,6 @@ They may silently truncate data.</p>
 <li>[<code>nng_http_handler_set_host</code>]</li>
 <li>[<code>nng_http_handler_set_method</code>]</li>
 <li>[<code>nng_http_handler_set_tree</code>]</li>
-<li>[<code>nng_http_handler_set_tree_exclusive</code>]</li>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
 These checks are removed now, but debug builds will assert if an application tries to do so.</p>
