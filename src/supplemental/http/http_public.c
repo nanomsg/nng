@@ -138,16 +138,6 @@ nng_http_get_version(nng_http *conn)
 #endif
 }
 
-nng_http_res *
-nng_http_conn_res(nng_http *conn)
-{
-#ifdef NNG_SUPP_HTTP
-	return (nni_http_conn_res(conn));
-#else
-	return (NULL);
-#endif
-}
-
 int
 nng_http_set_status(nng_http *conn, uint16_t status, const char *reason)
 {

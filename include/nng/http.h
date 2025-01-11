@@ -104,10 +104,6 @@ typedef struct nng_http_res nng_http_res;
 // normally only used for exchanging HTTP requests and responses.
 typedef struct nng_http_conn nng_http;
 
-// These methods obtain a pointer to the request or response structure
-// that is embedded in the conn structure.
-NNG_DECL nng_http_res *nng_http_conn_res(nng_http *);
-
 // nng_http_close closes the underlying channel.  Applications should
 // not use this channel after this operation is performed.
 NNG_DECL void nng_http_close(nng_http *);
