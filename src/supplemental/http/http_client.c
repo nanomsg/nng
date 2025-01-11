@@ -217,7 +217,6 @@ typedef struct http_txn {
 	nni_list         aios; // upper level aio(s) -- maximum one
 	nni_http_client *client;
 	nni_http_conn   *conn;
-	nni_http_req    *req;
 	nni_http_res    *res;
 	nni_http_chunks *chunks;
 	http_txn_state   state;
@@ -398,7 +397,6 @@ nni_http_transact_conn(nni_http_conn *conn, nni_aio *aio)
 	nni_aio_list_init(&txn->aios);
 	txn->client = NULL;
 	txn->conn   = conn;
-	txn->req    = nni_http_conn_req(conn);
 	txn->res    = nni_http_conn_res(conn);
 	txn->state  = HTTP_SENDING;
 

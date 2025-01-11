@@ -9,6 +9,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <complex.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -24,7 +25,9 @@
 
 // We insist that individual headers fit in 8K.
 // If you need more than that, you need something we can't do.
-#define HTTP_BUFSIZE 8192
+// We leave some room for allocator overhead (32 bytes should
+// be more than enough), to avoid possibly wasting an extra page.
+#define HTTP_BUFSIZE (8192 - 32)
 
 // types of reads
 enum read_flavor {
@@ -33,6 +36,7 @@ enum read_flavor {
 	HTTP_RD_REQ,
 	HTTP_RD_RES,
 	HTTP_RD_CHUNK,
+	HTTP_RD_DISCARD,
 };
 
 enum write_flavor {
@@ -45,7 +49,6 @@ enum write_flavor {
 struct nng_http_conn {
 	nng_stream *sock;
 	void       *ctx;
-	bool        closed;
 	nni_list    rdq; // high level http read requests
 	nni_list    wrq; // high level http write requests
 
@@ -59,16 +62,23 @@ struct nng_http_conn {
 	nng_http_req req;
 	nng_http_res res;
 
-	enum read_flavor rd_flavor;
-	uint8_t         *rd_buf;
-	size_t           rd_get;
-	size_t           rd_put;
-	size_t           rd_bufsz;
-	bool             rd_buffered;
-	bool             client; // true if this is a client's connection
-	bool             res_sent;
+	char        meth[32];
+	char        host[260]; // 253 per IETF, plus 6 for :port plus null
+	char        ubuf[200]; // Most URIs are smaller than this
+	const char *vers;
+	char       *uri;
+	uint8_t    *buf;
+	size_t      bufsz;
+	size_t      rd_get;
+	size_t      rd_put;
+	size_t      rd_discard;
 
+	enum read_flavor  rd_flavor;
 	enum write_flavor wr_flavor;
+	bool              rd_buffered;
+	bool              client; // true if a client's connection
+	bool              res_sent;
+	bool              closed;
 };
 
 nng_http_req *
@@ -141,14 +151,14 @@ nni_http_conn_close(nni_http_conn *conn)
 	nni_mtx_unlock(&conn->mtx);
 }
 
-// http_rd_buf_pull_up pulls the content of the read buffer back to the
+// http_buf_pull_up pulls the content of the read buffer back to the
 // beginning, so that the next read can go at the end.  This avoids the problem
 // of dealing with a read that might wrap.
 static void
-http_rd_buf_pull_up(nni_http_conn *conn)
+http_buf_pull_up(nni_http_conn *conn)
 {
 	if (conn->rd_get != 0) {
-		memmove(conn->rd_buf, conn->rd_buf + conn->rd_get,
+		memmove(conn->buf, conn->buf + conn->rd_get,
 		    conn->rd_put - conn->rd_get);
 		conn->rd_put -= conn->rd_get;
 		conn->rd_get = 0;
@@ -161,7 +171,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 {
 	size_t   cnt = conn->rd_put - conn->rd_get;
 	size_t   n;
-	uint8_t *rbuf = conn->rd_buf;
+	uint8_t *rbuf = conn->buf;
 	int      rv;
 	bool     raw = false;
 	nni_iov *iov;
@@ -212,6 +222,25 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		nng_stream_recv(conn->sock, &conn->rd_aio);
 		return (NNG_EAGAIN);
 
+	case HTTP_RD_DISCARD:
+		n = conn->rd_put - conn->rd_get;
+		if (n > conn->rd_discard) {
+			n = conn->rd_discard;
+		}
+		conn->rd_get += n;
+		conn->rd_discard -= n;
+		http_buf_pull_up(conn);
+		if (conn->rd_discard > 0) {
+			nni_iov iov1;
+			iov1.iov_buf      = conn->buf + conn->rd_put;
+			iov1.iov_len      = conn->bufsz - conn->rd_put;
+			conn->rd_buffered = true;
+			nni_aio_set_iov(&conn->rd_aio, 1, &iov1);
+			nng_stream_recv(conn->sock, &conn->rd_aio);
+			return (NNG_EAGAIN);
+		}
+		return (0);
+
 	case HTTP_RD_REQ:
 		conn->client = true;
 		rv           = nni_http_req_parse(conn, rbuf, cnt, &n);
@@ -222,9 +251,9 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
-			http_rd_buf_pull_up(conn);
-			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
-			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
+			http_buf_pull_up(conn);
+			iov1.iov_buf      = conn->buf + conn->rd_put;
+			iov1.iov_len      = conn->bufsz - conn->rd_put;
 			conn->rd_buffered = true;
 			if (iov1.iov_len == 0) {
 				return (NNG_EMSGSIZE);
@@ -244,9 +273,9 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
-			http_rd_buf_pull_up(conn);
-			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
-			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
+			http_buf_pull_up(conn);
+			iov1.iov_buf      = conn->buf + conn->rd_put;
+			iov1.iov_len      = conn->bufsz - conn->rd_put;
 			conn->rd_buffered = true;
 			if (iov1.iov_len == 0) {
 				return (NNG_EMSGSIZE);
@@ -265,8 +294,8 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
-			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
-			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
+			iov1.iov_buf      = conn->buf + conn->rd_put;
+			iov1.iov_len      = conn->bufsz - conn->rd_put;
 			conn->rd_buffered = true;
 			nni_aio_set_iov(&conn->rd_aio, 1, &iov1);
 			nng_stream_recv(conn->sock, &conn->rd_aio);
@@ -341,7 +370,7 @@ http_rd_cb(void *arg)
 	// If we were reading into the buffer, then advance location(s).
 	if (conn->rd_buffered) {
 		conn->rd_put += cnt;
-		NNI_ASSERT(conn->rd_put <= conn->rd_bufsz);
+		NNI_ASSERT(conn->rd_put <= conn->bufsz);
 		http_rd_start(conn);
 		nni_mtx_unlock(&conn->mtx);
 		return;
@@ -542,9 +571,15 @@ nni_http_conn_reset(nng_http *conn)
 {
 	nni_http_req_reset(&conn->req);
 	nni_http_res_reset(&conn->res);
-	if (strlen(conn->req.host)) {
-		nni_http_set_host(conn, conn->req.host);
+	(void) snprintf(conn->meth, sizeof(conn->meth), "GET");
+	if (strlen(conn->host)) {
+		nni_http_set_host(conn, conn->host);
 	}
+	if (conn->uri != NULL && conn->uri != conn->ubuf) {
+		nni_strfree(conn->uri);
+	}
+	conn->uri = NULL;
+	nni_http_set_version(conn, NNG_HTTP_VERSION_1_1);
 }
 
 void
@@ -572,6 +607,7 @@ nni_http_read_chunks(nni_http_conn *conn, nni_http_chunks *cl, nni_aio *aio)
 	nni_aio_set_prov_data(aio, cl);
 
 	nni_mtx_lock(&conn->mtx);
+	conn->rd_discard = 0;
 	http_rd_submit(conn, aio, HTTP_RD_CHUNK);
 	nni_mtx_unlock(&conn->mtx);
 }
@@ -582,7 +618,17 @@ nni_http_read_full(nni_http_conn *conn, nni_aio *aio)
 	nni_aio_set_prov_data(aio, NULL);
 
 	nni_mtx_lock(&conn->mtx);
+	conn->rd_discard = 0;
 	http_rd_submit(conn, aio, HTTP_RD_FULL);
+	nni_mtx_unlock(&conn->mtx);
+}
+
+void
+nni_http_read_discard(nng_http *conn, size_t discard, nng_aio *aio)
+{
+	nni_mtx_lock(&conn->mtx);
+	conn->rd_discard = discard;
+	http_rd_submit(conn, aio, HTTP_RD_DISCARD);
 	nni_mtx_unlock(&conn->mtx);
 }
 
@@ -596,8 +642,97 @@ nni_http_read(nni_http_conn *conn, nni_aio *aio)
 	nni_mtx_unlock(&conn->mtx);
 }
 
+static size_t
+http_sprintf_headers(char *buf, size_t sz, nni_list *list)
+{
+	size_t       rv = 0;
+	http_header *h;
+
+	if (buf == NULL) {
+		sz = 0;
+	}
+
+	NNI_LIST_FOREACH (list, h) {
+		size_t l;
+		l = snprintf(buf, sz, "%s: %s\r\n", h->name, h->value);
+		if (buf != NULL) {
+			buf += l;
+		}
+		sz = (sz > l) ? sz - l : 0;
+		rv += l;
+	}
+	return (rv);
+}
+
+static int
+http_snprintf(nng_http *conn, char *buf, size_t sz)
+{
+	size_t    len;
+	size_t    n;
+	nni_list *hdrs;
+
+	if (conn->client) {
+		len  = snprintf(buf, sz, "%s %s %s\r\n",
+		     nni_http_get_method(conn), nni_http_get_uri(conn),
+		     nni_http_get_version(conn));
+		hdrs = &conn->req.data.hdrs;
+	} else {
+		len  = snprintf(buf, sz, "%s %d %s\r\n",
+		     nni_http_get_version(conn), nni_http_get_status(conn),
+		     nni_http_get_reason(conn));
+		hdrs = &conn->res.data.hdrs;
+	}
+
+	if (len < sz) {
+		sz -= len;
+		buf += len;
+	} else {
+		sz  = 0;
+		buf = NULL;
+	}
+
+	n = http_sprintf_headers(buf, sz, hdrs);
+	len += n;
+	if (len < sz) {
+		sz -= n;
+		buf += n;
+	} else {
+		sz  = 0;
+		buf = NULL;
+	}
+
+	len += snprintf(buf, sz, "\r\n");
+	return (len);
+}
+
+static int
+http_prepare(nng_http *conn, void **data, size_t *szp)
+{
+	size_t len;
+
+	// get length needed first
+	len = http_snprintf(conn, NULL, 0);
+
+	// If it fits in the fixed buffer, use it. It should cover
+	// like 99% or more cases, as this buffer is 8KB.
+	if (len < conn->bufsz) {
+		http_snprintf(conn, (char *) conn->buf, conn->bufsz);
+		*data = conn->buf;
+		*szp  = len;
+		return (0);
+	}
+
+	// we have to allocate.
+	if ((*data = nni_alloc(len + 1)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	http_snprintf(conn, *data, len + 1);
+	*szp = len; // this does not include the terminating null
+	return (0);
+}
+
 void
-nni_http_write_req(nni_http_conn *conn, nni_aio *aio)
+nni_http_write_req(nng_http *conn, nni_aio *aio)
 {
 	int     rv;
 	void   *buf;
@@ -605,9 +740,14 @@ nni_http_write_req(nni_http_conn *conn, nni_aio *aio)
 	nni_iov iov[2];
 	int     niov;
 
-	if ((rv = nni_http_req_get_buf(&conn->req, &buf, &bufsz)) != 0) {
+	if ((rv = http_prepare(conn, &buf, &bufsz)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
+	}
+	if (buf != conn->buf) {
+		nni_free(conn->req.data.buf, conn->req.data.bufsz);
+		conn->req.data.buf   = buf;
+		conn->req.data.bufsz = bufsz + 1; // including \0
 	}
 	niov           = 1;
 	iov[0].iov_len = bufsz;
@@ -625,7 +765,7 @@ nni_http_write_req(nni_http_conn *conn, nni_aio *aio)
 }
 
 void
-nni_http_write_res(nni_http_conn *conn, nni_aio *aio)
+nni_http_write_res(nng_http *conn, nni_aio *aio)
 {
 	int     rv;
 	void   *buf;
@@ -633,11 +773,17 @@ nni_http_write_res(nni_http_conn *conn, nni_aio *aio)
 	nni_iov iov[2];
 	int     nio;
 
-	conn->res_sent = true;
-	if ((rv = nni_http_res_get_buf(conn, &buf, &bufsz)) != 0) {
+	if ((rv = http_prepare(conn, &buf, &bufsz)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+	if (buf != conn->buf) {
+		nni_free(conn->res.data.buf, conn->res.data.bufsz);
+		conn->res.data.buf   = buf;
+		conn->res.data.bufsz = bufsz + 1; // including \0
+	}
+
+	conn->res_sent = true;
 	nio            = 1;
 	iov[0].iov_len = bufsz;
 	iov[0].iov_buf = buf;
@@ -672,7 +818,7 @@ nni_http_write_full(nni_http_conn *conn, nni_aio *aio)
 const char *
 nni_http_get_version(nng_http *conn)
 {
-	return (conn->req.vers);
+	return (conn->vers);
 }
 
 int
@@ -691,8 +837,7 @@ nni_http_set_version(nng_http *conn, const char *vers)
 	vers = vers != NULL ? vers : NNG_HTTP_VERSION_1_1;
 	for (int i = 0; http_versions[i] != NULL; i++) {
 		if (strcmp(vers, http_versions[i]) == 0) {
-			conn->req.vers = http_versions[i];
-			conn->res.vers = http_versions[i];
+			conn->vers = http_versions[i];
 			return (0);
 		}
 	}
@@ -707,18 +852,21 @@ nni_http_set_method(nng_http *conn, const char *method)
 	}
 	// this may truncate the method, but nobody should be sending
 	// methods so long.
-	(void) snprintf(conn->req.meth, sizeof(conn->req.meth), "%s", method);
+	(void) snprintf(conn->meth, sizeof(conn->meth), "%s", method);
 }
 
 const char *
 nni_http_get_method(nng_http *conn)
 {
-	return (conn->req.meth);
+	return (conn->meth);
 }
 
 uint16_t
 nni_http_get_status(nng_http *conn)
 {
+	if (conn->res.code == 0) {
+		return (NNG_HTTP_STATUS_OK);
+	}
 	return (conn->res.code);
 }
 
@@ -944,12 +1092,12 @@ nni_http_set_redirect(
 void
 nni_http_set_host(nng_http *conn, const char *host)
 {
-	if (host != conn->req.host) {
-		snprintf(conn->req.host, sizeof(conn->req.host), "%s", host);
+	if (host != conn->host) {
+		snprintf(conn->host, sizeof(conn->host), "%s", host);
 	}
 	nni_list_node_remove(&conn->req.host_header.node);
 	conn->req.host_header.name         = "Host";
-	conn->req.host_header.value        = conn->req.host;
+	conn->req.host_header.value        = conn->host;
 	conn->req.host_header.static_name  = true;
 	conn->req.host_header.static_value = true;
 	conn->req.host_header.alloc_header = false;
@@ -980,7 +1128,7 @@ nni_http_set_content_type(nng_http *conn, const char *ctype)
 const char *
 nni_http_get_uri(nng_http *conn)
 {
-	return (conn->req.uri);
+	return (conn->uri);
 }
 
 int
@@ -998,25 +1146,24 @@ nni_http_set_uri(nng_http *conn, const char *uri, const char *query)
 		needed = strlen(uri);
 	}
 
-	if (conn->req.uri != NULL && (strcmp(uri, conn->req.uri) == 0) &&
+	if (conn->uri != NULL && (strcmp(uri, conn->uri) == 0) &&
 	    strlen(query) == 0) {
 		// no change, do nothing
 		return (0);
 	}
-	if (conn->req.uri != NULL && conn->req.uri != conn->req.ubuf) {
-		nni_strfree(conn->req.uri);
+	if (conn->uri != NULL && conn->uri != conn->ubuf) {
+		nni_strfree(conn->uri);
 	}
 
 	// fast path, small size URI fits in our buffer
-	if (needed < sizeof(conn->req.ubuf)) {
-		snprintf(
-		    conn->req.ubuf, sizeof(conn->req.ubuf), fmt, uri, query);
-		conn->req.uri = conn->req.ubuf;
+	if (needed < sizeof(conn->ubuf)) {
+		snprintf(conn->ubuf, sizeof(conn->ubuf), fmt, uri, query);
+		conn->uri = conn->ubuf;
 		return (0);
 	}
 
 	// too big, we have to allocate it (slow path)
-	if (nni_asprintf(&conn->req.uri, fmt, uri, query) != 0) {
+	if (nni_asprintf(&conn->uri, fmt, uri, query) != 0) {
 		return (NNG_ENOMEM);
 	}
 	return (0);
@@ -1327,7 +1474,7 @@ nni_http_conn_fini(nni_http_conn *conn)
 	nni_aio_fini(&conn->wr_aio);
 	nni_aio_fini(&conn->rd_aio);
 	nni_http_conn_reset(conn);
-	nni_free(conn->rd_buf, conn->rd_bufsz);
+	nni_free(conn->buf, conn->bufsz);
 	nni_mtx_fini(&conn->mtx);
 	NNI_FREE_STRUCT(conn);
 }
@@ -1347,13 +1494,13 @@ http_init(nni_http_conn **connp, nng_stream *data, bool client)
 	nni_http_req_init(&conn->req);
 	nni_http_res_init(&conn->res);
 	nni_http_set_version(conn, NNG_HTTP_VERSION_1_1);
-	nni_http_set_method(conn, NULL);
+	nni_http_set_method(conn, "GET");
 
-	if ((conn->rd_buf = nni_alloc(HTTP_BUFSIZE)) == NULL) {
+	if ((conn->buf = nni_alloc(HTTP_BUFSIZE)) == NULL) {
 		nni_http_conn_fini(conn);
 		return (NNG_ENOMEM);
 	}
-	conn->rd_bufsz = HTTP_BUFSIZE;
+	conn->bufsz = HTTP_BUFSIZE;
 
 	nni_aio_init(&conn->wr_aio, http_wr_cb, conn);
 	nni_aio_init(&conn->rd_aio, http_rd_cb, conn);

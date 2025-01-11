@@ -54,6 +54,8 @@ typedef struct http_sconn {
 	nni_http_handler *release; // set if we dispatched handler
 	bool              close;
 	bool              finished;
+	size_t            unconsumed_body;
+	size_t            unconsumed_request;
 	nni_aio           cbaio;
 	nni_aio           rxaio;
 	nni_aio           txaio;
@@ -322,7 +324,12 @@ http_sconn_txdone(void *arg)
 	}
 
 	sc->handler = NULL;
-	nni_http_read_req(sc->conn, &sc->rxaio);
+	if (sc->unconsumed_body) {
+		nni_http_read_discard(
+		    sc->conn, sc->unconsumed_body, &sc->rxaio);
+	} else {
+		nni_http_read_req(sc->conn, &sc->rxaio);
+	}
 }
 
 static char
@@ -523,6 +530,13 @@ http_sconn_rxdone(void *arg)
 		return;
 	}
 
+	// read the body, keep going
+	if (sc->unconsumed_body) {
+		sc->unconsumed_body = 0;
+		nni_http_read_req(sc->conn, aio);
+		return;
+	}
+
 	if ((h = sc->handler) != NULL) {
 		nni_mtx_lock(&s->mtx);
 		goto finish;
@@ -560,6 +574,17 @@ http_sconn_rxdone(void *arg)
 			// what they deserve. (Harmless actually, since it only
 			// prevents persistent connections.)
 			sc->close = true;
+		}
+	}
+
+	sc->unconsumed_body = 0;
+	if ((cls = nni_http_get_header(sc->conn, "Content-Length")) != NULL) {
+		char *end;
+		sc->unconsumed_body = strtoull(cls, &end, 10);
+		if ((end == NULL) && (*end != '\0')) {
+			sc->unconsumed_body = 0;
+			http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
+			return;
 		}
 	}
 
@@ -639,35 +664,29 @@ http_sconn_rxdone(void *arg)
 		return;
 	}
 
-	if ((h->getbody) &&
-	    ((cls = nni_http_get_header(sc->conn, "Content-Length")) !=
-	        NULL)) {
-		uint64_t len;
-		char    *end;
+	if ((h->getbody) && (sc->unconsumed_body > 0)) {
 
-		len = strtoull(cls, &end, 10);
-		if ((end == NULL) || (*end != '\0') || (len > h->maxbody)) {
+		if (sc->unconsumed_body > h->maxbody) {
 			nni_mtx_unlock(&s->mtx);
-			http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
+			http_sconn_error(
+			    sc, NNG_HTTP_STATUS_CONTENT_TOO_LARGE);
 			return;
 		}
-		if (len > 0) {
-			nng_iov iov;
-			if ((nni_http_req_alloc_data(req, (size_t) len)) !=
-			    0) {
-				nni_mtx_unlock(&s->mtx);
-				http_sconn_error(
-				    sc, NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR);
-				return;
-			}
-			iov.iov_buf = req->data.data;
-			iov.iov_len = req->data.size;
-			sc->handler = h;
+		nng_iov iov;
+		if ((nni_http_req_alloc_data(req, sc->unconsumed_body)) != 0) {
 			nni_mtx_unlock(&s->mtx);
-			nni_aio_set_iov(&sc->rxaio, 1, &iov);
-			nni_http_read_full(sc->conn, aio);
+			http_sconn_error(
+			    sc, NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR);
 			return;
 		}
+		iov.iov_buf         = req->data.data;
+		iov.iov_len         = req->data.size;
+		sc->unconsumed_body = 0;
+		sc->handler         = h;
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_set_iov(&sc->rxaio, 1, &iov);
+		nni_http_read_full(sc->conn, aio);
+		return;
 	}
 
 finish:
@@ -684,6 +703,7 @@ finish:
 
 	// make sure the response is freshly initialized
 	nni_http_res_reset(nni_http_conn_res(sc->conn));
+	nni_http_set_version(sc->conn, NNG_HTTP_VERSION_1_1);
 
 	h->cb(sc->conn, h->data, &sc->cbaio);
 }

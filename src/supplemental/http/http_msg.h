@@ -44,11 +44,6 @@ typedef struct nni_http_entity {
 
 struct nng_http_req {
 	nni_http_entity data;
-	char            meth[32];
-	char            host[260]; // 253 per IETF, plus 6 for :port plus null
-	char            ubuf[200]; // Most URIs are smaller than this
-	char           *uri;
-	const char     *vers;
 	http_header     host_header;
 };
 
@@ -56,7 +51,6 @@ struct nng_http_res {
 	nni_http_entity data;
 	uint16_t        code;
 	char           *rsn;
-	const char     *vers;
 	bool            iserr;
 	http_header     location;
 };

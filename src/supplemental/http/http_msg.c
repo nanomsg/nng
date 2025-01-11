@@ -66,11 +66,6 @@ void
 nni_http_req_reset(nni_http_req *req)
 {
 	http_entity_reset(&req->data);
-	if (req->uri != req->ubuf) {
-		nni_strfree(req->uri);
-	}
-	req->uri = NULL;
-	(void) snprintf(req->meth, sizeof(req->meth), "GET");
 }
 
 void
@@ -78,7 +73,6 @@ nni_http_res_reset(nni_http_res *res)
 {
 	http_entity_reset(&res->data);
 	nni_strfree(res->rsn);
-	res->vers = NNG_HTTP_VERSION_1_1;
 	res->rsn  = NULL;
 	res->code = 0;
 }
@@ -169,125 +163,6 @@ http_parse_header(nng_http *conn, void *line)
 	return (nni_http_add_header(conn, key, val));
 }
 
-// http_sprintf_headers makes headers for an HTTP request or an HTTP response
-// object.  Each header is dumped from the list. If the buf is NULL,
-// or the sz is 0, then a dryrun is done, in order to allow the caller to
-// determine how much space is needed. Returns the size of the space needed,
-// not including the terminating NULL byte.  Truncation occurs if the size
-// returned is >= the requested size.
-static size_t
-http_sprintf_headers(char *buf, size_t sz, nni_list *list)
-{
-	size_t       rv = 0;
-	http_header *h;
-
-	if (buf == NULL) {
-		sz = 0;
-	}
-
-	NNI_LIST_FOREACH (list, h) {
-		size_t l;
-		l = snprintf(buf, sz, "%s: %s\r\n", h->name, h->value);
-		if (buf != NULL) {
-			buf += l;
-		}
-		sz = (sz > l) ? sz - l : 0;
-		rv += l;
-	}
-	return (rv);
-}
-
-static int
-http_asprintf(char **bufp, size_t *szp, nni_list *hdrs, const char *fmt, ...)
-{
-	va_list ap;
-	size_t  len;
-	size_t  n;
-	char   *buf;
-
-	va_start(ap, fmt);
-	len = vsnprintf(NULL, 0, fmt, ap);
-	va_end(ap);
-
-	len += http_sprintf_headers(NULL, 0, hdrs);
-	len += 3; // \r\n\0
-
-	if (len <= *szp) {
-		buf = *bufp;
-	} else {
-		if ((buf = nni_alloc(len)) == NULL) {
-			return (NNG_ENOMEM);
-		}
-		nni_free(*bufp, *szp);
-		*bufp = buf;
-		*szp  = len;
-	}
-	va_start(ap, fmt);
-	n = vsnprintf(buf, len, fmt, ap);
-	va_end(ap);
-	buf += n;
-	len -= n;
-	n = http_sprintf_headers(buf, len, hdrs);
-	buf += n;
-	len -= n;
-	snprintf(buf, len, "\r\n");
-	NNI_ASSERT(len == 3);
-	return (0);
-}
-
-static int
-http_req_prepare(nni_http_req *req)
-{
-	int rv;
-	if (req->uri == NULL) {
-		return (NNG_EINVAL);
-	}
-	rv = http_asprintf(&req->data.buf, &req->data.bufsz, &req->data.hdrs,
-	    "%s %s %s\r\n", req->meth, req->uri, req->vers);
-	return (rv);
-}
-
-static int
-http_res_prepare(nng_http *conn)
-{
-	int           rv;
-	nng_http_res *res = nni_http_conn_res(conn);
-
-	if (res->code == 0) {
-		res->code = NNG_HTTP_STATUS_OK;
-	}
-	rv = http_asprintf(&res->data.buf, &res->data.bufsz, &res->data.hdrs,
-	    "%s %d %s\r\n", res->vers, res->code, nni_http_get_reason(conn));
-	return (rv);
-}
-
-int
-nni_http_req_get_buf(nni_http_req *req, void **data, size_t *szp)
-{
-	int rv;
-
-	if ((req->data.buf == NULL) && (rv = http_req_prepare(req)) != 0) {
-		return (rv);
-	}
-	*data = req->data.buf;
-	*szp  = req->data.bufsz - 1; // exclude terminating NUL
-	return (0);
-}
-
-int
-nni_http_res_get_buf(nng_http *conn, void **data, size_t *szp)
-{
-	int           rv;
-	nni_http_res *res = nni_http_conn_res(conn);
-
-	if ((res->data.buf == NULL) && (rv = http_res_prepare(conn)) != 0) {
-		return (rv);
-	}
-	*data = res->data.buf;
-	*szp  = res->data.bufsz - 1; // exclude terminating NUL
-	return (0);
-}
-
 void
 nni_http_req_init(nni_http_req *req)
 {
@@ -297,8 +172,6 @@ nni_http_req_init(nni_http_req *req)
 	req->data.data  = NULL;
 	req->data.size  = 0;
 	req->data.own   = false;
-	req->uri        = NULL;
-	(void) snprintf(req->meth, sizeof(req->meth), "GET");
 }
 
 void
@@ -310,7 +183,6 @@ nni_http_res_init(nni_http_res *res)
 	res->data.data  = NULL;
 	res->data.size  = 0;
 	res->data.own   = false;
-	res->vers       = NNG_HTTP_VERSION_1_1;
 	res->rsn        = NULL;
 	res->code       = 0;
 }
