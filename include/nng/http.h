@@ -25,7 +25,7 @@ extern "C" {
 #include <nng/nng.h>
 
 // HTTP status codes.  This list is not exhaustive.
-enum nng_http_status {
+typedef enum {
 	NNG_HTTP_STATUS_CONTINUE                 = 100,
 	NNG_HTTP_STATUS_SWITCHING                = 101,
 	NNG_HTTP_STATUS_PROCESSING               = 102,
@@ -86,7 +86,7 @@ enum nng_http_status {
 	NNG_HTTP_STATUS_LOOP_DETECTED            = 508,
 	NNG_HTTP_STATUS_NOT_EXTENDED             = 510,
 	NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED    = 511,
-};
+} nng_http_status;
 
 #define NNG_HTTP_VERSION_1_0 "HTTP/1.0"
 #define NNG_HTTP_VERSION_1_1 "HTTP/1.1"
@@ -153,7 +153,7 @@ NNG_DECL nng_err nng_http_set_uri(nng_http *, const char *, const char *);
 NNG_DECL const char *nng_http_get_uri(nng_http *);
 
 // nng_http_get_status gets the status of the last transaction
-NNG_DECL uint16_t nng_http_get_status(nng_http *);
+NNG_DECL nng_http_status nng_http_get_status(nng_http *);
 
 // nng_http_reason gets the message associated with status of the last
 // transaction
@@ -162,7 +162,7 @@ NNG_DECL const char *nng_http_get_reason(nng_http *);
 // nng_http_set_status sets the status for the transaction (server API),
 // and also sets the reason (message) for it.  (If NULL is used for the reason,
 // then a builtin value is used based on the code.)
-NNG_DECL void nng_http_set_status(nng_http *, uint16_t, const char *);
+NNG_DECL void nng_http_set_status(nng_http *, nng_http_status, const char *);
 
 // nng_http_set_version is used to change the version of a request.
 // Normally the version is "HTTP/1.1".  Note that the framework does
@@ -254,7 +254,7 @@ NNG_DECL nng_err nng_http_handler_alloc_static(
 // The status is given, along with the new URL.  If the status is 0,
 // then 301 will be used instead.
 NNG_DECL nng_err nng_http_handler_alloc_redirect(
-    nng_http_handler **, const char *, uint16_t, const char *);
+    nng_http_handler **, const char *, nng_http_status, const char *);
 
 // nng_http_handler_alloc_file creates a "directory" based handler, that
 // serves up static content from the given directory tree.  Directories
@@ -363,14 +363,14 @@ NNG_DECL nng_err nng_http_server_get_addr(nng_http_server *, nng_sockaddr *);
 // to be sent for the given error code.  This is used when the error is
 // generated internally by the framework.
 NNG_DECL nng_err nng_http_server_set_error_page(
-    nng_http_server *, uint16_t, const char *);
+    nng_http_server *, nng_http_status, const char *);
 
 // nng_http_server_set_error_file works like nng_http_server_error_page,
 // except that the content is loaded from the named file path.  The contents
 // are loaded at the time this function is called, so this function should be
 // called anytime the contents of the named file have changed.
 NNG_DECL nng_err nng_http_server_set_error_file(
-    nng_http_server *, uint16_t, const char *);
+    nng_http_server *, nng_http_status, const char *);
 
 // nng_http_server_error takes replaces the body of the response with
 // a custom error page previously set for the server, using the status

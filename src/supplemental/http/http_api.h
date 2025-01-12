@@ -106,7 +106,7 @@ extern int  nni_http_conn_getopt(
 // must not use them for any other purpose.
 
 extern int  nni_http_req_alloc(nni_http_req **, const nng_url *);
-extern int  nni_http_res_set_error(nni_http_res *, uint16_t);
+extern int  nni_http_res_set_error(nni_http_res *, nng_http_status);
 extern void nni_http_req_free(nni_http_req *);
 extern void nni_http_res_free(nni_http_res *);
 extern void nni_http_write_req(nni_http_conn *, nni_aio *);
@@ -202,7 +202,7 @@ extern void nni_http_server_close(nni_http_server *);
 
 // nni_http_server_set_error_page sets an error page for the named status.
 extern int nni_http_server_set_error_page(
-    nni_http_server *, uint16_t, const char *);
+    nni_http_server *, nng_http_status, const char *);
 
 // nni_http_server_res_error takes replaces the body of the res with
 // a custom error page previously set for the server, using the status
@@ -255,7 +255,7 @@ extern int nni_http_handler_init_static(
 
 // nni_http_handler_init_redirect creates a handler that redirects the request.
 extern int nni_http_handler_init_redirect(
-    nni_http_handler **, const char *, uint16_t, const char *);
+    nni_http_handler **, const char *, nng_http_status, const char *);
 
 // nni_http_handler_fini destroys a handler.  This should only be done before
 // the handler is added, or after it is deleted.  The server automatically
@@ -356,21 +356,21 @@ extern void        nni_http_set_method(nng_http *conn, const char *method);
 extern const char *nni_http_get_method(nng_http *conn);
 
 extern void nni_http_set_status(
-    nng_http *conn, uint16_t status, const char *reason);
+    nng_http *conn, nng_http_status status, const char *reason);
 
-extern uint16_t    nni_http_get_status(nng_http *);
-extern const char *nni_http_get_reason(nng_http *);
+extern nng_http_status nni_http_get_status(nng_http *);
+extern const char     *nni_http_get_reason(nng_http *);
 
 // nni_http_set_error flags an error using the built in HTML page.
 // unless body is not NULL.  To pass no content, pass an empty string for body.
-extern int nni_http_set_error(
-    nng_http *conn, uint16_t status, const char *reason, const char *body);
+extern int nni_http_set_error(nng_http *conn, nng_http_status status,
+    const char *reason, const char *body);
 
 // nni_http_set_redirect is used to set the redirection.
 // It uses a built-in error page, with a message about the redirection, and
 // sets the response Location: header accordingly.
-extern int nni_http_set_redirect(
-    nng_http *conn, uint16_t status, const char *reason, const char *dest);
+extern int nni_http_set_redirect(nng_http *conn, nng_http_status status,
+    const char *reason, const char *dest);
 
 extern int nni_http_set_uri(
     nng_http *conn, const char *uri, const char *query);

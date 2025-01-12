@@ -66,9 +66,9 @@ typedef struct http_sconn {
 } http_sconn;
 
 typedef struct http_error {
-	nni_list_node node;
-	uint16_t      code;
-	char         *body;
+	nni_list_node   node;
+	nng_http_status code;
+	char           *body;
 } http_error;
 
 struct nng_http_server {
@@ -327,7 +327,7 @@ http_sconn_txdone(void *arg)
 }
 
 static void
-http_sconn_error(http_sconn *sc, uint16_t err)
+http_sconn_error(http_sconn *sc, nng_http_status err)
 {
 	nng_http_set_status(sc->conn, err, NULL);
 	if (nni_http_server_error(sc->server, sc->conn) != 0) {
@@ -650,9 +650,9 @@ http_sconn_cbdone(void *arg)
 		return;
 	}
 	if (!nni_http_res_sent(sc->conn)) {
-		const char *val;
-		const char *method;
-		uint16_t    status;
+		const char     *val;
+		const char     *method;
+		nng_http_status status;
 		val    = nni_http_get_header(sc->conn, "Connection");
 		status = nni_http_get_status(sc->conn);
 		method = nni_http_get_method(sc->conn);
@@ -947,7 +947,7 @@ nni_http_server_close(nni_http_server *s)
 }
 
 static int
-http_server_set_err(nni_http_server *s, uint16_t code, char *body)
+http_server_set_err(nni_http_server *s, nng_http_status code, char *body)
 {
 	http_error *epage;
 
@@ -973,7 +973,7 @@ http_server_set_err(nni_http_server *s, uint16_t code, char *body)
 
 int
 nni_http_server_set_error_page(
-    nni_http_server *s, uint16_t code, const char *html)
+    nni_http_server *s, nng_http_status code, const char *html)
 {
 	char *body;
 	int   rv;
@@ -991,10 +991,10 @@ nni_http_server_set_error_page(
 int
 nni_http_server_error(nni_http_server *s, nng_http *conn)
 {
-	http_error *epage;
-	char       *body = NULL;
-	uint16_t    code = nni_http_get_status(conn);
-	int         rv;
+	http_error     *epage;
+	char           *body = NULL;
+	nng_http_status code = nni_http_get_status(conn);
+	int             rv;
 
 	nni_mtx_lock(&s->errors_mtx);
 	NNI_LIST_FOREACH (&s->errors, epage) {
@@ -1168,7 +1168,7 @@ http_handle_file(nng_http *conn, void *arg, nni_aio *aio)
 	// them up chunkwise.  Applications could even come up with their own
 	// caching version of the http handler.
 	if ((rv = nni_file_get(hf->path, &data, &size)) != 0) {
-		uint16_t status;
+		nng_http_status status;
 		switch (rv) {
 		case NNG_ENOMEM:
 			status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
@@ -1350,7 +1350,7 @@ http_handle_dir(nng_http *conn, void *arg, nng_aio *aio)
 
 	nni_free(pn, pnsz);
 	if (rv != 0) {
-		uint16_t status;
+		nng_http_status status;
 
 		switch (rv) {
 		case NNG_ENOMEM:
@@ -1418,9 +1418,9 @@ nni_http_handler_init_directory(
 }
 
 typedef struct http_redirect {
-	uint16_t code;
-	char    *where;
-	char    *from;
+	nng_http_status code;
+	char           *where;
+	char           *from;
 } http_redirect;
 
 static void
@@ -1483,7 +1483,7 @@ http_redirect_free(void *arg)
 
 int
 nni_http_handler_init_redirect(nni_http_handler **hpp, const char *uri,
-    uint16_t status, const char *where)
+    nng_http_status status, const char *where)
 {
 	nni_http_handler *h;
 	int               rv;

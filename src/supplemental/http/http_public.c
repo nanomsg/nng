@@ -138,7 +138,7 @@ nng_http_get_version(nng_http *conn)
 }
 
 void
-nng_http_set_status(nng_http *conn, uint16_t status, const char *reason)
+nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason)
 {
 #ifdef NNG_SUPP_HTTP
 	nni_http_set_status(conn, status, reason);
@@ -149,7 +149,7 @@ nng_http_set_status(nng_http *conn, uint16_t status, const char *reason)
 #endif
 }
 
-uint16_t
+nng_http_status
 nng_http_get_status(nng_http *conn)
 {
 #ifdef NNG_SUPP_HTTP
@@ -347,8 +347,8 @@ nng_http_handler_alloc_directory(
 }
 
 nng_err
-nng_http_handler_alloc_redirect(
-    nng_http_handler **hp, const char *uri, uint16_t status, const char *where)
+nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *uri,
+    nng_http_status status, const char *where)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_handler_init_redirect(hp, uri, status, where));
@@ -502,7 +502,7 @@ nng_http_server_del_handler(nng_http_server *srv, nng_http_handler *h)
 
 nng_err
 nng_http_server_set_error_page(
-    nng_http_server *srv, uint16_t code, const char *body)
+    nng_http_server *srv, nng_http_status code, const char *body)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_server_set_error_page(srv, code, body));

@@ -62,13 +62,13 @@ struct nng_http_conn {
 	nng_http_req req;
 	nng_http_res res;
 
-	uint16_t    code;
-	char        meth[32];
-	char        host[260]; // 253 per IETF, plus 6 for :port plus null
-	char        ubuf[200]; // Most URIs are smaller than this
-	const char *vers;
-	char       *uri;
-	char       *rsn;
+	nng_http_status code;
+	char            meth[32];
+	char            host[260]; // 253 per IETF, plus 6 for :port plus null
+	char            ubuf[200]; // Most URIs are smaller than this
+	const char     *vers;
+	char           *uri;
+	char           *rsn;
 
 	uint8_t *buf;
 	size_t   bufsz;
@@ -880,7 +880,7 @@ nni_http_get_method(nng_http *conn)
 	return (conn->meth);
 }
 
-uint16_t
+nng_http_status
 nni_http_get_status(nng_http *conn)
 {
 	if (conn->code == 0) {
@@ -890,11 +890,11 @@ nni_http_get_status(nng_http *conn)
 }
 
 const char *
-nni_http_reason(uint16_t code)
+nni_http_reason(nng_http_status code)
 {
 	static struct {
-		uint16_t    code;
-		const char *mesg;
+		nng_http_status code;
+		const char     *mesg;
 	} http_status[] = {
 		// 200, listed first because most likely
 		{ NNG_HTTP_STATUS_OK, "OK" },
@@ -996,7 +996,7 @@ nni_http_get_reason(nng_http *conn)
 }
 
 void
-nni_http_set_status(nng_http *conn, uint16_t status, const char *reason)
+nni_http_set_status(nng_http *conn, nng_http_status status, const char *reason)
 {
 	conn->code = status;
 	char *dup  = NULL;
@@ -1023,7 +1023,7 @@ nni_http_is_error(nng_http *conn)
 }
 
 static int
-http_conn_set_error(nng_http *conn, uint16_t status, const char *reason,
+http_conn_set_error(nng_http *conn, nng_http_status status, const char *reason,
     const char *body, const char *redirect)
 {
 	char        content[1024];
@@ -1082,15 +1082,15 @@ http_conn_set_error(nng_http *conn, uint16_t status, const char *reason,
 }
 
 int
-nni_http_set_error(
-    nng_http *conn, uint16_t status, const char *reason, const char *body)
+nni_http_set_error(nng_http *conn, nng_http_status status, const char *reason,
+    const char *body)
 {
 	return (http_conn_set_error(conn, status, reason, body, NULL));
 }
 
 int
-nni_http_set_redirect(
-    nng_http *conn, uint16_t status, const char *reason, const char *redirect)
+nni_http_set_redirect(nng_http *conn, nng_http_status status,
+    const char *reason, const char *redirect)
 {
 	char *loc;
 	bool  static_value = false;
