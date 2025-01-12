@@ -147,7 +147,7 @@ NNG_DECL void nng_http_reset(nng_http *);
 // include an optional query string, either inline in the URI to start,
 // or as a separate argument.  If the query string already exists
 // and one is also supplied here, it will be appended (separated with &).
-NNG_DECL int nng_http_set_uri(nng_http *, const char *, const char *);
+NNG_DECL nng_err nng_http_set_uri(nng_http *, const char *, const char *);
 
 // nng_http_get_uri returns the URI.  It will be NULL if not set.
 NNG_DECL const char *nng_http_get_uri(nng_http *);
@@ -167,7 +167,7 @@ NNG_DECL void nng_http_set_status(nng_http *, uint16_t, const char *);
 // nng_http_set_version is used to change the version of a request.
 // Normally the version is "HTTP/1.1".  Note that the framework does
 // not support HTTP/2 at all.  Null sets the default ("HTTP/1.1").
-NNG_DECL int nng_http_set_version(nng_http *, const char *);
+NNG_DECL nng_err nng_http_set_version(nng_http *, const char *);
 
 // nng_http_get_version is used to get the version of a request.
 NNG_DECL const char *nng_http_get_version(nng_http *);
@@ -184,8 +184,8 @@ NNG_DECL const char *nng_http_get_method(nng_http *);
 // a header to either the request or response.  Clients modify the request
 // headers, and servers (and callbacks on the server) modify response headers.
 // These can return NNG_ENOMEM, NNG_MSGSIZE, etc.
-NNG_DECL int nng_http_set_header(nng_http *, const char *, const char *);
-NNG_DECL int nng_http_add_header(nng_http *, const char *, const char *);
+NNG_DECL nng_err nng_http_set_header(nng_http *, const char *, const char *);
+NNG_DECL nng_err nng_http_add_header(nng_http *, const char *, const char *);
 
 // nng_http_del_header removes all of the headers for the given header.
 // For clients this is done on the request headers, for servers its the
@@ -205,7 +205,7 @@ NNG_DECL void nng_http_set_body(nng_http *, void *, size_t);
 
 // nng_http_copy_body sets the body to send out in the next exchange, but
 // makes a local copy.  It can fail due to NNG_ENOMEM.
-NNG_DECL int nng_http_copy_body(nng_http *, const void *, size_t);
+NNG_DECL nng_err nng_http_copy_body(nng_http *, const void *, size_t);
 
 // nng_http_handler is a handler used on the server side to handle HTTP
 // requests coming into a specific URL.
@@ -230,7 +230,7 @@ typedef struct nng_http_handler nng_http_handler;
 // completion by nng_aio_finish.  The second argument to this function is the
 // handler data that was optionally set by nng_handler_set_data.
 typedef void (*nng_http_handler_func)(nng_http *, void *, nng_aio *);
-NNG_DECL int nng_http_handler_alloc(
+NNG_DECL nng_err nng_http_handler_alloc(
     nng_http_handler **, const char *, nng_http_handler_func);
 
 // nng_http_handler_free frees the handler. This actually just drops a
@@ -241,19 +241,19 @@ NNG_DECL void nng_http_handler_free(nng_http_handler *);
 // nng_http_handler_alloc_file creates a "file" based handler, that
 // serves up static content from the given file path.  The content-type
 // supplied is determined from the file name using a simple built-in map.
-NNG_DECL int nng_http_handler_alloc_file(
+NNG_DECL nng_err nng_http_handler_alloc_file(
     nng_http_handler **, const char *, const char *);
 
 // nng_http_handler_alloc_static creates a static-content handler.
 // The last argument is the content-type, which may be NULL (in which case
 // "application/octet-stream" is assumed.)
-NNG_DECL int nng_http_handler_alloc_static(
+NNG_DECL nng_err nng_http_handler_alloc_static(
     nng_http_handler **, const char *, const void *, size_t, const char *);
 
 // nng_http_handler_alloc_redirect creates an HTTP redirect handler.
 // The status is given, along with the new URL.  If the status is 0,
 // then 301 will be used instead.
-NNG_DECL int nng_http_handler_alloc_redirect(
+NNG_DECL nng_err nng_http_handler_alloc_redirect(
     nng_http_handler **, const char *, uint16_t, const char *);
 
 // nng_http_handler_alloc_file creates a "directory" based handler, that
@@ -262,7 +262,7 @@ NNG_DECL int nng_http_handler_alloc_redirect(
 // directory content, otherwise a suitable error page is returned (the server
 // does not generate index pages automatically.)  The content-type for
 // files is determined from the file name using a simple built-in map.
-NNG_DECL int nng_http_handler_alloc_directory(
+NNG_DECL nng_err nng_http_handler_alloc_directory(
     nng_http_handler **, const char *, const char *);
 
 // nng_http_handler_set_method sets the method that the handler will be
@@ -310,7 +310,7 @@ typedef struct nng_http_server nng_http_server;
 // from the URL.  If a server already exists, then a hold is placed on it, and
 // that instance is returned.  If no such server exists, then a new instance
 // is created.
-NNG_DECL int nng_http_server_hold(nng_http_server **, const nng_url *);
+NNG_DECL nng_err nng_http_server_hold(nng_http_server **, const nng_url *);
 
 // nng_http_server_release releases the hold on the server.  If this is the
 // last instance of the server, then it is shutdown and resources are freed.
@@ -319,7 +319,7 @@ NNG_DECL void nng_http_server_release(nng_http_server *);
 // nng_http_server_start starts the server handling HTTP.  Once this is
 // called, it will not be possible to change certain parameters (such as
 // any TLS configuration).
-NNG_DECL int nng_http_server_start(nng_http_server *);
+NNG_DECL nng_err nng_http_server_start(nng_http_server *);
 
 // nng_http_server_stop stops the server.  No new client connections are
 // accepted after this returns.  Once a server is stopped fully, the
@@ -331,14 +331,14 @@ NNG_DECL void nng_http_server_stop(nng_http_server *);
 // This function will return NNG_EADDRINUSE if a conflicting handler
 // is already registered (i.e. a handler with the same value for Host,
 // Method, and URL.)
-NNG_DECL int nng_http_server_add_handler(
+NNG_DECL nng_err nng_http_server_add_handler(
     nng_http_server *, nng_http_handler *);
 
 // nni_http_del_handler removes the given handler.  The caller is
 // responsible for finalizing it afterwards.  If the handler was not found
 // (not registered), NNG_ENOENT is returned.  In this case it is unsafe
 // to make assumptions about the validity of the handler.
-NNG_DECL int nng_http_server_del_handler(
+NNG_DECL nng_err nng_http_server_del_handler(
     nng_http_server *, nng_http_handler *);
 
 // nng_http_server_set_tls adds a TLS configuration to the server,
@@ -347,36 +347,36 @@ NNG_DECL int nng_http_server_del_handler(
 // server client, so the caller must have configured it reasonably.
 // This API is not recommended unless the caller needs complete control
 // over the TLS configuration.
-NNG_DECL int nng_http_server_set_tls(nng_http_server *, nng_tls_config *);
+NNG_DECL nng_err nng_http_server_set_tls(nng_http_server *, nng_tls_config *);
 
 // nng_http_server_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The TLS configuration is invalidated if the
 // nng_http_server_set_tls function is called, so be careful.
-NNG_DECL int nng_http_server_get_tls(nng_http_server *, nng_tls_config **);
+NNG_DECL nng_err nng_http_server_get_tls(nng_http_server *, nng_tls_config **);
 
 // nng_http_server_get_addr obtains the address with which the server was
 // initialized or returns NNG_EINVAL. Useful for instance when the port has
 // been automatically assigned.
-NNG_DECL int nng_http_server_get_addr(nng_http_server *, nng_sockaddr *);
+NNG_DECL nng_err nng_http_server_get_addr(nng_http_server *, nng_sockaddr *);
 
 // nng_http_server_set_error_page sets a custom error page (HTML) content
 // to be sent for the given error code.  This is used when the error is
 // generated internally by the framework.
-NNG_DECL int nng_http_server_set_error_page(
+NNG_DECL nng_err nng_http_server_set_error_page(
     nng_http_server *, uint16_t, const char *);
 
 // nng_http_server_set_error_file works like nng_http_server_error_page,
 // except that the content is loaded from the named file path.  The contents
 // are loaded at the time this function is called, so this function should be
 // called anytime the contents of the named file have changed.
-NNG_DECL int nng_http_server_set_error_file(
+NNG_DECL nng_err nng_http_server_set_error_file(
     nng_http_server *, uint16_t, const char *);
 
-// nng_http_server_res_error takes replaces the body of the response with
+// nng_http_server_error takes replaces the body of the response with
 // a custom error page previously set for the server, using the status
 // of the response.  The response must have the status set first using
 // nng_http_res_set_status.
-NNG_DECL int nng_http_server_error(nng_http_server *, nng_http *);
+NNG_DECL nng_err nng_http_server_error(nng_http_server *, nng_http *);
 
 // nng_http_hijack is intended to be called by a handler that wishes to
 // take over the processing of the HTTP session -- usually to change protocols
@@ -389,7 +389,7 @@ NNG_DECL int nng_http_server_error(nng_http_server *, nng_http *);
 // of the request structure.  (Some hijackers may keep the request for
 // further processing.)
 
-NNG_DECL int nng_http_hijack(nng_http *);
+NNG_DECL nng_err nng_http_hijack(nng_http *);
 
 // nng_http_client represents a "client" object.  Clients can be used
 // to create HTTP connections.  At present, connections are not cached
@@ -398,7 +398,7 @@ typedef struct nng_http_client nng_http_client;
 
 // nng_http_client_alloc allocates a client object, associated with
 // the given URL.
-NNG_DECL int nng_http_client_alloc(nng_http_client **, const nng_url *);
+NNG_DECL nng_err nng_http_client_alloc(nng_http_client **, const nng_url *);
 
 // nng_http_client_free frees the client.  Connections created by the
 // the client are not necessarily closed.
@@ -408,12 +408,12 @@ NNG_DECL void nng_http_client_free(nng_http_client *);
 // the entire TLS configuration on the client, so the caller must have
 // configured it reasonably.  This API is not recommended unless the
 // caller needs complete control over the TLS configuration.
-NNG_DECL int nng_http_client_set_tls(nng_http_client *, nng_tls_config *);
+NNG_DECL nng_err nng_http_client_set_tls(nng_http_client *, nng_tls_config *);
 
 // nng_http_client_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The supplied TLS configuration object may
 // be invalidated by any future calls to nni_http_client_set_tls.
-NNG_DECL int nng_http_client_get_tls(nng_http_client *, nng_tls_config **);
+NNG_DECL nng_err nng_http_client_get_tls(nng_http_client *, nng_tls_config **);
 
 // nng_http_client_connect establishes a new connection with the server
 // named in the URL used when the client was created.  Once the connection

@@ -296,7 +296,7 @@ nni_aio_get_output(nni_aio *aio, unsigned index)
 	return (NULL);
 }
 
-int
+nng_err
 nni_aio_result(nni_aio *aio)
 {
 	return (aio->a_result);
@@ -325,7 +325,7 @@ nni_aio_busy(nni_aio *aio)
 void
 nni_aio_reset(nni_aio *aio)
 {
-	aio->a_result    = 0;
+	aio->a_result    = NNG_OK;
 	aio->a_count     = 0;
 	aio->a_abort     = false;
 	aio->a_expire_ok = false;
@@ -362,7 +362,7 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	if (!aio->a_sleep) {
 		aio->a_expire_ok = false;
 	}
-	aio->a_result = 0;
+	aio->a_result = NNG_OK;
 
 	// Do this outside the lock.  Note that we don't strictly need to have
 	// done this for the failure cases below (the task framework does the
@@ -388,14 +388,14 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 		aio->a_abort     = false;
 		aio->a_expire_ok = false;
 		aio->a_count     = 0;
-		NNI_ASSERT(aio->a_result != 0);
+		NNI_ASSERT(aio->a_result != NNG_OK);
 		nni_mtx_unlock(&eq->eq_mtx);
 		nni_task_dispatch(&aio->a_task);
 		return (false);
 	}
 	if (timeout) {
 		aio->a_sleep     = false;
-		aio->a_result    = aio->a_expire_ok ? 0 : NNG_ETIMEDOUT;
+		aio->a_result    = aio->a_expire_ok ? NNG_OK : NNG_ETIMEDOUT;
 		aio->a_expire_ok = false;
 		aio->a_count     = 0;
 		nni_mtx_unlock(&eq->eq_mtx);
@@ -419,7 +419,7 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 // nni_aio_abort is called by a consumer which guarantees that the aio
 // is still valid.
 void
-nni_aio_abort(nni_aio *aio, int rv)
+nni_aio_abort(nni_aio *aio, nng_err rv)
 {
 	if (aio != NULL && aio->a_init) {
 		nni_aio_cancel_fn fn;
@@ -451,7 +451,7 @@ nni_aio_abort(nni_aio *aio, int rv)
 
 static void
 nni_aio_finish_impl(
-    nni_aio *aio, int rv, size_t count, nni_msg *msg, bool sync)
+    nni_aio *aio, nng_err rv, size_t count, nni_msg *msg, bool sync)
 {
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
@@ -479,21 +479,21 @@ nni_aio_finish_impl(
 }
 
 void
-nni_aio_finish(nni_aio *aio, int result, size_t count)
+nni_aio_finish(nni_aio *aio, nng_err result, size_t count)
 {
 	nni_aio_finish_impl(aio, result, count, NULL, false);
 }
 
 void
-nni_aio_finish_sync(nni_aio *aio, int result, size_t count)
+nni_aio_finish_sync(nni_aio *aio, nng_err result, size_t count)
 {
 	nni_aio_finish_impl(aio, result, count, NULL, true);
 }
 
 void
-nni_aio_finish_error(nni_aio *aio, int result)
+nni_aio_finish_error(nni_aio *aio, nng_err result)
 {
-	nni_aio_finish_impl(aio, result, 0, NULL, false);
+	nni_aio_finish_impl(aio, result, NNG_OK, NULL, false);
 }
 
 void
@@ -539,7 +539,7 @@ nni_aio_completions_init(nni_aio_completions *clp)
 
 void
 nni_aio_completions_add(
-    nni_aio_completions *clp, nni_aio *aio, int result, size_t count)
+    nni_aio_completions *clp, nni_aio *aio, nng_err result, size_t count)
 {
 	NNI_ASSERT(!nni_aio_list_active(aio));
 	aio->a_reap_node.rn_next = *clp;

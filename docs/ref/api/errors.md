@@ -1,5 +1,9 @@
 # Errors
 
+```c
+typedef enum ... nng_err;
+```
+
 Many _NNG_ functions can fail for a variety of reasons.
 These functions tend to return either zero on success,
 or a non-zero error code to indicate failure.
@@ -7,7 +11,11 @@ or a non-zero error code to indicate failure.
 which behave the same way, but _NNG_ does not use a separate
 _errno_ variable.}}
 
-All these error codes are `int`.
+All these error codes are `nng_err`.
+
+> [!NOTE]
+> Many APIs are still using `int`, but the `nng_err` enumeration can be used
+> instead, and will help with debugging.
 
 Not every possible error code is defined here, as sometimes
 an underlying system or library error code is "wrapped".
@@ -15,7 +23,7 @@ an underlying system or library error code is "wrapped".
 ## Human Readable Error Message
 
 ```c
-const char *nng_strerror(int err);
+const char *nng_strerror(nng_err err);
 ```
 
 The {{i:`nng_strerror`}} returns the human-readable description of the

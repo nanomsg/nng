@@ -56,7 +56,7 @@ set when issuing the transaction.
 ### HTTP URI
 
 ```c
-int nng_http_set_uri(nng_http *conn, const char *uri, const char *query);
+nng_err nng_http_set_uri(nng_http *conn, const char *uri, const char *query);
 const char *nng_http_get_uri(nng_http *conn);
 ```
 
@@ -76,7 +76,7 @@ will have any query concentated, for example "/api/get_user.cgi?name=garrett".
 ### HTTP Version
 
 ```c
-int nng_http_set_version(nng_http *conn, const char *version);
+nng_err nng_http_set_version(nng_http *conn, const char *version);
 const char *nng_http_get_version(nng_http *conn);
 ```
 
@@ -210,8 +210,8 @@ The scan can be rest by setting _next_ to `NULL`.
 ### Modifying Headers
 
 ```c
-int nng_http_add_header(nng_http *conn, const char *key, const char *val);
-int nng_http_set_header(nng_http *conn, const char *key, const char *val);
+nng_err nng_http_add_header(nng_http *conn, const char *key, const char *val);
+nng_err nng_http_set_header(nng_http *conn, const char *key, const char *val);
 void nng_http_del_header(nng_http *conn, const char *key);
 ```
 
@@ -323,7 +323,7 @@ They can be used to transfer request or response body data as well.
 ### Hijacking Connections
 
 ```c
-void nng_http_hijack(nng_http_conn *conn);
+nng_err nng_http_hijack(nng_http *conn);
 ```
 
 TODO: This API will change to convert the conn into a stream object.
@@ -387,8 +387,8 @@ of its resources.
 ### Client TLS
 
 ```c
-int nng_http_client_get_tls(nng_http_client *client, nng_tls_config **tlsp);
-int nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
+nng_err nng_http_client_get_tls(nng_http_client *client, nng_tls_config **tlsp);
+nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 ```
 
 The {{i:`nng_http_client_get_tls`}} and {{i:`nng_http_client_set_tls`}} functions are used to
@@ -456,15 +456,6 @@ if ((rv = nng_aio_result(aio)) != 0) {
 
 ### Preparing a Transaction
 
-```c
-int nng_http_set_version(nng_http *conn, const char *version);
-int nng_http_set_uri(nng_http *conn, const char *uri);
-```
-
-The {{i:`nng_http_set_uri`}} function provides a URI for the transaction. This will be used to
-set the URI for the request. The URI typically appears like a path, starting with "/", although
-it may also contain a query string.
-
 ### Request Body
 
 ### Sending the Request
@@ -510,7 +501,7 @@ It does _not_ transfer any response body. To do that, use [`nng_http_read_all`] 
 ### Submitting the Transaction
 
 ```c
-int nng_http_transact(nng_http *conn, nng_aio *aio);
+void nng_http_transact(nng_http *conn, nng_aio *aio);
 ```
 
 The HTTP request is issued, and the response processed, asynchronously by the {{i:`nng_http_transact`}} function.

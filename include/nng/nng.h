@@ -109,6 +109,62 @@ typedef int32_t nng_duration; // in milliseconds
 // past, measured in milliseconds.  The values are always positive.
 typedef uint64_t nng_time;
 
+// Error codes.  These generally have different values from UNIX errnos,
+// so take care about converting them.  The one exception is that 0 is
+// unambiguously "success".
+//
+// NNG_SYSERR is a special code, which allows us to wrap errors from the
+// underlying operating system.  We generally prefer to map errors to one
+// of the above, but if we cannot, then we just encode an error this way.
+// The bit is large enough to accommodate all known UNIX and Win32 error
+// codes.  We try hard to match things semantically to one of our standard
+// errors.  For example, a connection reset or aborted we treat as a
+// closed connection, because that's basically what it means.  (The remote
+// peer closed the connection.)  For certain kinds of resource exhaustion
+// we treat it the same as memory.  But for files, etc. that's OS-specific,
+// and we use the generic below.  Some of the above error codes we use
+// internally, and the application should never see (e.g. NNG_EINTR).
+//
+// NNG_ETRANERR is like ESYSERR, but is used to wrap transport specific
+// errors, from different transports.  It should only be used when none
+// of the other options are available.
+typedef enum {
+	NNG_OK           = 0, // not an error!
+	NNG_EINTR        = 1,
+	NNG_ENOMEM       = 2,
+	NNG_EINVAL       = 3,
+	NNG_EBUSY        = 4,
+	NNG_ETIMEDOUT    = 5,
+	NNG_ECONNREFUSED = 6,
+	NNG_ECLOSED      = 7,
+	NNG_EAGAIN       = 8,
+	NNG_ENOTSUP      = 9,
+	NNG_EADDRINUSE   = 10,
+	NNG_ESTATE       = 11,
+	NNG_ENOENT       = 12,
+	NNG_EPROTO       = 13,
+	NNG_EUNREACHABLE = 14,
+	NNG_EADDRINVAL   = 15,
+	NNG_EPERM        = 16,
+	NNG_EMSGSIZE     = 17,
+	NNG_ECONNABORTED = 18,
+	NNG_ECONNRESET   = 19,
+	NNG_ECANCELED    = 20,
+	NNG_ENOFILES     = 21,
+	NNG_ENOSPC       = 22,
+	NNG_EEXIST       = 23,
+	NNG_EREADONLY    = 24,
+	NNG_EWRITEONLY   = 25,
+	NNG_ECRYPTO      = 26,
+	NNG_EPEERAUTH    = 27,
+	NNG_EBADTYPE     = 30,
+	NNG_ECONNSHUT    = 31,
+	NNG_ESTOPPED     = 999,
+	NNG_EINTERNAL    = 1000,
+	NNG_ESYSERR      = 0x10000000,
+	NNG_ETRANERR     = 0x20000000
+} nng_err;
+
 typedef struct nng_msg  nng_msg;
 typedef struct nng_stat nng_stat;
 typedef struct nng_aio  nng_aio;
@@ -379,7 +435,7 @@ NNG_DECL int nng_listener_get_tls(nng_listener, nng_tls_config **);
 
 // nng_strerror returns a human-readable string associated with the error
 // code supplied.
-NNG_DECL const char *nng_strerror(int);
+NNG_DECL const char *nng_strerror(nng_err);
 
 // nng_send sends (or arranges to send) the data on the socket.  Note that
 // this function may (will!) return before any receiver has actually
@@ -531,7 +587,7 @@ NNG_DECL void nng_aio_stop(nng_aio *);
 // nng_aio_result returns the status/result of the operation. This
 // will be zero on successful completion, or an nng error code on
 // failure.
-NNG_DECL int nng_aio_result(nng_aio *);
+NNG_DECL nng_err nng_aio_result(nng_aio *);
 
 // nng_aio_count returns the number of bytes transferred for certain
 // I/O operations.  This is meaningless for other operations (e.g.
@@ -546,7 +602,7 @@ NNG_DECL void nng_aio_cancel(nng_aio *);
 
 // nng_aio_abort is like nng_aio_cancel, but allows for a different
 // error result to be returned.
-NNG_DECL void nng_aio_abort(nng_aio *, int);
+NNG_DECL void nng_aio_abort(nng_aio *, nng_err);
 
 // nng_aio_wait waits synchronously for any pending operation to complete.
 // It also waits for the callback to have completed execution.  Therefore,
@@ -999,62 +1055,6 @@ NNG_DECL void nng_device_aio(nng_aio *, nng_socket, nng_socket);
 // they have enough special logic around them that it might be best not to
 // automate the promotion of them to other APIs.  This is an area open
 // for discussion.
-
-// Error codes.  These generally have different values from UNIX errnos,
-// so take care about converting them.  The one exception is that 0 is
-// unambiguously "success".
-//
-// NNG_SYSERR is a special code, which allows us to wrap errors from the
-// underlying operating system.  We generally prefer to map errors to one
-// of the above, but if we cannot, then we just encode an error this way.
-// The bit is large enough to accommodate all known UNIX and Win32 error
-// codes.  We try hard to match things semantically to one of our standard
-// errors.  For example, a connection reset or aborted we treat as a
-// closed connection, because that's basically what it means.  (The remote
-// peer closed the connection.)  For certain kinds of resource exhaustion
-// we treat it the same as memory.  But for files, etc. that's OS-specific,
-// and we use the generic below.  Some of the above error codes we use
-// internally, and the application should never see (e.g. NNG_EINTR).
-//
-// NNG_ETRANERR is like ESYSERR, but is used to wrap transport specific
-// errors, from different transports.  It should only be used when none
-// of the other options are available.
-
-typedef enum nng_errno_enum {
-	NNG_EINTR        = 1,
-	NNG_ENOMEM       = 2,
-	NNG_EINVAL       = 3,
-	NNG_EBUSY        = 4,
-	NNG_ETIMEDOUT    = 5,
-	NNG_ECONNREFUSED = 6,
-	NNG_ECLOSED      = 7,
-	NNG_EAGAIN       = 8,
-	NNG_ENOTSUP      = 9,
-	NNG_EADDRINUSE   = 10,
-	NNG_ESTATE       = 11,
-	NNG_ENOENT       = 12,
-	NNG_EPROTO       = 13,
-	NNG_EUNREACHABLE = 14,
-	NNG_EADDRINVAL   = 15,
-	NNG_EPERM        = 16,
-	NNG_EMSGSIZE     = 17,
-	NNG_ECONNABORTED = 18,
-	NNG_ECONNRESET   = 19,
-	NNG_ECANCELED    = 20,
-	NNG_ENOFILES     = 21,
-	NNG_ENOSPC       = 22,
-	NNG_EEXIST       = 23,
-	NNG_EREADONLY    = 24,
-	NNG_EWRITEONLY   = 25,
-	NNG_ECRYPTO      = 26,
-	NNG_EPEERAUTH    = 27,
-	NNG_EBADTYPE     = 30,
-	NNG_ECONNSHUT    = 31,
-	NNG_ESTOPPED     = 999,
-	NNG_EINTERNAL    = 1000,
-	NNG_ESYSERR      = 0x10000000,
-	NNG_ETRANERR     = 0x20000000
-} nng_err;
 
 // nng_url_parse parses a URL string into a structured form.
 // Note that the u_port member will be filled out with a numeric

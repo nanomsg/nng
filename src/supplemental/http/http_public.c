@@ -27,7 +27,7 @@ nng_http_get_header(nng_http *conn, const char *key)
 #endif
 }
 
-int
+nng_err
 nng_http_set_header(nng_http *conn, const char *key, const char *val)
 {
 #ifdef NNG_SUPP_HTTP
@@ -40,7 +40,7 @@ nng_http_set_header(nng_http *conn, const char *key, const char *val)
 #endif
 }
 
-int
+nng_err
 nng_http_add_header(nng_http *conn, const char *key, const char *val)
 {
 #ifdef NNG_SUPP_HTTP
@@ -61,7 +61,6 @@ nng_http_del_header(nng_http *conn, const char *key)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(key);
-	return (NNG_ENOTSUP);
 #endif
 }
 
@@ -78,7 +77,7 @@ nng_http_set_body(nng_http *conn, void *data, size_t sz)
 #endif
 }
 
-int
+nng_err
 nng_http_copy_body(nng_http *conn, const void *data, size_t len)
 {
 #ifdef NNG_SUPP_HTTP
@@ -114,7 +113,7 @@ nng_http_get_uri(nng_http *conn)
 #endif
 }
 
-int
+nng_err
 nng_http_set_uri(nng_http *conn, const char *uri, const char *query)
 {
 #ifdef NNG_SUPP_HTTP
@@ -174,7 +173,7 @@ nng_http_get_reason(nng_http *conn)
 #endif
 }
 
-int
+nng_err
 nng_http_set_version(nng_http *conn, const char *version)
 {
 #ifdef NNG_SUPP_HTTP
@@ -295,7 +294,7 @@ nng_http_read_response(nng_http *conn, nng_aio *aio)
 #endif
 }
 
-int
+nng_err
 nng_http_handler_alloc(
     nng_http_handler **hp, const char *uri, nng_http_handler_func cb)
 {
@@ -319,7 +318,7 @@ nng_http_handler_free(nng_http_handler *h)
 #endif
 }
 
-int
+nng_err
 nng_http_handler_alloc_file(
     nng_http_handler **hp, const char *uri, const char *path)
 {
@@ -333,7 +332,7 @@ nng_http_handler_alloc_file(
 #endif
 }
 
-int
+nng_err
 nng_http_handler_alloc_directory(
     nng_http_handler **hp, const char *uri, const char *path)
 {
@@ -347,7 +346,7 @@ nng_http_handler_alloc_directory(
 #endif
 }
 
-int
+nng_err
 nng_http_handler_alloc_redirect(
     nng_http_handler **hp, const char *uri, uint16_t status, const char *where)
 {
@@ -362,7 +361,7 @@ nng_http_handler_alloc_redirect(
 #endif
 }
 
-int
+nng_err
 nng_http_handler_alloc_static(nng_http_handler **hp, const char *uri,
     const void *data, size_t size, const char *ctype)
 {
@@ -434,7 +433,7 @@ nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 #endif
 }
 
-int
+nng_err
 nng_http_server_hold(nng_http_server **srvp, const nng_url *url)
 {
 #ifdef NNG_SUPP_HTTP
@@ -456,7 +455,7 @@ nng_http_server_release(nng_http_server *srv)
 #endif
 }
 
-int
+nng_err
 nng_http_server_start(nng_http_server *srv)
 {
 #ifdef NNG_SUPP_HTTP
@@ -477,7 +476,7 @@ nng_http_server_stop(nng_http_server *srv)
 #endif
 }
 
-int
+nng_err
 nng_http_server_add_handler(nng_http_server *srv, nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
@@ -489,7 +488,7 @@ nng_http_server_add_handler(nng_http_server *srv, nng_http_handler *h)
 #endif
 }
 
-int
+nng_err
 nng_http_server_del_handler(nng_http_server *srv, nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
@@ -501,7 +500,7 @@ nng_http_server_del_handler(nng_http_server *srv, nng_http_handler *h)
 #endif
 }
 
-int
+nng_err
 nng_http_server_set_error_page(
     nng_http_server *srv, uint16_t code, const char *body)
 {
@@ -515,7 +514,7 @@ nng_http_server_set_error_page(
 #endif
 }
 
-int
+nng_err
 nng_http_server_set_tls(nng_http_server *srv, nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
@@ -527,7 +526,7 @@ nng_http_server_set_tls(nng_http_server *srv, nng_tls_config *cfg)
 #endif
 }
 
-int
+nng_err
 nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
@@ -539,7 +538,7 @@ nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfg)
 #endif
 }
 
-int
+nng_err
 nng_http_server_get_addr(nng_http_server *srv, nng_sockaddr *addr)
 {
 #ifdef NNG_SUPP_HTTP
@@ -555,7 +554,7 @@ nng_http_server_get_addr(nng_http_server *srv, nng_sockaddr *addr)
 #endif
 }
 
-int
+nng_err
 nng_http_server_error(nng_http_server *srv, nng_http *conn)
 {
 #ifdef NNG_SUPP_HTTP
@@ -567,7 +566,7 @@ nng_http_server_error(nng_http_server *srv, nng_http *conn)
 #endif
 }
 
-int
+nng_err
 nng_http_hijack(nng_http *conn)
 {
 #ifdef NNG_SUPP_HTTP
@@ -578,7 +577,7 @@ nng_http_hijack(nng_http *conn)
 #endif
 }
 
-int
+nng_err
 nng_http_client_alloc(nng_http_client **clip, const nng_url *url)
 {
 #ifdef NNG_SUPP_HTTP
@@ -600,7 +599,7 @@ nng_http_client_free(nng_http_client *cli)
 #endif
 }
 
-int
+nng_err
 nng_http_client_set_tls(nng_http_client *cli, nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
@@ -612,7 +611,7 @@ nng_http_client_set_tls(nng_http_client *cli, nng_tls_config *cfg)
 #endif
 }
 
-int
+nng_err
 nng_http_client_get_tls(nng_http_client *cli, nng_tls_config **cfgp)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)

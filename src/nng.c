@@ -1234,7 +1234,7 @@ nng_device(nng_socket s1, nng_socket s2)
 }
 
 static const struct {
-	int         code;
+	nng_err     code;
 	const char *msg;
 } nni_errors[] = {
 	// clang-format off
@@ -1276,7 +1276,7 @@ static const struct {
 
 // Misc.
 const char *
-nng_strerror(int num)
+nng_strerror(nng_err num)
 {
 	static char unknownerrbuf[32];
 	for (int i = 0; nni_errors[i].msg != NULL; i++) {
@@ -1859,7 +1859,7 @@ nng_sleep_aio(nng_duration ms, nng_aio *aio)
 	nni_sleep_aio(ms, aio);
 }
 
-int
+nng_err
 nng_aio_result(nng_aio *aio)
 {
 	return (nni_aio_result(aio));
@@ -1890,7 +1890,7 @@ nng_aio_busy(nng_aio *aio)
 }
 
 void
-nng_aio_abort(nng_aio *aio, int err_code)
+nng_aio_abort(nng_aio *aio, nng_err err_code)
 {
 	nni_aio_abort(aio, err_code);
 }
