@@ -126,12 +126,6 @@ nni_http_res_alloc_data(nni_http_res *res, size_t size)
 	return (0);
 }
 
-bool
-nni_http_res_is_error(nni_http_res *res)
-{
-	return (res->iserr);
-}
-
 static int
 http_parse_header(nng_http *conn, void *line)
 {

@@ -714,7 +714,6 @@ http_sconn_cbdone(void *arg)
 {
 	http_sconn       *sc  = arg;
 	nni_aio          *aio = &sc->cbaio;
-	nni_http_res     *res;
 	nni_http_handler *h;
 	nni_http_server  *s = sc->server;
 
@@ -741,7 +740,6 @@ http_sconn_cbdone(void *arg)
 		http_sconn_close(sc);
 		return;
 	}
-	res = nni_http_conn_res(sc->conn);
 	if (!nni_http_res_sent(sc->conn)) {
 		const char *val;
 		const char *method;
@@ -759,7 +757,7 @@ http_sconn_cbdone(void *arg)
 		    status <= 299) {
 			// prune off data, preserving content-length header.
 			nni_http_prune_body(sc->conn);
-		} else if (nni_http_res_is_error(res)) {
+		} else if (nni_http_is_error(sc->conn)) {
 			(void) nni_http_server_error(s, sc->conn);
 		}
 		nni_http_write_res(sc->conn, &sc->txaio);

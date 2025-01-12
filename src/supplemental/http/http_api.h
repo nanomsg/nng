@@ -119,7 +119,7 @@ extern int nni_http_req_add_header(nni_http_req *, const char *, const char *);
 extern int nni_http_req_alloc_data(nni_http_req *, size_t);
 extern int nni_http_res_alloc_data(nni_http_res *, size_t);
 
-extern bool nni_http_res_is_error(nni_http_res *);
+extern bool nni_http_is_error(nng_http *);
 
 extern void nni_http_read(nni_http_conn *, nni_aio *);
 extern void nni_http_read_full(nni_http_conn *, nni_aio *);

@@ -31,7 +31,6 @@ typedef struct http_header nni_http_header;
 typedef struct nni_http_entity {
 	char       *data;
 	size_t      size;
-	bool        own;        // if true, data is "ours", and should be freed
 	char        clen[24];   // 64-bit lengths, in decimal
 	char        ctype[128]; // 63+63+; per RFC 6838
 	http_header content_type;
@@ -40,17 +39,15 @@ typedef struct nni_http_entity {
 	char       *buf;
 	size_t      bufsz;
 	bool        parsed;
+	bool        own; // if true, data is "ours", and should be freed
 } nni_http_entity;
 
 struct nng_http_req {
 	nni_http_entity data;
-	http_header     host_header;
 };
 
 struct nng_http_res {
 	nni_http_entity data;
-	bool            iserr;
-	http_header     location;
 };
 
 extern void nni_http_free_header(http_header *);
