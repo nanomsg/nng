@@ -307,7 +307,7 @@ void nng_http_set_status(nng_http *conn, uint16_t status, const char *reason);
 <p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typipcally numbered from 100 through 599) returned
 by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)</p>
 <p>A descriptive message matching the status code is returned by <a name="a010"></a><code>nng_http_get_reason</code>.</p>
-<p>The <a name="a011"></a><code>nng_http_set_status</code> function is used on a server in a handler callback to set the status codethat will be
+<p>The <a name="a011"></a><code>nng_http_set_status</code> function is used on a server in a handler callback to set the status code that will be
 reported to the client to <em>status</em>, and the associated text (reason) to <em>reason</em>. If <em>reason</em> is <code>NULL</code>,
 then a built in reason based on the <em>status</em> will be used instead.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
