@@ -269,7 +269,7 @@ married(nng_pipe p, nng_pipe_ev ev, void *arg)
 	nng_mtx_unlock(notice->mx);
 }
 
-int
+nng_err
 nuts_marry(nng_socket s1, nng_socket s2)
 {
 	return (nuts_marry_ex(s1, s2, NULL, NULL, NULL));
@@ -301,13 +301,13 @@ replace_port_zero(const char *addr, char *buf, int port)
 	buf[j] = '\0';
 }
 
-int
+nng_err
 nuts_marry_ex(
     nng_socket s1, nng_socket s2, const char *url, nng_pipe *p1, nng_pipe *p2)
 {
 	struct marriage_notice note;
 	nng_time               timeout;
-	int                    rv;
+	nng_err                rv;
 	char                   addr[64];
 	nng_listener           l;
 	int                    port;
@@ -358,7 +358,7 @@ nuts_marry_ex(
 			}
 		} else if (rv == NNG_ENOTSUP) {
 			url = "tcp://127.0.0.1:0";
-			rv  = 0;
+			rv  = NNG_OK;
 		} else {
 			return (rv);
 		}

@@ -84,14 +84,14 @@ extern void nuts_scratch_addr_zero(const char *, size_t, char *);
 // nuts_marry connects two sockets using inproc.  It uses socket
 // pipe hooks to ensure that it does not return before both sockets
 // are fully connected.
-extern int nuts_marry(nng_socket, nng_socket);
+extern nng_err nuts_marry(nng_socket, nng_socket);
 
 // nuts_marry_ex is like nuts_marry, but returns the pipes that
 // were connected, and includes an optional URL.  The pipe pointers and the
 // URL may be NULL if not needed.  If a port number is part of the URL
 // and is zero (i.e. if the URL contains :0) then listen is done first,
 // and the actual bound port will be used for the client.
-extern int nuts_marry_ex(
+extern nng_err nuts_marry_ex(
     nng_socket, nng_socket, const char *, nng_pipe *, nng_pipe *);
 
 // nuts_stream_send_start and nuts_stream_recv_start are used
@@ -208,21 +208,21 @@ extern const char *nuts_ecdsa_client_crt;
 // did not.
 #define NUTS_PASS(cond)                                         \
 	do {                                                    \
-		int result_ = (cond);                           \
-		TEST_ASSERT_(result_ == 0,                      \
+		nng_err result_ = (nng_err) (cond);             \
+		TEST_ASSERT_(result_ == NNG_OK,                 \
 		    "%s: expected success, got %s (%d)", #cond, \
 		    nng_strerror(result_), result_);            \
 	} while (0)
 
 // NUTS_FAIL tests for a specific NNG error code.
-#define NUTS_FAIL(cond, expect)                                             \
-	do {                                                                \
-		int result_ = (cond);                                       \
-		TEST_CHECK_(result_ == (expect), "%s fails with %s", #cond, \
-		    nng_strerror(expect));                                  \
-		TEST_MSG("%s: expected %s (%d), got %s (%d)", #cond,        \
-		    nng_strerror(expect), expect, nng_strerror(result_),    \
-		    result_);                                               \
+#define NUTS_FAIL(cond, expect)                                          \
+	do {                                                             \
+		nng_err result_ = (cond);                                \
+		TEST_CHECK_(result_ == (nng_err) (expect),               \
+		    "%s fails with %s", #cond, nng_strerror(expect));    \
+		TEST_MSG("%s: expected %s (%d), got %s (%d)", #cond,     \
+		    nng_strerror(expect), expect, nng_strerror(result_), \
+		    result_);                                            \
 	} while (0)
 
 #define NUTS_SEND(sock, string) \
