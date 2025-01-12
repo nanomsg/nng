@@ -98,9 +98,10 @@ there is little need to use this, but there are some subtle semantic differences
 ### HTTP Status
 
 ```c
-uint16_t nng_http_get_status(nng_http *conn);
+typedef enum ... nng_http_status;
+nng_http_status nng_http_get_status(nng_http *conn);
 const char *nng_http_get_reason(nng_http_conn *conn);
-void nng_http_set_status(nng_http *conn, uint16_t status, const char *reason);
+void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 ```
 
 The {{i:`nng_http_get_status`}} function obtains the numeric code (typipcally numbered from 100 through 599) returned
