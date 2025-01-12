@@ -301,9 +301,6 @@ NNG_DECL void nng_http_handler_set_tree(nng_http_handler *);
 NNG_DECL void nng_http_handler_set_data(
     nng_http_handler *, void *, void (*)(void *));
 
-// nng_http_handler_get_data returns the data that was previously stored.
-NNG_DECL void *nng_http_handler_get_data(nng_http_handler *);
-
 // nng_http_server is a handle to an HTTP server instance.  Servers
 // only serve a single port / address at this time.
 

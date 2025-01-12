@@ -163,12 +163,6 @@ nni_http_handler_set_data(nni_http_handler *h, void *data, nni_cb dtor)
 	h->dtor = dtor;
 }
 
-void *
-nni_http_handler_get_data(nni_http_handler *h)
-{
-	return (h->data);
-}
-
 const char *
 nni_http_handler_get_uri(nni_http_handler *h)
 {

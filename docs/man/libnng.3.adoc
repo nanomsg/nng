@@ -93,32 +93,6 @@ be the case if WebSocket support is configured as well.
 In this case, it is possible to access functionality to support the creation of
 HTTP (and HTTP/S if TLS support is present) servers and clients.
 
-==== Common HTTP Functions
-
-The following functions are used to work with HTTP requests, responses,
-and connections.
-
-|===
-|xref:nng_http_conn_read_req.3http.adoc[nng_http_conn_read_req()]|read HTTP request
-|xref:nng_http_conn_read_res.3http.adoc[nng_http_conn_read_res()]|read HTTP response
-|xref:nng_http_conn_write_req.3http.adoc[nng_http_conn_write_req()]|write HTTP request
-|xref:nng_http_conn_write_res.3http.adoc[nng_http_conn_write_res()]|write HTTP response
-|xref:nng_http_req_get_data.3http.adoc[nng_http_req_get_data()]|get HTTP request body
-|xref:nng_http_req_set_data.3http.adoc[nng_http_req_set_data()]|set HTTP request body
-|xref:nng_http_res_copy_data.3http.adoc[nng_http_res_copy_data()]|copy HTTP response body
-|xref:nng_http_res_get_data.3http.adoc[nng_http_res_get_data()]|get HTTP response body
-|xref:nng_http_res_get_header.3http.adoc[nng_http_res_get_header()]|return HTTP response header
-|xref:nng_http_res_set_data.3http.adoc[nng_http_res_set_data()]|set HTTP response body
-|===
-
-==== HTTP Client Functions
-
-These functions are intended for use with HTTP client applications.
-
-|===
-|xref:nng_http_conn_transact.3http.adoc[nng_http_conn_transact()]|perform one HTTP transaction on connection
-|===
-
 ==== HTTP Server Functions
 
 These functions are intended for use with HTTP server applications.
@@ -127,7 +101,6 @@ These functions are intended for use with HTTP server applications.
 |xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc()]|allocate HTTP server handler
 |xref:nng_http_handler_collect_body.3http.adoc[nng_http_handler_collect_body()]|set HTTP handler to collect request body
 |xref:nng_http_handler_free.3http.adoc[nng_http_handler_free()]|free HTTP server handler
-|xref:nng_http_handler_get_data.3http.adoc[nng_http_handler_get_data()]|return extra data for HTTP handler
 |xref:nng_http_handler_set_data.3http.adoc[nng_http_handler_set_data()]|set extra data for HTTP handler
 |xref:nng_http_handler_set_host.3http.adoc[nng_http_handler_set_host()]|set host for HTTP handler
 |xref:nng_http_handler_set_method.3http.adoc[nng_http_handler_set_method()]|set HTTP handler method

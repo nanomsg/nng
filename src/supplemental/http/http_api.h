@@ -294,14 +294,10 @@ extern void nni_http_handler_set_host(nni_http_handler *, const char *);
 extern void nni_http_handler_set_method(nni_http_handler *, const char *);
 
 // nni_http_handler_set_data sets an opaque data element on the handler,
-// which will be available to the callback via nni_http_handler_get_data.
+// which will be available to the handler function as argument.
 // The callback is an optional destructor, and will be called with the
 // data as its argument, when the handler is being destroyed.
 extern void nni_http_handler_set_data(nni_http_handler *, void *, nni_cb);
-
-// nni_http_handler_get_data returns the data that was previously stored
-// by nni_http_handler_set_data.
-extern void *nni_http_handler_get_data(nni_http_handler *);
 
 // nni_http_handler_get_uri returns the URI set on the handler.
 extern const char *nni_http_handler_get_uri(nni_http_handler *);

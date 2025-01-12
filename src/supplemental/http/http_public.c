@@ -434,17 +434,6 @@ nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 #endif
 }
 
-void *
-nng_http_handler_get_data(nng_http_handler *h)
-{
-#ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_get_data(h));
-#else
-	NNI_ARG_UNUSED(h);
-	return (NULL);
-#endif
-}
-
 int
 nng_http_server_hold(nng_http_server **srvp, const nng_url *url)
 {
