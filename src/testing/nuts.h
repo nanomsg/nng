@@ -214,7 +214,7 @@ extern const char *nuts_ecdsa_client_crt;
 		    nng_strerror(result_), result_);            \
 	} while (0)
 
-// NUTS_ERROR tests for a specific NNG error code.
+// NUTS_FAIL tests for a specific NNG error code.
 #define NUTS_FAIL(cond, expect)                                             \
 	do {                                                                \
 		int result_ = (cond);                                       \
@@ -324,5 +324,13 @@ extern const char *nuts_ecdsa_client_crt;
 #ifdef __cplusplus
 };
 #endif
+
+#define NUTS_HTTP_STATUS(conn, expect)                                        \
+	do {                                                                  \
+		TEST_CHECK(nng_http_get_status(conn) == (expect));            \
+		TEST_MSG("HTTP status: expected %d (%s) got %d (%s)", expect, \
+		    #expect, nng_http_get_status(conn),                       \
+		    nng_http_get_reason(conn));                               \
+	} while (0)
 
 #endif // NNG_TEST_NUTS_H

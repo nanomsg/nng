@@ -213,31 +213,39 @@ http_scan_line(void *vbuf, size_t n, size_t *lenp)
 static int
 http_req_parse_line(nng_http *conn, void *line)
 {
-	int   rv;
 	char *method;
 	char *uri;
 	char *version;
 
 	method = line;
 	if ((uri = strchr(method, ' ')) == NULL) {
-		return (NNG_EPROTO);
+		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
+		return (0);
 	}
 	*uri = '\0';
 	uri++;
 
 	if ((version = strchr(uri, ' ')) == NULL) {
-		return (NNG_EPROTO);
+		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
+		return (0);
 	}
 	*version = '\0';
 	version++;
 
-	nni_http_set_method(conn, method);
-	if (((rv = nni_url_canonify_uri(uri)) != 0) ||
-	    ((rv = nni_http_set_uri(conn, uri, NULL)) != 0) ||
-	    ((rv = nni_http_set_version(conn, version)) != 0)) {
-		return (rv);
+	if (nni_url_canonify_uri(uri) != 0) {
+		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
+		return (0);
 	}
-	return (0);
+	if (nni_http_set_version(conn, version)) {
+		nni_http_set_status(
+		    conn, NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP, NULL);
+		return (0);
+	}
+
+	nni_http_set_method(conn, method);
+
+	// this one only can fail due to ENOMEM
+	return (nni_http_set_uri(conn, uri, NULL));
 }
 
 static int
@@ -303,12 +311,9 @@ nni_http_req_parse(nng_http *conn, void *buf, size_t n, size_t *lenp)
 
 		if (req->data.parsed) {
 			rv = http_parse_header(conn, line);
-		} else if ((rv = http_req_parse_line(conn, line)) == 0) {
+		} else {
 			req->data.parsed = true;
-		}
-
-		if (rv != 0) {
-			break;
+			rv               = http_req_parse_line(conn, line);
 		}
 	}
 

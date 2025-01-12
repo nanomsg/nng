@@ -466,7 +466,11 @@ http_sconn_rxdone(void *arg)
 	// Validate the request -- it has to at least look like HTTP
 	// 1.x.  We flatly refuse to deal with HTTP 0.9, and we can't
 	// cope with HTTP/2.
-	if ((val = nni_http_get_version(sc->conn)) == NULL) {
+	if (nng_http_get_status(sc->conn) >= NNG_HTTP_STATUS_BAD_REQUEST) {
+		http_sconn_error(sc, nng_http_get_status(sc->conn));
+		return;
+	}
+	if ((val = nng_http_get_version(sc->conn)) == NULL) {
 		sc->close = true;
 		http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
 		return;
@@ -485,7 +489,7 @@ http_sconn_rxdone(void *arg)
 	}
 
 	// NB: The URI will already have been canonified by the REQ parser
-	uri = nni_http_get_uri(sc->conn);
+	uri = nng_http_get_uri(sc->conn);
 	if (uri[0] != '/') {
 		// We do not support authority form or asterisk form at present
 		sc->close = true;
