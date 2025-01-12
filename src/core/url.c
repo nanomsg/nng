@@ -119,8 +119,8 @@ nni_url_decode(uint8_t *out, const char *in, size_t max_len)
 	return (len);
 }
 
-static int
-url_canonify_uri(char *out)
+int
+nni_url_canonify_uri(char *out)
 {
 	size_t  src, dst;
 	uint8_t c;
@@ -435,7 +435,7 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 		url->u_hostname[i] = (char) tolower(url->u_hostname[i]);
 	}
 
-	if ((rv = url_canonify_uri(p)) != 0) {
+	if ((rv = nni_url_canonify_uri(p)) != 0) {
 		return (rv);
 	}
 

@@ -332,83 +332,6 @@ http_sconn_txdone(void *arg)
 	}
 }
 
-static char
-http_hexval(char c)
-{
-	if ((c >= '0') && (c <= '9')) {
-		return (c - '0');
-	}
-	if ((c >= 'a') && (c <= 'f')) {
-		return ((c - 'a') + 10);
-	}
-	if ((c >= 'A') && (c <= 'F')) {
-		return ((c - 'A') + 10);
-	}
-	return (0);
-}
-
-// XXX: REPLACE THIS WITH CODE USING THE URL FRAMEWORK.
-static char *
-http_uri_canonify(char *path)
-{
-	char *tmp;
-	char *dst;
-
-	// Chomp off query string.
-	if ((tmp = strchr(path, '?')) != NULL) {
-		*tmp = '\0';
-	}
-	// If the URI was absolute, make it relative.
-	if ((nni_strncasecmp(path, "http://", strlen("http://")) == 0) ||
-	    (nni_strncasecmp(path, "https://", strlen("https://")) == 0)) {
-		// Skip past the ://
-		path = strchr(path, ':');
-		path += 3;
-
-		// scan for the end of the host, distinguished by a /
-		// path delimiter.  There might not be one, in which
-		// case the whole thing is the host and we assume the
-		// path is just /.
-		if ((path = strchr(path, '/')) == NULL) {
-			return ("/");
-		}
-	}
-
-	// Now we have to unescape things.  Unescaping is a shrinking
-	// operation (strictly), so this is safe.  This is just URL
-	// decode. Note that paths with an embedded NUL are going to be
-	// treated as though truncated.  Don't be that guy that sends
-	// %00 in a URL.
-	//
-	// XXX: Normalizer needs to leave % encoded stuff in there if
-	// the characters to which they refer are reserved.  See RFC 3986
-	// section 6.2.2.
-	tmp = path;
-	dst = path;
-	while (*tmp != '\0') {
-		char c;
-		if ((c = *tmp) != '%') {
-			*dst++ = c;
-			tmp++;
-			continue;
-		}
-		if (isxdigit(tmp[1]) && isxdigit(tmp[2])) {
-			c = http_hexval(tmp[1]);
-			c *= 16;
-			c += http_hexval(tmp[2]);
-			*dst++ = c;
-			tmp += 3;
-		} else {
-			// garbage in, garbage out
-			*dst++ = c;
-			tmp++;
-		}
-	}
-	*dst = '\0';
-
-	return ((strlen(path) != 0) ? path : "/");
-}
-
 static void
 http_sconn_error(http_sconn *sc, uint16_t err)
 {
@@ -509,9 +432,7 @@ http_sconn_rxdone(void *arg)
 	nni_http_handler *head = NULL;
 	const char       *val;
 	nni_http_req     *req = nni_http_conn_req(sc->conn);
-	char             *uri;
-	size_t            urisz;
-	char             *path;
+	const char       *uri;
 	bool              badmeth  = false;
 	bool              needhost = false;
 	const char       *host;
@@ -563,6 +484,15 @@ http_sconn_rxdone(void *arg)
 		needhost = true;
 	}
 
+	// NB: The URI will already have been canonified by the REQ parser
+	uri = nni_http_get_uri(sc->conn);
+	if (uri[0] != '/') {
+		// We do not support authority form or asterisk form at present
+		sc->close = true;
+		http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
+		return;
+	}
+
 	// If the connection was 1.0, or a connection: close was
 	// requested, then mark this close on our end.
 	if ((val = nni_http_get_header(sc->conn, "Connection")) != NULL) {
@@ -588,20 +518,10 @@ http_sconn_rxdone(void *arg)
 		}
 	}
 
-	val   = nni_http_get_uri(sc->conn);
-	urisz = strlen(val) + 1;
-	if ((uri = nni_alloc(urisz)) == NULL) {
-		http_sconn_close(sc); // out of memory
-		return;
-	}
-	strncpy(uri, val, urisz);
-	path = http_uri_canonify(uri);
-
 	host = nni_http_get_header(sc->conn, "Host");
 	if ((host == NULL) && (needhost)) {
 		// Per RFC 2616 14.23 we have to send 400 status here.
 		http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
-		nni_free(uri, urisz);
 		return;
 	}
 
@@ -614,14 +534,14 @@ http_sconn_rxdone(void *arg)
 		}
 
 		len = strlen(h->uri);
-		if (strncmp(path, h->uri, len) != 0) {
+		if (strncmp(uri, h->uri, len) != 0) {
 			continue;
 		}
-		switch (path[len]) {
+		switch (uri[len]) {
 		case '\0':
 			break;
 		case '/':
-			if ((path[len + 1] != '\0') && (!h->tree)) {
+			if ((uri[len + 1] != '\0') && (!h->tree)) {
 				// Trailing component and not a directory.
 				continue;
 			}
@@ -652,7 +572,6 @@ http_sconn_rxdone(void *arg)
 	if ((h == NULL) && (head != NULL)) {
 		h = head;
 	}
-	nni_free(uri, urisz);
 	if (h == NULL) {
 		nni_mtx_unlock(&s->mtx);
 		if (badmeth) {

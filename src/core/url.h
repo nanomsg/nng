@@ -35,5 +35,6 @@ extern int      nni_url_to_address(nng_sockaddr *, const nng_url *);
 extern int      nni_url_parse_inline(nng_url *, const char *);
 extern int      nni_url_clone_inline(nng_url *, const nng_url *);
 extern void     nni_url_fini(nng_url *);
+extern int      nni_url_canonify_uri(char *);
 
 #endif // CORE_URL_H

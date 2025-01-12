@@ -16,6 +16,7 @@
 
 #include "core/list.h"
 #include "core/nng_impl.h"
+#include "core/url.h"
 #include "http_api.h"
 #include "http_msg.h"
 #include "nng/http.h"
@@ -231,7 +232,8 @@ http_req_parse_line(nng_http *conn, void *line)
 	version++;
 
 	nni_http_set_method(conn, method);
-	if (((rv = nni_http_set_uri(conn, uri, NULL)) != 0) ||
+	if (((rv = nni_url_canonify_uri(uri)) != 0) ||
+	    ((rv = nni_http_set_uri(conn, uri, NULL)) != 0) ||
 	    ((rv = nni_http_set_version(conn, version)) != 0)) {
 		return (rv);
 	}

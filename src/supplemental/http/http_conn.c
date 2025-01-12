@@ -1145,7 +1145,7 @@ nni_http_set_content_type(nng_http *conn, const char *ctype)
 const char *
 nni_http_get_uri(nng_http *conn)
 {
-	return (conn->uri);
+	return ((conn->uri && conn->uri[0]) ? conn->uri : "/");
 }
 
 int
