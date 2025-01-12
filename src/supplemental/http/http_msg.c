@@ -88,7 +88,7 @@ http_entity_set_data(nni_http_entity *entity, const void *data, size_t size)
 	entity->own  = false;
 }
 
-static int
+static nng_err
 http_entity_alloc_data(nni_http_entity *entity, size_t size)
 {
 	void *newdata;
@@ -99,35 +99,25 @@ http_entity_alloc_data(nni_http_entity *entity, size_t size)
 	}
 	http_entity_set_data(entity, newdata, size);
 	entity->own = true;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_http_req_alloc_data(nni_http_req *req, size_t size)
 {
-	int rv;
-
-	if ((rv = http_entity_alloc_data(&req->data, size)) != 0) {
-		return (rv);
-	}
-	return (0);
+	return (http_entity_alloc_data(&req->data, size));
 }
 
 // nni_http_res_alloc_data allocates the data region, but does not update any
 // headers.  The intended use is for client implementations that want to
 // allocate a buffer to receive the entity into.
-int
+nng_err
 nni_http_res_alloc_data(nni_http_res *res, size_t size)
 {
-	int rv;
-
-	if ((rv = http_entity_alloc_data(&res->data, size)) != 0) {
-		return (rv);
-	}
-	return (0);
+	return (http_entity_alloc_data(&res->data, size));
 }
 
-static int
+static nng_err
 http_parse_header(nng_http *conn, void *line)
 {
 	char *key = line;
@@ -219,31 +209,31 @@ http_req_parse_line(nng_http *conn, void *line)
 
 	if (nni_http_get_status(conn) >= NNG_HTTP_STATUS_BAD_REQUEST) {
 		// we've already failed it, nothing else for us to do
-		return (0);
+		return (NNG_OK);
 	}
 	method = line;
 	if ((uri = strchr(method, ' ')) == NULL) {
 		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
-		return (0);
+		return (NNG_OK);
 	}
 	*uri = '\0';
 	uri++;
 
 	if ((version = strchr(uri, ' ')) == NULL) {
 		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
-		return (0);
+		return (NNG_OK);
 	}
 	*version = '\0';
 	version++;
 
 	if (nni_url_canonify_uri(uri) != 0) {
 		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
-		return (0);
+		return (NNG_OK);
 	}
 	if (nni_http_set_version(conn, version)) {
 		nni_http_set_status(
 		    conn, NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP, NULL);
-		return (0);
+		return (NNG_OK);
 	}
 
 	nni_http_set_method(conn, method);
@@ -289,7 +279,7 @@ http_res_parse_line(nng_http *conn, uint8_t *line)
 // required, or NNG_ENOMEM on memory exhaustion.  Note that lenp may
 // be updated even in the face of errors (esp. NNG_EAGAIN, which is
 // not an error so much as a request for more data.)
-int
+nng_err
 nni_http_req_parse(nng_http *conn, void *buf, size_t n, size_t *lenp)
 {
 
@@ -328,7 +318,7 @@ nni_http_req_parse(nng_http *conn, void *buf, size_t n, size_t *lenp)
 	return (rv);
 }
 
-int
+nng_err
 nni_http_res_parse(nng_http *conn, void *buf, size_t n, size_t *lenp)
 {
 

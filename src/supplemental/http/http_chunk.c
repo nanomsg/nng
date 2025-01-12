@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -54,10 +54,10 @@ struct nng_http_chunk {
 	size_t        c_size;
 	size_t        c_alloc;
 	size_t        c_resid; // residual data to transfer
-	char *        c_data;
+	char         *c_data;
 };
 
-int
+nng_err
 nni_http_chunks_init(nni_http_chunks **clp, size_t maxsz)
 {
 	nni_http_chunks *cl;
@@ -68,7 +68,7 @@ nni_http_chunks_init(nni_http_chunks **clp, size_t maxsz)
 	NNI_LIST_INIT(&cl->cl_chunks, nni_http_chunk, c_node);
 	cl->cl_maxsz = maxsz;
 	*clp         = cl;
-	return (0);
+	return (NNG_OK);
 }
 
 void
@@ -120,7 +120,7 @@ nni_http_chunk_data(nni_http_chunk *ch)
 	return (ch->c_data);
 }
 
-static int
+static nng_err
 chunk_ingest_len(nni_http_chunks *cl, char c)
 {
 	if (isdigit(c)) {
@@ -139,10 +139,10 @@ chunk_ingest_len(nni_http_chunks *cl, char c)
 	} else {
 		return (NNG_EPROTO);
 	}
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 chunk_ingest_ext(nni_http_chunks *cl, char c)
 {
 	if (c == '\r') {
@@ -150,10 +150,10 @@ chunk_ingest_ext(nni_http_chunks *cl, char c)
 	} else if (!isprint(c)) {
 		return (NNG_EPROTO);
 	}
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 chunk_ingest_newline(nni_http_chunks *cl, char c)
 {
 	nni_http_chunk *chunk;
@@ -164,7 +164,7 @@ chunk_ingest_newline(nni_http_chunks *cl, char c)
 	if (cl->cl_size == 0) {
 		cl->cl_line  = 0;
 		cl->cl_state = CS_TRLR;
-		return (0);
+		return (NNG_OK);
 	}
 	if ((cl->cl_maxsz > 0) &&
 	    ((nni_http_chunks_size(cl) + cl->cl_size) > cl->cl_maxsz)) {
@@ -188,24 +188,24 @@ chunk_ingest_newline(nni_http_chunks *cl, char c)
 	chunk->c_resid = chunk->c_alloc;
 	nni_list_append(&cl->cl_chunks, chunk);
 
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 chunk_ingest_trailer(nni_http_chunks *cl, char c)
 {
 	if (c == '\r') {
 		cl->cl_state = CS_TRLRCR;
-		return (0);
+		return (NNG_OK);
 	}
 	if (!isprint(c)) {
 		return (NNG_EPROTO);
 	}
 	cl->cl_line++;
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 chunk_ingest_trailercr(nni_http_chunks *cl, char c)
 {
 	if (c != '\n') {
@@ -217,13 +217,13 @@ chunk_ingest_trailercr(nni_http_chunks *cl, char c)
 	}
 	cl->cl_line  = 0;
 	cl->cl_state = CS_TRLR;
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 chunk_ingest_char(nni_http_chunks *cl, char c)
 {
-	int rv;
+	nng_err rv;
 	switch (cl->cl_state) {
 	case CS_INIT:
 		if (!isalnum(c)) {
@@ -257,12 +257,12 @@ chunk_ingest_char(nni_http_chunks *cl, char c)
 	return (rv);
 }
 
-static int
+static nng_err
 chunk_ingest_data(nni_http_chunks *cl, char *buf, size_t n, size_t *lenp)
 {
 	nni_http_chunk *chunk;
 	size_t          offset;
-	char *          dest;
+	char           *dest;
 
 	chunk = nni_list_last(&cl->cl_chunks);
 
@@ -288,20 +288,20 @@ chunk_ingest_data(nni_http_chunks *cl, char *buf, size_t n, size_t *lenp)
 		cl->cl_size    = 0;
 		cl->cl_line    = 0;
 		*lenp          = n;
-		return (0);
+		return (NNG_OK);
 	}
 
 	memcpy(dest, buf, n);
 	chunk->c_resid -= n;
 	*lenp = n;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_http_chunks_parse(nni_http_chunks *cl, void *buf, size_t n, size_t *lenp)
 {
 	size_t i   = 0;
-	char * src = buf;
+	char  *src = buf;
 
 	// Format of this data is <hexdigits> [ ; <ascii> CRLF ]
 	// The <ascii> are chunk extensions, and we don't support any.
@@ -315,8 +315,8 @@ nni_http_chunks_parse(nni_http_chunks *cl, void *buf, size_t n, size_t *lenp)
 			break;
 
 		case CS_DATA:
-			if ((rv = chunk_ingest_data(cl, src + i, n - i, &cnt)) !=
-			    0) {
+			if ((rv = chunk_ingest_data(
+			         cl, src + i, n - i, &cnt)) != 0) {
 				return (rv);
 			}
 			i += cnt;
@@ -337,5 +337,5 @@ nni_http_chunks_parse(nni_http_chunks *cl, void *buf, size_t n, size_t *lenp)
 	if (cl->cl_state != CS_DONE) {
 		return (NNG_EAGAIN);
 	}
-	return (0);
+	return (NNG_OK);
 }

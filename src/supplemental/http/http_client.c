@@ -44,7 +44,7 @@ http_dial_cb(void *arg)
 {
 	nni_http_client *c = arg;
 	nni_aio         *aio;
-	int              rv;
+	nng_err          rv;
 	nng_stream      *stream;
 	nni_http_conn   *conn;
 
@@ -61,7 +61,7 @@ http_dial_cb(void *arg)
 		return;
 	}
 
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		nni_aio_list_remove(aio);
 		http_dial_start(c);
 		nni_mtx_unlock(&c->mtx);
@@ -73,20 +73,20 @@ http_dial_cb(void *arg)
 	stream = nni_aio_get_output(&c->aio, 0);
 	NNI_ASSERT(stream != NULL);
 
-	rv = nni_http_conn_init(&conn, stream, true);
+	rv = nni_http_init(&conn, stream, true);
 
 	// set up the host header
 	http_dial_start(c);
 	nni_mtx_unlock(&c->mtx);
 
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		// the conn_init function will have already discard stream.
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_http_set_host(conn, c->host);
 	nni_aio_set_output(aio, 0, conn);
-	nni_aio_finish(aio, 0, 0);
+	nni_aio_finish(aio, NNG_OK, 0);
 }
 
 void
@@ -100,10 +100,10 @@ nni_http_client_fini(nni_http_client *c)
 	NNI_FREE_STRUCT(c);
 }
 
-int
+nng_err
 nni_http_client_init(nni_http_client **cp, const nng_url *url)
 {
-	int              rv;
+	nng_err          rv;
 	nni_http_client *c;
 	nng_url          my_url;
 	const char      *scheme;
@@ -144,16 +144,16 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 	}
 
 	*cp = c;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 {
 	return (nng_stream_dialer_set_tls(c->dialer, tls));
 }
 
-int
+nng_err
 nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
 {
 	return (nng_stream_dialer_get_tls(c->dialer, tlsp));
@@ -268,7 +268,7 @@ http_txn_cb(void *arg)
 	http_txn       *txn = arg;
 	const char     *str;
 	char           *end;
-	int             rv;
+	nng_err         rv;
 	uint64_t        len;
 	nni_iov         iov;
 	char           *dst;
@@ -276,7 +276,7 @@ http_txn_cb(void *arg)
 	nni_http_chunk *chunk = NULL;
 
 	nni_mtx_lock(&http_txn_lk);
-	if ((rv = nni_aio_result(&txn->aio)) != 0) {
+	if ((rv = nni_aio_result(&txn->aio)) != NNG_OK) {
 		http_txn_finish_aios(txn, rv);
 		nni_mtx_unlock(&http_txn_lk);
 		http_txn_fini(txn);
@@ -299,7 +299,7 @@ http_txn_cb(void *arg)
 		    (strstr(str, "chunked") != NULL)) {
 
 			if ((rv = nni_http_chunks_init(&txn->chunks, 0)) !=
-			    0) {
+			    NNG_OK) {
 				goto error;
 			}
 			txn->state = HTTP_RECVING_CHUNKS;
@@ -323,7 +323,7 @@ http_txn_cb(void *arg)
 		}
 
 		if ((rv = nni_http_res_alloc_data(txn->res, (size_t) len)) !=
-		    0) {
+		    NNG_OK) {
 			goto error;
 		}
 		nni_http_get_body(txn->conn, &iov.iov_buf, &iov.iov_len);
