@@ -433,15 +433,7 @@ http_sconn_rxdone(void *arg)
 	const char       *cls;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
-		if (rv == NNG_EMSGSIZE) {
-			sc->close = true;
-			http_sconn_error(sc,
-			    nni_http_parsed(sc->conn)
-			        ? NNG_HTTP_STATUS_HEADERS_TOO_LARGE
-			        : NNG_HTTP_STATUS_URI_TOO_LONG);
-		} else {
-			http_sconn_close(sc);
-		}
+		http_sconn_close(sc);
 		return;
 	}
 

@@ -260,12 +260,22 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
 			http_buf_pull_up(conn);
+			if (conn->rd_put == conn->bufsz) {
+				nng_http_set_status(conn,
+				    conn->req.data.parsed
+				        ? NNG_HTTP_STATUS_HEADERS_TOO_LARGE
+				        : NNG_HTTP_STATUS_URI_TOO_LONG,
+				    NULL);
+				// leave a "header" so we don't confuse parsing
+				// We want to ensure this is an overlong
+				// request.
+				strcpy((char *) conn->buf, "NNG-DISCARD: X");
+				conn->rd_get = 0;
+				conn->rd_put = strlen((char *) conn->buf);
+			}
 			iov1.iov_buf   = conn->buf + conn->rd_put;
 			iov1.iov_len   = conn->bufsz - conn->rd_put;
 			conn->buffered = true;
-			if (iov1.iov_len == 0) {
-				return (NNG_EMSGSIZE);
-			}
 			nni_aio_set_iov(&conn->rd_aio, 1, &iov1);
 			nng_stream_recv(conn->sock, &conn->rd_aio);
 		}
@@ -702,7 +712,7 @@ http_snprintf(nng_http *conn, char *buf, size_t sz)
 
 	n = http_sprintf_headers(buf, sz, hdrs);
 	len += n;
-	if (len < sz) {
+	if (n < sz) {
 		sz -= n;
 		buf += n;
 	} else {

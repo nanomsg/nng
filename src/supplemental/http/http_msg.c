@@ -177,16 +177,16 @@ nni_http_res_init(nni_http_res *res)
 	res->data.own   = false;
 }
 
-static int
+static nng_err
 http_scan_line(void *vbuf, size_t n, size_t *lenp)
 {
-	size_t len;
-	char   lc;
-	char  *buf = vbuf;
+	size_t   len;
+	char     lc;
+	uint8_t *buf = vbuf;
 
 	lc = 0;
 	for (len = 0; len < n; len++) {
-		char c = buf[len];
+		uint8_t c = buf[len];
 		if (c == '\n') {
 			// Technically we should be receiving CRLF, but
 			// debugging is easier with just LF, so we behave
@@ -210,13 +210,17 @@ http_scan_line(void *vbuf, size_t n, size_t *lenp)
 	return (NNG_EAGAIN);
 }
 
-static int
+static nng_err
 http_req_parse_line(nng_http *conn, void *line)
 {
 	char *method;
 	char *uri;
 	char *version;
 
+	if (nni_http_get_status(conn) >= NNG_HTTP_STATUS_BAD_REQUEST) {
+		// we've already failed it, nothing else for us to do
+		return (0);
+	}
 	method = line;
 	if ((uri = strchr(method, ' ')) == NULL) {
 		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
@@ -248,7 +252,7 @@ http_req_parse_line(nng_http *conn, void *line)
 	return (nni_http_set_uri(conn, uri, NULL));
 }
 
-static int
+static nng_err
 http_res_parse_line(nng_http *conn, uint8_t *line)
 {
 	char *reason;
@@ -317,7 +321,7 @@ nni_http_req_parse(nng_http *conn, void *buf, size_t n, size_t *lenp)
 		}
 	}
 
-	if (rv == 0) {
+	if (rv != NNG_EAGAIN) {
 		req->data.parsed = false;
 	}
 	*lenp = len;

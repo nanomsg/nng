@@ -1020,7 +1020,7 @@ NNG_DECL void nng_device_aio(nng_aio *, nng_socket, nng_socket);
 // errors, from different transports.  It should only be used when none
 // of the other options are available.
 
-enum nng_errno_enum {
+typedef enum nng_errno_enum {
 	NNG_EINTR        = 1,
 	NNG_ENOMEM       = 2,
 	NNG_EINVAL       = 3,
@@ -1054,7 +1054,7 @@ enum nng_errno_enum {
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
 	NNG_ETRANERR     = 0x20000000
-};
+} nng_err;
 
 // nng_url_parse parses a URL string into a structured form.
 // Note that the u_port member will be filled out with a numeric

@@ -489,6 +489,94 @@ test_server_wrong_method(void)
 }
 
 static void
+test_server_uri_too_long(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+	char               buf[32768];
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
+
+	server_setup(&st, h);
+
+	memset(buf, 'a', sizeof(buf) - 1);
+	buf[0]               = '/';
+	buf[sizeof(buf) - 1] = 0;
+
+	NUTS_PASS(nng_http_set_uri(st.conn, buf, NULL));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_URI_TOO_LONG);
+
+	server_free(&st);
+}
+
+static void
+test_server_header_too_long(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+	char               buf[32768];
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
+
+	server_setup(&st, h);
+
+	memset(buf, 'a', sizeof(buf) - 1);
+	buf[0]               = '/';
+	buf[sizeof(buf) - 1] = 0;
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/home.html", NULL));
+	NUTS_PASS(nng_http_set_header(st.conn, "Referrer", buf));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_HEADERS_TOO_LARGE);
+
+	server_free(&st);
+}
+
+static void
+test_server_invalid_utf8(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
+
+	server_setup(&st, h);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/home\xFF.html", NULL));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+
+	server_free(&st);
+}
+
+static void
 test_server_post_handler(void)
 {
 	struct server_test st;
@@ -1026,6 +1114,9 @@ NUTS_TESTS = {
 	{ "server missing host", test_server_missing_host },
 	{ "server wrong method", test_server_wrong_method },
 	{ "server method too long", test_server_method_too_long },
+	{ "server uri too long", test_server_uri_too_long },
+	{ "server header too long", test_server_header_too_long },
+	{ "server invalid utf", test_server_invalid_utf8 },
 	{ "server post handler", test_server_post_handler },
 	{ "server get redirect", test_server_get_redirect },
 	{ "server tree redirect", test_server_tree_redirect },
