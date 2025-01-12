@@ -704,6 +704,7 @@ finish:
 	// make sure the response is freshly initialized
 	nni_http_res_reset(nni_http_conn_res(sc->conn));
 	nni_http_set_version(sc->conn, NNG_HTTP_VERSION_1_1);
+	nni_http_set_status(sc->conn, 0, NULL);
 
 	h->cb(sc->conn, h->data, &sc->cbaio);
 }

@@ -138,16 +138,15 @@ nng_http_get_version(nng_http *conn)
 #endif
 }
 
-int
+void
 nng_http_set_status(nng_http *conn, uint16_t status, const char *reason)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_set_status(conn, status, reason));
+	nni_http_set_status(conn, status, reason);
 #else
 	NNI_ARG_UNUSED(res);
 	NNI_ARG_UNUSED(status);
 	NNI_ARG_UNUSED(reason);
-	return (NNG_ENOTSUP);
 #endif
 }
 

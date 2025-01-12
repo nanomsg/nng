@@ -108,7 +108,7 @@ by the server in the last exchange on _conn_. (If no exchange has been performed
 
 A descriptive message matching the status code is returned by {{i:`nng_http_get_reason`}}.
 
-The {{i:`nng_http_set_status`}} function is used on a server in a handler callback to set the status codethat will be
+The {{i:`nng_http_set_status`}} function is used on a server in a handler callback to set the status code that will be
 reported to the client to _status_, and the associated text (reason) to _reason_. If _reason_ is `NULL`,
 then a built in reason based on the _status_ will be used instead.
 

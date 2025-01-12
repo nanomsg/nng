@@ -162,7 +162,7 @@ NNG_DECL const char *nng_http_get_reason(nng_http *);
 // nng_http_set_status sets the status for the transaction (server API),
 // and also sets the reason (message) for it.  (If NULL is used for the reason,
 // then a builtin value is used based on the code.)
-NNG_DECL int nng_http_set_status(nng_http *, uint16_t, const char *);
+NNG_DECL void nng_http_set_status(nng_http *, uint16_t, const char *);
 
 // nng_http_set_version is used to change the version of a request.
 // Normally the version is "HTTP/1.1".  Note that the framework does

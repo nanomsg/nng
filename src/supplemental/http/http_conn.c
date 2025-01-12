@@ -62,16 +62,19 @@ struct nng_http_conn {
 	nng_http_req req;
 	nng_http_res res;
 
+	uint16_t    code;
 	char        meth[32];
 	char        host[260]; // 253 per IETF, plus 6 for :port plus null
 	char        ubuf[200]; // Most URIs are smaller than this
 	const char *vers;
 	char       *uri;
-	uint8_t    *buf;
-	size_t      bufsz;
-	size_t      rd_get;
-	size_t      rd_put;
-	size_t      rd_discard;
+	char       *rsn;
+
+	uint8_t *buf;
+	size_t   bufsz;
+	size_t   rd_get;
+	size_t   rd_put;
+	size_t   rd_discard;
 
 	enum read_flavor  rd_flavor;
 	enum write_flavor wr_flavor;
@@ -580,6 +583,7 @@ nni_http_conn_reset(nng_http *conn)
 	}
 	conn->uri = NULL;
 	nni_http_set_version(conn, NNG_HTTP_VERSION_1_1);
+	nni_http_set_status(conn, 0, NULL);
 }
 
 void
@@ -864,10 +868,10 @@ nni_http_get_method(nng_http *conn)
 uint16_t
 nni_http_get_status(nng_http *conn)
 {
-	if (conn->res.code == 0) {
+	if (conn->code == 0) {
 		return (NNG_HTTP_STATUS_OK);
 	}
-	return (conn->res.code);
+	return (conn->code);
 }
 
 const char *
@@ -973,39 +977,34 @@ nni_http_reason(uint16_t code)
 const char *
 nni_http_get_reason(nng_http *conn)
 {
-#ifdef NNG_SUPP_HTTP
-	return (
-	    conn->res.rsn ? conn->res.rsn : nni_http_reason(conn->res.code));
-#else
-	return (NULL);
-#endif
+	return (conn->rsn ? conn->rsn : nni_http_reason(conn->code));
 }
 
-int
+void
 nni_http_set_status(nng_http *conn, uint16_t status, const char *reason)
 {
-	conn->res.code = status;
-	char *dup      = NULL;
-	if ((reason != NULL) &&
-	    (strcmp(reason, nni_http_reason(conn->res.code)) == 0)) {
-		reason = NULL;
-		return (0);
+	conn->code = status;
+	char *dup  = NULL;
+	if (reason != NULL) {
+		if (strcmp(reason, nni_http_reason(conn->code)) == 0) {
+			dup = NULL;
+		} else {
+			// This might fail, but if it does, we will just
+			// use the built in reason, which should not
+			// fundamentally affect semantics.  This allows us to
+			// make this function void, and avoid some error
+			// handling.
+			dup = nni_strdup(reason);
+		}
 	}
-	if ((reason != NULL) && (dup = nni_strdup(reason)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if (conn->res.rsn != NULL) {
-		nni_strfree(conn->res.rsn);
-	}
-	conn->res.rsn = dup;
-	return (0);
+	nni_strfree(conn->rsn);
+	conn->rsn = dup;
 }
 
 static int
 http_conn_set_error(nng_http *conn, uint16_t status, const char *reason,
     const char *body, const char *redirect)
 {
-	int         rv;
 	char        content[1024];
 	const char *prefix = "<!DOCTYPE html>\n"
 	                     "<html><head><title>%d %s</title>\n"
@@ -1026,9 +1025,7 @@ http_conn_set_error(nng_http *conn, uint16_t status, const char *reason,
 
 	conn->res.iserr = true;
 
-	if ((rv = nni_http_set_status(conn, status, reason)) != 0) {
-		return (rv);
-	}
+	nni_http_set_status(conn, status, reason);
 	reason = nni_http_get_reason(conn);
 
 	if (body == NULL) {

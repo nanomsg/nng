@@ -72,9 +72,6 @@ void
 nni_http_res_reset(nni_http_res *res)
 {
 	http_entity_reset(&res->data);
-	nni_strfree(res->rsn);
-	res->rsn  = NULL;
-	res->code = 0;
 }
 
 // http_entity_set_data sets the entity, but does not update the
@@ -183,8 +180,6 @@ nni_http_res_init(nni_http_res *res)
 	res->data.data  = NULL;
 	res->data.size  = 0;
 	res->data.own   = false;
-	res->rsn        = NULL;
-	res->code       = 0;
 }
 
 static int
@@ -252,7 +247,6 @@ http_req_parse_line(nng_http *conn, void *line)
 static int
 http_res_parse_line(nng_http *conn, uint8_t *line)
 {
-	int   rv;
 	char *reason;
 	char *codestr;
 	char *version;
@@ -276,14 +270,9 @@ http_res_parse_line(nng_http *conn, uint8_t *line)
 		return (NNG_EPROTO);
 	}
 
-	if ((rv = nni_http_set_status(conn, (uint16_t) status, reason)) != 0) {
-		return (rv);
-	}
+	nni_http_set_status(conn, (uint16_t) status, reason);
 
-	if ((rv = nni_http_set_version(conn, version)) != 0) {
-		return (rv);
-	}
-	return (0);
+	return (nni_http_set_version(conn, version));
 }
 
 // nni_http_req_parse parses a request (but not any attached entity data).

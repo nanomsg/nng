@@ -359,7 +359,7 @@ extern int         nni_http_set_version(nng_http *conn, const char *vers);
 extern void        nni_http_set_method(nng_http *conn, const char *method);
 extern const char *nni_http_get_method(nng_http *conn);
 
-extern int nni_http_set_status(
+extern void nni_http_set_status(
     nng_http *conn, uint16_t status, const char *reason);
 
 extern uint16_t    nni_http_get_status(nng_http *);

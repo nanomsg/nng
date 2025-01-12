@@ -49,8 +49,6 @@ struct nng_http_req {
 
 struct nng_http_res {
 	nni_http_entity data;
-	uint16_t        code;
-	char           *rsn;
 	bool            iserr;
 	http_header     location;
 };
