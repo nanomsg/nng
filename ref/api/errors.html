@@ -221,15 +221,25 @@
 
 </style>
 <h1 id="errors"><a class="header" href="#errors">Errors</a></h1>
+<pre><code class="language-c">typedef enum ... nng_err;
+</code></pre>
 <p>Many <em>NNG</em> functions can fail for a variety of reasons.
 These functions tend to return either zero on success,
 or a non-zero error code to indicate failure.
 <sup><a name="to-footnote-1"><a href="#footnote-1">1</a></a></sup></p>
-<p>All these error codes are <code>int</code>.</p>
+<p>All these error codes are <code>nng_err</code>.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>Many APIs are still using <code>int</code>, but the <code>nng_err</code> enumeration can be used
+instead, and will help with debugging.</p>
+</div>
 <p>Not every possible error code is defined here, as sometimes
 an underlying system or library error code is “wrapped”.</p>
 <h2 id="human-readable-error-message"><a class="header" href="#human-readable-error-message">Human Readable Error Message</a></h2>
-<pre><code class="language-c">const char *nng_strerror(int err);
+<pre><code class="language-c">const char *nng_strerror(nng_err err);
 </code></pre>
 <p>The <a name="a001"></a><code>nng_strerror</code> returns the human-readable description of the
 given error in <code>err</code>.</p>

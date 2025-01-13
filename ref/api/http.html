@@ -256,7 +256,7 @@ and so forth. This function silently truncates any method to 32-characters. (The
 <p>The <a name="a003"></a><code>nng_http_get_method</code> function is used, typically on a server, to retrieve the method the client
 set when issuing the transaction.</p>
 <h3 id="http-uri"><a class="header" href="#http-uri">HTTP URI</a></h3>
-<pre><code class="language-c">int nng_http_set_uri(nng_http *conn, const char *uri, const char *query);
+<pre><code class="language-c">nng_err nng_http_set_uri(nng_http *conn, const char *uri, const char *query);
 const char *nng_http_get_uri(nng_http *conn);
 </code></pre>
 <p>The <a name="a004"></a><code>nng_http_set_uri</code> function sets the <a name="a005"></a>URI, which normally appears like a path such as “/docs/index.html”,
@@ -275,7 +275,7 @@ or <a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if there is
 If the URI is unset (such as for a freshly created connection), then it returns <code>NULL</code>. The returned value
 will have any query concentated, for example “/api/get_user.cgi?name=garrett”.</p>
 <h3 id="http-version"><a class="header" href="#http-version">HTTP Version</a></h3>
-<pre><code class="language-c">int nng_http_set_version(nng_http *conn, const char *version);
+<pre><code class="language-c">nng_err nng_http_set_version(nng_http *conn, const char *version);
 const char *nng_http_get_version(nng_http *conn);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_http_set_version</code> function is used to select the HTTP protocol version to use for the
@@ -300,9 +300,10 @@ It might be easiest to just fail any request coming in that is not HTTP/1.1.</p>
 <p>NNG does not support HTTP/2 or HTTP/3 at this time.</p>
 </div>
 <h3 id="http-status"><a class="header" href="#http-status">HTTP Status</a></h3>
-<pre><code class="language-c">uint16_t nng_http_get_status(nng_http *conn);
+<pre><code class="language-c">typedef enum ... nng_http_status;
+nng_http_status nng_http_get_status(nng_http *conn);
 const char *nng_http_get_reason(nng_http_conn *conn);
-void nng_http_set_status(nng_http *conn, uint16_t status, const char *reason);
+void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 </code></pre>
 <p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typipcally numbered from 100 through 599) returned
 by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)</p>
@@ -401,8 +402,8 @@ the header name and value. It also updates <em>next</em>, which should be used f
 <p>Once <code>nng_http_next_header</code> returns <code>false</code>, further calls with the same parameters will continue to do so.
 The scan can be rest by setting <em>next</em> to <code>NULL</code>.</p>
 <h3 id="modifying-headers"><a class="header" href="#modifying-headers">Modifying Headers</a></h3>
-<pre><code class="language-c">int nng_http_add_header(nng_http *conn, const char *key, const char *val);
-int nng_http_set_header(nng_http *conn, const char *key, const char *val);
+<pre><code class="language-c">nng_err nng_http_add_header(nng_http *conn, const char *key, const char *val);
+nng_err nng_http_set_header(nng_http *conn, const char *key, const char *val);
 void nng_http_del_header(nng_http *conn, const char *key);
 </code></pre>
 <p>The <a name="a014"></a><code>nng_http_add_header</code>, <a name="a015"></a><code>nng_http_set_header</code>, and <a name="a016"></a><code>nng_http_del_header</code> functions are
@@ -495,7 +496,7 @@ operations until the the entire amount of data requested by the <a href="/api/ai
 <p>These functions are most likely to be useful after hijacking the connection with <a href="/api/http.html#hijacking-connections"><code>nng_http_hijack</code></a>.
 They can be used to transfer request or response body data as well.</p>
 <h3 id="hijacking-connections"><a class="header" href="#hijacking-connections">Hijacking Connections</a></h3>
-<pre><code class="language-c">void nng_http_hijack(nng_http_conn *conn);
+<pre><code class="language-c">nng_err nng_http_hijack(nng_http *conn);
 </code></pre>
 <p>TODO: This API will change to convert the conn into a stream object.</p>
 <p>The <a name="a026"></a><code>nng_http_hijack</code> function hijacks the connection <em>conn</em>, causing it
@@ -550,8 +551,8 @@ of its resources.</p>
 and must be closed explicitly as needed.</p>
 </div>
 <h3 id="client-tls"><a class="header" href="#client-tls">Client TLS</a></h3>
-<pre><code class="language-c">int nng_http_client_get_tls(nng_http_client *client, nng_tls_config **tlsp);
-int nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
+<pre><code class="language-c">nng_err nng_http_client_get_tls(nng_http_client *client, nng_tls_config **tlsp);
+nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 </code></pre>
 <p>The <a name="a030"></a><code>nng_http_client_get_tls</code> and <a name="a031"></a><code>nng_http_client_set_tls</code> functions are used to
 retrieve or change the <a href="/TODO.html">TLS configuration</a> used when making outbound connections, enabling
@@ -609,17 +610,11 @@ if ((rv = nng_aio_result(aio)) != 0) {
 }
 </code></pre>
 <h3 id="preparing-a-transaction"><a class="header" href="#preparing-a-transaction">Preparing a Transaction</a></h3>
-<pre><code class="language-c">int nng_http_set_version(nng_http *conn, const char *version);
-int nng_http_set_uri(nng_http *conn, const char *uri);
-</code></pre>
-<p>The <a name="a034"></a><code>nng_http_set_uri</code> function provides a URI for the transaction. This will be used to
-set the URI for the request. The URI typically appears like a path, starting with “/”, although
-it may also contain a query string.</p>
 <h3 id="request-body"><a class="header" href="#request-body">Request Body</a></h3>
 <h3 id="sending-the-request"><a class="header" href="#sending-the-request">Sending the Request</a></h3>
 <pre><code class="language-c">void nng_http_write_request(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a035"></a><code>nng_http_write_request</code> function starts an asynchronous write of
+<p>The <a name="a034"></a><code>nng_http_write_request</code> function starts an asynchronous write of
 the HTTP request associated with <em>conn</em>.
 The entire request is sent,
 including headers, and if present, the request body data.
@@ -639,7 +634,7 @@ which provides a simpler interface for performing a complete HTTP client transac
 <h2 id="obtaining-the-response"><a class="header" href="#obtaining-the-response">Obtaining the Response</a></h2>
 <pre><code class="language-c">void nng_http_read_response(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a036"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
+<p>The <a name="a035"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
 HTTP connection <em>conn</em>, reading an HTTP response into the response associated with <em>conn</em>, including all
 of the related headers.</p>
 <p>It does <em>not</em> transfer any response body. To do that, use <a href="/api/http.html#direct-read-and-write"><code>nng_http_read_all</code></a> or <a href="/api/http.html#direct-read-and-write"><code>nng_http_read</code></a>.</p>
@@ -659,11 +654,11 @@ need to do so may use the direct read functions.</p>
 <p>An easier one-shot method for many use cases might be [<code>nng_http_transact</code>].</p>
 </div>
 <h3 id="submitting-the-transaction"><a class="header" href="#submitting-the-transaction">Submitting the Transaction</a></h3>
-<pre><code class="language-c">int nng_http_transact(nng_http *conn, nng_aio *aio);
+<pre><code class="language-c">void nng_http_transact(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The HTTP request is issued, and the response processed, asynchronously by the <a name="a037"></a><code>nng_http_transact</code> function.
+<p>The HTTP request is issued, and the response processed, asynchronously by the <a name="a036"></a><code>nng_http_transact</code> function.
 When the function is complete, the <em>aio</em> will be notified.</p>
-<p>The <a name="a038"></a><code>nng_http_transact</code> function is used to perform a complete
+<p>The <a name="a037"></a><code>nng_http_transact</code> function is used to perform a complete
 HTTP exchange over the connection <em>conn</em>, sending the request
 and attached body data to the remote server, and reading the response.</p>
 <p>The entire response is read, including any associated body, which can
@@ -704,7 +699,7 @@ may be obtained via [<code>nng_aio_result()</code>].</p>
 </code></pre>
 <p>Normally the server will send any attached response, but there are circumstances where
 a response must be sent manually, such as when <a href="/api/http.html#hijacking-connections">hijacking</a> a connection.</p>
-<p>In such a case, <a name="a039"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
+<p>In such a case, <a name="a038"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
 using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
 <p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
 will be reused to receive new requests. For <code>HTTP/1.0</code>, or if the client has requested

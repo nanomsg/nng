@@ -295,7 +295,7 @@ is safe to call from <em>aio</em>’s own callback.</p>
 Use <code>nng_aio_reap</code> instead if an object must be destroyed from a callback.</p>
 </div>
 <h2 id="cancellation"><a class="header" href="#cancellation">Cancellation</a></h2>
-<pre><code class="language-c">void nng_aio_abort(nng_aio *aio, int err);
+<pre><code class="language-c">void nng_aio_abort(nng_aio *aio, nng_err err);
 void nng_aio_cancel(nng_aio *aio);
 void nng_aio_stop(nng_aio *aio);
 </code></pre>
@@ -373,7 +373,7 @@ This is the same test used internally by <a href="/api/aio.html#wait-for-complet
 Because the <em>aio</em> can be reused use of this function can be racy.</p>
 </div>
 <h2 id="result-of-operation"><a class="header" href="#result-of-operation">Result of Operation</a></h2>
-<pre><code class="language-c">int nng_aio_result(nng_aio *aio);
+<pre><code class="language-c">nng_err nng_aio_result(nng_aio *aio);
 size_t nng_aio_count(nng_aio *aio);
 </code></pre>
 <p>The <a name="a016"></a><code>nng_aio_result</code> function returns the result of the operation associated
