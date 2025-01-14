@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -546,7 +546,7 @@ sfd_tran_pipe_peer(void *arg)
 	return (p->peer);
 }
 
-static int
+static nng_err
 sfd_tran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {

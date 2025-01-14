@@ -740,14 +740,14 @@ NNG_DECL nng_pipe nng_msg_get_pipe(const nng_msg *);
 // we do permit an application to close a pipe. This can be useful, for
 // example during a connection notification, to disconnect a pipe that
 // is associated with an invalid or untrusted remote peer.
-NNG_DECL int nng_pipe_get_bool(nng_pipe, const char *, bool *);
-NNG_DECL int nng_pipe_get_int(nng_pipe, const char *, int *);
-NNG_DECL int nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
-NNG_DECL int nng_pipe_get_size(nng_pipe, const char *, size_t *);
-NNG_DECL int nng_pipe_get_string(nng_pipe, const char *, char **);
-NNG_DECL int nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
+NNG_DECL nng_err nng_pipe_get_bool(nng_pipe, const char *, bool *);
+NNG_DECL nng_err nng_pipe_get_int(nng_pipe, const char *, int *);
+NNG_DECL nng_err nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
+NNG_DECL nng_err nng_pipe_get_size(nng_pipe, const char *, size_t *);
+NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, char **);
+NNG_DECL nng_err nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
 
-NNG_DECL int          nng_pipe_close(nng_pipe);
+NNG_DECL nng_err      nng_pipe_close(nng_pipe);
 NNG_DECL int          nng_pipe_id(nng_pipe);
 NNG_DECL nng_socket   nng_pipe_socket(nng_pipe);
 NNG_DECL nng_dialer   nng_pipe_dialer(nng_pipe);

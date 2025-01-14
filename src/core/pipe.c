@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -75,7 +75,7 @@ pipe_reap(void *arg)
 	nni_pipe_rele(p);
 }
 
-int
+nng_err
 nni_pipe_find(nni_pipe **pp, uint32_t id)
 {
 	nni_pipe *p;
@@ -90,7 +90,7 @@ nni_pipe_find(nni_pipe **pp, uint32_t id)
 		*pp = p;
 	}
 	nni_mtx_unlock(&pipes_lk);
-	return (p == NULL ? NNG_ENOENT : 0);
+	return (p == NULL ? NNG_ENOENT : NNG_OK);
 }
 
 void
@@ -330,11 +330,11 @@ nni_pipe_alloc_listener(void **datap, nni_listener *l)
 	return (0);
 }
 
-int
+nng_err
 nni_pipe_getopt(
     nni_pipe *p, const char *name, void *val, size_t *szp, nni_opt_type t)
 {
-	int rv;
+	nng_err rv;
 
 	rv = p->p_tran_ops.p_getopt(p->p_tran_data, name, val, szp, t);
 	if (rv != NNG_ENOTSUP) {

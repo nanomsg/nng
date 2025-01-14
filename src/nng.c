@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -1301,10 +1301,10 @@ nng_strerror(nng_err num)
 	return (unknownerrbuf);
 }
 
-static int
+static nng_err
 pipe_get(nng_pipe p, const char *name, void *val, size_t *szp, nni_type t)
 {
-	int       rv;
+	nng_err   rv;
 	nni_pipe *pipe;
 
 	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
@@ -1315,37 +1315,37 @@ pipe_get(nng_pipe p, const char *name, void *val, size_t *szp, nni_type t)
 	return (rv);
 }
 
-int
+nng_err
 nng_pipe_get_int(nng_pipe id, const char *n, int *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_INT32));
 }
 
-int
+nng_err
 nng_pipe_get_bool(nng_pipe id, const char *n, bool *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_BOOL));
 }
 
-int
+nng_err
 nng_pipe_get_size(nng_pipe id, const char *n, size_t *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_SIZE));
 }
 
-int
+nng_err
 nng_pipe_get_string(nng_pipe id, const char *n, char **v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_STRING));
 }
 
-int
+nng_err
 nng_pipe_get_ms(nng_pipe id, const char *n, nng_duration *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_DURATION));
 }
 
-int
+nng_err
 nng_pipe_get_addr(nng_pipe id, const char *n, nng_sockaddr *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
@@ -1388,10 +1388,10 @@ nng_pipe_listener(nng_pipe p)
 	return (l);
 }
 
-int
+nng_err
 nng_pipe_close(nng_pipe p)
 {
-	int       rv;
+	nng_err   rv;
 	nni_pipe *pipe;
 
 	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
@@ -1399,7 +1399,7 @@ nng_pipe_close(nng_pipe p)
 	}
 	nni_pipe_close(pipe);
 	nni_pipe_rele(pipe);
-	return (0);
+	return (NNG_OK);
 }
 
 int

@@ -567,7 +567,7 @@ tcptran_pipe_peer(void *arg)
 	return (p->peer);
 }
 
-static int
+static nng_err
 tcptran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {

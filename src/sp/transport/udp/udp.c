@@ -1,4 +1,4 @@
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -1082,7 +1082,7 @@ static nni_option udp_pipe_options[] = {
 	},
 };
 
-static int
+static nng_err
 udp_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {

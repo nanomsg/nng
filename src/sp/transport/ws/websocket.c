@@ -315,12 +315,12 @@ static const nni_option ws_pipe_options[] = {
 	}
 };
 
-static int
+static nng_err
 wstran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ws_pipe *p = arg;
-	int      rv;
+	nng_err  rv;
 
 	if ((rv = nni_stream_get(p->ws, name, buf, szp, t)) == NNG_ENOTSUP) {
 		rv = nni_getopt(ws_pipe_options, name, p, buf, szp, t);

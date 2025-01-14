@@ -180,7 +180,7 @@ struct nni_sp_pipe_ops {
 
 	// p_getopt is used to obtain an option.  Pipes don't implement
 	// option setting.
-	int (*p_getopt)(void *, const char *, void *, size_t *, nni_type);
+	nng_err (*p_getopt)(void *, const char *, void *, size_t *, nni_type);
 };
 
 // Transport implementation details.  Transports must implement the

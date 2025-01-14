@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -577,7 +577,7 @@ static const nni_option inproc_pipe_options[] = {
 	},
 };
 
-static int
+static nng_err
 inproc_pipe_getopt(
     void *arg, const char *name, void *v, size_t *szp, nni_type t)
 {

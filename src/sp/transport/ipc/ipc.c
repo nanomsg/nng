@@ -947,7 +947,7 @@ ipc_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static int
+static nng_err
 ipc_pipe_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ipc_pipe *p = arg;

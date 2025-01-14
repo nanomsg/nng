@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -938,12 +938,12 @@ static const nni_option tlstran_pipe_opts[] = {
 	},
 };
 
-static int
+static nng_err
 tlstran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tlstran_pipe *p = arg;
-	int           rv;
+	nng_err       rv;
 
 	if ((rv = nni_stream_get(p->tls, name, buf, szp, t)) == NNG_ENOTSUP) {
 		rv = nni_getopt(tlstran_pipe_opts, name, p, buf, szp, t);
