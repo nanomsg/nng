@@ -236,6 +236,19 @@
 [`nng_ctx_send`]: /api/ctx.md#nng_ctx_send
 [`nng_ctx_recvmsg`]: /api/ctx.md#nng_ctx_recvmsg
 [`nng_ctx_recv`]: /api/ctx.md#nng_ctx_recv
+[`nng_pipe`]: /api/pipe.md#pipes
+[`nng_pipe_id`]: /api/pipe.md#pipe-identity
+[`nng_pipe_close`]: /api/pipe.md#closing-a-pipe
+[`nng_pipe_dialer`]: /api/pipe.md#pipe-creator
+[`nng_pipe_listener`]: /api/pipe.md#pipe-creator
+[`nng_pipe_socket`]: /api/pipe.md#pipe-creator
+[`nng_pipe_get_bool`]: /api/pipe.md#pipe-options
+[`nng_pipe_get_int`]: /api/pipe.md#pipe-options
+[`nng_pipe_get_ms`]: /api/pipe.md#pipe-options
+[`nng_pipe_get_size`]: /api/pipe.md#pipe-options
+[`nng_pipe_get_addr`]: /api/pipe.md#pipe-options
+[`nng_pipe_get_string`]: /api/pipe.md#pipe-options
+[`nng_pipe_notify`]: /api/pipe.md#pipe-notifications
 [`nng_sockaddr`]: /TODO.md
 [`nng_sockaddr_in`]: /TODO.md
 [`nng_sockaddr_in6`]: /TODO.md
@@ -258,19 +271,20 @@
 [`nng_http_set_version`]: /api/http.md#http-protocol-versions
 [`nng_http_get_method`]: /api/http.md#http-method
 [`nng_http_set_method`]: /api/http.md#http-method
-[`nng_http_set_url`]: /api/http.md#preparing-a-transaction
+[`nng_http_set_uri`]: /api/http.md#http-uri
+[`nng_http_get_uri`]: /api/http.md#http-uri
 [`nng_http_get_reason`]: /api/http.md#http-status
 [`nng_http_get_status`]: /api/http.md#http-status
 [`nng_http_set_status`]: /api/http.md#http-status
-[`nng_http_get_url`]: /TODO.md
 [`nng_http_hijack`]: /api/http.md#hijacking-connections
 [`nng_http_get_header`]: /api/http.md#retrieving-headers
 [`nng_http_next_header`]: /api/http.md#retrieving-headers
 [`nng_http_add_header`]: /api/http.md#modifying-headers
 [`nng_http_set_header`]: /api/http.md#modifying-headers
 [`nng_http_del_header`]: /api/http.md#modifying-headers
-[`nng_http_set_response_body`]: /TODO.md
-[`nng_http_get_response_body`]: /TODO.md
+[`nng_http_copy_body`]: /api/http.md#storing-body-content
+[`nng_http_set_body`]: /api/http.md#storing-body-content
+[`nng_http_get_body`]: /api/http.md#retrieving-body-content
 [`nng_http_read_response_body`]: /TODO.md
 [`nng_http_read_request_body`]: /TODO.md
 [`nng_http_server_set_error`]: /TODO.md
@@ -352,6 +366,10 @@
 [`NNG_OPT_IPC_PERMISSIONS`]: /tran/ipc.md#NNG_OPT_IPC_PERMISSIONS
 [`NNG_SOCKET_INITIALIZER`]: /api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: /api/ctx.md#context-structure
+[`NNG_PIPE_INITIALIZER`]: /api/pipe.md#initialization
+[`NNG_PIPE_EV_ADD_PRE`]: /api/pipe.md#NNG_PIPE_EV_ADD_PRE
+[`NNG_PIPE_EV_ADD_POST`]: /api/pipe.md#NNG_PIPE_EV_ADD_POST
+[`NNG_PIPE_EV_REM_POST`]: /api/pipe.md#NNG_PIPE_EV_REM_POST
 
 <!-- Protocols -->
 
@@ -378,7 +396,7 @@
 
 [aio]: /api/aio.md
 [raw]: /api/sock.md#raw-mode-sockets
-[pipe]: /TODO.md
+[pipe]: /api/pipe.md
 [socket]: /TODO.md
 [context]: /TODO.md
 [dialer]: /TODO.md

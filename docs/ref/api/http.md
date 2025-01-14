@@ -106,6 +106,7 @@ void nng_http_set_status(nng_http *conn, nng_http_status status, const char *rea
 
 The {{i:`nng_http_get_status`}} function obtains the numeric code (typipcally numbered from 100 through 599) returned
 by the server in the last exchange on _conn_. (If no exchange has been performed yet, the result is undefined.)
+The value is returned as an {{i:`nng_http_status`}}.
 
 A descriptive message matching the status code is returned by {{i:`nng_http_get_reason`}}.
 

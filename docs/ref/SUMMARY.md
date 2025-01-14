@@ -14,6 +14,8 @@
 
   - [Contexts](./api/ctx.md)
 
+  - [Pipes](./api/pipe.md)
+
   - [Memory](./api/memory.md)
 
   - [Time](./api/time.md)
