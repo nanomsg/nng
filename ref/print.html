@@ -700,7 +700,7 @@ finalize the library and deallocate any resources used by the library.</p>
     int16_t num_resolver_threads;
 } nng_init_params;
 
-extern int nng_init(nng_init_parms *params);
+extern nng_err nng_init(nng_init_parms *params);
 </code></pre>
 <p>Before using other interfaces in this library, it is necessary to initialize
 the library. The <a name="a001"></a><code>nng_init</code> function performs this initialization.</p>
@@ -1731,7 +1731,7 @@ call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>Closing the socket associated with <em>ctx</em> using <code>nng_socket_close</code>] also closes this context.</p>
+<p>Closing the socket associated with <em>ctx</em> using <a href="api//api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> also closes this context.</p>
 </div>
 <h2 id="sending-messages-1"><a class="header" href="#sending-messages-1">Sending Messages</a></h2>
 <pre><code class="language-c">int nng_ctx_sendmsg(nng_ctx ctx, nng_msg *msg, int flags);
@@ -2674,7 +2674,7 @@ operations that are already in progress as well setting a maximum
 <p>It is also possible to initiate an asynchronous operation, and <a href="api//api/aio.html#wait-for-completion">wait</a> for it to
 complete, creating a synchronous flow from an asynchronous one.</p>
 <h2 id="create-handle"><a class="header" href="#create-handle">Create Handle</a></h2>
-<pre><code class="language-c">int nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
+<pre><code class="language-c">nng_err nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
 </code></pre>
 <p>The <a name="a004"></a><code>nng_aio_alloc</code> function creates an <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> object, with the
 <a name="a005"></a>callback <em>callb</em> taking the argument <em>arg</em>, and returns it in <em>aiop</em>.</p>
@@ -4916,13 +4916,13 @@ The value returned is suitable for use with cryptographic functions such as
 key generation, and is obtained using platform-specific cryptographically strong random
 number facilities when available.</p>
 <h2 id="create-socket-pair"><a class="header" href="#create-socket-pair">Create Socket Pair</a></h2>
-<pre><code class="language-c">int nng_socket_pair(int fds[2]);
+<pre><code class="language-c">nng_err nng_socket_pair(int fds[2]);
 </code></pre>
-<p>The <code>nng_socket_pair</code> function creates a pair of connected file descriptors.
+<p>The <a name="a003"></a><code>nng_socket_pair</code> function creates a pair of connected file descriptors.
 These file descriptors, which are returned in the <em>fds</em> array, are suitable for
 use with the <a href="api//tran/socket.html">Socket transport</a>.</p>
 <p>On POSIX platforms, this is a thin wrapper around the standard <code>socketpair</code> function,
-using the <a name="a003"></a><code>AF_UNIX</code> family and the <code>SOCK_STREAM</code> socket type.
+using the <a name="a004"></a><code>AF_UNIX</code> family and the <code>SOCK_STREAM</code> socket type.
 <sup><a name="to-footnote-1"><a href="api/misc.html#footnote-1">1</a></a></sup></p>
 <p>This will return zero on success, or an error number. On platforms that lack this
 capability, such as Windows, it will return <code>NNG_ENOTSUP</code>.</p>
@@ -4937,19 +4937,19 @@ a child process on UNIX platforms, without requiring the processes use a shared 
 <h2 id="report-library-version"><a class="header" href="#report-library-version">Report Library Version</a></h2>
 <pre><code class="language-c">const char * nng_version(void);
 </code></pre>
-<p>The <a name="a004"></a><code>nng_version</code> function returns a human readable <a name="a005"></a>version number
+<p>The <a name="a005"></a><code>nng_version</code> function returns a human readable <a name="a006"></a>version number
 for <em>NNG</em>, formatted as a <code>NUL</code>-terminated string.</p>
 <p>Additionally, compile time version information is available
 via some predefined macros:</p>
 <ul>
-<li><a name="a006"></a><code>NNG_MAJOR_VERSION</code>: Major version number.</li>
-<li><a name="a007"></a><code>NNG_MINOR_VERSION</code>: Minor version number.</li>
-<li><a name="a008"></a><code>NNG_PATCH_VERSION</code>: Patch version number.</li>
+<li><a name="a007"></a><code>NNG_MAJOR_VERSION</code>: Major version number.</li>
+<li><a name="a008"></a><code>NNG_MINOR_VERSION</code>: Minor version number.</li>
+<li><a name="a009"></a><code>NNG_PATCH_VERSION</code>: Patch version number.</li>
 </ul>
 <p><em>NNG</em> is developed and released using
 <a href="http://www.semver.org">Semantic Versioning 2.0</a>, and
 the version numbers reported refer to both the API and the library itself.
-(The <a name="a009"></a>ABI – <a name="a010"></a>application binary interface – between the
+(The <a name="a010"></a>ABI – <a name="a011"></a>application binary interface – between the
 library and the application is controlled in a similar, but different
 manner depending upon the link options and how the library is built.)</p>
 <!-- Symbol cross reference -->
@@ -8082,14 +8082,14 @@ dialer before starting to dial.</p>
 <!-- Transports -->
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><h1 id="index"><a class="header" href="#index">Index</a></h1>
-<p>ABI, <a href="api/misc.html#a009">1</a><br/>
+<p>ABI, <a href="api/misc.html#a010">1</a><br/>
 abstract sockets, <a href="tran/ipc.html#a007">1</a><br/>
 <code>abstract://</code>, <a href="tran/ipc.html#a008">1</a><br/>
 <code>accept</code>, <a href="api/stream.html#a019">1</a><br/>
-<code>AF_UNIX</code>, <a href="api/misc.html#a003">1</a><br/>
+<code>AF_UNIX</code>, <a href="api/misc.html#a004">1</a><br/>
 aio, <a href="api/aio.html#a002">1</a><br/>
 allocations, <a href="api/memory.html#a002">1</a><br/>
-application binary interface, <a href="api/misc.html#a010">1</a><br/>
+application binary interface, <a href="api/misc.html#a011">1</a><br/>
 asynchronous I/O, <a href="api/aio.html#a003">1</a><br/>
 back-pressure, <a href="proto/index.html#a005">1</a><br/>
 backtrace, <a href="proto/rep.html#a004">1</a>, <a href="proto/req.html#a008">2</a>, <a href="proto/respondent.html#a004">3</a>, <a href="proto/surveyor.html#a008">4</a><br/>
@@ -8235,8 +8235,8 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_log_set_level</code>, <a href="api/logging.html#a004">1</a><br/>
 <code>nng_log_set_logger</code>, <a href="api/logging.html#a008">1</a><br/>
 <code>nng_logger</code>, <a href="api/logging.html#a009">1</a><br/>
-<code>NNG_MAJOR_VERSION</code>, <a href="api/misc.html#a006">1</a><br/>
-<code>NNG_MINOR_VERSION</code>, <a href="api/misc.html#a007">1</a><br/>
+<code>NNG_MAJOR_VERSION</code>, <a href="api/misc.html#a007">1</a><br/>
+<code>NNG_MINOR_VERSION</code>, <a href="api/misc.html#a008">1</a><br/>
 <code>nng_msg</code>, <a href="api/msg.html#a004">1</a><br/>
 <code>nng_msg_alloc</code>, <a href="api/msg.html#a005">1</a><br/>
 <code>nng_msg_append</code>, <a href="api/msg.html#a014">1</a><br/>
@@ -8277,7 +8277,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_pair1_open</code>, <a href="api/sock.html#a011">1</a><br/>
 <code>nng_pair1_open_poly</code>, <a href="api/sock.html#a012">1</a><br/>
 <code>nng_pair1_open_raw</code>, <a href="api/sock.html#a024">1</a><br/>
-<code>NNG_PATCH_VERSION</code>, <a href="api/misc.html#a008">1</a><br/>
+<code>NNG_PATCH_VERSION</code>, <a href="api/misc.html#a009">1</a><br/>
 <code>nng_pipe</code>, <a href="api/pipe.html#a001">1</a><br/>
 <code>nng_pipe_close</code>, <a href="api/pipe.html#a006">1</a><br/>
 <code>nng_pipe_dialer</code>, <a href="api/pipe.html#a007">1</a><br/>
@@ -8318,6 +8318,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_socket_get_recv_poll_fd</code>, <a href="api/sock.html#a043">1</a><br/>
 <code>nng_socket_get_send_poll_fd</code>, <a href="api/sock.html#a044">1</a><br/>
 <code>nng_socket_id</code>, <a href="api/sock.html#a003">1</a><br/>
+<code>nng_socket_pair</code>, <a href="api/misc.html#a003">1</a><br/>
 <code>nng_socket_peer_id</code>, <a href="api/sock.html#a005">1</a><br/>
 <code>nng_socket_peer_name</code>, <a href="api/sock.html#a007">1</a><br/>
 <code>nng_socket_proto_id</code>, <a href="api/sock.html#a004">1</a><br/>
@@ -8434,7 +8435,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_url_scheme</code>, <a href="api/url.html#a003">1</a><br/>
 <code>nng_url_sprintf</code>, <a href="api/url.html#a010">1</a><br/>
 <code>nng_url_userinfo</code>, <a href="api/url.html#a004">1</a><br/>
-<code>nng_version</code>, <a href="api/misc.html#a004">1</a><br/>
+<code>nng_version</code>, <a href="api/misc.html#a005">1</a><br/>
 <code>nni_http_get_uri</code>, <a href="api/http.html#a006">1</a><br/>
 <em>PAIR</em>, <a href="proto/pair.html#a002">1</a><br/>
 <em>PAIR</em> protocol, <a href="proto/pair.html#a001">1</a><br/>
@@ -8490,7 +8491,7 @@ UNIX domain sockets, <a href="tran/ipc.html#a003">1</a><br/>
 <code>unix://</code>, <a href="tran/ipc.html#a006">1</a><br/>
 URI, <a href="api/http.html#a005">1</a><br/>
 URL, <a href="api/url.html#a002">1</a>, <a href="api/stream.html#a024">2</a><br/>
-version number, <a href="api/misc.html#a005">1</a><br/>
+version number, <a href="api/misc.html#a006">1</a><br/>
 voting, <a href="proto/surveyor.html#a004">1</a><br/></p>
 
                     </main>

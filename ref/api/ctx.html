@@ -286,7 +286,7 @@ call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>Closing the socket associated with <em>ctx</em> using <code>nng_socket_close</code>] also closes this context.</p>
+<p>Closing the socket associated with <em>ctx</em> using <a href="/api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> also closes this context.</p>
 </div>
 <h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
 <pre><code class="language-c">int nng_ctx_sendmsg(nng_ctx ctx, nng_msg *msg, int flags);

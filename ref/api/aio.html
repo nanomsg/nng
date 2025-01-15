@@ -255,7 +255,7 @@ operations that are already in progress as well setting a maximum
 <p>It is also possible to initiate an asynchronous operation, and <a href="/api/aio.html#wait-for-completion">wait</a> for it to
 complete, creating a synchronous flow from an asynchronous one.</p>
 <h2 id="create-handle"><a class="header" href="#create-handle">Create Handle</a></h2>
-<pre><code class="language-c">int nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
+<pre><code class="language-c">nng_err nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
 </code></pre>
 <p>The <a name="a004"></a><code>nng_aio_alloc</code> function creates an <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> object, with the
 <a name="a005"></a>callback <em>callb</em> taking the argument <em>arg</em>, and returns it in <em>aiop</em>.</p>
