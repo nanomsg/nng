@@ -81,7 +81,7 @@ Threads waiting for operations on the context when this
 call is executed may also return with an `NNG_ECLOSED` result.
 
 > [!NOTE]
-> Closing the socket associated with _ctx_ using `nng_socket_close`] also closes this context.
+> Closing the socket associated with _ctx_ using [`nng_socket_close`] also closes this context.
 
 ## Sending Messages
 
