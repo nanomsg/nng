@@ -1174,10 +1174,10 @@ nng_socket_raw(nng_socket id, bool *rawp)
 	return (0);
 }
 
-int
+nng_err
 nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg)
 {
-	int       rv;
+	nng_err   rv;
 	nni_sock *sock;
 
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
@@ -1186,7 +1186,7 @@ nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg)
 
 	nni_sock_set_pipe_cb(sock, ev, cb, arg);
 	nni_sock_rele(sock);
-	return (0);
+	return (NNG_OK);
 }
 
 void

@@ -337,7 +337,7 @@ typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
 // nng_pipe_notify registers a callback to be executed when the
 // given event is triggered.  To watch for different events, register
 // multiple times.  Each event can have at most one callback registered.
-NNG_DECL int nng_pipe_notify(nng_socket, nng_pipe_ev, nng_pipe_cb, void *);
+NNG_DECL nng_err nng_pipe_notify(nng_socket, nng_pipe_ev, nng_pipe_cb, void *);
 
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
