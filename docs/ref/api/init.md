@@ -17,7 +17,7 @@ typedef struct {
     int16_t num_resolver_threads;
 } nng_init_params;
 
-extern int nng_init(nng_init_parms *params);
+extern nng_err nng_init(nng_init_parms *params);
 ```
 
 Before using other interfaces in this library, it is necessary to initialize

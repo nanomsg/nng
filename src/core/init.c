@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -49,11 +49,11 @@ static nng_init_params init_params;
 unsigned int    init_count;
 nni_atomic_flag init_busy;
 
-int
+nng_err
 nng_init(nng_init_params *params)
 {
 	nng_init_params zero = { 0 };
-	int             rv;
+	nng_err         rv;
 
 	// cheap spin lock
 	while (nni_atomic_flag_test_and_set(&init_busy)) {

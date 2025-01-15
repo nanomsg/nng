@@ -1292,7 +1292,7 @@ typedef struct {
 // only the first call can contain a non-NULL params.  If already
 // initialized with non-NULL params, will return NNG_EALREADY.
 // Applications should *not* call a matching nng_fini() in that case.
-NNG_DECL int nng_init(nng_init_params *parms);
+NNG_DECL nng_err nng_init(nng_init_params *parms);
 
 // nng_fini is used to terminate the library, freeing certain global resources.
 // Each call to nng_fini is paired to a call to nng_init.  The last such
