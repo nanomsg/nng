@@ -235,7 +235,7 @@ created with <a href="/api/misc.html#create-socket-pair"><code>nng_socket_pair</
 </div>
 <p>The socket file descriptor is passed to the listener using
 the <a name="a002"></a><code>NNG_OPT_SOCKET_FD</code> option (as an integer).
-Setting this option will cause the listener to create a <a href="/TODO.html">pipe</a>
+Setting this option will cause the listener to create a <a href="/api/pipe.html">pipe</a>
 backed by the file descriptor.</p>
 <p>The protocol between peers using this transport is compatible with the protocol used
 for the <em><a href="/tran/tcp.html">tcp</a></em> transport, but this is an implementation detail and subject to change without notice.
@@ -256,7 +256,7 @@ There are no further socket details available.</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>The following transport options are supported by this transport.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="/TODO.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
+<tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="/api/pipe.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>

@@ -604,6 +604,7 @@ include the <code>nng/nng.h</code> header file like so:</p>
 <li><a href="api/msg.html">Messages</a></li>
 <li><a href="api/sock.html">Sockets</a></li>
 <li><a href="api/ctx.html">Contexts</a></li>
+<li><a href="api/pipe.html">Pipes</a></li>
 <li><a href="api/memory.html">Memory</a></li>
 <li><a href="api/time.html">Time</a></li>
 <li><a href="api/url.html">URLs</a></li>
@@ -1025,7 +1026,7 @@ except that they operate the message header rather than the message body.</p>
 <pre><code class="language-c">nng_pipe nng_msg_get_pipe(nng_msg *msg);
 void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
 </code></pre>
-<p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="api//TODO.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
+<p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="api//api/pipe.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
 This is most often useful when used with protocols that support directing
 a message to a specific peer.
 For example the <a href="api//proto/pair.html"><em>PAIR</em></a> version 1 protocol can do
@@ -1252,7 +1253,7 @@ a result of <a href="api//api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code><
   note
 </p>
 <p>Closing a socket also invalidates any <a href="api//TODO.html">dialers</a>, <a href="api//TODO.html">listeners</a>,
-<a href="api//TODO.html">pipes</a>, or <a href="api//TODO.html">contexts</a> associated with it.</p>
+<a href="api//api/pipe.html">pipes</a>, or <a href="api//TODO.html">contexts</a> associated with it.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1892,6 +1893,230 @@ start_echo_service(nng_socket rep_socket)
     }
 }
 </code></pre>
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div><style>
+.mdbook-alerts {
+  padding: 8px 16px;
+  margin-bottom: 16px;
+  border-left: 0.25em solid var(--mdbook-alerts-color);
+}
+
+.mdbook-alerts > *:first-child {
+  margin-top: 0;
+}
+
+.mdbook-alerts > *:last-child {
+  margin-bottom: 0;
+}
+
+.mdbook-alerts-title {
+  display: flex;
+  font-weight: 600;
+  align-items: center;
+  line-height: 1;
+  color: var(--mdbook-alerts-color);
+  text-transform: capitalize;
+}
+
+.mdbook-alerts-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.2em;
+  background-color: currentColor;
+  -webkit-mask: no-repeat center / 100%;
+  mask: no-repeat center / 100%;
+  -webkit-mask-image: var(--mdbook-alerts-icon);
+  mask-image: var(--mdbook-alerts-icon);
+}
+
+.mdbook-alerts-note {
+  --mdbook-alerts-color: rgb(9, 105, 218);
+  /* https://icon-sets.iconify.design/material-symbols/info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16v-4q0-.425-.288-.712T12 11q-.425 0-.712.288T11 12v4q0 .425.288.713T12 17m0-8q.425 0 .713-.288T13 8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8q0 .425.288.713T12 9m0 13q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-2.075.788-3.9t2.137-3.175q1.35-1.35 3.175-2.137T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22m0-2q3.35 0 5.675-2.325T20 12q0-3.35-2.325-5.675T12 4Q8.65 4 6.325 6.325T4 12q0 3.35 2.325 5.675T12 20m0-8"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-tip {
+  --mdbook-alerts-color: rgb(26, 127, 55);
+  /* https://icon-sets.iconify.design/material-symbols/lightbulb-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 22q-.825 0-1.412-.587T10 20h4q0 .825-.587 1.413T12 22m-3-3q-.425 0-.712-.288T8 18q0-.425.288-.712T9 17h6q.425 0 .713.288T16 18q0 .425-.288.713T15 19zm-.75-3q-1.725-1.025-2.738-2.75T4.5 9.5q0-3.125 2.188-5.312T12 2q3.125 0 5.313 2.188T19.5 9.5q0 2.025-1.012 3.75T15.75 16zm.6-2h6.3q1.125-.8 1.738-1.975T17.5 9.5q0-2.3-1.6-3.9T12 4Q9.7 4 8.1 5.6T6.5 9.5q0 1.35.613 2.525T8.85 14M12 14"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-important {
+  --mdbook-alerts-color: rgb(130, 80, 223);
+  /* https://icon-sets.iconify.design/material-symbols/chat-info-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 7q.425 0 .713-.288T13 6q0-.425-.288-.712T12 5q-.425 0-.712.288T11 6q0 .425.288.713T12 7m0 8q.425 0 .713-.288T13 14v-4q0-.425-.288-.712T12 9q-.425 0-.712.288T11 10v4q0 .425.288.713T12 15m-6 3l-2.3 2.3q-.475.475-1.088.213T2 19.575V4q0-.825.588-1.412T4 2h16q.825 0 1.413.588T22 4v12q0 .825-.587 1.413T20 18zm-.85-2H20V4H4v13.125zM4 16V4z"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-warning {
+  --mdbook-alerts-color: rgb(154, 103, 0);
+  /* https://icon-sets.iconify.design/material-symbols/warning-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M2.725 21q-.275 0-.5-.137t-.35-.363q-.125-.225-.137-.488t.137-.512l9.25-16q.15-.25.388-.375T12 3q.25 0 .488.125t.387.375l9.25 16q.15.25.138.513t-.138.487q-.125.225-.35.363t-.5.137zm1.725-2h15.1L12 6zM12 18q.425 0 .713-.288T13 17q0-.425-.288-.712T12 16q-.425 0-.712.288T11 17q0 .425.288.713T12 18m0-3q.425 0 .713-.288T13 14v-3q0-.425-.288-.712T12 10q-.425 0-.712.288T11 11v3q0 .425.288.713T12 15m0-2.5"%2F%3E%3C%2Fsvg%3E');
+}
+
+.mdbook-alerts-caution {
+  --mdbook-alerts-color: rgb(207, 34, 46);
+  /* https://icon-sets.iconify.design/material-symbols/brightness-alert-outline-rounded/ */
+  --mdbook-alerts-icon: url('data:image/svg+xml,%3Csvg xmlns="http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg" width="24" height="24" viewBox="0 0 24 24"%3E%3Cpath fill="currentColor" d="M12 17q.425 0 .713-.288T13 16q0-.425-.288-.712T12 15q-.425 0-.712.288T11 16q0 .425.288.713T12 17m0-4q.425 0 .713-.288T13 12V8q0-.425-.288-.712T12 7q-.425 0-.712.288T11 8v4q0 .425.288.713T12 13m-3.35 7H6q-.825 0-1.412-.587T4 18v-2.65L2.075 13.4q-.275-.3-.425-.662T1.5 12q0-.375.15-.737t.425-.663L4 8.65V6q0-.825.588-1.412T6 4h2.65l1.95-1.925q.3-.275.663-.425T12 1.5q.375 0 .738.15t.662.425L15.35 4H18q.825 0 1.413.588T20 6v2.65l1.925 1.95q.275.3.425.663t.15.737q0 .375-.15.738t-.425.662L20 15.35V18q0 .825-.587 1.413T18 20h-2.65l-1.95 1.925q-.3.275-.662.425T12 22.5q-.375 0-.737-.15t-.663-.425zm.85-2l2.5 2.5l2.5-2.5H18v-3.5l2.5-2.5L18 9.5V6h-3.5L12 3.5L9.5 6H6v3.5L3.5 12L6 14.5V18zm2.5-6"%2F%3E%3C%2Fsvg%3E');
+}
+
+</style>
+<h1 id="pipes"><a class="header" href="#pipes">Pipes</a></h1>
+<pre><code class="language-c">typedef struct nng_pipe_s nng_pipe;
+</code></pre>
+<p>An <a name="a001"></a><code>nng_pipe</code> is a handle to a <a name="a002"></a>pipe object, which can be thought of as a single <a name="a003"></a>connection.
+(In most cases this is actually the case – the pipe is an abstraction for a single TCP or IPC connection.)
+Pipes are associated with either the listener or dialer that created them,
+and therefore are also automatically associated with a single socket.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The <code>nng_pipe</code> structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Most applications should never concern themselves with individual pipes.
+However it is possible to access a pipe when more information about the
+source of a message is needed, or when more control is required over message delivery.</p>
+</div>
+<p>Pipe objects are created by <a href="api//TODO.html">dialers</a> and and <a href="api//TODO.html">listeners</a>.</p>
+<h2 id="initialization-1"><a class="header" href="#initialization-1">Initialization</a></h2>
+<p>A pipe may be initialized using the macro <a name="a004"></a><code>NNG_PIPE_INITIALIZER</code>
+before it is opened, to prevent confusion with valid open pipes.</p>
+<p>For example:</p>
+<pre><code class="language-c">nng_pipe p = NNG_PIPE_INITIALIZER;
+</code></pre>
+<h2 id="pipe-identity"><a class="header" href="#pipe-identity">Pipe Identity</a></h2>
+<pre><code class="language-c">int nng_pipe_id(nng_pipe p);
+</code></pre>
+<p>The <a name="a005"></a><code>nng_pipe_id</code> function returns a positive identifier for the pipe <em>p</em>, if it is valid.
+Otherwise it returns <code>-1</code>.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>A pipe is considered valid if it was ever created by the socket.
+Pipes that are allocated on the stack or statically should be initialized with the macro
+<a href="api//api/pipe.html#initialization"><code>NNG_PIPE_INITIALIZER</code></a> to ensure that they cannot be confused with a valid pipe.</p>
+</div>
+<h2 id="closing-a-pipe"><a class="header" href="#closing-a-pipe">Closing a Pipe</a></h2>
+<pre><code class="language-c">nng_err nng_pipe_close(nng_pipe p);
+</code></pre>
+<p>The <a name="a006"></a><code>nng_pipe_close</code> function closes the supplied pipe, <em>p</em>.
+Messages that have been submitted for sending may be flushed or delivered,
+depending upon the transport.</p>
+<p>Further attempts to use the pipe after this call returns will result in <a href="api//api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Pipes are automatically closed when their creator closes, or when the
+remote peer closes the underlying connection.</p>
+</div>
+<h2 id="pipe-creator"><a class="header" href="#pipe-creator">Pipe Creator</a></h2>
+<pre><code class="language-c">nng_dialer nng_pipe_dialer(nng_pipe p);
+nng_listener nng_pipe_listener(nng_pipe p);
+nng_socket nng_pipe_socket(nng_pipe p);
+</code></pre>
+<p><a name="a007"></a>
+<a name="a008"></a>
+<a name="a009"></a>
+These functions return the <a href="api//TODO.html">socket</a>, <a href="api//TODO.html">dialer</a>, or <a href="api//TODO.html">listener</a> that created or owns the pipe.</p>
+<p>If the pipe was does not have an associated dialer or listener, then the associated will
+return [<code>NNG_DIALER_INITIALIZER</code>] or [<code>NNG_LISTENER_INITIALIZER</code>], as appropriate, and
+either [<code>nng_dialer_id</code>] or [<code>nng_listener_id</code>] for the returned object will return -1.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The socket, or the endpoint, returned by these functions may be in the process of closing,
+and might not be further usable as a result. (Other functions will result in <a href="api//api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.)</p>
+</div>
+<h2 id="pipe-options"><a class="header" href="#pipe-options">Pipe Options</a></h2>
+<pre><code class="language-c">nng_err nng_pipe_get_bool(nng_pipe p, const char *opt, bool *valp);
+nng_err nng_pipe_get_int(nng_pipe p, const char *opt, int *valp);
+nng_err nng_pipe_get_ms(nng_pipe p, const char *opt, nng_duration *valp);
+nng_err nng_pipe_get_size(nng_pipe p, const char *opt, size_t *valp);
+nng_err nng_pipe_get_addr(nng_pipe p, const char *opt, nng_sockaddr *valp);
+nng_err nng_pipe_get_string(nng_pipe p, const char *opt, char **valp);
+</code></pre>
+<p><a name="a010"></a>
+<a name="a011"></a>
+<a name="a012"></a>
+<a name="a013"></a>
+<a name="a014"></a>
+<a name="a015"></a>
+These functions are used to obtain value of an option named <em>opt</em> from the pipe <em>p</em>, and store it in the location
+referenced by <em>valp</em>.</p>
+<p>These functions access an option as a specific type. The transport layer will have details about which options
+are available, and which type they may be accessed using.</p>
+<p>In the case of <code>nng_pipe_get_string</code>, the string is created as if by <a href="api//api/memory.html#duplicate-string"><code>nng_strdup</code></a>, and must be freed by
+the caller using <a href="api//api/memory.html#free-string"><code>nng_strfree</code></a> when no longer needed.</p>
+<h2 id="pipe-notifications"><a class="header" href="#pipe-notifications">Pipe Notifications</a></h2>
+<pre><code class="language-c">typedef enum {
+        NNG_PIPE_EV_ADD_PRE,
+        NNG_PIPE_EV_ADD_POST,
+        NNG_PIPE_EV_REM_POST,
+} nng_pipe_ev;
+
+typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
+
+nng_err nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg);
+</code></pre>
+<p>The <a name="a016"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
+to be called whenever the pipe event specified by
+<em>ev</em> occurs on the socket <em>s</em>.
+The callback <em>cb</em> will be passed <em>arg</em> as its final argument.</p>
+<p>A different callback may be supplied for each event.
+Each event may have at most one callback registered.
+Registering a callback implicitly unregisters any previously registered.</p>
+<p>The following pipe events are supported:</p>
+<div class="table-wrapper"><table><thead><tr><th>Event</th><th>Description</th></tr></thead><tbody>
+<tr><td><a name="a017"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="api//api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
+<tr><td><a name="a018"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
+<tr><td><a name="a019"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
+</tbody></table>
+</div><div class="mdbook-alerts mdbook-alerts-warning">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  warning
+</p>
+<p>The callback <em>cb</em> function must <em>not</em> attempt to perform any
+accesses to the socket, as it is called with a lock on the socket held!
+Doing so would thus result in a deadlock.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>The callback <em>cb</em> may close a pipe for any reason by simply closing it using <a href="api//api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>.
+For example, this might be done to prevent an unauthorized peer from connecting to the socket,
+if an authorization check made during <code>NNG_PIPE_EV_ADD_PRE</code> fails.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>This function ignores invalid values for <em>ev</em>.</p>
+</div>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- Macros -->
@@ -3751,7 +3976,7 @@ using these Streams APIs.</p>
   note
 </p>
 <p>The <code>nng_stream</code> object is used for raw byte stream connections, and
-should not be confused with a <a href="api//TODO.html">pipe</a> object created on a <a href="api//TODO.html">socket</a> using
+should not be confused with a <a href="api//api/pipe.html">pipe</a> object created on a <a href="api//TODO.html">socket</a> using
 the <a href="api//TODO.html"><code>nng_listen</code></a>, <a href="api//TODO.html"><code>nng_dial</code></a> or related functions.</p>
 </div>
 <h2 id="sending-and-receiving-data"><a class="header" href="#sending-and-receiving-data">Sending and Receiving Data</a></h2>
@@ -4207,9 +4432,10 @@ const char *nng_http_get_reason(nng_http_conn *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 </code></pre>
 <p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typipcally numbered from 100 through 599) returned
-by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)</p>
-<p>A descriptive message matching the status code is returned by <a name="a010"></a><code>nng_http_get_reason</code>.</p>
-<p>The <a name="a011"></a><code>nng_http_set_status</code> function is used on a server in a handler callback to set the status code that will be
+by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)
+The value is returned as an <a name="a010"></a><code>nng_http_status</code>.</p>
+<p>A descriptive message matching the status code is returned by <a name="a011"></a><code>nng_http_get_reason</code>.</p>
+<p>The <a name="a012"></a><code>nng_http_set_status</code> function is used on a server in a handler callback to set the status code that will be
 reported to the client to <em>status</em>, and the associated text (reason) to <em>reason</em>. If <em>reason</em> is <code>NULL</code>,
 then a built in reason based on the <em>status</em> will be used instead.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
@@ -4289,14 +4515,14 @@ for display to users.</p>
 <pre><code class="language-c">const char *nng_http_get_header(nng_http *conn, const char *key);
 bool nng_next_header(nng_http *conn, const char **keyp, const char **valuep, void **next);
 </code></pre>
-<p>The <a name="a012"></a><code>nng_http_get_header</code> returns the header value matching <em>key</em> that was received over <em>conn</em>,
+<p>The <a name="a013"></a><code>nng_http_get_header</code> returns the header value matching <em>key</em> that was received over <em>conn</em>,
 or <code>NULL</code> if no such header exists.</p>
 <p>Thus, if <em>conn</em> is a client connection, then this function returns the the header value
 sent by the server as part of a response, whereas if it is a server connection, it returns
 the header value sent by the client as part of the request.</p>
 <p>If multiple headers are present with the same key, they may be returned as a combined value,
 with individual values separated by commas, but this behavior is not guaranteed.</p>
-<p>The <a name="a013"></a><code>nng_http_next_header</code> function iterates over all the headers, using the same list
+<p>The <a name="a014"></a><code>nng_http_next_header</code> function iterates over all the headers, using the same list
 that <code>nng_http_get_header</code> uses. To start, it is called with <em>next</em> initialized to <code>NULL</code>.
 If a header was found, then it returns <code>true</code>, and sets <em>keyp</em> and <em>valuep</em> to values containing
 the header name and value. It also updates <em>next</em>, which should be used for the next iteration.</p>
@@ -4307,7 +4533,7 @@ The scan can be rest by setting <em>next</em> to <code>NULL</code>.</p>
 nng_err nng_http_set_header(nng_http *conn, const char *key, const char *val);
 void nng_http_del_header(nng_http *conn, const char *key);
 </code></pre>
-<p>The <a name="a014"></a><code>nng_http_add_header</code>, <a name="a015"></a><code>nng_http_set_header</code>, and <a name="a016"></a><code>nng_http_del_header</code> functions are
+<p>The <a name="a015"></a><code>nng_http_add_header</code>, <a name="a016"></a><code>nng_http_set_header</code>, and <a name="a017"></a><code>nng_http_del_header</code> functions are
 used to add a modify either the request or response headers for <em>conn</em> prior to sending to the connected peer on <em>conn</em>.</p>
 <p>Thus, if the <em>conn</em> is a client connection created by <a href="api//api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, then the request headers are modified.
 Conversely, if it is a connection created by an HTTP server and used in a callback function, then the response headers are modified.</p>
@@ -4329,7 +4555,7 @@ as by guaranting that only a single instance of one of these headers is present.
 <h3 id="retrieving-body-content"><a class="header" href="#retrieving-body-content">Retrieving Body Content</a></h3>
 <pre><code class="language-c">void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
 </code></pre>
-<p>The <a name="a017"></a><code>nng_http_get_data</code> obtains the most recently received request or
+<p>The <a name="a018"></a><code>nng_http_get_data</code> obtains the most recently received request or
 response body. This will be <code>NULL</code> if the content has not been retrieved
 properly yet, or if the peer did not any content. (Some requests are defined
 to never have body content, such as “HEAD”.)</p>
@@ -4337,10 +4563,10 @@ to never have body content, such as “HEAD”.)</p>
 <pre><code class="language-c">void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
 void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_http_set_data</code> function sets the outgoing body content to <em>data</em>,
+<p>The <a name="a019"></a><code>nng_http_set_data</code> function sets the outgoing body content to <em>data</em>,
 which must be <em>size</em> bytes long. The caller must ensure that <em>data</em> remains
 valid for the duration of the transaction.</p>
-<p>The <a name="a019"></a><code>nng_http_copy_data</code> function makes a copy of <em>data</em>, which
+<p>The <a name="a020"></a><code>nng_http_copy_data</code> function makes a copy of <em>data</em>, which
 will be freed automatically when the transaction is finished, but otherwise
 behaves like <code>nng_http_set_data</code>.</p>
 <p>On client <em>conn</em> objects, these functions update the request object, but on server
@@ -4364,13 +4590,13 @@ transfer-encoding.</p>
 <h3 id="closing-the-connection"><a class="header" href="#closing-the-connection">Closing the Connection</a></h3>
 <pre><code class="language-c">void nng_http_close(nng_http *conn);
 </code></pre>
-<p>The <a name="a020"></a><code>nng_http_close</code> function closes the supplied HTTP connection <em>conn</em>,
+<p>The <a name="a021"></a><code>nng_http_close</code> function closes the supplied HTTP connection <em>conn</em>,
 including any disposing of any underlying file descriptors or related resources.</p>
 <p>Once this function, no further access to the <em>conn</em> structure may be made.</p>
 <h3 id="reset-connection-state"><a class="header" href="#reset-connection-state">Reset Connection State</a></h3>
 <pre><code class="language-c">void nng_http_reset(nng_http *conn);
 </code></pre>
-<p>The <a name="a021"></a><code>nng_http_reset</code> function resets the request and response state of the
+<p>The <a name="a022"></a><code>nng_http_reset</code> function resets the request and response state of the
 the connection <em>conn</em>, so that it is just as if it had been freshly created with
 <a href="api//api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or passed into a handler function for a server callback.</p>
 <p>The intended purpose of this function is to clear the object state before reusing the <em>conn</em> for
@@ -4381,11 +4607,11 @@ void nng_http_write(nng_http *conn, nng_aio *aio);
 void nng_http_read_all(nng_http *conn, nng_aio *aio);
 void nng_http_write_all(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a022"></a><code>nng_http_read</code> and <a name="a023"></a><code>nng_http_write</code> functions read or write data asynchronously from or to the
+<p>The <a name="a023"></a><code>nng_http_read</code> and <a name="a024"></a><code>nng_http_write</code> functions read or write data asynchronously from or to the
 connection <em>conn</em>, using the <a href="api//api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> that is set in <em>aio</em> with <a href="api//api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.
 These functions will complete as soon as any data is transferred.
 Use <a href="api//api/aio.html#result-of-operation"><code>nng_aio_count</code></a> to determine how much data was actually transferred.</p>
-<p>The <a name="a024"></a><code>nng_http_read_all</code> and <a name="a025"></a><code>nng_http_write_all</code> functions perform the same task, but will keep resubmitting
+<p>The <a name="a025"></a><code>nng_http_read_all</code> and <a name="a026"></a><code>nng_http_write_all</code> functions perform the same task, but will keep resubmitting
 operations until the the entire amount of data requested by the <a href="api//api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> is transferred.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -4400,7 +4626,7 @@ They can be used to transfer request or response body data as well.</p>
 <pre><code class="language-c">nng_err nng_http_hijack(nng_http *conn);
 </code></pre>
 <p>TODO: This API will change to convert the conn into a stream object.</p>
-<p>The <a name="a026"></a><code>nng_http_hijack</code> function hijacks the connection <em>conn</em>, causing it
+<p>The <a name="a027"></a><code>nng_http_hijack</code> function hijacks the connection <em>conn</em>, causing it
 to be disassociated from the HTTP server where it was created.</p>
 <p>The purpose of this function is the creation of HTTP upgraders (such as
 WebSocket), where the underlying HTTP connection will be taken over for
@@ -4430,18 +4656,18 @@ transactions on those connections.</p>
 <h3 id="client-object"><a class="header" href="#client-object">Client Object</a></h3>
 <pre><code class="language-c">typedef struct nng_http_client nng_http_client;
 </code></pre>
-<p>The <a name="a027"></a><code>nng_http_client</code> object is the client side creator for <a href="api//api/http.html#connection-object"><code>nng_http</code></a> objects.
+<p>The <a name="a028"></a><code>nng_http_client</code> object is the client side creator for <a href="api//api/http.html#connection-object"><code>nng_http</code></a> objects.
 It is analogous to a <a href="api//TODO.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
 <pre><code class="language-c">void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 </code></pre>
-<p>The <a name="a028"></a><code>nng_http_client_alloc</code> allocates an HTTP client suitable for
+<p>The <a name="a029"></a><code>nng_http_client_alloc</code> allocates an HTTP client suitable for
 connecting to the server identified by <em>url</em> and stores a pointer to
 it in the location referenced by <em>clientp</em>.</p>
 <h3 id="destroy-a-client"><a class="header" href="#destroy-a-client">Destroy a Client</a></h3>
 <pre><code class="language-c">void nng_http_client_free(nng_http_client *client);
 </code></pre>
-<p>The <a name="a029"></a><code>nng_http_client_free</code> connection destroys the client object and any
+<p>The <a name="a030"></a><code>nng_http_client_free</code> connection destroys the client object and any
 of its resources.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -4455,9 +4681,9 @@ and must be closed explicitly as needed.</p>
 <pre><code class="language-c">nng_err nng_http_client_get_tls(nng_http_client *client, nng_tls_config **tlsp);
 nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 </code></pre>
-<p>The <a name="a030"></a><code>nng_http_client_get_tls</code> and <a name="a031"></a><code>nng_http_client_set_tls</code> functions are used to
+<p>The <a name="a031"></a><code>nng_http_client_get_tls</code> and <a name="a032"></a><code>nng_http_client_set_tls</code> functions are used to
 retrieve or change the <a href="api//TODO.html">TLS configuration</a> used when making outbound connections, enabling
-<a name="a032"></a>TLS as a result.</p>
+<a name="a033"></a>TLS as a result.</p>
 <p>If TLS has not been previously configured on <em>client</em>, then <code>nng_http_client_get_tls</code> will return <a href="api//api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
 Both functions will return <a href="api//api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if either HTTP or TLS is not supported.</p>
 <p>Calling <code>nng_http_client_set_tls</code> invalidates any client previously obtained with
@@ -4477,7 +4703,7 @@ Existing connections will use the TLS configuration that there were created with
 
 void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
 </code></pre>
-<p>The <a name="a033"></a><code>nng_http_client_connect</code> function makes an outgoing connection to the
+<p>The <a name="a034"></a><code>nng_http_client_connect</code> function makes an outgoing connection to the
 server configured for <em>client</em>, and creates an <a href="api//api/http.html#connection-object"><code>nng_http</code></a> object for the connection.</p>
 <p>This is done asynchronously, and when the operation succeseds the connection may be
 retried from the <em>aio</em> using <a href="api//api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> with index 0.</p>
@@ -4515,7 +4741,7 @@ if ((rv = nng_aio_result(aio)) != 0) {
 <h3 id="sending-the-request"><a class="header" href="#sending-the-request">Sending the Request</a></h3>
 <pre><code class="language-c">void nng_http_write_request(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a034"></a><code>nng_http_write_request</code> function starts an asynchronous write of
+<p>The <a name="a035"></a><code>nng_http_write_request</code> function starts an asynchronous write of
 the HTTP request associated with <em>conn</em>.
 The entire request is sent,
 including headers, and if present, the request body data.
@@ -4535,7 +4761,7 @@ which provides a simpler interface for performing a complete HTTP client transac
 <h2 id="obtaining-the-response"><a class="header" href="#obtaining-the-response">Obtaining the Response</a></h2>
 <pre><code class="language-c">void nng_http_read_response(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a035"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
+<p>The <a name="a036"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
 HTTP connection <em>conn</em>, reading an HTTP response into the response associated with <em>conn</em>, including all
 of the related headers.</p>
 <p>It does <em>not</em> transfer any response body. To do that, use <a href="api//api/http.html#direct-read-and-write"><code>nng_http_read_all</code></a> or <a href="api//api/http.html#direct-read-and-write"><code>nng_http_read</code></a>.</p>
@@ -4557,9 +4783,9 @@ need to do so may use the direct read functions.</p>
 <h3 id="submitting-the-transaction"><a class="header" href="#submitting-the-transaction">Submitting the Transaction</a></h3>
 <pre><code class="language-c">void nng_http_transact(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The HTTP request is issued, and the response processed, asynchronously by the <a name="a036"></a><code>nng_http_transact</code> function.
+<p>The HTTP request is issued, and the response processed, asynchronously by the <a name="a037"></a><code>nng_http_transact</code> function.
 When the function is complete, the <em>aio</em> will be notified.</p>
-<p>The <a name="a037"></a><code>nng_http_transact</code> function is used to perform a complete
+<p>The <a name="a038"></a><code>nng_http_transact</code> function is used to perform a complete
 HTTP exchange over the connection <em>conn</em>, sending the request
 and attached body data to the remote server, and reading the response.</p>
 <p>The entire response is read, including any associated body, which can
@@ -4600,7 +4826,7 @@ may be obtained via [<code>nng_aio_result()</code>].</p>
 </code></pre>
 <p>Normally the server will send any attached response, but there are circumstances where
 a response must be sent manually, such as when <a href="api//api/http.html#hijacking-connections">hijacking</a> a connection.</p>
-<p>In such a case, <a name="a038"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
+<p>In such a case, <a name="a039"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
 using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
 <p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
 will be reused to receive new requests. For <code>HTTP/1.0</code>, or if the client has requested
@@ -6988,7 +7214,7 @@ created with <a href="tran//api/misc.html#create-socket-pair"><code>nng_socket_p
 </div>
 <p>The socket file descriptor is passed to the listener using
 the <a name="a002"></a><code>NNG_OPT_SOCKET_FD</code> option (as an integer).
-Setting this option will cause the listener to create a <a href="tran//TODO.html">pipe</a>
+Setting this option will cause the listener to create a <a href="tran//api/pipe.html">pipe</a>
 backed by the file descriptor.</p>
 <p>The protocol between peers using this transport is compatible with the protocol used
 for the <em><a href="tran//tran/tcp.html">tcp</a></em> transport, but this is an implementation detail and subject to change without notice.
@@ -7009,7 +7235,7 @@ There are no further socket details available.</p>
 <h2 id="transport-options-2"><a class="header" href="#transport-options-2">Transport Options</a></h2>
 <p>The following transport options are supported by this transport.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="tran//TODO.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
+<tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="tran//api/pipe.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
@@ -7166,7 +7392,7 @@ the actual structure is either of type
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><a href="tran//api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></td><td><a href="tran//TODO.html"><code>nng_sockaddr</code></a></td><td>The locally bound address, will be either <a href="tran//TODO.html"><code>nng_sockaddr_in</code></a> or <a href="tran//TODO.html"><code>nng_sockaddr_in6</code></a>.</td></tr>
-<tr><td><a href="tran//api/sock.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></td><td><a href="tran//TODO.html"><code>nng_sockaddr</code></a></td><td>The remote peer address, will be either <a href="tran//TODO.html"><code>nng_sockaddr_in</code></a> or <a href="tran//TODO.html"><code>nng_sockaddr_in6</code></a>. Only valid for <a href="tran//TODO.html">pipe</a> and <a href="tran//TODO.html">dialer</a> objects.</td></tr>
+<tr><td><a href="tran//api/sock.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></td><td><a href="tran//TODO.html"><code>nng_sockaddr</code></a></td><td>The remote peer address, will be either <a href="tran//TODO.html"><code>nng_sockaddr_in</code></a> or <a href="tran//TODO.html"><code>nng_sockaddr_in6</code></a>. Only valid for <a href="tran//api/pipe.html">pipe</a> and <a href="tran//TODO.html">dialer</a> objects.</td></tr>
 <tr><td><a href="tran//api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
 <tr><td><code>NNG_OPT_UDP_BOUND_PORT</code><a name="NNG_OPT_UDP_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="tran//TODO.html">listener</a> objects only.</td></tr>
@@ -7749,7 +7975,7 @@ update it for this version of NNG.</p>
 <h2 id="link-libraries"><a class="header" href="#link-libraries">Link Libraries</a></h2>
 <p>Replace <code>-lnanomsg</code> with <code>-lnng</code>.
 It may be necessary to include additional system libraries, such as <code>-lpthread</code>, depending on your system.</p>
-<h2 id="initialization-1"><a class="header" href="#initialization-1">Initialization</a></h2>
+<h2 id="initialization-2"><a class="header" href="#initialization-2">Initialization</a></h2>
 <p>It is necessary to explicitly initialize the library, using the <a href="migrate//api/init.html#initialization"><code>nng_init</code></a> function.
 This must be called before any other function.</p>
 <h2 id="types"><a class="header" href="#types">Types</a></h2>
@@ -7879,6 +8105,7 @@ concurrency, <a href="api/thread.html#a002">1</a><br/>
 concurrent, <a href="api/ctx.html#a002">1</a><br/>
 condition variable, <a href="api/synch.html#a009">1</a><br/>
 <code>connect</code>, <a href="api/stream.html#a021">1</a><br/>
+connection, <a href="api/pipe.html#a003">1</a><br/>
 context, <a href="api/ctx.html#a001">1</a><br/>
 CPU-bound, <a href="api/thread.html#a003">1</a><br/>
 duration, <a href="api/time.html#a003">1</a><br/>
@@ -7956,39 +8183,40 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_FLAG_NONBLOCK</code>, <a href="api/sock.html#a037">1</a>, <a href="api/sock.html#a041">2</a><br/>
 <code>nng_free</code>, <a href="api/memory.html#a004">1</a><br/>
 <code>nng_http</code>, <a href="api/http.html#a001">1</a><br/>
-<code>nng_http_add_header</code>, <a href="api/http.html#a014">1</a><br/>
-<code>nng_http_client</code>, <a href="api/http.html#a027">1</a><br/>
-<code>nng_http_client_alloc</code>, <a href="api/http.html#a028">1</a><br/>
-<code>nng_http_client_connect</code>, <a href="api/http.html#a033">1</a><br/>
-<code>nng_http_client_free</code>, <a href="api/http.html#a029">1</a><br/>
-<code>nng_http_client_get_tls</code>, <a href="api/http.html#a030">1</a><br/>
-<code>nng_http_client_set_tls</code>, <a href="api/http.html#a031">1</a><br/>
-<code>nng_http_close</code>, <a href="api/http.html#a020">1</a><br/>
-<code>nng_http_copy_data</code>, <a href="api/http.html#a019">1</a><br/>
-<code>nng_http_del_header</code>, <a href="api/http.html#a016">1</a><br/>
-<code>nng_http_get_data</code>, <a href="api/http.html#a017">1</a><br/>
-<code>nng_http_get_header</code>, <a href="api/http.html#a012">1</a><br/>
+<code>nng_http_add_header</code>, <a href="api/http.html#a015">1</a><br/>
+<code>nng_http_client</code>, <a href="api/http.html#a028">1</a><br/>
+<code>nng_http_client_alloc</code>, <a href="api/http.html#a029">1</a><br/>
+<code>nng_http_client_connect</code>, <a href="api/http.html#a034">1</a><br/>
+<code>nng_http_client_free</code>, <a href="api/http.html#a030">1</a><br/>
+<code>nng_http_client_get_tls</code>, <a href="api/http.html#a031">1</a><br/>
+<code>nng_http_client_set_tls</code>, <a href="api/http.html#a032">1</a><br/>
+<code>nng_http_close</code>, <a href="api/http.html#a021">1</a><br/>
+<code>nng_http_copy_data</code>, <a href="api/http.html#a020">1</a><br/>
+<code>nng_http_del_header</code>, <a href="api/http.html#a017">1</a><br/>
+<code>nng_http_get_data</code>, <a href="api/http.html#a018">1</a><br/>
+<code>nng_http_get_header</code>, <a href="api/http.html#a013">1</a><br/>
 <code>nng_http_get_method</code>, <a href="api/http.html#a003">1</a><br/>
-<code>nng_http_get_reason</code>, <a href="api/http.html#a010">1</a><br/>
+<code>nng_http_get_reason</code>, <a href="api/http.html#a011">1</a><br/>
 <code>nng_http_get_status</code>, <a href="api/http.html#a009">1</a><br/>
 <code>nng_http_get_version</code>, <a href="api/http.html#a008">1</a><br/>
-<code>nng_http_hijack</code>, <a href="api/http.html#a026">1</a><br/>
-<code>nng_http_next_header</code>, <a href="api/http.html#a013">1</a><br/>
-<code>nng_http_read</code>, <a href="api/http.html#a022">1</a><br/>
-<code>nng_http_read_all</code>, <a href="api/http.html#a024">1</a><br/>
-<code>nng_http_read_response</code>, <a href="api/http.html#a035">1</a><br/>
-<code>nng_http_reset</code>, <a href="api/http.html#a021">1</a><br/>
-<code>nng_http_set_data</code>, <a href="api/http.html#a018">1</a><br/>
-<code>nng_http_set_header</code>, <a href="api/http.html#a015">1</a><br/>
+<code>nng_http_hijack</code>, <a href="api/http.html#a027">1</a><br/>
+<code>nng_http_next_header</code>, <a href="api/http.html#a014">1</a><br/>
+<code>nng_http_read</code>, <a href="api/http.html#a023">1</a><br/>
+<code>nng_http_read_all</code>, <a href="api/http.html#a025">1</a><br/>
+<code>nng_http_read_response</code>, <a href="api/http.html#a036">1</a><br/>
+<code>nng_http_reset</code>, <a href="api/http.html#a022">1</a><br/>
+<code>nng_http_set_data</code>, <a href="api/http.html#a019">1</a><br/>
+<code>nng_http_set_header</code>, <a href="api/http.html#a016">1</a><br/>
 <code>nng_http_set_method</code>, <a href="api/http.html#a002">1</a><br/>
-<code>nng_http_set_status</code>, <a href="api/http.html#a011">1</a><br/>
+<code>nng_http_set_status</code>, <a href="api/http.html#a012">1</a><br/>
 <code>nng_http_set_uri</code>, <a href="api/http.html#a004">1</a><br/>
 <code>nng_http_set_version</code>, <a href="api/http.html#a007">1</a><br/>
-<code>nng_http_transact</code>, <a href="api/http.html#a036">1</a>, <a href="api/http.html#a037">2</a><br/>
-<code>nng_http_write</code>, <a href="api/http.html#a023">1</a><br/>
-<code>nng_http_write_all</code>, <a href="api/http.html#a025">1</a><br/>
-<code>nng_http_write_request</code>, <a href="api/http.html#a034">1</a><br/>
-<code>nng_http_write_response</code>, <a href="api/http.html#a038">1</a><br/>
+<code>nng_http_status</code>, <a href="api/http.html#a010">1</a><br/>
+<code>nng_http_transact</code>, <a href="api/http.html#a037">1</a>, <a href="api/http.html#a038">2</a><br/>
+<code>nng_http_write</code>, <a href="api/http.html#a024">1</a><br/>
+<code>nng_http_write_all</code>, <a href="api/http.html#a026">1</a><br/>
+<code>nng_http_write_request</code>, <a href="api/http.html#a035">1</a><br/>
+<code>nng_http_write_response</code>, <a href="api/http.html#a039">1</a><br/>
 <code>nng_id_alloc</code>, <a href="api/id_map.html#a006">1</a><br/>
 <code>nng_id_get</code>, <a href="api/id_map.html#a005">1</a><br/>
 <code>nng_id_map</code>, <a href="api/id_map.html#a001">1</a><br/>
@@ -8050,6 +8278,23 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_pair1_open_poly</code>, <a href="api/sock.html#a012">1</a><br/>
 <code>nng_pair1_open_raw</code>, <a href="api/sock.html#a024">1</a><br/>
 <code>NNG_PATCH_VERSION</code>, <a href="api/misc.html#a008">1</a><br/>
+<code>nng_pipe</code>, <a href="api/pipe.html#a001">1</a><br/>
+<code>nng_pipe_close</code>, <a href="api/pipe.html#a006">1</a><br/>
+<code>nng_pipe_dialer</code>, <a href="api/pipe.html#a007">1</a><br/>
+<code>NNG_PIPE_EV_ADD_POST</code>, <a href="api/pipe.html#a018">1</a><br/>
+<code>NNG_PIPE_EV_ADD_PRE</code>, <a href="api/pipe.html#a017">1</a><br/>
+<code>NNG_PIPE_EV_REM_POST</code>, <a href="api/pipe.html#a019">1</a><br/>
+<code>nng_pipe_get_addr</code>, <a href="api/pipe.html#a014">1</a><br/>
+<code>nng_pipe_get_bool</code>, <a href="api/pipe.html#a010">1</a><br/>
+<code>nng_pipe_get_int</code>, <a href="api/pipe.html#a011">1</a><br/>
+<code>nng_pipe_get_ms</code>, <a href="api/pipe.html#a012">1</a><br/>
+<code>nng_pipe_get_size</code>, <a href="api/pipe.html#a013">1</a><br/>
+<code>nng_pipe_get_string</code>, <a href="api/pipe.html#a015">1</a><br/>
+<code>nng_pipe_id</code>, <a href="api/pipe.html#a005">1</a><br/>
+<code>NNG_PIPE_INITIALIZER</code>, <a href="api/pipe.html#a004">1</a><br/>
+<code>nng_pipe_listener</code>, <a href="api/pipe.html#a008">1</a><br/>
+<code>nng_pipe_notify</code>, <a href="api/pipe.html#a016">1</a><br/>
+<code>nng_pipe_socket</code>, <a href="api/pipe.html#a009">1</a><br/>
 <code>nng_pub0_open</code>, <a href="api/sock.html#a013">1</a><br/>
 <code>nng_pub0_open_raw</code>, <a href="api/sock.html#a025">1</a><br/>
 <code>nng_pull0_open</code>, <a href="api/sock.html#a014">1</a><br/>
@@ -8193,6 +8438,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nni_http_get_uri</code>, <a href="api/http.html#a006">1</a><br/>
 <em>PAIR</em>, <a href="proto/pair.html#a002">1</a><br/>
 <em>PAIR</em> protocol, <a href="proto/pair.html#a001">1</a><br/>
+pipe, <a href="api/pipe.html#a002">1</a><br/>
 pipeline pattern, <a href="proto/pull.html#a003">1</a>, <a href="proto/push.html#a003">2</a>, <a href="proto/index.html#a003">3</a><br/>
 polyamorous mode, <a href="proto/pair.html#a003">1</a><br/>
 port number, <a href="tran/udp.html#a006">1</a><br/>
@@ -8235,7 +8481,7 @@ synchronization primitives, <a href="api/synch.html#a001">1</a><br/>
 threads, <a href="api/thread.html#a001">1</a><br/>
 thundering herd, <a href="api/synch.html#a016">1</a><br/>
 timeout, <a href="api/aio.html#a012">1</a><br/>
-TLS, <a href="api/stream.html#a062">1</a>, <a href="api/http.html#a032">2</a><br/>
+TLS, <a href="api/stream.html#a062">1</a>, <a href="api/http.html#a033">2</a><br/>
 UDP, <a href="tran/udp.html#a002">1</a><br/>
 <em>udp</em> transport, <a href="tran/udp.html#a001">1</a><br/>
 <code>udp://</code>, <a href="tran/udp.html#a005">1</a><br/>

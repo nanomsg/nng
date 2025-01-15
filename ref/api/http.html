@@ -306,9 +306,10 @@ const char *nng_http_get_reason(nng_http_conn *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 </code></pre>
 <p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typipcally numbered from 100 through 599) returned
-by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)</p>
-<p>A descriptive message matching the status code is returned by <a name="a010"></a><code>nng_http_get_reason</code>.</p>
-<p>The <a name="a011"></a><code>nng_http_set_status</code> function is used on a server in a handler callback to set the status code that will be
+by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)
+The value is returned as an <a name="a010"></a><code>nng_http_status</code>.</p>
+<p>A descriptive message matching the status code is returned by <a name="a011"></a><code>nng_http_get_reason</code>.</p>
+<p>The <a name="a012"></a><code>nng_http_set_status</code> function is used on a server in a handler callback to set the status code that will be
 reported to the client to <em>status</em>, and the associated text (reason) to <em>reason</em>. If <em>reason</em> is <code>NULL</code>,
 then a built in reason based on the <em>status</em> will be used instead.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
@@ -388,14 +389,14 @@ for display to users.</p>
 <pre><code class="language-c">const char *nng_http_get_header(nng_http *conn, const char *key);
 bool nng_next_header(nng_http *conn, const char **keyp, const char **valuep, void **next);
 </code></pre>
-<p>The <a name="a012"></a><code>nng_http_get_header</code> returns the header value matching <em>key</em> that was received over <em>conn</em>,
+<p>The <a name="a013"></a><code>nng_http_get_header</code> returns the header value matching <em>key</em> that was received over <em>conn</em>,
 or <code>NULL</code> if no such header exists.</p>
 <p>Thus, if <em>conn</em> is a client connection, then this function returns the the header value
 sent by the server as part of a response, whereas if it is a server connection, it returns
 the header value sent by the client as part of the request.</p>
 <p>If multiple headers are present with the same key, they may be returned as a combined value,
 with individual values separated by commas, but this behavior is not guaranteed.</p>
-<p>The <a name="a013"></a><code>nng_http_next_header</code> function iterates over all the headers, using the same list
+<p>The <a name="a014"></a><code>nng_http_next_header</code> function iterates over all the headers, using the same list
 that <code>nng_http_get_header</code> uses. To start, it is called with <em>next</em> initialized to <code>NULL</code>.
 If a header was found, then it returns <code>true</code>, and sets <em>keyp</em> and <em>valuep</em> to values containing
 the header name and value. It also updates <em>next</em>, which should be used for the next iteration.</p>
@@ -406,7 +407,7 @@ The scan can be rest by setting <em>next</em> to <code>NULL</code>.</p>
 nng_err nng_http_set_header(nng_http *conn, const char *key, const char *val);
 void nng_http_del_header(nng_http *conn, const char *key);
 </code></pre>
-<p>The <a name="a014"></a><code>nng_http_add_header</code>, <a name="a015"></a><code>nng_http_set_header</code>, and <a name="a016"></a><code>nng_http_del_header</code> functions are
+<p>The <a name="a015"></a><code>nng_http_add_header</code>, <a name="a016"></a><code>nng_http_set_header</code>, and <a name="a017"></a><code>nng_http_del_header</code> functions are
 used to add a modify either the request or response headers for <em>conn</em> prior to sending to the connected peer on <em>conn</em>.</p>
 <p>Thus, if the <em>conn</em> is a client connection created by <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, then the request headers are modified.
 Conversely, if it is a connection created by an HTTP server and used in a callback function, then the response headers are modified.</p>
@@ -428,7 +429,7 @@ as by guaranting that only a single instance of one of these headers is present.
 <h3 id="retrieving-body-content"><a class="header" href="#retrieving-body-content">Retrieving Body Content</a></h3>
 <pre><code class="language-c">void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
 </code></pre>
-<p>The <a name="a017"></a><code>nng_http_get_data</code> obtains the most recently received request or
+<p>The <a name="a018"></a><code>nng_http_get_data</code> obtains the most recently received request or
 response body. This will be <code>NULL</code> if the content has not been retrieved
 properly yet, or if the peer did not any content. (Some requests are defined
 to never have body content, such as “HEAD”.)</p>
@@ -436,10 +437,10 @@ to never have body content, such as “HEAD”.)</p>
 <pre><code class="language-c">void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
 void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_http_set_data</code> function sets the outgoing body content to <em>data</em>,
+<p>The <a name="a019"></a><code>nng_http_set_data</code> function sets the outgoing body content to <em>data</em>,
 which must be <em>size</em> bytes long. The caller must ensure that <em>data</em> remains
 valid for the duration of the transaction.</p>
-<p>The <a name="a019"></a><code>nng_http_copy_data</code> function makes a copy of <em>data</em>, which
+<p>The <a name="a020"></a><code>nng_http_copy_data</code> function makes a copy of <em>data</em>, which
 will be freed automatically when the transaction is finished, but otherwise
 behaves like <code>nng_http_set_data</code>.</p>
 <p>On client <em>conn</em> objects, these functions update the request object, but on server
@@ -463,13 +464,13 @@ transfer-encoding.</p>
 <h3 id="closing-the-connection"><a class="header" href="#closing-the-connection">Closing the Connection</a></h3>
 <pre><code class="language-c">void nng_http_close(nng_http *conn);
 </code></pre>
-<p>The <a name="a020"></a><code>nng_http_close</code> function closes the supplied HTTP connection <em>conn</em>,
+<p>The <a name="a021"></a><code>nng_http_close</code> function closes the supplied HTTP connection <em>conn</em>,
 including any disposing of any underlying file descriptors or related resources.</p>
 <p>Once this function, no further access to the <em>conn</em> structure may be made.</p>
 <h3 id="reset-connection-state"><a class="header" href="#reset-connection-state">Reset Connection State</a></h3>
 <pre><code class="language-c">void nng_http_reset(nng_http *conn);
 </code></pre>
-<p>The <a name="a021"></a><code>nng_http_reset</code> function resets the request and response state of the
+<p>The <a name="a022"></a><code>nng_http_reset</code> function resets the request and response state of the
 the connection <em>conn</em>, so that it is just as if it had been freshly created with
 <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or passed into a handler function for a server callback.</p>
 <p>The intended purpose of this function is to clear the object state before reusing the <em>conn</em> for
@@ -480,11 +481,11 @@ void nng_http_write(nng_http *conn, nng_aio *aio);
 void nng_http_read_all(nng_http *conn, nng_aio *aio);
 void nng_http_write_all(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a022"></a><code>nng_http_read</code> and <a name="a023"></a><code>nng_http_write</code> functions read or write data asynchronously from or to the
+<p>The <a name="a023"></a><code>nng_http_read</code> and <a name="a024"></a><code>nng_http_write</code> functions read or write data asynchronously from or to the
 connection <em>conn</em>, using the <a href="/api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> that is set in <em>aio</em> with <a href="/api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.
 These functions will complete as soon as any data is transferred.
 Use <a href="/api/aio.html#result-of-operation"><code>nng_aio_count</code></a> to determine how much data was actually transferred.</p>
-<p>The <a name="a024"></a><code>nng_http_read_all</code> and <a name="a025"></a><code>nng_http_write_all</code> functions perform the same task, but will keep resubmitting
+<p>The <a name="a025"></a><code>nng_http_read_all</code> and <a name="a026"></a><code>nng_http_write_all</code> functions perform the same task, but will keep resubmitting
 operations until the the entire amount of data requested by the <a href="/api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> is transferred.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -499,7 +500,7 @@ They can be used to transfer request or response body data as well.</p>
 <pre><code class="language-c">nng_err nng_http_hijack(nng_http *conn);
 </code></pre>
 <p>TODO: This API will change to convert the conn into a stream object.</p>
-<p>The <a name="a026"></a><code>nng_http_hijack</code> function hijacks the connection <em>conn</em>, causing it
+<p>The <a name="a027"></a><code>nng_http_hijack</code> function hijacks the connection <em>conn</em>, causing it
 to be disassociated from the HTTP server where it was created.</p>
 <p>The purpose of this function is the creation of HTTP upgraders (such as
 WebSocket), where the underlying HTTP connection will be taken over for
@@ -529,18 +530,18 @@ transactions on those connections.</p>
 <h3 id="client-object"><a class="header" href="#client-object">Client Object</a></h3>
 <pre><code class="language-c">typedef struct nng_http_client nng_http_client;
 </code></pre>
-<p>The <a name="a027"></a><code>nng_http_client</code> object is the client side creator for <a href="/api/http.html#connection-object"><code>nng_http</code></a> objects.
+<p>The <a name="a028"></a><code>nng_http_client</code> object is the client side creator for <a href="/api/http.html#connection-object"><code>nng_http</code></a> objects.
 It is analogous to a <a href="/TODO.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
 <pre><code class="language-c">void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 </code></pre>
-<p>The <a name="a028"></a><code>nng_http_client_alloc</code> allocates an HTTP client suitable for
+<p>The <a name="a029"></a><code>nng_http_client_alloc</code> allocates an HTTP client suitable for
 connecting to the server identified by <em>url</em> and stores a pointer to
 it in the location referenced by <em>clientp</em>.</p>
 <h3 id="destroy-a-client"><a class="header" href="#destroy-a-client">Destroy a Client</a></h3>
 <pre><code class="language-c">void nng_http_client_free(nng_http_client *client);
 </code></pre>
-<p>The <a name="a029"></a><code>nng_http_client_free</code> connection destroys the client object and any
+<p>The <a name="a030"></a><code>nng_http_client_free</code> connection destroys the client object and any
 of its resources.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -554,9 +555,9 @@ and must be closed explicitly as needed.</p>
 <pre><code class="language-c">nng_err nng_http_client_get_tls(nng_http_client *client, nng_tls_config **tlsp);
 nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 </code></pre>
-<p>The <a name="a030"></a><code>nng_http_client_get_tls</code> and <a name="a031"></a><code>nng_http_client_set_tls</code> functions are used to
+<p>The <a name="a031"></a><code>nng_http_client_get_tls</code> and <a name="a032"></a><code>nng_http_client_set_tls</code> functions are used to
 retrieve or change the <a href="/TODO.html">TLS configuration</a> used when making outbound connections, enabling
-<a name="a032"></a>TLS as a result.</p>
+<a name="a033"></a>TLS as a result.</p>
 <p>If TLS has not been previously configured on <em>client</em>, then <code>nng_http_client_get_tls</code> will return <a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
 Both functions will return <a href="/api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if either HTTP or TLS is not supported.</p>
 <p>Calling <code>nng_http_client_set_tls</code> invalidates any client previously obtained with
@@ -576,7 +577,7 @@ Existing connections will use the TLS configuration that there were created with
 
 void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
 </code></pre>
-<p>The <a name="a033"></a><code>nng_http_client_connect</code> function makes an outgoing connection to the
+<p>The <a name="a034"></a><code>nng_http_client_connect</code> function makes an outgoing connection to the
 server configured for <em>client</em>, and creates an <a href="/api/http.html#connection-object"><code>nng_http</code></a> object for the connection.</p>
 <p>This is done asynchronously, and when the operation succeseds the connection may be
 retried from the <em>aio</em> using <a href="/api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> with index 0.</p>
@@ -614,7 +615,7 @@ if ((rv = nng_aio_result(aio)) != 0) {
 <h3 id="sending-the-request"><a class="header" href="#sending-the-request">Sending the Request</a></h3>
 <pre><code class="language-c">void nng_http_write_request(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a034"></a><code>nng_http_write_request</code> function starts an asynchronous write of
+<p>The <a name="a035"></a><code>nng_http_write_request</code> function starts an asynchronous write of
 the HTTP request associated with <em>conn</em>.
 The entire request is sent,
 including headers, and if present, the request body data.
@@ -634,7 +635,7 @@ which provides a simpler interface for performing a complete HTTP client transac
 <h2 id="obtaining-the-response"><a class="header" href="#obtaining-the-response">Obtaining the Response</a></h2>
 <pre><code class="language-c">void nng_http_read_response(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The <a name="a035"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
+<p>The <a name="a036"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
 HTTP connection <em>conn</em>, reading an HTTP response into the response associated with <em>conn</em>, including all
 of the related headers.</p>
 <p>It does <em>not</em> transfer any response body. To do that, use <a href="/api/http.html#direct-read-and-write"><code>nng_http_read_all</code></a> or <a href="/api/http.html#direct-read-and-write"><code>nng_http_read</code></a>.</p>
@@ -656,9 +657,9 @@ need to do so may use the direct read functions.</p>
 <h3 id="submitting-the-transaction"><a class="header" href="#submitting-the-transaction">Submitting the Transaction</a></h3>
 <pre><code class="language-c">void nng_http_transact(nng_http *conn, nng_aio *aio);
 </code></pre>
-<p>The HTTP request is issued, and the response processed, asynchronously by the <a name="a036"></a><code>nng_http_transact</code> function.
+<p>The HTTP request is issued, and the response processed, asynchronously by the <a name="a037"></a><code>nng_http_transact</code> function.
 When the function is complete, the <em>aio</em> will be notified.</p>
-<p>The <a name="a037"></a><code>nng_http_transact</code> function is used to perform a complete
+<p>The <a name="a038"></a><code>nng_http_transact</code> function is used to perform a complete
 HTTP exchange over the connection <em>conn</em>, sending the request
 and attached body data to the remote server, and reading the response.</p>
 <p>The entire response is read, including any associated body, which can
@@ -699,7 +700,7 @@ may be obtained via [<code>nng_aio_result()</code>].</p>
 </code></pre>
 <p>Normally the server will send any attached response, but there are circumstances where
 a response must be sent manually, such as when <a href="/api/http.html#hijacking-connections">hijacking</a> a connection.</p>
-<p>In such a case, <a name="a038"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
+<p>In such a case, <a name="a039"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
 using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
 <p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
 will be reused to receive new requests. For <code>HTTP/1.0</code>, or if the client has requested

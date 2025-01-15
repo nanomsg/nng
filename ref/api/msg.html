@@ -416,7 +416,7 @@ except that they operate the message header rather than the message body.</p>
 <pre><code class="language-c">nng_pipe nng_msg_get_pipe(nng_msg *msg);
 void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
 </code></pre>
-<p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="/TODO.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
+<p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="/api/pipe.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
 This is most often useful when used with protocols that support directing
 a message to a specific peer.
 For example the <a href="/proto/pair.html"><em>PAIR</em></a> version 1 protocol can do
