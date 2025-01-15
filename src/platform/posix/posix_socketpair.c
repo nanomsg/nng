@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,7 +17,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 
-int
+nng_err
 nni_socket_pair(int fds[2])
 {
 	int rv;
@@ -28,14 +28,16 @@ nni_socket_pair(int fds[2])
 
 #ifdef SO_NOSIGPIPE
 	int set = 1;
-	setsockopt(fds[0], SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-	setsockopt(fds[1], SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+	setsockopt(
+	    fds[0], SOL_SOCKET, SO_NOSIGPIPE, (void *) &set, sizeof(int));
+	setsockopt(
+	    fds[1], SOL_SOCKET, SO_NOSIGPIPE, (void *) &set, sizeof(int));
 #endif
 
 	return (0);
 }
 #else
-int
+nng_err
 nni_socket_pair(int fds[2])
 {
 	return (NNG_ENOTSUP);

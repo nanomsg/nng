@@ -2135,7 +2135,7 @@ nng_random(void)
 	return (nni_random());
 }
 
-int
+nng_err
 nng_socket_pair(int fds[2])
 {
 	return (nni_socket_pair(fds));

@@ -17,10 +17,10 @@ number facilities when available.
 ## Create Socket Pair
 
 ```c
-int nng_socket_pair(int fds[2]);
+nng_err nng_socket_pair(int fds[2]);
 ```
 
-The `nng_socket_pair` function creates a pair of connected file descriptors.
+The {{i:`nng_socket_pair`}} function creates a pair of connected file descriptors.
 These file descriptors, which are returned in the _fds_ array, are suitable for
 use with the [Socket transport][socktran].
 

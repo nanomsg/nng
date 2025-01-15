@@ -1407,7 +1407,7 @@ NNG_DECL uint32_t nng_random(void);
 // by reliable, bidirectional, byte streams.  This will return NNG_ENOTSUP
 // if the platform lacks support for this.  The argument is a pointer
 // to an array of file descriptors (or HANDLES or similar).
-NNG_DECL int nng_socket_pair(int[2]);
+NNG_DECL nng_err nng_socket_pair(int[2]);
 
 // Multithreading and synchronization functions.
 
