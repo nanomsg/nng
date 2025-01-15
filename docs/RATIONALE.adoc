@@ -335,6 +335,6 @@ switches and extra raw vs. cooked logic.
 It is my intention that _nng_ ultimately replace _nanomsg_.  I do think of it
 as "nanomsg 2.0".  In fact "nng" stands for "nanomsg next generation" in
 my mind.  Some day soon I'm hoping that the various website
-references to nanomsg my simply be updated to point at _nng_.  It is not
+references to nanomsg may simply be updated to point at _nng_.  It is not
 clear to me whether at that time I will simply rename the existing
 code to _nanomsg_, nanomsg2, or leave it as _nng_.
