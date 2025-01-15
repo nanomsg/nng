@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -37,7 +37,7 @@ extern void nni_aio_reap(nni_aio *);
 // is called with the supplied argument when the operation is complete.
 // If NULL is supplied for the callback, then nni_aio_wake is used in its
 // place, and the aio is used for the argument.
-extern int nni_aio_alloc(nni_aio **, nni_cb, void *arg);
+extern nng_err nni_aio_alloc(nni_aio **, nni_cb, void *arg);
 
 // nni_aio_free frees the aio, releasing resources (locks)
 // associated with it. This is safe to call on zeroed memory.
@@ -138,7 +138,7 @@ extern size_t nni_aio_iov_advance(nni_aio *, size_t);
 // nni_aio_iov_count returns the number of bytes referenced by the aio iov.
 extern size_t nni_aio_iov_count(nni_aio *);
 
-extern int nni_aio_set_iov(nni_aio *, unsigned, const nni_iov *);
+extern nng_err nni_aio_set_iov(nni_aio *, unsigned, const nni_iov *);
 
 extern void         nni_aio_set_timeout(nni_aio *, nng_duration);
 extern void         nni_aio_set_expire(nni_aio *, nni_time);
@@ -188,9 +188,9 @@ extern void nni_aio_completions_run(nni_aio_completions *);
 extern void nni_aio_completions_add(
     nni_aio_completions *, nni_aio *, nng_err, size_t);
 
-extern int  nni_aio_sys_init(nng_init_params *);
-extern bool nni_aio_sys_drain(void);
-extern void nni_aio_sys_fini(void);
+extern nng_err nni_aio_sys_init(nng_init_params *);
+extern bool    nni_aio_sys_drain(void);
+extern void    nni_aio_sys_fini(void);
 
 typedef struct nni_aio_expire_q nni_aio_expire_q;
 

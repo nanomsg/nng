@@ -62,7 +62,6 @@ although it is harmless if it does.
 == SEE ALSO
 
 [.text-left]
-xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
 xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
 xref:nng_aio_finish.3.adoc[nng_aio_finish(3)],
 xref:nng_aio_result.3.adoc[nng_aio_result(3)],

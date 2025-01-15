@@ -43,7 +43,7 @@ complete, creating a synchronous flow from an asynchronous one.
 ## Create Handle
 
 ```c
-int nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
+nng_err nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
 ```
 
 The {{i:`nng_aio_alloc`}} function creates an [`nng_aio`] object, with the

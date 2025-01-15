@@ -51,7 +51,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
 xref:nng_aio_reset.3.adoc[nng_aio_reset(3)],
 xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
 xref:nng_aio_start.3.adoc[nng_aio_start(3)],

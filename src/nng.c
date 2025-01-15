@@ -1828,11 +1828,11 @@ nng_msg_set_pipe(nng_msg *msg, nng_pipe p)
 	nni_msg_set_pipe(msg, p.id);
 }
 
-int
+nng_err
 nng_aio_alloc(nng_aio **app, void (*cb)(void *), void *arg)
 {
 	nng_aio *aio;
-	int      rv;
+	nng_err  rv;
 
 	if ((rv = nni_aio_alloc(&aio, (nni_cb) cb, arg)) == 0) {
 		nng_aio_set_timeout(aio, NNG_DURATION_DEFAULT);

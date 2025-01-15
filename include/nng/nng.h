@@ -563,7 +563,7 @@ NNG_DECL void nng_strfree(char *);
 // when a submitted operation completes (or is canceled or fails) the
 // callback will be executed, generally in a different thread, with no
 // locks held.
-NNG_DECL int nng_aio_alloc(nng_aio **, void (*)(void *), void *);
+NNG_DECL nng_err nng_aio_alloc(nng_aio **, void (*)(void *), void *);
 
 // nng_aio_free frees the AIO and any associated resources.
 // It *must not* be in use at the time it is freed.

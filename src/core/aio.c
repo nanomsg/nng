@@ -124,7 +124,7 @@ nni_aio_fini(nni_aio *aio)
 	}
 }
 
-int
+nng_err
 nni_aio_alloc(nni_aio **aio_p, nni_cb cb, void *arg)
 {
 	nni_aio *aio;
@@ -134,7 +134,7 @@ nni_aio_alloc(nni_aio **aio_p, nni_cb cb, void *arg)
 	}
 	nni_aio_init(aio, cb, arg);
 	*aio_p = aio;
-	return (0);
+	return (NNG_OK);
 }
 
 void
@@ -154,7 +154,7 @@ nni_aio_reap(nni_aio *aio)
 	}
 }
 
-int
+nng_err
 nni_aio_set_iov(nni_aio *aio, unsigned nio, const nni_iov *iov)
 {
 
@@ -170,7 +170,7 @@ nni_aio_set_iov(nni_aio *aio, unsigned nio, const nni_iov *iov)
 		}
 	}
 	aio->a_nio = nio;
-	return (0);
+	return (NNG_OK);
 }
 
 // nni_aio_stop cancels any outstanding operation, and waits for the
@@ -602,7 +602,7 @@ nni_aio_expire_loop(void *arg)
 
 	for (;;) {
 		nni_aio *aio;
-		int      rv;
+		nng_err  rv;
 		nni_time next;
 
 		next = q->eq_next;
@@ -884,7 +884,7 @@ nni_aio_sys_fini(void)
 	nni_aio_expire_q_list = NULL;
 }
 
-int
+nng_err
 nni_aio_sys_init(nng_init_params *params)
 {
 	int16_t num_thr;
@@ -912,5 +912,5 @@ nni_aio_sys_init(nng_init_params *params)
 		nni_aio_expire_q_list[i] = eq;
 	}
 
-	return (0);
+	return (NNG_OK);
 }
