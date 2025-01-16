@@ -4712,7 +4712,7 @@ retried from the <em>aio</em> using <a href="api//api/aio.html#inputs-and-output
 nng_url *url;
 nng_http_client *client;
 nng_http *conn;
-int rv;
+nng_err rv;
 
 // Error checks elided for clarity.
 nng_url_parse(&amp;url, "http://www.google.com");
@@ -4737,7 +4737,6 @@ if ((rv = nng_aio_result(aio)) != 0) {
 }
 </code></pre>
 <h3 id="preparing-a-transaction"><a class="header" href="#preparing-a-transaction">Preparing a Transaction</a></h3>
-<h3 id="request-body"><a class="header" href="#request-body">Request Body</a></h3>
 <h3 id="sending-the-request"><a class="header" href="#sending-the-request">Sending the Request</a></h3>
 <pre><code class="language-c">void nng_http_write_request(nng_http *conn, nng_aio *aio);
 </code></pre>
@@ -4758,7 +4757,7 @@ may be obtained via <a href="api//api/aio.html#result-of-operation"><code>nng_ai
 <p>Consider using the [<code>nng_http_transact</code>] function,
 which provides a simpler interface for performing a complete HTTP client transaction.</p>
 </div>
-<h2 id="obtaining-the-response"><a class="header" href="#obtaining-the-response">Obtaining the Response</a></h2>
+<h3 id="obtaining-the-response"><a class="header" href="#obtaining-the-response">Obtaining the Response</a></h3>
 <pre><code class="language-c">void nng_http_read_response(nng_http *conn, nng_aio *aio);
 </code></pre>
 <p>The <a name="a036"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
@@ -4821,12 +4820,226 @@ may be obtained via [<code>nng_aio_result()</code>].</p>
 <h3 id="response-body"><a class="header" href="#response-body">Response Body</a></h3>
 <h2 id="server-api"><a class="header" href="#server-api">Server API</a></h2>
 <h3 id="handlers"><a class="header" href="#handlers">Handlers</a></h3>
-<h3 id="sending-the-response"><a class="header" href="#sending-the-response">Sending the Response</a></h3>
+<pre><code class="language-c">typedef struct nng_http_handler nng_http_handler;
+</code></pre>
+<p>An <a name="a039"></a><code>nng_http_handler</code> encapsulates a function used used to handle
+incoming requests on an HTTP server, routed based on method and URI,
+and the parameters used with that function.</p>
+<p>Every handler has a Request-URI to which it refers, which is determined by the <em>path</em> argument.
+Only the path component of the Request URI is considered when determining whether the handler should be called.</p>
+<p>This implementation limits the <em>path</em> length to 1024 bytes, including the
+zero termination byte. This does not prevent requests with much longer
+URIs from being supported, but doing so will require setting the handler to match a parent path in the tree using
+[<code>nng_http_handler_set_tree</code>].</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>The NNG HTTP framework is optimized for URLs shorter than 200 characters.</p>
+</div>
+<p>Additionally each handler has a method it is registered to handle
+(the default is “GET” andc can be changed with [<code>nng_http_handler_set_method</code>]), and
+optionally a “Host” header it can be matched against (see [<code>nng_http_handler_set_host</code>]).</p>
+<p>In some cases, a handler may reference a logical tree rather (directory)
+rather than just a single element.
+(See [<code>nng_http_handler_set_tree</code>]).</p>
+<h3 id="implementing-a-handler"><a class="header" href="#implementing-a-handler">Implementing a Handler</a></h3>
+<pre><code class="language-c">typedef void (*nng_http_hander_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+
+nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
+</code></pre>
+<p>The <a name="a040"></a><code>nng_http_handler_alloc</code> function allocates a generic handler
+which will be used to process requests coming into an HTTP server.
+On success, a pointer to the handler is stored at the located pointed to by <em>hp</em>.</p>
+<p>The handler function is specified by <em>cb</em>.
+This function uses the asynchronous I/O framework.</p>
+<p>The function receives the connection on <em>conn</em>, and an optional data pointer that was set
+previously with [<code>nng_http_handler_set_data</code>] as the second argument. The
+final argument is the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, which must be “finished” to complete the operation.</p>
+<p>The handler may call [<code>nng_http_write_response</code>] to send the response, or
+it may simply let the framework do so on its behalf. The server will perform
+this step if the callback has not already done so.</p>
+<p>Response headers may be set using <a href="api//api/http.html#modifying-headers"><code>nng_http_set_header</code></a>, and request headers
+may be accessed by using <a href="api//api/http.html#retrieving-headers"><code>nng_http_get_header</code></a>.</p>
+<p>Likewise the request body may be accessed, using <a href="api//api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a>, and
+the response body may be set using either <a href="api//api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="api//api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The request body is only collected for the handler if the
+[<code>nng_http_handler_collect_body</code>] function has been called for the handler.</p>
+</div>
+<p>The HTTP status should be set for the transaction using <a href="api//api/http.html#http-status"><code>nng_http_set_status</code></a>.</p>
+<p>Finally, the handler should finish the operation by calling the <a href="api//TODO.html"><code>nng_aio_finish</code></a> function
+after having set the status to [<code>NNG_OK</code>].
+If any other status is set on the <em>aio</em>, then a generic 500 response will be created and
+sent, if possible, and the connection will be closed.</p>
+<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="api//TODO.html"><code>nng_aio_start</code></a>.</p>
+<h3 id="serving-directories-and-files"><a class="header" href="#serving-directories-and-files">Serving Directories and Files</a></h3>
+<pre><code class="language-c">nng_err nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path, const char *dirname);
+nng_err nng_http_handler_alloc_file(nng_http_handler **hp, const char *path, const char *filename);
+</code></pre>
+<p>The <a name="a041"></a><code>nng_http_handler_alloc_directory</code> and <a name="a042"></a><code>nng_http_handler_alloc_file</code>
+create handlers pre-configured to act as static content servers for either a full
+directory at <em>dirname</em>, or the single file at <em>filename</em>. These support the “GET” and “HEAD”
+methods, and the directory variant will dynamically generate <code>index.html</code> content based on
+the directory contents. These will also set the “Content-Type” if the file extension
+matches one of the built-in values already known. If the no suitable MIME type can be
+determined, the content type is set to “application/octet-stream”.</p>
+<h3 id="static-handler"><a class="header" href="#static-handler">Static Handler</a></h3>
+<pre><code class="language-c">nng_err nng_http_handler_alloc_static(nng_http_handler **hp, const char *path,
+        const void *data, size_t size, const char *content_type);
+</code></pre>
+<p>The <a name="a043"></a><code>nng_http_handler_alloc_static</code> function creates a handler that
+serves the content located in <em>data</em> (consisting of <em>size</em> bytes) at the URI <em>path</em>.
+The <em>content_type</em> determines the “Content-Type” header. If <code>NULL</code> is specified
+then a value of <code>application/octet-stream</code> is assumed.</p>
+<h3 id="redirect-handler"><a class="header" href="#redirect-handler">Redirect Handler</a></h3>
+<pre><code class="language-c">nng_err nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *path,
+        nng_http_status status, const char *location);
+</code></pre>
+<p>The <a name="a044"></a><code>nng_http_handler_alloc_redirect</code> function creates a handler with
+a function that simply directions from the URI at <em>path</em> to the given <em>location</em>.</p>
+<p>The HTTP reply it creates will be with [status code][<code>nng_http_status</code>] <em>status</em>,
+which should be a 3XX code such as 301, and a <code>Location:</code> header will contain the URL
+referenced by <em>location</em>, with any residual suffix from the request
+URI appended.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Use [<code>nng_http_handler_set_tree</code>] to redirect an entire tree.
+For example, it is possible to redirect an entire HTTP site to another
+HTTPS site by specifying <code>/</code> as the path and then using the base
+of the new site, such as <code>https://newsite.example.com</code> as the new location.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Be sure to use the appropriate value for <em>status</em>.
+Permanent redirection should use [<code>NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY</code>] (301)
+and temporary redirections should use [<code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code>] (307).
+In REST APIs, using a redirection to supply the new location of an object
+created with <code>POST</code> should use [<code>NNG_HTTP_STATUS_SEE_OTHER</code>] (303).</p>
+</div>
+<h3 id="collecting-request-body"><a class="header" href="#collecting-request-body">Collecting Request Body</a></h3>
+<pre><code class="language-c">void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
+</code></pre>
+<p>The <a name="a045"></a><code>nng_http_handler_collect_body</code> function requests that HTTP server
+framework collect any reuqest body for the request and attach it to the
+connection before calling the callback for the <em>handler</em>.</p>
+<p>Subsequently the data can be retrieved by the handler from the request with the
+<a href="api//api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a> function.</p>
+<p>The collection is enabled if <em>want</em> is true.
+Furthermore, the data that the client may sent is limited by the
+value of <em>maxsz</em>.
+If the client attempts to send more data than <em>maxsz</em>, then the
+request will be terminated with [<code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code>] (413).</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Limiting the size of incoming request data can provide protection
+against denial of service attacks, as a buffer of the client-supplied
+size must be allocated to receive the data.</p>
+</div>
+<blockquote>
+<p>In order to provide an unlimited size, use <code>(size_t)-1</code> for <em>maxsz</em>.
+The value <code>0</code> for <em>maxsz</em> can be used to prevent any data from being passed
+by the client.</p>
+</blockquote>
+<blockquote>
+<p>The built-in handlers for files, directories, and static data limit the
+<em>maxsz</em> to zero by default.
+Otherwise the default setting is to enable this capability with a default
+value of <em>maxsz</em> of 1 megabyte.</p>
+</blockquote>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>NNG specifically does not support the <code>Chunked</code> transfer-encoding.
+This is considered a bug, and is a deficiency for full HTTP/1.1 compliance.
+However, few clients send data in this format, so in practice this should
+create few limitations.</p>
+</div>
+<h3 id="setting-callback-argument"><a class="header" href="#setting-callback-argument">Setting Callback Argument</a></h3>
+<pre><code class="language-c">void nng_http_handler_set_data(nng_http_handler *handler, void *data,
+    void (*dtor)(void *));
+</code></pre>
+<p>The <a name="a046"></a><code>nng_http_handler_set_data</code> function is used to set the
+<em>data</em> argument that will be passed to the callback.</p>
+<p>Additionally, when the handler is deallocated, if <em>dtor</em> is not <code>NULL</code>,
+then it will be called with <em>data</em> as its argument.
+The intended use of this function is deallocate any resources associated with <em>data</em>.</p>
+<h3 id="setting-the-method"><a class="header" href="#setting-the-method">Setting the Method</a></h3>
+<pre><code class="language-c">void nng_http_handler_set_method(nng_http_handler *handler, const char *method);
+</code></pre>
+<p>The <a name="a047"></a><code>nng_http_handler_set_method</code> function sets the <em>method</em> that the
+<em>handler</em> will be called for, such as “GET” or “POST”.
+(By default the “GET” method is handled.)</p>
+<p>If <em>method</em> is <code>NULL</code> the handler will be executed for all methods.
+The handler may determine the actual method used with the <a href="api//api/http.html#http-method"><code>nng_http_get_method</code></a> function.</p>
+<p>The server will automatically call “GET” handlers if the client
+sends a “HEAD” request, and will suppress HTTP body data in the responses
+sent for such requests.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>If <em>method</em> is longer than 32-bytes, it may be truncated silently.</p>
+</div>
+<h3 id="filtering-by-host"><a class="header" href="#filtering-by-host">Filtering by Host</a></h3>
+<pre><code class="language-c">void nng_http_handler_set_host(nng_http_handler *handler, const char *host);
+</code></pre>
+<p>The <a name="a048"></a><code>nng_http_handler_set_host</code> function is used to limit the scope of the
+<em>handler</em> so that it will only be called when the specified <em>host</em> matches
+the value of the <code>Host:</code> HTTP header.</p>
+<p>This can be used to create servers with different content for different virtual hosts.</p>
+<p>The value of the <em>host</em> can include a colon and port, and should match
+exactly the value of the <code>Host</code> header sent by the client.
+(Canonicalization of the host name is performed.)</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>The port number may be ignored; at present the HTTP server framework
+does not support a single server listening on different ports concurrently.</p>
+</div>
+<h3 id="handling-an-entire-tree"><a class="header" href="#handling-an-entire-tree">Handling an Entire Tree</a></h3>
+<pre><code class="language-c">void nng_http_handler_set_tree(nng_http_handler *handler);
+</code></pre>
+<p>The <a name="a049"></a><code>nng_http_handler_set_tree</code> function causes the <em>handler</em> to be matched if the request URI sent
+by the client is a logical child of the path for <em>handler</em>, and no more specific
+<em>handler</em> has been registered.</p>
+<p>This is useful in cases when the handler would like to examine the entire path
+and possibly behave differently; for example a REST API that uses the rest of
+the path to pass additional parameters.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>This function is useful when constructing API handlers where a single
+service address (path) supports dynamically generated children.
+It can also provide a logical fallback instead of relying on a 404 error code.</p>
+</div>
+<h3 id="sending-the-response-explicitly"><a class="header" href="#sending-the-response-explicitly">Sending the Response Explicitly</a></h3>
 <pre><code class="language-c">void nng_http_write_response(nng_http *conn, nng_aio *aio);
 </code></pre>
 <p>Normally the server will send any attached response, but there are circumstances where
 a response must be sent manually, such as when <a href="api//api/http.html#hijacking-connections">hijacking</a> a connection.</p>
-<p>In such a case, <a name="a039"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
+<p>In such a case, <a name="a050"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
 using the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
 <p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
 will be reused to receive new requests. For <code>HTTP/1.0</code>, or if the client has requested
@@ -8199,6 +8412,17 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_http_get_reason</code>, <a href="api/http.html#a011">1</a><br/>
 <code>nng_http_get_status</code>, <a href="api/http.html#a009">1</a><br/>
 <code>nng_http_get_version</code>, <a href="api/http.html#a008">1</a><br/>
+<code>nng_http_handler</code>, <a href="api/http.html#a039">1</a><br/>
+<code>nng_http_handler_alloc</code>, <a href="api/http.html#a040">1</a><br/>
+<code>nng_http_handler_alloc_directory</code>, <a href="api/http.html#a041">1</a><br/>
+<code>nng_http_handler_alloc_file</code>, <a href="api/http.html#a042">1</a><br/>
+<code>nng_http_handler_alloc_redirect</code>, <a href="api/http.html#a044">1</a><br/>
+<code>nng_http_handler_alloc_static</code>, <a href="api/http.html#a043">1</a><br/>
+<code>nng_http_handler_collect_body</code>, <a href="api/http.html#a045">1</a><br/>
+<code>nng_http_handler_set_data</code>, <a href="api/http.html#a046">1</a><br/>
+<code>nng_http_handler_set_host</code>, <a href="api/http.html#a048">1</a><br/>
+<code>nng_http_handler_set_method</code>, <a href="api/http.html#a047">1</a><br/>
+<code>nng_http_handler_set_tree</code>, <a href="api/http.html#a049">1</a><br/>
 <code>nng_http_hijack</code>, <a href="api/http.html#a027">1</a><br/>
 <code>nng_http_next_header</code>, <a href="api/http.html#a014">1</a><br/>
 <code>nng_http_read</code>, <a href="api/http.html#a023">1</a><br/>
@@ -8216,7 +8440,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_http_write</code>, <a href="api/http.html#a024">1</a><br/>
 <code>nng_http_write_all</code>, <a href="api/http.html#a026">1</a><br/>
 <code>nng_http_write_request</code>, <a href="api/http.html#a035">1</a><br/>
-<code>nng_http_write_response</code>, <a href="api/http.html#a039">1</a><br/>
+<code>nng_http_write_response</code>, <a href="api/http.html#a050">1</a><br/>
 <code>nng_id_alloc</code>, <a href="api/id_map.html#a006">1</a><br/>
 <code>nng_id_get</code>, <a href="api/id_map.html#a005">1</a><br/>
 <code>nng_id_map</code>, <a href="api/id_map.html#a001">1</a><br/>
