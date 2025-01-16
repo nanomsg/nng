@@ -431,7 +431,7 @@ nng_aio *aio;
 nng_url *url;
 nng_http_client *client;
 nng_http *conn;
-int rv;
+nng_err rv;
 
 // Error checks elided for clarity.
 nng_url_parse(&url, "http://www.google.com");
@@ -458,8 +458,6 @@ if ((rv = nng_aio_result(aio)) != 0) {
 
 ### Preparing a Transaction
 
-### Request Body
-
 ### Sending the Request
 
 ```c
@@ -481,7 +479,7 @@ may be obtained via [`nng_aio_result`].
 > Consider using the [`nng_http_transact`] function,
 > which provides a simpler interface for performing a complete HTTP client transaction.
 
-## Obtaining the Response
+### Obtaining the Response
 
 ```c
 void nng_http_read_response(nng_http *conn, nng_aio *aio);
@@ -545,7 +543,243 @@ may be obtained via [`nng_aio_result()`].
 
 ### Handlers
 
-### Sending the Response
+```c
+typedef struct nng_http_handler nng_http_handler;
+```
+
+An {{i:`nng_http_handler`}} encapsulates a function used used to handle
+incoming requests on an HTTP server, routed based on method and URI,
+and the parameters used with that function.
+
+Every handler has a Request-URI to which it refers, which is determined by the _path_ argument.
+Only the path component of the Request URI is considered when determining whether the handler should be called.
+
+This implementation limits the _path_ length to 1024 bytes, including the
+zero termination byte. This does not prevent requests with much longer
+URIs from being supported, but doing so will require setting the handler to match a parent path in the tree using
+[`nng_http_handler_set_tree`].
+
+> [!TIP]
+> The NNG HTTP framework is optimized for URLs shorter than 200 characters.
+
+Additionally each handler has a method it is registered to handle
+(the default is "GET" andc can be changed with [`nng_http_handler_set_method`]), and
+optionally a "Host" header it can be matched against (see [`nng_http_handler_set_host`]).
+
+In some cases, a handler may reference a logical tree rather (directory)
+rather than just a single element.
+(See [`nng_http_handler_set_tree`]).
+
+### Implementing a Handler
+
+```c
+typedef void (*nng_http_hander_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+
+nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
+```
+
+The {{i:`nng_http_handler_alloc`}} function allocates a generic handler
+which will be used to process requests coming into an HTTP server.
+On success, a pointer to the handler is stored at the located pointed to by _hp_.
+
+The handler function is specified by _cb_.
+This function uses the asynchronous I/O framework.
+
+The function receives the connection on _conn_, and an optional data pointer that was set
+previously with [`nng_http_handler_set_data`] as the second argument. The
+final argument is the [`nng_aio`] _aio_, which must be "finished" to complete the operation.
+
+The handler may call [`nng_http_write_response`] to send the response, or
+it may simply let the framework do so on its behalf. The server will perform
+this step if the callback has not already done so.
+
+Response headers may be set using [`nng_http_set_header`], and request headers
+may be accessed by using [`nng_http_get_header`].
+
+Likewise the request body may be accessed, using [`nng_http_get_body`], and
+the response body may be set using either [`nng_http_set_body`] or [`nng_http_copy_body`].
+
+> [!NOTE]
+> The request body is only collected for the handler if the
+> [`nng_http_handler_collect_body`] function has been called for the handler.
+
+The HTTP status should be set for the transaction using [`nng_http_set_status`].
+
+Finally, the handler should finish the operation by calling the [`nng_aio_finish`] function
+after having set the status to [`NNG_OK`].
+If any other status is set on the _aio_, then a generic 500 response will be created and
+sent, if possible, and the connection will be closed.
+
+The _aio_ may be scheduled for deferred completion using the [`nng_aio_start`].
+
+### Serving Directories and Files
+
+```c
+nng_err nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path, const char *dirname);
+nng_err nng_http_handler_alloc_file(nng_http_handler **hp, const char *path, const char *filename);
+```
+
+The {{i:`nng_http_handler_alloc_directory`}} and {{i:`nng_http_handler_alloc_file`}}
+create handlers pre-configured to act as static content servers for either a full
+directory at _dirname_, or the single file at _filename_. These support the "GET" and "HEAD"
+methods, and the directory variant will dynamically generate `index.html` content based on
+the directory contents. These will also set the "Content-Type" if the file extension
+matches one of the built-in values already known. If the no suitable MIME type can be
+determined, the content type is set to "application/octet-stream".
+
+### Static Handler
+
+```c
+nng_err nng_http_handler_alloc_static(nng_http_handler **hp, const char *path,
+        const void *data, size_t size, const char *content_type);
+```
+
+The {{i:`nng_http_handler_alloc_static`}} function creates a handler that
+serves the content located in _data_ (consisting of _size_ bytes) at the URI _path_.
+The _content_type_ determines the "Content-Type" header. If `NULL` is specified
+then a value of `application/octet-stream` is assumed.
+
+### Redirect Handler
+
+```c
+nng_err nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *path,
+        nng_http_status status, const char *location);
+```
+
+The {{i:`nng_http_handler_alloc_redirect`}} function creates a handler with
+a function that simply directions from the URI at _path_ to the given _location_.
+
+The HTTP reply it creates will be with [status code][`nng_http_status`] _status_,
+which should be a 3XX code such as 301, and a `Location:` header will contain the URL
+referenced by _location_, with any residual suffix from the request
+URI appended.
+
+> [!TIP]
+> Use [`nng_http_handler_set_tree`] to redirect an entire tree.
+> For example, it is possible to redirect an entire HTTP site to another
+> HTTPS site by specifying `/` as the path and then using the base
+> of the new site, such as `https://newsite.example.com` as the new location.
+
+> [!TIP]
+> Be sure to use the appropriate value for _status_.
+> Permanent redirection should use [`NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY`] (301)
+> and temporary redirections should use [`NNG_HTTP_STATUS_TEMPORARY_REDIRECT`] (307).
+> In REST APIs, using a redirection to supply the new location of an object
+> created with `POST` should use [`NNG_HTTP_STATUS_SEE_OTHER`] (303).
+
+### Collecting Request Body
+
+```c
+void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
+```
+
+The {{i:`nng_http_handler_collect_body`}} function requests that HTTP server
+framework collect any reuqest body for the request and attach it to the
+connection before calling the callback for the _handler_.
+
+Subsequently the data can be retrieved by the handler from the request with the
+[`nng_http_get_body`] function.
+
+The collection is enabled if _want_ is true.
+Furthermore, the data that the client may sent is limited by the
+value of _maxsz_.
+If the client attempts to send more data than _maxsz_, then the
+request will be terminated with [`NNG_HTTP_STATUS_CONTENT_TOO_LARGE`] (413).
+
+> [!TIP]
+> Limiting the size of incoming request data can provide protection
+> against denial of service attacks, as a buffer of the client-supplied
+> size must be allocated to receive the data.
+
+> In order to provide an unlimited size, use `(size_t)-1` for _maxsz_.
+> The value `0` for _maxsz_ can be used to prevent any data from being passed
+> by the client.
+
+> The built-in handlers for files, directories, and static data limit the
+> _maxsz_ to zero by default.
+> Otherwise the default setting is to enable this capability with a default
+> value of _maxsz_ of 1 megabyte.
+
+> [!NOTE]
+> NNG specifically does not support the `Chunked` transfer-encoding.
+> This is considered a bug, and is a deficiency for full HTTP/1.1 compliance.
+> However, few clients send data in this format, so in practice this should
+> create few limitations.
+
+### Setting Callback Argument
+
+```c
+void nng_http_handler_set_data(nng_http_handler *handler, void *data,
+    void (*dtor)(void *));
+```
+
+The {{i:`nng_http_handler_set_data`}} function is used to set the
+_data_ argument that will be passed to the callback.
+
+Additionally, when the handler is deallocated, if _dtor_ is not `NULL`,
+then it will be called with _data_ as its argument.
+The intended use of this function is deallocate any resources associated with _data_.
+
+### Setting the Method
+
+```c
+void nng_http_handler_set_method(nng_http_handler *handler, const char *method);
+```
+
+The {{i:`nng_http_handler_set_method`}} function sets the _method_ that the
+_handler_ will be called for, such as "GET" or "POST".
+(By default the "GET" method is handled.)
+
+If _method_ is `NULL` the handler will be executed for all methods.
+The handler may determine the actual method used with the [`nng_http_get_method`] function.
+
+The server will automatically call "GET" handlers if the client
+sends a "HEAD" request, and will suppress HTTP body data in the responses
+sent for such requests.
+
+> [!NOTE]
+> If _method_ is longer than 32-bytes, it may be truncated silently.
+
+### Filtering by Host
+
+```c
+void nng_http_handler_set_host(nng_http_handler *handler, const char *host);
+```
+
+The {{i:`nng_http_handler_set_host`}} function is used to limit the scope of the
+_handler_ so that it will only be called when the specified _host_ matches
+the value of the `Host:` HTTP header.
+
+This can be used to create servers with different content for different virtual hosts.
+
+The value of the _host_ can include a colon and port, and should match
+exactly the value of the `Host` header sent by the client.
+(Canonicalization of the host name is performed.)
+
+> [!NOTE]
+> The port number may be ignored; at present the HTTP server framework
+> does not support a single server listening on different ports concurrently.
+
+### Handling an Entire Tree
+
+```c
+void nng_http_handler_set_tree(nng_http_handler *handler);
+```
+
+The {{i:`nng_http_handler_set_tree`}} function causes the _handler_ to be matched if the request URI sent
+by the client is a logical child of the path for _handler_, and no more specific
+_handler_ has been registered.
+
+This is useful in cases when the handler would like to examine the entire path
+and possibly behave differently; for example a REST API that uses the rest of
+the path to pass additional parameters.
+
+> [!TIP]
+> This function is useful when constructing API handlers where a single
+> service address (path) supports dynamically generated children.
+> It can also provide a logical fallback instead of relying on a 404 error code.
+
+### Sending the Response Explicitly
 
 ```c
 void nng_http_write_response(nng_http *conn, nng_aio *aio);

@@ -236,6 +236,8 @@ NNG_DECL nng_err nng_http_handler_alloc(
 // nng_http_handler_free frees the handler. This actually just drops a
 // reference count on the handler, as it may be in use by an existing
 // server.  The server will also call this when it is destroyed.
+// This is not formally documented as there is no practical reason that
+// user code should need to free a handler explicitly.
 NNG_DECL void nng_http_handler_free(nng_http_handler *);
 
 // nng_http_handler_alloc_file creates a "file" based handler, that
