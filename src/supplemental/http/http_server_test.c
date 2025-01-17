@@ -203,7 +203,7 @@ test_server_basic(void)
 	nng_iov            iov;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -245,7 +245,7 @@ test_server_canonify(void)
 	nng_iov            iov;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home/index.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -287,7 +287,7 @@ test_server_head(void)
 	size_t             size;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -354,7 +354,7 @@ test_server_no_authoritive_form(void)
 	struct server_test st;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -381,7 +381,7 @@ test_server_bad_canonify(void)
 	struct server_test st;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -451,7 +451,7 @@ test_server_method_too_long(void)
 {
 	nng_http_handler *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	nng_http_handler_set_method(h,
@@ -467,7 +467,7 @@ test_server_wrong_method(void)
 	struct server_test st;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -495,7 +495,7 @@ test_server_uri_too_long(void)
 	nng_http_handler  *h;
 	char               buf[32768];
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -526,7 +526,7 @@ test_server_header_too_long(void)
 	nng_http_handler  *h;
 	char               buf[32768];
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -557,7 +557,7 @@ test_server_invalid_utf8(void)
 	struct server_test st;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_static(
+	NUTS_PASS(nng_http_handler_static(
 	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
 
 	server_setup(&st, h);
@@ -625,7 +625,7 @@ test_server_get_redirect(void)
 	struct server_test st;
 
 	// We'll use a 303 (SEE OTHER) to ensure codes carry thru
-	NUTS_PASS(nng_http_handler_alloc_redirect(
+	NUTS_PASS(nng_http_handler_redirect(
 	    &h, "/here", NNG_HTTP_STATUS_SEE_OTHER, "http://127.0.0.1/there"));
 	server_setup(&st, h);
 
@@ -651,7 +651,7 @@ test_server_tree_redirect(void)
 	struct server_test st;
 
 	// We'll use a permanent redirect to ensure codes carry thru
-	NUTS_PASS(nng_http_handler_alloc_redirect(&h, "/here",
+	NUTS_PASS(nng_http_handler_redirect(&h, "/here",
 	    NNG_HTTP_STATUS_PERMANENT_REDIRECT, "http://127.0.0.1/there"));
 	nng_http_handler_set_tree(h);
 	server_setup(&st, h);
@@ -679,7 +679,7 @@ test_server_post_redirect(void)
 	struct server_test st;
 	nng_http_handler  *h;
 
-	NUTS_PASS(nng_http_handler_alloc_redirect(
+	NUTS_PASS(nng_http_handler_redirect(
 	    &h, "/here", 301, "http://127.0.0.1/there"));
 	server_setup(&st, h);
 
@@ -772,20 +772,20 @@ test_server_multiple_trees(void)
 	NUTS_PASS(nni_file_put(file1, doc1, strlen(doc1)));
 	NUTS_PASS(nni_file_put(file2, doc2, strlen(doc2)));
 
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", workdir));
 	nng_http_handler_set_tree(h);
 	server_setup(&st, h);
 
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", workdir));
 	nng_http_handler_set_tree(h);
 	NUTS_FAIL(nng_http_server_add_handler(st.s, h), NNG_EADDRINUSE);
 	nng_http_handler_free(h);
 
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/subdir", workdir2));
+	NUTS_PASS(nng_http_handler_directory(&h, "/subdir", workdir2));
 	nng_http_handler_set_tree(h);
 	NUTS_PASS(nng_http_server_add_handler(st.s, h));
 
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/subdir", workdir2));
+	NUTS_PASS(nng_http_handler_directory(&h, "/subdir", workdir2));
 	nng_http_handler_set_tree(h);
 	NUTS_FAIL(nng_http_server_add_handler(st.s, h), NNG_EADDRINUSE);
 	nng_http_handler_free(h);
@@ -892,7 +892,7 @@ test_serve_directory(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_set_uri(st.conn, "/subdir1/index.html", NULL));
@@ -921,7 +921,7 @@ test_serve_directory_index(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_CASE("Directory 1: index.html");
@@ -963,7 +963,7 @@ test_serve_plain_text(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_set_uri(st.conn, "/file.txt", NULL));
@@ -992,7 +992,7 @@ test_serve_file_parameters(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_set_uri(st.conn, "/file.txt?param=1234", NULL));
@@ -1033,7 +1033,7 @@ test_serve_missing_index(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_set_uri(st.conn, "/index.html", NULL));
@@ -1059,7 +1059,7 @@ test_serve_index_not_post(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_set_uri(st.conn, "/subdir2/index.html", NULL));
@@ -1086,7 +1086,7 @@ test_serve_subdir_index(void)
 	struct serve_directory sd;
 
 	setup_directory(&sd);
-	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/docs", sd.workdir));
+	NUTS_PASS(nng_http_handler_directory(&h, "/docs", sd.workdir));
 	server_setup(&st, h);
 
 	NUTS_PASS(nng_http_set_uri(st.conn, "/docs/subdir1/", NULL));

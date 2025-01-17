@@ -102,7 +102,7 @@ struct nni_ws_listener {
 	bool                isstream;
 	bool                send_text;
 	bool                recv_text;
-	nni_http_handler   *handler;
+	nng_http_handler   *handler;
 	nni_ws_listen_hook  hookfn;
 	void               *hookarg;
 	nni_list            headers; // response headers
@@ -1403,9 +1403,8 @@ ws_init(nni_ws **wsp)
 static void
 ws_listener_stop(void *arg)
 {
-	nni_ws_listener  *l = arg;
-	nni_http_handler *h;
-	nni_http_server  *s;
+	nni_ws_listener *l = arg;
+	nni_http_server *s;
 
 	ws_listener_close(l);
 
@@ -1413,15 +1412,10 @@ ws_listener_stop(void *arg)
 	while (!nni_list_empty(&l->reply)) {
 		nni_cv_wait(&l->cv);
 	}
-	h          = l->handler;
-	s          = l->server;
-	l->handler = NULL;
-	l->server  = NULL;
+	s         = l->server;
+	l->server = NULL;
 	nni_mtx_unlock(&l->mtx);
 
-	if (h != NULL) {
-		nni_http_handler_fini(h);
-	}
 	if (s != NULL) {
 		nni_http_server_fini(s);
 	}
@@ -2026,7 +2020,7 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 	if (strlen(host) == 0) {
 		host = NULL;
 	}
-	rv = nni_http_handler_init(&l->handler, url->u_path, ws_handler);
+	rv = nng_http_handler_alloc(&l->handler, url->u_path, ws_handler);
 	if (rv != 0) {
 		ws_listener_free(l);
 		return (rv);

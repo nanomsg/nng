@@ -299,7 +299,7 @@ nng_http_handler_alloc(
     nng_http_handler **hp, const char *uri, nng_http_handler_func cb)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_init(hp, uri, cb));
+	return (nni_http_handler_alloc(hp, uri, cb));
 #else
 	NNI_ARG_UNUSED(hp);
 	NNI_ARG_UNUSED(uri);
@@ -312,18 +312,18 @@ void
 nng_http_handler_free(nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
-	nni_http_handler_fini(h);
+	nni_http_handler_free(h);
 #else
 	NNI_ARG_UNUSED(h);
 #endif
 }
 
 nng_err
-nng_http_handler_alloc_file(
-    nng_http_handler **hp, const char *uri, const char *path)
+nng_http_handler_file(nng_http_handler **hp, const char *uri, const char *path,
+    const char *ctype)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_init_file(hp, uri, path));
+	return (nni_http_handler_file(hp, uri, path, ctype));
 #else
 	NNI_ARG_UNUSED(hp);
 	NNI_ARG_UNUSED(uri);
@@ -333,11 +333,11 @@ nng_http_handler_alloc_file(
 }
 
 nng_err
-nng_http_handler_alloc_directory(
+nng_http_handler_directory(
     nng_http_handler **hp, const char *uri, const char *path)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_init_directory(hp, uri, path));
+	return (nni_http_handler_directory(hp, uri, path));
 #else
 	NNI_ARG_UNUSED(hp);
 	NNI_ARG_UNUSED(uri);
@@ -347,11 +347,11 @@ nng_http_handler_alloc_directory(
 }
 
 nng_err
-nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *uri,
+nng_http_handler_redirect(nng_http_handler **hp, const char *uri,
     nng_http_status status, const char *where)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_init_redirect(hp, uri, status, where));
+	return (nni_http_handler_redirect(hp, uri, status, where));
 #else
 	NNI_ARG_UNUSED(hp);
 	NNI_ARG_UNUSED(uri);
@@ -362,11 +362,11 @@ nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *uri,
 }
 
 nng_err
-nng_http_handler_alloc_static(nng_http_handler **hp, const char *uri,
+nng_http_handler_static(nng_http_handler **hp, const char *uri,
     const void *data, size_t size, const char *ctype)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_handler_init_static(hp, uri, data, size, ctype));
+	return (nni_http_handler_static(hp, uri, data, size, ctype));
 #else
 	NNI_ARG_UNUSED(hp);
 	NNI_ARG_UNUSED(uri);
