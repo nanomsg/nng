@@ -121,7 +121,7 @@ struct nni_ws_dialer {
 	nng_stream_dialer ops;
 	nni_http_req     *req;
 	nni_http_res     *res;
-	nni_http_client  *client;
+	nng_http_client  *client;
 	nni_mtx           mtx;
 	nni_cv            cv;
 	char             *proto;
@@ -1279,7 +1279,7 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 		return;
 	}
 
-	status = nni_http_get_status(ws->http);
+	status = nng_http_get_status(ws->http);
 	switch (status) {
 	case NNG_HTTP_STATUS_SWITCHING:
 		break;
@@ -1585,7 +1585,7 @@ ws_handler(nng_http *conn, void *arg, nng_aio *aio)
 
 	nni_list_append(&l->reply, ws);
 	nng_http_write_response(conn, &ws->httpaio);
-	(void) nni_http_hijack(conn);
+	(void) nng_http_hijack(conn);
 	nni_aio_set_output(aio, 0, NULL);
 	nni_aio_finish(aio, 0, 0);
 	nni_mtx_unlock(&l->mtx);
@@ -2026,8 +2026,8 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 		return (rv);
 	}
 
-	nni_http_handler_set_host(l->handler, host);
-	nni_http_handler_set_data(l->handler, l, 0);
+	nng_http_handler_set_host(l->handler, host);
+	nng_http_handler_set_data(l->handler, l, 0);
 
 	if ((rv = nni_http_server_init(&l->server, url)) != 0) {
 		ws_listener_free(l);
@@ -2103,7 +2103,7 @@ ws_conn_cb(void *arg)
 	nni_base64_encode(raw, 16, ws->keybuf, 24);
 	ws->keybuf[24] = '\0';
 
-	if ((rv = nni_http_set_uri(
+	if ((rv = nng_http_set_uri(
 	         ws->http, d->url->u_path, d->url->u_query)) != 0) {
 		goto err;
 	}
@@ -2123,7 +2123,7 @@ ws_conn_cb(void *arg)
 	}
 
 	NNI_LIST_FOREACH (&d->headers, hdr) {
-		if ((rv = nni_http_set_header(
+		if ((rv = nng_http_set_header(
 		         ws->http, hdr->name, hdr->value)) != 0) {
 			goto err;
 		}
@@ -2186,7 +2186,7 @@ ws_dialer_free(void *arg)
 		NNI_FREE_STRUCT(hdr);
 	}
 	if (d->client) {
-		nni_http_client_fini(d->client);
+		nng_http_client_free(d->client);
 	}
 	if (d->url) {
 		nng_url_free(d->url);
@@ -2243,7 +2243,7 @@ ws_dialer_dial(void *arg, nni_aio *aio)
 	ws->recv_text = d->recv_text;
 	ws->send_text = d->send_text;
 	nni_list_append(&d->wspend, ws);
-	nni_http_client_connect(d->client, &ws->connaio);
+	nng_http_client_connect(d->client, &ws->connaio);
 	nni_mtx_unlock(&d->mtx);
 }
 
@@ -2510,14 +2510,14 @@ static int
 ws_dialer_get_tls(void *arg, nng_tls_config **cfgp)
 {
 	nni_ws_dialer *d = arg;
-	return (nni_http_client_get_tls(d->client, cfgp));
+	return (nng_http_client_get_tls(d->client, cfgp));
 }
 
 static int
 ws_dialer_set_tls(void *arg, nng_tls_config *cfg)
 {
 	nni_ws_dialer *d = arg;
-	return (nni_http_client_set_tls(d->client, cfg));
+	return (nng_http_client_set_tls(d->client, cfg));
 }
 
 int
@@ -2540,7 +2540,7 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 		return (rv);
 	}
 
-	if ((rv = nni_http_client_init(&d->client, url)) != 0) {
+	if ((rv = nng_http_client_alloc(&d->client, url)) != 0) {
 		ws_dialer_free(d);
 		return (rv);
 	}
@@ -2666,7 +2666,7 @@ static int
 ws_get_request_uri(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_ws *ws = arg;
-	return (nni_copyout_str(nni_http_get_uri(ws->http), buf, szp, t));
+	return (nni_copyout_str(nng_http_get_uri(ws->http), buf, szp, t));
 }
 
 static int
@@ -2716,7 +2716,7 @@ ws_get_header(nni_ws *ws, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	const char *s;
 	nm += strlen(NNG_OPT_WS_HEADER);
-	s = nni_http_get_header(ws->http, nm);
+	s = nng_http_get_header(ws->http, nm);
 	if (s == NULL) {
 		return (NNG_ENOENT);
 	}

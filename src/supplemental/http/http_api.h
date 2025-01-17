@@ -24,9 +24,7 @@
 
 typedef struct nng_http_req    nni_http_req;
 typedef struct nng_http_res    nni_http_res;
-typedef struct nng_http_conn   nni_http_conn;
 typedef struct nng_http_server nni_http_server;
-typedef struct nng_http_client nni_http_client;
 typedef struct nng_http_chunk  nni_http_chunk;
 typedef struct nng_http_chunks nni_http_chunks;
 
@@ -66,15 +64,14 @@ extern void *nni_http_chunk_data(nni_http_chunk *);
 extern nng_err nni_http_chunks_parse(
     nni_http_chunks *, void *, size_t, size_t *);
 
-extern void nni_http_read_chunks(
-    nni_http_conn *, nni_http_chunks *, nni_aio *);
+extern void nni_http_read_chunks(nng_http *, nni_http_chunks *, nni_aio *);
 
-extern nni_http_req *nni_http_conn_req(nni_http_conn *);
-extern nni_http_res *nni_http_conn_res(nni_http_conn *);
+extern nni_http_req *nni_http_conn_req(nng_http *);
+extern nni_http_res *nni_http_conn_res(nng_http *);
 
 // Private to the server. (Used to support session hijacking.)
-extern void  nni_http_conn_set_ctx(nni_http_conn *, void *);
-extern void *nni_http_conn_get_ctx(nni_http_conn *);
+extern void  nni_http_conn_set_ctx(nng_http *, void *);
+extern void *nni_http_conn_get_ctx(nng_http *);
 
 // An HTTP connection is a connection over which messages are exchanged.
 // Generally, clients send request messages, and then read responses.
@@ -82,8 +79,8 @@ extern void *nni_http_conn_get_ctx(nni_http_conn *);
 // require a 1:1 mapping between request and response here -- the application
 // is responsible for dealing with that.
 //
-// We only support HTTP/1.1, though using the nni_http_conn_read and
-// nni_http_conn_write low level methods, it is possible to write an upgrader
+// We only support HTTP/1.1, though using the nni_http_read and
+// nni_http_write low level methods, it is possible to write an upgrader
 // (such as websocket!) that might support e.g. HTTP/2 or reading data that
 // follows a legacy HTTP/1.0 message.
 //
@@ -96,7 +93,7 @@ extern void *nni_http_conn_get_ctx(nni_http_conn *);
 extern nng_err nni_http_init(nng_http **, nng_stream *, bool);
 
 extern void nni_http_conn_close(nng_http *);
-extern void nni_http_conn_fini(nni_http_conn *);
+extern void nni_http_conn_fini(nng_http *);
 extern int  nni_http_conn_getopt(
      nng_http *, const char *, void *, size_t *, nni_type);
 
@@ -105,30 +102,21 @@ extern int  nni_http_conn_getopt(
 // Note that the iovs of the aio's are clobbered by these methods -- callers
 // must not use them for any other purpose.
 
-extern void nni_http_write_req(nni_http_conn *, nni_aio *);
-extern void nni_http_read_res(nni_http_conn *, nni_aio *);
-extern void nni_http_read_req(nni_http_conn *, nni_aio *);
-extern void nni_http_write_res(nni_http_conn *, nni_aio *);
-extern void nni_http_read_discard(nni_http_conn *, size_t, nni_aio *);
+extern void nni_http_write_req(nng_http *, nni_aio *);
+extern void nni_http_read_res(nng_http *, nni_aio *);
+extern void nni_http_read_req(nng_http *, nni_aio *);
+extern void nni_http_write_res(nng_http *, nni_aio *);
+extern void nni_http_read_discard(nng_http *, size_t, nni_aio *);
 
 extern nng_err nni_http_req_alloc_data(nni_http_req *, size_t);
 extern nng_err nni_http_res_alloc_data(nni_http_res *, size_t);
 
 extern bool nni_http_is_error(nng_http *);
 
-extern void nni_http_read(nni_http_conn *, nni_aio *);
-extern void nni_http_read_full(nni_http_conn *, nni_aio *);
-extern void nni_http_write(nni_http_conn *, nni_aio *);
-extern void nni_http_write_full(nni_http_conn *, nni_aio *);
-
-extern nng_err     nni_http_add_header(nng_http *, const char *, const char *);
-extern nng_err     nni_http_set_header(nng_http *, const char *, const char *);
-extern void        nni_http_del_header(nng_http *, const char *);
-extern const char *nni_http_get_header(nng_http *, const char *);
-
-extern void    nni_http_get_body(nng_http *, void **, size_t *);
-extern void    nni_http_set_body(nng_http *, void *, size_t);
-extern nng_err nni_http_copy_body(nng_http *, const void *, size_t);
+extern void nni_http_read(nng_http *, nni_aio *);
+extern void nni_http_read_full(nng_http *, nni_aio *);
+extern void nni_http_write(nng_http *, nni_aio *);
+extern void nni_http_write_full(nng_http *, nni_aio *);
 
 // prune body clears the outgoing body (0 bytes), but leaves content-length
 // intact if present for the benefit of HEAD.
@@ -207,153 +195,32 @@ extern nng_err nni_http_server_set_error_page(
 // of the res.  The res must have the status set first.
 extern nng_err nni_http_server_error(nni_http_server *, nng_http *);
 
-// nni_http_hijack is intended to be called by a handler that wishes to
-// take over the processing of the HTTP session -- usually to change protocols
-// (such as in the case of websocket).  The caller is responsible for obtaining
-// and disposal of the associated nni_http session.  Also, this completely
-// disassociates the http session from the server, so the server may be
-// stopped or destroyed without affecting the hijacked session.  Note also
-// that the hijacker will need to issue any HTTP reply itself.  Finally,
-// when a session is hijacked, the caller is also responsible for disposing
-// of the request structure.  (Some hijackers may keep the request for
-// further processing.)
-extern nng_err nni_http_hijack(nni_http_conn *);
-
-// nni_http_handler_alloc creates a server handler object, for the supplied
-// URI (path only) with the callback.
-//
-// Note that methods which modify a handler cannot be called while the handler
-// is registered with the server, and that a handler can only be registered
-// once per server.
-extern nng_err nni_http_handler_alloc(
-    nng_http_handler **, const char *, nng_http_handler_func);
-
-// nni_http_handler_creates a handler with a function to serve
-// up a file named in the last argument.
-extern nng_err nni_http_handler_file(
-    nng_http_handler **, const char *, const char *, const char *);
-
-// nni_http_handler_directory serves up an entire
-// directory tree.  The content types are determined from the built-in
-// content type list.  Actual directories are required to contain a
-// file called index.html or index.htm.  We do not generate directory
-// listings for security reasons.
-extern nng_err nni_http_handler_directory(
-    nng_http_handler **, const char *, const char *);
-
-// nni_http_handler_static creates a handler that serves up static
-// content supplied, with the Content-Type supplied in the final argument.
-extern nng_err nni_http_handler_static(
-    nng_http_handler **, const char *, const void *, size_t, const char *);
-
-// nni_http_handler_redirect creates a handler that redirects the request.
-extern nng_err nni_http_handler_redirect(
-    nng_http_handler **, const char *, nng_http_status, const char *);
-
-// nni_http_handler_free destroys a handler.  This should only be done before
-// the handler is added, or after it is deleted.  The server automatically
-// calls this for any handlers still registered with it if it is destroyed.
-extern void nni_http_handler_free(nng_http_handler *);
-
-// nni_http_handler_collect_body informs the server that it should collect
-// the entitty data associated with the client request, and sets the maximum
-// size to accept.
-extern void nni_http_handler_collect_body(nng_http_handler *, bool, size_t);
-
-// nni_http_handler_set_tree marks the handler as servicing the entire
-// tree (e.g. a directory), rather than just a leaf node.  The handler
-// will probably need to inspect the URL of the request.
-extern void nni_http_handler_set_tree(nng_http_handler *);
-
-// nni_http_handler_set_host limits the handler to only being called for
-// the given Host: field.  This can be used to set up multiple virtual
-// hosts.  Note that host names must match exactly.  If NULL or an empty
-// string is specified, then the client's Host: field is ignored.  (The
-// supplied value for the Host is copied by this function.)  When supplying
-// a hostname, do not include a value for the port number; we do not match
-// on port number as we assume that clients MUST have gotten that part right
-// as we do not support virtual hosting on multiple separate ports; the
-// server only listens on a single port.
-extern void nni_http_handler_set_host(nng_http_handler *, const char *);
-
-// nni_http_handler_set_method limits the handler to only being called
-// for the given HTTP method.  By default a handler is called for GET
-// methods only (and HEAD, which is handled internally.)  Handlers can
-// be specified for any valid HTTP method.  A handler may set the value
-// NULL here, to be called for any HTTP method.  In such a case, the handler
-// is obligated to inspect the method.  (Note: the passed method must be
-// in upper case and should come from a statically allocated string; the
-// server does not make its own copy.)
-extern void nni_http_handler_set_method(nng_http_handler *, const char *);
-
-// nni_http_handler_set_data sets an opaque data element on the handler,
-// which will be available to the handler function as argument.
-// The callback is an optional destructor, and will be called with the
-// data as its argument, when the handler is being destroyed.
-extern void nni_http_handler_set_data(nng_http_handler *, void *, nni_cb);
-
-// nni_http_handler_get_uri returns the URI set on the handler.
-extern const char *nni_http_handler_get_uri(nng_http_handler *);
-
 // Client stuff.
-
-extern nng_err nni_http_client_init(nni_http_client **, const nng_url *);
-extern void    nni_http_client_fini(nni_http_client *);
 
 // nni_http_client_set_tls sets the TLS configuration.  This wipes out
 // the entire TLS configuration on the client, so the caller must have
 // configured it reasonably.  This API is not recommended unless the
 // caller needs complete control over the TLS configuration.
 extern nng_err nni_http_client_set_tls(
-    nni_http_client *, struct nng_tls_config *);
+    nng_http_client *, struct nng_tls_config *);
 
 // nni_http_client_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The supplied TLS configuration object may
 // be invalidated by any future calls to nni_http_client_set_tls.
 extern nng_err nni_http_client_get_tls(
-    nni_http_client *, struct nng_tls_config **);
+    nng_http_client *, struct nng_tls_config **);
 
 extern int nni_http_client_set(
-    nni_http_client *, const char *, const void *buf, size_t, nni_type);
+    nng_http_client *, const char *, const void *buf, size_t, nni_type);
 extern int nni_http_client_get(
-    nni_http_client *, const char *, void *, size_t *, nni_type);
-
-extern void nni_http_client_connect(nni_http_client *, nni_aio *);
-
-// nni_http_transact_conn is used to perform a round-trip exchange (i.e. a
-// single HTTP transaction).  It will not automatically close the connection,
-// unless some kind of significant error occurs.  The caller should dispose
-// of the connection if the aio does not complete successfully.
-// Note that this will fail with NNG_ENOTSUP if the server attempts to reply
-// with a chunked transfer encoding.  The request and response used are the
-// ones associated with the connection.
-extern void nni_http_transact_conn(nni_http_conn *, nni_aio *);
-
-// nni_http_transact is used to execute a single transaction to a server.
-// The connection is opened, and will be closed when the transaction is
-// complete.  Note that this will fail with NNG_ENOTSUP if the server attempts
-// to reply with a chunked transfer encoding.
-extern void nni_http_transact(
-    nni_http_client *, nni_http_req *, nni_http_res *, nni_aio *);
+    nng_http_client *, const char *, void *, size_t *, nni_type);
 
 // nni_http_stream_scheme returns the underlying stream scheme for a given
 // upper layer scheme.
 extern const char *nni_http_stream_scheme(const char *);
 
 // Private method used for the server.
-extern bool nni_http_res_sent(nni_http_conn *conn);
-
-extern const char *nni_http_get_version(nng_http *conn);
-extern int         nni_http_set_version(nng_http *conn, const char *vers);
-
-extern void        nni_http_set_method(nng_http *conn, const char *method);
-extern const char *nni_http_get_method(nng_http *conn);
-
-extern void nni_http_set_status(
-    nng_http *conn, nng_http_status status, const char *reason);
-
-extern nng_http_status nni_http_get_status(nng_http *);
-extern const char     *nni_http_get_reason(nng_http *);
+extern bool nni_http_res_sent(nng_http *conn);
 
 // nni_http_set_error flags an error using the built in HTML page.
 // unless body is not NULL.  To pass no content, pass an empty string for body.
@@ -365,10 +232,6 @@ extern nng_err nni_http_set_error(nng_http *conn, nng_http_status status,
 // sets the response Location: header accordingly.
 extern nng_err nni_http_set_redirect(nng_http *conn, nng_http_status status,
     const char *reason, const char *dest);
-
-extern nng_err nni_http_set_uri(
-    nng_http *conn, const char *uri, const char *query);
-extern const char *nni_http_get_uri(nng_http *conn);
 
 extern void nni_http_set_host(nng_http *conn, const char *);
 extern void nni_http_set_content_type(nng_http *conn, const char *);

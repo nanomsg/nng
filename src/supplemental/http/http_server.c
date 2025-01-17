@@ -48,8 +48,8 @@ struct nng_http_handler {
 
 typedef struct http_sconn {
 	nni_list_node     node;
-	nni_http_conn    *conn;
-	nni_http_server  *server;
+	nng_http         *conn;
+	nng_http_server  *server;
 	nng_http_handler *handler; // set if we deferred to read body
 	nng_http_handler *release; // set if we dispatched handler
 	bool              close;
@@ -115,7 +115,7 @@ http_handler_fini(void *arg)
 }
 
 void
-nni_http_handler_free(nng_http_handler *h)
+nng_http_handler_free(nng_http_handler *h)
 {
 	if (h) {
 		nni_refcnt_rele(&h->ref);
@@ -123,7 +123,7 @@ nni_http_handler_free(nng_http_handler *h)
 }
 
 nng_err
-nni_http_handler_alloc(
+nng_http_handler_alloc(
     nng_http_handler **hp, const char *uri, nng_http_handler_func cb)
 {
 	nng_http_handler *h;
@@ -152,14 +152,14 @@ nni_http_handler_alloc(
 }
 
 void
-nni_http_handler_collect_body(nng_http_handler *h, bool want, size_t maxbody)
+nng_http_handler_collect_body(nng_http_handler *h, bool want, size_t maxbody)
 {
 	h->getbody = want;
 	h->maxbody = maxbody;
 }
 
 void
-nni_http_handler_set_data(nng_http_handler *h, void *data, nni_cb dtor)
+nng_http_handler_set_data(nng_http_handler *h, void *data, nni_cb dtor)
 {
 	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	h->data = data;
@@ -167,7 +167,7 @@ nni_http_handler_set_data(nng_http_handler *h, void *data, nni_cb dtor)
 }
 
 const char *
-nni_http_handler_get_uri(nng_http_handler *h)
+nng_http_handler_get_uri(nng_http_handler *h)
 {
 	if (strlen(h->uri) == 0) {
 		return ("/");
@@ -176,14 +176,14 @@ nni_http_handler_get_uri(nng_http_handler *h)
 }
 
 void
-nni_http_handler_set_tree(nng_http_handler *h)
+nng_http_handler_set_tree(nng_http_handler *h)
 {
 	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	h->tree = true;
 }
 
 void
-nni_http_handler_set_host(nng_http_handler *h, const char *host)
+nng_http_handler_set_host(nng_http_handler *h, const char *host)
 {
 	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 
@@ -217,7 +217,7 @@ nni_http_handler_set_host(nng_http_handler *h, const char *host)
 }
 
 void
-nni_http_handler_set_method(nng_http_handler *h, const char *method)
+nng_http_handler_set_method(nng_http_handler *h, const char *method)
 {
 	NNI_ASSERT(!nni_atomic_get_bool(&h->busy));
 	if (method == NULL) {
@@ -266,7 +266,7 @@ http_sc_reap(void *arg)
 static void
 http_sconn_close(http_sconn *sc)
 {
-	nni_http_conn *conn;
+	nng_http *conn;
 
 	if (nni_atomic_flag_test_and_set(&sc->closed)) {
 		return;
@@ -346,7 +346,7 @@ http_sconn_error(http_sconn *sc, nng_http_status err)
 }
 
 nng_err
-nni_http_hijack(nni_http_conn *conn)
+nng_http_hijack(nng_http *conn)
 {
 	http_sconn *sc;
 
@@ -488,7 +488,7 @@ http_sconn_rxdone(void *arg)
 
 	// If the connection was 1.0, or a connection: close was
 	// requested, then mark this close on our end.
-	if ((val = nni_http_get_header(sc->conn, "Connection")) != NULL) {
+	if ((val = nng_http_get_header(sc->conn, "Connection")) != NULL) {
 		// HTTP 1.1 says these have to be case insensitive
 		if (nni_strcasestr(val, "close") != NULL) {
 			// In theory this could falsely match some other weird
@@ -501,7 +501,7 @@ http_sconn_rxdone(void *arg)
 	}
 
 	sc->unconsumed_body = 0;
-	if ((cls = nni_http_get_header(sc->conn, "Content-Length")) != NULL) {
+	if ((cls = nng_http_get_header(sc->conn, "Content-Length")) != NULL) {
 		char *end;
 		sc->unconsumed_body = strtoull(cls, &end, 10);
 		if ((end == NULL) && (*end != '\0')) {
@@ -511,7 +511,7 @@ http_sconn_rxdone(void *arg)
 		}
 	}
 
-	host = nni_http_get_header(sc->conn, "Host");
+	host = nng_http_get_header(sc->conn, "Host");
 	if ((host == NULL) && (needhost)) {
 		// Per RFC 2616 14.23 we have to send 400 status here.
 		http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
@@ -548,7 +548,7 @@ http_sconn_rxdone(void *arg)
 			break;
 		}
 		// So, what about the method?
-		val = nni_http_get_method(sc->conn);
+		val = nng_http_get_method(sc->conn);
 		if (strcmp(val, h->method) == 0) {
 			break;
 		}
@@ -614,8 +614,8 @@ finish:
 
 	// make sure the response is freshly initialized
 	nni_http_res_reset(nni_http_conn_res(sc->conn));
-	nni_http_set_version(sc->conn, NNG_HTTP_VERSION_1_1);
-	nni_http_set_status(sc->conn, 0, NULL);
+	nng_http_set_version(sc->conn, NNG_HTTP_VERSION_1_1);
+	nng_http_set_status(sc->conn, 0, NULL);
 
 	nni_refcnt_hold(&h->ref);
 	h->cb(sc->conn, h->data, &sc->cbaio);
@@ -656,14 +656,14 @@ http_sconn_cbdone(void *arg)
 		const char     *val;
 		const char     *method;
 		nng_http_status status;
-		val    = nni_http_get_header(sc->conn, "Connection");
-		status = nni_http_get_status(sc->conn);
-		method = nni_http_get_method(sc->conn);
+		val    = nng_http_get_header(sc->conn, "Connection");
+		status = nng_http_get_status(sc->conn);
+		method = nng_http_get_method(sc->conn);
 		if ((val != NULL) && (strstr(val, "close") != NULL)) {
 			sc->close = true;
 		}
 		if (sc->close) {
-			nni_http_set_header(sc->conn, "Connection", "close");
+			nng_http_set_header(sc->conn, "Connection", "close");
 		}
 		if ((strcmp(method, "HEAD") == 0) && status >= 200 &&
 		    status <= 299) {
@@ -996,7 +996,7 @@ nni_http_server_error(nni_http_server *s, nng_http *conn)
 {
 	http_error     *epage;
 	char           *body = NULL;
-	nng_http_status code = nni_http_get_status(conn);
+	nng_http_status code = nng_http_get_status(conn);
 	nng_err         rv;
 
 	nni_mtx_lock(&s->errors_mtx);
@@ -1193,8 +1193,8 @@ http_handle_file(nng_http *conn, void *arg, nni_aio *aio)
 		nni_aio_finish(aio, NNG_OK, 0);
 		return;
 	}
-	if (((rv = nni_http_set_header(conn, "Content-Type", ctype)) != 0) ||
-	    ((rv = nni_http_copy_body(conn, data, size)) != 0)) {
+	if (((rv = nng_http_set_header(conn, "Content-Type", ctype)) != 0) ||
+	    ((rv = nng_http_copy_body(conn, data, size)) != 0)) {
 		nni_free(data, size);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1219,7 +1219,7 @@ http_file_free(void *arg)
 }
 
 nng_err
-nni_http_handler_file(nng_http_handler **hpp, const char *uri,
+nng_http_handler_file(nng_http_handler **hpp, const char *uri,
     const char *path, const char *ctype)
 {
 	nng_http_handler *h;
@@ -1244,15 +1244,15 @@ nni_http_handler_file(nng_http_handler **hpp, const char *uri,
 		return (NNG_ENOMEM);
 	}
 
-	if ((rv = nni_http_handler_alloc(&h, uri, http_handle_file)) != 0) {
+	if ((rv = nng_http_handler_alloc(&h, uri, http_handle_file)) != 0) {
 		http_file_free(hf);
 		return (rv);
 	}
 
-	nni_http_handler_set_data(h, hf, http_file_free);
+	nng_http_handler_set_data(h, hf, http_file_free);
 
 	// We don't permit a body for getting a file.
-	nni_http_handler_collect_body(h, true, 0);
+	nng_http_handler_collect_body(h, true, 0);
 
 	*hpp = h;
 	return (NNG_OK);
@@ -1267,7 +1267,7 @@ http_handle_dir(nng_http *conn, void *arg, nng_aio *aio)
 	http_file  *hf   = arg;
 	const char *path = hf->path;
 	const char *base = hf->base;
-	const char *uri  = nni_http_get_uri(conn);
+	const char *uri  = nng_http_get_uri(conn);
 	const char *ctype;
 	char       *dst;
 	size_t      len;
@@ -1384,7 +1384,7 @@ http_handle_dir(nng_http *conn, void *arg, nng_aio *aio)
 }
 
 nng_err
-nni_http_handler_directory(
+nng_http_handler_directory(
     nng_http_handler **hpp, const char *uri, const char *path)
 {
 	http_file        *hf;
@@ -1400,7 +1400,7 @@ nni_http_handler_directory(
 		return (NNG_ENOMEM);
 	}
 
-	if ((rv = nni_http_handler_alloc(&h, uri, http_handle_dir)) != 0) {
+	if ((rv = nng_http_handler_alloc(&h, uri, http_handle_dir)) != 0) {
 		http_file_free(hf);
 		return (rv);
 	}
@@ -1429,7 +1429,7 @@ http_handle_redirect(nng_http *conn, void *data, nng_aio *aio)
 	const char    *uri;
 
 	base = hr->from; // base uri
-	uri  = nni_http_get_uri(conn);
+	uri  = nng_http_get_uri(conn);
 
 	// If we are doing a full tree, then include the entire suffix.
 	if (strncmp(uri, base, strlen(base)) == 0) {
@@ -1447,7 +1447,7 @@ http_handle_redirect(nng_http *conn, void *data, nng_aio *aio)
 	// keeps us from having to consume the entity body, we can just
 	// discard it.
 	if (((rv = nni_http_set_redirect(conn, hr->code, NULL, loc)) != 0) ||
-	    ((rv = nni_http_set_header(conn, "Connection", "close")) != 0)) {
+	    ((rv = nng_http_set_header(conn, "Connection", "close")) != 0)) {
 		if (loc != hr->where) {
 			nni_strfree(loc);
 		}
@@ -1476,7 +1476,7 @@ http_redirect_free(void *arg)
 }
 
 nng_err
-nni_http_handler_redirect(nng_http_handler **hpp, const char *uri,
+nng_http_handler_redirect(nng_http_handler **hpp, const char *uri,
     nng_http_status status, const char *where)
 {
 	nng_http_handler *h;
@@ -1496,19 +1496,19 @@ nni_http_handler_redirect(nng_http_handler **hpp, const char *uri,
 	}
 	hr->code = status;
 
-	if ((rv = nni_http_handler_alloc(&h, uri, http_handle_redirect)) !=
+	if ((rv = nng_http_handler_alloc(&h, uri, http_handle_redirect)) !=
 	    0) {
 		http_redirect_free(hr);
 		return (rv);
 	}
 
-	nni_http_handler_set_method(h, NULL);
+	nng_http_handler_set_method(h, NULL);
 
-	nni_http_handler_set_data(h, hr, http_redirect_free);
+	nng_http_handler_set_data(h, hr, http_redirect_free);
 
 	// We don't need to collect the body at all, because the handler
 	// just discards the content and closes the connection.
-	nni_http_handler_collect_body(h, false, 0);
+	nng_http_handler_collect_body(h, false, 0);
 
 	*hpp = h;
 	return (NNG_OK);
@@ -1531,8 +1531,8 @@ http_handle_static(nng_http *conn, void *data, nni_aio *aio)
 	}
 
 	// this cannot fail (no dynamic allocation)
-	(void) nni_http_set_header(conn, "Content-Type", ctype);
-	nni_http_set_body(conn, hs->data, hs->size);
+	(void) nng_http_set_header(conn, "Content-Type", ctype);
+	nng_http_set_body(conn, hs->data, hs->size);
 
 	nng_http_set_status(conn, NNG_HTTP_STATUS_OK, NULL);
 
@@ -1552,7 +1552,7 @@ http_static_free(void *arg)
 }
 
 nng_err
-nni_http_handler_static(nng_http_handler **hpp, const char *uri,
+nng_http_handler_static(nng_http_handler **hpp, const char *uri,
     const void *data, size_t size, const char *ctype)
 {
 	nng_http_handler *h;
@@ -1570,15 +1570,15 @@ nni_http_handler_static(nng_http_handler **hpp, const char *uri,
 	hs->size = size;
 	memcpy(hs->data, data, size);
 
-	if ((rv = nni_http_handler_alloc(&h, uri, http_handle_static)) != 0) {
+	if ((rv = nng_http_handler_alloc(&h, uri, http_handle_static)) != 0) {
 		http_static_free(hs);
 		return (rv);
 	}
 
-	nni_http_handler_set_data(h, hs, http_static_free);
+	nng_http_handler_set_data(h, hs, http_static_free);
 
 	// We don't permit a body for getting static data.
-	nni_http_handler_collect_body(h, true, 0);
+	nng_http_handler_collect_body(h, true, 0);
 
 	*hpp = h;
 	return (NNG_OK);

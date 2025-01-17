@@ -142,7 +142,7 @@ http_parse_header(nng_http *conn, void *line)
 		end--;
 	}
 
-	return (nni_http_add_header(conn, key, val));
+	return (nng_http_add_header(conn, key, val));
 }
 
 void
@@ -207,39 +207,39 @@ http_req_parse_line(nng_http *conn, void *line)
 	char *uri;
 	char *version;
 
-	if (nni_http_get_status(conn) >= NNG_HTTP_STATUS_BAD_REQUEST) {
+	if (nng_http_get_status(conn) >= NNG_HTTP_STATUS_BAD_REQUEST) {
 		// we've already failed it, nothing else for us to do
 		return (NNG_OK);
 	}
 	method = line;
 	if ((uri = strchr(method, ' ')) == NULL) {
-		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
+		nng_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
 		return (NNG_OK);
 	}
 	*uri = '\0';
 	uri++;
 
 	if ((version = strchr(uri, ' ')) == NULL) {
-		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
+		nng_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
 		return (NNG_OK);
 	}
 	*version = '\0';
 	version++;
 
 	if (nni_url_canonify_uri(uri) != 0) {
-		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
+		nng_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
 		return (NNG_OK);
 	}
-	if (nni_http_set_version(conn, version)) {
-		nni_http_set_status(
+	if (nng_http_set_version(conn, version)) {
+		nng_http_set_status(
 		    conn, NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP, NULL);
 		return (NNG_OK);
 	}
 
-	nni_http_set_method(conn, method);
+	nng_http_set_method(conn, method);
 
 	// this one only can fail due to ENOMEM
-	return (nni_http_set_uri(conn, uri, NULL));
+	return (nng_http_set_uri(conn, uri, NULL));
 }
 
 static nng_err
@@ -268,9 +268,9 @@ http_res_parse_line(nng_http *conn, uint8_t *line)
 		return (NNG_EPROTO);
 	}
 
-	nni_http_set_status(conn, (uint16_t) status, reason);
+	nng_http_set_status(conn, (uint16_t) status, reason);
 
-	return (nni_http_set_version(conn, version));
+	return (nng_http_set_version(conn, version));
 }
 
 // nni_http_req_parse parses a request (but not any attached entity data).
