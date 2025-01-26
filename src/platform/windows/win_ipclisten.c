@@ -249,7 +249,7 @@ ipc_accept_cancel(nni_aio *aio, void *arg, int rv)
 {
 	ipc_listener *l = arg;
 
-	nni_mtx_unlock(&l->mtx);
+	nni_mtx_lock(&l->mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
