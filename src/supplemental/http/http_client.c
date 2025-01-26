@@ -31,7 +31,7 @@ struct nng_http_client {
 };
 
 static void
-http_dial_start(nni_http_client *c)
+http_dial_start(nng_http_client *c)
 {
 	if (nni_list_empty(&c->aios)) {
 		return;
@@ -42,11 +42,11 @@ http_dial_start(nni_http_client *c)
 static void
 http_dial_cb(void *arg)
 {
-	nni_http_client *c = arg;
+	nng_http_client *c = arg;
 	nni_aio         *aio;
 	nng_err          rv;
 	nng_stream      *stream;
-	nni_http_conn   *conn;
+	nng_http        *conn;
 
 	nni_mtx_lock(&c->mtx);
 	rv = nni_aio_result(&c->aio);
@@ -90,7 +90,7 @@ http_dial_cb(void *arg)
 }
 
 void
-nni_http_client_fini(nni_http_client *c)
+nng_http_client_free(nng_http_client *c)
 {
 	nni_aio_stop(&c->aio);
 	nng_stream_dialer_stop(c->dialer);
@@ -101,10 +101,10 @@ nni_http_client_fini(nni_http_client *c)
 }
 
 nng_err
-nni_http_client_init(nni_http_client **cp, const nng_url *url)
+nng_http_client_alloc(nng_http_client **cp, const nng_url *url)
 {
 	nng_err          rv;
-	nni_http_client *c;
+	nng_http_client *c;
 	nng_url          my_url;
 	const char      *scheme;
 
@@ -139,7 +139,7 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 		    url->u_port);
 	}
 	if ((rv = nng_stream_dialer_alloc_url(&c->dialer, &my_url)) != 0) {
-		nni_http_client_fini(c);
+		nng_http_client_free(c);
 		return (rv);
 	}
 
@@ -148,19 +148,19 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 }
 
 nng_err
-nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
+nng_http_client_set_tls(nng_http_client *c, nng_tls_config *tls)
 {
 	return (nng_stream_dialer_set_tls(c->dialer, tls));
 }
 
 nng_err
-nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
+nng_http_client_get_tls(nng_http_client *c, nng_tls_config **tlsp)
 {
 	return (nng_stream_dialer_get_tls(c->dialer, tlsp));
 }
 
 int
-nni_http_client_set(nni_http_client *c, const char *name, const void *buf,
+nni_http_client_set(nng_http_client *c, const char *name, const void *buf,
     size_t sz, nni_type t)
 {
 	// We have no local options, but we just pass them straight through.
@@ -169,7 +169,7 @@ nni_http_client_set(nni_http_client *c, const char *name, const void *buf,
 
 int
 nni_http_client_get(
-    nni_http_client *c, const char *name, void *buf, size_t *szp, nni_type t)
+    nng_http_client *c, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_stream_dialer_get(c->dialer, name, buf, szp, t));
 }
@@ -177,7 +177,7 @@ nni_http_client_get(
 static void
 http_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_http_client *c = arg;
+	nng_http_client *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
@@ -190,7 +190,7 @@ http_dial_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 void
-nni_http_client_connect(nni_http_client *c, nni_aio *aio)
+nng_http_client_connect(nng_http_client *c, nni_aio *aio)
 {
 	nni_aio_reset(aio);
 	nni_mtx_lock(&c->mtx);
@@ -215,8 +215,8 @@ typedef enum http_txn_state {
 typedef struct http_txn {
 	nni_aio          aio;  // lower level aio
 	nni_list         aios; // upper level aio(s) -- maximum one
-	nni_http_client *client;
-	nni_http_conn   *conn;
+	nng_http_client *client;
+	nng_http        *conn;
 	nni_http_res    *res;
 	nni_http_chunks *chunks;
 	http_txn_state   state;
@@ -293,8 +293,8 @@ http_txn_cb(void *arg)
 
 		// Detect chunked encoding.  You poor bastard.  (Only if not
 		// HEAD.)
-		if ((strcmp(nni_http_get_method(txn->conn), "HEAD") != 0) &&
-		    ((str = nni_http_get_header(
+		if ((strcmp(nng_http_get_method(txn->conn), "HEAD") != 0) &&
+		    ((str = nng_http_get_header(
 		          txn->conn, "Transfer-Encoding")) != NULL) &&
 		    (strstr(str, "chunked") != NULL)) {
 
@@ -309,8 +309,8 @@ http_txn_cb(void *arg)
 			return;
 		}
 
-		if ((strcmp(nni_http_get_method(txn->conn), "HEAD") == 0) ||
-		    ((str = nni_http_get_header(
+		if ((strcmp(nng_http_get_method(txn->conn), "HEAD") == 0) ||
+		    ((str = nng_http_get_header(
 		          txn->conn, "Content-Length")) == NULL) ||
 		    ((len = (uint64_t) strtoull(str, &end, 10)) == 0) ||
 		    (end == NULL) || (*end != '\0')) {
@@ -326,8 +326,8 @@ http_txn_cb(void *arg)
 		    NNG_OK) {
 			goto error;
 		}
-		nni_http_get_body(txn->conn, &iov.iov_buf, &iov.iov_len);
-		nni_aio_set_iov(&txn->aio, 1, &iov);
+		nng_http_get_body(txn->conn, &iov.iov_buf, &iov.iov_len);
+		nng_aio_set_iov(&txn->aio, 1, &iov);
 		txn->state = HTTP_RECVING_BODY;
 		nni_http_read_full(txn->conn, &txn->aio);
 		nni_mtx_unlock(&http_txn_lk);
@@ -347,7 +347,7 @@ http_txn_cb(void *arg)
 		if ((rv = nni_http_res_alloc_data(txn->res, sz)) != 0) {
 			goto error;
 		}
-		nni_http_get_body(txn->conn, (void **) &dst, &sz);
+		nng_http_get_body(txn->conn, (void **) &dst, &sz);
 		while ((chunk = nni_http_chunks_iter(txn->chunks, chunk)) !=
 		    NULL) {
 			memcpy(dst, nni_http_chunk_data(chunk),
@@ -378,13 +378,13 @@ http_txn_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&http_txn_lk);
 }
 
-// nni_http_transact_conn sends a request to an HTTP server, and reads the
+// nng_http_transact sends a request to an HTTP server, and reads the
 // response.  It also attempts to read any associated data.  Note that
 // at present it can only read data that comes in normally, as support
 // for Chunked Transfer Encoding is missing.  Note that cancelling the aio
 // is generally fatal to the connection.
 void
-nni_http_transact_conn(nni_http_conn *conn, nni_aio *aio)
+nng_http_transact(nng_http *conn, nni_aio *aio)
 {
 	http_txn *txn;
 
@@ -401,7 +401,7 @@ nni_http_transact_conn(nni_http_conn *conn, nni_aio *aio)
 	txn->state  = HTTP_SENDING;
 
 	nni_http_res_reset(txn->res);
-	nni_http_set_status(txn->conn, 0, NULL);
+	nng_http_set_status(txn->conn, 0, NULL);
 
 	nni_mtx_lock(&http_txn_lk);
 	if (!nni_aio_start(aio, http_txn_cancel, txn)) {

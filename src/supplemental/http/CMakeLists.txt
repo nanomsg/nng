@@ -11,13 +11,9 @@
 option (NNG_ENABLE_HTTP "Enable HTTP API" ON)
 if (NNG_ENABLE_HTTP)
     set(NNG_SUPP_HTTP ON)
-endif()
-mark_as_advanced(NNG_ENABLE_HTTP)
-
-nng_sources(http_public.c http_api.h)
-
-nng_defines_if(NNG_SUPP_HTTP NNG_SUPP_HTTP)
-nng_sources_if(NNG_SUPP_HTTP
+    nng_defines(NNG_SUPP_HTTP)
+    nng_sources(
+        http_api.h
         http_client.c
         http_chunk.c
         http_conn.c
@@ -25,4 +21,8 @@ nng_sources_if(NNG_SUPP_HTTP
         http_public.c
         http_schemes.c
         http_server.c)
-nng_test_if(NNG_SUPP_HTTP http_server_test)
+    nng_test(http_server_test)
+else()
+    nng_sources(http_stubs.c)
+endif()
+mark_as_advanced(NNG_ENABLE_HTTP)
