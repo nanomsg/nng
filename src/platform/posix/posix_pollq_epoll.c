@@ -225,7 +225,7 @@ nni_epoll_thr(void *arg)
 
 				mask = ev->events &
 				    ((unsigned) (EPOLLIN | EPOLLOUT |
-				        EPOLLERR));
+				        EPOLLERR | EPOLLHUP));
 
 				nni_atomic_and(&pfd->events, (int) ~mask);
 
