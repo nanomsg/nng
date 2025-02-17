@@ -72,7 +72,7 @@ static int                nni_aio_expire_q_cnt;
 
 static nni_reap_list aio_reap_list = {
 	.rl_offset = offsetof(nni_aio, a_reap_node),
-	.rl_func   = (nni_cb) nni_aio_free,
+	.rl_func   = nni_aio_free_cb,
 };
 
 static void nni_aio_expire_add(nni_aio *);
@@ -141,6 +141,12 @@ nni_aio_free(nni_aio *aio)
 		nni_aio_fini(aio);
 		NNI_FREE_STRUCT(aio);
 	}
+}
+
+void
+nni_aio_free_cb(void *aio)
+{
+  nni_aio_free((nni_aio *) aio);
 }
 
 void
