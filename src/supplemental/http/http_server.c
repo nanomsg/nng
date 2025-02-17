@@ -1580,7 +1580,8 @@ http_handle_dir(nni_aio *aio)
 
 	rv = 0;
 	if (nni_file_is_dir(pn)) {
-		sprintf(dst, "%s%s", NNG_PLATFORM_DIR_SEP, "index.html");
+		snprintf(dst, pnsz - strlen(pn), "%s%s", NNG_PLATFORM_DIR_SEP,
+		    "index.html");
 		if (!nni_file_is_file(pn)) {
 			pn[strlen(pn) - 1] = '\0'; // index.html -> index.htm
 			if (!nni_file_is_file(pn)) {

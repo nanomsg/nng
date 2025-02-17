@@ -44,6 +44,7 @@ extern int nni_aio_alloc(nni_aio **, nni_cb, void *arg);
 // This must only be called on an object that was allocated
 // with nni_aio_allocate.
 extern void nni_aio_free(nni_aio *aio);
+extern void nni_aio_free_cb(void *aio);
 
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
