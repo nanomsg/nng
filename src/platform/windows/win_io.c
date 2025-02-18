@@ -64,9 +64,10 @@ nni_win_io_init(nni_win_io *io, nni_win_io_cb cb, void *ptr)
 {
 	ZeroMemory(&io->olpd, sizeof(io->olpd));
 
-	io->cb  = cb;
-	io->ptr = ptr;
-	io->aio = NULL;
+	io->cb          = cb;
+	io->ptr         = ptr;
+	io->aio         = NULL;
+	io->olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 }
 
 int
