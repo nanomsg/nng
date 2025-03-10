@@ -37,7 +37,7 @@ win_io_handler(void *arg)
 		int         rv;
 
 		ok = GetQueuedCompletionStatus(
-		    win_io_h, &cnt, &key, &olpd, 5000);
+		    win_io_h, &cnt, &key, &olpd, INFINITE);
 
 		if (olpd == NULL) {
 			// Completion port closed...
