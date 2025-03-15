@@ -146,7 +146,7 @@ nni_aio_free(nni_aio *aio)
 void
 nni_aio_free_cb(void *aio)
 {
-  nni_aio_free((nni_aio *) aio);
+	nni_aio_free((nni_aio *) aio);
 }
 
 void
