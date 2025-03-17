@@ -27,7 +27,7 @@
 // NNG_TLS_MAX_RECV_SIZE limits the amount of data we will receive in a single
 // operation.  As we have to buffer data, this drives the size of our
 // intermediary buffer.  The 16K is aligned to the maximum TLS record size.
-#ifndef NNG_TLX_MAX_RECV_SIZE
+#ifndef NNG_TLS_MAX_RECV_SIZE
 #define NNG_TLS_MAX_RECV_SIZE 16384
 #endif
 
