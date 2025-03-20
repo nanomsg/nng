@@ -294,6 +294,11 @@
 [`nng_http_read_all`]: /api/http.md#direct-read-and-write
 [`nng_http_write`]: /api/http.md#direct-read-and-write
 [`nng_http_write_all`]: /api/http.md#direct-read-and-write
+[`nng_http_handler_alloc`]: /api/http.md#nng_http_handler_alloc
+[`nng_http_handler_static`]: /api/http.md#nng_http_handler_static
+[`nng_http_handler_redirect`]: /api/http.md#nng_http_handler_redirect
+[`nng_http_handler_file`]: /api/http.md#nng_http_handler_file
+[`nng_http_handler_directory`]: /api/http.md#nng_http_handler_directory
 
 <!-- Macros -->
 

@@ -242,20 +242,21 @@ NNG_DECL void nng_http_handler_free(nng_http_handler *);
 
 // nng_http_handler_alloc_file creates a "file" based handler, that
 // serves up static content from the given file path.  The content-type
-// supplied is determined from the file name using a simple built-in map.
-NNG_DECL nng_err nng_http_handler_alloc_file(
-    nng_http_handler **, const char *, const char *);
+// is taken from the 3rd argument, unless that is NULL, in which case
+// it is determined from the file name using a simple built-in map.
+NNG_DECL nng_err nng_http_handler_file(
+    nng_http_handler **, const char *, const char *, const char *);
 
 // nng_http_handler_alloc_static creates a static-content handler.
 // The last argument is the content-type, which may be NULL (in which case
 // "application/octet-stream" is assumed.)
-NNG_DECL nng_err nng_http_handler_alloc_static(
+NNG_DECL nng_err nng_http_handler_static(
     nng_http_handler **, const char *, const void *, size_t, const char *);
 
 // nng_http_handler_alloc_redirect creates an HTTP redirect handler.
 // The status is given, along with the new URL.  If the status is 0,
 // then 301 will be used instead.
-NNG_DECL nng_err nng_http_handler_alloc_redirect(
+NNG_DECL nng_err nng_http_handler_redirect(
     nng_http_handler **, const char *, nng_http_status, const char *);
 
 // nng_http_handler_alloc_file creates a "directory" based handler, that
@@ -264,7 +265,7 @@ NNG_DECL nng_err nng_http_handler_alloc_redirect(
 // directory content, otherwise a suitable error page is returned (the server
 // does not generate index pages automatically.)  The content-type for
 // files is determined from the file name using a simple built-in map.
-NNG_DECL nng_err nng_http_handler_alloc_directory(
+NNG_DECL nng_err nng_http_handler_directory(
     nng_http_handler **, const char *, const char *);
 
 // nng_http_handler_set_method sets the method that the handler will be
