@@ -50,7 +50,7 @@ unsigned int    init_count;
 nni_atomic_flag init_busy;
 
 nng_err
-nng_init(nng_init_params *params)
+nng_init(const nng_init_params *params)
 {
 	nng_init_params zero = { 0 };
 	nng_err         rv;
