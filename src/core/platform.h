@@ -353,11 +353,15 @@ extern int nni_ipc_listener_alloc(nng_stream_listener **, const nng_url *);
 //
 typedef struct nni_plat_udp nni_plat_udp;
 
-// nni_plat_udp_open initializes a UDP socket, binding to the local
-// address specified in the AIO.  The remote address is
-// not used.  The resulting nni_plat_udp structure is returned in the
-// aio's a_pipe.
-extern int nni_plat_udp_open(nni_plat_udp **, nni_sockaddr *);
+// nni_plat_udp_open initializes a UDP socket, binding to the specified local
+// address.
+extern int nni_plat_udp_open(nni_plat_udp **udpp, nni_sockaddr *self);
+
+// nni_plat_udp_connected initializes a connected UDP socket, binding to the
+// local address specified in the AIO, and connecting to the remote one.
+// This is a non-blocking operation.
+extern int nni_plat_udp_connect(
+    nni_plat_udp **udpp, nni_sockaddr *self, nni_sockaddr *peer);
 
 // nni_plat_udp_close closes the underlying UDP socket.
 extern void nni_plat_udp_close(nni_plat_udp *);
@@ -405,6 +409,7 @@ extern void nni_plat_pipe_clear(int);
 extern void nni_plat_pipe_close(int, int);
 
 extern int nni_plat_udp_sockname(nni_plat_udp *, nni_sockaddr *);
+extern int nni_plat_udp_peername(nni_plat_udp *, nni_sockaddr *);
 
 // nni_socket_pair is used to create a socket pair using socketpair()
 // on POSIX systems.  (Windows might provide a similar solution, using

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -28,6 +28,9 @@ struct nni_plat_udp {
 	bool             closed;
 	SOCKADDR_STORAGE rxsa;
 	int              rxsalen;
+	bool             connected; // is the socket a connected socket?
+	nni_sockaddr 	 peer;      // only valid for connected
+	int              peerlen;
 };
 
 static void udp_recv_cb(nni_win_io *, int, size_t);
@@ -85,6 +88,90 @@ nni_plat_udp_open(nni_plat_udp **udpp, nni_sockaddr *sa)
 	return (rv);
 }
 
+// nni_plat_udp_connect initializes a connected UDP socket, binding to the
+// local address specified specified, and then connecting to the remote one.
+// If the peer address is NULL, then its not connected, but intended to be
+// compatible with connected sockets (by using SO_REUSEADDR.)
+int
+nni_plat_udp_connect(
+    nni_plat_udp **udpp, nni_sockaddr *self, nni_sockaddr *peer)
+{
+	nni_plat_udp    *u;
+	SOCKADDR_STORAGE ss;
+	SOCKADDR_STORAGE ps;
+	int              sslen;
+	int              pslen;
+	DWORD            no;
+	DWORD            yes;
+	int              rv;
+
+	if ((sslen = nni_win_nn2sockaddr(&ss, self)) < 0) {
+		return (NNG_EADDRINVAL);
+	}
+	if (peer != NULL) {
+		if (self->s_family != peer->s_family) {
+			return (NNG_EADDRINVAL);
+		}
+
+		if ((pslen = nni_win_nn2sockaddr(&ps, peer)) < 0) {
+			return (NNG_EADDRINVAL);
+		}
+	}
+
+	if ((u = NNI_ALLOC_STRUCT(u)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_aio_list_init(&u->rxq);
+	nni_mtx_init(&u->lk);
+	nni_cv_init(&u->cv, &u->lk);
+
+	u->s = socket(ss.ss_family, SOCK_DGRAM, IPPROTO_UDP);
+	if (u->s == INVALID_SOCKET) {
+		rv = nni_win_error(GetLastError());
+		nni_plat_udp_close(u);
+		return (rv);
+	}
+	// Don't inherit the handle (CLOEXEC really).
+	SetHandleInformation((HANDLE) u->s, HANDLE_FLAG_INHERIT, 0);
+	no = 0;
+	(void) setsockopt(
+	    u->s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no, sizeof(no));
+
+	nni_win_io_init(&u->rxio, udp_recv_cb, u);
+
+	if ((rv = nni_win_io_register((HANDLE) u->s)) != 0) {
+		nni_plat_udp_close(u);
+		return (rv);
+	}
+
+	// We need to allow the concurrent until we switch to connected mode.
+	yes = 1;
+	(void) setsockopt(
+	    u->s, SOL_SOCKET, SO_REUSEADDR, (char *) &yes, sizeof(yes));
+
+	// Bind the local address
+	if (bind(u->s, (struct sockaddr *) &ss, sslen) == SOCKET_ERROR) {
+		rv = nni_win_error(GetLastError());
+		nni_plat_udp_close(u);
+		return (rv);
+	}
+
+	// Connect, if we have a peer address
+	if (peer != NULL) {
+		if (connect(u->s, (struct sockaddr *) &ps, pslen) ==
+		    SOCKET_ERROR) {
+			rv = nni_win_error(GetLastError());
+			nni_plat_udp_close(u);
+			return (rv);
+		}
+		u->connected = true;
+		u->peer = *peer;
+	}
+
+	*udpp = u;
+	return (rv);
+}
+
 // nni_plat_udp_close closes the underlying UDP socket.
 void
 nni_plat_udp_close(nni_plat_udp *u)
@@ -123,10 +210,13 @@ nni_plat_udp_send(nni_plat_udp *u, nni_aio *aio)
 	DWORD            nsent;
 
 	nni_aio_reset(aio);
-	sa = nni_aio_get_input(aio, 0);
-	if ((tolen = nni_win_nn2sockaddr(&to, sa)) < 0) {
-		nni_aio_finish_error(aio, NNG_EADDRINVAL);
-		return;
+
+	if (!u->connected) {
+		sa = nni_aio_get_input(aio, 0);
+		if ((tolen = nni_win_nn2sockaddr(&to, sa)) < 0) {
+			nni_aio_finish_error(aio, NNG_EADDRINVAL);
+			return;
+		}
 	}
 
 	nni_aio_get_iov(aio, &naiov, &aiov);
@@ -150,10 +240,14 @@ nni_plat_udp_send(nni_plat_udp *u, nni_aio *aio)
 		iov[i].len = (ULONG) aiov[i].iov_len;
 	}
 
-	// We can use a "non-overlapping" send; there is little point in
-	// handling UDP send completions asynchronously.
-	rv = WSASendTo(u->s, iov, (DWORD) naiov, &nsent, 0,
-	    (struct sockaddr *) &to, tolen, NULL, NULL);
+	// We can use a "non-overlapping" send; there is little point
+	// in handling UDP send completions asynchronously.
+	if (u->connected) {
+		rv = WSASend(u->s, iov, (DWORD) naiov, &nsent, 0, NULL, NULL);
+	} else {
+		rv = WSASendTo(u->s, iov, (DWORD) naiov, &nsent, 0,
+		    (struct sockaddr *) &to, tolen, NULL, NULL);
+	}
 
 	if (rv == SOCKET_ERROR) {
 		rv    = nni_win_error(GetLastError());
@@ -203,7 +297,7 @@ udp_recv_cb(nni_win_io *io, int rv, size_t num)
 	}
 
 	// convert address from Windows form...
-	if ((sa = nni_aio_get_input(aio, 0)) != NULL) {
+	if (((sa = nni_aio_get_input(aio, 0)) != NULL) && !u->connected) {
 		if (nni_win_sockaddr2nn(sa, &u->rxsa, sizeof(u->rxsa)) != 0) {
 			rv  = NNG_EADDRINVAL;
 			num = 0;
@@ -259,8 +353,14 @@ again:
 	// already. The actual aio's iov array we don't touch.
 	flags = 0;
 
-	rv = WSARecvFrom(u->s, iov, (DWORD) naiov, NULL, &flags,
-	    (struct sockaddr *) &u->rxsa, &u->rxsalen, &u->rxio.olpd, NULL);
+	if (u->connected) {
+		rv = WSARecv(u->s, iov, (DWORD) naiov, NULL, &flags,
+		    &u->rxio.olpd, NULL);
+	} else {
+		rv = WSARecvFrom(u->s, iov, (DWORD) naiov, NULL, &flags,
+		    (struct sockaddr *) &u->rxsa, &u->rxsalen, &u->rxio.olpd,
+		    NULL);
+	}
 
 	_freea(iov);
 
@@ -303,6 +403,23 @@ nni_plat_udp_sockname(nni_plat_udp *udp, nni_sockaddr *sa)
 	int              sz;
 
 	sz = sizeof(ss);
+	if (getsockname(udp->s, (SOCKADDR *) &ss, &sz) < 0) {
+		return (nni_win_error(GetLastError()));
+	}
+	return (nni_win_sockaddr2nn(sa, &ss, sz));
+}
+
+int
+nni_plat_udp_peername(nni_plat_udp *udp, nni_sockaddr *sa)
+{
+	SOCKADDR_STORAGE ss;
+	int              sz;
+
+	if (!udp->connected) {
+		return (NNG_ENOTCONN);
+	}
+	*sa = udp->peer;
+	sz  = sizeof(*sa);
 	if (getsockname(udp->s, (SOCKADDR *) &ss, &sz) < 0) {
 		return (nni_win_error(GetLastError()));
 	}

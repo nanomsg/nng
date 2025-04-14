@@ -1268,6 +1268,7 @@ static const struct {
 	{ NNG_EPEERAUTH, "Peer could not be authenticated" },
 	{ NNG_EBADTYPE, "Incorrect type" },
 	{ NNG_ECONNSHUT, "Connection shutdown" },
+	{ NNG_ENOTCONN, "Not connected"},
 	{ NNG_ESTOPPED, "Operation stopped"},
 	{ NNG_EINTERNAL, "Internal error detected" },
 	{ 0, NULL },
@@ -2147,6 +2148,12 @@ nng_udp_open(nng_udp **udp, nng_sockaddr *sa)
 	return (nni_plat_udp_open((nni_plat_udp **) udp, sa));
 }
 
+int
+nng_udp_connect(nng_udp **udp, nng_sockaddr *self, nng_sockaddr *peer)
+{
+	return (nni_plat_udp_connect((nni_plat_udp **) udp, self, peer));
+}
+
 void
 nng_udp_close(nng_udp *udp)
 {
@@ -2157,6 +2164,12 @@ int
 nng_udp_sockname(nng_udp *udp, nng_sockaddr *sa)
 {
 	return (nni_plat_udp_sockname((nni_plat_udp *) udp, sa));
+}
+
+int
+nng_udp_peername(nng_udp *udp, nng_sockaddr *sa)
+{
+	return (nni_plat_udp_peername((nni_plat_udp *) udp, sa));
 }
 
 void

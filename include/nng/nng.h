@@ -159,6 +159,7 @@ typedef enum {
 	NNG_EPEERAUTH    = 27,
 	NNG_EBADTYPE     = 30,
 	NNG_ECONNSHUT    = 31,
+	NNG_ENOTCONN     = 32,
 	NNG_ESTOPPED     = 999,
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
@@ -1223,12 +1224,24 @@ typedef struct nng_udp nng_udp;
 // to the specified address.
 NNG_DECL int nng_udp_open(nng_udp **udpp, nng_sockaddr *sa);
 
+// nng_udp_connect initializes a ocnnected UDP socket, if the peer
+// address is not NULL.  If the peer address is NULL, then the socket
+// is opened with only BIND, but with SO_REUSEADDR set to be compatible
+// with connected sockets on the same local address.
+NNG_DECL int nng_udp_connect(
+    nng_udp **udpp, nng_sockaddr *self, nng_sockaddr *peer);
+
 // nng_udp_close closes the underlying UDP socket.
 NNG_DECL void nng_udp_close(nng_udp *udp);
 
 // nng_udp_sockname determines the locally bound address.
 // This is useful to determine a chosen port after binding to port 0.
 NNG_DECL int nng_udp_sockname(nng_udp *udp, nng_sockaddr *sa);
+
+// nng_udp_peername determines the peer address for a connected UDP socket.
+// It fails with NNG_ENOTCONN if the socket is was not created with
+// `nng_udp_connect`.
+NNG_DECL int nng_udp_peername(nng_udp *udp, nng_sockaddr *sa);
 
 // nng_udp_send sends the data in the aio to the the
 // destination specified in the nng_aio.  The iovs are the UDP payload.

@@ -86,6 +86,93 @@ test_udp_pair(void)
 }
 
 void
+test_udp_connected(void)
+{
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
+	nng_udp     *u1;
+	nng_udp     *u2;
+	nng_udp     *u3;
+	nng_udp     *u4;
+	uint32_t     loopback;
+	nng_aio     *aio1;
+	nng_aio     *aio2;
+	nng_iov      iov1, iov2;
+	char         msg[] = "hello";
+	char         rbuf[1024];
+	nng_sockaddr to;
+	nng_sockaddr from;
+
+	loopback = htonl(0x7f000001); // 127.0.0.1
+
+	sa1.s_in.sa_family = NNG_AF_INET;
+	sa1.s_in.sa_addr   = loopback;
+	sa1.s_in.sa_port   = 0; // wild card port binding
+
+	sa2.s_in.sa_family = NNG_AF_INET;
+	sa2.s_in.sa_addr   = loopback;
+	sa2.s_in.sa_port   = 0;
+
+	NUTS_PASS(nng_udp_connect(&u1, &sa1, NULL));
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
+
+	NUTS_PASS(nng_udp_connect(&u2, &sa2, NULL));
+	NUTS_PASS(nng_udp_sockname(u2, &sa2));
+
+	sa2.s_in.sa_family = NNG_AF_INET;
+	sa2.s_in.sa_addr   = loopback;
+	sa2.s_in.sa_port   = 0;
+
+	NUTS_PASS(nng_udp_sockname(u1, &sa1));
+	NUTS_PASS(nng_udp_sockname(u2, &sa2));
+
+	NUTS_FAIL(nng_udp_peername(u1, &to), NNG_ENOTCONN);
+	NUTS_FAIL(nng_udp_peername(u2, &to), NNG_ENOTCONN);
+
+	NUTS_PASS(nng_udp_connect(&u3, &sa1, &sa2));
+	NUTS_PASS(nng_udp_connect(&u4, &sa2, &sa1));
+
+	nng_msleep(500);
+
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+
+	iov1.iov_buf = msg;
+	iov1.iov_len = strlen(msg) + 1;
+	NUTS_PASS(nng_aio_set_iov(aio1, 1, &iov1));
+	NUTS_PASS(nng_aio_set_input(aio1, 0, &to));
+
+	iov2.iov_buf = rbuf;
+	iov2.iov_len = 1024;
+	NUTS_PASS(nng_aio_set_iov(aio2, 1, &iov2));
+	NUTS_PASS(nng_aio_set_input(aio2, 0, &from));
+
+	nng_udp_recv(u3, aio2);
+	nng_udp_send(u4, aio1);
+	nng_aio_wait(aio1);
+	nng_aio_wait(aio2);
+
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_PASS(nng_aio_result(aio2));
+	NUTS_ASSERT(nng_aio_count(aio2) == strlen(msg) + 1);
+	NUTS_ASSERT(strcmp(rbuf, msg) == 0);
+
+	NUTS_PASS(nng_udp_peername(u3, &from));
+	NUTS_PASS(nng_udp_peername(u4, &to));
+
+	NUTS_ASSERT(from.s_in.sa_family == sa2.s_in.sa_family);
+	NUTS_ASSERT(from.s_in.sa_addr == sa2.s_in.sa_addr);
+	NUTS_ASSERT(to.s_in.sa_port == sa1.s_in.sa_port);
+
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
+	nng_udp_close(u1);
+	nng_udp_close(u2);
+	nng_udp_close(u3);
+	nng_udp_close(u4);
+}
+
+void
 test_udp_scatter_gather(void)
 {
 	nng_sockaddr sa1;
@@ -480,6 +567,7 @@ test_udp_send_v6_from_v4(void)
 
 NUTS_TESTS = {
 	{ "udp pair", test_udp_pair },
+	{ "udp connected", test_udp_connected },
 	{ "udp scatter gather", test_udp_scatter_gather },
 	{ "udp send recv multi", test_udp_multi_send_recv },
 	{ "udp send no address", test_udp_send_no_addr },
