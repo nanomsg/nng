@@ -168,12 +168,10 @@ http_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
 	nni_http_client *c = arg;
 	nni_mtx_lock(&c->mtx);
+	nni_aio_abort(c->aio, rv);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
-	}
-	if (nni_list_empty(&c->aios)) {
-		nni_aio_abort(c->aio, rv);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
