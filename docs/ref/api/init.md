@@ -68,7 +68,7 @@ The following parameters are present:
 ## Finalization
 
 ```c
-extern void nng_init(nng_init_parms *params);
+extern void nng_fini(void);
 ```
 
 When the consumer is ready to deallocate any resoures allocated by the library, it should call
