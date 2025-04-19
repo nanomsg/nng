@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
@@ -43,6 +43,7 @@ tls_client_config(void)
 	NUTS_PASS(nng_tls_config_own_cert(
 	    c, nuts_client_crt, nuts_client_key, NULL));
 	NUTS_PASS(nng_tls_config_ca_chain(c, nuts_server_crt, NULL));
+	NUTS_PASS(nng_tls_config_server_name(c, "localhost"));
 	return (c);
 }
 
