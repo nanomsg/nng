@@ -391,7 +391,7 @@ NUTS_TESTS = {
 	{ "tls keep alive option", test_tls_keep_alive_option },
 	{ "tls recv max", test_tls_recv_max },
 	{ "tls pre-shared key", test_tls_psk },
-	{ "tsl bad cert mutual", test_tls_bad_cert_mutual },
-	{ "tsl cert mutual", test_tls_cert_mutual },
+	{ "tls bad cert mutual", test_tls_bad_cert_mutual },
+	{ "tls cert mutual", test_tls_cert_mutual },
 	{ NULL, NULL },
 };
