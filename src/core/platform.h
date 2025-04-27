@@ -357,7 +357,7 @@ typedef struct nni_plat_udp nni_plat_udp;
 // address specified in the AIO.  The remote address is
 // not used.  The resulting nni_plat_udp structure is returned in the
 // aio's a_pipe.
-extern int nni_plat_udp_open(nni_plat_udp **, nni_sockaddr *);
+extern int nni_plat_udp_open(nni_plat_udp **, const nni_sockaddr *);
 
 // nni_plat_udp_close closes the underlying UDP socket.
 extern void nni_plat_udp_close(nni_plat_udp *);

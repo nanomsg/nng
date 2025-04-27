@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -36,7 +36,7 @@ static void udp_recv_start(nni_plat_udp *);
 // nni_plat_udp_open initializes a UDP socket, binding to the local
 // address specified specified.
 int
-nni_plat_udp_open(nni_plat_udp **udpp, nni_sockaddr *sa)
+nni_plat_udp_open(nni_plat_udp **udpp, const nni_sockaddr *sa)
 {
 	nni_plat_udp    *u;
 	SOCKADDR_STORAGE ss;

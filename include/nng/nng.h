@@ -202,8 +202,8 @@ struct nng_sockaddr_path {
 struct nng_sockaddr_in6 {
 	uint16_t sa_family;
 	uint16_t sa_port;
+	uint32_t sa_scope; // scope moved here to make sa_addr 64-bit aligned
 	uint8_t  sa_addr[16];
-	uint32_t sa_scope;
 };
 
 struct nng_sockaddr_in {

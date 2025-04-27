@@ -308,7 +308,7 @@ nni_posix_udp_cb(void *arg, unsigned events)
 }
 
 int
-nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
+nni_plat_udp_open(nni_plat_udp **upp, const nni_sockaddr *bindaddr)
 {
 	nni_plat_udp           *udp;
 	int                     salen;
