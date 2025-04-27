@@ -124,7 +124,7 @@ nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 }
 
 int
-nng_send(nng_socket s, void *buf, size_t len, int flags)
+nng_send(nng_socket s, const void *buf, size_t len, int flags)
 {
 	nng_msg *msg;
 	int      rv;
