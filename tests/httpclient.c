@@ -20,7 +20,6 @@
 #include "core/nng_impl.h"
 
 #include "convey.h"
-#include "trantest.h"
 
 TestMain("HTTP Client", {
 	Convey("Given a TCP connection to example.com", {
