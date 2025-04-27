@@ -52,6 +52,7 @@ tls_client_config(void)
 	NUTS_PASS(nng_tls_config_own_cert(
 	    c, nuts_client_crt, nuts_client_key, NULL));
 	NUTS_PASS(nng_tls_config_ca_chain(c, nuts_server_crt, NULL));
+	NUTS_PASS(nng_tls_config_server_name(c, "localhost"));
 	return (c);
 }
 
@@ -63,6 +64,7 @@ tls_client_config_ecdsa(void)
 	NUTS_PASS(nng_tls_config_own_cert(
 	    c, nuts_ecdsa_client_crt, nuts_ecdsa_client_key, NULL));
 	NUTS_PASS(nng_tls_config_ca_chain(c, nuts_ecdsa_server_crt, NULL));
+	NUTS_PASS(nng_tls_config_server_name(c, "localhost"));
 	return (c);
 }
 
