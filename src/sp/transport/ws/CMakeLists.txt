@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -19,3 +19,4 @@ nng_defines_if(NNG_TRANSPORT_WS NNG_TRANSPORT_WS)
 nng_defines_if(NNG_TRANSPORT_WSS NNG_TRANSPORT_WSS)
 nng_sources_if(WS_ON websocket.c)
 nng_test_if(WS_ON ws_test)
+nng_test_if(NNG_TRANSPORT_WSS wss_test)
