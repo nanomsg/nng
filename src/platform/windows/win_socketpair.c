@@ -9,7 +9,6 @@
 
 #include "core/nng_impl.h"
 
-
 #ifdef NNG_HAVE_SOCKETPAIR_TODO
 // TODO: Windows lacks socketpair.  We can emulate it with an explcit
 // implementation based on AF_UNIX.
@@ -46,7 +45,7 @@ nni_sfd_close_fd(int fd)
 	NNI_ARG_UNUSED(fd);
 }
 
-int
+nng_err
 nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 {
 	NNI_ARG_UNUSED(cp);

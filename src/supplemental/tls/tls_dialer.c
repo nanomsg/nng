@@ -144,11 +144,11 @@ tls_dialer_set(
 	return (nni_stream_dialer_set(d->d, name, buf, sz, t));
 }
 
-int
+nng_err
 nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	tls_dialer *d;
-	int         rv;
+	nng_err     rv;
 	nng_url     my_url;
 
 	memcpy(&my_url, url, sizeof(my_url));
@@ -161,12 +161,13 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	}
 	nni_mtx_init(&d->lk);
 
-	if ((rv = nng_stream_dialer_alloc_url(&d->d, &my_url)) != 0) {
+	if ((rv = nng_stream_dialer_alloc_url(&d->d, &my_url)) != NNG_OK) {
 		nni_mtx_fini(&d->lk);
 		NNI_FREE_STRUCT(d);
 		return (rv);
 	}
-	if ((rv = nng_tls_config_alloc(&d->cfg, NNG_TLS_MODE_CLIENT)) != 0) {
+	if ((rv = nng_tls_config_alloc(&d->cfg, NNG_TLS_MODE_CLIENT)) !=
+	    NNG_OK) {
 		nng_stream_dialer_free(d->d);
 		nni_mtx_fini(&d->lk);
 		NNI_FREE_STRUCT(d);

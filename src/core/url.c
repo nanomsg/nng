@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -39,7 +39,7 @@ url_hex_val(char c)
 // is malformed UTF-8.  We consider UTF-8 malformed when the sequence
 // is an invalid code point, not the shortest possible code point, or
 // incomplete.
-static int
+static nng_err
 url_utf8_validate(void *arg)
 {
 	uint8_t *s = arg;
@@ -88,7 +88,7 @@ url_utf8_validate(void *arg)
 			return (NNG_EINVAL);
 		}
 	}
-	return (0);
+	return (NNG_OK);
 }
 
 size_t
@@ -119,7 +119,7 @@ nni_url_decode(uint8_t *out, const char *in, size_t max_len)
 	return (len);
 }
 
-int
+nng_err
 nni_url_canonify_uri(char *out)
 {
 	size_t  src, dst;
@@ -217,11 +217,11 @@ nni_url_canonify_uri(char *out)
 
 	// Finally lets make sure that the results are valid UTF-8.
 	// This guards against using UTF-8 redundancy to break security.
-	if ((rv = url_utf8_validate(out)) != 0) {
+	if ((rv = url_utf8_validate(out)) != NNG_OK) {
 		return (rv);
 	}
 
-	return (0);
+	return (NNG_OK);
 }
 
 static struct {
@@ -325,7 +325,7 @@ nni_url_default_port(const char *scheme)
 // Nanomsg URLs are always of the first form, we always require a
 // scheme with a leading //, such as http:// or tcp://. So our parser
 // is a bit more restricted, but sufficient for our needs.
-static int
+static nng_err
 nni_url_parse_inline_inner(nng_url *url, const char *raw)
 {
 	size_t      len;
@@ -392,7 +392,7 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 		url->u_query    = NULL;
 		url->u_fragment = NULL;
 		url->u_userinfo = NULL;
-		return (0);
+		return (NNG_OK);
 	}
 
 	// Look for host part (including colon).  Will be terminated by
@@ -504,24 +504,24 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 		url->u_port = nni_url_default_port(url->u_scheme);
 	}
 
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_url_parse_inline(nng_url *url, const char *raw)
 {
-	int rv = nni_url_parse_inline_inner(url, raw);
-	if (rv != 0) {
+	nng_err rv = nni_url_parse_inline_inner(url, raw);
+	if (rv != NNG_OK) {
 		nni_url_fini(url);
 	}
 	return (rv);
 }
 
-int
+nng_err
 nng_url_parse(nng_url **urlp, const char *raw)
 {
 	nng_url *url;
-	int      rv;
+	nng_err  rv;
 
 	if ((url = NNI_ALLOC_STRUCT(url)) == NULL) {
 		return (NNG_ENOMEM);
@@ -531,7 +531,7 @@ nng_url_parse(nng_url **urlp, const char *raw)
 		return (rv);
 	}
 	*urlp = url;
-	return (0);
+	return (NNG_OK);
 }
 
 void
@@ -590,7 +590,7 @@ nng_url_sprintf(char *str, size_t size, const nng_url *url)
 	    url->u_fragment != NULL ? url->u_fragment : ""));
 }
 
-int
+nng_err
 nni_url_asprintf(char **str, const nng_url *url)
 {
 	char  *result;
@@ -602,13 +602,13 @@ nni_url_asprintf(char **str, const nng_url *url)
 	}
 	nng_url_sprintf(result, sz, url);
 	*str = result;
-	return (0);
+	return (NNG_OK);
 }
 
 // nni_url_asprintf_port is like nni_url_asprintf, but includes a port
 // override.  If non-zero, this port number replaces the port number
 // in the port string.
-int
+nng_err
 nni_url_asprintf_port(char **str, const nng_url *url, int port)
 {
 	nng_url myurl = *url;
@@ -621,7 +621,7 @@ nni_url_asprintf_port(char **str, const nng_url *url, int port)
 
 #define URL_COPYSTR(d, s) ((s != NULL) && ((d = nni_strdup(s)) == NULL))
 
-int
+nng_err
 nni_url_clone_inline(nng_url *dst, const nng_url *src)
 {
 	if (src->u_bufsz != 0) {
@@ -652,36 +652,36 @@ nni_url_clone_inline(nng_url *dst, const nng_url *src)
 	}
 	dst->u_scheme = src->u_scheme;
 	dst->u_port   = src->u_port;
-	return (0);
+	return (NNG_OK);
 }
 
 #undef URL_COPYSTR
 
-int
+nng_err
 nng_url_clone(nng_url **dstp, const nng_url *src)
 {
 	nng_url *dst;
-	int      rv;
+	nng_err  rv;
 	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_url_clone_inline(dst, src) != 0)) {
+	if ((rv = nni_url_clone_inline(dst, src) != NNG_OK)) {
 		NNI_FREE_STRUCT(dst);
 		return (rv);
 	}
 	*dstp = dst;
-	return (0);
+	return (NNG_OK);
 }
 
 // nni_url_to_address resolves a URL into a sockaddr, assuming the URL is for
 // an IP address.
-int
+nng_err
 nni_url_to_address(nng_sockaddr *sa, const nng_url *url)
 {
 	int             af;
 	nni_aio         aio;
 	const char     *h;
-	int             rv;
+	nng_err         rv;
 	nni_resolv_item ri;
 
 	// This assumes the scheme is one that uses TCP/IP addresses.

@@ -304,7 +304,7 @@ ipc_dialer_set(
 	return (nni_setopt(ipc_dialer_options, nm, d, buf, sz, t));
 }
 
-int
+nng_err
 nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	ipc_dialer *d;

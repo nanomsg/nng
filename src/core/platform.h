@@ -340,8 +340,8 @@ typedef struct nni_ipc_listener nni_ipc_listener;
 // IPC is so different from platform to platform.  The following should
 // be implemented.  If IPC isn't supported, all of these functions should
 // be stubs that just return NNG_ENOTSUP.
-extern int nni_ipc_dialer_alloc(nng_stream_dialer **, const nng_url *);
-extern int nni_ipc_listener_alloc(nng_stream_listener **, const nng_url *);
+extern nng_err nni_ipc_dialer_alloc(nng_stream_dialer **, const nng_url *);
+extern nng_err nni_ipc_listener_alloc(nng_stream_listener **, const nng_url *);
 
 //
 // UDP support. UDP is not connection oriented, and only has the notion

@@ -238,7 +238,7 @@ ipc_dialer_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 	return (nni_getopt(ipc_dialer_options, nm, d, buf, szp, t));
 }
 
-int
+nng_err
 nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	ipc_dialer *d;
@@ -269,7 +269,7 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_set          = ipc_dialer_set;
 	nni_aio_list_init(&d->aios);
 	*dp = (void *) d;
-	return (0);
+	return (NNG_OK);
 }
 
 int

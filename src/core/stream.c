@@ -21,8 +21,8 @@
 
 static struct {
 	const char *scheme;
-	int (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
-	int (*listener_alloc)(nng_stream_listener **, const nng_url *);
+	nng_err (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
+	nng_err (*listener_alloc)(nng_stream_listener **, const nng_url *);
 
 } stream_drivers[] = {
 	{

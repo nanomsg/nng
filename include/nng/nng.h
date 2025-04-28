@@ -1061,13 +1061,13 @@ NNG_DECL void nng_device_aio(nng_aio *, nng_socket, nng_socket);
 // port if one isn't specified and a default port is appropriate for
 // the scheme.  The URL structure is allocated, along with individual
 // members.  It can be freed with nng_url_free.
-NNG_DECL int nng_url_parse(nng_url **, const char *);
+NNG_DECL nng_err nng_url_parse(nng_url **, const char *);
 
 // nng_url_free frees a URL structure that was created by nng_url_parse().
 NNG_DECL void nng_url_free(nng_url *);
 
 // nng_url_clone clones a URL structure.
-NNG_DECL int nng_url_clone(nng_url **, const nng_url *);
+NNG_DECL nng_err nng_url_clone(nng_url **, const nng_url *);
 
 // nng_url_sprintf prints a URL to a string using semantics similar to
 // snprintf.

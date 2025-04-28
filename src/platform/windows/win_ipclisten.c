@@ -348,7 +348,7 @@ ipc_listener_free(void *arg)
 	NNI_FREE_STRUCT(l);
 }
 
-int
+nng_err
 nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
 	ipc_listener *l;

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -20,7 +20,7 @@
 // accept is performed, then another slot is available.
 #define NNG_SFD_LISTEN_QUEUE 16
 
-int
+nng_err
 nni_sfd_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	NNI_ARG_UNUSED(dp);
@@ -81,7 +81,7 @@ static void
 sfd_start_conn(sfd_listener *l, nni_aio *aio)
 {
 	int           fd;
-	int           rv;
+	nng_err       rv;
 	nni_sfd_conn *c;
 	NNI_ASSERT(l->listen_cnt > 0);
 	fd = l->listen_q[0];
@@ -209,7 +209,7 @@ sfd_listener_set(
 	return (nni_setopt(sfd_listener_options, name, l, buf, sz, t));
 }
 
-int
+nng_err
 nni_sfd_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
 	sfd_listener *l;
@@ -233,5 +233,5 @@ nni_sfd_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	l->ops.sl_set    = sfd_listener_set;
 
 	*lp = (void *) l;
-	return (0);
+	return (NNG_OK);
 }

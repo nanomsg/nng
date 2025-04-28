@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,7 +15,7 @@
 // These are interfaces we use for TCP internally.  These are not exposed
 // to the public API.
 
-extern int nni_tcp_dialer_alloc(nng_stream_dialer **, const nng_url *);
-extern int nni_tcp_listener_alloc(nng_stream_listener **, const nng_url *);
+extern nng_err nni_tcp_dialer_alloc(nng_stream_dialer **, const nng_url *);
+extern nng_err nni_tcp_listener_alloc(nng_stream_listener **, const nng_url *);
 
 #endif // CORE_TCP_H

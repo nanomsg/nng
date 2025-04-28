@@ -16,7 +16,7 @@
 
 // The implementation supplies this function to create the TLS connection
 // object.  All fields will be zeroed.
-extern int nni_tls_dialer_alloc(nng_stream_dialer **, const nng_url *);
-extern int nni_tls_listener_alloc(nng_stream_listener **, const nng_url *);
+extern nng_err nni_tls_dialer_alloc(nng_stream_dialer **, const nng_url *);
+extern nng_err nni_tls_listener_alloc(nng_stream_listener **, const nng_url *);
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_API_H

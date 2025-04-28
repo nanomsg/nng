@@ -448,7 +448,7 @@ sfd_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 	return (nni_setopt(sfd_options, name, c, buf, sz, t));
 }
 
-int
+nng_err
 nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 {
 	nni_sfd_conn *c;
@@ -473,7 +473,7 @@ nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 	c->stream.s_set   = sfd_set;
 
 	*cp = c;
-	return (0);
+	return (NNG_OK);
 }
 
 void

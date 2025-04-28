@@ -219,10 +219,10 @@ tcp_dialer_set(
 	return (nni_tcp_dialer_set(d->d, name, buf, sz, t));
 }
 
-static int
+static nng_err
 tcp_dialer_alloc(tcp_dialer **dp)
 {
-	int         rv;
+	nng_err     rv;
 	tcp_dialer *d;
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
@@ -234,7 +234,7 @@ tcp_dialer_alloc(tcp_dialer **dp)
 	nni_aio_init(&d->resaio, tcp_dial_res_cb, d);
 	nni_aio_init(&d->conaio, tcp_dial_con_cb, d);
 
-	if ((rv = nni_tcp_dialer_init(&d->d)) != 0) {
+	if ((rv = nni_tcp_dialer_init(&d->d)) != NNG_OK) {
 		tcp_dialer_free(d);
 		return (rv);
 	}
@@ -247,16 +247,16 @@ tcp_dialer_alloc(tcp_dialer **dp)
 	d->ops.sd_set   = tcp_dialer_set;
 
 	*dp = d;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	tcp_dialer *d;
 	int         rv;
 
-	if ((rv = tcp_dialer_alloc(&d)) != 0) {
+	if ((rv = tcp_dialer_alloc(&d)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -279,5 +279,5 @@ nni_tcp_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->port = url->u_port;
 
 	*dp = (void *) d;
-	return (0);
+	return (NNG_OK);
 }

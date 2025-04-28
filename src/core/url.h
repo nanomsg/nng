@@ -28,13 +28,13 @@ struct nng_url {
 };
 
 extern uint16_t nni_url_default_port(const char *);
-extern int      nni_url_asprintf(char **, const nng_url *);
-extern int      nni_url_asprintf_port(char **, const nng_url *, int);
+extern nng_err  nni_url_asprintf(char **, const nng_url *);
+extern nng_err  nni_url_asprintf_port(char **, const nng_url *, int);
 extern size_t   nni_url_decode(uint8_t *, const char *, size_t);
-extern int      nni_url_to_address(nng_sockaddr *, const nng_url *);
-extern int      nni_url_parse_inline(nng_url *, const char *);
-extern int      nni_url_clone_inline(nng_url *, const nng_url *);
+extern nng_err  nni_url_to_address(nng_sockaddr *, const nng_url *);
+extern nng_err  nni_url_parse_inline(nng_url *, const char *);
+extern nng_err  nni_url_clone_inline(nng_url *, const nng_url *);
 extern void     nni_url_fini(nng_url *);
-extern int      nni_url_canonify_uri(char *);
+extern nng_err  nni_url_canonify_uri(char *);
 
 #endif // CORE_URL_H

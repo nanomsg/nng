@@ -151,11 +151,11 @@ tls_listener_set(
 	return (nni_stream_listener_set(l->l, name, buf, sz, t));
 }
 
-int
+nng_err
 nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
 	tls_listener *l;
-	int           rv;
+	nng_err       rv;
 	nng_url       my_url;
 
 	memcpy(&my_url, url, sizeof(my_url));
@@ -169,12 +169,13 @@ nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	}
 	nni_mtx_init(&l->lk);
 
-	if ((rv = nng_stream_listener_alloc_url(&l->l, &my_url)) != 0) {
+	if ((rv = nng_stream_listener_alloc_url(&l->l, &my_url)) != NNG_OK) {
 		nni_mtx_fini(&l->lk);
 		NNI_FREE_STRUCT(l);
 		return (rv);
 	}
-	if ((rv = nng_tls_config_alloc(&l->cfg, NNG_TLS_MODE_SERVER)) != 0) {
+	if ((rv = nng_tls_config_alloc(&l->cfg, NNG_TLS_MODE_SERVER)) !=
+	    NNG_OK) {
 		nng_stream_listener_free(l->l);
 		nni_mtx_fini(&l->lk);
 		NNI_FREE_STRUCT(l);

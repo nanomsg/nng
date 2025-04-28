@@ -505,7 +505,7 @@ ipc_listener_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&l->mtx);
 }
 
-int
+nng_err
 nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
 	ipc_listener *l;
@@ -560,5 +560,5 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	l->sl.sl_set    = ipc_listener_set;
 
 	*lp = (void *) l;
-	return (0);
+	return (NNG_OK);
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -16,9 +16,9 @@
 // an arbitrary byte stream file descriptor (UNIX) or handle (Windows)
 // with a nng_stream.
 typedef struct nni_sfd_conn nni_sfd_conn;
-extern int nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd);
-extern int nni_sfd_dialer_alloc(nng_stream_dialer **, const nng_url *);
-extern int nni_sfd_listener_alloc(nng_stream_listener **, const nng_url *);
+extern nng_err              nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd);
+extern nng_err nni_sfd_dialer_alloc(nng_stream_dialer **, const nng_url *);
+extern nng_err nni_sfd_listener_alloc(nng_stream_listener **, const nng_url *);
 
 // this is used to close a file descriptor, in case we cannot
 // create a connection (or if the listener is closed before the
