@@ -483,7 +483,7 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
-static int
+static nng_err
 inproc_ep_bind(void *arg, nng_url *url)
 {
 	inproc_ep *ep = arg;
@@ -500,7 +500,7 @@ inproc_ep_bind(void *arg, nng_url *url)
 	}
 	nni_list_append(list, ep);
 	nni_mtx_unlock(&nni_inproc.mx);
-	return (0);
+	return (NNG_OK);
 }
 
 static void

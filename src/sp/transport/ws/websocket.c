@@ -225,13 +225,13 @@ wstran_pipe_peer(void *arg)
 	return (p->peer);
 }
 
-static int
+static nng_err
 wstran_listener_bind(void *arg, nng_url *url)
 {
 	ws_listener *l = arg;
-	int          rv;
+	nng_err      rv;
 
-	if ((rv = nng_stream_listener_listen(l->listener)) == 0) {
+	if ((rv = nng_stream_listener_listen(l->listener)) == NNG_OK) {
 		int port;
 		nng_stream_listener_get_int(
 		    l->listener, NNG_OPT_TCP_BOUND_PORT, &port);

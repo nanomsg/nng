@@ -853,15 +853,15 @@ tlstran_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static int
+static nng_err
 tlstran_ep_bind(void *arg, nng_url *url)
 {
 	tlstran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nng_stream_listener_listen(ep->listener);
-	if (rv == 0) {
+	if (rv == NNG_OK) {
 		int port;
 		nng_stream_listener_get_int(
 		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);

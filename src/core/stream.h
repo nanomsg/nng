@@ -68,7 +68,7 @@ struct nng_stream_listener {
 	void (*sl_free)(void *);
 	void (*sl_close)(void *);
 	void (*sl_stop)(void *);
-	int (*sl_listen)(void *);
+	nng_err (*sl_listen)(void *);
 	void (*sl_accept)(void *, nng_aio *);
 	int (*sl_get)(void *, const char *, void *, size_t *, nni_type);
 	int (*sl_set)(void *, const char *, const void *, size_t, nni_type);

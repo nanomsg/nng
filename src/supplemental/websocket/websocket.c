@@ -1688,11 +1688,11 @@ nni_ws_listener_hook(
 	nni_mtx_unlock(&l->mtx);
 }
 
-static int
+static nng_err
 ws_listener_listen(void *arg)
 {
 	nni_ws_listener *l = arg;
-	int              rv;
+	nng_err          rv;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
@@ -1704,14 +1704,15 @@ ws_listener_listen(void *arg)
 		return (NNG_ESTATE);
 	}
 
-	if ((rv = nni_http_server_add_handler(l->server, l->handler)) != 0) {
+	if ((rv = nni_http_server_add_handler(l->server, l->handler)) !=
+	    NNG_OK) {
 		nni_http_server_fini(l->server);
 		l->server = NULL;
 		nni_mtx_unlock(&l->mtx);
 		return (rv);
 	}
 
-	if ((rv = nni_http_server_start(l->server)) != 0) {
+	if ((rv = nni_http_server_start(l->server)) != NNG_OK) {
 		nni_http_server_del_handler(l->server, l->handler);
 		nni_http_server_fini(l->server);
 		l->server = NULL;
@@ -1722,7 +1723,7 @@ ws_listener_listen(void *arg)
 	l->started = true;
 
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
 static int

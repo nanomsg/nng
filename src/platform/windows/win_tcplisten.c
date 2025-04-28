@@ -130,10 +130,10 @@ tcp_listener_free(void *arg)
 	NNI_FREE_STRUCT(l);
 }
 
-static int
+static nng_err
 tcp_listener_listen(void *arg)
 {
-	int           rv;
+	nng_err       rv;
 	BOOL          yes;
 	DWORD         no;
 	int           len;
@@ -192,7 +192,7 @@ tcp_listener_listen(void *arg)
 	}
 	l->started = true;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
 static void

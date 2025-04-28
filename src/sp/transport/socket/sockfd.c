@@ -768,7 +768,7 @@ sfd_tran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	return (rv);
 }
 
-static int
+static nng_err
 sfd_tran_ep_bind(void *arg, nng_url *url)
 {
 	sfd_tran_ep *ep = arg;

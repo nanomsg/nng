@@ -1709,11 +1709,11 @@ udp_ep_start(udp_ep *ep)
 	udp_start_rx(ep);
 }
 
-static int
+static nng_err
 udp_ep_bind(void *arg, nng_url *url)
 {
 	udp_ep *ep = arg;
-	int     rv;
+	nng_err rv;
 
 	nni_mtx_lock(&ep->mtx);
 	if (ep->started) {
@@ -1722,7 +1722,7 @@ udp_ep_bind(void *arg, nng_url *url)
 	}
 
 	rv = nni_udp_open(&ep->udp, &ep->self_sa);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		nni_mtx_unlock(&ep->mtx);
 		return (rv);
 	}

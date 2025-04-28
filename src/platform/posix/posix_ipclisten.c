@@ -358,13 +358,13 @@ ipc_listener_chmod(ipc_listener *l, const char *path)
 	return (0);
 }
 
-int
+nng_err
 ipc_listener_listen(void *arg)
 {
 	ipc_listener           *l = arg;
 	socklen_t               len;
 	struct sockaddr_storage ss;
-	int                     rv;
+	nng_err                 rv;
 	int                     fd;
 	char                   *path;
 
@@ -420,7 +420,7 @@ ipc_listener_listen(void *arg)
 	    (listen(fd, 128) != 0)) {
 		rv = nni_plat_errno(errno);
 	}
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		nni_mtx_unlock(&l->mtx);
 		(void) close(fd);
 		if (path != NULL) {
@@ -457,7 +457,7 @@ ipc_listener_listen(void *arg)
 	l->path    = path;
 	nni_mtx_unlock(&l->mtx);
 
-	return (0);
+	return (NNG_OK);
 }
 
 static void

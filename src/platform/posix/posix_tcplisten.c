@@ -176,13 +176,13 @@ tcp_listener_cancel(nni_aio *aio, void *arg, nng_err rv)
 	nni_mtx_unlock(&l->mtx);
 }
 
-static int
+static nng_err
 tcp_listener_listen(void *arg)
 {
 	tcp_listener           *l = arg;
 	socklen_t               len;
 	struct sockaddr_storage ss;
-	int                     rv;
+	nng_err                 rv;
 	int                     fd;
 
 	if (((len = nni_posix_nn2sockaddr(&ss, &l->sa)) == 0) ||
@@ -244,7 +244,7 @@ tcp_listener_listen(void *arg)
 	l->started = true;
 	nni_mtx_unlock(&l->mtx);
 
-	return (0);
+	return (NNG_OK);
 }
 
 static void

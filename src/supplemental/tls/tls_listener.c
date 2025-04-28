@@ -54,7 +54,7 @@ tls_listener_free(void *arg)
 	}
 }
 
-static int
+static nng_err
 tls_listener_listen(void *arg)
 {
 	tls_listener *l = arg;

@@ -92,7 +92,7 @@ struct nni_sp_listener_ops {
 	// address, or NNG_EACCESS for permission problems. The transport
 	// should update the url if it has changed (e.g. due to converting
 	// from port 0 to a real port.)
-	int (*l_bind)(void *, nng_url *);
+	nng_err (*l_bind)(void *, nng_url *);
 
 	// l_accept accepts an inbound connection.
 	void (*l_accept)(void *, nni_aio *);

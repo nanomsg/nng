@@ -69,12 +69,12 @@ sfd_listener_stop(void *arg)
 	sfd_listener_close(arg);
 }
 
-static int
+static nng_err
 sfd_listener_listen(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 	// nothing really for us to do
-	return (0);
+	return (NNG_OK);
 }
 
 static void
