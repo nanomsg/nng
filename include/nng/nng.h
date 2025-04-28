@@ -1041,7 +1041,7 @@ NNG_DECL uint64_t nng_stat_timestamp(const nng_stat *);
 // This version is synchronous, which means the caller will block until
 // one of the sockets is closed. Note that caller is responsible for
 // finally closing both sockets when this function returns.
-NNG_DECL int nng_device(nng_socket, nng_socket);
+NNG_DECL nng_err nng_device(nng_socket, nng_socket);
 
 // Asynchronous form of nng_device.  When this succeeds, the device is
 // left intact and functioning in the background, until one of the sockets

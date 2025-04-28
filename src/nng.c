@@ -1220,11 +1220,11 @@ nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2)
 	}
 }
 
-int
+nng_err
 nng_device(nng_socket s1, nng_socket s2)
 {
 	nni_aio aio;
-	int     rv;
+	nng_err rv;
 	nni_aio_init(&aio, NULL, NULL);
 	nng_device_aio(&aio, s1, s2);
 	nni_aio_wait(&aio);
