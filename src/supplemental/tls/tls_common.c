@@ -47,7 +47,7 @@ static void tls_bio_send_start(tls_conn *);
 static void tls_bio_error(tls_conn *, int);
 
 static void
-tls_cancel(nni_aio *aio, void *arg, int rv)
+tls_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tls_conn *conn = arg;
 	nni_mtx_lock(&conn->lock);

@@ -547,7 +547,7 @@ ws_start_write(nni_ws *ws)
 }
 
 static void
-ws_cancel_close(nni_aio *aio, void *arg, int rv)
+ws_cancel_close(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_ws *ws = arg;
 	nni_mtx_lock(&ws->mtx);
@@ -653,7 +653,7 @@ ws_write_cb(void *arg)
 }
 
 static void
-ws_write_cancel(nni_aio *aio, void *arg, int rv)
+ws_write_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_ws   *ws = arg;
 	ws_frame *frame;
@@ -1108,7 +1108,7 @@ ws_read_cb(void *arg)
 }
 
 static void
-ws_read_cancel(nni_aio *aio, void *arg, int rv)
+ws_read_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_ws *ws = arg;
 
@@ -1607,7 +1607,7 @@ err:
 }
 
 static void
-ws_accept_cancel(nni_aio *aio, void *arg, int rv)
+ws_accept_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_ws_listener *l = arg;
 
@@ -2203,7 +2203,7 @@ ws_dialer_free(void *arg)
 }
 
 static void
-ws_dial_cancel(nni_aio *aio, void *arg, int rv)
+ws_dial_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_ws *ws = arg;
 

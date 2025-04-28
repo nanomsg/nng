@@ -76,7 +76,7 @@ struct sub0_pipe {
 };
 
 static void
-sub0_ctx_cancel(nng_aio *aio, void *arg, int rv)
+sub0_ctx_cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	sub0_ctx  *ctx  = arg;
 	sub0_sock *sock = ctx->sock;

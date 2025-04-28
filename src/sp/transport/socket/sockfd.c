@@ -382,7 +382,7 @@ recv_error:
 }
 
 static void
-sfd_tran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
+sfd_tran_pipe_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	sfd_tran_pipe *p = arg;
 
@@ -470,7 +470,7 @@ sfd_tran_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-sfd_tran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+sfd_tran_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	sfd_tran_pipe *p = arg;
 
@@ -728,7 +728,7 @@ sfd_tran_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 }
 
 static void
-sfd_tran_ep_cancel(nni_aio *aio, void *arg, int rv)
+sfd_tran_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	sfd_tran_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);

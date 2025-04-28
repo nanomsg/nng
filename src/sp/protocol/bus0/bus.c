@@ -318,7 +318,7 @@ bus0_sock_send(void *arg, nni_aio *aio)
 }
 
 static void
-bus0_recv_cancel(nng_aio *aio, void *arg, int rv)
+bus0_recv_cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	bus0_sock *s = arg;
 	nni_mtx_lock(&s->mtx);

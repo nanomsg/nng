@@ -395,7 +395,7 @@ recv_error:
 }
 
 static void
-tlstran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
+tlstran_pipe_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tlstran_pipe *p = arg;
 
@@ -476,7 +476,7 @@ tlstran_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-tlstran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+tlstran_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tlstran_pipe *p = arg;
 
@@ -815,7 +815,7 @@ tlstran_ep_init_listener(void *arg, nng_url *url, nni_listener *nlistener)
 }
 
 static void
-tlstran_ep_cancel(nni_aio *aio, void *arg, int rv)
+tlstran_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tlstran_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);

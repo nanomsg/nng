@@ -106,7 +106,7 @@ wstran_pipe_recv_cb(void *arg)
 }
 
 static void
-wstran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+wstran_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ws_pipe *p = arg;
 	nni_mtx_lock(&p->mtx);
@@ -137,7 +137,7 @@ wstran_pipe_recv(void *arg, nni_aio *aio)
 }
 
 static void
-wstran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
+wstran_pipe_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ws_pipe *p = arg;
 	nni_mtx_lock(&p->mtx);
@@ -241,7 +241,7 @@ wstran_listener_bind(void *arg, nng_url *url)
 }
 
 static void
-wstran_listener_cancel(nni_aio *aio, void *arg, int rv)
+wstran_listener_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ws_listener *l = arg;
 
@@ -277,7 +277,7 @@ wstran_listener_accept(void *arg, nni_aio *aio)
 }
 
 static void
-wstran_dialer_cancel(nni_aio *aio, void *arg, int rv)
+wstran_dialer_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ws_dialer *d = arg;
 

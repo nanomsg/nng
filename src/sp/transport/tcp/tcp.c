@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -402,7 +402,7 @@ recv_error:
 }
 
 static void
-tcptran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
+tcptran_pipe_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tcptran_pipe *p = arg;
 
@@ -491,7 +491,7 @@ tcptran_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-tcptran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+tcptran_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tcptran_pipe *p = arg;
 
@@ -846,7 +846,7 @@ tcptran_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 }
 
 static void
-tcptran_ep_cancel(nni_aio *aio, void *arg, int rv)
+tcptran_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tcptran_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);

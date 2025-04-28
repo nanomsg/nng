@@ -205,7 +205,7 @@ pull0_sock_send(void *arg, nni_aio *aio)
 }
 
 static void
-pull0_cancel(nni_aio *aio, void *arg, int rv)
+pull0_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	pull0_sock *s = arg;
 	nni_mtx_lock(&s->m);

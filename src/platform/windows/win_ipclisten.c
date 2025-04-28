@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -245,7 +245,7 @@ ipc_listener_listen(void *arg)
 }
 
 static void
-ipc_accept_cancel(nni_aio *aio, void *arg, int rv)
+ipc_accept_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_listener *l = arg;
 

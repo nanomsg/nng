@@ -248,7 +248,7 @@ pair1_pipe_init(void *arg, nni_pipe *pipe, void *pair)
 }
 
 static void
-pair1_cancel(nni_aio *aio, void *arg, int rv)
+pair1_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	pair1_sock *s = arg;
 

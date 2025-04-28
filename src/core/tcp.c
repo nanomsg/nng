@@ -35,7 +35,7 @@ typedef struct {
 } tcp_dialer;
 
 static void
-tcp_dial_cancel(nni_aio *aio, void *arg, int rv)
+tcp_dial_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tcp_dialer *d = arg;
 

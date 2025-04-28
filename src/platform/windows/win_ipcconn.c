@@ -138,7 +138,7 @@ ipc_recv_cb(nni_win_io *io, int rv, size_t num)
 }
 
 static void
-ipc_recv_cancel(nni_aio *aio, void *arg, int rv)
+ipc_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_conn *c = arg;
 	nni_mtx_lock(&c->mtx);

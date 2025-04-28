@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.com>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.com>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -60,7 +60,7 @@ device_fini(void *arg)
 }
 
 static void
-device_cancel(nni_aio *aio, void *arg, int rv)
+device_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	device_data *d = arg;
 	// cancellation is the only path to shutting it down.

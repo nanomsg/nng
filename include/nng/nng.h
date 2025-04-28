@@ -680,7 +680,7 @@ NNG_DECL void nng_aio_finish(nng_aio *, int);
 // This returns false if the operation cannot be deferred (because the AIO
 // has been stopped with nng_aio_stop.)  If it does so, then the aio's
 // completion callback will fire with a result of NNG_ESTOPPED.
-typedef void (*nng_aio_cancelfn)(nng_aio *, void *, int);
+typedef void (*nng_aio_cancelfn)(nng_aio *, void *, nng_err);
 NNG_DECL bool nng_aio_start(nng_aio *, nng_aio_cancelfn, void *);
 
 // nng_aio_sleep does a "sleeping" operation, basically does nothing

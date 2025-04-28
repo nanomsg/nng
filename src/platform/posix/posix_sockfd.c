@@ -261,7 +261,7 @@ sfd_cb(void *arg, unsigned events)
 }
 
 static void
-sfd_cancel(nni_aio *aio, void *arg, int rv)
+sfd_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_sfd_conn *c = arg;
 

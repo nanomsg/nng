@@ -57,7 +57,7 @@ tls_dialer_stop(void *arg)
 // Dialer cancel is called when the user has indicated that they no longer
 // want to wait for the connection to establish.
 static void
-tls_dialer_cancel(nni_aio *aio, void *arg, int rv)
+tls_dialer_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tls_stream *ts = arg;
 

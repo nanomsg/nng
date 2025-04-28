@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -123,7 +123,7 @@ ipc_dial_thr(void *arg)
 }
 
 static void
-ipc_dial_cancel(nni_aio *aio, void *arg, int rv)
+ipc_dial_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_dialer    *d = arg;
 	ipc_dial_work *w = &ipc_connector;

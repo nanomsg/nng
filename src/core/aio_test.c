@@ -25,7 +25,7 @@ sleep_done(void *arg)
 }
 
 static void
-cancel(nng_aio *aio, void *arg, int rv)
+cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	*(int *) arg = rv;
 	nng_aio_finish(aio, rv);

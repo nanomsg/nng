@@ -762,7 +762,7 @@ nni_aio_iov_advance(nni_aio *aio, size_t n)
 }
 
 static void
-nni_sleep_cancel(nng_aio *aio, void *arg, int rv)
+nni_sleep_cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	NNI_ARG_UNUSED(arg);
 	nni_aio_expire_q *eq = aio->a_expire_q;

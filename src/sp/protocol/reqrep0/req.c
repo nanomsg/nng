@@ -536,7 +536,8 @@ req0_run_send_queue(req0_sock *s, nni_aio_completions *sent_list)
 		// At this point, we will never give this message back to
 		// the user, so we don't have to worry about making it
 		// unique.  We can freely clone it.
-		// But only do so if we need to hang onto it (for potential retries)
+		// But only do so if we need to hang onto it (for potential
+		// retries)
 		if (ctx->retry > 0) {
 			nni_msg_clone(ctx->req_msg);
 		}
@@ -573,7 +574,7 @@ req0_ctx_reset(req0_ctx *ctx)
 }
 
 static void
-req0_ctx_cancel_recv(nni_aio *aio, void *arg, int rv)
+req0_ctx_cancel_recv(nni_aio *aio, void *arg, nng_err rv)
 {
 	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;
@@ -661,7 +662,7 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 }
 
 static void
-req0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
+req0_ctx_cancel_send(nni_aio *aio, void *arg, nng_err rv)
 {
 	req0_ctx  *ctx = arg;
 	req0_sock *s   = ctx->sock;

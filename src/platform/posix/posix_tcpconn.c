@@ -266,7 +266,7 @@ tcp_cb(void *arg, unsigned events)
 }
 
 static void
-tcp_cancel(nni_aio *aio, void *arg, int rv)
+tcp_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_tcp_conn *c = arg;
 

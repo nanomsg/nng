@@ -175,7 +175,7 @@ nni_http_client_get(
 }
 
 static void
-http_dial_cancel(nni_aio *aio, void *arg, int rv)
+http_dial_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_http_client *c = arg;
 	nni_mtx_lock(&c->mtx);
@@ -366,7 +366,7 @@ error:
 }
 
 static void
-http_txn_cancel(nni_aio *aio, void *arg, int rv)
+http_txn_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	http_txn *txn = arg;
 	nni_mtx_lock(&http_txn_lk);

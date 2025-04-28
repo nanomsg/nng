@@ -434,7 +434,7 @@ http_rd_cb(void *arg)
 }
 
 static void
-http_rd_cancel(nni_aio *aio, void *arg, int rv)
+http_rd_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_http_conn *conn = arg;
 
@@ -549,7 +549,7 @@ done:
 }
 
 static void
-http_wr_cancel(nni_aio *aio, void *arg, int rv)
+http_wr_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_http_conn *conn = arg;
 

@@ -169,7 +169,7 @@ nni_plat_udp_send(nni_plat_udp *u, nni_aio *aio)
 }
 
 static void
-udp_recv_cancel(nni_aio *aio, void *arg, int rv)
+udp_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_plat_udp *u = arg;
 	nni_mtx_lock(&u->lk);

@@ -164,7 +164,7 @@ ipc_listener_cb(void *arg, unsigned events)
 }
 
 static void
-ipc_listener_cancel(nni_aio *aio, void *arg, int rv)
+ipc_listener_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_listener *l = arg;
 

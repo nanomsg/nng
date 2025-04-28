@@ -249,7 +249,7 @@ push0_send_cb(void *arg)
 }
 
 static void
-push0_cancel(nni_aio *aio, void *arg, int rv)
+push0_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	push0_sock *s = arg;
 

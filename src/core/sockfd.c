@@ -99,7 +99,7 @@ sfd_start_conn(sfd_listener *l, nni_aio *aio)
 }
 
 static void
-sfd_cancel_accept(nni_aio *aio, void *arg, int rv)
+sfd_cancel_accept(nni_aio *aio, void *arg, nng_err rv)
 {
 	sfd_listener *l = arg;
 

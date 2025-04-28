@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -196,7 +196,7 @@ tcp_listener_listen(void *arg)
 }
 
 static void
-tcp_accept_cancel(nni_aio *aio, void *arg, int rv)
+tcp_accept_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	tcp_listener *l = arg;
 

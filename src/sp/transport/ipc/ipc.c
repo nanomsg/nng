@@ -413,7 +413,7 @@ error:
 }
 
 static void
-ipc_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
+ipc_pipe_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_pipe *p = arg;
 
@@ -500,7 +500,7 @@ ipc_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-ipc_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+ipc_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_pipe *p = arg;
 
@@ -835,7 +835,7 @@ ipc_ep_init_listener(void *arg, nng_url *url, nni_listener *listener)
 }
 
 static void
-ipc_ep_cancel(nni_aio *aio, void *arg, int rv)
+ipc_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);

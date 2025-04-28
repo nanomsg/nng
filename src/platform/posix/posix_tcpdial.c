@@ -113,7 +113,7 @@ nni_posix_tcp_dialer_rele(nni_tcp_dialer *d)
 }
 
 static void
-tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
+tcp_dialer_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_tcp_dialer *d = arg;
 	nni_tcp_conn   *c;

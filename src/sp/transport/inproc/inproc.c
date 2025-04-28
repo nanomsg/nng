@@ -176,7 +176,7 @@ inproc_queue_run(inproc_queue *queue)
 }
 
 static void
-inproc_queue_cancel(nni_aio *aio, void *arg, int rv)
+inproc_queue_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	inproc_queue *queue = arg;
 
@@ -433,7 +433,7 @@ inproc_accept_clients(inproc_ep *srv)
 }
 
 static void
-inproc_ep_cancel(nni_aio *aio, void *arg, int rv)
+inproc_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	inproc_ep *ep = arg;
 

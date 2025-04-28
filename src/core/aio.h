@@ -17,7 +17,7 @@
 #include "core/taskq.h"
 #include "core/thread.h"
 
-typedef void (*nni_aio_cancel_fn)(nni_aio *, void *, int);
+typedef void (*nni_aio_cancel_fn)(nni_aio *, void *, nng_err);
 
 // nni_aio_init initializes an aio object.  The callback is called with
 // the supplied argument when the operation is complete.  If NULL is

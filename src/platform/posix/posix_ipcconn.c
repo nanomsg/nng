@@ -231,7 +231,7 @@ ipc_cb(void *arg, unsigned events)
 }
 
 static void
-ipc_cancel(nni_aio *aio, void *arg, int rv)
+ipc_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_conn *c = arg;
 

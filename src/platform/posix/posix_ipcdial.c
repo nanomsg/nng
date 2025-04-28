@@ -82,7 +82,7 @@ nni_posix_ipc_dialer_rele(ipc_dialer *d)
 }
 
 static void
-ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
+ipc_dialer_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_ipc_dialer *d = arg;
 	nni_ipc_conn   *c;

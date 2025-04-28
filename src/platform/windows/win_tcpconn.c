@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -96,7 +96,7 @@ tcp_recv_cb(nni_win_io *io, int rv, size_t num)
 }
 
 static void
-tcp_recv_cancel(nni_aio *aio, void *arg, int rv)
+tcp_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);

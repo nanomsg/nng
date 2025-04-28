@@ -197,7 +197,7 @@ nni_msgq_run_notify(nni_msgq *mq)
 }
 
 static void
-nni_msgq_cancel(nni_aio *aio, void *arg, int rv)
+nni_msgq_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_msgq *mq = arg;
 

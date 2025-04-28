@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -96,7 +96,7 @@ nni_tcp_dialer_fini(nni_tcp_dialer *d)
 }
 
 static void
-tcp_dial_cancel(nni_aio *aio, void *arg, int rv)
+tcp_dial_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_tcp_dialer *d = arg;
 	nni_tcp_conn   *c;

@@ -999,7 +999,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-udp_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+udp_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	udp_pipe *p  = arg;
 	udp_ep   *ep = p->ep;
@@ -1430,7 +1430,7 @@ udp_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 }
 
 static void
-udp_ep_cancel(nni_aio *aio, void *arg, int rv)
+udp_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	udp_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);

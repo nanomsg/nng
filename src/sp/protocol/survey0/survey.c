@@ -133,7 +133,7 @@ surv0_ctx_init(void *c, void *s)
 }
 
 static void
-surv0_ctx_cancel(nni_aio *aio, void *arg, int rv)
+surv0_ctx_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	surv0_ctx  *ctx  = arg;
 	surv0_sock *sock = ctx->sock;

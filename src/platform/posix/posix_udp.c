@@ -377,7 +377,7 @@ nni_plat_udp_close(nni_plat_udp *udp)
 }
 
 void
-nni_plat_udp_cancel(nni_aio *aio, void *arg, int rv)
+nni_plat_udp_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_plat_udp *udp = arg;
 
