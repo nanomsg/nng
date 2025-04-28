@@ -334,19 +334,20 @@ xresp0_putq_cb(void *arg)
 	nni_pipe_recv(p->npipe, &p->aio_recv);
 }
 
-static int
+static nng_err
 xresp0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	xresp0_sock *s = arg;
 	int          ttl;
-	int          rv;
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
+	nng_err      rv;
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) ==
+	    NNG_OK) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);
 }
 
-static int
+static nng_err
 xresp0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	xresp0_sock *s = arg;

@@ -387,13 +387,13 @@ ipc_free(void *arg)
 	NNI_FREE_STRUCT(c);
 }
 
-static int
+static nng_err
 ipc_conn_get_addr(void *c, void *buf, size_t *szp, nni_opt_type t)
 {
 	return (nni_copyout_sockaddr(&(CONN(c))->sa, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 {
 	ULONG id;
@@ -431,14 +431,14 @@ static const nni_option ipc_conn_options[] = {
 	},
 };
 
-static int
+static nng_err
 ipc_set(void *arg, const char *nm, const void *val, size_t sz, nni_opt_type t)
 {
 	ipc_conn *c = arg;
 	return (nni_setopt(ipc_conn_options, nm, c, val, sz, t));
 }
 
-static int
+static nng_err
 ipc_get(void *arg, const char *nm, void *val, size_t *szp, nni_opt_type t)
 {
 	ipc_conn *c = arg;

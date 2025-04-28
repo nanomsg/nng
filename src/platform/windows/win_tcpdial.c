@@ -246,14 +246,15 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nni_mtx_unlock(&d->mtx);
 }
 
-static int
+static nng_err
 tcp_dialer_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_dialer *d = arg;
-	int             rv;
+	nng_err         rv;
 	bool            b;
 
-	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (d == NULL)) {
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != NNG_OK) ||
+	    (d == NULL)) {
 		return (rv);
 	}
 	nni_mtx_lock(&d->mtx);
@@ -262,7 +263,7 @@ tcp_dialer_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
 	return (0);
 }
 
-static int
+static nng_err
 tcp_dialer_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	bool            b;
@@ -273,14 +274,15 @@ tcp_dialer_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_dialer_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_dialer *d = arg;
-	int             rv;
+	nng_err         rv;
 	bool            b;
 
-	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (d == NULL)) {
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != NNG_OK) ||
+	    (d == NULL)) {
 		return (rv);
 	}
 	nni_mtx_lock(&d->mtx);
@@ -289,7 +291,7 @@ tcp_dialer_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
 	return (0);
 }
 
-static int
+static nng_err
 tcp_dialer_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	bool            b;
@@ -300,7 +302,7 @@ tcp_dialer_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_dialer_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_dialer *d = arg;
@@ -314,7 +316,7 @@ tcp_dialer_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_dialer     *d = arg;
@@ -322,13 +324,13 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 	SOCKADDR_STORAGE    ss;
 	struct sockaddr_in *sin;
 	size_t              sslen;
-	int                 rv;
+	nng_err             rv;
 #ifdef NNG_ENABLE_IPV6
 	struct sockaddr_in6 *sin6;
 #endif
 	NNI_ARG_UNUSED(sz);
 
-	if ((rv = nni_copyin_sockaddr(&sa, buf, t)) != 0) {
+	if ((rv = nni_copyin_sockaddr(&sa, buf, t)) != NNG_OK) {
 		return (rv);
 	}
 	if ((sslen = nni_win_nn2sockaddr(&ss, &sa)) == 0) {
@@ -364,7 +366,7 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 		d->srclen = sslen;
 		nni_mtx_unlock(&d->mtx);
 	}
-	return (0);
+	return (NNG_OK);
 }
 
 static const nni_option tcp_dialer_options[] = {

@@ -205,7 +205,7 @@ ipc_dialer_free(void *arg)
 	NNI_FREE_STRUCT(d);
 }
 
-static int
+static nng_err
 ipc_dialer_get_remaddr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_dialer *d = arg;
@@ -223,7 +223,7 @@ static const nni_option ipc_dialer_options[] = {
 	},
 };
 
-static int
+static nng_err
 ipc_dialer_set(
     void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
 {
@@ -231,7 +231,7 @@ ipc_dialer_set(
 	return (nni_setopt(ipc_dialer_options, nm, d, buf, sz, t));
 }
 
-static int
+static nng_err
 ipc_dialer_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	ipc_dialer *d = arg;

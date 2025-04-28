@@ -299,26 +299,26 @@ ipc_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
-static int
+static nng_err
 ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
-	int       rv;
+	nng_err   rv;
 	int       ignore;
 	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &id, &ignore,
-	         &ignore, &ignore)) != 0) {
+	         &ignore, &ignore)) != NNG_OK) {
 		return (rv);
 	}
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
-	int       rv;
+	nng_err   rv;
 	int       ignore;
 	int       id = 0;
 
@@ -329,16 +329,16 @@ ipc_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
-	int       rv;
+	nng_err   rv;
 	int       ignore;
 	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &ignore, &ignore,
-	         &ignore, &id)) != 0) {
+	         &ignore, &id)) != NNG_OK) {
 		return (rv);
 	}
 	if (id == -1) {
@@ -348,16 +348,16 @@ ipc_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
-	int       rv;
+	nng_err   rv;
 	int       ignore;
 	int       id = 0;
 
 	if ((rv = nni_posix_peerid(nni_posix_pfd_fd(&c->pfd), &ignore, &ignore,
-	         &id, &ignore)) != 0) {
+	         &id, &ignore)) != NNG_OK) {
 		return (rv);
 	}
 	if (id == -1) {
@@ -367,7 +367,7 @@ ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
@@ -441,14 +441,14 @@ static const nni_option ipc_options[] = {
 	},
 };
 
-static int
+static nng_err
 ipc_get(void *arg, const char *name, void *val, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
 	return (nni_getopt(ipc_options, name, c, val, szp, t));
 }
 
-static int
+static nng_err
 ipc_set(void *arg, const char *name, const void *val, size_t sz, nni_type t)
 {
 	ipc_conn *c = arg;

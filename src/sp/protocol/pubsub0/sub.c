@@ -400,7 +400,7 @@ sub0_recv_cb(void *arg)
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
-static int
+static nng_err
 sub0_ctx_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	sub0_ctx  *ctx  = arg;
@@ -413,15 +413,15 @@ sub0_ctx_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(val, buf, szp, t));
 }
 
-static int
+static nng_err
 sub0_ctx_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	sub0_ctx  *ctx  = arg;
 	sub0_sock *sock = ctx->sock;
 	int        val;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	nni_mtx_lock(&sock->lk);
@@ -436,7 +436,7 @@ sub0_ctx_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 		sock->recv_buf_len = (size_t) val;
 	}
 	nni_mtx_unlock(&sock->lk);
-	return (0);
+	return (NNG_OK);
 }
 
 // For now, we maintain subscriptions on a sorted linked list.  As we do not
@@ -444,7 +444,7 @@ sub0_ctx_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 // really O(n), we think this is acceptable.  In the future we might decide
 // to replace this with a patricia trie, like old nanomsg had.
 
-static int
+static nng_err
 sub0_ctx_subscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 {
 	sub0_sock  *sock = ctx->sock;
@@ -459,7 +459,7 @@ sub0_ctx_subscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 		if (memcmp(topic->buf, buf, sz) == 0) {
 			// Already have it.
 			nni_mtx_unlock(&sock->lk);
-			return (0);
+			return (NNG_OK);
 		}
 	}
 	if ((new_topic = NNI_ALLOC_STRUCT(new_topic)) == NULL) {
@@ -477,10 +477,10 @@ sub0_ctx_subscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 	new_topic->len = sz;
 	nni_list_append(&ctx->topics, new_topic);
 	nni_mtx_unlock(&sock->lk);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 sub0_ctx_unsubscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 {
 	sub0_sock  *sock = ctx->sock;
@@ -521,10 +521,10 @@ sub0_ctx_unsubscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 
 	nni_free(topic->buf, topic->len);
 	NNI_FREE_STRUCT(topic);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 sub0_ctx_get_prefer_new(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	sub0_ctx  *ctx  = arg;
@@ -538,15 +538,15 @@ sub0_ctx_get_prefer_new(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(val, buf, szp, t));
 }
 
-static int
+static nng_err
 sub0_ctx_set_prefer_new(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	sub0_ctx  *ctx  = arg;
 	sub0_sock *sock = ctx->sock;
 	bool       val;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nni_copyin_bool(&val, buf, sz, t)) != 0) {
+	if ((rv = nni_copyin_bool(&val, buf, sz, t)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -557,7 +557,7 @@ sub0_ctx_set_prefer_new(void *arg, const void *buf, size_t sz, nni_type t)
 	}
 	nni_mtx_unlock(&sock->lk);
 
-	return (0);
+	return (NNG_OK);
 }
 
 static nni_option sub0_ctx_options[] = {
@@ -591,7 +591,7 @@ sub0_sock_recv(void *arg, nni_aio *aio)
 	sub0_ctx_recv(&sock->master, aio);
 }
 
-static int
+static nng_err
 sub0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	sub0_sock *sock = arg;
@@ -599,28 +599,28 @@ sub0_sock_get_recv_fd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&sock->readable, fdp));
 }
 
-static int
+static nng_err
 sub0_sock_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	sub0_sock *sock = arg;
 	return (sub0_ctx_get_recv_buf_len(&sock->master, buf, szp, t));
 }
 
-static int
+static nng_err
 sub0_sock_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	sub0_sock *sock = arg;
 	return (sub0_ctx_set_recv_buf_len(&sock->master, buf, sz, t));
 }
 
-static int
+static nng_err
 sub0_sock_get_prefer_new(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	sub0_sock *sock = arg;
 	return (sub0_ctx_get_prefer_new(&sock->master, buf, szp, t));
 }
 
-static int
+static nng_err
 sub0_sock_set_prefer_new(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	sub0_sock *sock = arg;

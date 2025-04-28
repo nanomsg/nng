@@ -153,80 +153,80 @@ sock_get_fd(nni_sock *s, unsigned flag, int *fdp)
 	return (rv);
 }
 
-static int
+static nng_err
 sock_set_recvtimeo(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_rcvtimeo, buf, sz, t));
 }
 
-static int
+static nng_err
 sock_get_recvtimeo(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_rcvtimeo, buf, szp, t));
 }
 
-static int
+static nng_err
 sock_set_sendtimeo(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_sndtimeo, buf, sz, t));
 }
 
-static int
+static nng_err
 sock_get_sendtimeo(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_sndtimeo, buf, szp, t));
 }
 
-static int
+static nng_err
 sock_set_reconnmint(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_reconn, buf, sz, t));
 }
 
-static int
+static nng_err
 sock_get_reconnmint(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_reconn, buf, szp, t));
 }
 
-static int
+static nng_err
 sock_set_reconnmaxt(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_reconnmax, buf, sz, t));
 }
 
-static int
+static nng_err
 sock_get_reconnmaxt(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_reconnmax, buf, szp, t));
 }
 
-static int
+static nng_err
 sock_set_recvmaxsz(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (
 	    nni_copyin_size(&SOCK(s)->s_rcvmaxsz, buf, sz, 0, NNI_MAXSZ, t));
 }
 
-static int
+static nng_err
 sock_get_recvmaxsz(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_size(SOCK(s)->s_rcvmaxsz, buf, szp, t));
 }
 
-static int
+static nng_err
 sock_set_recvbuf(void *s, const void *buf, size_t sz, nni_type t)
 {
-	int len;
-	int rv;
+	int     len;
+	nng_err rv;
 
-	if ((rv = nni_copyin_int(&len, buf, sz, 0, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&len, buf, sz, 0, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	return (nni_msgq_resize(SOCK(s)->s_urq, len));
 }
 
-static int
+static nng_err
 sock_get_recvbuf(void *s, void *buf, size_t *szp, nni_type t)
 {
 	int len = nni_msgq_cap(SOCK(s)->s_urq);
@@ -234,19 +234,19 @@ sock_get_recvbuf(void *s, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(len, buf, szp, t));
 }
 
-static int
+static nng_err
 sock_set_sendbuf(void *s, const void *buf, size_t sz, nni_type t)
 {
-	int len;
-	int rv;
+	int     len;
+	nng_err rv;
 
-	if ((rv = nni_copyin_int(&len, buf, sz, 0, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&len, buf, sz, 0, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	return (nni_msgq_resize(SOCK(s)->s_uwq, len));
 }
 
-static int
+static nng_err
 sock_get_sendbuf(void *s, void *buf, size_t *szp, nni_type t)
 {
 	int len = nni_msgq_cap(SOCK(s)->s_uwq);

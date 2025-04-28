@@ -360,7 +360,7 @@ again:
 	nni_aio_finish(aio, 0, nni_msg_len(msg));
 }
 
-static int
+static nng_err
 bus0_sock_get_send_fd(void *arg, int *fdp)
 {
 	bus0_sock *sock = arg;
@@ -369,7 +369,7 @@ bus0_sock_get_send_fd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&sock->can_send, fdp));
 }
 
-static int
+static nng_err
 bus0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	bus0_sock *s = arg;
@@ -377,7 +377,7 @@ bus0_sock_get_recv_fd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&s->can_recv, fdp));
 }
 
-static int
+static nng_err
 bus0_sock_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	bus0_sock *s = arg;
@@ -389,7 +389,7 @@ bus0_sock_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(val, buf, szp, t));
 }
 
-static int
+static nng_err
 bus0_sock_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	bus0_sock *s = arg;
@@ -400,14 +400,14 @@ bus0_sock_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(val, buf, szp, t));
 }
 
-static int
+static nng_err
 bus0_sock_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	bus0_sock *s = arg;
 	int        val;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	nni_mtx_lock(&s->mtx);
@@ -417,18 +417,18 @@ bus0_sock_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	}
 
 	nni_mtx_unlock(&s->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 bus0_sock_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	bus0_sock *s = arg;
 	bus0_pipe *p;
 	int        val;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 

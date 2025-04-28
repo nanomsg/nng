@@ -256,19 +256,20 @@ xreq0_sock_recv(void *arg, nni_aio *aio)
 	nni_msgq_aio_get(s->urq, aio);
 }
 
-static int
+static nng_err
 xreq0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	xreq0_sock *s = arg;
 	int         ttl;
-	int         rv;
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
+	nng_err     rv;
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) ==
+	    NNG_OK) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);
 }
 
-static int
+static nng_err
 xreq0_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	xreq0_sock *s = arg;

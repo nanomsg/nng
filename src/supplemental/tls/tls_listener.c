@@ -99,7 +99,7 @@ tls_listener_accept(void *arg, nng_aio *aio)
 	nng_stream_listener_accept(l->l, &ts->conn_aio);
 }
 
-static int
+static nng_err
 tls_listener_set_tls(void *arg, nng_tls_config *cfg)
 {
 	tls_listener   *l = arg;
@@ -120,20 +120,20 @@ tls_listener_set_tls(void *arg, nng_tls_config *cfg)
 	nni_mtx_unlock(&l->lk);
 
 	nng_tls_config_free(old);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tls_listener_get_tls(void *arg, nng_tls_config **cfg)
 {
 	tls_listener *l = arg;
 	nni_mtx_lock(&l->lk);
 	*cfg = l->cfg;
 	nni_mtx_unlock(&l->lk);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tls_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -142,7 +142,7 @@ tls_listener_get(
 	return (nni_stream_listener_get(l->l, name, buf, szp, t));
 }
 
-static int
+static nng_err
 tls_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {

@@ -301,7 +301,7 @@ tcp_listener_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&l->mtx);
 }
 
-static int
+static nng_err
 tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	tcp_listener *l = arg;
@@ -320,23 +320,24 @@ tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_listener_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	tcp_listener *l = arg;
-	int           rv;
+	nng_err       rv;
 	bool          b;
 
-	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (l == NULL)) {
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != NNG_OK) ||
+	    (l == NULL)) {
 		return (rv);
 	}
 	nni_mtx_lock(&l->mtx);
 	l->nodelay = b;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tcp_listener_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	bool          b;
@@ -347,23 +348,24 @@ tcp_listener_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_listener_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	tcp_listener *l = arg;
-	int           rv;
+	nng_err       rv;
 	bool          b;
 
-	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (l == NULL)) {
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != NNG_OK) ||
+	    (l == NULL)) {
 		return (rv);
 	}
 	nni_mtx_lock(&l->mtx);
 	l->keepalive = b;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tcp_listener_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	bool          b;
@@ -374,7 +376,7 @@ tcp_listener_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	tcp_listener *l = arg;
@@ -403,16 +405,16 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(port, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	tcp_listener           *l = arg;
 	int                     fd;
 	struct sockaddr_storage ss;
 	socklen_t               len = sizeof(ss);
-	int                     rv;
+	nng_err                 rv;
 
-	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != 0) {
+	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -442,15 +444,15 @@ tcp_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_posix_pfd_init(&l->pfd, fd, tcp_listener_cb, l);
 	l->started = true;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
 #ifdef NNG_TEST_LIB
 // this is readable only for test code -- user code should never rely on this
-static int
+static nng_err
 tcp_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	int           rv;
+	nng_err       rv;
 	tcp_listener *l = arg;
 	nni_mtx_lock(&l->mtx);
 	NNI_ASSERT(l->started);
@@ -492,14 +494,14 @@ static const nni_option tcp_listener_options[] = {
 	},
 };
 
-static int
+static nng_err
 tcp_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_getopt(tcp_listener_options, name, arg, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {

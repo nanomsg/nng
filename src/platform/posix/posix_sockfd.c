@@ -327,7 +327,7 @@ sfd_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
-static int
+static nng_err
 sfd_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(arg);
@@ -336,46 +336,46 @@ sfd_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
 
-static int
+static nng_err
 sfd_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
-	int           rv;
+	nng_err       rv;
 	int           ignore;
 	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &id, &ignore, &ignore, &ignore);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		return (rv);
 	}
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 sfd_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
-	int           rv;
+	nng_err       rv;
 	int           ignore;
 	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &ignore, &id, &ignore, &ignore);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		return (rv);
 	}
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 sfd_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
-	int           rv;
+	nng_err       rv;
 	int           ignore;
 	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &ignore, &ignore, &ignore, &id);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		return (rv);
 	}
 	if (id == -1) {
@@ -385,16 +385,16 @@ sfd_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static int
+static nng_err
 sfd_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
-	int           rv;
+	nng_err       rv;
 	int           ignore;
 	int           id = 0;
 
 	rv = nni_posix_peerid(c->fd, &ignore, &ignore, &id, &ignore);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		return (rv);
 	}
 	if (id == -1) {
@@ -434,14 +434,14 @@ static const nni_option sfd_options[] = {
 	},
 };
 
-static int
+static nng_err
 sfd_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
 	return (nni_getopt(sfd_options, name, c, buf, szp, t));
 }
 
-static int
+static nng_err
 sfd_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	nni_sfd_conn *c = arg;

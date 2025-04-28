@@ -332,26 +332,26 @@ tcp_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
-static int
+static nng_err
 tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn           *c = arg;
 	struct sockaddr_storage ss;
 	socklen_t               len = sizeof(ss);
 	int                     fd  = nni_posix_pfd_fd(&c->pfd);
-	int                     rv;
+	nng_err                 rv;
 	nng_sockaddr            sa;
 
 	if (getpeername(fd, (void *) &ss, &len) != 0) {
 		return (nni_plat_errno(errno));
 	}
-	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == 0) {
+	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == NNG_OK) {
 		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
 	}
 	return (rv);
 }
 
-static int
+static nng_err
 tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn           *c = arg;
@@ -364,13 +364,13 @@ tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 	if (getsockname(fd, (void *) &ss, &len) != 0) {
 		return (nni_plat_errno(errno));
 	}
-	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == 0) {
+	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == NNG_OK) {
 		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
 	}
 	return (rv);
 }
 
-static int
+static nng_err
 tcp_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c     = arg;
@@ -385,7 +385,7 @@ tcp_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(val, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c     = arg;
@@ -422,14 +422,14 @@ static const nni_option tcp_options[] = {
 	},
 };
 
-static int
+static nng_err
 tcp_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c = arg;
 	return (nni_getopt(tcp_options, name, c, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_conn *c = arg;

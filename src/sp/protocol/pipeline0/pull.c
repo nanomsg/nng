@@ -245,7 +245,7 @@ pull0_sock_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&s->m);
 }
 
-static int
+static nng_err
 pull0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	pull0_sock *s = arg;

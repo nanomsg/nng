@@ -467,21 +467,22 @@ pair1_sock_close(void *arg)
 	nni_mtx_unlock(&s->mtx);
 }
 
-static int
+static nng_err
 pair1_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	pair1_sock *s = arg;
-	int         rv;
+	nng_err     rv;
 	int         ttl;
 
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) ==
+	    NNG_OK) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 
 	return (rv);
 }
 
-static int
+static nng_err
 pair1_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	pair1_sock *s = arg;
@@ -489,11 +490,11 @@ pair1_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 #ifdef NNG_TEST_LIB
-static int
+static nng_err
 pair1_set_test_inject_header(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	pair1_sock *s = arg;
-	int         rv;
+	nng_err     rv;
 	nni_mtx_lock(&s->mtx);
 	rv = nni_copyin_bool(&s->inject_header, buf, sz, t);
 	nni_mtx_unlock(&s->mtx);
@@ -646,14 +647,14 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&s->mtx);
 }
 
-static int
+static nng_err
 pair1_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	pair1_sock *s = arg;
 	int         val;
-	int         rv;
+	nng_err     rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	nni_mtx_lock(&s->mtx);
@@ -668,7 +669,7 @@ pair1_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	return (rv);
 }
 
-static int
+static nng_err
 pair1_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	pair1_sock *s = arg;
@@ -681,14 +682,14 @@ pair1_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	return (nni_copyout_int(val, buf, szp, t));
 }
 
-static int
+static nng_err
 pair1_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	pair1_sock *s = arg;
 	int         val;
-	int         rv;
+	nng_err     rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	nni_mtx_lock(&s->mtx);
@@ -703,7 +704,7 @@ pair1_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	return (rv);
 }
 
-static int
+static nng_err
 pair1_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	pair1_sock *s = arg;
@@ -716,7 +717,7 @@ pair1_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	return (nni_copyout_int(val, buf, szp, t));
 }
 
-static int
+static nng_err
 pair1_sock_get_recv_fd(void *arg, int *fdp)
 {
 	pair1_sock *s = arg;
@@ -724,7 +725,7 @@ pair1_sock_get_recv_fd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&s->readable, fdp));
 }
 
-static int
+static nng_err
 pair1_sock_get_send_fd(void *arg, int *fdp)
 {
 	pair1_sock *s = arg;

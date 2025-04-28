@@ -321,14 +321,14 @@ push0_sock_recv(void *arg, nni_aio *aio)
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 }
 
-static int
+static nng_err
 push0_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	push0_sock *s = arg;
 	int         val;
-	int         rv;
+	nng_err     rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 0, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 	nni_mtx_lock(&s->m);
@@ -343,7 +343,7 @@ push0_set_send_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	return (rv);
 }
 
-static int
+static nng_err
 push0_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	push0_sock *s = arg;
@@ -356,7 +356,7 @@ push0_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	return (nni_copyout_int(val, buf, szp, t));
 }
 
-static int
+static nng_err
 push0_sock_get_send_fd(void *arg, int *fdp)
 {
 	push0_sock *s = arg;

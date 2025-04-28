@@ -179,7 +179,7 @@ ipc_listener_cancel(nni_aio *aio, void *arg, nng_err rv)
 	nni_mtx_unlock(&l->mtx);
 }
 
-static int
+static nng_err
 ipc_remove_stale(const char *path)
 {
 	int                fd;
@@ -213,24 +213,24 @@ ipc_remove_stale(const char *path)
 		}
 	}
 	(void) close(fd);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_listener *l = arg;
 	return (nni_copyout_sockaddr(&l->sa, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_listener_set_perms(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	ipc_listener *l = arg;
 	int           mode;
-	int           rv;
+	nng_err       rv;
 
-	if ((rv = nni_copyin_int(&mode, buf, sz, 0, S_IFMT, t)) != 0) {
+	if ((rv = nni_copyin_int(&mode, buf, sz, 0, S_IFMT, t)) != NNG_OK) {
 		return (rv);
 	}
 	if (l->sa.s_family == NNG_AF_ABSTRACT) {
@@ -249,10 +249,10 @@ ipc_listener_set_perms(void *arg, const void *buf, size_t sz, nni_type t)
 	}
 	l->perms = mode;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 ipc_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	ipc_listener           *l = arg;
@@ -261,7 +261,7 @@ ipc_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
 	socklen_t               len = sizeof(ss);
 	int                     rv;
 
-	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != 0) {
+	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -286,15 +286,15 @@ ipc_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_posix_pfd_init(&l->pfd, fd, ipc_listener_cb, l);
 	l->started = true;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
 #ifdef NNG_TEST_LIB
 // this is readable only for test code -- user code should never rely on this
-static int
+static nng_err
 ipc_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	int           rv;
+	nng_err       rv;
 	ipc_listener *l = arg;
 
 	nni_mtx_lock(&l->mtx);
@@ -327,7 +327,7 @@ static const nni_option ipc_listener_options[] = {
 	},
 };
 
-static int
+static nng_err
 ipc_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -335,7 +335,7 @@ ipc_listener_get(
 	return (nni_getopt(ipc_listener_options, name, l, buf, szp, t));
 }
 
-static int
+static nng_err
 ipc_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {

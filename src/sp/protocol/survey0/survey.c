@@ -462,20 +462,20 @@ surv0_pipe_recv_cb(void *arg)
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
-static int
+static nng_err
 surv0_ctx_set_survey_time(
     void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	surv0_ctx   *ctx = arg;
 	nng_duration expire;
-	int          rv;
-	if ((rv = nni_copyin_ms(&expire, buf, sz, t)) == 0) {
+	nng_err      rv;
+	if ((rv = nni_copyin_ms(&expire, buf, sz, t)) == NNG_OK) {
 		nni_atomic_set(&ctx->survey_time, expire);
 	}
 	return (rv);
 }
 
-static int
+static nng_err
 surv0_ctx_get_survey_time(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	surv0_ctx *ctx = arg;
@@ -483,21 +483,21 @@ surv0_ctx_get_survey_time(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	    nni_copyout_ms(nni_atomic_get(&ctx->survey_time), buf, szp, t));
 }
 
-static int
+static nng_err
 surv0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	surv0_sock *s = arg;
 	return (nni_copyin_int(&s->ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t));
 }
 
-static int
+static nng_err
 surv0_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	surv0_sock *s = arg;
 	return (nni_copyout_int(s->ttl, buf, szp, t));
 }
 
-static int
+static nng_err
 surv0_sock_set_survey_time(
     void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
@@ -505,14 +505,14 @@ surv0_sock_set_survey_time(
 	return (surv0_ctx_set_survey_time(&s->ctx, buf, sz, t));
 }
 
-static int
+static nng_err
 surv0_sock_get_survey_time(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	surv0_sock *s = arg;
 	return (surv0_ctx_get_survey_time(&s->ctx, buf, szp, t));
 }
 
-static int
+static nng_err
 surv0_sock_get_send_fd(void *arg, int *fdp)
 {
 	surv0_sock *sock = arg;
@@ -520,7 +520,7 @@ surv0_sock_get_send_fd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&sock->writable, fdp));
 }
 
-static int
+static nng_err
 surv0_sock_get_recv_fd(void *arg, int *fdp)
 {
 	surv0_sock *sock = arg;

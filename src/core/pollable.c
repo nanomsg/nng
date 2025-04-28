@@ -14,7 +14,7 @@
 // atomically and use nni_atomic_cas64, to be lock free.
 #define WFD(fds) ((int) ((fds) &0xffffffffu))
 #define RFD(fds) ((int) (((fds) >> 32u) & 0xffffffffu))
-#define FD_JOIN(wfd, rfd) ((uint64_t)(wfd) + ((uint64_t)(rfd) << 32u))
+#define FD_JOIN(wfd, rfd) ((uint64_t) (wfd) + ((uint64_t) (rfd) << 32u))
 
 void
 nni_pollable_init(nni_pollable *p)
@@ -60,7 +60,7 @@ nni_pollable_clear(nni_pollable *p)
 	}
 }
 
-int
+nng_err
 nni_pollable_getfd(nni_pollable *p, int *fdp)
 {
 	if (p == NULL) {
@@ -75,7 +75,7 @@ nni_pollable_getfd(nni_pollable *p, int *fdp)
 
 		if ((fds = nni_atomic_get64(&p->p_fds)) != (uint64_t) -1) {
 			*fdp = RFD(fds);
-			return (0);
+			return (NNG_OK);
 		}
 		if ((rv = nni_plat_pipe_open(&wfd, &rfd)) != 0) {
 			return (rv);
@@ -87,7 +87,7 @@ nni_pollable_getfd(nni_pollable *p, int *fdp)
 				nni_plat_pipe_raise(wfd);
 			}
 			*fdp = rfd;
-			return (0);
+			return (NNG_OK);
 		}
 
 		// Someone beat us.  Close ours, and try again.

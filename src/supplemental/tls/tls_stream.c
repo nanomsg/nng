@@ -134,7 +134,7 @@ tls_stream_conn_cb(void *arg)
 	nni_aio_finish(ts->user_aio, 0, 0);
 }
 
-static int tls_stream_get(
+static nng_err tls_stream_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t);
 
 int
@@ -173,7 +173,7 @@ nni_tls_stream_alloc(tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio)
 	return (0);
 }
 
-static int
+static nng_err
 tls_get_verified(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	tls_stream *ts = arg;
@@ -181,7 +181,7 @@ tls_get_verified(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(nni_tls_verified(&ts->conn), buf, szp, t));
 }
 
-static int
+static nng_err
 tls_get_peer_cn(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(szp);
@@ -192,7 +192,7 @@ tls_get_peer_cn(void *arg, void *buf, size_t *szp, nni_type t)
 
 	tls_stream *ts = arg;
 	*(char **) buf = (char *) nni_tls_peer_cn(&ts->conn);
-	return (0);
+	return (NNG_OK);
 }
 
 static const nni_option tls_stream_options[] = {
@@ -209,11 +209,11 @@ static const nni_option tls_stream_options[] = {
 	},
 };
 
-static int
+static nng_err
 tls_stream_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_stream *ts = arg;
-	int         rv;
+	nng_err     rv;
 
 	if ((rv = nni_stream_get(ts->conn.bio, name, buf, szp, t)) !=
 	    NNG_ENOTSUP) {

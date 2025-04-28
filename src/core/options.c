@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-int
+nng_err
 nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, nni_type t)
 {
 	nni_duration dur;
@@ -33,10 +33,10 @@ nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, nni_type t)
 	if (dp != NULL) {
 		*dp = dur;
 	}
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyin_bool(bool *bp, const void *v, size_t sz, nni_type t)
 {
 	NNI_ARG_UNUSED(sz);
@@ -45,10 +45,10 @@ nni_copyin_bool(bool *bp, const void *v, size_t sz, nni_type t)
 		return (NNG_EBADTYPE);
 	}
 	*bp = *(bool *) v;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyin_int(
     int *ip, const void *v, size_t sz, int minv, int maxv, nni_type t)
 {
@@ -66,10 +66,10 @@ nni_copyin_int(
 		return (NNG_EINVAL);
 	}
 	*ip = i;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyin_size(
     size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv, nni_type t)
 {
@@ -85,10 +85,10 @@ nni_copyin_size(
 		return (NNG_EINVAL);
 	}
 	*sp = val;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyin_str(char *s, const void *v, size_t maxsz, nni_type t)
 {
 	size_t z;
@@ -102,20 +102,20 @@ nni_copyin_str(char *s, const void *v, size_t maxsz, nni_type t)
 	}
 	memcpy(s, v, z);
 	s[z] = 0;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyin_sockaddr(nng_sockaddr *ap, const void *v, nni_type t)
 {
 	if (t != NNI_TYPE_SOCKADDR) {
 		return (NNG_EBADTYPE);
 	}
 	*ap = *(nng_sockaddr *) v;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyout_bool(bool b, void *dst, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(szp);
@@ -123,10 +123,10 @@ nni_copyout_bool(bool b, void *dst, size_t *szp, nni_type t)
 		return (NNG_EBADTYPE);
 	}
 	*(bool *) dst = b;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyout_int(int i, void *dst, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(szp);
@@ -134,10 +134,10 @@ nni_copyout_int(int i, void *dst, size_t *szp, nni_type t)
 		return (NNG_EBADTYPE);
 	}
 	*(int *) dst = i;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyout_ms(nng_duration d, void *dst, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(szp);
@@ -145,10 +145,10 @@ nni_copyout_ms(nng_duration d, void *dst, size_t *szp, nni_type t)
 		return (NNG_EBADTYPE);
 	}
 	*(nng_duration *) dst = d;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyout_size(size_t s, void *dst, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(szp);
@@ -156,10 +156,10 @@ nni_copyout_size(size_t s, void *dst, size_t *szp, nni_type t)
 		return (NNG_EBADTYPE);
 	}
 	*(size_t *) dst = s;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyout_sockaddr(
     const nng_sockaddr *sap, void *dst, size_t *szp, nni_type t)
 {
@@ -168,10 +168,10 @@ nni_copyout_sockaddr(
 		return (NNG_EBADTYPE);
 	}
 	*(nng_sockaddr *) dst = *sap;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_copyout_str(const char *str, void *dst, size_t *szp, nni_type t)
 {
 	char *s;
@@ -184,10 +184,10 @@ nni_copyout_str(const char *str, void *dst, size_t *szp, nni_type t)
 		return (NNG_ENOMEM);
 	}
 	*(char **) dst = s;
-	return (0);
+	return (NNG_OK);
 }
 
-int
+nng_err
 nni_getopt(const nni_option *opts, const char *nm, void *arg, void *buf,
     size_t *szp, nni_type otype)
 {
@@ -203,7 +203,7 @@ nni_getopt(const nni_option *opts, const char *nm, void *arg, void *buf,
 	return (NNG_ENOTSUP);
 }
 
-int
+nng_err
 nni_setopt(const nni_option *opts, const char *nm, void *arg, const void *buf,
     size_t sz, nni_type otype)
 {

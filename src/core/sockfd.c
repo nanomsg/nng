@@ -135,15 +135,15 @@ sfd_listener_accept(void *arg, nng_aio *aio)
 	nni_mtx_unlock(&l->mtx);
 }
 
-static int
+static nng_err
 sfd_listener_set_fd(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	sfd_listener *l = arg;
 	nni_aio      *aio;
 	int           fd;
-	int           rv;
+	nng_err       rv;
 
-	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != 0) {
+	if ((rv = nni_copyin_int(&fd, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -167,10 +167,10 @@ sfd_listener_set_fd(void *arg, const void *buf, size_t sz, nni_type t)
 	}
 
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 sfd_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(arg);
@@ -193,7 +193,7 @@ static const nni_option sfd_listener_options[] = {
 	},
 };
 
-static int
+static nng_err
 sfd_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -201,7 +201,7 @@ sfd_listener_get(
 	return (nni_getopt(sfd_listener_options, name, l, buf, szp, t));
 }
 
-static int
+static nng_err
 sfd_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {

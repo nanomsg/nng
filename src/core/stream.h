@@ -16,25 +16,27 @@
 #include "defs.h"
 
 // Private property operations (these include the types.)
-extern int nni_stream_get(
+extern nng_err nni_stream_get(
     nng_stream *, const char *, void *, size_t *, nni_type);
-extern int nni_stream_set(
+extern nng_err nni_stream_set(
     nng_stream *, const char *, const void *, size_t, nni_type);
 
-extern int nni_stream_dialer_get(
+extern nng_err nni_stream_dialer_get(
     nng_stream_dialer *, const char *, void *, size_t *, nni_type);
-extern int nni_stream_dialer_set(
+extern nng_err nni_stream_dialer_set(
     nng_stream_dialer *, const char *, const void *, size_t, nni_type);
-extern int nni_stream_dialer_set_tls(nng_stream_dialer *, nng_tls_config *);
-extern int nni_stream_dialer_get_tls(nng_stream_dialer *, nng_tls_config **);
+extern nng_err nni_stream_dialer_set_tls(
+    nng_stream_dialer *, nng_tls_config *);
+extern nng_err nni_stream_dialer_get_tls(
+    nng_stream_dialer *, nng_tls_config **);
 
-extern int nni_stream_listener_get(
+extern nng_err nni_stream_listener_get(
     nng_stream_listener *, const char *, void *, size_t *, nni_type);
-extern int nni_stream_listener_set(
+extern nng_err nni_stream_listener_set(
     nng_stream_listener *, const char *, const void *, size_t, nni_type);
-extern int nni_stream_listener_set_tls(
+extern nng_err nni_stream_listener_set_tls(
     nng_stream_listener *, nng_tls_config *);
-extern int nni_stream_listener_get_tls(
+extern nng_err nni_stream_listener_get_tls(
     nng_stream_listener *, nng_tls_config **);
 
 // This is the common implementation of a connected byte stream.  It should be
@@ -46,8 +48,8 @@ struct nng_stream {
 	void (*s_stop)(void *);
 	void (*s_recv)(void *, nng_aio *);
 	void (*s_send)(void *, nng_aio *);
-	int (*s_get)(void *, const char *, void *, size_t *, nni_type);
-	int (*s_set)(void *, const char *, const void *, size_t, nni_type);
+	nng_err (*s_get)(void *, const char *, void *, size_t *, nni_type);
+	nng_err (*s_set)(void *, const char *, const void *, size_t, nni_type);
 };
 
 // Dialer implementation.  Stream dialers create streams.
@@ -56,10 +58,11 @@ struct nng_stream_dialer {
 	void (*sd_close)(void *);
 	void (*sd_stop)(void *);
 	void (*sd_dial)(void *, nng_aio *);
-	int (*sd_get)(void *, const char *, void *, size_t *, nni_type);
-	int (*sd_set)(void *, const char *, const void *, size_t, nni_type);
-	int (*sd_get_tls)(void *, nng_tls_config **);
-	int (*sd_set_tls)(void *, nng_tls_config *);
+	nng_err (*sd_get)(void *, const char *, void *, size_t *, nni_type);
+	nng_err (*sd_set)(
+	    void *, const char *, const void *, size_t, nni_type);
+	nng_err (*sd_get_tls)(void *, nng_tls_config **);
+	nng_err (*sd_set_tls)(void *, nng_tls_config *);
 };
 
 // Listener implementation.  Stream listeners accept connections and create
@@ -70,11 +73,12 @@ struct nng_stream_listener {
 	void (*sl_stop)(void *);
 	nng_err (*sl_listen)(void *);
 	void (*sl_accept)(void *, nng_aio *);
-	int (*sl_get)(void *, const char *, void *, size_t *, nni_type);
-	int (*sl_set)(void *, const char *, const void *, size_t, nni_type);
-	int (*sl_get_tls)(void *, nng_tls_config **);
-	int (*sl_set_tls)(void *, nng_tls_config *);
-	int (*sl_set_security_descriptor)(void *, void *);
+	nng_err (*sl_get)(void *, const char *, void *, size_t *, nni_type);
+	nng_err (*sl_set)(
+	    void *, const char *, const void *, size_t, nni_type);
+	nng_err (*sl_get_tls)(void *, nng_tls_config **);
+	nng_err (*sl_set_tls)(void *, nng_tls_config *);
+	nng_err (*sl_set_security_descriptor)(void *, void *);
 };
 
 #endif // CORE_STREAM_H

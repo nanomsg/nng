@@ -139,7 +139,7 @@ ipc_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	nni_mtx_unlock(&l->mtx);
 }
 
-static int
+static nng_err
 ipc_listener_set_sec_desc(void *arg, void *desc)
 {
 	ipc_listener *l = arg;
@@ -155,7 +155,7 @@ ipc_listener_set_sec_desc(void *arg, void *desc)
 	}
 	l->sec_attr.lpSecurityDescriptor = desc;
 	nni_mtx_unlock(&l->mtx);
-	return (0);
+	return (NNG_OK);
 }
 
 static int

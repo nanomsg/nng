@@ -557,27 +557,28 @@ drop:
 	nni_pipe_recv(p->npipe, &p->aio_recv);
 }
 
-static int
+static nng_err
 resp0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	resp0_sock *s = arg;
 	int         ttl;
-	int         rv;
+	nng_err     rv;
 
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) ==
+	    NNG_OK) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);
 }
 
-static int
+static nng_err
 resp0_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	resp0_sock *s = arg;
 	return (nni_copyout_int(nni_atomic_get(&s->ttl), buf, szp, t));
 }
 
-static int
+static nng_err
 resp0_sock_get_sendfd(void *arg, int *fdp)
 {
 	resp0_sock *s = arg;
@@ -585,7 +586,7 @@ resp0_sock_get_sendfd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&s->writable, fdp));
 }
 
-static int
+static nng_err
 resp0_sock_get_recvfd(void *arg, int *fdp)
 {
 	resp0_sock *s = arg;

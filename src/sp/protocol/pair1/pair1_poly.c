@@ -443,28 +443,29 @@ pair1poly_sock_close(void *arg)
 	nni_aio_close(&s->aio_get);
 }
 
-static int
+static nng_err
 pair1poly_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	pair1poly_sock *s = arg;
-	int             rv;
+	nng_err         rv;
 	int             ttl;
 
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) ==
+	    NNG_OK) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 
 	return (rv);
 }
 
-static int
+static nng_err
 pair1poly_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	pair1poly_sock *s = arg;
 	return (nni_copyout_int(nni_atomic_get(&s->ttl), buf, szp, t));
 }
 
-static int
+static nng_err
 pair1poly_get_poly(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	NNI_ARG_UNUSED(arg);

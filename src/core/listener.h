@@ -32,7 +32,7 @@ extern int nni_listener_getopt(
     nni_listener *, const char *, void *, size_t *, nni_type);
 extern int      nni_listener_get_tls(nni_listener *, nng_tls_config **);
 extern int      nni_listener_set_tls(nni_listener *, nng_tls_config *);
-extern int      nni_listener_set_security_descriptor(nni_listener *, void *);
+extern nng_err  nni_listener_set_security_descriptor(nni_listener *, void *);
 extern nng_url *nni_listener_url(nni_listener *);
 extern void     nni_listener_add_stat(nni_listener *, nni_stat_item *);
 extern void     nni_listener_bump_error(nni_listener *, int);

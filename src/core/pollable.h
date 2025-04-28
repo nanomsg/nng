@@ -16,9 +16,9 @@
 
 typedef struct nni_pollable nni_pollable;
 
-extern void nni_pollable_raise(nni_pollable *);
-extern void nni_pollable_clear(nni_pollable *);
-extern int  nni_pollable_getfd(nni_pollable *, int *);
+extern void    nni_pollable_raise(nni_pollable *);
+extern void    nni_pollable_clear(nni_pollable *);
+extern nng_err nni_pollable_getfd(nni_pollable *, int *);
 
 // nni_pollable implementation details are private.  Only here for inlining.
 // We have joined the write and read file descriptors into a single

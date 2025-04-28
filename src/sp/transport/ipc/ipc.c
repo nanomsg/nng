@@ -873,24 +873,24 @@ ipc_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static int
+static nng_err
 ipc_ep_get_recv_max_sz(void *arg, void *v, size_t *szp, nni_type t)
 {
 	ipc_ep *ep = arg;
-	int     rv;
+	nng_err rv;
 	nni_mtx_lock(&ep->mtx);
 	rv = nni_copyout_size(ep->rcv_max, v, szp, t);
 	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
 
-static int
+static nng_err
 ipc_ep_set_recv_max_sz(void *arg, const void *v, size_t sz, nni_type t)
 {
 	ipc_ep *ep = arg;
 	size_t  val;
-	int     rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+	nng_err rv;
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == NNG_OK) {
 
 		nni_mtx_lock(&ep->mtx);
 		ep->rcv_max = val;
@@ -1034,7 +1034,7 @@ ipc_listener_set(
 	return (rv);
 }
 
-static int
+static nng_err
 ipc_listener_set_sec_desc(void *arg, void *pdesc)
 {
 	ipc_ep *ep = arg;

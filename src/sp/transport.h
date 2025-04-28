@@ -120,7 +120,7 @@ struct nni_sp_listener_ops {
 	int (*l_set_tls)(void *, nng_tls_config *);
 
 	// l_set_security_descriptor is used exclusively on Windows.
-	int (*l_set_security_descriptor)(void *, void *);
+	nng_err (*l_set_security_descriptor)(void *, void *);
 
 	// l_options is an array of listener options.  The final
 	// element must have a NULL name. If this member is NULL, then

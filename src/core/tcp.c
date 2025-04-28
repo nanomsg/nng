@@ -204,14 +204,14 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 	nni_mtx_unlock(&d->mtx);
 }
 
-static int
+static nng_err
 tcp_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcp_dialer *d = arg;
 	return (nni_tcp_dialer_get(d->d, name, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {

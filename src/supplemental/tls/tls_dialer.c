@@ -92,7 +92,7 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 	nng_stream_dialer_dial(d->d, &ts->conn_aio);
 }
 
-static int
+static nng_err
 tls_dialer_set_tls(void *arg, nng_tls_config *cfg)
 {
 	tls_dialer     *d = arg;
@@ -114,20 +114,20 @@ tls_dialer_set_tls(void *arg, nng_tls_config *cfg)
 	nni_mtx_unlock(&d->lk);
 
 	nng_tls_config_free(old);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tls_dialer_get_tls(void *arg, nng_tls_config **cfg)
 {
 	tls_dialer *d = arg;
 	nni_mtx_lock(&d->lk);
 	*cfg = d->cfg;
 	nni_mtx_unlock(&d->lk);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tls_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_dialer *d = arg;
@@ -135,7 +135,7 @@ tls_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_stream_dialer_get(d->d, name, buf, szp, t));
 }
 
-static int
+static nng_err
 tls_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {

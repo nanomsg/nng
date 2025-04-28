@@ -249,7 +249,7 @@ pub0_sock_send(void *arg, nni_aio *aio)
 	nni_aio_finish(aio, 0, len);
 }
 
-static int
+static nng_err
 pub0_sock_get_sendfd(void *arg, int *fdp)
 {
 	pub0_sock *sock = arg;
@@ -259,15 +259,15 @@ pub0_sock_get_sendfd(void *arg, int *fdp)
 	return (nni_pollable_getfd(&sock->sendable, fdp));
 }
 
-static int
+static nng_err
 pub0_sock_set_sendbuf(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	pub0_sock *sock = arg;
 	pub0_pipe *p;
 	int        val;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -287,7 +287,7 @@ pub0_sock_set_sendbuf(void *arg, const void *buf, size_t sz, nni_type t)
 	return (rv);
 }
 
-static int
+static nng_err
 pub0_sock_get_sendbuf(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	pub0_sock *sock = arg;
