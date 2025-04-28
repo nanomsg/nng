@@ -1241,7 +1241,14 @@ typedef struct nng_udp nng_udp;
 // to the specified address.
 NNG_DECL int nng_udp_open(nng_udp **udpp, nng_sockaddr *sa);
 
-// nng_udp_close closes the underlying UDP socket.
+// nng_udp_stop stops the UDP socket from transferring data, before closing it.
+// This may be useful if data flows need to be stopped but freeing the
+// structure must be done at a later time.  Note that this may wait for I/O to
+// be canceled.
+NNG_DECL void nng_udp_stop(nng_udp *udp);
+
+// nng_udp_close closes the underlying UDP socket and frees the associated
+// resources. Calls nng_udp_stop implicitly.
 NNG_DECL void nng_udp_close(nng_udp *udp);
 
 // nng_udp_sockname determines the locally bound address.

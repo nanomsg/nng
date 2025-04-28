@@ -41,15 +41,15 @@ static nni_atomic_ptr tls_engine;
 
 static void tls_bio_send_cb(void *arg);
 static void tls_bio_recv_cb(void *arg);
-static void tls_do_send(tls_conn *);
-static void tls_do_recv(tls_conn *);
-static void tls_bio_send_start(tls_conn *);
-static void tls_bio_error(tls_conn *, int);
+static void tls_do_send(nni_tls_conn *);
+static void tls_do_recv(nni_tls_conn *);
+static void tls_bio_send_start(nni_tls_conn *);
+static void tls_bio_error(nni_tls_conn *, int);
 
 static void
 tls_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
-	tls_conn *conn = arg;
+	nni_tls_conn *conn = arg;
 	nni_mtx_lock(&conn->lock);
 	if (aio == nni_list_first(&conn->recv_queue)) {
 		nni_aio_abort(&conn->bio_recv, rv);
@@ -64,7 +64,7 @@ tls_cancel(nni_aio *aio, void *arg, nng_err rv)
 
 // tls_send implements the upper layer send operation.
 void
-nni_tls_send(tls_conn *conn, nni_aio *aio)
+nni_tls_send(nni_tls_conn *conn, nni_aio *aio)
 {
 	nni_aio_reset(aio);
 	nni_mtx_lock(&conn->lock);
@@ -83,7 +83,7 @@ nni_tls_send(tls_conn *conn, nni_aio *aio)
 }
 
 void
-nni_tls_recv(tls_conn *conn, nni_aio *aio)
+nni_tls_recv(nni_tls_conn *conn, nni_aio *aio)
 {
 	nni_aio_reset(aio);
 	nni_mtx_lock(&conn->lock);
@@ -103,7 +103,7 @@ nni_tls_recv(tls_conn *conn, nni_aio *aio)
 }
 
 void
-nni_tls_close(tls_conn *conn)
+nni_tls_close(nni_tls_conn *conn)
 {
 	if (!nni_atomic_flag_test_and_set(&conn->did_close)) {
 		nni_mtx_lock(&conn->lock);
@@ -117,7 +117,7 @@ nni_tls_close(tls_conn *conn)
 }
 
 void
-nni_tls_stop(tls_conn *conn)
+nni_tls_stop(nni_tls_conn *conn)
 {
 	nni_tls_close(conn);
 	if (conn->bio != NULL) {
@@ -128,7 +128,7 @@ nni_tls_stop(tls_conn *conn)
 }
 
 bool
-nni_tls_verified(tls_conn *conn)
+nni_tls_verified(nni_tls_conn *conn)
 {
 	bool result;
 	nni_mtx_lock(&conn->lock);
@@ -138,7 +138,7 @@ nni_tls_verified(tls_conn *conn)
 }
 
 const char *
-nni_tls_peer_cn(tls_conn *conn)
+nni_tls_peer_cn(nni_tls_conn *conn)
 {
 	const char *result;
 	nni_mtx_lock(&conn->lock);
@@ -148,7 +148,7 @@ nni_tls_peer_cn(tls_conn *conn)
 }
 
 int
-nni_tls_init(tls_conn *conn, nng_tls_config *cfg)
+nni_tls_init(nni_tls_conn *conn, nng_tls_config *cfg)
 {
 	const nng_tls_engine *eng;
 
@@ -182,7 +182,7 @@ nni_tls_init(tls_conn *conn, nng_tls_config *cfg)
 }
 
 void
-nni_tls_fini(tls_conn *conn)
+nni_tls_fini(nni_tls_conn *conn)
 {
 	nni_tls_stop(conn);
 	conn->ops.fini((void *) (conn + 1));
@@ -204,7 +204,7 @@ nni_tls_fini(tls_conn *conn)
 }
 
 int
-nni_tls_start(tls_conn *conn, const nni_tls_bio_ops *biops, void *bio)
+nni_tls_start(nni_tls_conn *conn, const nni_tls_bio_ops *biops, void *bio)
 {
 	nng_tls_engine_config *cfg;
 	nng_tls_engine_conn   *econ;
@@ -219,7 +219,7 @@ nni_tls_start(tls_conn *conn, const nni_tls_bio_ops *biops, void *bio)
 }
 
 static void
-tls_bio_error(tls_conn *conn, int rv)
+tls_bio_error(nni_tls_conn *conn, int rv)
 {
 	// An error here is fatal.  Shut it all down.
 	nni_aio *aio;
@@ -236,7 +236,7 @@ tls_bio_error(tls_conn *conn, int rv)
 }
 
 static bool
-tls_do_handshake(tls_conn *conn)
+tls_do_handshake(nni_tls_conn *conn)
 {
 	int rv;
 	if (conn->hs_done) {
@@ -256,7 +256,7 @@ tls_do_handshake(tls_conn *conn)
 }
 
 static void
-tls_do_recv(tls_conn *conn)
+tls_do_recv(nni_tls_conn *conn)
 {
 	nni_aio *aio;
 
@@ -304,7 +304,7 @@ tls_do_recv(tls_conn *conn)
 
 // tls_do_send attempts to send user data.
 static void
-tls_do_send(tls_conn *conn)
+tls_do_send(nni_tls_conn *conn)
 {
 	nni_aio *aio;
 
@@ -353,10 +353,10 @@ tls_do_send(tls_conn *conn)
 static void
 tls_bio_send_cb(void *arg)
 {
-	tls_conn *conn = arg;
-	nng_aio  *aio  = &conn->bio_send;
-	int       rv;
-	size_t    count;
+	nni_tls_conn *conn = arg;
+	nng_aio      *aio  = &conn->bio_send;
+	int           rv;
+	size_t        count;
 
 	nni_mtx_lock(&conn->lock);
 	conn->bio_send_active = false;
@@ -385,9 +385,9 @@ tls_bio_send_cb(void *arg)
 static void
 tls_bio_recv_cb(void *arg)
 {
-	tls_conn *conn = arg;
-	nni_aio  *aio  = &conn->bio_recv;
-	int       rv;
+	nni_tls_conn *conn = arg;
+	nni_aio      *aio  = &conn->bio_recv;
+	int           rv;
 
 	nni_mtx_lock(&conn->lock);
 
@@ -411,7 +411,7 @@ tls_bio_recv_cb(void *arg)
 }
 
 static void
-tls_bio_recv_start(tls_conn *conn)
+tls_bio_recv_start(nni_tls_conn *conn)
 {
 	nng_iov iov;
 
@@ -434,7 +434,7 @@ tls_bio_recv_start(tls_conn *conn)
 }
 
 static void
-tls_bio_send_start(tls_conn *conn)
+tls_bio_send_start(nni_tls_conn *conn)
 {
 	nni_iov  iov[2];
 	unsigned nio = 0;
@@ -478,12 +478,12 @@ tls_bio_send_start(tls_conn *conn)
 int
 nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 {
-	tls_conn *conn = arg;
-	size_t    len  = *szp;
-	size_t    head = conn->bio_send_head;
-	size_t    tail = conn->bio_send_tail;
-	size_t    space;
-	size_t    cnt;
+	nni_tls_conn *conn = arg;
+	size_t        len  = *szp;
+	size_t        head = conn->bio_send_head;
+	size_t        tail = conn->bio_send_tail;
+	size_t        space;
+	size_t        cnt;
 
 	space = NNG_TLS_MAX_SEND_SIZE - conn->bio_send_len;
 
@@ -531,8 +531,8 @@ nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 int
 nng_tls_engine_recv(void *arg, uint8_t *buf, size_t *szp)
 {
-	tls_conn *conn = arg;
-	size_t    len  = *szp;
+	nni_tls_conn *conn = arg;
+	size_t        len  = *szp;
 
 	if (conn->closed) {
 		return (NNG_ECLOSED);

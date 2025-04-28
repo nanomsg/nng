@@ -90,17 +90,17 @@ typedef struct {
 	nni_reap_node   reap;
 
 	// ... engine connection data follows
-} tls_conn;
+} nni_tls_conn;
 
-extern void nni_tls_fini(tls_conn *conn);
-extern int  nni_tls_init(tls_conn *conn, nng_tls_config *cfg);
+extern void nni_tls_fini(nni_tls_conn *conn);
+extern int  nni_tls_init(nni_tls_conn *conn, nng_tls_config *cfg);
 extern int  nni_tls_start(
-     tls_conn *conn, const nni_tls_bio_ops *biops, void *bio);
-extern void        nni_tls_stop(tls_conn *conn);
-extern void        nni_tls_close(tls_conn *conn);
-extern void        nni_tls_recv(tls_conn *conn, nni_aio *aio);
-extern void        nni_tls_send(tls_conn *conn, nni_aio *aio);
-extern bool        nni_tls_verified(tls_conn *conn);
-extern const char *nni_tls_peer_cn(tls_conn *conn);
+     nni_tls_conn *conn, const nni_tls_bio_ops *biops, void *bio);
+extern void        nni_tls_stop(nni_tls_conn *conn);
+extern void        nni_tls_close(nni_tls_conn *conn);
+extern void        nni_tls_recv(nni_tls_conn *conn, nni_aio *aio);
+extern void        nni_tls_send(nni_tls_conn *conn, nni_aio *aio);
+extern bool        nni_tls_verified(nni_tls_conn *conn);
+extern const char *nni_tls_peer_cn(nni_tls_conn *conn);
 
 #endif // NNG_TLS_TLS_COMMON_H
