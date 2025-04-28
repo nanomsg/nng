@@ -786,11 +786,11 @@ tcptran_ep_init(tcptran_ep *ep, nni_sock *sock, void (*conn_cb)(void *))
 #endif
 }
 
-static int
+static nng_err
 tcptran_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 	nni_sock   *sock = nni_dialer_sock(ndialer);
 
 	ep->ndialer = ndialer;
@@ -806,21 +806,21 @@ tcptran_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != 0) {
+	if ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != NNG_OK) {
 		return (rv);
 	}
 
 #ifdef NNG_ENABLE_STATS
 	nni_dialer_add_stat(ndialer, &ep->st_rcv_max);
 #endif
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tcptran_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 	nni_sock   *sock = nni_listener_sock(nlistener);
 
 	ep->nlistener = nlistener;
@@ -835,14 +835,15 @@ tcptran_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) {
+	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) !=
+	    NNG_OK) {
 		return (rv);
 	}
 #ifdef NNG_ENABLE_STATS
 	nni_listener_add_stat(nlistener, &ep->st_rcv_max);
 #endif
 
-	return (0);
+	return (NNG_OK);
 }
 
 static void
@@ -987,12 +988,12 @@ static const nni_option tcptran_ep_opts[] = {
 	},
 };
 
-static int
+static nng_err
 tcptran_dialer_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 
 	rv = nni_stream_dialer_get(ep->dialer, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
@@ -1001,12 +1002,12 @@ tcptran_dialer_getopt(
 	return (rv);
 }
 
-static int
+static nng_err
 tcptran_dialer_setopt(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 
 	rv = nni_stream_dialer_set(ep->dialer, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
@@ -1015,12 +1016,12 @@ tcptran_dialer_setopt(
 	return (rv);
 }
 
-static int
+static nng_err
 tcptran_listener_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 
 	rv = nni_stream_listener_get(ep->listener, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
@@ -1029,12 +1030,12 @@ tcptran_listener_getopt(
 	return (rv);
 }
 
-static int
+static nng_err
 tcptran_listener_setopt(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tcptran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 
 	rv = nni_stream_listener_set(ep->listener, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {

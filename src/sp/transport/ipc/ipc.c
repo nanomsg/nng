@@ -795,43 +795,44 @@ ipc_ep_init(ipc_ep *ep, nni_sock *sock, void (*conn_cb)(void *))
 #endif
 }
 
-static int
+static nng_err
 ipc_ep_init_dialer(void *arg, nng_url *url, nni_dialer *dialer)
 {
 	ipc_ep   *ep = arg;
-	int       rv;
+	nng_err   rv;
 	nni_sock *sock = nni_dialer_sock(dialer);
 
 	ipc_ep_init(ep, sock, ipc_ep_dial_cb);
 	ep->ndialer = dialer;
 
-	if ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != 0) {
+	if ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != NNG_OK) {
 		return (rv);
 	}
 #ifdef NNG_ENABLE_STATS
 	nni_dialer_add_stat(dialer, &ep->st_rcv_max);
 #endif
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 ipc_ep_init_listener(void *arg, nng_url *url, nni_listener *listener)
 {
 	ipc_ep   *ep = arg;
-	int       rv;
+	nng_err   rv;
 	nni_sock *sock = nni_listener_sock(listener);
 
 	ipc_ep_init(ep, sock, ipc_ep_accept_cb);
 	ep->nlistener = listener;
 
-	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) {
+	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) !=
+	    NNG_OK) {
 		return (rv);
 	}
 
 #ifdef NNG_ENABLE_STATS
 	nni_listener_add_stat(listener, &ep->st_rcv_max);
 #endif
-	return (0);
+	return (NNG_OK);
 }
 
 static void
@@ -979,11 +980,11 @@ static const nni_option ipc_ep_options[] = {
 	},
 };
 
-static int
+static nng_err
 ipc_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ipc_ep *ep = arg;
-	int     rv;
+	nng_err rv;
 
 	rv = nni_getopt(ipc_ep_options, name, ep, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
@@ -992,12 +993,12 @@ ipc_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (rv);
 }
 
-static int
+static nng_err
 ipc_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ipc_ep *ep = arg;
-	int     rv;
+	nng_err rv;
 
 	rv = nni_setopt(ipc_ep_options, name, ep, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
@@ -1006,12 +1007,12 @@ ipc_dialer_set(
 	return (rv);
 }
 
-static int
+static nng_err
 ipc_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ipc_ep *ep = arg;
-	int     rv;
+	nng_err rv;
 
 	rv = nni_getopt(ipc_ep_options, name, ep, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
@@ -1020,12 +1021,12 @@ ipc_listener_get(
 	return (rv);
 }
 
-static int
+static nng_err
 ipc_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ipc_ep *ep = arg;
-	int     rv;
+	nng_err rv;
 
 	rv = nni_setopt(ipc_ep_options, name, ep, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {

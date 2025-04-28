@@ -757,11 +757,11 @@ tlstran_ep_init(tlstran_ep *ep, nni_sock *sock, nni_cb conn_cb)
 	return (0);
 }
 
-static int
+static nng_err
 tlstran_ep_init_dialer(void *arg, nng_url *url, nni_dialer *ndialer)
 {
 	tlstran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 	nni_sock   *sock = nni_dialer_sock(ndialer);
 
 	tlstran_ep_init(ep, sock, tlstran_dial_cb);
@@ -777,20 +777,20 @@ tlstran_ep_init_dialer(void *arg, nng_url *url, nni_dialer *ndialer)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != 0) {
+	if ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != NNG_OK) {
 		return (rv);
 	}
 #ifdef NNG_ENABLE_STATS
 	nni_dialer_add_stat(ndialer, &ep->st_rcv_max);
 #endif
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 tlstran_ep_init_listener(void *arg, nng_url *url, nni_listener *nlistener)
 {
 	tlstran_ep *ep = arg;
-	int         rv;
+	nng_err     rv;
 	nni_sock   *sock = nni_listener_sock(nlistener);
 
 	tlstran_ep_init(ep, sock, tlstran_accept_cb);
@@ -804,14 +804,15 @@ tlstran_ep_init_listener(void *arg, nng_url *url, nni_listener *nlistener)
 	    (url->u_query != NULL)) {
 		return (NNG_EADDRINVAL);
 	}
-	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) {
+	if ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) !=
+	    NNG_OK) {
 		return (rv);
 	}
 
 #ifdef NNG_ENABLE_STATS
 	nni_listener_add_stat(nlistener, &ep->st_rcv_max);
 #endif
-	return (0);
+	return (NNG_OK);
 }
 
 static void
@@ -975,11 +976,11 @@ static nni_option tlstran_ep_options[] = {
 	},
 };
 
-static int
+static nng_err
 tlstran_dialer_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	int         rv;
+	nng_err     rv;
 	tlstran_ep *ep = arg;
 
 	rv = nni_stream_dialer_get(ep->dialer, name, buf, szp, t);
@@ -989,11 +990,11 @@ tlstran_dialer_getopt(
 	return (rv);
 }
 
-static int
+static nng_err
 tlstran_dialer_setopt(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
-	int         rv;
+	nng_err     rv;
 	tlstran_ep *ep = arg;
 
 	rv = nni_stream_dialer_set(
@@ -1004,11 +1005,11 @@ tlstran_dialer_setopt(
 	return (rv);
 }
 
-static int
+static nng_err
 tlstran_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	int         rv;
+	nng_err     rv;
 	tlstran_ep *ep = arg;
 
 	rv = nni_stream_listener_get(ep->listener, name, buf, szp, t);
@@ -1018,7 +1019,7 @@ tlstran_listener_get(
 	return (rv);
 }
 
-static int
+static nng_err
 tlstran_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
@@ -1033,28 +1034,28 @@ tlstran_listener_set(
 	return (rv);
 }
 
-static int
+static nng_err
 tlstran_listener_set_tls(void *arg, nng_tls_config *cfg)
 {
 	tlstran_ep *ep = arg;
 	return (nni_stream_listener_set_tls(ep->listener, cfg));
 }
 
-static int
+static nng_err
 tlstran_listener_get_tls(void *arg, nng_tls_config **cfgp)
 {
 	tlstran_ep *ep = arg;
 	return (nni_stream_listener_get_tls(ep->listener, cfgp));
 }
 
-static int
+static nng_err
 tlstran_dialer_set_tls(void *arg, nng_tls_config *cfg)
 {
 	tlstran_ep *ep = arg;
 	return (nni_stream_dialer_set_tls(ep->dialer, cfg));
 }
 
-static int
+static nng_err
 tlstran_dialer_get_tls(void *arg, nng_tls_config **cfgp)
 {
 	tlstran_ep *ep = arg;

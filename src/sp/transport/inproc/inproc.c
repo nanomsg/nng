@@ -270,24 +270,24 @@ inproc_ep_init(inproc_ep *ep, nni_sock *sock, const nng_url *url)
 	ep->addr = url->u_path; // we match on the URL path.
 }
 
-static int
+static nng_err
 inproc_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 {
 	inproc_ep *ep = arg;
 
 	ep->dialer = ndialer;
 	inproc_ep_init(ep, nni_dialer_sock(ndialer), url);
-	return (0);
+	return (NNG_OK);
 }
 
-static int
+static nng_err
 inproc_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
 	inproc_ep *ep = arg;
 
 	ep->listener = nlistener;
 	inproc_ep_init(ep, nni_listener_sock(nlistener), url);
-	return (0);
+	return (NNG_OK);
 }
 
 static void
@@ -616,13 +616,13 @@ static const nni_option inproc_ep_options[] = {
 	},
 };
 
-static int
+static nng_err
 inproc_ep_getopt(void *arg, const char *name, void *v, size_t *szp, nni_type t)
 {
 	return (nni_getopt(inproc_ep_options, name, arg, v, szp, t));
 }
 
-static int
+static nng_err
 inproc_ep_setopt(
     void *arg, const char *name, const void *v, size_t sz, nni_type t)
 {

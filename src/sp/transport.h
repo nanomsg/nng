@@ -33,7 +33,7 @@ struct nni_sp_dialer_ops {
 
 	// d_init creates a vanilla dialer. The value created is
 	// used for the first argument for all other dialer functions.
-	int (*d_init)(void *, nng_url *, nni_dialer *);
+	nng_err (*d_init)(void *, nng_url *, nni_dialer *);
 
 	// d_fini frees the resources associated with the dialer.
 	// The dialer will already have been closed.
@@ -53,18 +53,19 @@ struct nni_sp_dialer_ops {
 	void (*d_stop)(void *);
 
 	// d_getopt is used to obtain an option.
-	int (*d_getopt)(void *, const char *, void *, size_t *, nni_type);
+	nng_err (*d_getopt)(void *, const char *, void *, size_t *, nni_type);
 
 	// d_setopt is used to set or change an option.
-	int (*d_setopt)(void *, const char *, const void *, size_t, nni_type);
+	nng_err (*d_setopt)(
+	    void *, const char *, const void *, size_t, nni_type);
 
 	// d_get_tls is used to get the TLS configuration to use for dialing.
 	// This may be NULL if the dialer does not support TLS.
-	int (*d_get_tls)(void *, nng_tls_config **);
+	nng_err (*d_get_tls)(void *, nng_tls_config **);
 
 	// d_set_tls is used to set the TLS configruation to use for the
 	// dialer. This may be NULL if this dialer does not support TLS.
-	int (*d_set_tls)(void *, nng_tls_config *);
+	nng_err (*d_set_tls)(void *, nng_tls_config *);
 
 	// d_options is an array of dialer options.  The final
 	// element must have a NULL name. If this member is NULL, then
@@ -79,7 +80,7 @@ struct nni_sp_listener_ops {
 
 	// l_init creates a vanilla listener. The value created is
 	// used for the first argument for all other listener functions.
-	int (*l_init)(void *, nng_url *, nni_listener *);
+	nng_err (*l_init)(void *, nng_url *, nni_listener *);
 
 	// l_fini frees the resources associated with the listener.
 	// The listener will already have been closed.
@@ -106,18 +107,19 @@ struct nni_sp_listener_ops {
 	void (*l_stop)(void *);
 
 	// l_getopt is used to obtain an option.
-	int (*l_getopt)(void *, const char *, void *, size_t *, nni_type);
+	nng_err (*l_getopt)(void *, const char *, void *, size_t *, nni_type);
 
 	// l_setopt is used to set or change an option.
-	int (*l_setopt)(void *, const char *, const void *, size_t, nni_type);
+	nng_err (*l_setopt)(
+	    void *, const char *, const void *, size_t, nni_type);
 
 	// l_get_tls is used to get the TLS configuration to use for listening.
 	// This may be NULL if the listener does not support TLS.
-	int (*l_get_tls)(void *, nng_tls_config **);
+	nng_err (*l_get_tls)(void *, nng_tls_config **);
 
 	// l_set_tls is used to set the TLS configruation to use for listening.
 	// This may be NULL if this listener does not support TLS.
-	int (*l_set_tls)(void *, nng_tls_config *);
+	nng_err (*l_set_tls)(void *, nng_tls_config *);
 
 	// l_set_security_descriptor is used exclusively on Windows.
 	nng_err (*l_set_security_descriptor)(void *, void *);
