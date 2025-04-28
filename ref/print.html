@@ -4025,12 +4025,12 @@ or be aborted, these functions are unsafe to call from functions that may not bl
 completion function registered with an <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> when it is created.</p>
 </div>
 <h2 id="getting-stream-options"><a class="header" href="#getting-stream-options">Getting Stream Options</a></h2>
-<pre><code class="language-c">int nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
-int nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
-int nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
-int nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
-int nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
-int nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+<pre><code class="language-c">nng_err nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
+nng_err nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
+nng_err nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
+nng_err nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
+nng_err nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+nng_err nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
 </code></pre>
 <p><a name="a008"></a>
 <a name="a009"></a>
@@ -4058,10 +4058,10 @@ Normally a listener may be used to accept multiple, possibly many, concurrent co
 connection requests. While there isn’t a specific BSD socket analogue, this can be thought of as a factory for TCP sockets
 created by opening them with <a name="a020"></a><code>socket</code> and then calling <a name="a021"></a><code>connect</code> on them.</p>
 <h2 id="creating-a-stream-factory"><a class="header" href="#creating-a-stream-factory">Creating a Stream Factory</a></h2>
-<pre><code class="language-c">int nng_stream_dialer_alloc(nng_stream_dialer **dialerp, const char *url);
-int nng_stream_dialer_alloc_url(nng_stream_dialer **dialerp, const nng_url *url);
-int nng_stream_listener_alloc(nng_stream_listener **lstenerp, const char *url);
-int nng_stream_listener_alloc_url(nng_stream_listener **listenerp, const nng_url *url);
+<pre><code class="language-c">nng_err nng_stream_dialer_alloc(nng_stream_dialer **dialerp, const char *url);
+nng_err nng_stream_dialer_alloc_url(nng_stream_dialer **dialerp, const nng_url *url);
+nng_err nng_stream_listener_alloc(nng_stream_listener **lstenerp, const char *url);
+nng_err nng_stream_listener_alloc_url(nng_stream_listener **listenerp, const nng_url *url);
 </code></pre>
 <p>The <a name="a022"></a><code>nng_stream_dialer_alloc</code> and <a name="a023"></a><code>nng_stream_dialer_alloc_url</code> functions create a stream dialer, associated the
 <a name="a024"></a>URL specified by <em>url</em> represented as a string, or as an <a href="api//api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The dialer is returned in the location
@@ -4133,7 +4133,7 @@ if (nng_aio_result(aio) != 0) {
 stream = nng_aio_get_output(aio, 0);
 </code></pre>
 <h2 id="accepting-incoming-connections"><a class="header" href="#accepting-incoming-connections">Accepting Incoming Connections</a></h2>
-<pre><code class="language-c">int nng_stream_listener_listen(nng_stream_listener *listener);
+<pre><code class="language-c">nng_err nng_stream_listener_listen(nng_stream_listener *listener);
 void nng_stream_listener_accept(nng_stream_listener *listener, nng_aio *aio);
 </code></pre>
 <p>Accepting incoming connections is performed in two steps. The first step, <a name="a034"></a><code>nng_stream_listener_listen</code> is to setup for
@@ -4166,33 +4166,33 @@ if (nng_aio_result(aio) != 0) {
 stream = nng_aio_get_output(aio, 0);
 </code></pre>
 <h2 id="stream-factory-options"><a class="header" href="#stream-factory-options">Stream Factory Options</a></h2>
-<pre><code class="language-c">int nng_stream_dialer_get_addr(nng_stream_dialer *dialer, const char *opt, nng_sockaddr *valp);
-int nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, bool *valp);
-int nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
-int nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
-int nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
-int nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, char **valp);
+<pre><code class="language-c">nng_err nng_stream_dialer_get_addr(nng_stream_dialer *dialer, const char *opt, nng_sockaddr *valp);
+nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, bool *valp);
+nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
+nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
+nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
+nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, char **valp);
 
-int nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
-int nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
-int nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
-int nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
-int nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
-int nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, char **valp);
+nng_err nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
+nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
+nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
+nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
+nng_err nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
+nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, char **valp);
 
-int nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
-int nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
-int nng_stream_dialer_set_int(nng_stream_dialer *dialer, const char *opt, int val);
-int nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng_duration val);
-int nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
-int nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
+nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
+nng_err nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
+nng_err nng_stream_dialer_set_int(nng_stream_dialer *dialer, const char *opt, int val);
+nng_err nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng_duration val);
+nng_err nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
+nng_err nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
 
-int nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
-int nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
-int nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
-int nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
-int nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
-int nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
+nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
+nng_err nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
+nng_err nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
+nng_err nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
+nng_err nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
+nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
 </code></pre>
 <p><a name="a036"></a>
 <a name="a037"></a>
@@ -4255,10 +4255,10 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 // can now start doing nng_stream_listener_accept...
 </code></pre>
 <h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
-<pre><code class="language-c">int nng_stream_dialer_get_tls(nng_stream_listener *dialer, nng_tls_config **tlsp);
-int nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *tls);
-int nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
-int nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
+<pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_listener *dialer, nng_tls_config **tlsp);
+nng_err nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *tls);
+nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
+nng_err nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
 </code></pre>
 <p>Both <a href="api//api/stream.html#stream-factories"><code>nng_stream_dialer</code></a> and <a href="api//api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects may support configuration of <a name="a062"></a>TLS parameters.
 The <a name="a063"></a><code>nng_stream_dialer_set_tls</code> and <a name="a064"></a><code>nng_stream_listener_set_tls</code> functions support setting the
