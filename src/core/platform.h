@@ -359,6 +359,10 @@ typedef struct nni_plat_udp nni_plat_udp;
 // aio's a_pipe.
 extern int nni_plat_udp_open(nni_plat_udp **, const nni_sockaddr *);
 
+// nni_plat_udp_stop stops I/O on the socket, but does not close it
+// or free the underlying data.  May block for callbacks to complete.
+extern void nni_plat_udp_stop(nni_plat_udp *);
+
 // nni_plat_udp_close closes the underlying UDP socket.
 extern void nni_plat_udp_close(nni_plat_udp *);
 

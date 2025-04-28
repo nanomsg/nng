@@ -121,7 +121,8 @@ option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TCP)
 
 # TLS transport
-option (NNG_TRANSPORT_TLS "Enable TLS transport." ON)
+CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_TLS "Enable TLS transport." ON
+    "NNG_ENABLE_TLS" OFF)
 mark_as_advanced(NNG_TRANSPORT_TLS)
 
 # WebSocket
@@ -137,6 +138,11 @@ mark_as_advanced(NNG_TRANSPORT_FDC)
 
 option (NNG_TRANSPORT_UDP "Enable UDP transport (EXPERIMENTAL)" ON)
 mark_as_advanced(NNG_TRANSPORT_UDP)
+
+CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_DTLS
+    "Enable DTLS transport (EXPERIMENTAL)" ON
+    "NNG_ENABLE_TLS" OFF)
+mark_as_advanced(NNG_TRANSPORT_DTLS)
 
 if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     # Make sure things we *MUST* have are enabled.

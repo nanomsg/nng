@@ -85,9 +85,8 @@ nni_plat_udp_open(nni_plat_udp **udpp, const nni_sockaddr *sa)
 	return (rv);
 }
 
-// nni_plat_udp_close closes the underlying UDP socket.
 void
-nni_plat_udp_close(nni_plat_udp *u)
+nni_plat_udp_stop(nni_plat_udp *u)
 {
 	nni_mtx_lock(&u->lk);
 	u->closed = true;
@@ -98,6 +97,13 @@ nni_plat_udp_close(nni_plat_udp *u)
 		nni_cv_wait(&u->cv);
 	}
 	nni_mtx_unlock(&u->lk);
+}
+
+// nni_plat_udp_close closes the underlying UDP socket.
+void
+nni_plat_udp_close(nni_plat_udp *u)
+{
+	nni_plat_udp_stop(u);
 
 	if (u->s != INVALID_SOCKET) {
 		closesocket(u->s);

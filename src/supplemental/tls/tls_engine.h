@@ -44,7 +44,10 @@ typedef struct nng_tls_engine_conn_ops_s {
 	// init is used to initialize a connection object.
 	// The passed in connection state will be aligned naturally,
 	// and zeroed.  On success this returns 0, else an NNG error code.
-	int (*init)(nng_tls_engine_conn *, void *, nng_tls_engine_config *);
+	// The sockaddr is the peer's socket adress (needed for DTLS or
+	// possibly session resumption.)
+	int (*init)(nng_tls_engine_conn *, void *, nng_tls_engine_config *,
+	    const nng_sockaddr *);
 
 	// fini destroys a connection object.  This will
 	// be called only when no other external use of the connection
@@ -175,7 +178,7 @@ typedef enum nng_tls_engine_version_e {
 } nng_tls_engine_version;
 
 typedef struct nng_tls_engine_s {
-	// _version is the engine version.  This for now must
+	// version is the engine version.  This for now must
 	// be NNG_TLS_ENGINE_VERSION.  If the version does not match
 	// then registration of the engine will fail.
 	nng_tls_engine_version version;
@@ -212,7 +215,7 @@ extern int nng_tls_engine_register(const nng_tls_engine *);
 // is the context structure passed in when starting the engine.
 extern int nng_tls_engine_send(void *, const uint8_t *, size_t *);
 
-// nng_tls_engine_recv is called byu the engine to receive data over
+// nng_tls_engine_recv is called by the engine to receive data over
 // the underlying connection.  It returns zero on success, NNG_EAGAIN
 // if the operation can't be completed yet (there is no data available
 // for reading), or some other error.  On success the count is updated

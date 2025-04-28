@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -15,5 +15,6 @@ add_subdirectory(inproc)
 add_subdirectory(ipc)
 add_subdirectory(tcp)
 add_subdirectory(tls)
+add_subdirectory(dtls)
 add_subdirectory(udp)
 add_subdirectory(ws)

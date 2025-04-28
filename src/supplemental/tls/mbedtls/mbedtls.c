@@ -23,6 +23,9 @@
 
 #include "nng/nng.h"
 
+// We use a common cookie for our application.
+#include "mbedtls/ssl_cookie.h"
+
 #include "../tls_engine.h"
 
 // mbedTLS renamed this header for 2.4.0.
@@ -82,6 +85,8 @@ static nni_mtx                  rng_lock;
 struct nng_tls_engine_conn {
 	void               *tls; // parent conn
 	mbedtls_ssl_context ctx;
+	nng_time            exp1;
+	nng_time            exp2;
 };
 
 struct nng_tls_engine_config {
@@ -95,6 +100,8 @@ struct nng_tls_engine_config {
 	nni_list           pairs;
 	nni_list           psks;
 };
+
+static mbedtls_ssl_cookie_ctx mbed_ssl_cookie_ctx;
 
 static void
 tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
@@ -238,15 +245,44 @@ conn_fini(nng_tls_engine_conn *ec)
 	mbedtls_ssl_free(&ec->ctx);
 }
 
-static int
-conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg)
+static void
+conn_set_timer(void *arg, unsigned int t1, unsigned int t2)
 {
-	int rv;
+	nng_time             now = nng_clock();
+	nng_tls_engine_conn *ec  = arg;
+	ec->exp1                 = t1 ? now + t1 : 0;
+	ec->exp2                 = t2 ? now + t2 : 0;
+}
+
+static int
+conn_get_timer(void *arg)
+{
+	nng_tls_engine_conn *ec  = arg;
+	nng_time             now = nng_clock();
+	if (ec->exp2 == 0) {
+		return -1;
+	}
+	if (now > ec->exp2) {
+		return 2;
+	}
+	if (now > ec->exp1) {
+		return 1;
+	}
+	return (0);
+}
+
+static int
+conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
+    const nng_sockaddr *sa)
+{
+	int  rv;
+	char buf[NNG_MAXADDRSTRLEN];
 
 	ec->tls = tls;
 
 	mbedtls_ssl_init(&ec->ctx);
 	mbedtls_ssl_set_bio(&ec->ctx, tls, net_send, net_recv, NULL);
+	mbedtls_ssl_set_timer_cb(&ec->ctx, ec, conn_set_timer, conn_get_timer);
 
 	if ((rv = mbedtls_ssl_setup(&ec->ctx, &cfg->cfg_ctx)) != 0) {
 		tls_log_warn(
@@ -256,6 +292,12 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg)
 
 	if (cfg->server_name != NULL) {
 		mbedtls_ssl_set_hostname(&ec->ctx, cfg->server_name);
+	}
+
+	if (cfg->mode == NNG_TLS_MODE_SERVER) {
+		nng_str_sockaddr(sa, buf, sizeof(buf));
+		mbedtls_ssl_set_client_transport_id(
+		    &ec->ctx, (const void *) buf, strlen(buf));
 	}
 
 	return (0);
@@ -483,6 +525,12 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 
 	mbedtls_ssl_conf_rng(&cfg->cfg_ctx, tls_random, cfg);
 	mbedtls_ssl_conf_dbg(&cfg->cfg_ctx, tls_dbg, cfg);
+
+	if (cfg->mode == NNG_TLS_MODE_SERVER) {
+		mbedtls_ssl_conf_dtls_cookies(&cfg->cfg_ctx,
+		    mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check,
+		    &mbed_ssl_cookie_ctx);
+	}
 
 	return (0);
 }
@@ -793,9 +841,14 @@ nng_tls_engine_init_mbed(void)
 #endif
 	// Uncomment the following to have noisy debug from mbedTLS.
 	// This may be useful when trying to debug failures.
-	//	mbedtls_debug_set_threshold(9);
+	// mbedtls_debug_set_threshold(9);
 
-	rv = nng_tls_engine_register(&tls_engine_mbed);
+	mbedtls_ssl_cookie_init(&mbed_ssl_cookie_ctx);
+	rv = mbedtls_ssl_cookie_setup(&mbed_ssl_cookie_ctx, tls_random, NULL);
+
+	if (rv == 0) {
+		rv = nng_tls_engine_register(&tls_engine_mbed);
+	}
 
 #ifdef NNG_TLS_USE_CTR_DRBG
 	if (rv != 0) {
@@ -809,6 +862,7 @@ nng_tls_engine_init_mbed(void)
 void
 nng_tls_engine_fini_mbed(void)
 {
+	mbedtls_ssl_cookie_free(&mbed_ssl_cookie_ctx);
 #ifdef NNG_TLS_USE_CTR_DRBG
 	mbedtls_ctr_drbg_free(&rng_ctx);
 	nni_mtx_fini(&rng_lock);

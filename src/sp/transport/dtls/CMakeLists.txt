@@ -1,6 +1,5 @@
 #
 # Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
-# Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,11 +7,11 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-# TLS transport
-nng_directory(tls)
+# DTLS transport
+nng_directory(dtls)
 
-if (NNG_TRANSPORT_TLS)
-    nng_sources(tls.c)
-    nng_defines(NNG_TRANSPORT_TLS)
-    nng_test(tls_tran_test)
+if (NNG_TRANSPORT_DTLS)
+    nng_sources(dtls.c)
+    nng_defines(NNG_TRANSPORT_DTLS)
+    nng_test(dtls_tran_test)
 endif()

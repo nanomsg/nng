@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -956,8 +956,14 @@ ipc_pipe_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_stream_get(p->conn, name, buf, szp, t));
 }
 
+static size_t
+ipc_pipe_size(void)
+{
+	return (sizeof(ipc_pipe));
+}
+
 static nni_sp_pipe_ops ipc_tran_pipe_ops = {
-	.p_size   = sizeof(ipc_pipe),
+	.p_size   = ipc_pipe_size,
 	.p_init   = ipc_pipe_init,
 	.p_fini   = ipc_pipe_fini,
 	.p_stop   = ipc_pipe_stop,

@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -10,6 +10,8 @@
 # UDP transport
 nng_directory(udp)
 
-nng_sources_if(NNG_TRANSPORT_UDP udp.c)
-nng_defines_if(NNG_TRANSPORT_UDP NNG_TRANSPORT_UDP)
-nng_test_if(NNG_TRANSPORT_UDP udp_tran_test)
+if (NNG_TRANSPORT_UDP)
+    nng_sources(udp.c)
+    nng_defines(NNG_TRANSPORT_UDP)
+    nng_test(udp_tran_test)
+endif()

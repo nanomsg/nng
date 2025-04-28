@@ -1,5 +1,5 @@
 #
-# Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -10,6 +10,8 @@
 # File Descriptor (or Handle) based connections
 nng_directory(socket)
 
-nng_sources_if(NNG_TRANSPORT_FDC sockfd.c)
-nng_defines_if(NNG_TRANSPORT_FDC NNG_TRANSPORT_FDC)
-nng_test(sockfd_test)
+if (NNG_TRANSPORT_FDC)
+    nng_sources(sockfd.c)
+    nng_defines(NNG_TRANSPORT_FDC)
+    nng_test(sockfd_test)
+endif()

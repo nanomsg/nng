@@ -139,7 +139,12 @@ struct nni_sp_pipe_ops {
 	// p_init initializes the pipe data structures.  The main
 	// purpose of this is so that the pipe will see the upper
 	// layer nni_pipe and get a chance to register stats and such.
-	size_t p_size;
+	// size_t p_size;
+
+	// p_size returns the size of the transport data needed for a pipe.
+	// This allows for dynamic registration of context size to allow for
+	// different tunings or different runtimes.
+	size_t (*p_size)(void);
 
 	// p_init initializes the transport's pipe data structure.
 	// The pipe MUST be left in a state that p_fini can be safely

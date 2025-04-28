@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -11,6 +11,8 @@
 # TCP protocol
 nng_directory(tcp)
 
-nng_sources_if(NNG_TRANSPORT_TCP tcp.c)
-nng_defines_if(NNG_TRANSPORT_TCP NNG_TRANSPORT_TCP)
-nng_test(tcp_test)
+if (NNG_TRANSPORT_TCP)
+    nng_sources(tcp.c)
+    nng_defines(NNG_TRANSPORT_TCP)
+    nng_test(tcp_test)
+endif()

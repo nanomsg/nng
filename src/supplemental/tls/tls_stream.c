@@ -110,9 +110,10 @@ tls_stream_recv(void *arg, nng_aio *aio)
 static void
 tls_stream_conn_cb(void *arg)
 {
-	tls_stream *ts = arg;
-	nng_stream *bio;
-	int         rv;
+	tls_stream  *ts = arg;
+	nng_stream  *bio;
+	int          rv;
+	nng_sockaddr sa;
 
 	if ((rv = nni_aio_result(&ts->conn_aio)) != 0) {
 		nni_aio_finish_error(ts->user_aio, rv);
@@ -121,8 +122,13 @@ tls_stream_conn_cb(void *arg)
 	}
 
 	bio = nni_aio_get_output(&ts->conn_aio, 0);
+	if ((rv = nng_stream_get_addr(bio, NNG_OPT_REMADDR, &sa)) != 0) {
+		nni_aio_finish_error(ts->user_aio, rv);
+		nni_tls_stream_free(ts);
+		return;
+	};
 
-	if ((rv = nni_tls_start(&ts->conn, &tls_stream_bio, bio)) != 0) {
+	if ((rv = nni_tls_start(&ts->conn, &tls_stream_bio, bio, &sa)) != 0) {
 		// NB: if this fails, it *will* have set the bio either way.
 		// So nni_tls_stream_free will also free the bio.
 		nni_aio_finish_error(ts->user_aio, rv);
@@ -140,13 +146,12 @@ static nng_err tls_stream_get(
 int
 nni_tls_stream_alloc(tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio)
 {
-	tls_stream           *ts;
-	const nng_tls_engine *eng;
-	size_t                size;
-	int                   rv;
+	tls_stream *ts;
+	size_t      size;
+	int         rv;
 
-	eng  = cfg->engine;
-	size = NNI_ALIGN_UP(sizeof(*ts)) + eng->conn_ops->size;
+	size = NNI_ALIGN_UP(sizeof(*ts)) +
+	    NNI_ALIGN_UP(nni_tls_engine_conn_size());
 
 	if ((ts = nni_zalloc(size)) == NULL) {
 		return (NNG_ENOMEM);

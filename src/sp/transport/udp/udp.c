@@ -1756,8 +1756,14 @@ udp_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+static size_t
+udp_pipe_size(void)
+{
+	return (sizeof(udp_pipe));
+}
+
 static nni_sp_pipe_ops udp_pipe_ops = {
-	.p_size   = sizeof(udp_pipe),
+	.p_size   = udp_pipe_size,
 	.p_init   = udp_pipe_init,
 	.p_fini   = udp_pipe_fini,
 	.p_stop   = udp_pipe_stop,

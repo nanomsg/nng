@@ -2148,6 +2148,12 @@ nng_udp_open(nng_udp **udp, nng_sockaddr *sa)
 }
 
 void
+nng_udp_stop(nng_udp *udp)
+{
+	nni_plat_udp_stop((nni_plat_udp *) udp);
+}
+
+void
 nng_udp_close(nng_udp *udp)
 {
 	nni_plat_udp_close((nni_plat_udp *) udp);

@@ -952,8 +952,14 @@ tlstran_pipe_getopt(
 	return (rv);
 }
 
+static size_t
+tlstran_pipe_size(void)
+{
+	return (sizeof(tlstran_pipe)); // TODO add engine data size
+}
+
 static nni_sp_pipe_ops tlstran_pipe_ops = {
-	.p_size   = sizeof(tlstran_pipe),
+	.p_size   = tlstran_pipe_size,
 	.p_init   = tlstran_pipe_init,
 	.p_fini   = tlstran_pipe_fini,
 	.p_stop   = tlstran_pipe_stop,

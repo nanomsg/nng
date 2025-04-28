@@ -499,7 +499,7 @@ nni_aio_finish_sync(nni_aio *aio, nng_err result, size_t count)
 void
 nni_aio_finish_error(nni_aio *aio, nng_err result)
 {
-	nni_aio_finish_impl(aio, result, NNG_OK, NULL, false);
+	nni_aio_finish_impl(aio, result, 0, NULL, false);
 }
 
 void

@@ -250,7 +250,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, nni_dialer *d,
 	size_t                 sz;
 
 	sz = NNI_ALIGN_UP(sizeof(*p)) + NNI_ALIGN_UP(pops->pipe_size) +
-	    NNI_ALIGN_UP(tops->p_size);
+	    NNI_ALIGN_UP(tops->p_size());
 
 	if ((p = nni_zalloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
