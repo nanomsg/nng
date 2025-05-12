@@ -317,7 +317,20 @@ NNG_DECL const char *nng_str_sockaddr(
 // Obtain a port number (for NNG_AF_INET and NNG_AF_INET6this will be 16 bits
 // maximum, but other address familiies may have larger port numbers.)  For
 // address that don't have the concept of port numbers, zero will be returned.
-uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
+NNG_DECL uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
+
+// Compare two socket addresses. Returns true if they are equal, false
+// otherwise.
+NNG_DECL bool nng_sockaddr_equal(
+    const nng_sockaddr *sa1, const nng_sockaddr *sa2);
+
+// Generate a quick non-zero 64-bit value for the sockaddr.
+// This should usually be unique, but collisions are possible.
+// The resulting hash is not portable between systems, and may not
+// be portable from one version of NNG to the next.
+//
+// The intended use is to allow creation of an index for use with id maps.
+NNG_DECL uint64_t nng_sockaddr_hash(const nng_sockaddr *sa);
 
 // Arguably the pipe callback functions could be handled as an option,
 // but with the need to specify an argument, we find it best to unify
