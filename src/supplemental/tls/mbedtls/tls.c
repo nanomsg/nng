@@ -254,9 +254,7 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg)
 		return (tls_mk_err(rv));
 	}
 
-	if (cfg->server_name != NULL) {
-		mbedtls_ssl_set_hostname(&ec->ctx, cfg->server_name);
-	}
+	mbedtls_ssl_set_hostname(&ec->ctx, cfg->server_name);
 
 	return (0);
 }
@@ -490,8 +488,8 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 static int
 config_server_name(nng_tls_engine_config *cfg, const char *name)
 {
-	char *dup;
-	if ((dup = nni_strdup(name)) == NULL) {
+	char *dup = NULL;
+	if (name != NULL && ((dup = nni_strdup(name)) == NULL)) {
 		return (NNG_ENOMEM);
 	}
 	if (cfg->server_name != NULL) {
