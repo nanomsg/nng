@@ -235,6 +235,92 @@ test_tls_ecdsa(void)
 }
 
 void
+test_tls_null_server_name(void)
+{
+	nng_stream_listener *l;
+	nng_stream_dialer   *d;
+	nng_aio             *aio1, *aio2;
+	nng_stream          *s1;
+	nng_stream          *s2;
+	nng_tls_config      *c1;
+	nng_tls_config      *c2;
+	char                 addr[32];
+	uint8_t             *buf1;
+	uint8_t             *buf2;
+	size_t               size = 8000;
+	void                *t1;
+	void                *t2;
+	int                  port;
+
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
+	// allocate messages
+	NUTS_ASSERT((buf1 = nng_alloc(size)) != NULL);
+	NUTS_ASSERT((buf2 = nng_alloc(size)) != NULL);
+
+	for (size_t i = 0; i < size; i++) {
+		buf1[i] = rand() & 0xff;
+	}
+
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	nng_aio_set_timeout(aio1, 5000);
+	nng_aio_set_timeout(aio2, 5000);
+
+	// Allocate the listener first.  We use a wild-card port.
+	NUTS_PASS(nng_stream_listener_alloc(&l, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_tls_config_alloc(&c1, NNG_TLS_MODE_SERVER));
+	NUTS_PASS(nng_tls_config_own_cert(
+	    c1, nuts_server_crt, nuts_server_key, NULL));
+	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	NUTS_PASS(
+	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_TRUE(port > 0);
+	NUTS_TRUE(port < 65536);
+
+	snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%d", port);
+	NUTS_PASS(nng_stream_dialer_alloc(&d, addr));
+	NUTS_PASS(nng_tls_config_alloc(&c2, NNG_TLS_MODE_CLIENT));
+	NUTS_PASS(nng_tls_config_ca_chain(c2, nuts_server_crt, NULL));
+
+	NUTS_PASS(nng_stream_dialer_set_tls(d, c2));
+
+	nng_stream_listener_accept(l, aio1);
+	nng_stream_dialer_dial(d, aio2);
+
+	nng_aio_wait(aio1);
+	nng_aio_wait(aio2);
+
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_PASS(nng_aio_result(aio2));
+
+	NUTS_TRUE((s1 = nng_aio_get_output(aio1, 0)) != NULL);
+	NUTS_TRUE((s2 = nng_aio_get_output(aio2, 0)) != NULL);
+
+	t1 = nuts_stream_send_start(s1, buf1, size);
+	t2 = nuts_stream_recv_start(s2, buf2, size);
+
+	NUTS_PASS(nuts_stream_wait(t1));
+	NUTS_PASS(nuts_stream_wait(t2));
+	NUTS_TRUE(memcmp(buf1, buf2, size) == 0);
+
+	nng_stream_stop(s1);
+	nng_stream_stop(s2);
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
+	nng_stream_free(s1);
+	nng_stream_free(s2);
+	nng_stream_dialer_free(d);
+	nng_stream_listener_free(l);
+	nng_tls_config_free(c1);
+	nng_tls_config_free(c2);
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
+	nng_free(buf1, size);
+	nng_free(buf2, size);
+}
+
+void
 test_tls_garbled_cert(void)
 {
 	nng_stream_listener *l;
@@ -575,6 +661,7 @@ TEST_LIST = {
 	{ "tls conn refused", test_tls_conn_refused },
 	{ "tls large message", test_tls_large_message },
 	{ "tls ecdsa", test_tls_ecdsa },
+	{ "tls null server name", test_tls_null_server_name },
 #ifndef NNG_TLS_ENGINE_WOLFSSL // wolfSSL doesn't validate certas until use
 	{ "tls garbled cert", test_tls_garbled_cert },
 #endif
