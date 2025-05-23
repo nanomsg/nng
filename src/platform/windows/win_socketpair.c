@@ -10,7 +10,7 @@
 #include "core/nng_impl.h"
 
 #ifdef NNG_HAVE_SOCKETPAIR_TODO
-// TODO: Windows lacks socketpair.  We can emulate it with an explcit
+// TODO: Windows lacks socketpair.  We can emulate it with an explicit
 // implementation based on AF_UNIX.
 
 #include <errno.h>

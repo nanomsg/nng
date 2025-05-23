@@ -54,7 +54,7 @@
  * This was inspired by GoConvey -- github.com/smartystreets/goconvey - but
  * there are differences of course -- C is not Go!
  *
- * Pleaes note that we abuse the C preprocessor and setjmp fairly heavily,
+ * Please note that we abuse the C preprocessor and setjmp fairly heavily,
  * and as a result of the magic we have to do, a lot of these guts must be
  * exposed in this header file.  HOWEVER, only symbols beginning with a
  * capital letter are intended for consumers.  All others are for internal
@@ -95,7 +95,7 @@ extern int  conveyMainImpl(void);
 /*
  * conveyRun is a helper macro not to be called directly by user
  * code.  It has to be here exposed, in order for setjmp() to work.
- * and for the code block to be inlined.  Becuase this inlines user
+ * and for the code block to be inlined.  Because this inlines user
  * code, we have to be *very* careful with symbol names.
  */
 #define conveyRun(convey_name, convey_code, convey_resultp)          \

@@ -726,7 +726,7 @@ udp_recv_creq(udp_ep *ep, udp_sp_creq *creq, nng_sockaddr *sa)
 	if ((p = udp_find_pipe(ep, creq->us_peer_id, creq->us_sender_id))) {
 		if ((p->peer_id == 0) || (p->peer != creq->us_type)) {
 			// we don't expect this -- a connection request from a
-			// peer while we have an oustanding request of our own.
+			// peer while we have an outstanding request of our own.
 			// We *could* compare the sockaddrs to see if they
 			// match and if so then treat this as just a dueling
 			// connection. but for now we just discard it -- we'll

@@ -349,7 +349,7 @@ test_server_404(void)
 }
 
 static void
-test_server_no_authoritive_form(void)
+test_server_no_authoritative_form(void)
 {
 	struct server_test st;
 	nng_http_handler  *h;
@@ -1108,7 +1108,7 @@ NUTS_TESTS = {
 	{ "server canonify", test_server_canonify },
 	{ "server head", test_server_head },
 	{ "server 404", test_server_404 },
-	{ "server authoritiative form", test_server_no_authoritive_form },
+	{ "server authoritiative form", test_server_no_authoritative_form },
 	{ "server bad canonify", test_server_bad_canonify },
 	{ "server bad version", test_server_bad_version },
 	{ "server missing host", test_server_missing_host },

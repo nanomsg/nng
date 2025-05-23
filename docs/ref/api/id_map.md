@@ -23,7 +23,7 @@ can also be randomly within the range.
 
 The identifiers are 64-bit unsigned integers and can be sparse; the structure
 will use space efficiently even if identifiers are very far apart.
-{{footnote: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifers may
+{{footnote: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifiers may
 themselves be much larger than this.}}
 
 > [!IMPORTANT]
@@ -66,7 +66,7 @@ with it.
 
 > [!NOTE]
 > The `nng_id_map_free` frees the map itself, but will not free memory associated with
-> any strctures contained within it.
+> any structures contained within it.
 
 ## Store a Value
 

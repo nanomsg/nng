@@ -23,7 +23,7 @@ extern void nuts_logger(
     nng_log_level, nng_log_facility, const char *, const char *);
 
 // Call nng_fini during test finalization -- this avoids leak warnings.
-/// We add a 20 millisecond delay as a hack to allow for other subsytems to
+/// We add a 20 millisecond delay as a hack to allow for other subsystems to
 // drain first. (Notably the HTTP framework can fail if we shut down too
 // quickly.  These bugs should be fixed and then the sleep can be removed.)
 #ifndef TEST_FINI

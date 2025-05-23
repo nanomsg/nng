@@ -1,7 +1,7 @@
 # Initialization & Finalization
 
 This chapter details the function used to initialize
-the library before first use, and the funtion used to
+the library before first use, and the function used to
 finalize the library and deallocate any resources used by the library.
 
 ## Initialization
@@ -17,7 +17,7 @@ typedef struct {
     int16_t num_resolver_threads;
 } nng_init_params;
 
-extern nng_err nng_init(nng_init_parms *params);
+extern nng_err nng_init(nng_init_params *params);
 ```
 
 Before using other interfaces in this library, it is necessary to initialize
@@ -52,7 +52,7 @@ The following parameters are present:
 - `num_task_threads` and `max_task_threads` \
   Configures the number of threads to use for tasks, which are used principally for completion
   callbacks. The maximum value can be used to provide an upper limit while still allowing
-  for a dynamically calculated value to be used, as long as it does not exceeed the maximum.
+  for a dynamically calculated value to be used, as long as it does not exceed the maximum.
 
 - `num_expire_threads` and `max_expire_threads` \
   Configures the number of threads used for expiring operations. Using a larger value will
@@ -71,7 +71,7 @@ The following parameters are present:
 extern void nng_fini(void);
 ```
 
-When the consumer is ready to deallocate any resoures allocated by the library, it should call
+When the consumer is ready to deallocate any resources allocated by the library, it should call
 the {{i:`nng_fini`}} function. Each call to `nng_fini` should be paired with an earlier call to
 [`nng_init`].
 

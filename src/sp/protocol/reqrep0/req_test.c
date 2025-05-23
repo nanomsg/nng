@@ -429,7 +429,7 @@ test_req_cancel_abort_recv(void)
 	// Send req #1 (abc).
 	NUTS_SEND(req, "abc");
 
-	// Wait for it to get ot the other side.
+	// Wait for it to get to the other side.
 	NUTS_SLEEP(100);
 
 	nng_aio_set_timeout(aio, 5 * SECOND);

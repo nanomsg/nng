@@ -32,7 +32,7 @@ applications.
 typedef struct nng_thread nng_thread;
 ```
 
-The {{i:`nng_thread`}} structure represnts a thread, which is a single execution context.
+The {{i:`nng_thread`}} structure represents a thread, which is a single execution context.
 A given thread will have its own stack, and CPU registers. However global state, as well
 as values allocated on the heap, will be shared and accessible to all threads in the system
 (See the [Synchronization][synchronization] chapter for functions to help with data sharing between different threads.)

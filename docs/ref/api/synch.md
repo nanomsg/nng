@@ -29,7 +29,7 @@ int nng_mutx_alloc(nng_mt **mtxp);
 A mutex can be created by allocating one with {{i:`nng_mtx_lock`}}.
 On success, a pointer to the mutex is returned through _mtxp_.
 This function can fail due to insufficient memory or resources, in which
-case it will return [`NNG_ENOMEM`]. Otherwise it will succceed and return zero.
+case it will return [`NNG_ENOMEM`]. Otherwise it will succeed and return zero.
 
 ### Destroying a Mutex
 
@@ -132,7 +132,7 @@ The difference between these functions is that
 one thread (which may be chosen randomly).
 
 > [!TIP]
-> Use of `nng_cv_wake1` may be used to reduce the "{{i:thundering herd}}" syndrom of waking
+> Use of `nng_cv_wake1` may be used to reduce the "{{i:thundering herd}}" syndrome of waking
 > all threads concurrently, but should only be used in circumstances where the application
 > does not depend on _which_ thread will be woken. When in doubt, `nng_cv_wake` is safer.
 

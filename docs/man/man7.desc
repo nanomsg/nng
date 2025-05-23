@@ -8,7 +8,7 @@ A given xref:nng_socket.5.adoc[socket] is created with exactly one protocol, and
 protocol defines the key behavior of the socket.
 
 (((transport)))
-Conversely, transports are the underlying mechansims by which messages
+Conversely, transports are the underlying mechanisms by which messages
 are moved between participants, such as TCP/IP or UNIX domain IPC.
 A given xref:nng_socket.5.adoc[socket] may be using several transports at the same
 time.

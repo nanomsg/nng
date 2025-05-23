@@ -89,7 +89,7 @@ extern void *nni_ctx_proto_data(nni_ctx *);
 // by the context is also released.
 extern void nni_ctx_rele(nni_ctx *);
 
-// nni_ctx_close is used to close the context.  It also implictly releases
+// nni_ctx_close is used to close the context.  It also implicitly releases
 // the context.
 extern void nni_ctx_close(nni_ctx *);
 

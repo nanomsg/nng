@@ -138,7 +138,7 @@ These functions (, {{i:`nng_ctx_recvmsg`}} and {{i:`nng_ctx_recv`}}) receive
 messages over the context _ctx_. The differences in their behaviors are as follows.
 
 > [!NOTE]
-> The semantics of what receving a message means varies from protocol to
+> The semantics of what receiving a message means varies from protocol to
 > protocol, so examination of the protocol documentation is encouraged.
 > Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
 > (For example, [REQ][req] sockets cannot normally receive data until they have first sent a request.)

@@ -87,7 +87,7 @@ nni_inet_ntop(const uint8_t addr[16], char buf[46])
 			idx += 2;
 			sep = false;
 		} else if (i < maxoff || i >= maxoff + maxcnt) {
-			// this takes at most six bytes -- four hax digits a
+			// this takes at most six bytes -- four hex digits a
 			// colon, and a null
 			NNI_ASSERT(idx <= 40);
 			snprintf(buf + idx, 6, sep ? ":%x" : "%x",

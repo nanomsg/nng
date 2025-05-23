@@ -108,7 +108,7 @@ parse_int(const char *arg, const char *what)
 	char *eptr;
 
 	val = strtol(arg, &eptr, 10);
-	// Must be a postive number less than around a billion.
+	// Must be a positive number less than around a billion.
 	if ((val < 0) || (val > (1 << 30)) || (*eptr != 0) || (eptr == arg)) {
 		die("Invalid %s", what);
 	}

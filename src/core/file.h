@@ -82,7 +82,7 @@ extern const char *nni_file_basename(const char *);
 // false if an error occurs, or the path references something else.
 extern bool nni_file_is_file(const char *);
 
-// nni_file_is_dir returns true if the path references a directroy.  It returns
+// nni_file_is_dir returns true if the path references a directory.  It returns
 // false if an error occurs, or the path references something else.
 extern bool nni_file_is_dir(const char *);
 

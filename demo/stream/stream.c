@@ -63,7 +63,7 @@ client(const char *url)
 	nng_iov            iov;
 	int                rv;
 
-	// Allocatate dialer and aio assoicated with this connection
+	// Allocate dialer and aio associated with this connection
 	if ((rv = nng_stream_dialer_alloc(&dialer, url)) != 0) {
 		nng_fatal("call to nng_stream_dialer_alloc failed", rv);
 	}
@@ -125,7 +125,7 @@ server(const char *url)
 	nng_iov              iov;
 	int                  rv;
 
-	// Allocatate dialer and aio assoicated with this connection
+	// Allocate dialer and aio associated with this connection
 	if ((rv = nng_stream_listener_alloc(&listener, url)) != 0) {
 		nng_fatal("call to nng_stream_listener_alloc failed", rv);
 	}
