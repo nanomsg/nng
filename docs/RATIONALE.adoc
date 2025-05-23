@@ -51,7 +51,7 @@ many of which feed into others, such that tracking flow through the state
 machines is incredibly painful.
 
 Worse, these state machines are designed to be run from a single worker
-thread.  This means that a given socket is entirely single theaded; you
+thread.  This means that a given socket is entirely single threaded; you
 could in theory have dozens, hundreds, or even thousands of connections
 open, but they would be serviced only by a single thread.  (Admittedly
 non-blocking I/O is used to let the OS kernel calls run asynchronously
@@ -108,7 +108,7 @@ This means that implementing new transports which might need something
 other than a file descriptor, is really non-trivial.  This stymied my
 first attempt to add http://www.openssl.org[OpenSSL] support to get TLS
 added -- _OpenSSL_ has it's own `struct BIO` for this stuff, and I could
-not see an easy way to convert _nanomsg_'s `usock` stuff to accomodate the
+not see an easy way to convert _nanomsg_'s `usock` stuff to accommodate the
 `struct BIO`.
 
 In retrospect, _OpenSSL_ wasn't the ideal choice for an SSL/TLS library,
@@ -231,7 +231,7 @@ The completion routines are _usually_ run on a separate worker thread
 available number of CPU cores to ensure that we never wait while a CPU
 core is available for work), but they can be run "synchronously" if
 the I/O provider knows it is safe to do so (for example the completion
-is occuring in a context where no locks are held.)
+is occurring in a context where no locks are held.)
 
 The `nni_aio` structures are accessible to user applications as well, which can
 lead to much more efficient and easier to write asynchronous applications,
@@ -291,7 +291,7 @@ layer makes implementation of these all fairly straight-forward.
 
 As part of implementing a real WebSocket transport, it was necessary to
 implement at least some HTTP capabilities.  Rather than just settle for a toy
-implementation, _nng_ has a very capable HTTP server and client framework. 
+implementation, _nng_ has a very capable HTTP server and client framework.
 The server can be used to build real web services, so it becomes possible
 for example to serve static content, REST API, and _nng_ based services
 all from the same TCP port using the same program.

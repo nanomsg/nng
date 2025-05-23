@@ -123,6 +123,6 @@ people of both Ukraine and Russia continue to suffer under this needless, pointl
 the ego of a dictator.
 
 The actions done here, have killed thousands, probably hundreds of thousands, of soldiers and civilians alike, and there seems to be no end to the madness. I still pray for sanity to return, because the current path, if followed
-to its logical conclusion, most likely ends in apocalpyse.
+to its logical conclusion, most likely ends in apocalypse.
 
 If you find my sharing these truths uncomfortable, please feel welcome to cease use of my software. While the license does permit use by anyone for any reason, I would not be displeased if the Russian military, and those sympathetic to it, declined from use of any of my work.

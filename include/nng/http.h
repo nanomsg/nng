@@ -214,7 +214,7 @@ typedef struct nng_http_handler nng_http_handler;
 
 // nng_http_handler_alloc creates a server handler object, for the supplied
 // absolute URI (path only) with the callback.  By default the handler
-// is assumed to handle only GET requests (and implictly HEAD requests
+// is assumed to handle only GET requests (and implicitly HEAD requests
 // as well.)
 //
 // Note that methods which modify a handler cannot be called while the handler

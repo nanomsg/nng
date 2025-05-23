@@ -81,7 +81,7 @@ const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 ```
 
 Sometimes it is easiest to search for a specific statistic, matching by name,
-or possibly to find the tree of statistics associated iwth a specific [socket],
+or possibly to find the tree of statistics associated with a specific [socket],
 [dialer], or [listener].
 
 The `nng_stat_find` functions are provided for this purpose.
@@ -129,7 +129,7 @@ function can be used to obtain that value.
   The units will be given by the value returned from [`nng_stat_unit`].
 
 - {{i:`NNG_STAT_LEVEL`}}: <a name="NNG_STAT_LEVEL"></a>
-  The statistic represnts a measured value which corresponds
+  The statistic represents a measured value which corresponds
   to a specific value at a specific time. For example, this may represent the
   number of messages currently queued for some operation, or the link speed
   of a network interface. Most often the absolute value is more interesting
@@ -170,7 +170,7 @@ The {{i:`nng_stat_bool`}} function returns the Boolean value (either `true` or `
 type [`NNG_STAT_BOOLEAN`]. If the statistics is not of this type, then it returns `false`.
 
 The {{i:`nng_stat_string`}} function returns a pointer to a string value for the statistic _stat_,
-of type [`NNG_STAT_STRING`]. This string will remain valud until the snapshot that
+of type [`NNG_STAT_STRING`]. This string will remain valid until the snapshot that
 _stat_ was collected with is deallocated with [`nng_stats_free`]. If the statistic
 is not of type `NNG_STAT_STRING`, then `NULL` is returned.
 

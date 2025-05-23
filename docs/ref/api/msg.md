@@ -48,7 +48,7 @@ int nng_msg_dup(nng_msg **dup, nng_msg *msg);
 ```
 
 The {{i:`nng_msg_dup`}} function duplicates the message _msg_, storing a pointer
-to the new duplicate in _dup_. This function also returns zero on succes, or [`NNG_ENOMEM`]
+to the new duplicate in _dup_. This function also returns zero on success, or [`NNG_ENOMEM`]
 if memory is exhausted.
 
 ## Message Size and Capacity

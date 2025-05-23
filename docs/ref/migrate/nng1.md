@@ -161,7 +161,7 @@ used, and was error prone.
 NNG 1.x had an undocumented ability to specify the local address to bind
 to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
-compatilibility, and is no longer offered. The correct way to specify a
+compatibility, and is no longer offered. The correct way to specify a
 local address is by setting `NNG_OPT_LOCADDR` on the dialer.
 
 ## IPC Option Type Changes
@@ -274,7 +274,7 @@ Note that the new functions provide a reference to a static string, and thus do 
 allocation, and the returned strings should not be freed. Also the IDs are provided as `uint16_t`,
 matching the actual wire protocol values, instead of `int`.
 
-The `NNG_OPT_RAW` option has aso been replaced by a function, [`nng_socket_raw`].
+The `NNG_OPT_RAW` option has also been replaced by a function, [`nng_socket_raw`].
 
 The `NNG_OPT_SENDFD` and `NNG_OPT_RECVFD` options have been replaced by
 [`nng_socket_get_send_poll_fd`] and [`nng_socket_get_recv_poll_fd`] respectively.
@@ -284,7 +284,7 @@ Applications should keep track of this information separately.
 
 ## Subscriptions
 
-The `NNG_OPT_SUB_SUBSCRIBE` and `NNG_OPT_SUB_UNSUBCRIBE` options have been replaced by
+The `NNG_OPT_SUB_SUBSCRIBE` and `NNG_OPT_SUB_UNSUBSCRIBE` options have been replaced by
 the following functions: [`nng_sub0_socket_subscribe`], [`nng_sub0_socket_unsubscribe`],
 [`nng_sub0_ctx_subscribe`] and [`nng_sub0_ctx_unsubscribe`]. These functions, like the options
 they replace, are only applicable to SUB sockets.
@@ -311,7 +311,7 @@ structure instead of a string.
 ## URL Structure Changes
 
 The details of [`nng_url`] have changed significantly, and direct
-access of the structure is no longer permitted. Intead new
+access of the structure is no longer permitted. Instead new
 accessors functions are provided:
 
 - `u_scheme` is replaced by [`nng_url_scheme`].

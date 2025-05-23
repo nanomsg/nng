@@ -12,7 +12,7 @@ typedef uint64_t nng_time;
 The {{i:`nng_time`}} type is used to represent a clock offset from a common base time,
 measured in milliseconds.
 
-The reference, or zero value, is some arbitrary point in time, most often sytem boot, but can
+The reference, or zero value, is some arbitrary point in time, most often system boot, but can
 be process start time or any other convenient reference.
 
 All threads within a process will use the same reference time, but be aware that different processes

@@ -305,7 +305,7 @@ NNG_DECL int nng_socket_raw(nng_socket id, bool *rawp);
 
 // Utility function for getting a printable form of the socket address
 // for display in logs, etc.  It is not intended to be parsed, and the
-// display format may change without notice.  Generally you should alow
+// display format may change without notice.  Generally you should allow
 // at least NNG_MAXADDRSTRLEN if you want to avoid typical truncations.
 // It is still possible for very long IPC paths to be truncated, but that
 // is an edge case and applications that pass such long paths should
@@ -315,7 +315,7 @@ NNG_DECL const char *nng_str_sockaddr(
     const nng_sockaddr *sa, char *buf, size_t bufsz);
 
 // Obtain a port number (for NNG_AF_INET and NNG_AF_INET6this will be 16 bits
-// maximum, but other address familiies may have larger port numbers.)  For
+// maximum, but other address families may have larger port numbers.)  For
 // address that don't have the concept of port numbers, zero will be returned.
 NNG_DECL uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
 
@@ -1317,7 +1317,7 @@ typedef struct {
 // only the first call can contain a non-NULL params.  If already
 // initialized with non-NULL params, will return NNG_EALREADY.
 // Applications should *not* call a matching nng_fini() in that case.
-NNG_DECL nng_err nng_init(const nng_init_params *parms);
+NNG_DECL nng_err nng_init(const nng_init_params *params);
 
 // nng_fini is used to terminate the library, freeing certain global resources.
 // Each call to nng_fini is paired to a call to nng_init.  The last such
@@ -1365,7 +1365,7 @@ typedef enum nng_log_facility {
 // as above.  The message ID is chosen by the submitter - internal NNG
 // messages will have MSGIDs starting with "NNG-".  The MSGID should be
 // not more than 8 characters, though this is not a hard requirement.
-// Loggers are required ot make a copy of the msgid and message if required,
+// Loggers are required to make a copy of the msgid and message if required,
 // because the values will not be valid once the logger returns.
 typedef void (*nng_logger)(nng_log_level level, nng_log_facility facility,
     const char *msgid, const char *msg);
