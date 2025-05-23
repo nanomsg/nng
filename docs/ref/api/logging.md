@@ -20,11 +20,11 @@ void nng_log_debug(const char *msgid, const char *msg, ...);
 
 These {{hi:`nng_log`}} functions inject a a message into the
 logging system, where it will be processed and potentially go to
-system logs, standard output, or procssed further.
+system logs, standard output, or processed further.
 
 The _msgid_ is a short prefix that should uniquely identify the message,
 possibly also with some kind of category. It is recommended that
-strings between 8 and 16 charactes be used. As this may, but will not necessarily
+strings between 8 and 16 characters be used. As this may, but will not necessarily
 be displayed to the user, the content of the message should not appear
 solely in this field. A `NULL` value is permitted here, but that may
 make filtering the message or other automatic processing more difficult.

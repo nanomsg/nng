@@ -197,7 +197,7 @@ void nng_aio_set_msg(nng_aio *aio, nng_msg *msg);
 The {{i:`nng_aio_get_msg`}} and {{i:`nng_aio_set_msg`}} functions retrieve and store a [message]
 in _aio_.
 For example, if a function to receive data is called, that function can generally be expected
-to store a message on the asssociated _aio_, for the application to retrieve with
+to store a message on the associated _aio_, for the application to retrieve with
 `nng_aio_get_msg`.
 Conversely an application desiring to send a message _msg_ will store it in the _aio_ using
 `nng_aio_set_msg`. The function implementing the send operation will retrieve the message

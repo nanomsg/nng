@@ -4,7 +4,7 @@ endif::[]
 
 = Building for Cross Compilation
 
-TIP: Cross-compiling is used when the operating system or process architecure
+TIP: Cross-compiling is used when the operating system or process architecture
 the software is being built for is different than the system where the software
 is being compiled.  If you don't know what this means, this does not apply to
 and you should ignore this file.

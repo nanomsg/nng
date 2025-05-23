@@ -71,7 +71,7 @@ or [`NNG_EINVAL`] if there is some other problem with the URI.
 
 The {{i:`nni_http_get_uri`}} function is used to obtain the URI that was previously set by `nng_http_set_uri`.
 If the URI is unset (such as for a freshly created connection), then it returns `NULL`. The returned value
-will have any query concentated, for example "/api/get_user.cgi?name=garrett".
+will have any query concatenated, for example "/api/get_user.cgi?name=garrett".
 
 ### HTTP Version
 
@@ -119,7 +119,7 @@ then a built in reason based on the _status_ will be used instead.
 > `nng_http_set_status`, because those functions will also set the response body to a suitable HTML document
 > for display to users.
 
-Status codes are defined by the IETF. Here are defininitions that NNG provides for convenience:
+Status codes are defined by the IETF. Here are definitions that NNG provides for convenience:
 
 | Name                                                                                             | Code | Reason Text                     | Notes                                                 |
 | ------------------------------------------------------------------------------------------------ | ---- | ------------------------------- | ----------------------------------------------------- |
@@ -165,13 +165,13 @@ Status codes are defined by the IETF. Here are defininitions that NNG provides f
 | `NNG_HTTP_STATUS_TEAPOT`<a name="#NNG_HTTP_STATUS_TEAPOT"></a>                                   | 418  | I Am A Teapot                   | RFC 2324.                                             |
 | `NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY`<a name="#NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a>       | 422  | Unprocessable Entity            |
 | `NNG_HTTP_STATUS_LOCKED`<a name="#NNG_HTTP_STATUS_LOCKED"></a>                                   | 423  | Locked                          |
-| `NNG_HTTP_STATUS_FAILED_DEPENDENCY`<a name="#NNG_HTTP_STATUS_FAILED_DEPEDNENCY"></a>             | 424  | Failed Dependency               |
+| `NNG_HTTP_STATUS_FAILED_DEPENDENCY`<a name="#NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a>             | 424  | Failed Dependency               |
 | `NNG_HTTP_STATUS_TOO_EARLY`<a name="#NNG_HTTP_STATUS_TOO_EARLY"></a>                             | 425  | Too Early                       |
 | `NNG_HTTP_STATUS_UPGRADE_REQUIRED`<a name="#NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a>               | 426  | Upgrade Required                |
 | `NNG_HTTP_STATUS_PRECONDITION_REQUIRED`<a name="#NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a>     | 428  | Precondition Required           |                                                       |
 | `NNG_HTTP_STATUS_TOO_MANY_REQUESTS`<a name="#NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a>             | 429  | Too Many Requests               |                                                       |
 | `NNG_HTTP_STATUS_HEADERS_TOO_LARGE`<a name="#NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a>             | 431  | Headers Too Large               |                                                       |
-| `NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS`<a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a>     | 451  | Unavailabe For Legal Reasons    |                                                       |
+| `NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS`<a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a>     | 451  | Unavailable For Legal Reasons   |                                                       |
 | `NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR`<a name="#NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a>     | 500  | Internal Server Error           |
 | `NNG_HTTP_STATUS_NOT_IMPLEMENTED`<a name="#NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a>                 | 501  | Not Implemented                 | Server does not implement method.                     |
 | `NNG_HTTP_STATUS_BAD_GATEWAY`<a name="#NNG_HTTP_STATUS_BAD_GATEWAY"></a>                         | 502  | Bad Gateway                     |
@@ -406,7 +406,7 @@ Calling `nng_http_client_set_tls` invalidates any client previously obtained wit
 Once TLS is enabled for an `nng_http_client`, it is not possible to disable TLS.
 
 > [!NOTE]
-> The TLS configuration itself cannnot be changed once it has been used to create a connection,
+> The TLS configuration itself cannot be changed once it has been used to create a connection,
 > such as by calling [`nng_http_client_connect`], but a new one can be installed in the client.
 > Existing connections will use the TLS configuration that there were created with.
 
@@ -573,7 +573,7 @@ rather than just a single element.
 ### Implementing a Handler
 
 ```c
-typedef void (*nng_http_hander_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 ```
@@ -674,7 +674,7 @@ void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t 
 ```
 
 The {{i:`nng_http_handler_collect_body`}} function requests that HTTP server
-framework collect any reuqest body for the request and attach it to the
+framework collect any request body for the request and attach it to the
 connection before calling the callback for the _handler_.
 
 Subsequently the data can be retrieved by the handler from the request with the
