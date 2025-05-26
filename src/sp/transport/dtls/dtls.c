@@ -18,7 +18,6 @@
 #include "core/stats.h"
 #include "nng/nng.h"
 #include "supplemental/tls/tls_common.h"
-#include "supplemental/tls/tls_udp.h"
 
 #include <string.h>
 
