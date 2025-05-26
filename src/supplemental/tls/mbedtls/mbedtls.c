@@ -23,6 +23,9 @@
 
 #include "nng/nng.h"
 
+// We use a common cookie for our application.
+#include "mbedtls/ssl_cookie.h"
+
 #include "../tls_engine.h"
 
 // mbedTLS renamed this header for 2.4.0.
@@ -97,6 +100,8 @@ struct nng_tls_engine_config {
 	nni_list           pairs;
 	nni_list           psks;
 };
+
+static mbedtls_ssl_cookie_ctx mbed_ssl_cookie_ctx;
 
 static void
 tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
@@ -522,10 +527,10 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 	mbedtls_ssl_conf_rng(&cfg->cfg_ctx, tls_random, cfg);
 	mbedtls_ssl_conf_dbg(&cfg->cfg_ctx, tls_dbg, cfg);
 
-	// TODO: FIXME: this is not secure, and disables hello verification. We
-	// need to fix that.
 	if (cfg->mode == NNG_TLS_MODE_SERVER) {
-		mbedtls_ssl_conf_dtls_cookies(&cfg->cfg_ctx, NULL, NULL, NULL);
+		mbedtls_ssl_conf_dtls_cookies(&cfg->cfg_ctx,
+		    mbedtls_ssl_cookie_write, mbedtls_ssl_cookie_check,
+		    &mbed_ssl_cookie_ctx);
 	}
 
 	return (0);
@@ -839,7 +844,12 @@ nng_tls_engine_init_mbed(void)
 	// This may be useful when trying to debug failures.
 	// mbedtls_debug_set_threshold(9);
 
-	rv = nng_tls_engine_register(&tls_engine_mbed);
+	mbedtls_ssl_cookie_init(&mbed_ssl_cookie_ctx);
+	rv = mbedtls_ssl_cookie_setup(&mbed_ssl_cookie_ctx, tls_random, NULL);
+
+	if (rv == 0) {
+		rv = nng_tls_engine_register(&tls_engine_mbed);
+	}
 
 #ifdef NNG_TLS_USE_CTR_DRBG
 	if (rv != 0) {
@@ -853,6 +863,7 @@ nng_tls_engine_init_mbed(void)
 void
 nng_tls_engine_fini_mbed(void)
 {
+	mbedtls_ssl_cookie_free(&mbed_ssl_cookie_ctx);
 #ifdef NNG_TLS_USE_CTR_DRBG
 	mbedtls_ctr_drbg_free(&rng_ctx);
 	nni_mtx_fini(&rng_lock);
