@@ -807,8 +807,14 @@ sfd_tran_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+static size_t
+sfd_tran_pipe_size(void)
+{
+	return (sizeof(sfd_tran_pipe));
+}
+
 static nni_sp_pipe_ops sfd_tran_pipe_ops = {
-	.p_size   = sizeof(sfd_tran_pipe),
+	.p_size   = sfd_tran_pipe_size,
 	.p_init   = sfd_tran_pipe_init,
 	.p_fini   = sfd_tran_pipe_fini,
 	.p_stop   = sfd_tran_pipe_stop,

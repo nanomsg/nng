@@ -964,8 +964,14 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+static size_t
+tcptran_pipe_size(void)
+{
+	return (sizeof(tcptran_pipe));
+}
+
 static nni_sp_pipe_ops tcptran_pipe_ops = {
-	.p_size   = sizeof(tcptran_pipe),
+	.p_size   = tcptran_pipe_size,
 	.p_init   = tcptran_pipe_init,
 	.p_fini   = tcptran_pipe_fini,
 	.p_stop   = tcptran_pipe_stop,

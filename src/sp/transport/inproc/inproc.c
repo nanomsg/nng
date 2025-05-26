@@ -584,8 +584,14 @@ inproc_pipe_getopt(
 	return (nni_getopt(inproc_pipe_options, name, arg, v, szp, t));
 }
 
+static size_t
+inproc_pipe_size(void)
+{
+	return (sizeof(inproc_pipe));
+}
+
 static nni_sp_pipe_ops inproc_pipe_ops = {
-	.p_size   = sizeof(inproc_pipe),
+	.p_size   = inproc_pipe_size,
 	.p_init   = inproc_pipe_init,
 	.p_fini   = inproc_pipe_fini,
 	.p_send   = inproc_pipe_send,

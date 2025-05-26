@@ -14,6 +14,7 @@
 #include "core/options.h"
 #include "core/pipe.h"
 #include "core/platform.h"
+#include "core/socket.h"
 #include "core/stats.h"
 #include "nng/nng.h"
 #include "supplemental/tls/tls_common.h"
@@ -58,10 +59,15 @@ typedef enum dtls_disc_reason {
 #define NNG_DTLS_RXQUEUE_LEN 16
 #endif
 
-#define DTLS_MAX_SEGMENT 16384
+// The maximum TLS record size
+#define DTLS_MAX_RECORD 16384
 
+// For DTLS we use a maximum record size of 16384,
+// but we reserve some space for headers.  DTLS needs
+// 13 bytes, and the transport layer needs 8 bytes.
+// To leave some room for the future, we just trim to 64 bytes.
 #ifndef NNG_DTLS_RECVMAX
-#define NNG_DTLS_RECVMAX 16384 // largest permitted by DTLS, smaller than UDP.
+#define NNG_DTLS_RECVMAX (DTLS_MAX_RECORD - 64)
 #endif
 
 #ifndef NNG_DTLS_REFRESH
@@ -71,8 +77,6 @@ typedef enum dtls_disc_reason {
 #ifndef NNG_DTLS_CONNRETRY
 #define NNG_DTLS_CONNRETRY (NNI_SECOND / 5)
 #endif
-
-#define DTLS_EP_ROLE(ep) ((ep)->dialer ? "dialer  " : "listener")
 
 // 64-bit protocol header
 typedef struct dtls_sp_hdr {
@@ -87,6 +91,9 @@ typedef struct dtls_sp_hdr {
 
 // DTLS pipe timeout in msec (nng_duration)
 #define DTLS_PIPE_TIMEOUT(p) ((p)->refresh * 5)
+
+#define DTLS_PIPE_MODE(p) ((p->dialer) ? "dialer  " : "listener")
+#define DTLS_EP_ROLE(ep) ((ep)->dialer ? "dialer  " : "listener")
 
 struct dtls_pipe {
 	dtls_ep      *ep;
@@ -127,6 +134,8 @@ struct dtls_pipe {
 	uint8_t  last_op; // last op code we sent
 	uint16_t reason;  // only for disconnect
 
+	nni_mtx lower_mtx; // protects the lower rx_q, etc.
+
 	// This is the lower level RX buffer, which contains only
 	// received ciphertext (content before passed to TLS layer for
 	// decrypt).  The actual pointers may change, as we "swap"
@@ -140,11 +149,11 @@ struct dtls_ep {
 	nng_udp        *udp;
 	nni_mtx         mtx;
 	uint16_t        proto;
+	uint16_t        peer;
 	uint16_t        af; // address family
 	bool            fini;
 	bool            started;
 	bool            closed;
-	bool            cooldown;
 	nng_url        *url;
 	const char     *host; // for dialers
 	nni_aio        *useraio;
@@ -199,43 +208,45 @@ static void
 dtls_bio_cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	dtls_pipe *p = arg;
-	nni_mtx_lock(&p->ep->mtx);
+	nni_mtx_lock(&p->lower_mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 	}
 	nni_aio_finish_error(aio, rv);
-	nni_mtx_unlock(&p->ep->mtx);
+	nni_mtx_unlock(&p->lower_mtx);
 }
 
 static void
 dtls_bio_recv_done(dtls_pipe *p)
 {
-	nng_aio *aio = nni_list_first(&p->rx_q);
+	nng_aio *aio;
 	uint8_t *ptr;
 	size_t   resid;
 	nni_msg *msg;
 
-	if (aio == NULL || nni_lmq_empty(&p->rx_mq)) {
-		return;
+	while ((!nni_lmq_empty(&p->rx_mq)) &&
+	    ((aio = nni_list_first(&p->rx_q)) != NULL)) {
+
+		nni_aio_list_remove(aio);
+		nni_lmq_get(&p->rx_mq, &msg);
+
+		// assumption we only have a body, because we don't bother to
+		// fill in the header for raw UDP.
+
+		resid = nni_msg_len(msg);
+		ptr   = nni_msg_body(msg);
+
+		for (unsigned i = 0; i < aio->a_nio && resid > 0; i++) {
+			size_t num = resid > aio->a_iov[i].iov_len
+			    ? aio->a_iov[i].iov_len
+			    : resid;
+			memcpy(aio->a_iov[i].iov_buf, ptr, num);
+			ptr += num;
+			resid -= num;
+		}
+		nni_aio_finish(aio, NNG_OK, nni_msg_len(msg));
+		nni_msg_free(msg);
 	}
-
-	nni_aio_list_remove(aio);
-	nni_lmq_get(&p->rx_mq, &msg);
-
-	// assumption we only have a body, because we don't bother to fill in
-	// the header for raw UDP.
-
-	resid = nni_msg_len(msg);
-	ptr   = nni_msg_body(msg);
-
-	for (unsigned i = 0; i < aio->a_nio && resid > 0; i++) {
-		size_t num = resid > aio->a_iov[i].iov_len
-		    ? aio->a_iov[i].iov_len
-		    : resid;
-		memcpy(aio->a_iov[i].iov_buf, ptr, num);
-	}
-	nni_aio_finish(aio, NNG_OK, nni_msg_len(msg));
-	nni_msg_free(msg);
 }
 
 static void
@@ -243,15 +254,15 @@ dtls_bio_recv(void *arg, nng_aio *aio)
 {
 	dtls_pipe *p = arg;
 
-	nni_mtx_lock(&p->ep->mtx);
+	nni_mtx_lock(&p->lower_mtx);
 	if (!nni_aio_start(aio, dtls_bio_cancel, p)) {
-		nni_mtx_unlock(&p->ep->mtx);
+		nni_mtx_unlock(&p->lower_mtx);
 		return;
 	}
 
 	nni_aio_list_append(&p->rx_q, aio);
 	dtls_bio_recv_done(p);
-	nni_mtx_unlock(&p->ep->mtx);
+	nni_mtx_unlock(&p->lower_mtx);
 }
 
 static void
@@ -376,7 +387,7 @@ dtls_pipe_send_tls(dtls_pipe *p)
 	nng_iov      iov;
 	dtls_sp_hdr *hdr = (void *) p->send_buf;
 
-	if (p->send_busy) {
+	if (p->send_busy || p->closed) {
 		return;
 	}
 
@@ -400,6 +411,7 @@ dtls_pipe_send_tls(dtls_pipe *p)
 				// no work for us!
 				return;
 			}
+			nni_aio_list_remove(aio);
 			msg = nni_aio_get_msg(aio);
 			if (nni_msg_header_len(msg) + nni_msg_len(msg) +
 			        sizeof(*hdr) >
@@ -434,6 +446,7 @@ dtls_pipe_send_tls(dtls_pipe *p)
 
 	case OPCODE_DISC:
 		NNI_PUT16LE(&hdr->us_params[0], p->reason);
+		p->closed = true;
 		break;
 	default:
 		NNI_ASSERT(false); // this should never happen!
@@ -442,7 +455,8 @@ dtls_pipe_send_tls(dtls_pipe *p)
 		NNI_PUT16LE(&hdr->us_params[0], DISC_PROTO);
 	}
 
-	p->last_op = opcode;
+	p->last_op   = opcode;
+	p->send_busy = true;
 	nni_aio_set_iov(&p->send_tls_aio, 1, &iov);
 	nni_tls_send(&p->tls, &p->send_tls_aio);
 }
@@ -545,6 +559,7 @@ dtls_pipe_recv_tls(dtls_pipe *p)
 	nni_aio_list_remove(aio);
 	len = nng_aio_count(&p->recv_tls_aio);
 	NNI_ASSERT(len >= sizeof(dtls_sp_hdr));
+	len -= sizeof(dtls_sp_hdr);
 
 	if ((rv = nni_msg_alloc(&msg, len)) != NNG_OK) {
 		nni_aio_finish_error(aio, rv);
@@ -559,13 +574,40 @@ static void
 dtls_pipe_recv_tls_cb(void *arg)
 {
 	dtls_pipe   *p   = arg;
+	dtls_ep     *ep  = p->ep;
 	dtls_sp_hdr *hdr = (void *) p->recv_buf;
 	nng_aio     *aio = &p->recv_tls_aio;
 	uint16_t     proto;
 	uint16_t     refresh;
 	uint16_t     rcvmax;
+	nng_err      rv;
 
+	nni_mtx_lock(&ep->mtx);
 	p->recv_busy = false;
+
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
+		p->closed = true;
+
+		// If we didn't connect yet, issue an error so the peer can see
+		// a connection failure (e.g. if we failed the TLS handshake.)
+		if (!p->matched) {
+			nni_aio *caio;
+			if ((caio = nni_list_first(&ep->connaios)) != NULL) {
+				nni_aio_list_remove(caio);
+				nni_aio_finish_error(caio, rv);
+			}
+			nni_mtx_unlock(&ep->mtx);
+			nni_pipe_close(p->npipe);
+			return;
+		}
+
+		// Bump a bad receive stat (e.g. someone may have sent us
+		// garbage.)  We do not acknowledge or handle garbage frames
+		// sent to an open session.
+		goto bad;
+	}
+
+	// We had a "good" receive (TLS passed at least) from the peer.
 
 	if (nni_aio_count(aio) < sizeof(*hdr)) {
 		// Runt frame.
@@ -594,12 +636,10 @@ dtls_pipe_recv_tls_cb(void *arg)
 		goto bad;
 	}
 
-	// for listeners, we update the timeout.
-	// (Dialers don't expire due to inactivity.)
-	nng_time now = nni_clock();
-	p->expire    = now + DTLS_PIPE_TIMEOUT(p);
+	p->expire = nni_clock() + DTLS_PIPE_TIMEOUT(p);
 
 	if (!p->matched) {
+		p->matched = true;
 		nni_list_append(&p->ep->connpipes, p);
 		dtls_ep_match(p->ep);
 	}
@@ -611,7 +651,7 @@ dtls_pipe_recv_tls_cb(void *arg)
 			goto bad;
 		}
 		NNI_GET16LE(&hdr->us_params[0], rcvmax);
-		NNI_GET16LE(&hdr->us_params[0], refresh);
+		NNI_GET16LE(&hdr->us_params[1], refresh);
 		if ((refresh > 0) && ((refresh * NNI_SECOND) < p->refresh)) {
 			p->refresh = refresh * NNI_SECOND;
 		}
@@ -639,12 +679,14 @@ dtls_pipe_recv_tls_cb(void *arg)
 
 	case OPCODE_DISC:
 		p->closed = true;
+		nni_mtx_unlock(&ep->mtx);
 		nni_pipe_close(p->npipe);
 		return;
 
 	case OPCODE_DATA:
 		p->recv_rdy = true;
 		dtls_pipe_recv_tls(p);
+		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
 bad:
@@ -652,6 +694,7 @@ bad:
 		dtls_pipe_send_tls(p);
 	}
 	dtls_pipe_recv_tls_start(p);
+	nni_mtx_unlock(&ep->mtx);
 }
 
 static void
@@ -704,20 +747,47 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 		rv = nni_pipe_alloc_listener((void *) &p, ep->nlistener);
 	}
 	if (rv != NNG_OK) {
+		nng_log_err("NNG-DTLS-PIPE-ALLOC-FAIL",
+		    "Failed allocating pipe for DTLS: %s", nng_strerror(rv));
 		return (rv);
 	}
+	p->dialer    = ep->dialer;
+	p->ep        = ep;
+	p->proto     = ep->proto;
+	p->peer      = ep->peer;
 	p->peer_addr = *sa;
 	p->id        = nng_sockaddr_hash(sa);
+	p->refresh   = ep->refresh;
+	p->send_max  = NNG_DTLS_RECVMAX;
+	p->recv_max  = ep->rcvmax;
 	*pp          = p;
 
 	if (((rv = dtls_add_pipe(ep, p)) != NNG_OK) ||
 	    ((rv = nni_tls_init(&p->tls, ep->tlscfg)) != NNG_OK) ||
-	    ((rv = nni_tls_start(&p->tls, &dtls_bio_ops, p)) != NNG_OK)) {
+	    ((rv = nni_tls_start(&p->tls, &dtls_bio_ops, p, sa)) != NNG_OK)) {
 		nni_pipe_close(p->npipe);
+		nng_log_err("NNG-DTLS-PIPE-ADD-FAIL",
+		    "Failed adding pipe for DTLS: %s", nng_strerror(rv));
 		return (rv);
 	}
 
+	// We need to start a receiver on the pipe.
+	dtls_pipe_recv_tls_start(p);
+
+	// Also start TLS up and running.
+	nni_tls_run(&p->tls);
+
+	// wake the timer so it knows to resubmit
+	nni_aio_abort(&ep->timeaio, NNG_ETIMEDOUT);
+
 	return (NNG_OK);
+}
+
+static size_t
+dtls_pipe_size(void)
+{
+	return (NNI_ALIGN_UP(sizeof(dtls_pipe)) +
+	    NNI_ALIGN_UP(nni_tls_engine_conn_size()));
 }
 
 static int
@@ -726,18 +796,20 @@ dtls_pipe_init(void *arg, nni_pipe *npipe)
 	dtls_pipe *p = arg;
 	p->npipe     = npipe;
 
-	size_t bufsz = DTLS_MAX_SEGMENT; // TODO: Make this a tunable.
+	size_t bufsz = DTLS_MAX_RECORD; // TODO: Make this a tunable.
 
-	if ((p->recv_buf = nni_alloc(bufsz)) != 0) {
+	if ((p->recv_buf = nni_alloc(bufsz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((p->send_buf = nni_alloc(bufsz)) != 0) {
+	if ((p->send_buf = nni_alloc(bufsz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	p->recv_bufsz = bufsz;
 	p->send_bufsz = bufsz;
+	nni_mtx_init(&p->lower_mtx);
 	nni_aio_init(&p->recv_tls_aio, dtls_pipe_recv_tls_cb, p);
 	nni_aio_init(&p->send_tls_aio, dtls_pipe_send_tls_cb, p);
+	nni_aio_list_init(&p->rx_q);
 	nni_aio_list_init(&p->recv_aios);
 	nni_aio_list_init(&p->send_aios);
 	nni_lmq_init(&p->rx_mq, NNG_DTLS_RXQUEUE_LEN);
@@ -759,11 +831,13 @@ dtls_pipe_fini(void *arg)
 	if (p->send_buf != NULL) {
 		nni_free(p->send_buf, p->send_bufsz);
 	}
-	// call with ep->mtx lock held
+	nni_mtx_lock(&p->lower_mtx);
 	while (!nni_lmq_empty(&p->rx_mq)) {
 		nni_lmq_get(&p->rx_mq, &m);
 		nni_msg_free(m);
 	}
+	nni_mtx_unlock(&p->lower_mtx);
+	nni_mtx_fini(&p->lower_mtx);
 	nni_lmq_fini(&p->rx_mq);
 	NNI_ASSERT(nni_list_empty(&p->recv_aios));
 	NNI_ASSERT(nni_list_empty(&p->send_aios));
@@ -836,6 +910,7 @@ dtls_start_rx(dtls_ep *ep)
 	iov.iov_buf = ep->rx_buf;
 	iov.iov_len = ep->rx_size;
 
+	nni_aio_reset(&ep->rx_aio);
 	nni_aio_set_input(&ep->rx_aio, 0, &ep->rx_sa);
 	nni_aio_set_iov(&ep->rx_aio, 1, &iov);
 	nng_udp_recv(ep->udp, &ep->rx_aio);
@@ -864,45 +939,47 @@ dtls_rx_cb(void *arg)
 		case NNG_EAGAIN:
 		case NNG_EINTR:
 		default:
-			goto finish;
+			goto fail;
 		}
-	}
-	if (ep->cooldown) {
-		ep->cooldown = false;
-		goto finish;
 	}
 
 	// If this came from another host, and we are a dialer, we discard.
 	// Dialers only talk to the party they explicitly dialed.
 	if (ep->dialer && !nng_sockaddr_equal(&ep->rx_sa, &ep->peer_sa)) {
-		goto finish;
+		goto fail;
 	}
 
 	if ((p = dtls_find_pipe(ep, &ep->rx_sa)) == NULL) {
 		if (dtls_pipe_alloc(ep, &p, &ep->rx_sa) != NNG_OK) {
-			goto finish;
+			goto fail;
 		}
+	} else if (p->closed) {
+		goto fail;
 	}
 	NNI_ASSERT(p != NULL);
 
-	if (nni_lmq_full(&p->rx_mq)) {
-		// no where to put the message.
-		// TODO: BUMP A NO RECV BUF STAT
-		goto finish;
-	}
-
 	if (nni_msg_alloc(&msg, nni_aio_count(aio)) != NNG_OK) {
 		// TODO BUMP A NO RECV ALLOC STAT
-		goto finish;
+		goto fail;
 	}
+	memcpy(nni_msg_body(msg), ep->rx_buf, nni_aio_count(aio));
+	dtls_start_rx(ep);
+	nni_mtx_unlock(&ep->mtx);
 
-	nni_msg_clear(msg);
-	nni_msg_append(msg, ep->rx_buf, nni_aio_count(aio));
-	nni_lmq_put(&p->rx_mq, msg);
+	nni_mtx_lock(&p->lower_mtx);
 
+	if (nni_lmq_put(&p->rx_mq, msg) != NNG_OK) {
+		// TODO: BUMP TXQ FULL STAT
+		nng_msg_free(msg);
+	}
 	dtls_bio_recv_done(p);
+	nni_mtx_unlock(&p->lower_mtx);
 
-finish:
+	// Run the TLS state machine.
+	nni_tls_run(&p->tls);
+	return;
+
+fail:
 	// start another receive
 	dtls_start_rx(ep);
 
@@ -979,6 +1056,9 @@ dtls_ep_fini(void *arg)
 	if (ep->udp != NULL) {
 		nng_udp_close(ep->udp);
 	}
+	if (ep->rx_size != 0) {
+		nni_free(ep->rx_buf, ep->rx_size);
+	}
 
 	nni_msg_free(ep->rx_payload); // safe even if msg is null
 	nni_id_map_fini(&ep->pipes);
@@ -1052,7 +1132,8 @@ dtls_timer_cb(void *arg)
 		if (p->closed) {
 			continue;
 		}
-		if (now > p->expire) {
+		NNI_ASSERT(p->refresh > 0);
+		if (p->expire > 0 && now > p->expire) {
 			char buf[128];
 			nng_log_info("NNG-DTLS-INACTIVE",
 			    "Pipe peer %s timed out due to inactivity",
@@ -1068,7 +1149,7 @@ dtls_timer_cb(void *arg)
 			p->next_refresh = p->expire + p->refresh;
 			dtls_pipe_send_tls(p);
 		}
-		if (refresh == NNG_DURATION_INFINITE) {
+		if (refresh == NNG_DURATION_INFINITE && p->refresh > 0) {
 			refresh = p->refresh;
 		} else if ((p->refresh > 0) && (p->refresh < refresh)) {
 			refresh = p->refresh;
@@ -1079,7 +1160,7 @@ dtls_timer_cb(void *arg)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static int
+static nng_err
 dtls_ep_init(
     dtls_ep *ep, nng_url *url, nni_sock *sock, nni_dialer *d, nni_listener *l)
 {
@@ -1104,9 +1185,16 @@ dtls_ep_init(
 
 	ep->self_sa.s_family = ep->af;
 	ep->proto            = nni_sock_proto_id(sock);
+	ep->peer             = nni_sock_peer_id(sock);
 	ep->url              = url;
 	ep->refresh          = NNG_DTLS_REFRESH; // one minute by default
 	ep->rcvmax           = NNG_DTLS_RECVMAX;
+
+	// receive buffer plus some extra for UDP and TLS headers
+	if ((ep->rx_buf = nni_alloc(DTLS_MAX_RECORD)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	ep->rx_size = DTLS_MAX_RECORD;
 
 	NNI_STAT_LOCK(rcv_max_info, "rcv_max", "maximum receive size",
 	    NNG_STAT_LEVEL, NNG_UNIT_BYTES);
@@ -1161,9 +1249,10 @@ dtls_ep_init(
 	// schedule our timer callback - forever for now
 	// adjusted automatically as we add pipes or other
 	// actions which require earlier wakeup.
-	nni_sleep_aio(NNG_DURATION_INFINITE, &ep->timeaio);
+	// nni_sleep_aio(NNG_DURATION_INFINITE, &ep->timeaio);
+	nni_sleep_aio(100, &ep->timeaio);
 
-	return (0);
+	return (NNG_OK);
 }
 
 static nng_err
@@ -1192,12 +1281,12 @@ dtls_dialer_init(void *arg, nng_url *url, nni_dialer *ndialer)
 	nng_err   rv;
 	nni_sock *sock = nni_dialer_sock(ndialer);
 
-	ep->ndialer = ndialer;
-	if ((rv = dtls_ep_init(ep, url, sock, ndialer, NULL)) != NNG_OK) {
+	if ((rv = dtls_check_url(url, false)) != NNG_OK) {
 		return (rv);
 	}
 
-	if ((rv = dtls_check_url(url, false)) != NNG_OK) {
+	ep->ndialer = ndialer;
+	if ((rv = dtls_ep_init(ep, url, sock, ndialer, NULL)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -1244,6 +1333,7 @@ dtls_resolv_cb(void *arg)
 	dtls_pipe *p;
 	nni_aio   *aio;
 	int        rv;
+
 	nni_mtx_lock(&ep->mtx);
 	if ((aio = nni_list_first(&ep->connaios)) == NULL) {
 		nni_mtx_unlock(&ep->mtx);
@@ -1270,7 +1360,7 @@ dtls_resolv_cb(void *arg)
 	}
 
 	if (ep->udp == NULL) {
-		if ((rv = nng_udp_open(&ep->udp, &ep->self_sa)) != 0) {
+		if ((rv = nng_udp_open(&ep->udp, &ep->self_sa)) != NNG_OK) {
 			nni_aio_list_remove(aio);
 			nni_mtx_unlock(&ep->mtx);
 			nni_aio_finish_error(aio, rv);
@@ -1278,13 +1368,12 @@ dtls_resolv_cb(void *arg)
 		}
 	}
 
-	// places a "hold" on the ep
-	if ((rv = nni_pipe_alloc_dialer((void **) &p, ep->ndialer)) != 0) {
+	if ((rv = dtls_pipe_alloc(ep, &p, &ep->peer_sa)) != NNG_OK) {
 		nni_aio_list_remove(aio);
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
+		return;
 	}
-
 	dtls_ep_start(ep);
 
 	// Send out the connection request.  We don't complete
@@ -1533,7 +1622,7 @@ dtls_ep_accept(void *arg, nni_aio *aio)
 }
 
 static nni_sp_pipe_ops dtls_pipe_ops = {
-	.p_size   = sizeof(dtls_pipe),
+	.p_size   = dtls_pipe_size,
 	.p_init   = dtls_pipe_init,
 	.p_fini   = dtls_pipe_fini,
 	.p_stop   = dtls_pipe_stop,

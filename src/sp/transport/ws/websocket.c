@@ -328,8 +328,14 @@ wstran_pipe_getopt(
 	return (rv);
 }
 
+static size_t
+wstran_pipe_size(void)
+{
+	return (sizeof(ws_pipe));
+}
+
 static nni_sp_pipe_ops ws_pipe_ops = {
-	.p_size   = sizeof(ws_pipe),
+	.p_size   = wstran_pipe_size,
 	.p_init   = wstran_pipe_init,
 	.p_fini   = wstran_pipe_fini,
 	.p_stop   = wstran_pipe_stop,

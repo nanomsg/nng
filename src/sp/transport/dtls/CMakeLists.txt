@@ -10,6 +10,6 @@
 # DTLS transport
 nng_directory(dtls)
 
-nng_sources_if(NNG_TRANSPORT_TLS dtls.c)
-nng_defines_if(NNG_TRANSPORT_TLS NNG_TRANSPORT_TLS)
-# nng_test_if(NNG_ENABLE_TLS tls_tran_test)
+nng_sources_if(NNG_TRANSPORT_DTLS dtls.c)
+nng_defines_if(NNG_TRANSPORT_DTLS NNG_TRANSPORT_DTLS)
+nng_test_if(NNG_TRANSPORT_DTLS dtls_tran_test)

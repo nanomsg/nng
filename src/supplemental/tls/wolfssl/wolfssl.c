@@ -155,8 +155,10 @@ wolf_conn_fini(nng_tls_engine_conn *ec)
 }
 
 static int
-wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg)
+wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
+    const nng_sockaddr *sa)
 {
+	NNI_ARG_UNUSED(sa); // for now... revisit if we support DTLS ?
 	ec->tls       = tls;
 	ec->auth_mode = cfg->auth_mode;
 

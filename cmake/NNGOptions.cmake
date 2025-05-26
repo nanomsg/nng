@@ -138,6 +138,9 @@ mark_as_advanced(NNG_TRANSPORT_FDC)
 option (NNG_TRANSPORT_UDP "Enable UDP transport (EXPERIMENTAL)" ON)
 mark_as_advanced(NNG_TRANSPORT_UDP)
 
+option (NNG_TRANSPORT_DTLS "Enable DTLS transport (EXPERIMENTAL)" ON)
+mark_as_advanced(NNG_TRANSPORT_DTLS)
+
 if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     # Make sure things we *MUST* have are enabled.
     set(NNG_SUPP_WEBSOCKET ON)

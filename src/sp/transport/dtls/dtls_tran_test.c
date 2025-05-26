@@ -205,41 +205,34 @@ test_dtls_malformed_address(void)
 	NUTS_CLOSE(s1);
 }
 
+// DTLS does not support TCP_NODELAY because it's based on UDP.
 void
-test_tls_no_delay_option(void)
+test_dtls_no_delay_option(void)
 {
 	nng_socket      s;
 	nng_dialer      d;
 	nng_listener    l;
 	bool            v;
-	int             x;
 	char           *addr;
 	nng_tls_config *dc, *lc;
 
-	NUTS_ADDR(addr, "tls+tcp");
+	NUTS_ADDR(addr, "dtls");
 	dc = tls_client_config();
 	lc = tls_server_config();
 
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dialer_create(&d, s, addr));
 	NUTS_PASS(nng_dialer_set_tls(d, dc));
-	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v));
-	NUTS_TRUE(v);
-	NUTS_PASS(nng_dialer_set_bool(d, NNG_OPT_TCP_NODELAY, false));
-	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v));
-	NUTS_TRUE(v == false);
 	NUTS_FAIL(
-	    nng_dialer_get_int(d, NNG_OPT_TCP_NODELAY, &x), NNG_EBADTYPE);
-	x = 0;
-	NUTS_FAIL(nng_dialer_set_int(d, NNG_OPT_TCP_NODELAY, x), NNG_EBADTYPE);
+	    nng_dialer_get_bool(d, NNG_OPT_TCP_NODELAY, &v), NNG_ENOTSUP);
+	NUTS_FAIL(nng_dialer_set_bool(d, NNG_OPT_TCP_NODELAY, v), NNG_ENOTSUP);
 
 	NUTS_PASS(nng_listener_create(&l, s, addr));
 	NUTS_PASS(nng_listener_set_tls(l, lc));
-	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_TCP_NODELAY, &v));
-	NUTS_TRUE(v == true);
-	x = 0;
 	NUTS_FAIL(
-	    nng_listener_set_int(l, NNG_OPT_TCP_NODELAY, x), NNG_EBADTYPE);
+	    nng_listener_get_bool(l, NNG_OPT_TCP_NODELAY, &v), NNG_ENOTSUP);
+	NUTS_FAIL(
+	    nng_listener_set_bool(l, NNG_OPT_TCP_NODELAY, v), NNG_ENOTSUP);
 
 	NUTS_PASS(nng_dialer_close(d));
 	NUTS_PASS(nng_listener_close(l));
@@ -250,51 +243,7 @@ test_tls_no_delay_option(void)
 }
 
 void
-test_tls_keep_alive_option(void)
-{
-	nng_socket      s;
-	nng_dialer      d;
-	nng_listener    l;
-	nng_tls_config *dc, *lc;
-	bool            v;
-	int             x;
-	char           *addr;
-
-	dc = tls_client_config();
-	lc = tls_server_config();
-	NUTS_ADDR(addr, "tls+tcp");
-	NUTS_OPEN(s);
-	NUTS_PASS(nng_dialer_create(&d, s, addr));
-	NUTS_PASS(nng_dialer_set_tls(d, dc));
-	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v));
-	NUTS_TRUE(v == false);
-	NUTS_PASS(nng_dialer_set_bool(d, NNG_OPT_TCP_KEEPALIVE, true));
-	NUTS_PASS(nng_dialer_get_bool(d, NNG_OPT_TCP_KEEPALIVE, &v));
-	NUTS_TRUE(v);
-	NUTS_FAIL(
-	    nng_dialer_get_int(d, NNG_OPT_TCP_KEEPALIVE, &x), NNG_EBADTYPE);
-	x = 1;
-	NUTS_FAIL(
-	    nng_dialer_set_int(d, NNG_OPT_TCP_KEEPALIVE, x), NNG_EBADTYPE);
-
-	NUTS_PASS(nng_listener_create(&l, s, addr));
-	NUTS_PASS(nng_listener_set_tls(l, lc));
-	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_TCP_KEEPALIVE, &v));
-	NUTS_TRUE(v == false);
-	x = 1;
-	NUTS_FAIL(
-	    nng_listener_set_int(l, NNG_OPT_TCP_KEEPALIVE, x), NNG_EBADTYPE);
-
-	NUTS_PASS(nng_dialer_close(d));
-	NUTS_PASS(nng_listener_close(l));
-
-	NUTS_CLOSE(s);
-	nng_tls_config_free(lc);
-	nng_tls_config_free(dc);
-}
-
-void
-test_tls_recv_max(void)
+test_dtls_recv_max(void)
 {
 	char            msg[256];
 	char            buf[256];
@@ -307,7 +256,7 @@ test_tls_recv_max(void)
 	char           *addr;
 	const nng_url  *url;
 
-	NUTS_ADDR_ZERO(addr, "tls+tcp");
+	NUTS_ADDR_ZERO(addr, "dtls");
 
 	c0 = tls_server_config();
 	c1 = tls_client_config();
@@ -359,6 +308,7 @@ test_dtls_psk(void)
 	}
 
 	NUTS_ADDR_ZERO(addr, "dtls");
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 
 	c0 = tls_config_psk(NNG_TLS_MODE_SERVER, "identity", key, sizeof key);
 	c1 = tls_config_psk(NNG_TLS_MODE_CLIENT, "identity", key, sizeof key);
@@ -373,7 +323,7 @@ test_dtls_psk(void)
 	NUTS_PASS(nng_dialer_create_url(&d, s1, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
-	NUTS_SLEEP(100); // make sure connection has time to form!
+	NUTS_SLEEP(1000); // make sure connection has time to form!
 	NUTS_PASS(nng_send(s1, msg, 95, 0));
 	NUTS_PASS(nng_recv(s0, buf, &sz, 0));
 	NUTS_TRUE(sz == 95);
@@ -389,11 +339,10 @@ test_dtls_psk(void)
 NUTS_TESTS = {
 
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
-	{ "tls malformed address", test_dtls_malformed_address },
-	{ "tls no delay option", test_tls_no_delay_option },
-	{ "tls keep alive option", test_tls_keep_alive_option },
-	{ "tls recv max", test_tls_recv_max },
-	{ "tls pre-shared key", test_dtls_psk },
+	{ "dtls malformed address", test_dtls_malformed_address },
+	{ "dtls no delay option", test_dtls_no_delay_option },
+	{ "dtls recv max", test_dtls_recv_max },
+	{ "dtls pre-shared key", test_dtls_psk },
 	{ "dtls bad cert mutual", test_dtls_bad_cert_mutual },
 	{ "dtls cert mutual", test_dtls_cert_mutual },
 	{ NULL, NULL },
