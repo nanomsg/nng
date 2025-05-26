@@ -151,25 +151,25 @@ typedef void (*nni_cb)(void *);
 		(ptr)[0] = (uint8_t) ((uint64_t) (u));          \
 	} while (0)
 
-#define NNI_GET16LE(ptr, v)                             \
-	v = (((uint16_t) ((uint8_t) (ptr)[1])) << 8u) + \
-	    (((uint16_t) (uint8_t) (ptr)[0]))
+#define NNI_GET16LE(ptr, v)                                 \
+	v = (((uint16_t) (((uint8_t *) (ptr))[1])) << 8u) + \
+	    ((uint16_t) ((uint8_t *) (ptr))[0])
 
-#define NNI_GET32LE(ptr, v)                              \
-	v = (((uint32_t) ((uint8_t) (ptr)[3])) << 24u) + \
-	    (((uint32_t) ((uint8_t) (ptr)[2])) << 16u) + \
-	    (((uint32_t) ((uint8_t) (ptr)[1])) << 8u) +  \
-	    (((uint32_t) (uint8_t) (ptr)[0]))
+#define NNI_GET32LE(ptr, v)                                  \
+	v = (((uint32_t) (((uint8_t *) (ptr))[3])) << 24u) + \
+	    (((uint32_t) (((uint8_t *) (ptr))[2])) << 16u) + \
+	    (((uint32_t) (((uint8_t *) (ptr))[1])) << 8u) +  \
+	    (((uint32_t) ((uint8_t *) (ptr))[0]))
 
-#define NNI_GET64LE(ptr, v)                              \
-	v = (((uint64_t) ((uint8_t) (ptr)[7])) << 56u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[6])) << 48u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[5])) << 40u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[4])) << 32u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[3])) << 24u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[2])) << 16u) + \
-	    (((uint64_t) ((uint8_t) (ptr)[1])) << 8u) +  \
-	    (((uint64_t) (uint8_t) (ptr)[0]))
+#define NNI_GET64LE(ptr, v)                                  \
+	v = (((uint64_t) (((uint8_t *) (ptr))[7])) << 56u) + \
+	    (((uint64_t) (((uint8_t *) (ptr))[6])) << 48u) + \
+	    (((uint64_t) (((uint8_t *) (ptr))[5])) << 40u) + \
+	    (((uint64_t) (((uint8_t *) (ptr))[4])) << 32u) + \
+	    (((uint64_t) (((uint8_t *) (ptr))[3])) << 24u) + \
+	    (((uint64_t) (((uint8_t *) (ptr))[2])) << 16u) + \
+	    (((uint64_t) (((uint8_t *) (ptr))[1])) << 8u) +  \
+	    (((uint64_t) ((uint8_t *) (ptr))[0]))
 
 // This increments a pointer a fixed number of byte cells.
 #define NNI_INCPTR(ptr, n) ((ptr) = (void *) ((char *) (ptr) + (n)))
