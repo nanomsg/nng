@@ -496,7 +496,7 @@ void
 test_url_huge_parts(void)
 {
 	nng_url *url = NULL;
-	char     huge1[8192];
+	char     huge1[8800];
 	char     huge2[8192];
 	char    *prefix = "http://example.com/path";
 	char    *frag   = "frag";
