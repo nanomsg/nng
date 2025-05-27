@@ -132,6 +132,8 @@ test_udp_recv_max(void)
 
 	NUTS_ADDR(addr, "udp");
 
+	memset(msg, 0, sizeof(msg));
+	memset(buf, 0, sizeof(buf));
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
 	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
