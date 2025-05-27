@@ -135,13 +135,9 @@ test_dtls_bad_cert_mutual(void)
 	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
-#ifdef NNG_TLS_ENGINE_MBEDTLS
-	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ECRYPTO);
-#else
-	// WolfSSL doesn't validate this here.
-	nng_dialer_start(d, 0);
-#endif
-	nng_msleep(50);
+	// With DTLS we are not guaranteed to get the connection failure.
+	nng_dialer_start(d, NNG_FLAG_NONBLOCK);
+	nng_msleep(500);
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c1);

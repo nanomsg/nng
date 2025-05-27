@@ -494,12 +494,14 @@ nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 {
 	nni_tls_conn *conn = arg;
 	size_t        len  = *szp;
-	size_t        head = conn->bio_send_head;
-	size_t        tail = conn->bio_send_tail;
+	size_t        head;
+	size_t        tail;
 	size_t        space;
 	size_t        cnt;
 
 	nni_mtx_lock(&conn->bio_lock);
+	head  = conn->bio_send_head;
+	tail  = conn->bio_send_tail;
 	space = NNG_TLS_MAX_SEND_SIZE - conn->bio_send_len;
 
 	if (space == 0) {

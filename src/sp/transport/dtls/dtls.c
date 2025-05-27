@@ -269,8 +269,12 @@ dtls_bio_send(void *arg, nng_aio *aio)
 {
 	dtls_pipe *p = arg;
 
-	nni_aio_set_input(aio, 0, &p->peer_addr);
-	nng_udp_send(p->ep->udp, aio);
+	nni_mtx_lock(&p->lower_mtx);
+	if (!p->closed) {
+		nni_aio_set_input(aio, 0, &p->peer_addr);
+		nng_udp_send(p->ep->udp, aio);
+	}
+	nni_mtx_unlock(&p->lower_mtx);
 }
 
 static void
@@ -414,7 +418,7 @@ dtls_pipe_send_tls(dtls_pipe *p)
 			msg = nni_aio_get_msg(aio);
 			if (nni_msg_header_len(msg) + nni_msg_len(msg) +
 			        sizeof(*hdr) >
-			    p->recv_bufsz) {
+			    p->send_bufsz) {
 				nng_msg_free(msg);
 				nni_aio_finish_error(aio, NNG_EMSGSIZE);
 				continue;
@@ -585,25 +589,24 @@ dtls_pipe_recv_tls_cb(void *arg)
 	p->recv_busy = false;
 
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
-		p->closed = true;
 
 		// If we didn't connect yet, issue an error so the peer can see
 		// a connection failure (e.g. if we failed the TLS handshake.)
-		if (!p->matched) {
+		if (p->dialer && !p->matched) {
 			nni_aio *caio;
 			if ((caio = nni_list_first(&ep->connaios)) != NULL) {
+				fprintf(stderr, "KILLING CONN REQ\n");
 				nni_aio_list_remove(caio);
 				nni_aio_finish_error(caio, rv);
 			}
-			nni_mtx_unlock(&ep->mtx);
-			nni_pipe_close(p->npipe);
-			return;
 		}
 
 		// Bump a bad receive stat (e.g. someone may have sent us
 		// garbage.)  We do not acknowledge or handle garbage frames
 		// sent to an open session.
-		goto bad;
+		nni_pipe_close(p->npipe);
+		nni_mtx_unlock(&ep->mtx);
+		return;
 	}
 
 	// We had a "good" receive (TLS passed at least) from the peer.
@@ -822,6 +825,7 @@ dtls_pipe_fini(void *arg)
 	dtls_pipe *p = arg;
 	nng_msg   *m;
 
+	nni_tls_fini(&p->tls);
 	nni_aio_fini(&p->recv_tls_aio);
 	nni_aio_fini(&p->send_tls_aio);
 	if (p->recv_buf != NULL) {
@@ -1248,8 +1252,8 @@ dtls_ep_init(
 	// schedule our timer callback - forever for now
 	// adjusted automatically as we add pipes or other
 	// actions which require earlier wakeup.
-	// nni_sleep_aio(NNG_DURATION_INFINITE, &ep->timeaio);
-	nni_sleep_aio(100, &ep->timeaio);
+	nni_sleep_aio(NNG_DURATION_INFINITE, &ep->timeaio);
+	// nni_sleep_aio(100, &ep->timeaio);
 
 	return (NNG_OK);
 }

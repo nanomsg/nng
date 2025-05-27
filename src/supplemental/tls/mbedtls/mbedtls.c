@@ -275,14 +275,14 @@ static int
 conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
     const nng_sockaddr *sa)
 {
-	int rv;
+	int  rv;
+	char buf[NNG_MAXADDRSTRLEN];
 
 	ec->tls = tls;
 
 	mbedtls_ssl_init(&ec->ctx);
 	mbedtls_ssl_set_bio(&ec->ctx, tls, net_send, net_recv, NULL);
-	mbedtls_ssl_set_timer_cb(
-	    &ec->ctx, &ec, conn_set_timer, conn_get_timer);
+	mbedtls_ssl_set_timer_cb(&ec->ctx, ec, conn_set_timer, conn_get_timer);
 
 	if ((rv = mbedtls_ssl_setup(&ec->ctx, &cfg->cfg_ctx)) != 0) {
 		tls_log_warn(
@@ -295,7 +295,6 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 	}
 
 	if (cfg->mode == NNG_TLS_MODE_SERVER) {
-		char buf[NNG_MAXADDRSTRLEN];
 		nng_str_sockaddr(sa, buf, sizeof(buf));
 		mbedtls_ssl_set_client_transport_id(
 		    &ec->ctx, (const void *) buf, strlen(buf));
