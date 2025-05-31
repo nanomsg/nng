@@ -232,11 +232,11 @@ tls_bio_error(nni_tls_conn *conn, nng_err rv)
 		}
 		nni_aio_abort(&conn->bio_send, rv);
 		nni_aio_abort(&conn->bio_recv, rv);
-		while (((aio = nni_list_first(&conn->send_queue)) != NULL) ||
-		    ((aio = nni_list_first(&conn->recv_queue)) != NULL)) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
-		}
+	}
+	while (((aio = nni_list_first(&conn->send_queue)) != NULL) ||
+	    ((aio = nni_list_first(&conn->recv_queue)) != NULL)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&conn->bio_lock);
 }
