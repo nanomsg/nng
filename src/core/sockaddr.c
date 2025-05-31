@@ -168,3 +168,82 @@ nng_sockaddr_port(const nng_sockaddr *sa)
 		return (0);
 	}
 }
+
+bool
+nng_sockaddr_equal(const nng_sockaddr *sa1, const nng_sockaddr *sa2)
+{
+	if (sa1->s_family != sa2->s_family) {
+		return false;
+	}
+	switch (sa1->s_family) {
+	case NNG_AF_INET:
+		return ((sa1->s_in.sa_addr == sa2->s_in.sa_addr) &&
+		    (sa1->s_in.sa_port == sa2->s_in.sa_port));
+	case NNG_AF_INET6:
+		return (
+		    memcmp(&sa1->s_in6, &sa2->s_in6, sizeof(sa1->s_in6)) == 0);
+	case NNG_AF_INPROC:
+		return (
+		    strcmp(sa1->s_inproc.sa_name, sa2->s_inproc.sa_name) == 0);
+	case NNG_AF_IPC:
+		return (strcmp(sa1->s_ipc.sa_path, sa2->s_ipc.sa_path) == 0);
+	case NNG_AF_ABSTRACT:
+		return (strcmp((char *) sa1->s_abstract.sa_name,
+		            (char *) sa2->s_abstract.sa_name) == 0);
+	default:
+		return (false);
+	}
+}
+
+// generate a quick non-zero 64-bit value for the sockaddr.
+// This should usually be unique, but collisions are possible.
+// The resulting hash is not portable and should not be used for
+// anything except ephemeral uses (e.g. as an index into a id map.)
+uint64_t
+nng_sockaddr_hash(const nng_sockaddr *sa)
+{
+	uint64_t       val1, val2;
+	size_t         len;
+	const uint8_t *ptr;
+
+	switch (sa->s_family) {
+	case NNG_AF_INET:
+		return (
+		    ((uint64_t) (sa->s_in.sa_addr) << 16) + sa->s_in.sa_port);
+	case NNG_AF_INET6:
+		memcpy(&val1, sa->s_in6.sa_addr, sizeof(val1));
+		memcpy(&val2, sa->s_in6.sa_addr + sizeof(val1), sizeof(val2));
+		// the high order bit is set to ensure it cannot be zero
+		return ((1ULL << 63) | (val1 ^ val2 ^ sa->s_in6.sa_port));
+	case NNG_AF_IPC:
+		len = strlen(sa->s_ipc.sa_path);
+		ptr = (const uint8_t *) sa->s_ipc.sa_path;
+		break;
+	case NNG_AF_INPROC:
+		len = strlen(sa->s_inproc.sa_name);
+		ptr = (const uint8_t *) sa->s_inproc.sa_name;
+		break;
+	case NNG_AF_ABSTRACT:
+		len = strlen((const char *) sa->s_abstract.sa_name);
+		ptr = (const uint8_t *) sa->s_abstract.sa_name;
+		break;
+	default:
+		// should never happen!
+		return (sa->s_family);
+	}
+
+	// sort of a string based hash done 64-bits at time.
+	val1 = 0;
+	while (len >= sizeof(val2)) {
+		memcpy(&val2, ptr, sizeof(val2));
+		val1 ^= val2;
+		len -= sizeof(val2);
+		ptr += sizeof(val2);
+	}
+	if (len > 0) {
+		val2 = 0;
+		memcpy(&val2, ptr, len);
+		val1 ^= val2;
+	}
+	return ((1ULL << 63) | val1);
+}

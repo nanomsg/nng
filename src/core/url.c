@@ -273,6 +273,9 @@ static const char *nni_schemes[] = {
 	"udp",
 	"udp4",
 	"udp6",
+	"dtls",
+	"dtls4",
+	"dtls6",
 	// we don't support these
 	"file",
 	"mailto",

@@ -21,7 +21,7 @@ typedef struct tls_stream_s {
 	nni_reap_node reap;
 	nni_aio       conn_aio;
 	nni_aio      *user_aio;
-	tls_conn      conn; // NB: must be last!
+	nni_tls_conn  conn; // NB: must be last!
 } tls_stream;
 
 extern void nni_tls_stream_free(void *arg);

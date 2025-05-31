@@ -47,6 +47,7 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 
 	if ((strncmp(scheme, "tcp", 3) == 0) ||
 	    (strncmp(scheme, "tls", 3) == 0) ||
+	    (strncmp(scheme, "dtls", 4) == 0) ||
 	    (strncmp(scheme, "udp", 3) == 0)) {
 		const char *ip =
 		    strchr(scheme, '6') != NULL ? "[::1]" : "127.0.0.1";
@@ -104,6 +105,7 @@ nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
 
 	if ((strncmp(scheme, "tcp", 3) == 0) ||
 	    (strncmp(scheme, "tls", 3) == 0) ||
+	    (strncmp(scheme, "dtls", 4) == 0) ||
 	    (strncmp(scheme, "udp", 3) == 0)) {
 		const char *ip =
 		    strchr(scheme, '6') != NULL ? "[::1]" : "127.0.0.1";

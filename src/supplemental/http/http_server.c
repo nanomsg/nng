@@ -99,9 +99,15 @@ static nni_reap_list http_sc_reap_list = {
 
 static void http_server_fini(nni_http_server *);
 
+static void
+http_server_fini_cb(void *arg)
+{
+	http_server_fini((nni_http_server *) arg);
+}
+
 static nni_reap_list http_server_reap_list = {
 	.rl_offset = offsetof(nni_http_server, reap),
-	.rl_func   = (nni_cb) http_server_fini,
+	.rl_func   = http_server_fini_cb,
 };
 
 nng_err
