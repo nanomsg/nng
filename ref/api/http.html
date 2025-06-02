@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -276,7 +287,7 @@ or <a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if there is
 </div>
 <p>The <a name="a006"></a><code>nni_http_get_uri</code> function is used to obtain the URI that was previously set by <code>nng_http_set_uri</code>.
 If the URI is unset (such as for a freshly created connection), then it returns <code>NULL</code>. The returned value
-will have any query concentated, for example “/api/get_user.cgi?name=garrett”.</p>
+will have any query concatenated, for example “/api/get_user.cgi?name=garrett”.</p>
 <h3 id="http-version"><a class="header" href="#http-version">HTTP Version</a></h3>
 <pre><code class="language-c">nng_err nng_http_set_version(nng_http *conn, const char *version);
 const char *nng_http_get_version(nng_http *conn);
@@ -324,7 +335,7 @@ then a built in reason based on the <em>status</em> will be used instead.</p>
 <code>nng_http_set_status</code>, because those functions will also set the response body to a suitable HTML document
 for display to users.</p>
 </div>
-<p>Status codes are defined by the IETF. Here are defininitions that NNG provides for convenience:</p>
+<p>Status codes are defined by the IETF. Here are definitions that NNG provides for convenience:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Code</th><th>Reason Text</th><th>Notes</th></tr></thead><tbody>
 <tr><td><code>NNG_HTTP_STATUS_CONTINUE</code><a name="#NNG_HTTP_STATUS_CONTINUE"></a></td><td>100</td><td>Continue</td><td>Partial transfer, client may send body.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_SWITCHING</code><a name="#NNG_HTTP_STATUS_SWITCHING"></a></td><td>101</td><td>Switching Protocols</td><td>Used when upgrading or hijacking a connection.</td></tr>
@@ -368,13 +379,13 @@ for display to users.</p>
 <tr><td><code>NNG_HTTP_STATUS_TEAPOT</code><a name="#NNG_HTTP_STATUS_TEAPOT"></a></td><td>418</td><td>I Am A Teapot</td><td>RFC 2324.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY</code><a name="#NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a></td><td>422</td><td>Unprocessable Entity</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_LOCKED</code><a name="#NNG_HTTP_STATUS_LOCKED"></a></td><td>423</td><td>Locked</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_FAILED_DEPENDENCY</code><a name="#NNG_HTTP_STATUS_FAILED_DEPEDNENCY"></a></td><td>424</td><td>Failed Dependency</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_FAILED_DEPENDENCY</code><a name="#NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a></td><td>424</td><td>Failed Dependency</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_TOO_EARLY</code><a name="#NNG_HTTP_STATUS_TOO_EARLY"></a></td><td>425</td><td>Too Early</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_UPGRADE_REQUIRED</code><a name="#NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a></td><td>426</td><td>Upgrade Required</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_PRECONDITION_REQUIRED</code><a name="#NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a></td><td>428</td><td>Precondition Required</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_TOO_MANY_REQUESTS</code><a name="#NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a></td><td>429</td><td>Too Many Requests</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_HEADERS_TOO_LARGE</code><a name="#NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a></td><td>431</td><td>Headers Too Large</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</code><a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a></td><td>451</td><td>Unavailabe For Legal Reasons</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</code><a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a></td><td>451</td><td>Unavailable For Legal Reasons</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</code><a name="#NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a></td><td>500</td><td>Internal Server Error</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_NOT_IMPLEMENTED</code><a name="#NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a></td><td>501</td><td>Not Implemented</td><td>Server does not implement method.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_BAD_GATEWAY</code><a name="#NNG_HTTP_STATUS_BAD_GATEWAY"></a></td><td>502</td><td>Bad Gateway</td><td></td></tr>
@@ -571,7 +582,7 @@ Both functions will return <a href="/api/errors.html#NNG_ENOTSUP"><code>NNG_ENOT
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>The TLS configuration itself cannnot be changed once it has been used to create a connection,
+<p>The TLS configuration itself cannot be changed once it has been used to create a connection,
 such as by calling <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, but a new one can be installed in the client.
 Existing connections will use the TLS configuration that there were created with.</p>
 </div>
@@ -722,7 +733,7 @@ optionally a “Host” header it can be matched against (see [<code>nng_http_ha
 rather than just a single element.
 (See [<code>nng_http_handler_set_tree</code>]).</p>
 <h3 id="implementing-a-handler"><a class="header" href="#implementing-a-handler">Implementing a Handler</a></h3>
-<pre><code class="language-c">typedef void (*nng_http_hander_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+<pre><code class="language-c">typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 </code></pre>
@@ -809,7 +820,7 @@ created with <code>POST</code> should use [<code>NNG_HTTP_STATUS_SEE_OTHER</code
 <pre><code class="language-c">void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
 </code></pre>
 <p>The <a name="a045"></a><code>nng_http_handler_collect_body</code> function requests that HTTP server
-framework collect any reuqest body for the request and attach it to the
+framework collect any request body for the request and attach it to the
 connection before calling the callback for the <em>handler</em>.</p>
 <p>Subsequently the data can be retrieved by the handler from the request with the
 <a href="/api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a> function.</p>

@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -358,7 +369,7 @@ used, and was error prone.</p>
 <p>NNG 1.x had an undocumented ability to specify the local address to bind
 to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
-compatilibility, and is no longer offered. The correct way to specify a
+compatibility, and is no longer offered. The correct way to specify a
 local address is by setting <code>NNG_OPT_LOCADDR</code> on the dialer.</p>
 <h2 id="ipc-option-type-changes"><a class="header" href="#ipc-option-type-changes">IPC Option Type Changes</a></h2>
 <p>The types of <a href="/tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="/tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="/tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="/tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
@@ -456,13 +467,13 @@ Use <a href="/api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a
 Note that the new functions provide a reference to a static string, and thus do not require
 allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
 matching the actual wire protocol values, instead of <code>int</code>.</p>
-<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <a href="/api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
+<p>The <code>NNG_OPT_RAW</code> option has also been replaced by a function, <a href="/api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
 <p>The <code>NNG_OPT_SENDFD</code> and <code>NNG_OPT_RECVFD</code> options have been replaced by
 <a href="/api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a> and <a href="/api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> respectively.</p>
 <p>The <code>NNG_OPT_SOCKNAME</code> function is removed. This was provided for application use, and never used internally by NNG.
 Applications should keep track of this information separately.</p>
 <h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
-<p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBCRIBE</code> options have been replaced by
+<p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBSCRIBE</code> options have been replaced by
 the following functions: <a href="/TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="/TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
 <a href="/TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="/TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
 they replace, are only applicable to SUB sockets.</p>
@@ -481,7 +492,7 @@ It is replaced by the type safe <a href="/TODO.html"><code>nng_dialer_get_url</c
 structure instead of a string.</p>
 <h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
 <p>The details of <a href="/api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct
-access of the structure is no longer permitted. Intead new
+access of the structure is no longer permitted. Instead new
 accessors functions are provided:</p>
 <ul>
 <li><code>u_scheme</code> is replaced by <a href="/api/url.html#url-fields"><code>nng_url_scheme</code></a>.</li>

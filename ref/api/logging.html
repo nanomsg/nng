@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -239,10 +250,10 @@ void nng_log_debug(const char *msgid, const char *msg, ...);
 </code></pre>
 <p>These <a name="a001"></a> functions inject a a message into the
 logging system, where it will be processed and potentially go to
-system logs, standard output, or procssed further.</p>
+system logs, standard output, or processed further.</p>
 <p>The <em>msgid</em> is a short prefix that should uniquely identify the message,
 possibly also with some kind of category. It is recommended that
-strings between 8 and 16 charactes be used. As this may, but will not necessarily
+strings between 8 and 16 characters be used. As this may, but will not necessarily
 be displayed to the user, the content of the message should not appear
 solely in this field. A <code>NULL</code> value is permitted here, but that may
 make filtering the message or other automatic processing more difficult.</p>

@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -258,7 +269,7 @@ indicating that insufficient memory is available to allocate a new message.</p>
 <pre><code class="language-c">int nng_msg_dup(nng_msg **dup, nng_msg *msg);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_msg_dup</code> function duplicates the message <em>msg</em>, storing a pointer
-to the new duplicate in <em>dup</em>. This function also returns zero on succes, or <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
+to the new duplicate in <em>dup</em>. This function also returns zero on success, or <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
 if memory is exhausted.</p>
 <h2 id="message-size-and-capacity"><a class="header" href="#message-size-and-capacity">Message Size and Capacity</a></h2>
 <pre><code class="language-c">size_t nng_msg_capacity(nng_msg *msg);

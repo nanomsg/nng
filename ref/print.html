@@ -43,6 +43,17 @@
         <script src="toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -120,7 +131,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -690,7 +701,7 @@ include the <code>nng/nng.h</code> header file like so:</p>
 </style>
 <h1 id="initialization--finalization"><a class="header" href="#initialization--finalization">Initialization &amp; Finalization</a></h1>
 <p>This chapter details the function used to initialize
-the library before first use, and the funtion used to
+the library before first use, and the function used to
 finalize the library and deallocate any resources used by the library.</p>
 <h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
 <pre><code class="language-c">typedef struct {
@@ -703,7 +714,7 @@ finalize the library and deallocate any resources used by the library.</p>
     int16_t num_resolver_threads;
 } nng_init_params;
 
-extern nng_err nng_init(nng_init_parms *params);
+extern nng_err nng_init(nng_init_params *params);
 </code></pre>
 <p>Before using other interfaces in this library, it is necessary to initialize
 the library. The <a name="a001"></a><code>nng_init</code> function performs this initialization.</p>
@@ -735,7 +746,7 @@ will be used instead for that value.</p>
 <p><code>num_task_threads</code> and <code>max_task_threads</code> <br />
 Configures the number of threads to use for tasks, which are used principally for completion
 callbacks. The maximum value can be used to provide an upper limit while still allowing
-for a dynamically calculated value to be used, as long as it does not exceeed the maximum.</p>
+for a dynamically calculated value to be used, as long as it does not exceed the maximum.</p>
 </li>
 <li>
 <p><code>num_expire_threads</code> and <code>max_expire_threads</code> <br />
@@ -755,7 +766,7 @@ Changes the number of threads used for asynchronous DNS look ups.</p>
 <h2 id="finalization"><a class="header" href="#finalization">Finalization</a></h2>
 <pre><code class="language-c">extern void nng_fini(void);
 </code></pre>
-<p>When the consumer is ready to deallocate any resoures allocated by the library, it should call
+<p>When the consumer is ready to deallocate any resources allocated by the library, it should call
 the <a name="a002"></a><code>nng_fini</code> function. Each call to <code>nng_fini</code> should be paired with an earlier call to
 <a href="api//api/init.html#initialization"><code>nng_init</code></a>.</p>
 <p>After calling <code>nng_fini</code>, the consuming application must not make any other calls to NNG functions,
@@ -868,7 +879,7 @@ indicating that insufficient memory is available to allocate a new message.</p>
 <pre><code class="language-c">int nng_msg_dup(nng_msg **dup, nng_msg *msg);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_msg_dup</code> function duplicates the message <em>msg</em>, storing a pointer
-to the new duplicate in <em>dup</em>. This function also returns zero on succes, or <a href="api//api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
+to the new duplicate in <em>dup</em>. This function also returns zero on success, or <a href="api//api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
 if memory is exhausted.</p>
 <h2 id="message-size-and-capacity"><a class="header" href="#message-size-and-capacity">Message Size and Capacity</a></h2>
 <pre><code class="language-c">size_t nng_msg_capacity(nng_msg *msg);
@@ -1355,7 +1366,7 @@ messages over the socket <em>s</em>. The differences in their behaviors are as f
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>The semantics of what receving a message means varies from protocol to
+<p>The semantics of what receiving a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
 (For example, <a href="api//proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request,
@@ -1787,7 +1798,7 @@ messages over the context <em>ctx</em>. The differences in their behaviors are a
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>The semantics of what receving a message means varies from protocol to
+<p>The semantics of what receiving a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
 (For example, <a href="api//proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request.)</p>
@@ -2322,7 +2333,7 @@ system clock, and supporting timeouts for certain operations.</p>
 </code></pre>
 <p>The <a name="a001"></a><code>nng_time</code> type is used to represent a clock offset from a common base time,
 measured in milliseconds.</p>
-<p>The reference, or zero value, is some arbitrary point in time, most often sytem boot, but can
+<p>The reference, or zero value, is some arbitrary point in time, most often system boot, but can
 be process start time or any other convenient reference.</p>
 <p>All threads within a process will use the same reference time, but be aware that different processes
 may use a different reference time.</p>
@@ -2821,7 +2832,7 @@ void nng_aio_set_msg(nng_aio *aio, nng_msg *msg);
 <p>The <a name="a018"></a><code>nng_aio_get_msg</code> and <a name="a019"></a><code>nng_aio_set_msg</code> functions retrieve and store a <a href="api//api/msg.html">message</a>
 in <em>aio</em>.
 For example, if a function to receive data is called, that function can generally be expected
-to store a message on the asssociated <em>aio</em>, for the application to retrieve with
+to store a message on the associated <em>aio</em>, for the application to retrieve with
 <code>nng_aio_get_msg</code>.
 Conversely an application desiring to send a message <em>msg</em> will store it in the <em>aio</em> using
 <code>nng_aio_set_msg</code>. The function implementing the send operation will retrieve the message
@@ -3015,7 +3026,7 @@ by calling <a href="api//api/synch.html#releasing-a-mutex"><code>nng_mtx_unlock<
 <p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_lock</code>.
 On success, a pointer to the mutex is returned through <em>mtxp</em>.
 This function can fail due to insufficient memory or resources, in which
-case it will return <a href="api//api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succceed and return zero.</p>
+case it will return <a href="api//api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succeed and return zero.</p>
 <h3 id="destroying-a-mutex"><a class="header" href="#destroying-a-mutex">Destroying a Mutex</a></h3>
 <pre><code class="language-c">void nng_mtx_free(nng_mtx *mtx);
 </code></pre>
@@ -3098,7 +3109,7 @@ one thread (which may be chosen randomly).</p>
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Use of <code>nng_cv_wake1</code> may be used to reduce the “<a name="a016"></a>thundering herd” syndrom of waking
+<p>Use of <code>nng_cv_wake1</code> may be used to reduce the “<a name="a016"></a>thundering herd” syndrome of waking
 all threads concurrently, but should only be used in circumstances where the application
 does not depend on <em>which</em> thread will be woken. When in doubt, <code>nng_cv_wake</code> is safer.</p>
 </div>
@@ -3245,7 +3256,7 @@ an asynchronous model using <a href="api//api/aio.html#asynchronous-io-handle"><
 <h2 id="thread-structure"><a class="header" href="#thread-structure">Thread Structure</a></h2>
 <pre><code class="language-c">typedef struct nng_thread nng_thread;
 </code></pre>
-<p>The <a name="a004"></a><code>nng_thread</code> structure represnts a thread, which is a single execution context.
+<p>The <a name="a004"></a><code>nng_thread</code> structure represents a thread, which is a single execution context.
 A given thread will have its own stack, and CPU registers. However global state, as well
 as values allocated on the heap, will be shared and accessible to all threads in the system
 (See the <a href="api//api/synch.html">Synchronization</a> chapter for functions to help with data sharing between different threads.)</p>
@@ -3366,10 +3377,10 @@ void nng_log_debug(const char *msgid, const char *msg, ...);
 </code></pre>
 <p>These <a name="a001"></a> functions inject a a message into the
 logging system, where it will be processed and potentially go to
-system logs, standard output, or procssed further.</p>
+system logs, standard output, or processed further.</p>
 <p>The <em>msgid</em> is a short prefix that should uniquely identify the message,
 possibly also with some kind of category. It is recommended that
-strings between 8 and 16 charactes be used. As this may, but will not necessarily
+strings between 8 and 16 characters be used. As this may, but will not necessarily
 be displayed to the user, the content of the message should not appear
 solely in this field. A <code>NULL</code> value is permitted here, but that may
 make filtering the message or other automatic processing more difficult.</p>
@@ -3627,7 +3638,7 @@ const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener
 const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
-or possibly to find the tree of statistics associated iwth a specific <a href="api//TODO.html">socket</a>,
+or possibly to find the tree of statistics associated with a specific <a href="api//TODO.html">socket</a>,
 <a href="api//TODO.html">dialer</a>, or <a href="api//TODO.html">listener</a>.</p>
 <p>The <code>nng_stat_find</code> functions are provided for this purpose.</p>
 <p>The <a name="a008"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
@@ -3667,7 +3678,7 @@ The units will be given by the value returned from <a href="api//api/stats.html#
 </li>
 <li>
 <p><a name="a017"></a><code>NNG_STAT_LEVEL</code>: <a name="NNG_STAT_LEVEL"></a>
-The statistic represnts a measured value which corresponds
+The statistic represents a measured value which corresponds
 to a specific value at a specific time. For example, this may represent the
 number of messages currently queued for some operation, or the link speed
 of a network interface. Most often the absolute value is more interesting
@@ -3706,7 +3717,7 @@ If <em>stat</em> is not one of these types, then it returns zero.</p>
 <p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
 type <a href="api//api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistics is not of this type, then it returns <code>false</code>.</p>
 <p>The <a name="a023"></a><code>nng_stat_string</code> function returns a pointer to a string value for the statistic <em>stat</em>,
-of type <a href="api//api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valud until the snapshot that
+of type <a href="api//api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valid until the snapshot that
 <em>stat</em> was collected with is deallocated with <a href="api//api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>. If the statistic
 is not of type <code>NNG_STAT_STRING</code>, then <code>NULL</code> is returned.</p>
 <h2 id="statistic-units"><a class="header" href="#statistic-units">Statistic Units</a></h2>
@@ -3845,7 +3856,7 @@ as in diagnostic messages or log entries.</p>
 <h2 id="list-of-errors"><a class="header" href="#list-of-errors">List of Errors</a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Error</th><th>Value</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>NNG_EINTR</code><a name="NNG_EINTR"></a></td><td>1</td><td>Operation interrupted.</td></tr>
-<tr><td><code>NNG_ENOMEM</code><a name="NNG_ENOMEM"></a></td><td>2</td><td>Out of memory, or other resource exahusted.</td></tr>
+<tr><td><code>NNG_ENOMEM</code><a name="NNG_ENOMEM"></a></td><td>2</td><td>Out of memory, or other resource exhausted.</td></tr>
 <tr><td><code>NNG_EINVAL</code><a name="NNG_EINVAL"></a></td><td>3</td><td>Invalid argument. The arguments are invalid or malformed somehow.</td></tr>
 <tr><td><code>NNG_EBUSY</code><a name="NNG_EBUSY"></a></td><td>4</td><td>Resource busy.</td></tr>
 <tr><td><code>NNG_ETIMEDOUT</code><a name="NNG_ETIMEDOUT"></a></td><td>5</td><td>Timed out. The operation took longer than the allotted time.</td></tr>
@@ -4402,7 +4413,7 @@ or <a href="api//api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if ther
 </div>
 <p>The <a name="a006"></a><code>nni_http_get_uri</code> function is used to obtain the URI that was previously set by <code>nng_http_set_uri</code>.
 If the URI is unset (such as for a freshly created connection), then it returns <code>NULL</code>. The returned value
-will have any query concentated, for example “/api/get_user.cgi?name=garrett”.</p>
+will have any query concatenated, for example “/api/get_user.cgi?name=garrett”.</p>
 <h3 id="http-version"><a class="header" href="#http-version">HTTP Version</a></h3>
 <pre><code class="language-c">nng_err nng_http_set_version(nng_http *conn, const char *version);
 const char *nng_http_get_version(nng_http *conn);
@@ -4450,7 +4461,7 @@ then a built in reason based on the <em>status</em> will be used instead.</p>
 <code>nng_http_set_status</code>, because those functions will also set the response body to a suitable HTML document
 for display to users.</p>
 </div>
-<p>Status codes are defined by the IETF. Here are defininitions that NNG provides for convenience:</p>
+<p>Status codes are defined by the IETF. Here are definitions that NNG provides for convenience:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Code</th><th>Reason Text</th><th>Notes</th></tr></thead><tbody>
 <tr><td><code>NNG_HTTP_STATUS_CONTINUE</code><a name="#NNG_HTTP_STATUS_CONTINUE"></a></td><td>100</td><td>Continue</td><td>Partial transfer, client may send body.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_SWITCHING</code><a name="#NNG_HTTP_STATUS_SWITCHING"></a></td><td>101</td><td>Switching Protocols</td><td>Used when upgrading or hijacking a connection.</td></tr>
@@ -4494,13 +4505,13 @@ for display to users.</p>
 <tr><td><code>NNG_HTTP_STATUS_TEAPOT</code><a name="#NNG_HTTP_STATUS_TEAPOT"></a></td><td>418</td><td>I Am A Teapot</td><td>RFC 2324.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY</code><a name="#NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a></td><td>422</td><td>Unprocessable Entity</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_LOCKED</code><a name="#NNG_HTTP_STATUS_LOCKED"></a></td><td>423</td><td>Locked</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_FAILED_DEPENDENCY</code><a name="#NNG_HTTP_STATUS_FAILED_DEPEDNENCY"></a></td><td>424</td><td>Failed Dependency</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_FAILED_DEPENDENCY</code><a name="#NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a></td><td>424</td><td>Failed Dependency</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_TOO_EARLY</code><a name="#NNG_HTTP_STATUS_TOO_EARLY"></a></td><td>425</td><td>Too Early</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_UPGRADE_REQUIRED</code><a name="#NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a></td><td>426</td><td>Upgrade Required</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_PRECONDITION_REQUIRED</code><a name="#NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a></td><td>428</td><td>Precondition Required</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_TOO_MANY_REQUESTS</code><a name="#NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a></td><td>429</td><td>Too Many Requests</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_HEADERS_TOO_LARGE</code><a name="#NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a></td><td>431</td><td>Headers Too Large</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</code><a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a></td><td>451</td><td>Unavailabe For Legal Reasons</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</code><a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a></td><td>451</td><td>Unavailable For Legal Reasons</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</code><a name="#NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a></td><td>500</td><td>Internal Server Error</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_NOT_IMPLEMENTED</code><a name="#NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a></td><td>501</td><td>Not Implemented</td><td>Server does not implement method.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_BAD_GATEWAY</code><a name="#NNG_HTTP_STATUS_BAD_GATEWAY"></a></td><td>502</td><td>Bad Gateway</td><td></td></tr>
@@ -4697,7 +4708,7 @@ Both functions will return <a href="api//api/errors.html#NNG_ENOTSUP"><code>NNG_
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>The TLS configuration itself cannnot be changed once it has been used to create a connection,
+<p>The TLS configuration itself cannot be changed once it has been used to create a connection,
 such as by calling <a href="api//api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, but a new one can be installed in the client.
 Existing connections will use the TLS configuration that there were created with.</p>
 </div>
@@ -4848,7 +4859,7 @@ optionally a “Host” header it can be matched against (see [<code>nng_http_ha
 rather than just a single element.
 (See [<code>nng_http_handler_set_tree</code>]).</p>
 <h3 id="implementing-a-handler"><a class="header" href="#implementing-a-handler">Implementing a Handler</a></h3>
-<pre><code class="language-c">typedef void (*nng_http_hander_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+<pre><code class="language-c">typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 </code></pre>
@@ -4935,7 +4946,7 @@ created with <code>POST</code> should use [<code>NNG_HTTP_STATUS_SEE_OTHER</code
 <pre><code class="language-c">void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
 </code></pre>
 <p>The <a name="a045"></a><code>nng_http_handler_collect_body</code> function requests that HTTP server
-framework collect any reuqest body for the request and attach it to the
+framework collect any request body for the request and attach it to the
 connection before calling the callback for the <em>handler</em>.</p>
 <p>Subsequently the data can be retrieved by the handler from the request with the
 <a href="api//api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a> function.</p>
@@ -5298,7 +5309,7 @@ with it.</p>
   note
 </p>
 <p>The <code>nng_id_map_free</code> frees the map itself, but will not free memory associated with
-any strctures contained within it.</p>
+any structures contained within it.</p>
 </div>
 <h2 id="store-a-value"><a class="header" href="#store-a-value">Store a Value</a></h2>
 <pre><code class="language-c">int nng_id_set(nng_id_map *map, uint64_t id, void *value);
@@ -5363,7 +5374,7 @@ table indices.</p>
 <!-- Transports -->
 <!-- Concept index -->
 <p><hr/>
-<p><a name="footnote-1"><a href="api/id_map.html#to-footnote-1">1</a></a>: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifers may
+<p><a name="footnote-1"><a href="api/id_map.html#to-footnote-1">1</a></a>: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifiers may
 themselves be much larger than this.</p>
 <p><a name="footnote-2"><a href="api/id_map.html#to-footnote-2">2</a></a>: The concern about possibly reusing a
 recently released identifier comes into consideration after the range has wrapped.
@@ -7921,7 +7932,7 @@ used, and was error prone.</p>
 <p>NNG 1.x had an undocumented ability to specify the local address to bind
 to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
-compatilibility, and is no longer offered. The correct way to specify a
+compatibility, and is no longer offered. The correct way to specify a
 local address is by setting <code>NNG_OPT_LOCADDR</code> on the dialer.</p>
 <h2 id="ipc-option-type-changes"><a class="header" href="#ipc-option-type-changes">IPC Option Type Changes</a></h2>
 <p>The types of <a href="migrate//tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="migrate//tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="migrate//tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="migrate//tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
@@ -8019,13 +8030,13 @@ Use <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_proto_id</
 Note that the new functions provide a reference to a static string, and thus do not require
 allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
 matching the actual wire protocol values, instead of <code>int</code>.</p>
-<p>The <code>NNG_OPT_RAW</code> option has aso been replaced by a function, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
+<p>The <code>NNG_OPT_RAW</code> option has also been replaced by a function, <a href="migrate//api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
 <p>The <code>NNG_OPT_SENDFD</code> and <code>NNG_OPT_RECVFD</code> options have been replaced by
 <a href="migrate//api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a> and <a href="migrate//api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> respectively.</p>
 <p>The <code>NNG_OPT_SOCKNAME</code> function is removed. This was provided for application use, and never used internally by NNG.
 Applications should keep track of this information separately.</p>
 <h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
-<p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBCRIBE</code> options have been replaced by
+<p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBSCRIBE</code> options have been replaced by
 the following functions: <a href="migrate//TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="migrate//TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
 <a href="migrate//TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="migrate//TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
 they replace, are only applicable to SUB sockets.</p>
@@ -8044,7 +8055,7 @@ It is replaced by the type safe <a href="migrate//TODO.html"><code>nng_dialer_ge
 structure instead of a string.</p>
 <h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
 <p>The details of <a href="migrate//api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct
-access of the structure is no longer permitted. Intead new
+access of the structure is no longer permitted. Instead new
 accessors functions are provided:</p>
 <ul>
 <li><code>u_scheme</code> is replaced by <a href="migrate//api/url.html#url-fields"><code>nng_url_scheme</code></a>.</li>

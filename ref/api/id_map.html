@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -278,7 +289,7 @@ with it.</p>
   note
 </p>
 <p>The <code>nng_id_map_free</code> frees the map itself, but will not free memory associated with
-any strctures contained within it.</p>
+any structures contained within it.</p>
 </div>
 <h2 id="store-a-value"><a class="header" href="#store-a-value">Store a Value</a></h2>
 <pre><code class="language-c">int nng_id_set(nng_id_map *map, uint64_t id, void *value);
@@ -343,7 +354,7 @@ table indices.</p>
 <!-- Transports -->
 <!-- Concept index -->
 <p><hr/>
-<p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifers may
+<p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifiers may
 themselves be much larger than this.</p>
 <p><a name="footnote-2"><a href="#to-footnote-2">2</a></a>: The concern about possibly reusing a
 recently released identifier comes into consideration after the range has wrapped.

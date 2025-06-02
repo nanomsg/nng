@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -264,7 +275,7 @@ an asynchronous model using <a href="/api/aio.html#asynchronous-io-handle"><code
 <h2 id="thread-structure"><a class="header" href="#thread-structure">Thread Structure</a></h2>
 <pre><code class="language-c">typedef struct nng_thread nng_thread;
 </code></pre>
-<p>The <a name="a004"></a><code>nng_thread</code> structure represnts a thread, which is a single execution context.
+<p>The <a name="a004"></a><code>nng_thread</code> structure represents a thread, which is a single execution context.
 A given thread will have its own stack, and CPU registers. However global state, as well
 as values allocated on the heap, will be shared and accessible to all threads in the system
 (See the <a href="/api/synch.html">Synchronization</a> chapter for functions to help with data sharing between different threads.)</p>

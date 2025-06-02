@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -264,7 +275,7 @@ as in diagnostic messages or log entries.</p>
 <h2 id="list-of-errors"><a class="header" href="#list-of-errors">List of Errors</a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Error</th><th>Value</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>NNG_EINTR</code><a name="NNG_EINTR"></a></td><td>1</td><td>Operation interrupted.</td></tr>
-<tr><td><code>NNG_ENOMEM</code><a name="NNG_ENOMEM"></a></td><td>2</td><td>Out of memory, or other resource exahusted.</td></tr>
+<tr><td><code>NNG_ENOMEM</code><a name="NNG_ENOMEM"></a></td><td>2</td><td>Out of memory, or other resource exhausted.</td></tr>
 <tr><td><code>NNG_EINVAL</code><a name="NNG_EINVAL"></a></td><td>3</td><td>Invalid argument. The arguments are invalid or malformed somehow.</td></tr>
 <tr><td><code>NNG_EBUSY</code><a name="NNG_EBUSY"></a></td><td>4</td><td>Resource busy.</td></tr>
 <tr><td><code>NNG_ETIMEDOUT</code><a name="NNG_ETIMEDOUT"></a></td><td>5</td><td>Timed out. The operation took longer than the allotted time.</td></tr>

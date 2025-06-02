@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -244,7 +255,7 @@ by calling <a href="/api/synch.html#releasing-a-mutex"><code>nng_mtx_unlock</cod
 <p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_lock</code>.
 On success, a pointer to the mutex is returned through <em>mtxp</em>.
 This function can fail due to insufficient memory or resources, in which
-case it will return <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succceed and return zero.</p>
+case it will return <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succeed and return zero.</p>
 <h3 id="destroying-a-mutex"><a class="header" href="#destroying-a-mutex">Destroying a Mutex</a></h3>
 <pre><code class="language-c">void nng_mtx_free(nng_mtx *mtx);
 </code></pre>
@@ -327,7 +338,7 @@ one thread (which may be chosen randomly).</p>
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Use of <code>nng_cv_wake1</code> may be used to reduce the “<a name="a016"></a>thundering herd” syndrom of waking
+<p>Use of <code>nng_cv_wake1</code> may be used to reduce the “<a name="a016"></a>thundering herd” syndrome of waking
 all threads concurrently, but should only be used in circumstances where the application
 does not depend on <em>which</em> thread will be woken. When in doubt, <code>nng_cv_wake</code> is safer.</p>
 </div>

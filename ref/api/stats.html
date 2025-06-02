@@ -42,6 +42,17 @@
         <script src="../toc.js"></script>
     </head>
     <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
     <div id="body-container">
         <!-- Work around some values being stored in localStorage wrapped in quotes -->
         <script>
@@ -119,7 +130,7 @@
                             <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
                             <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
                         </ul>
-                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
                             <i class="fa fa-search"></i>
                         </button>
                     </div>
@@ -292,7 +303,7 @@ const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener
 const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
-or possibly to find the tree of statistics associated iwth a specific <a href="/TODO.html">socket</a>,
+or possibly to find the tree of statistics associated with a specific <a href="/TODO.html">socket</a>,
 <a href="/TODO.html">dialer</a>, or <a href="/TODO.html">listener</a>.</p>
 <p>The <code>nng_stat_find</code> functions are provided for this purpose.</p>
 <p>The <a name="a008"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
@@ -332,7 +343,7 @@ The units will be given by the value returned from <a href="/api/stats.html#stat
 </li>
 <li>
 <p><a name="a017"></a><code>NNG_STAT_LEVEL</code>: <a name="NNG_STAT_LEVEL"></a>
-The statistic represnts a measured value which corresponds
+The statistic represents a measured value which corresponds
 to a specific value at a specific time. For example, this may represent the
 number of messages currently queued for some operation, or the link speed
 of a network interface. Most often the absolute value is more interesting
@@ -371,7 +382,7 @@ If <em>stat</em> is not one of these types, then it returns zero.</p>
 <p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
 type <a href="/api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistics is not of this type, then it returns <code>false</code>.</p>
 <p>The <a name="a023"></a><code>nng_stat_string</code> function returns a pointer to a string value for the statistic <em>stat</em>,
-of type <a href="/api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valud until the snapshot that
+of type <a href="/api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valid until the snapshot that
 <em>stat</em> was collected with is deallocated with <a href="/api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>. If the statistic
 is not of type <code>NNG_STAT_STRING</code>, then <code>NULL</code> is returned.</p>
 <h2 id="statistic-units"><a class="header" href="#statistic-units">Statistic Units</a></h2>
