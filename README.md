@@ -85,11 +85,11 @@ Here are areas where this project improves on "nanomsg":
 
   Because it avoids ties to file descriptors, and avoids confusing interlocking
   state machines, it is easier to add new protocols and transports to NNG.
-  This was demonstrated by the addition of the TLS and ZeroTier transports.
+  This was demonstrated by the addition of new transports such as TLS.
 
 - _Security_
 
-  NNG provides TLS (1.2 and optionally 1.3) and ZeroTier transports, offering
+  NNG provides TLS (1.2 and optionally 1.3) enabled transports, offering
   support for robust and industry standard authentication and encryption.
   In addition, it is hardened to be resilient against malicious attackers,
   with special consideration given to use in a hostile Internet.
