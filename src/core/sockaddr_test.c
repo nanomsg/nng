@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -20,64 +20,108 @@
 void
 test_sa_ipc(void)
 {
-	nng_sockaddr sa;
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
 	char         addr[NNG_MAXADDRSTRLEN];
-	sa.s_ipc.sa_family = NNG_AF_IPC;
-	snprintf(sa.s_ipc.sa_path, sizeof(sa.s_ipc.sa_path), "/tmp/something");
-	NUTS_ASSERT(strcmp(nng_str_sockaddr(&sa, addr, sizeof(addr)),
-	                "/tmp/something") == 0);
+	sa1.s_ipc.sa_family = NNG_AF_IPC;
+	sa2.s_ipc.sa_family = NNG_AF_IPC;
+	snprintf(sa1.s_ipc.sa_path, sizeof(sa1.s_ipc.sa_path), "/tmp/testing");
+	snprintf(sa2.s_ipc.sa_path, sizeof(sa2.s_ipc.sa_path), "/tmp/nothing");
+	NUTS_ASSERT(strcmp(nng_str_sockaddr(&sa1, addr, sizeof(addr)),
+	                "/tmp/testing") == 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa1) != 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa2) != nng_sockaddr_hash(&sa1));
+	NUTS_ASSERT(!nng_sockaddr_equal(&sa1, &sa2));
 }
 
 void
 test_sa_abstract(void)
 {
-	nng_sockaddr sa;
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
 	char         addr[NNG_MAXADDRSTRLEN];
-	sa.s_abstract.sa_family = NNG_AF_ABSTRACT;
-	snprintf((char *) sa.s_abstract.sa_name, sizeof(sa.s_abstract.sa_name),
-	    "something");
-	NUTS_ASSERT(strcmp(nng_str_sockaddr(&sa, addr, sizeof(addr)),
-	                "abstract[something]") == 0);
+	sa1.s_abstract.sa_family = NNG_AF_ABSTRACT;
+	sa2.s_abstract.sa_family = NNG_AF_ABSTRACT;
+	snprintf((char *) sa1.s_abstract.sa_name,
+	    sizeof(sa1.s_abstract.sa_name), "one");
+	snprintf((char *) sa2.s_abstract.sa_name,
+	    sizeof(sa2.s_abstract.sa_name), "two");
+	NUTS_ASSERT(strcmp(nng_str_sockaddr(&sa1, addr, sizeof(addr)),
+	                "abstract[one]") == 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa1) != 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa2) != nng_sockaddr_hash(&sa1));
+	NUTS_ASSERT(!nng_sockaddr_equal(&sa1, &sa2));
 }
 
 void
 test_sa_inproc(void)
 {
-	nng_sockaddr sa;
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
 	char         addr[NNG_MAXADDRSTRLEN];
-	sa.s_inproc.sa_family = NNG_AF_INPROC;
-	snprintf((char *) sa.s_inproc.sa_name, sizeof(sa.s_inproc.sa_name),
-	    "something");
-	nng_str_sockaddr(&sa, addr, sizeof(addr));
-	nng_log_debug(NULL, "address is %s", addr);
-	NUTS_ASSERT(strcmp(addr, "inproc[something]") == 0);
+	sa1.s_inproc.sa_family = NNG_AF_INPROC;
+	sa2.s_inproc.sa_family = NNG_AF_INPROC;
+	snprintf((char *) sa1.s_inproc.sa_name, sizeof(sa1.s_inproc.sa_name),
+	    "one");
+	snprintf((char *) sa2.s_inproc.sa_name, sizeof(sa2.s_inproc.sa_name),
+	    "two");
+	nng_str_sockaddr(&sa1, addr, sizeof(addr));
+	NUTS_ASSERT(strcmp(addr, "inproc[one]") == 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa1) != 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa2) != nng_sockaddr_hash(&sa1));
+	NUTS_ASSERT(!nng_sockaddr_equal(&sa1, &sa2));
 }
 
 void
 test_sa_inet(void)
 {
-	nng_sockaddr sa;
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
 	char         addr[NNG_MAXADDRSTRLEN];
-	sa.s_in.sa_family = NNG_AF_INET;
-	sa.s_in.sa_addr   = htonl(0x7F000001);
-	sa.s_in.sa_port   = htons(80);
-	NUTS_ASSERT(strcmp(nng_str_sockaddr(&sa, addr, sizeof(addr)),
+	sa1.s_in.sa_family = NNG_AF_INET;
+	sa1.s_in.sa_addr   = htonl(0x7F000001);
+	sa1.s_in.sa_port   = htons(80);
+	sa2                = sa1;
+	sa2.s_in.sa_port   = htons(25);
+	NUTS_ASSERT(strcmp(nng_str_sockaddr(&sa1, addr, sizeof(addr)),
 	                "127.0.0.1:80") == 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa1) != 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa2) != nng_sockaddr_hash(&sa1));
+	NUTS_ASSERT(!nng_sockaddr_equal(&sa1, &sa2));
 }
 
 void
 test_sa_inet6(void)
 {
-	nng_sockaddr sa;
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
 	char         addr[NNG_MAXADDRSTRLEN];
-	sa.s_in.sa_family = NNG_AF_INET6;
-	memset(sa.s_in6.sa_addr, 0, sizeof(sa.s_in6.sa_addr));
-	sa.s_in6.sa_addr[15] = 1; // loopback
-	sa.s_in6.sa_scope    = 0;
-	sa.s_in6.sa_port     = htons(80);
-	nng_str_sockaddr(&sa, addr, sizeof(addr));
-	nng_log_debug(NULL, "address is %s", addr);
+	sa1.s_in.sa_family = NNG_AF_INET6;
+	memset(sa1.s_in6.sa_addr, 0, sizeof(sa1.s_in6.sa_addr));
+	sa1.s_in6.sa_addr[15] = 1; // loopback
+	sa1.s_in6.sa_scope    = 0;
+	sa1.s_in6.sa_port     = htons(80);
+	sa2                   = sa1;
+	NUTS_ASSERT(nng_sockaddr_equal(&sa1, &sa2));
+	sa2.s_in6.sa_port = htons(25);
+	nng_str_sockaddr(&sa1, addr, sizeof(addr));
 	NUTS_ASSERT(strcmp(addr, "[::1]:80") == 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa1) != 0);
+	NUTS_ASSERT(nng_sockaddr_hash(&sa2) != nng_sockaddr_hash(&sa1));
+	NUTS_ASSERT(!nng_sockaddr_equal(&sa1, &sa2));
+}
+
+void
+test_sa_families_unequal(void)
+{
+	nng_sockaddr sa1;
+	nng_sockaddr sa2;
+
+	sa1.s_inproc.sa_family = NNG_AF_INPROC;
+	memcpy(sa1.s_inproc.sa_name, "ABC", 3);
+	sa2.s_ipc.sa_family = NNG_AF_IPC;
+	memcpy(sa2.s_ipc.sa_path, "ABC", 3);
+	NUTS_ASSERT(!nng_sockaddr_equal(&sa1, &sa2));
 }
 
 void
@@ -157,5 +201,6 @@ TEST_LIST = {
 	{ "nng_sockaddr_in6 link local", test_sa_inet6_ll },
 	{ "nng_sockaddr_in6 zero", test_sa_inet6_zero },
 	{ "nng_sockaddr_in6 subnet", test_sa_inet6_net },
+	{ "nng_sockaddr families unequal", test_sa_families_unequal },
 	{ NULL, NULL },
 };
