@@ -240,9 +240,10 @@ static void udp_resolv_cb(void *);
 static void udp_rx_cb(void *);
 
 static void udp_recv_data(
-    udp_ep *ep, udp_sp_data *dreq, size_t len, nng_sockaddr *sa);
-static void udp_send_disc_full(udp_ep *ep, nng_sockaddr *sa, uint32_t local_id,
-    uint32_t remote_id, uint32_t seq, udp_disc_reason reason);
+    udp_ep *ep, udp_sp_data *dreq, size_t len, const nng_sockaddr *sa);
+static void udp_send_disc_full(udp_ep *ep, const nng_sockaddr *sa,
+    uint32_t local_id, uint32_t remote_id, uint32_t seq,
+    udp_disc_reason reason);
 static void udp_send_disc(udp_ep *ep, udp_pipe *p, udp_disc_reason reason);
 
 static void udp_ep_match(udp_ep *ep);
@@ -445,7 +446,8 @@ udp_start_tx(udp_ep *ep)
 }
 
 static void
-udp_queue_tx(udp_ep *ep, nng_sockaddr *sa, udp_sp_msg *msg, nni_msg *payload)
+udp_queue_tx(
+    udp_ep *ep, const nng_sockaddr *sa, udp_sp_msg *msg, nni_msg *payload)
 {
 	udp_txring *ring = &ep->tx_ring;
 	udp_txdesc *desc = &ring->descs[ring->head];
@@ -531,7 +533,7 @@ udp_send_disc(udp_ep *ep, udp_pipe *p, udp_disc_reason reason)
 }
 
 static void
-udp_send_disc_full(udp_ep *ep, nng_sockaddr *sa, uint32_t local_id,
+udp_send_disc_full(udp_ep *ep, const nng_sockaddr *sa, uint32_t local_id,
     uint32_t remote_id, uint32_t seq, udp_disc_reason reason)
 {
 	udp_sp_disc disc;
@@ -581,7 +583,7 @@ udp_send_cack(udp_ep *ep, udp_pipe *p)
 }
 
 static void
-udp_recv_disc(udp_ep *ep, udp_sp_disc *disc, nng_sockaddr *sa)
+udp_recv_disc(udp_ep *ep, udp_sp_disc *disc, const nng_sockaddr *sa)
 {
 	udp_pipe *p;
 	nni_aio  *aio;
@@ -603,7 +605,8 @@ udp_recv_disc(udp_ep *ep, udp_sp_disc *disc, nng_sockaddr *sa)
 // Receive data for the pipe.  Returns true if we used
 // the message, false otherwise.
 static void
-udp_recv_data(udp_ep *ep, udp_sp_data *dreq, size_t len, nng_sockaddr *sa)
+udp_recv_data(
+    udp_ep *ep, udp_sp_data *dreq, size_t len, const nng_sockaddr *sa)
 {
 	// NB: ep mtx is locked
 	udp_pipe *p;
@@ -726,8 +729,8 @@ udp_recv_creq(udp_ep *ep, udp_sp_creq *creq, nng_sockaddr *sa)
 	if ((p = udp_find_pipe(ep, creq->us_peer_id, creq->us_sender_id))) {
 		if ((p->peer_id == 0) || (p->peer != creq->us_type)) {
 			// we don't expect this -- a connection request from a
-			// peer while we have an outstanding request of our own.
-			// We *could* compare the sockaddrs to see if they
+			// peer while we have an outstanding request of our
+			// own. We *could* compare the sockaddrs to see if they
 			// match and if so then treat this as just a dueling
 			// connection. but for now we just discard it -- we'll
 			// wait for the CACK.
@@ -791,7 +794,7 @@ udp_recv_creq(udp_ep *ep, udp_sp_creq *creq, nng_sockaddr *sa)
 }
 
 static void
-udp_recv_cack(udp_ep *ep, udp_sp_creq *cack, nng_sockaddr *sa)
+udp_recv_cack(udp_ep *ep, udp_sp_creq *cack, const nng_sockaddr *sa)
 {
 	udp_pipe *p;
 	bool      first;
