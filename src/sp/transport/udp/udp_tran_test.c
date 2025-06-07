@@ -496,6 +496,66 @@ test_udp_pipe(void)
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 }
+
+void
+test_udp_reconnect_dialer(void)
+{
+	nng_socket   s0;
+	nng_socket   s1;
+	nng_listener l;
+	nng_dialer   d;
+	char        *addr;
+	nng_msg     *msg;
+	nng_sockaddr sa0;
+
+	NUTS_LOGGING();
+	NUTS_ADDR(addr, "udp4");
+
+	// For this test, using PUB sub is better to avoid fighting the pair
+	// exclusion. Generally speaking pair is probably a poor fit for UDP
+	// anyway.
+
+	NUTS_PASS(nng_pub0_open(&s0));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 2000));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa0));
+
+	NUTS_PASS(nng_sub0_open(&s1));
+	NUTS_PASS(nng_sub0_socket_subscribe(s1, "", 0));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 2000));
+	NUTS_PASS(nng_dialer_create(&d, s1, addr));
+	NUTS_PASS(nng_dialer_start(d, 0));
+
+	nng_msleep(500);
+
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_sendmsg(s0, msg, 0));
+	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+	nng_msg_free(msg);
+
+	// now close the dialer
+	NUTS_PASS(nng_dialer_close(d));
+
+	// wait a bit before starting a new one -- allow for the old one to
+	// tear down completely on both ends.
+	nng_msleep(500);
+
+	// and create and start a new one
+	NUTS_PASS(nng_dialer_create(&d, s1, addr));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	nng_msleep(500);
+
+	// show that we still send and receive
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_sendmsg(s0, msg, 0));
+	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+	nng_msg_free(msg);
+
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+}
+
 void
 test_udp_stats(void)
 {
@@ -559,6 +619,7 @@ NUTS_TESTS = {
 	{ "udp multi small burst", test_udp_multi_small_burst },
 	{ "udp crush", test_udp_crush },
 	{ "udp pipe", test_udp_pipe },
+	{ "udp reconnect dialer", test_udp_reconnect_dialer },
 	{ "udp stats", test_udp_stats },
 	{ NULL, NULL },
 };
