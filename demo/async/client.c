@@ -26,7 +26,6 @@
 #include <time.h>
 
 #include <nng/nng.h>
-#include <nng/supplemental/util/platform.h>
 
 void
 fatal(const char *func, int rv)
