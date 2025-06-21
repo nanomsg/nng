@@ -854,7 +854,7 @@ nni_tls_engine_conn_size(void)
 
 	eng = nni_atomic_get_ptr(&tls_engine);
 
-	return (eng == NULL ? false : eng->conn_ops->size);
+	return (eng == NULL ? 0 : eng->conn_ops->size);
 }
 
 #ifdef NNG_TLS_ENGINE_INIT
