@@ -76,12 +76,6 @@ psk_free(psk *p)
 	}
 }
 
-#ifdef NNG_TLS_USE_CTR_DRBG
-// Use a global RNG if we're going to override the builtin.
-static mbedtls_ctr_drbg_context rng_ctx;
-static nni_mtx                  rng_lock;
-#endif
-
 struct nng_tls_engine_conn {
 	void               *tls; // parent conn
 	mbedtls_ssl_context ctx;
@@ -134,16 +128,7 @@ tls_get_entropy(void *arg, unsigned char *buf, size_t len)
 static int
 tls_random(void *arg, unsigned char *buf, size_t sz)
 {
-#ifdef NNG_TLS_USE_CTR_DRBG
-	int rv;
-
-	nni_mtx_lock(&rng_lock);
-	rv = mbedtls_ctr_drbg_random(&rng_ctx, buf, sz);
-	nni_mtx_unlock(&rng_lock);
-	return (rv);
-#else
 	return (tls_get_entropy(arg, buf, sz));
-#endif
 }
 
 static void
@@ -453,9 +438,6 @@ config_fini(nng_tls_engine_config *cfg)
 	psk  *psk;
 
 	mbedtls_ssl_config_free(&cfg->cfg_ctx);
-#ifdef NNG_TLS_USE_CTR_DRBG
-	mbedtls_ctr_drbg_free(&cfg->rng_ctx);
-#endif
 	mbedtls_x509_crt_free(&cfg->ca_certs);
 	mbedtls_x509_crl_free(&cfg->crl);
 	if (cfg->server_name) {
@@ -818,17 +800,6 @@ nng_tls_engine_init_mbed(void)
 {
 	int rv;
 
-#ifdef NNG_TLS_USE_CTR_DRBG
-	nni_mtx_init(&rng_lock);
-
-	mbedtls_ctr_drbg_init(&cfg->rng_ctx);
-	rv = mbedtls_ctr_drbg_seed(&rng_ctx, tls_get_entropy, NULL, NULL, 0);
-	if (rv != 0) {
-		tls_log_err("NNG-TLS-RNG", "Failed initializing CTR DRBG", rv);
-		nni_mtx_fini(&rng_lock);
-		return (rv);
-	}
-#endif
 #ifdef MBEDTLS_PSA_CRYPTO_C
 	rv = psa_crypto_init();
 	if (rv != 0) {
@@ -848,12 +819,6 @@ nng_tls_engine_init_mbed(void)
 		rv = nng_tls_engine_register(&tls_engine_mbed);
 	}
 
-#ifdef NNG_TLS_USE_CTR_DRBG
-	if (rv != 0) {
-		nni_mtx_fini(&rng_lock);
-	}
-#endif
-
 	return (rv);
 }
 
@@ -861,10 +826,6 @@ void
 nng_tls_engine_fini_mbed(void)
 {
 	mbedtls_ssl_cookie_free(&mbed_ssl_cookie_ctx);
-#ifdef NNG_TLS_USE_CTR_DRBG
-	mbedtls_ctr_drbg_free(&rng_ctx);
-	nni_mtx_fini(&rng_lock);
-#endif
 #ifdef MBEDTLS_PSA_CRYPTO_C
 	mbedtls_psa_crypto_free();
 #endif
