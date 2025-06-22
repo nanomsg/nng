@@ -445,7 +445,6 @@ dtls_pipe_send_tls(dtls_pipe *p)
 
 	case OPCODE_DISC:
 		NNI_PUT16LE(&hdr->us_params[0], p->reason);
-		p->closed = true;
 		break;
 	default:
 		NNI_ASSERT(false); // this should never happen!
@@ -468,12 +467,12 @@ dtls_pipe_send_tls_cb(void *arg)
 	nni_mtx_lock(&p->ep->mtx);
 
 	p->send_busy = false;
-	if (nni_aio_result(&p->send_tls_aio) != NNG_OK ||
-	    p->last_op == OPCODE_DISC) {
+	if (p->closed) {
+		nni_mtx_unlock(&p->ep->mtx);
+		return;
+	}
+	if (nni_aio_result(&p->send_tls_aio) != NNG_OK) {
 		nni_pipe_close(p->npipe);
-		if (p->matched == 0) {
-			dtls_remove_pipe(p);
-		}
 		nni_mtx_unlock(&p->ep->mtx);
 		return;
 	}
@@ -713,13 +712,12 @@ dtls_pipe_close(void *arg)
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
-	if (!p->matched) {
-		dtls_remove_pipe(p);
-	} else {
+	if (p->matched) {
 		p->send_op = OPCODE_DISC;
 		p->reason  = DISC_CLOSED;
 		dtls_pipe_send_tls(p);
 	}
+	p->closed = true;
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -732,6 +730,8 @@ dtls_pipe_stop(void *arg)
 	dtls_ep   *ep = p->ep;
 
 	dtls_pipe_close(arg);
+
+	nni_tls_stop(&p->tls);
 
 	nni_mtx_lock(&ep->mtx);
 	dtls_remove_pipe(p);
@@ -766,9 +766,9 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	p->recv_max  = ep->rcvmax;
 	*pp          = p;
 
-	if (((rv = dtls_add_pipe(ep, p)) != NNG_OK) ||
-	    ((rv = nni_tls_init(&p->tls, ep->tlscfg)) != NNG_OK) ||
-	    ((rv = nni_tls_start(&p->tls, &dtls_bio_ops, p, sa)) != NNG_OK)) {
+	if (((rv = nni_tls_init(&p->tls, ep->tlscfg)) != NNG_OK) ||
+	    ((rv = nni_tls_start(&p->tls, &dtls_bio_ops, p, sa)) != NNG_OK) ||
+	    ((rv = dtls_add_pipe(ep, p)) != NNG_OK)) {
 		nni_pipe_close(p->npipe);
 		nng_log_err("NNG-DTLS-PIPE-ADD-FAIL",
 		    "Failed adding pipe for DTLS: %s", nng_strerror(rv));
