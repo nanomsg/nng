@@ -839,7 +839,10 @@ nni_tls_sys_init(void)
 		    NNG_TLS_ENGINE_VERSION);
 		return (NNG_ENOTSUP);
 	}
-	nng_log_info("NNG-TLS-INFO", "TLS Engine: %s", eng->description);
+	NNI_ASSERT(eng->version == NNG_TLS_ENGINE_VERSION);
+	nng_log_info("NNG-TLS-INFO", "TLS Engine: %s%s (%s)",
+	    nng_tls_engine_name(), nng_tls_engine_fips_mode() ? " (FIPS)" : "",
+	    nng_tls_engine_description());
 	return (eng->init());
 }
 
