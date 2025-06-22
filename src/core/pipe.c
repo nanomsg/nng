@@ -99,6 +99,12 @@ nni_pipe_rele(nni_pipe *p)
 	nni_refcnt_rele(&p->p_refcnt);
 }
 
+void
+nni_pipe_hold(nni_pipe *p)
+{
+	nni_refcnt_hold(&p->p_refcnt);
+}
+
 // nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces.
 uint32_t
 nni_pipe_id(nni_pipe *p)

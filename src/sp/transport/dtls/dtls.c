@@ -985,6 +985,7 @@ dtls_rx_cb(void *arg)
 	}
 	memcpy(nni_msg_body(msg), ep->rx_buf, nni_aio_count(aio));
 	dtls_start_rx(ep);
+	nni_pipe_hold(p->npipe);
 	nni_mtx_unlock(&ep->mtx);
 
 	nni_mtx_lock(&p->lower_mtx);
@@ -1004,6 +1005,7 @@ dtls_rx_cb(void *arg)
 	default:
 		nni_pipe_close(p->npipe);
 	}
+	nni_pipe_rele(p->npipe);
 	return;
 
 fail:

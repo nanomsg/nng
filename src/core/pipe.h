@@ -55,6 +55,10 @@ extern uint32_t nni_pipe_dialer_id(nni_pipe *);
 // nni_pipe_rele releases the hold on the pipe placed by nni_pipe_find.
 extern void nni_pipe_rele(nni_pipe *);
 
+// nni_pipe_hold adds an additional hold on the pipe.  Each hold must be
+// matched by a call to nni_pipe_rele.
+extern void nni_pipe_hold(nni_pipe *);
+
 // nni_pipe_add_stat adds a statistic to the pipe
 extern void nni_pipe_add_stat(nni_pipe *, nni_stat_item *);
 
