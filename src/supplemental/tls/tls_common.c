@@ -37,8 +37,6 @@
 // parts of TLS support that are invariant relative to different TLS
 // libraries, such as dialer and listener support.
 
-static nni_atomic_ptr tls_engine;
-
 static void tls_bio_send_cb(void *arg);
 static void tls_bio_recv_cb(void *arg);
 static void tls_do_send(nni_tls_conn *);
@@ -188,6 +186,8 @@ nni_tls_fini(nni_tls_conn *conn)
 	conn->ops.fini((void *) (conn + 1));
 	nni_aio_fini(&conn->bio_send);
 	nni_aio_fini(&conn->bio_recv);
+	nni_mtx_lock(&conn->lock);
+	nni_mtx_unlock(&conn->lock);
 	if (conn->cfg != NULL) {
 		nng_tls_config_free(conn->cfg); // this drops our hold on it
 	}
@@ -369,8 +369,11 @@ tls_do_send(nni_tls_conn *conn)
 nng_err
 nni_tls_run(nni_tls_conn *conn)
 {
-	nni_aio *aio;
-	nng_err  rv;
+	nni_aio            *aio;
+	nng_err             rv;
+	nni_aio_completions compq;
+
+	nni_aio_completions_init(&compq);
 	nni_mtx_lock(&conn->lock);
 	switch ((rv = tls_handshake(conn))) {
 	case NNG_OK:
@@ -383,11 +386,12 @@ nni_tls_run(nni_tls_conn *conn)
 		while (((aio = nni_list_first(&conn->send_queue)) != NULL) ||
 		    ((aio = nni_list_first(&conn->recv_queue)) != NULL)) {
 			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
+			nni_aio_completions_add(&compq, aio, rv, 0);
 		}
 		break;
 	}
 	nni_mtx_unlock(&conn->lock);
+	nni_aio_completions_run(&compq);
 	return (rv);
 }
 
@@ -749,15 +753,9 @@ int
 nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 {
 	nng_tls_config       *cfg;
-	const nng_tls_engine *eng;
 	size_t                size;
 	int                   rv;
-
-	eng = nni_atomic_get_ptr(&tls_engine);
-
-	if (eng == NULL) {
-		return (NNG_ENOTSUP);
-	}
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
 
 	size = NNI_ALIGN_UP(sizeof(*cfg)) + eng->config_ops->size;
 
@@ -806,90 +804,48 @@ nng_tls_config_hold(nng_tls_config *cfg)
 const char *
 nng_tls_engine_name(void)
 {
-	const nng_tls_engine *eng;
-
-	eng = nni_atomic_get_ptr(&tls_engine);
-
-	return (eng == NULL ? "none" : eng->name);
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	return (eng->name);
 }
 
 const char *
 nng_tls_engine_description(void)
 {
-	const nng_tls_engine *eng;
-
-	eng = nni_atomic_get_ptr(&tls_engine);
-
-	return (eng == NULL ? "" : eng->description);
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	return (eng->description);
 }
 
 bool
 nng_tls_engine_fips_mode(void)
 {
-	const nng_tls_engine *eng;
-
-	eng = nni_atomic_get_ptr(&tls_engine);
-
-	return (eng == NULL ? false : eng->fips_mode);
-}
-
-int
-nng_tls_engine_register(const nng_tls_engine *engine)
-{
-	if (engine->version != NNG_TLS_ENGINE_VERSION) {
-		nng_log_err("NNG-TLS-ENGINE-VER",
-		    "TLS Engine version mismatch: %d != %d", engine->version,
-		    NNG_TLS_ENGINE_VERSION);
-		return (NNG_ENOTSUP);
-	}
-	nng_log_info("NNG-TLS-INFO", "TLS Engine: %s", engine->description);
-	nni_atomic_set_ptr(&tls_engine, (void *) engine);
-	return (0);
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	return (eng->fips_mode());
 }
 
 size_t
 nni_tls_engine_conn_size(void)
 {
-	const nng_tls_engine *eng;
-
-	eng = nni_atomic_get_ptr(&tls_engine);
-
-	return (eng == NULL ? 0 : eng->conn_ops->size);
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	return (eng->conn_ops->size);
 }
-
-#ifdef NNG_TLS_ENGINE_INIT
-extern int NNG_TLS_ENGINE_INIT(void);
-#else
-static int
-NNG_TLS_ENGINE_INIT(void)
-{
-	return (0);
-}
-#endif
-
-#ifdef NNG_TLS_ENGINE_FINI
-extern void NNG_TLS_ENGINE_FINI(void);
-#else
-static void
-NNG_TLS_ENGINE_FINI(void)
-{
-}
-#endif
 
 int
 nni_tls_sys_init(void)
 {
-	int rv;
-
-	rv = NNG_TLS_ENGINE_INIT();
-	if (rv != 0) {
-		return (rv);
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	if (eng->version != NNG_TLS_ENGINE_VERSION) {
+		nng_log_err("NNG-TLS-ENGINE-VER",
+		    "TLS Engine version mismatch: %d != %d", eng->version,
+		    NNG_TLS_ENGINE_VERSION);
+		return (NNG_ENOTSUP);
 	}
-	return (0);
+	nng_log_info("NNG-TLS-INFO", "TLS Engine: %s", eng->description);
+	return (eng->init());
 }
 
 void
 nni_tls_sys_fini(void)
 {
-	NNG_TLS_ENGINE_FINI();
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	eng->fini();
 }

@@ -174,7 +174,8 @@ typedef enum nng_tls_engine_version_e {
 	NNG_TLS_ENGINE_V0      = 0,
 	NNG_TLS_ENGINE_V1      = 1, // adds FIPS, TLS 1.3 support
 	NNG_TLS_ENGINE_V2      = 2, // adds PSK support
-	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V2,
+	NNG_TLS_ENGINE_V3      = 3, // refactored API
+	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V3,
 } nng_tls_engine_version;
 
 typedef struct nng_tls_engine_s {
@@ -202,10 +203,16 @@ typedef struct nng_tls_engine_s {
 	// It is expected that this will be enabled either at compile
 	// time, or via environment variables at engine initialization.
 	// FIPS mode cannot be changed once the engine is registered.
-	bool fips_mode;
+	bool (*fips_mode)(void);
+
+	nng_err (*init)(void);
+
+	void (*fini)(void);
+
 } nng_tls_engine;
 
-extern int nng_tls_engine_register(const nng_tls_engine *);
+// Implementation supplies this ops vector.
+extern nng_tls_engine nng_tls_engine_ops;
 
 // nng_tls_engine_send is called by the engine to send data over the
 // underlying connection.  It returns zero on success, NNG_EAGAIN if

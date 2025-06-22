@@ -625,6 +625,58 @@ wolf_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	return (0);
 }
 
+static void
+wolf_logging_cb(const int level, const char *msg)
+{
+	switch (level) {
+	case ERROR_LOG:
+		nng_log_err("NNG-WOLFSSL", msg);
+		break;
+	case INFO_LOG:
+		nng_log_info("NNG-WOLFSSL", msg);
+		break;
+	case ENTER_LOG:
+		nng_log_debug("NNG-WOLFSSL-ENTER", msg);
+		break;
+	case LEAVE_LOG:
+		nng_log_debug("NNG-WOLFSSL-ENTER", msg);
+		break;
+	case OTHER_LOG:
+		nng_log_debug("NNG-WOLFSSL", msg);
+		break;
+	}
+}
+
+static nng_err
+tls_engine_init(void)
+{
+	switch (wolfSSL_Init()) {
+	case WOLFSSL_SUCCESS:
+		break;
+	default:
+		// Best guess...
+		wolfSSL_Cleanup();
+		return (NNG_EINTERNAL);
+	}
+	wolfSSL_SetLoggingCb(wolf_logging_cb);
+	// Uncomment for full debug (also WolfSSL needs to be a debug build)
+	//
+	// wolfSSL_Debugging_ON();
+	return (NNG_OK);
+}
+
+static void
+tls_engine_fini(void)
+{
+	(void) wolfSSL_Cleanup();
+}
+
+static bool
+fips_mode(void)
+{
+	return (false); // TODO: Support FIPS mode.
+}
+
 static nng_tls_engine_config_ops wolf_config_ops = {
 	.init     = wolf_config_init,
 	.fini     = wolf_config_fini,
@@ -648,57 +700,13 @@ static nng_tls_engine_conn_ops wolf_conn_ops = {
 	.verified  = wolf_conn_verified,
 };
 
-static nng_tls_engine wolf_engine = {
+nng_tls_engine nng_tls_engine_ops = {
 	.version     = NNG_TLS_ENGINE_VERSION,
 	.config_ops  = &wolf_config_ops,
 	.conn_ops    = &wolf_conn_ops,
 	.name        = "wolf",
 	.description = "wolfSSL " LIBWOLFSSL_VERSION_STRING,
-	.fips_mode   = false, // commercial users only
+	.init        = tls_engine_init,
+	.fini        = tls_engine_fini,
+	.fips_mode   = fips_mode,
 };
-
-static void
-wolf_logging_cb(const int level, const char *msg)
-{
-	switch (level) {
-	case ERROR_LOG:
-		nng_log_err("NNG-WOLFSSL", msg);
-		break;
-	case INFO_LOG:
-		nng_log_info("NNG-WOLFSSL", msg);
-		break;
-	case ENTER_LOG:
-		nng_log_debug("NNG-WOLFSSL-ENTER", msg);
-		break;
-	case LEAVE_LOG:
-		nng_log_debug("NNG-WOLFSSL-ENTER", msg);
-		break;
-	case OTHER_LOG:
-		nng_log_debug("NNG-WOLFSSL", msg);
-		break;
-	}
-}
-
-int
-nng_tls_engine_init_wolf(void)
-{
-	switch (wolfSSL_Init()) {
-	case WOLFSSL_SUCCESS:
-		break;
-	default:
-		// Best guess...
-		wolfSSL_Cleanup();
-		return (NNG_EINTERNAL);
-	}
-	wolfSSL_SetLoggingCb(wolf_logging_cb);
-	// Uncomment for full debug (also WolfSSL needs to be a debug build)
-	//
-	// wolfSSL_Debugging_ON();
-	return (nng_tls_engine_register(&wolf_engine));
-}
-
-void
-nng_tls_engine_fini_wolf(void)
-{
-	(void) wolfSSL_Cleanup();
-}

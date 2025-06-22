@@ -69,8 +69,6 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         message(STATUS "wolfSSL configured without pre-shared key (PSK) support.")
     endif()
 
-    nng_defines(NNG_TLS_ENGINE_INIT=nng_tls_engine_init_wolf)
-    nng_defines(NNG_TLS_ENGINE_FINI=nng_tls_engine_fini_wolf)
     nng_defines(NNG_SUPP_TLS)
     nng_defines(NNG_TLS_ENGINE_WOLFSSL)
 endif ()
