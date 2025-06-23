@@ -149,7 +149,7 @@ tcp_listener_cb(void *arg, unsigned events)
 	tcp_listener *l = arg;
 
 	nni_mtx_lock(&l->mtx);
-	if ((events & NNI_POLL_INVAL) != 0) {
+	if (((events & NNI_POLL_INVAL) != 0) || (l->closed)) {
 		tcp_listener_doclose(l);
 		nni_mtx_unlock(&l->mtx);
 		return;
@@ -263,6 +263,7 @@ tcp_listener_free(void *arg)
 {
 	tcp_listener *l = arg;
 
+	tcp_listener_stop(l); // should usually already be stopped
 	nni_posix_pfd_fini(&l->pfd);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
