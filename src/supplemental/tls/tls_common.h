@@ -40,12 +40,11 @@
 // libraries, such as dialer and listener support.
 
 struct nng_tls_config {
-	nng_tls_engine_config_ops ops;
-	nni_mtx                   lock;
-	int                       ref;
-	bool                      busy;
-	bool                      key_is_set;
-	size_t                    size;
+	nni_mtx lock;
+	int     ref;
+	bool    busy;
+	bool    key_is_set;
+	size_t  size;
 
 	// ... engine config data follows
 };
@@ -59,17 +58,15 @@ typedef struct nni_tls_bio_ops_s {
 } nni_tls_bio_ops;
 
 typedef struct {
-	nng_stream              stream;
-	nng_tls_engine_conn_ops ops;
-	nng_tls_config         *cfg;
-	const nng_tls_engine   *engine;
-	size_t                  size;
-	nni_mtx                 lock;
-	bool                    closed;
-	nni_atomic_flag         did_close;
-	bool                    hs_done;
-	nni_list                send_queue;
-	nni_list                recv_queue;
+	nng_stream      stream;
+	nng_tls_config *cfg;
+	size_t          size;
+	nni_mtx         lock;
+	bool            closed;
+	nni_atomic_flag did_close;
+	bool            hs_done;
+	nni_list        send_queue;
+	nni_list        recv_queue;
 
 	void           *bio;      // lower level transport object
 	nni_tls_bio_ops bio_ops;  // lower level ops vector

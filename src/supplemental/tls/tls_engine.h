@@ -185,10 +185,10 @@ typedef struct nng_tls_engine_s {
 	nng_tls_engine_version version;
 
 	// config_ops is the operations for TLS configuration objects.
-	nng_tls_engine_config_ops *config_ops;
+	const nng_tls_engine_config_ops *config_ops;
 
 	// conn_ops is the operations for TLS connections (stream-oriented).
-	nng_tls_engine_conn_ops *conn_ops;
+	const nng_tls_engine_conn_ops *conn_ops;
 
 	// name contains the name of the engine, for example "wolfSSL".
 	// It is acceptable to append a version number as well.
@@ -211,7 +211,7 @@ typedef struct nng_tls_engine_s {
 
 } nng_tls_engine;
 
-// Implementation supplies this ops vector.
+// Implementation supplies these ops vectors.
 extern nng_tls_engine nng_tls_engine_ops;
 
 // nng_tls_engine_send is called by the engine to send data over the

@@ -44,6 +44,9 @@ static void tls_do_recv(nni_tls_conn *);
 static void tls_bio_send_start(nni_tls_conn *);
 static void tls_bio_error(nni_tls_conn *, nng_err);
 
+#define nni_tls_conn_ops (nng_tls_engine_ops.conn_ops)
+#define nni_tls_cfg_ops (nng_tls_engine_ops.config_ops)
+
 static void
 tls_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
@@ -105,7 +108,7 @@ nni_tls_close(nni_tls_conn *conn)
 {
 	if (!nni_atomic_flag_test_and_set(&conn->did_close)) {
 		nni_mtx_lock(&conn->lock);
-		conn->ops.close((void *) (conn + 1));
+		nni_tls_conn_ops->close((void *) (conn + 1));
 		nni_mtx_unlock(&conn->lock);
 		nni_mtx_lock(&conn->bio_lock);
 		tls_bio_error(conn, NNG_ECLOSED);
@@ -129,7 +132,7 @@ nni_tls_verified(nni_tls_conn *conn)
 {
 	bool result;
 	nni_mtx_lock(&conn->lock);
-	result = conn->ops.verified((void *) (conn + 1));
+	result = nni_tls_conn_ops->verified((void *) (conn + 1));
 	nni_mtx_unlock(&conn->lock);
 	return result;
 }
@@ -139,7 +142,7 @@ nni_tls_peer_cn(nni_tls_conn *conn)
 {
 	const char *result;
 	nni_mtx_lock(&conn->lock);
-	result = conn->ops.peer_cn((void *) (conn + 1));
+	result = nni_tls_conn_ops->peer_cn((void *) (conn + 1));
 	nni_mtx_unlock(&conn->lock);
 	return result;
 }
@@ -147,8 +150,6 @@ nni_tls_peer_cn(nni_tls_conn *conn)
 int
 nni_tls_init(nni_tls_conn *conn, nng_tls_config *cfg)
 {
-	const nng_tls_engine *eng = &nng_tls_engine_ops;
-
 	nni_mtx_lock(&cfg->lock);
 	cfg->busy = true;
 	nni_mtx_unlock(&cfg->lock);
@@ -159,9 +160,7 @@ nni_tls_init(nni_tls_conn *conn, nng_tls_config *cfg)
 	        NULL)) {
 		return (NNG_ENOMEM);
 	}
-	conn->ops    = *eng->conn_ops;
-	conn->engine = eng;
-	conn->cfg    = cfg;
+	conn->cfg = cfg;
 
 	nni_aio_init(&conn->bio_recv, tls_bio_recv_cb, conn);
 	nni_aio_init(&conn->bio_send, tls_bio_send_cb, conn);
@@ -181,7 +180,7 @@ void
 nni_tls_fini(nni_tls_conn *conn)
 {
 	nni_tls_stop(conn);
-	conn->ops.fini((void *) (conn + 1));
+	nni_tls_conn_ops->fini((void *) (conn + 1));
 	nni_aio_fini(&conn->bio_send);
 	nni_aio_fini(&conn->bio_recv);
 	nni_mtx_lock(&conn->lock);
@@ -215,7 +214,7 @@ nni_tls_start(nni_tls_conn *conn, const nni_tls_bio_ops *biops, void *bio,
 	conn->bio_ops = *biops;
 	conn->bio     = bio;
 
-	return (conn->ops.init(econ, conn, cfg, sa));
+	return (nni_tls_conn_ops->init(econ, conn, cfg, sa));
 }
 
 static void
@@ -257,7 +256,7 @@ tls_handshake(nni_tls_conn *conn)
 	if (conn->hs_done) {
 		return (NNG_OK);
 	}
-	rv = conn->ops.handshake((void *) (conn + 1));
+	rv = nni_tls_conn_ops->handshake((void *) (conn + 1));
 	if (rv == NNG_EAGAIN) {
 		// We need more data.
 		return (rv);
@@ -297,7 +296,7 @@ tls_do_recv(nni_tls_conn *conn)
 			continue;
 		}
 
-		rv = conn->ops.recv((void *) (conn + 1), buf, &len);
+		rv = nni_tls_conn_ops->recv((void *) (conn + 1), buf, &len);
 		if (rv == NNG_EAGAIN) {
 			// Nothing more we can do, the engine doesn't
 			// have anything else for us (yet).
@@ -348,7 +347,7 @@ tls_do_send(nni_tls_conn *conn)
 		}
 
 		// Ask the engine to send.
-		rv = conn->ops.send((void *) (conn + 1), buf, &len);
+		rv = nni_tls_conn_ops->send((void *) (conn + 1), buf, &len);
 		if (rv == NNG_EAGAIN) {
 			// Can't send any more, wait for callback.
 			return;
@@ -659,7 +658,8 @@ nng_tls_config_version(
 	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
-		rv = cfg->ops.version((void *) (cfg + 1), min_ver, max_ver);
+		rv = nni_tls_cfg_ops->version(
+		    (void *) (cfg + 1), min_ver, max_ver);
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
@@ -674,7 +674,7 @@ nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
 	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
-		rv = cfg->ops.server((void *) (cfg + 1), name);
+		rv = nni_tls_cfg_ops->server((void *) (cfg + 1), name);
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
@@ -690,7 +690,7 @@ nng_tls_config_ca_chain(
 	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
-		rv = cfg->ops.ca_chain((void *) (cfg + 1), certs, crl);
+		rv = nni_tls_cfg_ops->ca_chain((void *) (cfg + 1), certs, crl);
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
@@ -708,7 +708,8 @@ nng_tls_config_own_cert(
 	if (cfg->busy || cfg->key_is_set) {
 		rv = NNG_EBUSY;
 	} else {
-		rv = cfg->ops.own_cert((void *) (cfg + 1), cert, key, pass);
+		rv = nni_tls_cfg_ops->own_cert(
+		    (void *) (cfg + 1), cert, key, pass);
 		if (rv == 0) {
 			cfg->key_is_set = true;
 		}
@@ -726,7 +727,8 @@ nng_tls_config_psk(nng_tls_config *cfg, const char *identity,
 	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
-		rv = cfg->ops.psk((void *) (cfg + 1), identity, key, key_len);
+		rv = nni_tls_cfg_ops->psk(
+		    (void *) (cfg + 1), identity, key, key_len);
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
@@ -741,7 +743,7 @@ nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 	if (cfg->busy) {
 		rv = NNG_EBUSY;
 	} else {
-		rv = cfg->ops.auth((void *) (cfg + 1), mode);
+		rv = nni_tls_cfg_ops->auth((void *) (cfg + 1), mode);
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
@@ -750,24 +752,22 @@ nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 int
 nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 {
-	nng_tls_config       *cfg;
-	size_t                size;
-	int                   rv;
-	const nng_tls_engine *eng = &nng_tls_engine_ops;
+	nng_tls_config *cfg;
+	size_t          size;
+	int             rv;
 
-	size = NNI_ALIGN_UP(sizeof(*cfg)) + eng->config_ops->size;
+	size = NNI_ALIGN_UP(sizeof(*cfg)) + nni_tls_cfg_ops->size;
 
 	if ((cfg = nni_zalloc(size)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
-	cfg->ops  = *eng->config_ops;
 	cfg->size = size;
 	cfg->ref  = 1;
 	cfg->busy = false;
 	nni_mtx_init(&cfg->lock);
 
-	if ((rv = cfg->ops.init((void *) (cfg + 1), mode)) != 0) {
+	if ((rv = nni_tls_cfg_ops->init((void *) (cfg + 1), mode)) != 0) {
 		nni_free(cfg, cfg->size);
 		return (rv);
 	}
@@ -786,7 +786,7 @@ nng_tls_config_free(nng_tls_config *cfg)
 	}
 	nni_mtx_unlock(&cfg->lock);
 	nni_mtx_fini(&cfg->lock);
-	cfg->ops.fini((void *) (cfg + 1));
+	nni_tls_cfg_ops->fini((void *) (cfg + 1));
 	nni_free(cfg, cfg->size);
 }
 
