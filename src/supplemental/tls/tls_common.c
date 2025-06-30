@@ -147,9 +147,7 @@ nni_tls_peer_cn(nni_tls_conn *conn)
 int
 nni_tls_init(nni_tls_conn *conn, nng_tls_config *cfg)
 {
-	const nng_tls_engine *eng;
-
-	eng = cfg->engine;
+	const nng_tls_engine *eng = &nng_tls_engine_ops;
 
 	nni_mtx_lock(&cfg->lock);
 	cfg->busy = true;
@@ -763,11 +761,10 @@ nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 		return (NNG_ENOMEM);
 	}
 
-	cfg->ops    = *eng->config_ops;
-	cfg->size   = size;
-	cfg->engine = eng;
-	cfg->ref    = 1;
-	cfg->busy   = false;
+	cfg->ops  = *eng->config_ops;
+	cfg->size = size;
+	cfg->ref  = 1;
+	cfg->busy = false;
 	nni_mtx_init(&cfg->lock);
 
 	if ((rv = cfg->ops.init((void *) (cfg + 1), mode)) != 0) {
