@@ -41,7 +41,6 @@
 
 struct nng_tls_config {
 	nng_tls_engine_config_ops ops;
-	const nng_tls_engine     *engine; // store this so we can verify
 	nni_mtx                   lock;
 	int                       ref;
 	bool                      busy;
