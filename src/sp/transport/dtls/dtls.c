@@ -206,8 +206,8 @@ dtls_bio_cancel(nng_aio *aio, void *arg, nng_err rv)
 	nni_mtx_lock(&p->lower_mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
 	}
-	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->lower_mtx);
 }
 
