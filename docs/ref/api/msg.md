@@ -278,7 +278,7 @@ strcpy(nng_msg_body(m), "content");
 if (nng_msg_alloc(&m, 1024) != 0) {
   // handle error
 }
-while ((val64 = next_datum()) != 0) P
+while ((val64 = next_datum()) != 0) {
   if (nng_msg_append_u64(m, val64) != 0) {
       // handle error
   }
