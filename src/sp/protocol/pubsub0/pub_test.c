@@ -96,6 +96,17 @@ test_pub_send_no_pipes(void)
 	NUTS_PASS(nng_pub0_open(&pub));
 	NUTS_SEND(pub, "DROP1");
 	NUTS_SEND(pub, "DROP2");
+
+	nng_stat       *stats;
+	const nng_stat *pubs;
+	NUTS_PASS(nng_stats_get(&stats));
+
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((pubs = nng_stat_find_socket(stats, pub)) != NULL);
+
+	nng_stats_dump(pubs);
+	nng_stats_free(stats);
+
 	NUTS_CLOSE(pub);
 }
 
@@ -127,6 +138,7 @@ test_pub_validate_peer(void)
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
+	nng_stats_dump(stats);
 	nng_stats_free(stats);
 }
 
@@ -156,6 +168,16 @@ test_pub_send_queued(void)
 	NUTS_RECV(sub, "second");
 	NUTS_RECV(sub, "three musketeers");
 	NUTS_RECV(sub, "four");
+
+	nng_stat       *stats;
+	const nng_stat *pubs;
+	NUTS_PASS(nng_stats_get(&stats));
+
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((pubs = nng_stat_find_socket(stats, pub)) != NULL);
+
+	nng_stats_dump(pubs);
+	nng_stats_free(stats);
 
 	NUTS_CLOSE(pub);
 	NUTS_CLOSE(sub);
