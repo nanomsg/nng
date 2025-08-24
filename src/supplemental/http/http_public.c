@@ -289,7 +289,6 @@ nng_http_read_response(nng_http *conn, nng_aio *aio)
 	nni_http_read_res(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	NNI_ARG_UNUSED(res);
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 #endif
 }
