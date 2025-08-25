@@ -53,8 +53,7 @@ nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 	pfd->fd     = fd;
 	pfd->pq     = pq;
 	pfd->cb     = cb;
-	pfd->arg    = arg;
-	pfd->data   = NULL;
+	pfd->data   = arg;
 }
 
 int
@@ -127,7 +126,7 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 	int              rv;
 	int              ev = (int) events;
 
-	ev |= ni_atomic_or(&pfd->events, ev);
+	ev |= nni_atomic_or(&pfd->events, ev);
 	rv = port_associate(pq->port, PORT_SOURCE_FD, pfd->fd, ev, pfd);
 	if (rv != 0) {
 		nni_plat_errno(errno);
@@ -175,7 +174,7 @@ nni_port_thr(void *arg)
 				arg = pfd->data;
 				nni_atomic_and(&pfd->events, ~events);
 
-				cb(pfd, (unsigned) events, arg);
+				cb(arg, (unsigned) events);
 			}
 		}
 		if (user_wake) {
@@ -196,7 +195,7 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
 	if (pq->init) {
 		(void) close(pq->port);
-		nni_cv_destroy(&pq->cv);
+		nni_cv_fini(&pq->cv);
 		nni_mtx_fini(&pq->mtx);
 		nni_thr_fini(&pq->thr);
 	}
@@ -208,7 +207,7 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	int rv;
 
 	nni_mtx_init(&pq->mtx);
-	nni_cv_init(&pq->cv, pq->mtx);
+	nni_cv_init(&pq->cv, &pq->mtx);
 	pq->init = true;
 	pq->port = -1;
 
@@ -224,6 +223,19 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 
 	nni_thr_run(&pq->thr);
 	return (0);
+}
+
+void
+nni_posix_pollq_sysfini(void)
+{
+	if (nni_port_npq > 0) {
+		for (int i = 0; i < nni_port_npq; i++) {
+			nni_posix_pollq_destroy(&nni_port_pqs[i]);
+		}
+		NNI_FREE_STRUCTS(nni_port_pqs, nni_port_npq);
+		nni_port_pqs = NULL;
+		nni_port_npq = 0;
+	}
 }
 
 int
@@ -250,25 +262,12 @@ nni_posix_pollq_sysinit(nng_init_params *params)
 	nni_port_npq = num_thr;
 	for (int i = 0; i < num_thr; i++) {
 		int rv;
-		if ((rv = nni_port_pq_create(&nni_port_pqs[i])) != 0) {
+		if ((rv = nni_posix_pollq_create(&nni_port_pqs[i])) != 0) {
 			nni_posix_pollq_sysfini();
 			return (rv);
 		}
 	}
 	return (0);
-}
-
-void
-nni_posix_pollq_sysfini(void)
-{
-	if (nni_port_npq > 0) {
-		for (int i = 0; i < nni_port_npq; i++) {
-			nni_port_pq_destroy(&nni_port_pqs[i]);
-		}
-		NNI_FREE_STRUCTS(nni_port_pqs, nni_port_npq);
-		nni_port_pqs = NULL;
-		nni_port_npq = 0;
-	}
 }
 
 #endif // NNG_HAVE_PORT_CREATE
