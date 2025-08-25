@@ -268,6 +268,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "SunOS")
     add_definitions(-DNNG_PLATFORM_POSIX)
     add_definitions(-DNNG_PLATFORM_SUNOS)
     set(NNG_PLATFORM_POSIX ON)
+    set(NNG_PLATFORM_SUNOS ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions(-DNNG_PLATFORM_WINDOWS)

@@ -42,8 +42,14 @@ if (NNG_PLATFORM_POSIX)
     nng_check_lib(pthread pthread_atfork NNG_HAVE_PTHREAD_ATFORK_PTHREAD)
     nng_check_lib(pthread pthread_set_name_np NNG_HAVE_PTHREAD_SET_NAME_NP)
     nng_check_lib(pthread pthread_setname_np NNG_HAVE_PTHREAD_SETNAME_NP)
-    nng_check_lib(nsl gethostbyname NNG_HAVE_LIBNSL)
-    nng_check_lib(socket socket NNG_HAVE_LIBSOCKET)
+    if (NNG_PLATFORM_SUNOS)
+        nng_defines(NNG_HAVE_SOCKETPAIR)
+        nng_check_lib(nsl gethostbyname NNG_HAVE_LIBNSL)
+        nng_check_lib(socket socket NNG_HAVE_LIBSOCKET)
+    else()
+        nng_check_lib(nsl gethostbyname NNG_HAVE_LIBNSL)
+        nng_check_lib(socket socket NNG_HAVE_LIBSOCKET)
+    endif()
 
     # GCC needs libatomic on some architectures (e.g. ARM) because the
     # underlying architecture may lack the necessary atomic primitives.
