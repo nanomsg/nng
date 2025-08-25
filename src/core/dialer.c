@@ -22,7 +22,7 @@ static void dialer_connect_start(nni_dialer *);
 static void dialer_connect_cb(void *);
 static void dialer_timer_cb(void *);
 
-static nni_id_map dialers    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
+static nni_id_map dialers    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, false);
 static nni_mtx    dialers_lk = NNI_MTX_INITIALIZER;
 
 uint32_t

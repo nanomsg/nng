@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,7 @@
 #ifndef CORE_IDHASH_H
 #define CORE_IDHASH_H
 
-#include "core/defs.h"
+#include "defs.h"
 
 // We find that we often want to have a list of things listed by a
 // numeric ID, which is generally monotonically increasing.  This is
@@ -30,12 +30,14 @@ typedef struct nni_id_entry nni_id_entry;
 // They are provided here to facilitate inlining in structures.
 // We can support at most 2^32 ~ 4 billion ~ entries.
 struct nni_id_map {
-	uint32_t      id_flags;
 	uint32_t      id_cap;
 	uint32_t      id_count;
 	uint32_t      id_load;
 	uint32_t      id_min_load; // considers placeholders
 	uint32_t      id_max_load;
+	bool          id_static;
+	bool          id_registered;
+	bool          id_random;
 	uint64_t      id_min_val;
 	uint64_t      id_max_val;
 	uint64_t      id_dyn_val;
@@ -57,10 +59,13 @@ extern void     nni_id_map_sys_fini(void);
 extern bool     nni_id_visit(nni_id_map *, uint64_t *, void **, uint32_t *);
 extern uint32_t nni_id_count(const nni_id_map *);
 
-#define NNI_ID_MAP_INITIALIZER(min, max, flags)            \
-	{                                                  \
-		.id_min_val = (min), .id_max_val = (max),  \
-		.id_flags = ((flags) | NNI_ID_FLAG_STATIC) \
+#define NNI_ID_MAP_INITIALIZER(min, max, random) \
+	{                                        \
+		.id_min_val    = (min),          \
+		.id_max_val    = (max),          \
+		.id_static     = true,           \
+		.id_registered = false,          \
+		.id_random     = random,         \
 	}
 
 #endif // CORE_IDHASH_H

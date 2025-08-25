@@ -24,7 +24,7 @@ static void listener_accept_start(nni_listener *);
 static void listener_accept_cb(void *);
 static void listener_timer_cb(void *);
 
-static nni_id_map listeners    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
+static nni_id_map listeners    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, false);
 static nni_mtx    listeners_lk = NNI_MTX_INITIALIZER;
 
 uint32_t

@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -67,7 +67,7 @@ typedef int32_t  nni_duration; // Rel. time (ms).
 typedef void (*nni_cb)(void *);
 
 // Some default timing things.
-#define NNI_TIME_NEVER ((nni_time) -1)
+#define NNI_TIME_NEVER ((nni_time) - 1)
 #define NNI_TIME_ZERO ((nni_time) 0)
 #define NNI_SECOND (1000)
 
@@ -238,5 +238,24 @@ typedef nni_type nni_opt_type;
 #error "Unknown endian: specify -DNNG_BIG_ENDIAN=1 or -DNNG_LITTLE_ENDIAN=1"
 #endif // defined(__BYTE_ORDER)
 #endif // defined() endianness
+
+// nni_alloc allocates memory.  In most cases this can just be malloc().
+// However, you may provide a different allocator, for example it is
+// possible to use a slab allocator or somesuch.  It is permissible for this
+// to return NULL if memory cannot be allocated.
+extern void *nni_alloc(size_t);
+
+// nni_zalloc is just like nni_alloc, but ensures that memory is
+// initialized to zero.  It is a separate function because some platforms
+// can use a more efficient zero-based allocation.
+extern void *nni_zalloc(size_t);
+
+// nni_free frees memory allocated with nni_alloc or nni_zalloc. It takes
+// a size because some allocators do not track size, or can operate more
+// efficiently if the size is provided with the free call.  Examples of this
+// are slab allocators like this found in Solaris/illumos (see libumem).
+// This routine does nothing if supplied with a NULL pointer and zero size.
+// Most implementations can just call free() here.
+extern void nni_free(void *, size_t);
 
 #endif // CORE_DEFS_H
