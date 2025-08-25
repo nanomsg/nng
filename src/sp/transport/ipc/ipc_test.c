@@ -16,6 +16,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #endif
+#ifdef NNG_PLATFORM_SUNOS
+#include <zone.h>
+#endif
 
 void
 test_path_too_long(void)
