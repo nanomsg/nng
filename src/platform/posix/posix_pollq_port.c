@@ -39,7 +39,7 @@ static nni_posix_pollq *nni_port_pqs;
 static int              nni_port_npq;
 
 void
-nni_posix_pfd_init(nni_posix_pfd *pfdp, int fd, nni_posix_pfd_cb cb, void *arg)
+nni_posix_pfd_init(nni_posix_pfd *pfd, int fd, nni_posix_pfd_cb cb, void *arg)
 {
 	nni_posix_pollq *pq;
 
