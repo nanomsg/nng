@@ -13,17 +13,18 @@ jobs:
     env:
       NNG_UDP_PASS_RATE: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Test NNG in OmniOS
         id: test
         uses: vmactions/omnios-vm@v1
         with:
+          release: r151052
           usesh: true
           sync: rsync
           copyback: false
           envs: NNG_UDP_PASS_RATE
           prepare: |
-            pkg install develeper/clang-19
+            pkg install developer/clang-19
             pkg install developer/ninja
             pkg install developer/cmake
           run: |

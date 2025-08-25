@@ -40,6 +40,7 @@ nni_socket_pair(int fds[2])
 nng_err
 nni_socket_pair(int fds[2])
 {
+	NNI_ARG_UNUSED(fds);
 	return (NNG_ENOTSUP);
 }
 #endif

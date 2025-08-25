@@ -22,7 +22,7 @@
 // Symbols that are private to the library begin with the nni_ prefix, whereas
 // those starting with nng_ are intended for external consumption.  The latter
 // symbols should be found in the toplevel nng.h header.
-#include "core/defs.h"
+#include "defs.h"
 
 #include "core/platform.h"
 
