@@ -277,9 +277,9 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 		} else if ((ch->ch_len + len + sizeof(uint64_t)) <=
 		    ch->ch_cap) {
 			// We have some room.  Split it between the head and
-			// tail. This is an attempt to reduce the likelhood of
+			// tail. This is an attempt to reduce the likelihood of
 			// repeated shifts.  We round it up to preserve
-			// alignment along pointers.  Note that this
+			// alignment along pointers.
 			//
 			// We've ensured we have an extra
 			// pad for alignment in the check above.
