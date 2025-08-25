@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,7 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "idhash.h"
+#include "defs.h"
+#include "nng_impl.h"
 
 #include <string.h>
 
@@ -18,10 +20,19 @@ struct nni_id_entry {
 	void    *val;
 };
 
-static int          id_reg_len = 0;
-static int          id_reg_num = 0;
-static nni_id_map **id_reg_map = NULL;
-static nni_mtx      id_reg_mtx = NNI_MTX_INITIALIZER;
+// Maximum number of static maps permitted.
+// This static map initialization to be simpler, and
+// avoids an unnecessary heap allocation, at the cost of
+// being a compile time tunable.  At present there are
+// only a few (5) static idmaps defined.
+
+#ifndef NNI_MAX_STATIC_IDMAP
+#define NNI_MAX_STATIC_IDMAP 10
+#endif
+
+static int         id_reg_num = 0;
+static nni_id_map *id_reg_map[NNI_MAX_STATIC_IDMAP];
+static nni_mtx     id_reg_mtx = NNI_MTX_INITIALIZER;
 
 void
 nni_id_map_init(nni_id_map *m, uint64_t lo, uint64_t hi, bool randomize)
@@ -34,20 +45,18 @@ nni_id_map_init(nni_id_map *m, uint64_t lo, uint64_t hi, bool randomize)
 	}
 	NNI_ASSERT(lo != 0);
 	NNI_ASSERT(hi > lo);
-	m->id_entries  = NULL;
-	m->id_count    = 0;
-	m->id_load     = 0;
-	m->id_cap      = 0;
-	m->id_dyn_val  = 0;
-	m->id_max_load = 0;
-	m->id_min_load = 0; // never shrink below this
-	m->id_min_val  = lo;
-	m->id_max_val  = hi;
-	if (randomize) {
-		m->id_flags = NNI_ID_FLAG_RANDOM;
-	} else {
-		m->id_flags = 0;
-	}
+	m->id_entries    = NULL;
+	m->id_count      = 0;
+	m->id_load       = 0;
+	m->id_cap        = 0;
+	m->id_dyn_val    = 0;
+	m->id_max_load   = 0;
+	m->id_min_load   = 0; // never shrink below this
+	m->id_min_val    = lo;
+	m->id_max_val    = hi;
+	m->id_random     = randomize;
+	m->id_static     = false;
+	m->id_registered = false;
 }
 
 void
@@ -64,7 +73,7 @@ nni_id_map_fini(nni_id_map *m)
 // Inspired by Python dict implementation.  This probe will visit every
 // cell.  We always hash consecutively assigned IDs.  This requires that
 // the capacity is always a power of two.
-#define ID_NEXT(m, j) ((((j) *5) + 1) & (m->id_cap - 1))
+#define ID_NEXT(m, j) ((((j) * 5) + 1) & (m->id_cap - 1))
 #define ID_INDEX(m, j) ((j) & (m->id_cap - 1))
 
 static size_t
@@ -107,37 +116,20 @@ nni_id_get(nni_id_map *m, uint64_t id)
 	return (m->id_entries[index].val);
 }
 
-static int
+static void
 id_map_register(nni_id_map *m)
 {
-	if ((m->id_flags & (NNI_ID_FLAG_STATIC | NNI_ID_FLAG_REGISTER)) !=
-	    NNI_ID_FLAG_STATIC) {
-		return (0);
-	}
 	nni_mtx_lock(&id_reg_mtx);
-	if (id_reg_len <= id_reg_num) {
-		nni_id_map **mr;
-		int          len = id_reg_len;
-		if (len < 10) {
-			len = 10;
-		} else {
-			len *= 2;
-		}
-		mr = nni_zalloc(sizeof(nni_id_map *) * len);
-		if (mr == NULL) {
-			nni_mtx_unlock(&id_reg_mtx);
-			return (NNG_ENOMEM);
-		}
-		id_reg_len = len;
-		if (id_reg_map != NULL)
-			memcpy(
-			    mr, id_reg_map, id_reg_num * sizeof(nni_id_map *));
-		id_reg_map = mr;
+	// This check occurs under the lock although it probably
+	// is not strictly necessary.  This code is called infrequently.
+	if (!m->id_registered) {
+		// If this assertion fires, increase the tunable.
+		// It shouldn't happen unless we add a lot more static idmaps.
+		NNI_ASSERT(id_reg_num < NNI_MAX_STATIC_IDMAP);
+		m->id_registered         = true;
+		id_reg_map[id_reg_num++] = m;
 	}
-	id_reg_map[id_reg_num++] = m;
-	m->id_flags |= NNI_ID_FLAG_REGISTER;
 	nni_mtx_unlock(&id_reg_mtx);
-	return (0);
 }
 
 void
@@ -147,11 +139,9 @@ nni_id_map_sys_fini(void)
 	for (int i = 0; i < id_reg_num; i++) {
 		if (id_reg_map[i] != NULL) {
 			nni_id_map_fini(id_reg_map[i]);
+			id_reg_map[i] = NULL;
 		}
 	}
-	nni_free(id_reg_map, sizeof(nni_id_map *) * id_reg_len);
-	id_reg_map = NULL;
-	id_reg_len = 0;
 	id_reg_num = 0;
 	nni_mtx_unlock(&id_reg_mtx);
 }
@@ -164,7 +154,6 @@ id_resize(nni_id_map *m)
 	uint32_t      new_cap;
 	uint32_t      old_cap;
 	uint32_t      i;
-	int           rv;
 
 	if ((m->id_load < m->id_max_load) && (m->id_load >= m->id_min_load)) {
 		// No resize needed.
@@ -173,8 +162,8 @@ id_resize(nni_id_map *m)
 
 	// if it is a statically declared map, register it so that we
 	// will free it at finalization time
-	if ((rv = id_map_register(m)) != 0) {
-		return (rv);
+	if (m->id_static) {
+		id_map_register(m);
 	}
 
 	old_cap = m->id_cap;
@@ -328,7 +317,7 @@ nni_id_alloc(nni_id_map *m, uint64_t *idp, void *val)
 		return (NNG_ENOMEM);
 	}
 	if (m->id_dyn_val == 0) {
-		if (m->id_flags & NNI_ID_FLAG_RANDOM) {
+		if (m->id_random) {
 			// NB: The range is inclusive.
 			m->id_dyn_val = nni_random() %
 			        (m->id_max_val - m->id_min_val + 1) +

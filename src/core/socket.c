@@ -123,8 +123,8 @@ struct nni_socket {
 
 static nni_list sock_list  = NNI_LIST_INITIALIZER(sock_list, nni_sock, s_node);
 static nni_mtx  sock_lk    = NNI_MTX_INITIALIZER;
-static nni_id_map sock_ids = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
-static nni_id_map ctx_ids  = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
+static nni_id_map sock_ids = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, false);
+static nni_id_map ctx_ids  = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, false);
 
 static void nni_ctx_destroy(nni_ctx *);
 

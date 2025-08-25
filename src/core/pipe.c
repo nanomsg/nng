@@ -9,8 +9,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
 #include "nng/nng.h"
+#include "nng_impl.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
@@ -20,9 +20,8 @@
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
 
-static nni_id_map pipes =
-    NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, NNI_ID_FLAG_RANDOM);
-static nni_mtx pipes_lk = NNI_MTX_INITIALIZER;
+static nni_id_map pipes    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, true);
+static nni_mtx    pipes_lk = NNI_MTX_INITIALIZER;
 
 static void pipe_destroy(void *);
 static void pipe_reap(void *);
