@@ -968,7 +968,7 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 	//If there are messages in the queue, retrieve the messages from the queue during reception 
 	//without waiting for the udp_recv_data operation to complete.
 	if(!nni_lmq_empty(&p->rx_mq)){
-		nni_lmq_get(&p->rx_mq, msg);
+		nni_lmq_get(&p->rx_mq, &msg);
 		nni_aio_set_msg(aio, msg);
 		nni_aio_completions_add(
 			&ep->complq, aio, 0, nni_aio_count(aio)
