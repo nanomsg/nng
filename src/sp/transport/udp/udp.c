@@ -952,6 +952,7 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 {
 	udp_pipe *p  = arg;
 	udp_ep   *ep = p->ep;
+	nni_msg  *msg;
 
 	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
@@ -964,7 +965,17 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-
+	//If there are messages in the queue, retrieve the messages from the queue during reception 
+	//without waiting for the udp_recv_data operation to complete.
+	if(!nni_lmq_empty(&p->rx_mq)){
+		nni_lmq_get(&p->rx_mq, msg);
+		nni_aio_set_msg(aio, msg);
+		nni_aio_completions_add(
+			&ep->complq, aio, 0, nni_aio_count(aio)
+		);
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
 	nni_list_append(&p->rx_aios, aio);
 	nni_mtx_unlock(&ep->mtx);
 }
