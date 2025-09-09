@@ -35,6 +35,7 @@ static void pub0_pipe_fini(void *);
 
 // pub0_sock is our per-socket protocol private structure.
 struct pub0_sock {
+	nni_sock    *sock;
 	nni_list     pipes;
 	nni_mtx      mtx;
 	bool         closed;
@@ -80,6 +81,7 @@ pub0_sock_init(void *arg, nni_sock *ns)
 	nni_mtx_init(&sock->mtx);
 	NNI_LIST_INIT(&sock->pipes, pub0_pipe, node);
 	sock->sendbuf = 16; // fairly arbitrary
+	sock->sock    = ns;
 
 #if NNG_ENABLE_STATS
 	static const nni_stat_info tx_direct_info = {
@@ -307,6 +309,7 @@ pub0_sock_send(void *arg, nni_aio *aio)
 	if (direct == 0 && queued == 0) {
 		dropped++; // we didn't find a pipe to send it to!
 	}
+	nni_sock_bump_tx(sock->sock, len);
 	nni_stat_inc(&sock->stat_tx_discard, dropped);
 	nni_stat_inc(&sock->stat_tx_queued, queued);
 	nni_stat_inc(&sock->stat_tx_direct, direct);
