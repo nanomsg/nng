@@ -284,6 +284,131 @@ test_dtls_recv_max(void)
 }
 
 void
+test_dtls_exchange_many(void)
+{
+	char            msg[256];
+	char            buf[256];
+	nng_socket      s0;
+	nng_socket      s1;
+	nng_tls_config *c0, *c1;
+	nng_listener    l;
+	nng_dialer      d;
+	size_t          sz;
+	char           *addr;
+	const nng_url  *url;
+
+	NUTS_ADDR_ZERO(addr, "dtls");
+
+	c0 = tls_server_config();
+	c1 = tls_client_config();
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_set_tls(l, c0));
+	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
+	NUTS_TRUE(sz == 200);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_dialer_create_url(&d, s1, url));
+	NUTS_PASS(nng_dialer_set_tls(d, c1));
+	NUTS_PASS(nng_dialer_start(d, 0));
+
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+
+	// send a bunch of messages - we're hoping that by serializing we won't
+	// overwhelm the network.
+	for (int i = 0; i < 100; i++) {
+		NUTS_PASS(nng_send(s1, msg, 95, 0));
+		NUTS_PASS(nng_recv(s0, buf, &sz, 0));
+		NUTS_TRUE(sz == 95);
+		NUTS_PASS(nng_send(s0, msg, 63, 0));
+		NUTS_PASS(nng_recv(s1, buf, &sz, 0));
+		NUTS_TRUE(sz == 63);
+	}
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+	nng_tls_config_free(c0);
+	nng_tls_config_free(c1);
+}
+
+void
+test_dtls_reqrep_multi(void)
+{
+	char            msg[256];
+	char            buf[256];
+	nng_socket      s0;
+	nng_socket      s1;
+	nng_socket      s2;
+	nng_tls_config *c0, *c1;
+	nng_listener    l;
+	nng_dialer      d1;
+	nng_dialer      d2;
+	size_t          sz;
+	char           *addr;
+	const nng_url  *url;
+
+	NUTS_ADDR_ZERO(addr, "dtls");
+
+	c0 = tls_server_config();
+	c1 = tls_client_config();
+	NUTS_PASS(nng_rep0_open(&s0));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_set_tls(l, c0));
+	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
+	NUTS_TRUE(sz == 200);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+
+	NUTS_PASS(nng_req0_open(&s1));
+	NUTS_PASS(nng_dialer_create_url(&d1, s1, url));
+	NUTS_PASS(nng_dialer_set_tls(d1, c1));
+	NUTS_PASS(nng_dialer_start(d1, 0));
+
+	NUTS_PASS(nng_req0_open(&s2));
+	NUTS_PASS(nng_dialer_create_url(&d2, s2, url));
+	NUTS_PASS(nng_dialer_set_tls(d2, c1));
+	NUTS_PASS(nng_dialer_start(d2, 0));
+
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+
+	// send a bunch of messages - we're hoping that by serializing we won't
+	// overwhelm the network.
+	for (int i = 0; i < 100; i++) {
+		NUTS_PASS(nng_send(s1, msg, 95, 0));
+		NUTS_PASS(nng_recv(s0, buf, &sz, 0));
+		NUTS_TRUE(sz == 95);
+		NUTS_PASS(nng_send(s0, msg, 63, 0));
+		NUTS_PASS(nng_recv(s1, buf, &sz, 0));
+		NUTS_TRUE(sz == 63);
+
+		NUTS_PASS(nng_send(s2, msg, 92, 0));
+		NUTS_PASS(nng_recv(s0, buf, &sz, 0));
+		NUTS_TRUE(sz == 92);
+		NUTS_PASS(nng_send(s0, msg, 62, 0));
+		NUTS_PASS(nng_recv(s2, buf, &sz, 0));
+		NUTS_TRUE(sz == 62);
+	}
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+	nng_tls_config_free(c0);
+	nng_tls_config_free(c1);
+}
+
+void
 test_dtls_psk(void)
 {
 #ifdef NNG_SUPP_TLS_PSK
@@ -338,6 +463,8 @@ NUTS_TESTS = {
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },
 	{ "dtls recv max", test_dtls_recv_max },
+	{ "dtls exchange many", test_dtls_exchange_many },
+	{ "dtls reqrep multi", test_dtls_reqrep_multi },
 	{ "dtls pre-shared key", test_dtls_psk },
 	{ "dtls bad cert mutual", test_dtls_bad_cert_mutual },
 	{ "dtls cert mutual", test_dtls_cert_mutual },
