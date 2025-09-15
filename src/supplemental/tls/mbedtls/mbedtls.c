@@ -147,6 +147,14 @@ tls_log_warn(const char *msgid, const char *context, int errnum)
 	nng_log_warn(msgid, "%s: %d - %s", context, errnum, errbuf);
 }
 
+static void
+tls_log_debug(const char *msgid, const char *context, int errnum)
+{
+	char errbuf[256];
+	mbedtls_strerror(errnum, errbuf, sizeof(errbuf));
+	nng_log_debug(msgid, "%s: %d - %s", context, errnum, errbuf);
+}
+
 // tls_mk_err converts an mbed error to an NNG error.
 static struct {
 	int tls;
@@ -349,7 +357,9 @@ conn_handshake(nng_tls_engine_conn *ec)
 		return (0);
 
 	default:
-		tls_log_warn("NNG-TLS-HANDSHAKE", "TLS handshake failed", rv);
+		// only at debug, because its too noisy otherwise (the crypto
+		// failure will still show up)
+		tls_log_debug("NNG-TLS-HANDSHAKE", "TLS handshake failed", rv);
 		return (tls_mk_err(rv));
 	}
 }
