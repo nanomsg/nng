@@ -407,10 +407,15 @@ listener_accept_cb(void *arg)
 		nni_pipe_start(nni_aio_get_output(aio, 0));
 		listener_accept_start(l);
 		break;
-	case NNG_ECONNABORTED: // remote condition, no cool down
-	case NNG_ECONNRESET:   // remote condition, no cool down
-	case NNG_ETIMEDOUT:    // No need to sleep, we timed out already.
-	case NNG_EPEERAUTH:    // peer validation failure
+	case NNG_ECONNABORTED: // happens on socket shutdown (normal)
+		nng_log_debug("NNG-ACCEPT-ABORT",
+		    "Connection for socket<%u>: %s", nni_sock_id(l->l_sock),
+		    nng_strerror(rv));
+		nni_listener_bump_error(l, rv);
+		break;
+	case NNG_ECONNRESET: // remote condition, no cool down
+	case NNG_ETIMEDOUT:  // No need to sleep, we timed out already.
+	case NNG_EPEERAUTH:  // peer validation failure
 		nng_log_warn("NNG-ACCEPT-FAIL",
 		    "Failed accepting for socket<%u>: %s",
 		    nni_sock_id(l->l_sock), nng_strerror(rv));
