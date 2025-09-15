@@ -1134,7 +1134,8 @@ dtls_ep_stop(void *arg)
 	nni_aio_stop(&ep->timeaio);
 
 	nni_mtx_lock(&ep->mtx);
-	ep->fini = true;
+	ep->fini    = true;
+	ep->started = false;
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -1440,18 +1441,21 @@ dtls_ep_connect(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	if (ep->started) {
+	if (!nni_list_empty(&ep->connaios)) {
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	NNI_ASSERT(nni_list_empty(&ep->connaios));
 	ep->dialer = true;
-
+	NNI_ASSERT(nni_list_empty(&ep->connaios));
 	nni_list_append(&ep->connaios, aio);
 
-	// lookup the IP address
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
 
+	// lookup the IP address
 	memset(&ep->resolv, 0, sizeof(ep->resolv));
 	ep->resolv.ri_family  = ep->af;
 	ep->resolv.ri_host    = ep->url->u_hostname;
