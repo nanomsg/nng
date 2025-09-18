@@ -23,6 +23,7 @@ extern int      nni_dialer_create(nni_dialer **, nni_sock *, const char *);
 extern int  nni_dialer_create_url(nni_dialer **, nni_sock *, const nng_url *);
 extern void nni_dialer_close(nni_dialer *);
 extern int  nni_dialer_start(nni_dialer *, unsigned);
+extern int  nni_dialer_start_aio(nni_dialer *, unsigned, nni_aio *);
 extern nni_sock *nni_dialer_sock(nni_dialer *);
 
 extern int nni_dialer_setopt(

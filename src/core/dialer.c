@@ -458,10 +458,6 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 	nni_aio  aio;
 	nni_aio *aiop = NULL;
 
-	if (nni_atomic_flag_test_and_set(&d->d_started)) {
-		return (NNG_ESTATE);
-	}
-
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
 		aiop = NULL;
 	} else {
@@ -470,16 +466,40 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 		nni_aio_start(aiop, NULL, NULL);
 	}
 
-	nni_mtx_lock(&d->d_mtx);
-	d->d_user_aio = aiop;
-	dialer_connect_start(d);
-	nni_mtx_unlock(&d->d_mtx);
+	if ((rv = nni_dialer_start_aio(d, flags, aiop)) != 0) {
+		return (rv);
+	}
 
 	if (aiop != NULL) {
 		nni_aio_wait(aiop);
 		rv = nni_aio_result(aiop);
 		nni_aio_fini(aiop);
 	}
+
+	return (rv);
+}
+
+int
+nni_dialer_start_aio(nni_dialer *d, unsigned flags, nni_aio *aiop)
+{
+	int      rv = 0;
+
+	if (nni_atomic_flag_test_and_set(&d->d_started)) {
+		return (NNG_ESTATE);
+	}
+
+	if (aiop != NULL) {
+		nni_aio_start(aiop, NULL, NULL);
+	}
+
+	// Note that flags is currently unused, since the only flag is
+	// NONBLOCK, which is handled in callers.
+	NNI_ARG_UNUSED(flags);
+
+	nni_mtx_lock(&d->d_mtx);
+	d->d_user_aio = aiop;
+	dialer_connect_start(d);
+	nni_mtx_unlock(&d->d_mtx);
 
 	nng_log_info("NNG-DIAL", "Starting dialer for socket<%u>",
 	    nni_sock_id(d->d_sock));
