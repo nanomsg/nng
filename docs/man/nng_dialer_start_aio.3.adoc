@@ -1,4 +1,4 @@
-= nng_dialer_start(3)
+= nng_dialer_start_aio(3)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_dialer_start - start dialer
+nng_dialer_start_aio - start dialer with an asynchronous I/O handle
 
 == SYNOPSIS
 
@@ -19,40 +19,34 @@ nng_dialer_start - start dialer
 ----
 #include <nng/nng.h>
 
-int nng_dialer_start(nng_dialer d, int flags);
+int nng_dialer_start_aio(nng_dialer d, int flags, nng_aio *aiop);
 ----
 
 == DESCRIPTION
 
-The `nng_dialer_start()` function starts the dialer _d_.
+The `nng_dialer_start_aio()` function starts the dialer _d_ using the
+explicit asynchronous I/O operation handle _aiop_.
 
-This causes the dialer to start connecting to the address with which it was
-created.
+This causes the dialer to asynchronously start connecting to the address with
+which it was created.
 
 When a connection is established, it results in a pipe being created,
 which will be attached to the dialer's socket.
 
-Normally, the first attempt to connect to the dialer's address is done
-synchronously, including any necessary name resolution.
-As a result, a failure, such as if the connection is refused, will be returned
-immediately, and no further action will be taken.
+This function must be called with `NNG_FLAG_NONBLOCK` set in _flags_ to
+indicate that the connection attempt should be made asynchronously. Failing to
+do so will return `NNG_EINVAL`.
 
-However, if the special value `NNG_FLAG_NONBLOCK` is
-supplied in _flags_, then the connection attempt is made asynchronously.
-
-Furthermore, if the connection was closed for a synchronously dialed
-connection, the dialer will still attempt to redial asynchronously.
-
-TIP: While `NNG_FLAG_NONBLOCK` can help an application be more resilient,
-it also generally makes diagnosing failures somewhat more difficult. You may
-want to use xref:nng_dialer_start_aio.3.adoc[`nng_dialer_start_aio()`].
+When the dialer finishes dialing, it invokes
+xref:nng_aio_finish.3.adoc[`nng_aio_finish()`] with the dialing result. Only
+the first dialing result is communicated this way.
 
 Once a dialer has started, it is generally not possible to change
 its configuration.
 
 == RETURN VALUES
 
-This function returns 0 on success, and non-zero otherwise.
+None. (The operation completes asynchronously.)
 
 == ERRORS
 
@@ -72,9 +66,10 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
+xref:nng_aio_result.3.adoc[nng_aio_result(3)]
 xref:nng_dial.3.adoc[nng_dial(3)],
 xref:nng_dialer_create.3.adoc[nng_dialer_create(3)]
-xref:nng_dialer_start_aio.3.adoc[nng_dialer_start_aio(3)]
+xref:nng_dialer_start.3.adoc[nng_dialer_start(3)]
 xref:nng_strerror.3.adoc[nng_strerror(3)],
 xref:nng_dialer.5.adoc[nng_dialer(5)],
 xref:nng.7.adoc[nng(7)]
