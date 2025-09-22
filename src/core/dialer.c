@@ -463,7 +463,6 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 	} else {
 		nni_aio_init(&aio, NULL, NULL);
 		aiop = &aio;
-		nni_aio_start(aiop, NULL, NULL);
 	}
 
 	if ((rv = nni_dialer_start_aio(d, flags, aiop)) != 0) {
