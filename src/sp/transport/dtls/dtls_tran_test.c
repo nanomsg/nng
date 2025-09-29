@@ -284,6 +284,61 @@ test_dtls_recv_max(void)
 }
 
 void
+test_dtls_recv_large(void)
+{
+	char            msg[1024];
+	char            buf[1024];
+	nng_socket      s0;
+	nng_socket      s1;
+	nng_tls_config *c0, *c1;
+	nng_listener    l;
+	nng_dialer      d;
+	size_t          sz;
+	char           *addr;
+	const nng_url  *url;
+
+	NUTS_ADDR_ZERO(addr, "dtls");
+
+	c0 = tls_server_config();
+	c1 = tls_client_config();
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_listener_set_tls(l, c0));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+
+	memset(buf, 0, sizeof(buf));
+	memset(msg, 'A', sizeof(msg));
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_dialer_create_url(&d, s1, url));
+	NUTS_PASS(nng_dialer_set_tls(d, c1));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	NUTS_PASS(nng_send(s1, msg, sizeof(msg), 0));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	sz = sizeof(buf);
+	NUTS_PASS(nng_recv(s0, buf, &sz, 0));
+	NUTS_TRUE(sz == sizeof(msg));
+	int mismatch = 0;
+	for (int i = 0; i < (int) sizeof(msg); i++) {
+		if (buf[i] != msg[i]) {
+			mismatch++;
+			if (mismatch < 6) {
+				NUTS_MSG(
+				    "Mismatch at index %d, sent %x recv %x", i,
+				    msg[i], buf[i]);
+			}
+		}
+	}
+	NUTS_MSG("total mismatches %d", mismatch);
+	NUTS_TRUE(mismatch == 0);
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+	nng_tls_config_free(c0);
+	nng_tls_config_free(c1);
+}
+
+void
 test_dtls_exchange_many(void)
 {
 	char            msg[256];
@@ -463,6 +518,7 @@ NUTS_TESTS = {
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },
 	{ "dtls recv max", test_dtls_recv_max },
+	{ "dtls recv large", test_dtls_recv_large },
 	{ "dtls exchange many", test_dtls_exchange_many },
 	{ "dtls reqrep multi", test_dtls_reqrep_multi },
 	{ "dtls pre-shared key", test_dtls_psk },
