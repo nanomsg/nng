@@ -166,11 +166,13 @@ nuts_sleep(int msec)
 }
 
 #define NUTS_COLOR_DEFAULT_ 0
-#define NUTS_COLOR_GREEN_ 1
-#define NUTS_COLOR_RED_ 2
-#define NUTS_COLOR_DEFAULT_INTENSIVE_ 3
-#define NUTS_COLOR_GREEN_INTENSIVE_ 4
-#define NUTS_COLOR_RED_INTENSIVE_ 5
+#define NUTS_COLOR_RED_ 1
+#define NUTS_COLOR_GREEN_ 2
+#define NUTS_COLOR_YELLOW_ 3
+#define NUTS_COLOR_DEFAULT_INTENSIVE_ 10
+#define NUTS_COLOR_RED_INTENSIVE_ 11
+#define NUTS_COLOR_GREEN_INTENSIVE_ 12
+#define NUTS_COLOR_YELLOW_INTENSIVE 13
 
 bool
 nuts_has_ipv6(void)
@@ -209,7 +211,7 @@ nuts_logger(nng_log_level level, nng_log_facility fac, const char *msgid,
 	switch (level) {
 	case NNG_LOG_DEBUG:
 		lstr  = "DEBUG";
-		color = NUTS_COLOR_DEFAULT_;
+		color = NUTS_COLOR_GREEN_;
 		break;
 	case NNG_LOG_INFO:
 		lstr  = "INFO";
@@ -221,11 +223,11 @@ nuts_logger(nng_log_level level, nng_log_facility fac, const char *msgid,
 		break;
 	case NNG_LOG_WARN:
 		lstr  = "WARNING";
-		color = NUTS_COLOR_RED_;
+		color = NUTS_COLOR_YELLOW_;
 		break;
 	case NNG_LOG_ERR:
 		lstr  = "ERROR";
-		color = NUTS_COLOR_RED_INTENSIVE_;
+		color = NUTS_COLOR_RED_;
 		break;
 	default:
 		lstr  = "LEVEL UNKNOWN";
