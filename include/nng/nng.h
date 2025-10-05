@@ -385,6 +385,14 @@ NNG_DECL int nng_listener_create_url(
 // the dialer is not already dialing.
 NNG_DECL int nng_dialer_start(nng_dialer, int);
 
+// nng_dialer_start_aio starts the endpoint dialing asynchronously.  This is
+// only possible if the dialer is not already dialing.  Unlike
+// nng_dialer_start, this accepts an AIO such that the caller can learn when
+// the dialing eventually succeeds or fails.  The supplied AIO must have been
+// initialized, and is only triggered with the result of the first dial
+// attempt.
+NNG_DECL void nng_dialer_start_aio(nng_dialer, int, nng_aio *);
+
 // nng_listener_start starts the endpoint listening.  This is only possible if
 // the listener is not already listening.
 NNG_DECL int nng_listener_start(nng_listener, int);
