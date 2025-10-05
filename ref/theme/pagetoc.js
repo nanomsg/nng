@@ -54,12 +54,15 @@ window.addEventListener('load', () => {
   const pagetoc = getPagetoc();
   const headers = [...document.getElementsByClassName("header")];
   headers.forEach(header => {
-    const link = Object.assign(document.createElement("a"), {
-      textContent: header.text,
-      href: header.href,
-      className: `pagetoc-${header.parentElement.tagName}`
-    });
-    pagetoc.appendChild(link);
+    const parent = header.parentElement
+    if (!parent.classList.contains("toc-ignore")) {
+      const link = Object.assign(document.createElement("a"), {
+        textContent: [...parent.childNodes].map(({ textContent }) => textContent).join(''),
+        href: header.href,
+        className: `pagetoc-${parent.tagName}`
+      });
+      pagetoc.appendChild(link);
+    }
   });
   updateFunction();
   listenActive();
