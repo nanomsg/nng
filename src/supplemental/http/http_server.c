@@ -1571,6 +1571,9 @@ nni_http_handler_init_static(nni_http_handler **hpp, const char *uri,
 	if ((hs = NNI_ALLOC_STRUCT(hs)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if (ctype == NULL) {
+		ctype = "application/octet-stream";
+	}
 	if (((hs->ctype = nni_strdup(ctype)) == NULL) ||
 	    ((size > 0) && ((hs->data = nni_alloc(size)) == NULL))) {
 		http_static_free(hs);
