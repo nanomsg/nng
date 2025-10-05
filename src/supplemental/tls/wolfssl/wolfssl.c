@@ -281,6 +281,57 @@ wolf_conn_verified(nng_tls_engine_conn *ec)
 	}
 }
 
+static char *
+wolf_conn_peer_cn(nng_tls_engine_conn *ec)
+{
+#ifdef NNG_WOLFSSL_HAVE_PEER_CERT
+	WOLFSSL_X509 *cert;
+	char         *cn;
+
+	if ((cert = wolfSSL_get_peer_certificate(ec->ssl)) == NULL) {
+		return (NULL);
+	}
+	cn = wolfSSL_X509_get_subjectCN(cert);
+	if (cn != NULL) {
+		cn = nng_strdup(cn);
+	}
+	return (cn);
+#else
+	return (NULL);
+#endif
+}
+
+static char **
+wolf_conn_peer_alt_names(nng_tls_engine_conn *ec)
+{
+#ifdef NNG_WOLFSSL_HAVE_PEER_CERT
+	WOLFSSL_X509 *cert;
+	int           num = 0;
+	char        **names;
+
+	if ((cert = wolfSSL_get_peer_certificate(ec->ssl)) == NULL) {
+		return (NULL);
+	}
+	while (wolfSSL_X509_get_next_altname(cert) != NULL) {
+		num++;
+	}
+	if ((names = nni_zalloc(sizeof(char *) * num)) == NULL) {
+		return (NULL);
+	}
+	if ((cert = wolfSSL_get_peer_certificate(ec->ssl)) == NULL) {
+		nni_free(names, sizeof(char *) * num);
+		return (NULL);
+	}
+	for (int i = 0; i < num; i++) {
+		names[i] = wolfSSL_X509_get_next_altname(cert);
+		NNI_ASSERT(names[i] != NULL);
+	}
+	return (names);
+#else
+	return (NULL);
+#endif
+}
+
 static void
 wolf_config_fini(nng_tls_engine_config *cfg)
 {
@@ -690,14 +741,16 @@ static nng_tls_engine_config_ops wolf_config_ops = {
 };
 
 static nng_tls_engine_conn_ops wolf_conn_ops = {
-	.size      = sizeof(nng_tls_engine_conn),
-	.init      = wolf_conn_init,
-	.fini      = wolf_conn_fini,
-	.close     = wolf_conn_close,
-	.recv      = wolf_conn_recv,
-	.send      = wolf_conn_send,
-	.handshake = wolf_conn_handshake,
-	.verified  = wolf_conn_verified,
+	.size           = sizeof(nng_tls_engine_conn),
+	.init           = wolf_conn_init,
+	.fini           = wolf_conn_fini,
+	.close          = wolf_conn_close,
+	.recv           = wolf_conn_recv,
+	.send           = wolf_conn_send,
+	.handshake      = wolf_conn_handshake,
+	.verified       = wolf_conn_verified,
+	.peer_cn        = wolf_conn_peer_cn,
+	.peer_alt_names = wolf_conn_peer_alt_names,
 };
 
 nng_tls_engine nng_tls_engine_ops = {
