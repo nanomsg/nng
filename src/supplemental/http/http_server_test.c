@@ -237,6 +237,53 @@ test_server_basic(void)
 }
 
 static void
+test_server_static_bin(void)
+{
+	struct server_test st;
+	char               chunk[256];
+	const void        *ptr;
+	nng_iov            iov;
+	nng_http_handler  *h;
+	static uint8_t     data[3] = { 1, 0, 2 };
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/data.bin", data, sizeof(data), NULL));
+
+	server_setup(&st, h);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/data.bin", NULL));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_OK);
+
+	ptr = nng_http_get_header(st.conn, "Content-Type");
+	NUTS_TRUE(ptr != NULL);
+	NUTS_TRUE(strcmp(ptr, "application/octet-stream") == 0);
+
+	ptr = nng_http_get_header(st.conn, "Content-Length");
+	NUTS_TRUE(ptr != NULL);
+	NUTS_TRUE(atoi(ptr) == (int) sizeof(data));
+
+	iov.iov_len = sizeof(data);
+	iov.iov_buf = chunk;
+	NUTS_PASS(nng_aio_set_iov(st.aio, 1, &iov));
+	nng_http_read_all(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+	NUTS_TRUE(nng_aio_count(st.aio) == sizeof(data));
+	NUTS_TRUE(memcmp(chunk, data, sizeof(data)) == 0);
+
+	server_free(&st);
+}
+
+static void
 test_server_canonify(void)
 {
 	struct server_test st;
@@ -1105,6 +1152,7 @@ test_serve_subdir_index(void)
 
 NUTS_TESTS = {
 	{ "server basic", test_server_basic },
+	{ "server static binary", test_server_static_bin },
 	{ "server canonify", test_server_canonify },
 	{ "server head", test_server_head },
 	{ "server 404", test_server_404 },
