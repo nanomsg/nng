@@ -117,7 +117,13 @@ posix_gai_errno(int rv)
 
 #ifdef EAI_AGAIN
 	case EAI_AGAIN:
-		return (NNG_EAGAIN);
+		// EAE_AGAIN means a temporary failure in name resolution.
+		// While that doesn't mean the address is invalid, it's the
+		// closest error code we currently have. This was previously
+		// mapped to NNG_EAGAIN, but that error code is used to
+		// indicate that non-blocking operations would block, so would
+		// be confusing to callers.
+		return (NNG_EADDRINVAL);
 #endif
 
 	default:
