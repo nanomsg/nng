@@ -15,6 +15,7 @@
 
 #include "../../core/nng_impl.h"
 
+#include "nng/nng.h"
 #include "tls_common.h"
 #include "tls_engine.h"
 #include "tls_stream.h"
@@ -142,6 +143,7 @@ tls_stream_conn_cb(void *arg)
 
 static nng_err tls_stream_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t);
+static nng_err tls_stream_peer_cert(void *arg, nng_tls_cert **);
 
 int
 nni_tls_stream_alloc(tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio)
@@ -160,12 +162,13 @@ nni_tls_stream_alloc(tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio)
 	ts->user_aio = user_aio;
 
 	// NB: free is exposed for benefit of dialer/listener
-	ts->stream.s_free  = nni_tls_stream_free;
-	ts->stream.s_close = tls_stream_close;
-	ts->stream.s_stop  = tls_stream_stop;
-	ts->stream.s_send  = tls_stream_send;
-	ts->stream.s_recv  = tls_stream_recv;
-	ts->stream.s_get   = tls_stream_get;
+	ts->stream.s_free      = nni_tls_stream_free;
+	ts->stream.s_close     = tls_stream_close;
+	ts->stream.s_stop      = tls_stream_stop;
+	ts->stream.s_send      = tls_stream_send;
+	ts->stream.s_recv      = tls_stream_recv;
+	ts->stream.s_get       = tls_stream_get;
+	ts->stream.s_peer_cert = tls_stream_peer_cert;
 
 	nni_aio_init(&ts->conn_aio, tls_stream_conn_cb, ts);
 
@@ -198,6 +201,13 @@ tls_get_peer_cn(void *arg, void *buf, size_t *szp, nni_type t)
 	tls_stream *ts = arg;
 	*(char **) buf = (char *) nni_tls_peer_cn(&ts->conn);
 	return (NNG_OK);
+}
+
+static nng_err
+tls_stream_peer_cert(void *arg, nng_tls_cert **certp)
+{
+	tls_stream *ts = arg;
+	return (nni_tls_peer_cert(&ts->conn, certp));
 }
 
 static const nni_option tls_stream_options[] = {

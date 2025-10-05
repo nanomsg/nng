@@ -952,6 +952,14 @@ tlstran_pipe_getopt(
 	return (rv);
 }
 
+static nng_err
+tlstran_pipe_peer_cert(void *arg, nng_tls_cert **certp)
+{
+	tlstran_pipe *p = arg;
+
+	return (nng_stream_peer_cert(p->tls, certp));
+}
+
 static size_t
 tlstran_pipe_size(void)
 {
@@ -959,15 +967,16 @@ tlstran_pipe_size(void)
 }
 
 static nni_sp_pipe_ops tlstran_pipe_ops = {
-	.p_size   = tlstran_pipe_size,
-	.p_init   = tlstran_pipe_init,
-	.p_fini   = tlstran_pipe_fini,
-	.p_stop   = tlstran_pipe_stop,
-	.p_send   = tlstran_pipe_send,
-	.p_recv   = tlstran_pipe_recv,
-	.p_close  = tlstran_pipe_close,
-	.p_peer   = tlstran_pipe_peer,
-	.p_getopt = tlstran_pipe_getopt,
+	.p_size      = tlstran_pipe_size,
+	.p_init      = tlstran_pipe_init,
+	.p_fini      = tlstran_pipe_fini,
+	.p_stop      = tlstran_pipe_stop,
+	.p_send      = tlstran_pipe_send,
+	.p_recv      = tlstran_pipe_recv,
+	.p_close     = tlstran_pipe_close,
+	.p_peer      = tlstran_pipe_peer,
+	.p_getopt    = tlstran_pipe_getopt,
+	.p_peer_cert = tlstran_pipe_peer_cert,
 };
 
 static nni_option tlstran_ep_options[] = {

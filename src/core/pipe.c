@@ -430,3 +430,12 @@ nni_pipe_peer_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
 	nng_str_sockaddr(&sa, buf, NNG_MAXADDRSTRLEN);
 	return (buf);
 }
+
+nng_err
+nni_pipe_peer_cert(nni_pipe *p, nng_tls_cert **certp)
+{
+	if (p->p_tran_ops.p_peer_cert == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (p->p_tran_ops.p_peer_cert(p->p_tran_data, certp));
+}

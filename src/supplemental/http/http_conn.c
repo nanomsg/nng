@@ -1482,6 +1482,20 @@ nni_http_conn_getopt(
 	return (rv);
 }
 
+nng_err
+nni_http_conn_peer_cert(nni_http_conn *conn, nng_tls_cert **certp)
+{
+	int rv;
+	nni_mtx_lock(&conn->mtx);
+	if (conn->closed) {
+		rv = NNG_ECLOSED;
+	} else {
+		rv = nng_stream_peer_cert(conn->sock, certp);
+	}
+	nni_mtx_unlock(&conn->mtx);
+	return (rv);
+}
+
 void
 nni_http_conn_fini(nni_http_conn *conn)
 {

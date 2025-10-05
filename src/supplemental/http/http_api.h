@@ -99,6 +99,7 @@ extern void nni_http_conn_close(nng_http *);
 extern void nni_http_conn_fini(nni_http_conn *);
 extern int  nni_http_conn_getopt(
      nng_http *, const char *, void *, size_t *, nni_type);
+extern nng_err nni_http_conn_peer_cert(nng_http *, nng_tls_cert **);
 
 // Reading messages -- the caller must supply a preinitialized (but otherwise
 // idle) message.  We recommend the caller store this in the aio's user data.

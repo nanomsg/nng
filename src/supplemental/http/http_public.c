@@ -651,3 +651,15 @@ nng_http_reset(nng_http *conn)
 	NNI_ARG_UNUSED(conn);
 #endif
 }
+
+nng_err
+nng_http_peer_cert(nng_http *conn, nng_tls_cert **certp)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_peer_cert(conn, certp));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(certp);
+	return (NNG_ENOTSUP);
+#endif
+}

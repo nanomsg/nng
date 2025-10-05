@@ -24,6 +24,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
 
 // NNG_DECL is used on declarations to deal with scope.
 // For building Windows DLLs, it should be the appropriate __declspec().
@@ -175,6 +176,10 @@ typedef struct nng_url nng_url;
 // For some transports, we need TLS configuration, including certificates
 // and so forth.  A TLS configuration cannot be changed once it is in use.
 typedef struct nng_tls_config nng_tls_config;
+
+// This is a representation of X.509 certificate as used in TLS transports.
+// Internal details are opaque.
+typedef struct nng_tls_cert_s nng_tls_cert;
 
 // Initializers.
 // clang-format off
@@ -767,6 +772,7 @@ NNG_DECL nng_err nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL nng_err nng_pipe_get_size(nng_pipe, const char *, size_t *);
 NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, char **);
 NNG_DECL nng_err nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
+NNG_DECL nng_err nng_pipe_peer_cert(nng_pipe, nng_tls_cert **);
 
 NNG_DECL nng_err      nng_pipe_close(nng_pipe);
 NNG_DECL int          nng_pipe_id(nng_pipe);
@@ -802,13 +808,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // only available for pipes. This option may return incorrect results if
 // peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 #define NNG_OPT_TLS_PEER_CN "tls-peer-cn"
-
-// NNG_OPT_TLS_PEER_ALT_NAMES returns string list with the
-// subject alternative names of the peer certificate. Typically this is
-// read-only and only available for pipes. This option may return
-// incorrect results if peer authentication is disabled with
-// `NNG_TLS_AUTH_MODE_NONE`.
-#define NNG_OPT_TLS_PEER_ALT_NAMES "tls-peer-alt-names"
 
 // TCP options.  These may be supported on various transports that use
 // TCP underneath such as TLS, or not.
@@ -1145,6 +1144,7 @@ NNG_DECL nng_err nng_stream_get_uint64(nng_stream *, const char *, uint64_t *);
 NNG_DECL nng_err nng_stream_get_string(nng_stream *, const char *, char **);
 NNG_DECL nng_err nng_stream_get_addr(
     nng_stream *, const char *, nng_sockaddr *);
+NNG_DECL nng_err nng_stream_peer_cert(nng_stream *, nng_tls_cert **);
 
 NNG_DECL nng_err nng_stream_dialer_alloc(nng_stream_dialer **, const char *);
 NNG_DECL nng_err nng_stream_dialer_alloc_url(
@@ -1623,6 +1623,30 @@ NNG_DECL const char *nng_tls_engine_description(void);
 
 // nng_tls_engine_fips_mode returns true if the engine is in FIPS 140 mode.
 NNG_DECL bool nng_tls_engine_fips_mode(void);
+
+// nng_tls_cert_parse parses PEM content to obtain an object suitable for
+// use with TLS APIs.
+NNG_DECL nng_err nng_tls_cert_parse_pem(nng_tls_cert **, const char *, size_t);
+
+// nng_tls_cert_parse_der parses a DER (distinguished encoding rules) format
+// certificate.
+NNG_DECL nng_err nng_tls_cert_parse_der(
+    nng_tls_cert **, const uint8_t *, size_t);
+
+// nng_tls_cert_der extracts the certificate as DER content.  This can be
+// useful for importing into other APIs such as OpenSSL or mbedTLS directly.
+NNG_DECL void nng_tls_cert_der(nng_tls_cert *cert, uint8_t *, size_t *);
+
+// nng_tls_cert_free releases the certificate from memory.
+NNG_DECL void nng_tls_cert_free(nng_tls_cert *);
+
+NNG_DECL nng_err nng_tls_cert_subject(nng_tls_cert *, char **);
+NNG_DECL nng_err nng_tls_cert_issuer(nng_tls_cert *, char **);
+NNG_DECL nng_err nng_tls_cert_serial_number(nng_tls_cert *, char **);
+NNG_DECL nng_err nng_tls_cert_subject_cn(nng_tls_cert *, char **);
+NNG_DECL nng_err nng_tls_cert_next_alt(nng_tls_cert *, char **);
+NNG_DECL nng_err nng_tls_cert_not_before(nng_tls_cert *, struct tm *);
+NNG_DECL nng_err nng_tls_cert_not_after(nng_tls_cert *, struct tm *);
 
 // Public ID map support.
 typedef struct nng_id_map_s nng_id_map;

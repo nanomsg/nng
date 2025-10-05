@@ -227,11 +227,31 @@ test_tls_pipe_details(void)
 	p = nng_msg_get_pipe(msg);
 	NUTS_TRUE(nng_pipe_id(p) >= 0);
 #if !defined(NNG_TLS_ENGINE_WOLFSSL) || defined(NNG_WOLFSSL_HAVE_PEER_CERT)
-	char *cn;
-	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_TLS_PEER_CN, &cn));
-	NUTS_ASSERT(cn != NULL);
-	NUTS_MATCH(cn, "127.0.0.1");
-	nng_strfree(cn);
+	nng_tls_cert *cert;
+	char         *name;
+	NUTS_PASS(nng_pipe_peer_cert(p, &cert));
+	NUTS_PASS(nng_tls_cert_subject(cert, &name));
+	NUTS_ASSERT(name != NULL);
+	nng_log_debug(NULL, "SUBJECT: %s", name);
+	NUTS_PASS(nng_tls_cert_issuer(cert, &name));
+	NUTS_ASSERT(name != NULL);
+	nng_log_debug(NULL, "ISSUER: %s", name);
+	NUTS_PASS(nng_tls_cert_serial_number(cert, &name));
+	NUTS_ASSERT(name != NULL);
+	nng_log_debug(NULL, "SERIAL: %s", name);
+	NUTS_PASS(nng_tls_cert_subject_cn(cert, &name));
+	NUTS_MATCH(name, "127.0.0.1");
+	NUTS_PASS(nng_tls_cert_next_alt(cert, &name));
+	nng_log_debug(NULL, "FIRST ALT: %s", name);
+	NUTS_MATCH(name, "localhost");
+	NUTS_FAIL(nng_tls_cert_next_alt(cert, &name), NNG_ENOENT);
+	struct tm when;
+	NUTS_PASS(nng_tls_cert_not_before(cert, &when));
+	nng_log_debug(NULL, "BEGINS: %s", asctime(&when));
+	NUTS_PASS(nng_tls_cert_not_after(cert, &when));
+	nng_log_debug(NULL, "EXPIRES: %s", asctime(&when));
+
+	nng_tls_cert_free(cert);
 #endif
 	nng_msg_free(msg);
 	NUTS_CLOSE(s2);

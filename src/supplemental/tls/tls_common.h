@@ -49,6 +49,8 @@ struct nng_tls_config {
 	// ... engine config data follows
 };
 
+struct nng_tls_cert_s;
+
 typedef struct nni_tls_bio_ops_s {
 	void (*bio_send)(void *, nng_aio *);
 	void (*bio_recv)(void *, nng_aio *);
@@ -99,6 +101,7 @@ extern void nni_tls_recv(nni_tls_conn *conn, nni_aio *aio);
 extern void nni_tls_send(nni_tls_conn *conn, nni_aio *aio);
 extern bool nni_tls_verified(nni_tls_conn *conn);
 extern const char *nni_tls_peer_cn(nni_tls_conn *conn);
+extern nng_err     nni_tls_peer_cert(nni_tls_conn *conn, nng_tls_cert **certp);
 extern nng_err     nni_tls_run(nni_tls_conn *conn);
 extern size_t      nni_tls_engine_conn_size(void);
 

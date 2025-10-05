@@ -60,7 +60,13 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
     if (NNG_WOLFSSL_HAVE_PEER_CERT)
         nng_defines(NNG_WOLFSSL_HAVE_PEER_CERT)
     else ()
-        message(STATUS "wolfSSL configured without peer cert chain support.")
+        message(STATUS "wolfSSL configured without full certificate APIs.")
+        message(NOTICE "
+        ************************************************************
+        WolfSSL functionality for working with certificates is missing.
+        Consider rebuilding WolfSSL for full functionality.
+        ************************************************************")
+
     endif ()
 
     if (NNG_WOLFSSL_HAVE_PSK)

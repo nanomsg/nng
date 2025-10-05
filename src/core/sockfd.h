@@ -10,7 +10,7 @@
 #ifndef CORE_FDC_H
 #define CORE_FDC_H
 
-#include "core/nng_impl.h"
+#include "nng/nng.h"
 
 // the nni_sfd_conn struct is provided by platform code to wrap
 // an arbitrary byte stream file descriptor (UNIX) or handle (Windows)

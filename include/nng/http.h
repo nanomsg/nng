@@ -207,6 +207,10 @@ NNG_DECL void nng_http_set_body(nng_http *, void *, size_t);
 // makes a local copy.  It can fail due to NNG_ENOMEM.
 NNG_DECL nng_err nng_http_copy_body(nng_http *, const void *, size_t);
 
+// nng_http_peer_cert returns the HTTP peer cert, if the one is available.
+// Only available for HTTPS connections.
+NNG_DECL nng_err nng_http_peer_cert(nng_http *, nng_tls_cert **);
+
 // nng_http_handler is a handler used on the server side to handle HTTP
 // requests coming into a specific URL.
 //

@@ -14,7 +14,7 @@
 
 #include <nng/nng.h>
 
-#include <nuts.h>
+#include "../../../testing/nuts.h"
 
 static nng_tls_config *
 wss_server_config(void)
@@ -381,6 +381,79 @@ test_wss_psk(void)
 #endif
 }
 
+void
+test_wss_pipe_details(void)
+{
+	nng_socket      s1;
+	nng_socket      s2;
+	nng_tls_config *c1, *c2;
+	nng_sockaddr    sa;
+	nng_listener    l;
+	nng_dialer      d;
+	nng_msg        *msg;
+	nng_pipe        p;
+	const nng_url  *url;
+
+	c1 = wss_server_config_ecdsa();
+	c2 = wss_client_config_ecdsa();
+
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_tls_config_auth_mode(c1, NNG_TLS_AUTH_MODE_REQUIRED));
+	NUTS_PASS(nng_tls_config_ca_chain(c1, nuts_ecdsa_server_crt, NULL));
+	NUTS_PASS(nng_tls_config_ca_chain(c2, nuts_ecdsa_server_crt, NULL));
+	NUTS_PASS(nng_listener_create(&l, s1, "wss://127.0.0.1:0/test"));
+	NUTS_PASS(nng_listener_set_tls(l, c1));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_MATCH(nng_url_scheme(url), "wss");
+	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_port != 0);
+	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
+	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
+	NUTS_PASS(nng_dialer_set_tls(d, c2));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	nng_msleep(50);
+	NUTS_SEND(s1, "text");
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	p = nng_msg_get_pipe(msg);
+	NUTS_TRUE(nng_pipe_id(p) >= 0);
+#if !defined(NNG_TLS_ENGINE_WOLFSSL) || defined(NNG_WOLFSSL_HAVE_PEER_CERT)
+	nng_tls_cert *cert;
+	char         *name;
+	NUTS_PASS(nng_pipe_peer_cert(p, &cert));
+	NUTS_PASS(nng_tls_cert_subject(cert, &name));
+	NUTS_ASSERT(name != NULL);
+	nng_log_debug(NULL, "SUBJECT: %s", name);
+	NUTS_PASS(nng_tls_cert_issuer(cert, &name));
+	NUTS_ASSERT(name != NULL);
+	nng_log_debug(NULL, "ISSUER: %s", name);
+	NUTS_PASS(nng_tls_cert_serial_number(cert, &name));
+	NUTS_ASSERT(name != NULL);
+	nng_log_debug(NULL, "SERIAL: %s", name);
+	NUTS_PASS(nng_tls_cert_subject_cn(cert, &name));
+	NUTS_MATCH(name, "127.0.0.1");
+	NUTS_PASS(nng_tls_cert_next_alt(cert, &name));
+	nng_log_debug(NULL, "FIRST ALT: %s", name);
+	NUTS_MATCH(name, "localhost");
+	NUTS_FAIL(nng_tls_cert_next_alt(cert, &name), NNG_ENOENT);
+	struct tm when;
+	NUTS_PASS(nng_tls_cert_not_before(cert, &when));
+	nng_log_debug(NULL, "BEGINS: %s", asctime(&when));
+	NUTS_PASS(nng_tls_cert_not_after(cert, &when));
+	nng_log_debug(NULL, "EXPIRES: %s", asctime(&when));
+
+	nng_tls_cert_free(cert);
+#endif
+	nng_msg_free(msg);
+	NUTS_CLOSE(s2);
+	NUTS_CLOSE(s1);
+	nng_tls_config_free(c1);
+	nng_tls_config_free(c2);
+}
+
 NUTS_TESTS = {
 	{ "wss port zero bind", test_wss_port_zero_bind },
 	{ "wss malformed address", test_wss_malformed_address },
@@ -390,6 +463,7 @@ NUTS_TESTS = {
 	{ "wss pre-shared key", test_wss_psk },
 	{ "wss bad cert mutual", test_wss_bad_cert_mutual },
 	{ "wss cert mutual", test_wss_cert_mutual },
+	{ "wss pipe details", test_wss_pipe_details },
 
 	{ NULL, NULL },
 };

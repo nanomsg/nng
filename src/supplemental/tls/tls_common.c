@@ -45,6 +45,7 @@ static void tls_bio_send_start(nni_tls_conn *);
 static void tls_bio_error(nni_tls_conn *, nng_err);
 
 #define nni_tls_conn_ops (nng_tls_engine_ops.conn_ops)
+#define nni_tls_cert_ops (nng_tls_engine_ops.cert_ops)
 #define nni_tls_cfg_ops (nng_tls_engine_ops.config_ops)
 
 static void
@@ -134,7 +135,7 @@ nni_tls_verified(nni_tls_conn *conn)
 	nni_mtx_lock(&conn->lock);
 	result = nni_tls_conn_ops->verified((void *) (conn + 1));
 	nni_mtx_unlock(&conn->lock);
-	return result;
+	return (result);
 }
 
 const char *
@@ -144,7 +145,14 @@ nni_tls_peer_cn(nni_tls_conn *conn)
 	nni_mtx_lock(&conn->lock);
 	result = nni_tls_conn_ops->peer_cn((void *) (conn + 1));
 	nni_mtx_unlock(&conn->lock);
-	return result;
+	return (result);
+}
+
+nng_err
+nni_tls_peer_cert(nni_tls_conn *conn, nng_tls_cert **certp)
+{
+	return (
+	    nni_tls_conn_ops->peer_cert((void *) (conn + 1), (void *) certp));
 }
 
 int
@@ -796,6 +804,103 @@ nng_tls_config_hold(nng_tls_config *cfg)
 	nni_mtx_lock(&cfg->lock);
 	cfg->ref++;
 	nni_mtx_unlock(&cfg->lock);
+}
+
+void
+nng_tls_cert_free(nng_tls_cert *cert)
+{
+	nni_tls_cert_ops->fini((void *) cert);
+}
+
+nng_err
+nng_tls_cert_subject(nng_tls_cert *cert, char **namep)
+{
+	if (nni_tls_cert_ops->subject == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->subject((void *) cert, namep));
+}
+
+nng_err
+nng_tls_cert_issuer(nng_tls_cert *cert, char **namep)
+{
+	if (nni_tls_cert_ops->issuer == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->issuer((void *) cert, namep));
+}
+
+nng_err
+nng_tls_cert_serial_number(nng_tls_cert *cert, char **serialp)
+{
+	if (nni_tls_cert_ops->serial_number == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->serial_number((void *) cert, serialp));
+}
+
+nng_err
+nng_tls_cert_subject_cn(nng_tls_cert *cert, char **cnp)
+{
+	if (nni_tls_cert_ops->subject_cn == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->subject_cn((void *) cert, cnp));
+}
+
+nng_err
+nng_tls_cert_next_alt(nng_tls_cert *cert, char **alt)
+{
+	if (nni_tls_cert_ops->next_alt_name == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->next_alt_name((void *) cert, alt));
+}
+
+nng_err
+nng_tls_cert_not_before(nng_tls_cert *cert, struct tm *tmp)
+{
+	if (nni_tls_cert_ops->not_before == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->not_before((void *) cert, tmp));
+}
+
+nng_err
+nng_tls_cert_not_after(nng_tls_cert *cert, struct tm *tmp)
+{
+	if (nni_tls_cert_ops->not_after == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (nni_tls_cert_ops->not_after((void *) cert, tmp));
+}
+
+void
+nng_tls_cert_der(nng_tls_cert *cert, uint8_t *buf, size_t *bufsz)
+{
+	nni_tls_cert_ops->get_der((void *) cert, buf, bufsz);
+}
+
+nng_err
+nng_tls_cert_parse_der(nng_tls_cert **certp, const uint8_t *der, size_t size)
+{
+	nng_tls_engine_cert *ecrt;
+	nng_err              rv;
+	if ((rv = nni_tls_cert_ops->parse_der(&ecrt, der, size)) == NNG_OK) {
+		*certp = (void *) ecrt;
+	}
+	return (rv);
+}
+
+nng_err
+nng_tls_cert_parse_pem(nng_tls_cert **certp, const char *pem, size_t size)
+{
+	nng_tls_engine_cert *ecrt;
+	nng_err              rv;
+	if ((rv = nni_tls_cert_ops->parse_pem(&ecrt, pem, size)) == NNG_OK) {
+		*certp = (void *) ecrt;
+	}
+	return (rv);
 }
 
 const char *

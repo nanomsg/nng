@@ -188,6 +188,10 @@ struct nni_sp_pipe_ops {
 	// p_getopt is used to obtain an option.  Pipes don't implement
 	// option setting.
 	nng_err (*p_getopt)(void *, const char *, void *, size_t *, nni_type);
+
+	// p_peer_cert is used to obtain a peer cert for transports that
+	// implement TLS.
+	nng_err (*p_peer_cert)(void *, nng_tls_cert **);
 };
 
 // Transport implementation details.  Transports must implement the

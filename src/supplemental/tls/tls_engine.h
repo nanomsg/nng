@@ -13,6 +13,8 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H
 
+#include <time.h>
+
 #include "../../core/defs.h"
 
 // Locking theory statement for TLS engines.  The engine is assumed
@@ -34,6 +36,10 @@ typedef struct nng_tls_engine_conn nng_tls_engine_conn;
 // safety.  Engine implementations should provide the structure
 // definition locally.
 typedef struct nng_tls_engine_config nng_tls_engine_config;
+
+// nng_tls_engine_cert represents the engine-specific representation
+// of an X.509 certificate.
+typedef struct nng_tls_engine_cert nng_tls_engine_cert;
 
 typedef struct nng_tls_engine_conn_ops_s {
 	// size is the size of the engine's per-connection state.
@@ -84,13 +90,13 @@ typedef struct nng_tls_engine_conn_ops_s {
 	// TLS verified, false otherwise.
 	bool (*verified)(nng_tls_engine_conn *);
 
+	// peer_cert obtains the peer certificate(s).  Note that
+	// this capability might not be supported.
+	nng_err (*peer_cert)(nng_tls_engine_conn *, nng_tls_engine_cert **);
+
 	// peer_cn returns the common name of the peer
 	// The return string needs to be freed.
 	char *(*peer_cn)(nng_tls_engine_conn *);
-
-	// peer_alt_names returns the subject alternative names.
-	// The return string list and its strings need to be freed.
-	char **(*peer_alt_names)(nng_tls_engine_conn *);
 } nng_tls_engine_conn_ops;
 
 typedef struct nng_tls_engine_config_ops_s {
@@ -170,12 +176,51 @@ typedef struct nng_tls_engine_config_ops_s {
 	    nng_tls_engine_config *, nng_tls_version, nng_tls_version);
 } nng_tls_engine_config_ops;
 
+typedef struct nng_tls_engine_cert_ops_s {
+	// fini is used to tear down the configuration object.
+	// This will only be called on objects that have been properly
+	// initialized with nte_config_init.
+	void (*fini)(nng_tls_engine_cert *);
+
+	// parse_pem parses a PEM object to obtain a certificate object.
+	nng_err (*parse_pem)(
+	    nng_tls_engine_cert **certp, const char *pem, size_t pem_size);
+
+	// parse_der parses a DER object to obtain a certificate object.
+	nng_err (*parse_der)(
+	    nng_tls_engine_cert **certp, const uint8_t *der, size_t der_size);
+
+	// get_der extracts the DER content from the object, which may then be
+	// used with other X509 APIs.
+	nng_err (*get_der)(
+	    nng_tls_engine_cert *cert, uint8_t *dr, size_t *sizep);
+
+	// obtain the subject name
+	nng_err (*subject)(nng_tls_engine_cert *cert, char **name);
+
+	nng_err (*issuer)(nng_tls_engine_cert *cert, char **name);
+
+	nng_err (*serial_number)(nng_tls_engine_cert *cert, char **serial);
+
+	nng_err (*subject_cn)(nng_tls_engine_cert *cert, char **name);
+
+	nng_err (*next_alt_name)(nng_tls_engine_cert *cert, char **name);
+
+	// aka, valid from, the starting date of the certificate
+	nng_err (*not_before)(nng_tls_engine_cert *cert, struct tm *);
+
+	// aka, valid to, the expiration date of the certificate
+	nng_err (*not_after)(nng_tls_engine_cert *cert, struct tm *);
+
+} nng_tls_engine_cert_ops;
+
 typedef enum nng_tls_engine_version_e {
 	NNG_TLS_ENGINE_V0      = 0,
 	NNG_TLS_ENGINE_V1      = 1, // adds FIPS, TLS 1.3 support
 	NNG_TLS_ENGINE_V2      = 2, // adds PSK support
 	NNG_TLS_ENGINE_V3      = 3, // refactored API
-	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V3,
+	NNG_TLS_ENGINE_V4      = 4, // added cert ops
+	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V4,
 } nng_tls_engine_version;
 
 typedef struct nng_tls_engine_s {
@@ -189,6 +234,9 @@ typedef struct nng_tls_engine_s {
 
 	// conn_ops is the operations for TLS connections (stream-oriented).
 	const nng_tls_engine_conn_ops *conn_ops;
+
+	// cert_ops is the operations for TLS certificates.
+	const nng_tls_engine_cert_ops *cert_ops;
 
 	// name contains the name of the engine, for example "wolfSSL".
 	// It is acceptable to append a version number as well.

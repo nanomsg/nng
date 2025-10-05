@@ -156,6 +156,15 @@ The ability to configure multiple keys and certificates for a given TLS configur
 The intended purpose was to support alternative cryptographic algorithms, but this is not necessary, was never
 used, and was error prone.
 
+## TLS Peer Certificate APIs Replaced
+
+The `NNG_OPT_TLS_PEER_CN` and `NNG_OPT_TLS_PEER_ALT_NAMES` properties have been removed.
+They are replaced with functions like [`nng_pipe_peer_cert`], [`nng_stream_peer_cert`],
+and [`nng_http_peer_cert`] which return a new `nng_tls_cert` object.
+
+This object supports methods to get additional information about the certificate, as well
+as to obtain the raw DER content so that it can be imported for use in other APIs.
+
 ## Support for Local Addresses in Dial URLs Removed
 
 NNG 1.x had an undocumented ability to specify the local address to bind

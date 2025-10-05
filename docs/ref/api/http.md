@@ -349,6 +349,26 @@ This function is most useful when called from a handler function.
 > This function is intended to facilitate uses cases that involve changing the protocol from HTTP, such as WebSocket.
 > Most applications will never need to use this function.
 
+### Obtaining TLS Connection Details
+
+```c
+nng_err nng_http_peer_cert(nng_http_conn *conn, nng_tls_cert **certp);
+```
+
+TODO: We need to document the cert API.
+
+The {{i:`nng_http_peer_cert`}} function will obtain the TLS certificate object for the peer, if one is available.
+This can then be used for additional authentication or identity specific logic.
+
+The certificate must be released with [`nng_tls_cert_free`] when no longer in use.
+See [`nng_tls_cert`] for more information about working with TLS certificates.
+
+> [!NOTE]
+> While it should be obvious that this function is only available when using HTTPS,
+> it also requires that peer authentication is in use, and may require that the underlying
+> TLS engine support peer certificate colleciton. (Some minimal configurations elide this
+> to save space in embedded environments.)
+
 ## Client API
 
 The NNG client API consists of an API for creating connections, and an API for performing

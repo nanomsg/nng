@@ -670,7 +670,7 @@ void
 nng_dialer_start_aio(nng_dialer did, int flags, nng_aio *aio)
 {
 	nni_dialer *d;
-	int       rv;
+	int         rv;
 
 	if (aio != NULL) {
 		nni_aio_reset(aio);
@@ -1373,6 +1373,20 @@ nng_err
 nng_pipe_get_addr(nng_pipe id, const char *n, nng_sockaddr *v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
+}
+
+nng_err
+nng_pipe_peer_cert(nng_pipe p, nng_tls_cert **certp)
+{
+	nng_err   rv;
+	nni_pipe *pipe;
+
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_pipe_peer_cert(pipe, certp);
+	nni_pipe_rele(pipe);
+	return (rv);
 }
 
 nng_socket

@@ -12,12 +12,13 @@
 
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "nng_impl.h"
 
-#include "core/sockfd.h"
-#include "core/tcp.h"
-#include "supplemental/tls/tls_api.h"
-#include "supplemental/websocket/websocket.h"
+#include "sockfd.h"
+#include "tcp.h"
+
+#include "../supplemental/tls/tls_api.h"
+#include "../supplemental/websocket/websocket.h"
 
 static struct {
 	const char *scheme;
@@ -382,6 +383,15 @@ nng_err
 nng_stream_get_addr(nng_stream *s, const char *n, nng_sockaddr *v)
 {
 	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_SOCKADDR));
+}
+
+nng_err
+nng_stream_peer_cert(nng_stream *s, nng_tls_cert **certp)
+{
+	if (s->s_peer_cert == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (s->s_peer_cert(s, certp));
 }
 
 nng_err

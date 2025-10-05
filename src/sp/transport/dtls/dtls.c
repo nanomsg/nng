@@ -6,18 +6,18 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/aio.h"
-#include "core/defs.h"
-#include "core/idhash.h"
-#include "core/message.h"
-#include "core/nng_impl.h"
-#include "core/options.h"
-#include "core/pipe.h"
-#include "core/platform.h"
-#include "core/socket.h"
-#include "core/stats.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/idhash.h"
+#include "../../../core/message.h"
+#include "../../../core/nng_impl.h"
+#include "../../../core/options.h"
+#include "../../../core/pipe.h"
+#include "../../../core/platform.h"
+#include "../../../core/socket.h"
+#include "../../../core/stats.h"
+#include "../../../supplemental/tls/tls_common.h"
 #include "nng/nng.h"
-#include "supplemental/tls/tls_common.h"
 
 #include <string.h>
 
@@ -1070,6 +1070,14 @@ dtls_pipe_getopt(
 	return (nni_getopt(dtls_pipe_options, name, p, buf, szp, t));
 }
 
+static nng_err
+dtls_pipe_peer_cert(void *arg, nng_tls_cert **certp)
+{
+	dtls_pipe *p = arg;
+
+	return (nni_tls_peer_cert(&p->tls, certp));
+}
+
 static void
 dtls_ep_fini(void *arg)
 {
@@ -1676,15 +1684,16 @@ dtls_ep_accept(void *arg, nni_aio *aio)
 }
 
 static nni_sp_pipe_ops dtls_pipe_ops = {
-	.p_size   = dtls_pipe_size,
-	.p_init   = dtls_pipe_init,
-	.p_fini   = dtls_pipe_fini,
-	.p_stop   = dtls_pipe_stop,
-	.p_send   = dtls_pipe_send,
-	.p_recv   = dtls_pipe_recv,
-	.p_close  = dtls_pipe_close,
-	.p_peer   = dtls_pipe_peer,
-	.p_getopt = dtls_pipe_getopt,
+	.p_size      = dtls_pipe_size,
+	.p_init      = dtls_pipe_init,
+	.p_fini      = dtls_pipe_fini,
+	.p_stop      = dtls_pipe_stop,
+	.p_send      = dtls_pipe_send,
+	.p_recv      = dtls_pipe_recv,
+	.p_close     = dtls_pipe_close,
+	.p_peer      = dtls_pipe_peer,
+	.p_getopt    = dtls_pipe_getopt,
+	.p_peer_cert = dtls_pipe_peer_cert,
 };
 
 static const nni_option dtls_ep_opts[] = {

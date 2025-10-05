@@ -186,6 +186,7 @@ static void    ws_str_close(void *);
 static void    ws_str_send(void *, nng_aio *);
 static void    ws_str_recv(void *, nng_aio *);
 static nng_err ws_str_get(void *, const char *, void *, size_t *, nni_type);
+static nng_err ws_str_peer_cert(void *, nng_tls_cert **);
 
 static void ws_listener_close(void *);
 static void ws_listener_free(void *);
@@ -1388,12 +1389,13 @@ ws_init(nni_ws **wsp)
 	nni_aio_set_timeout(&ws->closeaio, 100);
 	nni_aio_set_timeout(&ws->httpaio, 2000);
 
-	ws->ops.s_close = ws_str_close;
-	ws->ops.s_free  = ws_str_free;
-	ws->ops.s_stop  = ws_stop;
-	ws->ops.s_send  = ws_str_send;
-	ws->ops.s_recv  = ws_str_recv;
-	ws->ops.s_get   = ws_str_get;
+	ws->ops.s_close     = ws_str_close;
+	ws->ops.s_free      = ws_str_free;
+	ws->ops.s_stop      = ws_stop;
+	ws->ops.s_send      = ws_str_send;
+	ws->ops.s_recv      = ws_str_recv;
+	ws->ops.s_get       = ws_str_get;
+	ws->ops.s_peer_cert = ws_str_peer_cert;
 
 	ws->fragsize = 1 << 20; // we won't send a frame larger than this
 	*wsp         = ws;
@@ -2753,4 +2755,18 @@ ws_str_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 		}
 	}
 	return (rv);
+}
+
+static nng_err
+ws_str_peer_cert(void *arg, nng_tls_cert **certp)
+{
+	nni_ws *ws = arg;
+
+	nni_mtx_lock(&ws->mtx);
+	if (ws->closed) {
+		nni_mtx_unlock(&ws->mtx);
+		return (NNG_ECLOSED);
+	}
+	nni_mtx_unlock(&ws->mtx);
+	return (nni_http_conn_peer_cert(ws->http, certp));
 }

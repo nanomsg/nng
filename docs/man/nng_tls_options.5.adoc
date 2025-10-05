@@ -22,7 +22,6 @@ nng_tls_options - TLS-specific options
 
 #define NNG_OPT_TLS_VERIFIED       "tls-verified"
 #define NNG_OPT_TLS_PEER_CN        "tls-peer-cn"
-#define NNG_OPT_TLS_PEER_ALT_NAMES "tls-peer-alt-names"
 ----
 
 == DESCRIPTION
@@ -65,11 +64,6 @@ May return incorrect results if peer authentication is disabled.
 (string)
 This read-only option returns the common name of the peer certificate.
 May return incorrect results if peer authentication is disabled.
-
-[[NNG_OPT_TLS_PEER_ALT_NAMES]]((`NNG_OPT_TLS_PEER_ALT_NAMES`))::
-(string)
-This read-only option returns string list with the subject alternative names of the
-peer certificate. May return incorrect results if peer authentication is disabled.
 
 === Inherited Options
 
