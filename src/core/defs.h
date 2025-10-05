@@ -127,28 +127,28 @@ typedef void (*nni_cb)(void *);
 
 #define NNI_PUT16LE(ptr, u)                                    \
 	do {                                                   \
-		(ptr)[1] = (uint8_t) (((uint16_t) (u)) >> 8u); \
-		(ptr)[0] = (uint8_t) ((uint16_t) (u));         \
+		((uint8_t *)ptr)[1] = (uint8_t) (((uint16_t) (u)) >> 8u); \
+		((uint8_t *)ptr)[0] = (uint8_t) ((uint16_t) (u));         \
 	} while (0)
 
 #define NNI_PUT32LE(ptr, u)                                     \
 	do {                                                    \
-		(ptr)[3] = (uint8_t) (((uint32_t) (u)) >> 24u); \
-		(ptr)[2] = (uint8_t) (((uint32_t) (u)) >> 16u); \
-		(ptr)[1] = (uint8_t) (((uint32_t) (u)) >> 8u);  \
-		(ptr)[0] = (uint8_t) ((uint32_t) (u));          \
+		((uint8_t *)ptr)[3] = (uint8_t) (((uint32_t) (u)) >> 24u); \
+		((uint8_t *)ptr)[2] = (uint8_t) (((uint32_t) (u)) >> 16u); \
+		((uint8_t *)ptr)[1] = (uint8_t) (((uint32_t) (u)) >> 8u);  \
+		((uint8_t *)ptr)[0] = (uint8_t) ((uint32_t) (u));          \
 	} while (0)
 
 #define NNI_PUT64LE(ptr, u)                                     \
 	do {                                                    \
-		(ptr)[7] = (uint8_t) (((uint64_t) (u)) >> 56u); \
-		(ptr)[6] = (uint8_t) (((uint64_t) (u)) >> 48u); \
-		(ptr)[5] = (uint8_t) (((uint64_t) (u)) >> 40u); \
-		(ptr)[4] = (uint8_t) (((uint64_t) (u)) >> 32u); \
-		(ptr)[3] = (uint8_t) (((uint64_t) (u)) >> 24u); \
-		(ptr)[2] = (uint8_t) (((uint64_t) (u)) >> 16u); \
-		(ptr)[1] = (uint8_t) (((uint64_t) (u)) >> 8u);  \
-		(ptr)[0] = (uint8_t) ((uint64_t) (u));          \
+		((uint8_t *)ptr)[7] = (uint8_t) (((uint64_t) (u)) >> 56u); \
+		((uint8_t *)ptr)[6] = (uint8_t) (((uint64_t) (u)) >> 48u); \
+		((uint8_t *)ptr)[5] = (uint8_t) (((uint64_t) (u)) >> 40u); \
+		((uint8_t *)ptr)[4] = (uint8_t) (((uint64_t) (u)) >> 32u); \
+		((uint8_t *)ptr)[3] = (uint8_t) (((uint64_t) (u)) >> 24u); \
+		((uint8_t *)ptr)[2] = (uint8_t) (((uint64_t) (u)) >> 16u); \
+		((uint8_t *)ptr)[1] = (uint8_t) (((uint64_t) (u)) >> 8u);  \
+		((uint8_t *)ptr)[0] = (uint8_t) ((uint64_t) (u));          \
 	} while (0)
 
 #define NNI_GET16LE(ptr, v)                                 \
