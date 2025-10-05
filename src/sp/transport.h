@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -12,9 +12,9 @@
 #ifndef PROTOCOL_SP_TRANSPORT_H
 #define PROTOCOL_SP_TRANSPORT_H
 
-#include "core/defs.h"
-#include "core/list.h"
-#include "core/options.h"
+#include "../core/defs.h"
+#include "../core/list.h"
+#include "../core/options.h"
 
 // Endpoint operations are called by the socket in a
 // protocol-independent fashion.  The socket makes individual calls,

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,7 @@
 #ifndef CORE_URL_H
 #define CORE_URL_H
 
-#include "core/defs.h"
+#include "defs.h"
 
 struct nng_url {
 	const char *u_scheme;   // never NULL

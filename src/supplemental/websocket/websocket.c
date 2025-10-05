@@ -13,9 +13,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
+#include "../../supplemental/http/http_api.h"
 #include "nng/http.h"
-#include "supplemental/http/http_api.h"
 
 #include "base64.h"
 #include "sha1.h"

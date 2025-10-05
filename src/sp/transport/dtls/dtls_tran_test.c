@@ -11,7 +11,8 @@
 //
 
 #include "nng/nng.h"
-#include <nuts.h>
+
+#include "../../../testing/nuts.h"
 
 // TLS tests.
 

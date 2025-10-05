@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
 #include "http_api.h"
 #include "nng/http.h"
 
@@ -73,7 +73,7 @@ nng_http_set_body(nng_http *conn, void *data, size_t sz)
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(data);
 	NNI_ARG_UNUSED(sz);
-	return (NNG_ENOTSUP);
+	return;
 #endif
 }
 
@@ -108,7 +108,7 @@ nng_http_get_uri(nng_http *conn)
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_get_uri(conn));
 #else
-	NNI_ARG_UNUSED(req);
+	NNI_ARG_UNUSED(conn);
 	return (NULL);
 #endif
 }
@@ -132,7 +132,7 @@ nng_http_get_version(nng_http *conn)
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_get_version(conn));
 #else
-	NNI_ARG_UNUSED(res);
+	NNI_ARG_UNUSED(conn);
 	return (NULL);
 #endif
 }
@@ -143,7 +143,7 @@ nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason)
 #ifdef NNG_SUPP_HTTP
 	nni_http_set_status(conn, status, reason);
 #else
-	NNI_ARG_UNUSED(res);
+	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(status);
 	NNI_ARG_UNUSED(reason);
 #endif
@@ -155,8 +155,7 @@ nng_http_get_status(nng_http *conn)
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_get_status(conn));
 #else
-	NNI_ARG_UNUSED(res);
-	NNI_ARG_UNUSED(status);
+	NNI_ARG_UNUSED(conn);
 	return (0);
 #endif
 }
@@ -167,8 +166,7 @@ nng_http_get_reason(nng_http *conn)
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_get_reason(conn));
 #else
-	NNI_ARG_UNUSED(res);
-	NNI_ARG_UNUSED(status);
+	NNI_ARG_UNUSED(conn);
 	return (0);
 #endif
 }
@@ -560,7 +558,7 @@ nng_http_server_error(nng_http_server *srv, nng_http *conn)
 	return (nni_http_server_error(srv, conn));
 #else
 	NNI_ARG_UNUSED(srv);
-	NNI_ARG_UNUSED(res);
+	NNI_ARG_UNUSED(conn);
 	return (NNG_ENOTSUP);
 #endif
 }
@@ -650,6 +648,6 @@ nng_http_reset(nng_http *conn)
 #ifdef NNG_SUPP_HTTP
 	nni_http_conn_reset(conn);
 #else
-	NNI_ARG_UNUSED(req);
+	NNI_ARG_UNUSED(conn);
 #endif
 }

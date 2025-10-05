@@ -42,7 +42,7 @@
 #include <poll.h>
 #endif
 
-#include <nuts.h>
+#include "nuts.h"
 
 uint64_t
 nuts_clock(void)

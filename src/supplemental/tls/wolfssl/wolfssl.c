@@ -31,7 +31,7 @@
 
 #include <wolfssl/ssl.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/nng_impl.h"
 #include "nng/nng.h"
 
 #include "../tls_engine.h"
@@ -490,6 +490,7 @@ wolf_config_psk(nng_tls_engine_config *cfg, const char *identity,
 	NNI_ARG_UNUSED(identity);
 	NNI_ARG_UNUSED(key);
 	NNI_ARG_UNUSED(key_len);
+	return (NNG_ENOTSUP);
 #else
 	psk *psk, *srch;
 

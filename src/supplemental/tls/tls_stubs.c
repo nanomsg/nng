@@ -9,7 +9,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
 #include "tls_engine.h"
 
 // Provide stubs for the case where TLS is not enabled.

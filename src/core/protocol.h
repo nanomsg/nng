@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,7 @@
 #ifndef CORE_PROTOCOL_H
 #define CORE_PROTOCOL_H
 
-#include "core/options.h"
+#include "options.h"
 
 // Protocol implementation details.  Protocols must implement the
 // interfaces in this file.  Note that implementing new protocols is
@@ -168,7 +168,7 @@ extern int nni_proto_open(nng_socket *, const nni_proto *);
 // There are gaps in the list, which are obsolete or unsupported protocols.
 // Protocol numbers are never more than 16 bits.  Also, there will never be
 // a valid protocol numbered 0 (NNG_PROTO_NONE).
-#define NNI_PROTO(major, minor) (((major) *16) + (minor))
+#define NNI_PROTO(major, minor) (((major) * 16) + (minor))
 
 // Protocol major numbers.  This is here for documentation only, and
 // to serve as a "registry" for managing new protocol numbers.  Consider

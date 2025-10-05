@@ -13,7 +13,7 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H
 
-#include "core/defs.h"
+#include "../../core/defs.h"
 
 // Locking theory statement for TLS engines.  The engine is assumed
 // operate only from the context of threads called by the common

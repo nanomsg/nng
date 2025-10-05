@@ -23,7 +23,7 @@
 #include "stats.h"
 #include "url.h"
 
-#include "sp/transport.h"
+#include "../sp/transport.h"
 
 // This file contains stuff shared within the core between sockets, endpoints,
 // and pipes.  This must not be exposed to other subsystems -- these internals

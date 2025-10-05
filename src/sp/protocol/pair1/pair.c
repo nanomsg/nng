@@ -10,7 +10,7 @@
 
 #include <stdlib.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/nng_impl.h"
 
 // Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern.
 

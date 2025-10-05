@@ -11,8 +11,8 @@
 #ifndef CORE_REAP_H
 #define CORE_REAP_H
 
-#include "core/defs.h"
-#include "core/list.h"
+#include "defs.h"
+#include "list.h"
 
 // nni_reap_node is to be inserted inline into structures
 // for subsystems that wish to support deferred reaping.

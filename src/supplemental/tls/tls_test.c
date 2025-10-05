@@ -8,7 +8,8 @@
 //
 
 #include "nng/nng.h"
-#include <nuts.h>
+
+#include "../../testing/nuts.h"
 
 void
 test_tls_config_version(void)

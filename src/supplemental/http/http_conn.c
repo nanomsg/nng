@@ -15,10 +15,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "core/list.h"
-#include "core/nng_impl.h"
+#include "../../core/list.h"
+#include "../../core/nng_impl.h"
+#include "../../supplemental/tls/tls_api.h"
 #include "nng/http.h"
-#include "supplemental/tls/tls_api.h"
 
 #include "http_api.h"
 #include "http_msg.h"
@@ -52,10 +52,10 @@ struct nng_http_conn {
 	nni_list    rdq; // high level http read requests
 	nni_list    wrq; // high level http write requests
 
-	nni_aio *rd_uaio; // user aio for read
-	nni_aio *wr_uaio; // user aio for write
-	nni_aio  rd_aio;  // bottom half read operations
-	nni_aio  wr_aio;  // bottom half write operations
+	nng_aio *rd_uaio; // user aio for read
+	nng_aio *wr_uaio; // user aio for write
+	nng_aio  rd_aio;  // bottom half read operations
+	nng_aio  wr_aio;  // bottom half write operations
 
 	nni_mtx mtx;
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,12 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
-#include "core/nng_impl.h"
-#include "core/options.h"
-#include "core/pipe.h"
+#include "defs.h"
 #include "list.h"
 #include "nng/nng.h"
+#include "nng_impl.h"
+#include "options.h"
+#include "pipe.h"
 #include "sockimpl.h"
 
 #include <stdio.h>

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,9 +11,9 @@
 #ifndef CORE_STATS_H
 #define CORE_STATS_H
 
-#include "core/defs.h"
-#include "core/list.h"
-#include "core/platform.h"
+#include "defs.h"
+#include "list.h"
+#include "platform.h"
 
 // Statistics support.  This is inspired in part by the Solaris
 // kernel stats framework, but we've simplified and tuned it for our use.

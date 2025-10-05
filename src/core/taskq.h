@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,9 +11,10 @@
 #ifndef CORE_TASKQ_H
 #define CORE_TASKQ_H
 
-#include "core/defs.h"
-#include "core/list.h"
-#include "core/platform.h"
+#include "defs.h"
+#include "list.h"
+#include "platform.h"
+
 #include "nng/nng.h"
 
 typedef struct nni_taskq nni_taskq;

@@ -12,7 +12,7 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_API_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_API_H
 
-#include "core/stream.h"
+#include "../../core/stream.h"
 
 // The implementation supplies this function to create the TLS connection
 // object.  All fields will be zeroed.

@@ -10,12 +10,12 @@
 //
 
 // Basic HTTP server tests.
-#include "core/defs.h"
+#include "../../core/defs.h"
 #include <complex.h>
 #include <nng/http.h>
 #include <nng/nng.h>
 
-#include <nuts.h>
+#include "../../testing/nuts.h"
 
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body></html>";
 const char *doc2 = "This is a text file.";

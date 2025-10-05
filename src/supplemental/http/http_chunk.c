@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "../../core/defs.h"
 
 #include "http_api.h"
 

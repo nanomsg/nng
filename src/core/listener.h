@@ -12,8 +12,8 @@
 #ifndef CORE_LISTENER_H
 #define CORE_LISTENER_H
 
-#include "core/defs.h"
-#include "core/stats.h"
+#include "defs.h"
+#include "stats.h"
 
 extern int      nni_listener_find(nni_listener **, uint32_t);
 extern int      nni_listener_hold(nni_listener *);

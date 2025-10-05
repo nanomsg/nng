@@ -1,5 +1,5 @@
 //
-// Copyright 2023 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -24,38 +24,39 @@
 // symbols should be found in the toplevel nng.h header.
 #include "defs.h"
 
-#include "core/platform.h"
+#include "platform.h"
 
-#include "core/aio.h"
-#include "core/device.h"
-#include "core/file.h"
-#include "core/idhash.h"
-#include "core/init.h"
-#include "core/list.h"
-#include "core/lmq.h"
-#include "core/message.h"
-#include "core/msgqueue.h"
-#include "core/options.h"
-#include "core/panic.h"
-#include "core/pollable.h"
-#include "core/protocol.h"
-#include "core/reap.h"
-#include "core/refcnt.h"
-#include "core/stats.h"
-#include "core/stream.h"
-#include "core/strs.h"
-#include "core/taskq.h"
-#include "core/thread.h"
-#include "core/url.h"
+#include "aio.h"
+#include "device.h"
+#include "file.h"
+#include "idhash.h"
+#include "init.h"
+#include "list.h"
+#include "lmq.h"
+#include "message.h"
+#include "msgqueue.h"
+#include "options.h"
+#include "panic.h"
+#include "pollable.h"
+#include "protocol.h"
+#include "reap.h"
+#include "refcnt.h"
+#include "stats.h"
+
+#include "stream.h"
+#include "strs.h"
+#include "taskq.h"
+#include "thread.h"
+#include "url.h"
 
 // transport needs to come after url
-#include "sp/transport.h"
+#include "../sp/transport.h"
 
 // These have to come after the others - particularly transport.h
 
-#include "core/dialer.h"
-#include "core/listener.h"
-#include "core/pipe.h"
-#include "core/socket.h"
+#include "dialer.h"
+#include "listener.h"
+#include "pipe.h"
+#include "socket.h"
 
 #endif // CORE_NNG_IMPL_H

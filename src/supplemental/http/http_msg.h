@@ -11,8 +11,8 @@
 #ifndef NNG_SUPPLEMENTAL_HTTP_HTTP_MSG
 #define NNG_SUPPLEMENTAL_HTTP_HTTP_MSG
 
-#include "core/defs.h"
-#include "core/list.h"
+#include "../../core/defs.h"
+#include "../../core/list.h"
 
 // Note that as we parse headers, the rule is that if a header is already
 // present, then we can append it to the existing header, separated by

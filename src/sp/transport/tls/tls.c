@@ -12,7 +12,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/nng_impl.h"
 
 #include "nng/nng.h"
 
@@ -43,9 +43,9 @@ struct tlstran_pipe {
 	size_t        gotrxhead;
 	size_t        wanttxhead;
 	size_t        wantrxhead;
-	nni_aio       txaio;
-	nni_aio       rxaio;
-	nni_aio       negoaio;
+	nng_aio       txaio;
+	nng_aio       rxaio;
+	nng_aio       negoaio;
 	nni_msg      *rxmsg;
 	nni_mtx       mtx;
 };
@@ -63,9 +63,9 @@ struct tlstran_ep {
 	nng_stream_listener *listener;
 	nni_dialer          *ndialer;
 	nni_listener        *nlistener;
-	nni_aio             *useraio;
-	nni_aio              connaio;
-	nni_aio              timeaio;
+	nng_aio             *useraio;
+	nng_aio              connaio;
+	nng_aio              timeaio;
 	nni_list             waitpipes; // pipes waiting to match to socket
 	nni_list             negopipes; // pipes busy negotiating
 	const char          *host;

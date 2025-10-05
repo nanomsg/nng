@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/list.h"
-#include "core/nng_impl.h"
-#include "core/url.h"
+#include "../../core/list.h"
+#include "../../core/nng_impl.h"
+#include "../../core/url.h"
 #include "http_api.h"
 #include "http_msg.h"
 #include "nng/http.h"

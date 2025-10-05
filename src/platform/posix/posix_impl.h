@@ -32,7 +32,7 @@
 #define NNG_PLATFORM_POSIX_SOCKADDR
 #define NNG_PLATFORM_POSIX_UDP
 
-#include "core/defs.h"
+#include "../../core/defs.h"
 
 #include "posix_config.h"
 #endif
@@ -60,10 +60,7 @@ struct nni_plat_mtx {
 	pthread_mutex_t mtx;
 };
 
-#define NNI_MTX_INITIALIZER               \
-	{                                 \
-		PTHREAD_MUTEX_INITIALIZER \
-	}
+#define NNI_MTX_INITIALIZER { PTHREAD_MUTEX_INITIALIZER }
 
 // No static form of CV initialization because of the need to use
 // attributes to set the clock type.

@@ -19,7 +19,7 @@
 #include "stats.h"
 #include "thread.h"
 
-#include "sp/transport.h"
+#include "../sp/transport.h"
 
 // AIO
 extern void nni_pipe_recv(nni_pipe *, nni_aio *);

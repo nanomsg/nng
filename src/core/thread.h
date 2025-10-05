@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,15 +11,15 @@
 #ifndef CORE_THREAD_H
 #define CORE_THREAD_H
 
-#include "core/defs.h"
-#include "core/platform.h"
+#include "defs.h"
+#include "platform.h"
 
 struct nni_thr {
 	nni_plat_thr thr;
 	nni_plat_mtx mtx;
 	nni_plat_cv  cv;
 	nni_thr_func fn;
-	void *       arg;
+	void        *arg;
 	int          start;
 	int          stop;
 	int          done;

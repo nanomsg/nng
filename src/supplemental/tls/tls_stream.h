@@ -12,15 +12,15 @@
 #ifndef NNG_TLS_TLS_STREAM_H
 #define NNG_TLS_TLS_STREAM_H
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
 #include "tls_common.h"
 
 typedef struct tls_stream_s {
 	nng_stream    stream;
 	size_t        size;
 	nni_reap_node reap;
-	nni_aio       conn_aio;
-	nni_aio      *user_aio;
+	nng_aio       conn_aio;
+	nng_aio      *user_aio;
 	nni_tls_conn  conn; // NB: must be last!
 } tls_stream;
 

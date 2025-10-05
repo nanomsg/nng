@@ -11,7 +11,8 @@
 //
 
 #include "nng/nng.h"
-#include <nuts.h>
+
+#include "../../../testing/nuts.h"
 
 // TLS tests.
 
@@ -226,8 +227,7 @@ test_tls_pipe_details(void)
 	p = nng_msg_get_pipe(msg);
 	NUTS_TRUE(nng_pipe_id(p) >= 0);
 #if !defined(NNG_TLS_ENGINE_WOLFSSL) || defined(NNG_WOLFSSL_HAVE_PEER_CERT)
-	char  *cn;
-	char **alts;
+	char *cn;
 	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_TLS_PEER_CN, &cn));
 	NUTS_ASSERT(cn != NULL);
 	NUTS_MATCH(cn, "127.0.0.1");

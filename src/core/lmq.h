@@ -10,7 +10,7 @@
 #ifndef CORE_LMQ_H
 #define CORE_LMQ_H
 
-#include "core/defs.h"
+#include "defs.h"
 
 // nni_lmq is a very lightweight message queue.  Defining it this way allows
 // us to share some common code.  Locking must be supplied by the caller.

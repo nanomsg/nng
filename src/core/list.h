@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Garrett D'Amore <garrett@damore.org>
+// Copyright 2025 Garrett D'Amore <garrett@damore.org>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,7 +10,7 @@
 #ifndef CORE_LIST_H
 #define CORE_LIST_H
 
-#include "core/defs.h"
+#include "defs.h"
 
 // In order to make life easy, we just define the list structures
 // directly, and let consumers directly inline structures.
@@ -32,12 +32,10 @@ extern void nni_list_init_offset(nni_list *list, size_t offset);
 // NNI_LIST_INITIALIZER is used to initialize structures at declaration time.
 // The list argument is the structure being initialized and the type and
 // offset determine where the node lives within each item.
-#define NNI_LIST_INITIALIZER(list, type, field)          \
-	{                                                \
-		.ll_head.ln_next = &(list).ll_head,      \
-		.ll_head.ln_prev = &(list).ll_head,      \
-		.ll_offset       = offsetof(type, field) \
-	}
+#define NNI_LIST_INITIALIZER(list, type, field)     \
+	{ .ll_head.ln_next       = &(list).ll_head, \
+		.ll_head.ln_prev = &(list).ll_head, \
+		.ll_offset       = offsetof(type, field) }
 
 #define NNI_LIST_NODE_INIT(node)                       \
 	do {                                           \
@@ -60,6 +58,6 @@ extern void  nni_list_node_remove(nni_list_node *);
 
 #define NNI_LIST_FOREACH(l, it)                  \
 	for (it = nni_list_first(l); it != NULL; \
-	     it = nni_list_next(l, (void *) it))
+	    it  = nni_list_next(l, (void *) it))
 
 #endif // CORE_LIST_H

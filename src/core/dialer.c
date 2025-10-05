@@ -9,9 +9,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
-#include "core/nng_impl.h"
+#include "defs.h"
 #include "nng/nng.h"
+#include "nng_impl.h"
 #include "sockimpl.h"
 
 #include <stdio.h>

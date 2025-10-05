@@ -11,11 +11,11 @@
 #ifndef CORE_AIO_H
 #define CORE_AIO_H
 
-#include "core/defs.h"
-#include "core/list.h"
-#include "core/reap.h"
-#include "core/taskq.h"
-#include "core/thread.h"
+#include "defs.h"
+#include "list.h"
+#include "reap.h"
+#include "taskq.h"
+#include "thread.h"
 
 typedef void (*nni_aio_cancel_fn)(nni_aio *, void *, nng_err);
 
