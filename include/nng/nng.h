@@ -73,7 +73,7 @@ extern "C" {
 // NNG_PROTOCOL_NUMBER is used by protocol headers to calculate their
 // protocol number from a major and minor number.  Applications should
 // probably not need to use this.
-#define NNG_PROTOCOL_NUMBER(maj, min) (((x) *16) + (y))
+#define NNG_PROTOCOL_NUMBER(maj, min) (((x) * 16) + (y))
 
 // Types common to nng.
 
