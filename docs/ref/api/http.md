@@ -121,68 +121,68 @@ then a built in reason based on the _status_ will be used instead.
 
 Status codes are defined by the IETF. Here are definitions that NNG provides for convenience:
 
-| Name                                                                                             | Code | Reason Text                     | Notes                                                 |
-| ------------------------------------------------------------------------------------------------ | ---- | ------------------------------- | ----------------------------------------------------- |
-| `NNG_HTTP_STATUS_CONTINUE`<a name="#NNG_HTTP_STATUS_CONTINUE"></a>                               | 100  | Continue                        | Partial transfer, client may send body.               |
-| `NNG_HTTP_STATUS_SWITCHING`<a name="#NNG_HTTP_STATUS_SWITCHING"></a>                             | 101  | Switching Protocols             | Used when upgrading or hijacking a connection.        |
-| `NNG_HTTP_STATUS_PROCESSING`<a name="#NNG_HTTP_STATUS_PROCESSING"></a>                           | 102  | Processing                      |
-| `NNG_HTTP_STATUS_OK`<a name="#NNG_HTTP_STATUS_OK"></a>                                           | 200  | OK                              | Successful result.                                    |
-| `NNG_HTTP_STATUS_CREATED`<a name="#NNG_HTTP_STATUS_CREATED"></a>                                 | 201  | Created                         | Resource created successfully.                        |
-| `NNG_HTTP_STATUS_ACCEPTED`<a name="#NNG_HTTP_STATUS_ACCEPTED"></a>                               | 202  | Created                         | Request accepted for future processing.               |
-| `NNG_HTTP_STATUS_NOT_AUTHORITATIVE`<a name="#NNG_HTTP_STATUS_NOT_AUTHORITATIVE"></a>             | 203  | Not Authoritative               | Request successful, but modified by proxy.            |
-| `NNG_HTTP_STATUS_NO_CONTENT`<a name="#NNG_HTTP_STATUS_NO_CONTENT"></a>                           | 204  | No Content                      | Request successful, no content returned.              |
-| `NNG_HTTP_STATUS_RESET_CONTENT`<a name="#NNG_HTTP_STATUS_NO_CONTENT"></a>                        | 205  | Reset Content                   | Request successful, client should reload content.     |
-| `NNG_HTTP_STATUS_PARTIAL_CONTENT`<a name="#NNG_HTTP_STATUS_NO_CONTENT"></a>                      | 206  | Partial Content                 | Response to a range request.                          |
-| `NNG_HTTP_STATUS_MULTI_STATUS`<a name="#NNG_HTTP_STATUS_MULTI_STATUS"></a>                       | 207  | Multi-Status                    | Used with WebDAV.                                     |
-| `NNG_HTTP_STATUS_ALREADY_REPORTED`<a name="#NNG_HTTP_STATUS_ALREADY_REPORTED"></a>               | 208  | Already Reported                | Used with WebDAV.                                     |
-| `NNG_HTTP_STATUS_IM_USED`<a name="#NNG_HTTP_STATUS_IM_USED"></a>                                 | 226  | IM Used                         | Used with delta encodings, rarely supported.          |
-| `NNG_HTTP_STATUS_MULTIPLE_CHOICES`<a name="#NNG_HTTP_STATUS_MULTIPLE_CHOICES"></a>               | 300  | Multiple Choices                | Multiple responses possible, client should choose.    |
-| `NNG_HTTP_STATUS_MOVED_PERMANENTLY`<a name="#NNG_HTTP_STATUS_MOVED_PERMANENTLY"></a>             | 301  | Moved Permanently               | Permanent redirection, may be saved by client.        |
-| `NNG_HTTP_STATUS_FOUND`<a name="#NNG_HTTP_STATUS_FOUND"></a>                                     | 302  | Found                           | Temporary redirection, client may switch to GET.      |
-| `NNG_HTTP_STATUS_SEE_OTHER`<a name="#NNG_HTTP_STATUS_SEE_OTHER"></a>                             | 303  | See Other                       | Redirect, perhaps after a success POST or PUT.        |
-| `NNG_HTTP_STATUS_NOT_MODIFIED`<a name="#NNG_HTTP_STATUS_NOT_MODIFIED"></a>                       | 304  | Not Modified                    | Resource not modified, client may use cached version. |
-| `NNG_HTTP_STATUS_USE_PROXY`<a name="#NNG_HTTP_STATUS_USE_PROXY"></a>                             | 305  | Use Proxy                       |
-| `NNG_HTTP_STATUS_TEMPORARY_REDIRECT`<a name="#NNG_HTTP_STATUS_TEMPORARY_REDIRECT"></a>           | 307  | Temporary Redirect              | Temporary redirect, preserves method.                 |
-| `NNG_HTTP_STATUS_PERMANENT_REDIRECT`<a name="#NNG_HTTP_STATUS_PERMANENT_REDIRECT"></a>           | 308  | Permanent Redirect              | Permanent redirect.                                   |
-| `NNG_HTTP_STATUS_BAD_REQUEST`<a name="#NNG_HTTP_STATUS_BAD_REQUEST"></a>                         | 400  | Bad Request                     | Generic problem with the request.                     |
-| `NNG_HTTP_STATUS_UNAUTHORIZED`<a name="#NNG_HTTP_STATUS_UNAUTHORIZED"></a>                       | 401  | Unauthorized                    | Indicates a problem with authentication.              |
-| `NNG_HTTP_STATUS_PAYMENT_REQUIRED`<a name="#NNG_HTTP_STATUS_PAYMENT_REQUIRED"></a>               | 402  | Payment Required                |
-| `NNG_HTTP_STATUS_FORBIDDEN`<a name="#NNG_HTTP_STATUS_FORBIDDEN"></a>                             | 403  | Forbidden                       | No permission to access resource.                     |
-| `NNG_HTTP_STATUS_NOT_FOUND`<a name="#NNG_HTTP_STATUS_NOT_FOUND"></a>                             | 404  | Not Found                       | Resource does not exist.                              |
-| `NNG_HTTP_STATUS_METHOD_NOT_ALLOWED`<a name="#NNG_HTTP_STATUS_METHOD_NOT_ALLOWED"></a>           | 405  | Method Not Allowed              | Resource does not support the method.                 |
-| `NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE`<a name="#NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE"></a>     | 406  | Not Acceptable                  | Could not satisfy accept requirements.                |
-| `NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED`<a name="#NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED"></a>         | 407  | Proxy Authentication Required   | Proxy requires authentication.                        |
-| `NNG_HTTP_STATUS_REQUEST_TIMEOUT`<a name="#NNG_HTTP_STATUS_REQUEST_TIMEOUT"></a>                 | 408  | Request Timeout                 | Timed out waiting for request.                        |
-| `NNG_HTTP_STATUS_CONFLICT`<a name="#NNG_HTTP_STATUS_CONFLICT"></a>                               | 409  | Conflict                        | Conflicting request.                                  |
-| `NNG_HTTP_STATUS_GONE`<a name="#NNG_HTTP_STATUS_GONE"></a>                                       | 410  | Gone                            | Resource no longer exists.                            |
-| `NNG_HTTP_STATUS_LENGTH_REQUIRED`<a name="#NNG_HTTP_STATUS_LENGTH_REQUIRED"></a>                 | 411  | Length Required                 | Missing Content-Length.                               |
-| `NNG_HTTP_STATUS_PRECONDITION_FAILED`<a name="#NNG_HTTP_STATUS_PRECONDITION_FAILED"></a>         | 412  | Precondition Failed             |                                                       |
-| `NNG_HTTP_STATUS_CONTENT_TOO_LARGE`<a name="#NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE"></a>             | 413  | Content Too Large               |                                                       |
-| `NNG_HTTP_STATUS_URI_TOO_LONG`<a name="#NNG_HTTP_STATUS_URI_TOO_LONG"></a>                       | 414  | URI Too Long                    |                                                       |
-| `NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE`<a name="#NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE"></a>   | 415  | Unsupported Media Type          |
-| `NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE`<a name="#NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE"></a>     | 416  | Range Not Satisfiable           |
-| `NNG_HTTP_STATUS_EXPECTATION_FAILED`<a name="#NNG_HTTP_STATUS_EXPECTATION_FAILED"></a>           | 417  | Expectation Failed              |
-| `NNG_HTTP_STATUS_TEAPOT`<a name="#NNG_HTTP_STATUS_TEAPOT"></a>                                   | 418  | I Am A Teapot                   | RFC 2324.                                             |
-| `NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY`<a name="#NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a>       | 422  | Unprocessable Entity            |
-| `NNG_HTTP_STATUS_LOCKED`<a name="#NNG_HTTP_STATUS_LOCKED"></a>                                   | 423  | Locked                          |
-| `NNG_HTTP_STATUS_FAILED_DEPENDENCY`<a name="#NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a>             | 424  | Failed Dependency               |
-| `NNG_HTTP_STATUS_TOO_EARLY`<a name="#NNG_HTTP_STATUS_TOO_EARLY"></a>                             | 425  | Too Early                       |
-| `NNG_HTTP_STATUS_UPGRADE_REQUIRED`<a name="#NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a>               | 426  | Upgrade Required                |
-| `NNG_HTTP_STATUS_PRECONDITION_REQUIRED`<a name="#NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a>     | 428  | Precondition Required           |                                                       |
-| `NNG_HTTP_STATUS_TOO_MANY_REQUESTS`<a name="#NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a>             | 429  | Too Many Requests               |                                                       |
-| `NNG_HTTP_STATUS_HEADERS_TOO_LARGE`<a name="#NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a>             | 431  | Headers Too Large               |                                                       |
-| `NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS`<a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a>     | 451  | Unavailable For Legal Reasons   |                                                       |
-| `NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR`<a name="#NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a>     | 500  | Internal Server Error           |
-| `NNG_HTTP_STATUS_NOT_IMPLEMENTED`<a name="#NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a>                 | 501  | Not Implemented                 | Server does not implement method.                     |
-| `NNG_HTTP_STATUS_BAD_GATEWAY`<a name="#NNG_HTTP_STATUS_BAD_GATEWAY"></a>                         | 502  | Bad Gateway                     |
-| `NNG_HTTP_STATUS_SERVICE_UNAVAILALE`<a name="#NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a>          | 503  | Service Unavailable             |
-| `NNG_HTTP_STATUS_GATEWAY_TIMEOUT`<a name="#NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a>                 | 504  | Gateway TImeout                 |
-| `NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP`<a name="#NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP"></a>     | 505  | HTTP Version Not Supported      |
-| `NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES`<a name="#NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES"></a> | 506  | Variant Also Negotiates         |
-| `NNG_HTTP_STATUS_INSUFFICIENT_STORAGE`<a name="#NNG_HTTP_STATUS_INSUFFICIENT_STORAGE"></a>       | 507  | Variant Also Negotiates         |
-| `NNG_HTTP_STATUS_LOOP_DETECTED`<a name="#NNG_HTTP_STATUS_LOOP_DETECTED"></a>                     | 508  | Loop Detected                   |
-| `NNG_HTTP_STATUS_NOT_EXTENDED`<a name="#NNG_HTTP_STATUS_NOT_EXTENDED"></a>                       | 510  | Not Extended                    |
-| `NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED`<a name="#NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED"></a>     | 511  | Network Authentication Required |
+| Name                                                                                            | Code | Reason Text                     | Notes                                                 |
+| ----------------------------------------------------------------------------------------------- | ---- | ------------------------------- | ----------------------------------------------------- |
+| `NNG_HTTP_STATUS_CONTINUE`<a name="NNG_HTTP_STATUS_CONTINUE"></a>                               | 100  | Continue                        | Partial transfer, client may send body.               |
+| `NNG_HTTP_STATUS_SWITCHING`<a name="NNG_HTTP_STATUS_SWITCHING"></a>                             | 101  | Switching Protocols             | Used when upgrading or hijacking a connection.        |
+| `NNG_HTTP_STATUS_PROCESSING`<a name="NNG_HTTP_STATUS_PROCESSING"></a>                           | 102  | Processing                      |
+| `NNG_HTTP_STATUS_OK`<a name="NNG_HTTP_STATUS_OK"></a>                                           | 200  | OK                              | Successful result.                                    |
+| `NNG_HTTP_STATUS_CREATED`<a name="NNG_HTTP_STATUS_CREATED"></a>                                 | 201  | Created                         | Resource created successfully.                        |
+| `NNG_HTTP_STATUS_ACCEPTED`<a name="NNG_HTTP_STATUS_ACCEPTED"></a>                               | 202  | Created                         | Request accepted for future processing.               |
+| `NNG_HTTP_STATUS_NOT_AUTHORITATIVE`<a name="NNG_HTTP_STATUS_NOT_AUTHORITATIVE"></a>             | 203  | Not Authoritative               | Request successful, but modified by proxy.            |
+| `NNG_HTTP_STATUS_NO_CONTENT`<a name="NNG_HTTP_STATUS_NO_CONTENT"></a>                           | 204  | No Content                      | Request successful, no content returned.              |
+| `NNG_HTTP_STATUS_RESET_CONTENT`<a name="NNG_HTTP_STATUS_NO_CONTENT"></a>                        | 205  | Reset Content                   | Request successful, client should reload content.     |
+| `NNG_HTTP_STATUS_PARTIAL_CONTENT`<a name="NNG_HTTP_STATUS_NO_CONTENT"></a>                      | 206  | Partial Content                 | Response to a range request.                          |
+| `NNG_HTTP_STATUS_MULTI_STATUS`<a name="NNG_HTTP_STATUS_MULTI_STATUS"></a>                       | 207  | Multi-Status                    | Used with WebDAV.                                     |
+| `NNG_HTTP_STATUS_ALREADY_REPORTED`<a name="NNG_HTTP_STATUS_ALREADY_REPORTED"></a>               | 208  | Already Reported                | Used with WebDAV.                                     |
+| `NNG_HTTP_STATUS_IM_USED`<a name="NNG_HTTP_STATUS_IM_USED"></a>                                 | 226  | IM Used                         | Used with delta encodings, rarely supported.          |
+| `NNG_HTTP_STATUS_MULTIPLE_CHOICES`<a name="NNG_HTTP_STATUS_MULTIPLE_CHOICES"></a>               | 300  | Multiple Choices                | Multiple responses possible, client should choose.    |
+| `NNG_HTTP_STATUS_MOVED_PERMANENTLY`<a name="NNG_HTTP_STATUS_MOVED_PERMANENTLY"></a>             | 301  | Moved Permanently               | Permanent redirection, may be saved by client.        |
+| `NNG_HTTP_STATUS_FOUND`<a name="NNG_HTTP_STATUS_FOUND"></a>                                     | 302  | Found                           | Temporary redirection, client may switch to GET.      |
+| `NNG_HTTP_STATUS_SEE_OTHER`<a name="NNG_HTTP_STATUS_SEE_OTHER"></a>                             | 303  | See Other                       | Redirect, perhaps after a success POST or PUT.        |
+| `NNG_HTTP_STATUS_NOT_MODIFIED`<a name="NNG_HTTP_STATUS_NOT_MODIFIED"></a>                       | 304  | Not Modified                    | Resource not modified, client may use cached version. |
+| `NNG_HTTP_STATUS_USE_PROXY`<a name="NNG_HTTP_STATUS_USE_PROXY"></a>                             | 305  | Use Proxy                       |
+| `NNG_HTTP_STATUS_TEMPORARY_REDIRECT`<a name="NNG_HTTP_STATUS_TEMPORARY_REDIRECT"></a>           | 307  | Temporary Redirect              | Temporary redirect, preserves method.                 |
+| `NNG_HTTP_STATUS_PERMANENT_REDIRECT`<a name="NNG_HTTP_STATUS_PERMANENT_REDIRECT"></a>           | 308  | Permanent Redirect              | Permanent redirect.                                   |
+| `NNG_HTTP_STATUS_BAD_REQUEST`<a name="NNG_HTTP_STATUS_BAD_REQUEST"></a>                         | 400  | Bad Request                     | Generic problem with the request.                     |
+| `NNG_HTTP_STATUS_UNAUTHORIZED`<a name="NNG_HTTP_STATUS_UNAUTHORIZED"></a>                       | 401  | Unauthorized                    | Indicates a problem with authentication.              |
+| `NNG_HTTP_STATUS_PAYMENT_REQUIRED`<a name="NNG_HTTP_STATUS_PAYMENT_REQUIRED"></a>               | 402  | Payment Required                |
+| `NNG_HTTP_STATUS_FORBIDDEN`<a name="NNG_HTTP_STATUS_FORBIDDEN"></a>                             | 403  | Forbidden                       | No permission to access resource.                     |
+| `NNG_HTTP_STATUS_NOT_FOUND`<a name="NNG_HTTP_STATUS_NOT_FOUND"></a>                             | 404  | Not Found                       | Resource does not exist.                              |
+| `NNG_HTTP_STATUS_METHOD_NOT_ALLOWED`<a name="NNG_HTTP_STATUS_METHOD_NOT_ALLOWED"></a>           | 405  | Method Not Allowed              | Resource does not support the method.                 |
+| `NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE`<a name="NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE"></a>     | 406  | Not Acceptable                  | Could not satisfy accept requirements.                |
+| `NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED`<a name="NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED"></a>         | 407  | Proxy Authentication Required   | Proxy requires authentication.                        |
+| `NNG_HTTP_STATUS_REQUEST_TIMEOUT`<a name="NNG_HTTP_STATUS_REQUEST_TIMEOUT"></a>                 | 408  | Request Timeout                 | Timed out waiting for request.                        |
+| `NNG_HTTP_STATUS_CONFLICT`<a name="NNG_HTTP_STATUS_CONFLICT"></a>                               | 409  | Conflict                        | Conflicting request.                                  |
+| `NNG_HTTP_STATUS_GONE`<a name="NNG_HTTP_STATUS_GONE"></a>                                       | 410  | Gone                            | Resource no longer exists.                            |
+| `NNG_HTTP_STATUS_LENGTH_REQUIRED`<a name="NNG_HTTP_STATUS_LENGTH_REQUIRED"></a>                 | 411  | Length Required                 | Missing Content-Length.                               |
+| `NNG_HTTP_STATUS_PRECONDITION_FAILED`<a name="NNG_HTTP_STATUS_PRECONDITION_FAILED"></a>         | 412  | Precondition Failed             |                                                       |
+| `NNG_HTTP_STATUS_CONTENT_TOO_LARGE`<a name="NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE"></a>             | 413  | Content Too Large               |                                                       |
+| `NNG_HTTP_STATUS_URI_TOO_LONG`<a name="NNG_HTTP_STATUS_URI_TOO_LONG"></a>                       | 414  | URI Too Long                    |                                                       |
+| `NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE`<a name="NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE"></a>   | 415  | Unsupported Media Type          |
+| `NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE`<a name="NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE"></a>     | 416  | Range Not Satisfiable           |
+| `NNG_HTTP_STATUS_EXPECTATION_FAILED`<a name="NNG_HTTP_STATUS_EXPECTATION_FAILED"></a>           | 417  | Expectation Failed              |
+| `NNG_HTTP_STATUS_TEAPOT`<a name="NNG_HTTP_STATUS_TEAPOT"></a>                                   | 418  | I Am A Teapot                   | RFC 2324.                                             |
+| `NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY`<a name="NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a>       | 422  | Unprocessable Entity            |
+| `NNG_HTTP_STATUS_LOCKED`<a name="NNG_HTTP_STATUS_LOCKED"></a>                                   | 423  | Locked                          |
+| `NNG_HTTP_STATUS_FAILED_DEPENDENCY`<a name="NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a>             | 424  | Failed Dependency               |
+| `NNG_HTTP_STATUS_TOO_EARLY`<a name="NNG_HTTP_STATUS_TOO_EARLY"></a>                             | 425  | Too Early                       |
+| `NNG_HTTP_STATUS_UPGRADE_REQUIRED`<a name="NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a>               | 426  | Upgrade Required                |
+| `NNG_HTTP_STATUS_PRECONDITION_REQUIRED`<a name="NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a>     | 428  | Precondition Required           |                                                       |
+| `NNG_HTTP_STATUS_TOO_MANY_REQUESTS`<a name="NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a>             | 429  | Too Many Requests               |                                                       |
+| `NNG_HTTP_STATUS_HEADERS_TOO_LARGE`<a name="NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a>             | 431  | Headers Too Large               |                                                       |
+| `NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS`<a name="NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a>     | 451  | Unavailable For Legal Reasons   |                                                       |
+| `NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR`<a name="NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a>     | 500  | Internal Server Error           |
+| `NNG_HTTP_STATUS_NOT_IMPLEMENTED`<a name="NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a>                 | 501  | Not Implemented                 | Server does not implement method.                     |
+| `NNG_HTTP_STATUS_BAD_GATEWAY`<a name="NNG_HTTP_STATUS_BAD_GATEWAY"></a>                         | 502  | Bad Gateway                     |
+| `NNG_HTTP_STATUS_SERVICE_UNAVAILALE`<a name="NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a>          | 503  | Service Unavailable             |
+| `NNG_HTTP_STATUS_GATEWAY_TIMEOUT`<a name="NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a>                 | 504  | Gateway TImeout                 |
+| `NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP`<a name="NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP"></a>     | 505  | HTTP Version Not Supported      |
+| `NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES`<a name="NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES"></a> | 506  | Variant Also Negotiates         |
+| `NNG_HTTP_STATUS_INSUFFICIENT_STORAGE`<a name="NNG_HTTP_STATUS_INSUFFICIENT_STORAGE"></a>       | 507  | Variant Also Negotiates         |
+| `NNG_HTTP_STATUS_LOOP_DETECTED`<a name="NNG_HTTP_STATUS_LOOP_DETECTED"></a>                     | 508  | Loop Detected                   |
+| `NNG_HTTP_STATUS_NOT_EXTENDED`<a name="NNG_HTTP_STATUS_NOT_EXTENDED"></a>                       | 510  | Not Extended                    |
+| `NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED`<a name="NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED"></a>     | 511  | Network Authentication Required |
 
 ### Retrieving Headers
 
@@ -532,7 +532,7 @@ HTTP exchange over the connection _conn_, sending the request
 and attached body data to the remote server, and reading the response.
 
 The entire response is read, including any associated body, which can
-subsequently be obtained using [`nng_http_get_data`].
+subsequently be obtained using [`nng_http_get_body`].
 
 This function is intended to make creation of client applications easier,
 by performing multiple asynchronous operations required to complete an
@@ -555,7 +555,7 @@ necessarily be usable with other transactions.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
-may be obtained via [`nng_aio_result()`].
+may be obtained via [`nng_aio_result`].
 
 ### Response Body
 
@@ -683,7 +683,7 @@ URI appended.
 
 > [!TIP]
 > Be sure to use the appropriate value for _status_.
-> Permanent redirection should use [`NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY`] (301)
+> Permanent redirection should use [`NNG_HTTP_STATUS_MOVED_PERMANENTLY`] (301)
 > and temporary redirections should use [`NNG_HTTP_STATUS_TEMPORARY_REDIRECT`] (307).
 > In REST APIs, using a redirection to supply the new location of an object
 > created with `POST` should use [`NNG_HTTP_STATUS_SEE_OTHER`] (303).

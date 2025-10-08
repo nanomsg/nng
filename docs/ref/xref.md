@@ -302,6 +302,8 @@
 [`nng_http_handler_set_host`]: /api/http.md#filtering-byt-host
 [`nng_http_handler_set_method`]: /api/http.md#setting-the-method
 [`nng_http_handler_set_data`]: /api/http.md#setting-the-callback-argument
+[`nng_http_handler_set_tree`]: /api/http.md#handling-an-entire-tree
+[`nng_http_transact`]: /api/http.md#submitting-the-transaction
 
 <!-- HTTP Status -->
 
@@ -365,6 +367,11 @@
 [`NNG_HTTP_STATUS_LOOP_DETECTED`]: /api/http.md#NNG_HTTP_STATUS_LOOP_DETECTED
 [`NNG_HTTP_STATUS_NOT_EXTENDED`]: /api/http.md#NNG_HTTP_STATUS_NOT_EXTENDED
 [`NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED`]: /api/http.md#NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED
+
+<!-- TLS -->
+
+[`nng_tls_cert`]: /TODO.md
+[`nng_tls_cert_free`]: /TODO.md
 
 <!-- Macros -->
 
