@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,8 +8,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "../../../testing/nuts.h"
 #include "nng/nng.h"
-#include <nuts.h>
 
 static void
 test_ws_url_path_filters(void)
@@ -231,6 +231,46 @@ check_props_v4(nng_msg *msg)
 
 	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_NODELAY, &b));
 	NUTS_TRUE(b); // default
+
+	const char *uri;
+	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_REQUEST_URI, &uri));
+
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_WS_HEADER_RESET, &b));
+	NUTS_ASSERT(b == true);
+	for (;;) {
+		const char *k;
+		const char *v;
+		char       *s;
+		char       *full;
+		char        buf[256];
+		size_t      sz;
+		NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_WS_HEADER_NEXT, &b));
+		if (!b) {
+			break;
+		}
+		// NB: Normally its unsafe for most callers to use this,
+		// because the pipe may be ripped out from underneath us.  But
+		// we are careful in this test to ensure that the pipe is kept
+		// alive.
+		NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_HEADER_KEY, &k));
+		NUTS_PASS(nng_pipe_get_strdup(p, NNG_OPT_WS_HEADER_KEY, &s));
+		NUTS_MATCH(s, k);
+		sz = sizeof(buf);
+		NUTS_PASS(
+		    nng_pipe_get_strcpy(p, NNG_OPT_WS_HEADER_KEY, buf, sz));
+		NUTS_MATCH(s, buf);
+		NUTS_PASS(nng_pipe_get_strlen(p, NNG_OPT_WS_HEADER_KEY, &sz));
+		NUTS_ASSERT(sz == strlen(s));
+		nng_strfree(s);
+
+		// again, not necessarily safe, but good enough
+		NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_HEADER_VALUE, &v));
+
+		snprintf(buf, sizeof(buf), "%s%s", NNG_OPT_WS_HEADER, k);
+		NUTS_PASS(nng_pipe_get_strdup(p, buf, &full));
+		NUTS_MATCH(v, full);
+		nng_strfree(full);
+	}
 }
 
 void

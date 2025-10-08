@@ -27,11 +27,11 @@ nng_http_get_header(nng_http *conn, const char *key)
 #endif
 }
 
-nng_err
+bool
 nng_http_next_header(
     nng_http *conn, const char **key, const char **val, void **ptr)
 {
-#ifdef NNG_SUP_HTTP
+#ifdef NNG_SUPP_HTTP
 	return (nni_http_next_header(conn, key, val, ptr));
 #else
 	NNI_ARG_UNUSED(conn);

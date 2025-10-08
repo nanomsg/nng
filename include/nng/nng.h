@@ -772,6 +772,9 @@ NNG_DECL nng_err nng_pipe_get_int(nng_pipe, const char *, int *);
 NNG_DECL nng_err nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL nng_err nng_pipe_get_size(nng_pipe, const char *, size_t *);
 NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, const char **);
+NNG_DECL nng_err nng_pipe_get_strdup(nng_pipe, const char *, char **);
+NNG_DECL nng_err nng_pipe_get_strcpy(nng_pipe, const char *, char *, size_t);
+NNG_DECL nng_err nng_pipe_get_strlen(nng_pipe, const char *, size_t *);
 NNG_DECL nng_err nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_pipe_peer_cert(nng_pipe, nng_tls_cert **);
 
@@ -893,14 +896,10 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // headers from the peer on a pipe.
 #define NNG_OPT_WS_HEADER "ws:header:"
 
-// NNG_OPT_WS_HEADER_KEY is also a prefix, but the value it contains
-// is the name (key) of the header at the index referenced. This
-// allows successive iteration through headers.
-#define NNG_OPT_WS_HEADER_KEY "ws:header_k:"
-
-// NNG_OPT_WS_HEADER_VAL is also a prefix, but the value it contains
-// is the value of the header at the index referenced.
-#define NNG_OPT_WS_HEADER_VAL "ws:header_v:"
+#define NNG_OPT_WS_HEADER_NEXT "ws:hdr-next"
+#define NNG_OPT_WS_HEADER_RESET "ws:hdr-reset"
+#define NNG_OPT_WS_HEADER_KEY "ws:hdr-key"
+#define NNG_OPT_WS_HEADER_VALUE "ws:hdr-val"
 
 // NNG_OPT_WS_REQUEST_URI is used to obtain the URI sent by the client.
 // This can be useful when a handler supports an entire directory tree.

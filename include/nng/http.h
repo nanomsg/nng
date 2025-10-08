@@ -203,7 +203,7 @@ NNG_DECL const char *nng_http_get_header(nng_http *, const char *);
 // the will receive its value. The caller starts the iteration by setting ptr
 // to NULL, and then the value must be preserved. The function returns NNG_OK
 // on success, or NNG_ENOENT if there are no more headers.
-NNG_DECL nng_err nng_http_next_header(
+NNG_DECL bool nng_http_next_header(
     nng_http *, const char **key, const char **val, void **ptr);
 
 // nng_http_get_body returns the body sent by the peer, if one is attached.

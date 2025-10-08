@@ -126,6 +126,8 @@ extern nng_err     nni_http_add_header(nng_http *, const char *, const char *);
 extern nng_err     nni_http_set_header(nng_http *, const char *, const char *);
 extern void        nni_http_del_header(nng_http *, const char *);
 extern const char *nni_http_get_header(nng_http *, const char *);
+extern bool        nni_http_next_header(
+           nng_http *, const char **, const char **, void **);
 
 extern void    nni_http_get_body(nng_http *, void **, size_t *);
 extern void    nni_http_set_body(nng_http *, void *, size_t);
