@@ -368,7 +368,7 @@ nng_stream_get_size(nng_stream *s, const char *n, size_t *v)
 }
 
 nng_err
-nng_stream_get_string(nng_stream *s, const char *n, char **v)
+nng_stream_get_string(nng_stream *s, const char *n, const char **v)
 {
 	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_STRING));
 }
@@ -413,7 +413,8 @@ nng_stream_dialer_get_size(nng_stream_dialer *d, const char *n, size_t *v)
 }
 
 nng_err
-nng_stream_dialer_get_string(nng_stream_dialer *d, const char *n, char **v)
+nng_stream_dialer_get_string(
+    nng_stream_dialer *d, const char *n, const char **v)
 {
 	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_STRING));
 }
@@ -456,7 +457,8 @@ nng_stream_listener_get_size(nng_stream_listener *l, const char *n, size_t *v)
 }
 
 nng_err
-nng_stream_listener_get_string(nng_stream_listener *l, const char *n, char **v)
+nng_stream_listener_get_string(
+    nng_stream_listener *l, const char *n, const char **v)
 {
 	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_STRING));
 }

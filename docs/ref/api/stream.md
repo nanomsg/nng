@@ -84,7 +84,7 @@ nng_err nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
 nng_err nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
 nng_err nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
 nng_err nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
-nng_err nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp);
 ```
 
 {{hi:`nng_stream_get_bool`}}
@@ -99,8 +99,8 @@ referenced by _valp_.
 These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.
 
-In the case of `nng_stream_get_string`, the string is created as if by [`nng_strdup`], and must be freed by
-the caller using [`nng_strfree`] when no longer needed.
+In the case of `nng_stream_get_string`, the string pointer is only guaranteed to be valid while the
+stream exists. Callers should make a copy of the data if required before closing the stream.
 
 ## Stream Factories
 
@@ -261,14 +261,14 @@ nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, b
 nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
-nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, char **valp);
+nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, const char **valp);
 
 nng_err nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
 nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
 nng_err nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
-nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, char **valp);
+nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, const char **valp);
 
 nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 nng_err nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
@@ -316,8 +316,8 @@ The `nng_stream_dialer_set_` and `nng_stream_listener_set_` function families ch
 These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.
 
-In the case of `nng_stream_dialer_get_string` and `nng_stream_listener_get_string`, the string is created as if by [`nng_strdup`], and must be freed by
-the caller using [`nng_strfree`] when no longer needed.
+In the case of `nng_stream_dialer_get_string` and `nng_stream_listener_get_string`, the memory holding
+the string is only valid as long as the associated object remains open.
 
 In the case of `nng_stream_dialer_set_string` and `nng_stream_listener_set_string`, the string contents are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.

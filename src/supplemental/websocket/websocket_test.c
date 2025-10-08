@@ -13,7 +13,7 @@
 
 #include "sha1.h"
 
-#include <nuts.h>
+#include "../../testing/nuts.h"
 
 void
 test_websocket_wildcard(void)
@@ -138,7 +138,7 @@ test_websocket_conn_props(void)
 	nng_stream          *c2   = NULL;
 	char                 uri[64];
 	bool                 on;
-	char                *str;
+	const char          *str;
 	uint16_t             port;
 	int                  rv;
 
@@ -208,18 +208,14 @@ test_websocket_conn_props(void)
 	NUTS_PASS(
 	    nng_stream_get_string(c1, NNG_OPT_WS_HEADER "NNG-Req", &str));
 	NUTS_MATCH(str, "True");
-	nng_strfree(str);
 
 	NUTS_PASS(
 	    nng_stream_get_string(c2, NNG_OPT_WS_HEADER "NNG-Rep", &str));
 	NUTS_MATCH(str, "True");
-	nng_strfree(str);
 
 	NUTS_PASS(nng_stream_get_string(
 	    c1, NNG_OPT_WS_HEADER "Sec-WebSocket-Version", &str));
-	NUTS_TRUE(str != NULL);
-	NUTS_TRUE(strcmp(str, "13") == 0);
-	nng_strfree(str);
+	NUTS_MATCH(str, "13");
 
 	nng_stream_close(c1);
 	nng_stream_close(c2);

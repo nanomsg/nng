@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -9,9 +9,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
-#include "core/nng_impl.h"
+#include "defs.h"
 #include "nng/nng.h"
+#include "nng_impl.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -174,16 +174,12 @@ nni_copyout_sockaddr(
 nng_err
 nni_copyout_str(const char *str, void *dst, size_t *szp, nni_type t)
 {
-	char *s;
 	NNI_ARG_UNUSED(szp);
 	if (t != NNI_TYPE_STRING) {
 		return (NNG_EBADTYPE);
 	}
 
-	if ((s = nni_strdup(str)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	*(char **) dst = s;
+	*(const char **) dst = str;
 	return (NNG_OK);
 }
 

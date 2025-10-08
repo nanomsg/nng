@@ -780,7 +780,7 @@ nng_dialer_get_size(nng_dialer id, const char *n, size_t *v)
 }
 
 int
-nng_dialer_get_string(nng_dialer id, const char *n, char **v)
+nng_dialer_get_string(nng_dialer id, const char *n, const char **v)
 {
 	return (dialer_get(id, n, v, NULL, NNI_TYPE_STRING));
 }
@@ -909,7 +909,7 @@ nng_listener_get_size(nng_listener id, const char *n, size_t *v)
 }
 
 int
-nng_listener_get_string(nng_listener id, const char *n, char **v)
+nng_listener_get_string(nng_listener id, const char *n, const char **v)
 {
 	return (listener_get(id, n, v, NULL, NNI_TYPE_STRING));
 }
@@ -1358,9 +1358,69 @@ nng_pipe_get_size(nng_pipe id, const char *n, size_t *v)
 }
 
 nng_err
-nng_pipe_get_string(nng_pipe id, const char *n, char **v)
+nng_pipe_get_string(nng_pipe id, const char *n, const char **v)
 {
 	return (pipe_get(id, n, v, NULL, NNI_TYPE_STRING));
+}
+
+nng_err
+nng_pipe_get_strcpy(nng_pipe p, const char *n, char *buf, size_t len)
+{
+	nng_err     rv;
+	nni_pipe   *pipe;
+	const char *s;
+
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_pipe_getopt(pipe, n, &s, NULL, NNI_TYPE_STRING);
+	if (rv == NNG_OK) {
+		if (nni_strlcpy(buf, s != NULL ? s : "", len) >= len) {
+			rv = NNG_ENOSPC;
+		}
+	}
+	nni_pipe_rele(pipe);
+	return (rv);
+}
+
+nng_err
+nng_pipe_get_strdup(nng_pipe p, const char *n, char **v)
+{
+	nng_err     rv;
+	nni_pipe   *pipe;
+	const char *s;
+
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_pipe_getopt(pipe, n, &s, NULL, NNI_TYPE_STRING);
+	if (rv == NNG_OK) {
+		if (s == NULL) {
+			*v = NULL;
+		} else if ((*v = nni_strdup(s)) == NULL) {
+			rv = NNG_ENOMEM;
+		}
+	}
+	nni_pipe_rele(pipe);
+	return (rv);
+}
+
+nng_err
+nng_pipe_get_strlen(nng_pipe p, const char *n, size_t *len)
+{
+	nng_err     rv;
+	nni_pipe   *pipe;
+	const char *s;
+
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_pipe_getopt(pipe, n, &s, NULL, NNI_TYPE_STRING);
+	if (rv == NNG_OK) {
+		*len = s == NULL ? 0 : strlen(s);
+	}
+	nni_pipe_rele(pipe);
+	return (rv);
 }
 
 nng_err

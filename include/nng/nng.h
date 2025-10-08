@@ -432,7 +432,7 @@ NNG_DECL int nng_dialer_get_bool(nng_dialer, const char *, bool *);
 NNG_DECL int nng_dialer_get_int(nng_dialer, const char *, int *);
 NNG_DECL int nng_dialer_get_size(nng_dialer, const char *, size_t *);
 NNG_DECL int nng_dialer_get_uint64(nng_dialer, const char *, uint64_t *);
-NNG_DECL int nng_dialer_get_string(nng_dialer, const char *, char **);
+NNG_DECL int nng_dialer_get_string(nng_dialer, const char *, const char **);
 NNG_DECL int nng_dialer_get_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_get_addr(nng_dialer, const char *, nng_sockaddr *);
 NNG_DECL int nng_dialer_get_tls(nng_dialer, nng_tls_config **);
@@ -454,7 +454,8 @@ NNG_DECL int nng_listener_get_bool(nng_listener, const char *, bool *);
 NNG_DECL int nng_listener_get_int(nng_listener, const char *, int *);
 NNG_DECL int nng_listener_get_size(nng_listener, const char *, size_t *);
 NNG_DECL int nng_listener_get_uint64(nng_listener, const char *, uint64_t *);
-NNG_DECL int nng_listener_get_string(nng_listener, const char *, char **);
+NNG_DECL int nng_listener_get_string(
+    nng_listener, const char *, const char **);
 NNG_DECL int nng_listener_get_ms(nng_listener, const char *, nng_duration *);
 NNG_DECL int nng_listener_get_addr(nng_listener, const char *, nng_sockaddr *);
 NNG_DECL int nng_listener_get_tls(nng_listener, nng_tls_config **);
@@ -770,7 +771,7 @@ NNG_DECL nng_err nng_pipe_get_bool(nng_pipe, const char *, bool *);
 NNG_DECL nng_err nng_pipe_get_int(nng_pipe, const char *, int *);
 NNG_DECL nng_err nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL nng_err nng_pipe_get_size(nng_pipe, const char *, size_t *);
-NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, char **);
+NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, const char **);
 NNG_DECL nng_err nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_pipe_peer_cert(nng_pipe, nng_tls_cert **);
 
@@ -891,6 +892,15 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // on outgoing dialer or listeners, and can be used to return the
 // headers from the peer on a pipe.
 #define NNG_OPT_WS_HEADER "ws:header:"
+
+// NNG_OPT_WS_HEADER_KEY is also a prefix, but the value it contains
+// is the name (key) of the header at the index referenced. This
+// allows successive iteration through headers.
+#define NNG_OPT_WS_HEADER_KEY "ws:header_k:"
+
+// NNG_OPT_WS_HEADER_VAL is also a prefix, but the value it contains
+// is the value of the header at the index referenced.
+#define NNG_OPT_WS_HEADER_VAL "ws:header_v:"
 
 // NNG_OPT_WS_REQUEST_URI is used to obtain the URI sent by the client.
 // This can be useful when a handler supports an entire directory tree.
@@ -1141,7 +1151,8 @@ NNG_DECL nng_err nng_stream_get_int(nng_stream *, const char *, int *);
 NNG_DECL nng_err nng_stream_get_ms(nng_stream *, const char *, nng_duration *);
 NNG_DECL nng_err nng_stream_get_size(nng_stream *, const char *, size_t *);
 NNG_DECL nng_err nng_stream_get_uint64(nng_stream *, const char *, uint64_t *);
-NNG_DECL nng_err nng_stream_get_string(nng_stream *, const char *, char **);
+NNG_DECL nng_err nng_stream_get_string(
+    nng_stream *, const char *, const char **);
 NNG_DECL nng_err nng_stream_get_addr(
     nng_stream *, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_stream_peer_cert(nng_stream *, nng_tls_cert **);
@@ -1164,7 +1175,7 @@ NNG_DECL nng_err nng_stream_dialer_get_size(
 NNG_DECL nng_err nng_stream_dialer_get_uint64(
     nng_stream_dialer *, const char *, uint64_t *);
 NNG_DECL nng_err nng_stream_dialer_get_string(
-    nng_stream_dialer *, const char *, char **);
+    nng_stream_dialer *, const char *, const char **);
 NNG_DECL nng_err nng_stream_dialer_get_addr(
     nng_stream_dialer *, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_stream_dialer_set_bool(
@@ -1211,7 +1222,7 @@ NNG_DECL nng_err nng_stream_listener_get_size(
 NNG_DECL nng_err nng_stream_listener_get_uint64(
     nng_stream_listener *, const char *, uint64_t *);
 NNG_DECL nng_err nng_stream_listener_get_string(
-    nng_stream_listener *, const char *, char **);
+    nng_stream_listener *, const char *, const char **);
 NNG_DECL nng_err nng_stream_listener_get_addr(
     nng_stream_listener *, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_stream_listener_set_bool(
