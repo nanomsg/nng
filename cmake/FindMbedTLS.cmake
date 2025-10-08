@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -40,6 +40,7 @@ set(_MBED_REQUIRED_VARS MbedTLS_TARGET MbedX509_TARGET MbedCrypto_TARGET MbedTLS
 
 include(FindPackageHandleStandardArgs)
 include(CMakePushCheckState)
+include(CheckSymbolExists)
 
 find_path(_MBEDTLS_INCLUDE_DIR
         NAMES mbedtls/ssl.h
@@ -116,4 +117,3 @@ set(MbedCrypto_TARGET MbedTLS::mbedcrypto)
 
 find_package_handle_standard_args(MbedTLS REQUIRED_VARS ${_MBED_REQUIRED_VARS})
 mark_as_advanced(${_MBED_REQUIRED_VARS})
-
