@@ -782,6 +782,7 @@ the <a name="a002"></a><code>nng_fini</code> function. Each call to <code>nng_fi
 except that it may use <code>nng_init</code> to initialize the application for further use.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -1085,6 +1086,7 @@ while ((val64 = next_datum()) != 0) {
 </code></pre>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -1617,6 +1619,7 @@ int main(int argc, char **argv) {
 </code></pre>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -1918,6 +1921,7 @@ start_echo_service(nng_socket rep_socket)
 </code></pre>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -2154,6 +2158,7 @@ if an authorization check made during <code>NNG_PIPE_EV_ADD_PRE</code> fails.</p
 </div>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -2275,6 +2280,7 @@ can be used to deallocate strings allocated with <a href="api//api/memory.html#d
 <p>It is effectively the same as <code>nng_free(strlen(str) + 1)</code>.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -2428,6 +2434,7 @@ then the sleep will wake up early, with a result code of <a href="api//api/error
 <a href="api//api/synch.html">Synchronization</a></p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -2603,6 +2610,7 @@ a URL with a new port. This will have no effect if the URL already has a non-zer
 <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -2955,6 +2963,7 @@ and if necessary resubmit the operation with a suitably updated vector of <code>
 <a href="api//api/time.html">Time</a></p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -3165,6 +3174,7 @@ nng_mtx_unlock(m);
 <a href="api//api/aio.html">Asynchronous I/O</a></p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -3311,6 +3321,7 @@ in debuggers. Not all platforms support setting the thread name.</p>
 <a href="api//api/aio.html">Asynchronous Operations</a></p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -3765,6 +3776,7 @@ here is the same reference time used for <a href="api//api/time.html#get-the-cur
 <p><a href="api//api/time.html#get-the-current-time"><code>nng_clock</code></a></p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -3912,6 +3924,7 @@ as in diagnostic messages or log entries.</p>
 </tbody></table>
 </div><!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -4310,6 +4323,7 @@ both configuring a different TLS configuration object, as well as mutating the e
 </div>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -4404,7 +4418,7 @@ performed after the first transaction is complete.</p>
 <p>At any given point in time, an <code>nng_http</code> object can only refer to a single HTTP transaction.
 In NNG, these <code>nng_http</code> objects are used in both the client and server APIs.</p>
 <p>The <code>nng_http</code> object is created by either <a href="api//api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or by an HTTP server
-object which then passes it to an [<code>nng_http_handler</code>] callback function.</p>
+object which then passes it to an <a href="api//api/http.html#handlers"><code>nng_http_handler</code></a> callback function.</p>
 <h3 id="http-method"><a class="header" href="#http-method">HTTP Method</a></h3>
 <pre><code class="language-c">void nng_http_set_method(nng_http *conn, const char *method);
 const char *nng_http_get_method(nng_http *conn);
@@ -4598,12 +4612,12 @@ to never have body content, such as “HEAD”.)</p>
 <pre><code class="language-c">void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
 void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
 </code></pre>
-<p>The <a name="a019"></a><code>nng_http_set_data</code> function sets the outgoing body content to <em>data</em>,
+<p>The <a name="a019"></a><code>nng_http_set_body</code> function sets the outgoing body content to <em>data</em>,
 which must be <em>size</em> bytes long. The caller must ensure that <em>data</em> remains
 valid for the duration of the transaction.</p>
-<p>The <a name="a020"></a><code>nng_http_copy_data</code> function makes a copy of <em>data</em>, which
+<p>The <a name="a020"></a><code>nng_http_copy_body</code> function makes a copy of <em>data</em>, which
 will be freed automatically when the transaction is finished, but otherwise
-behaves like <code>nng_http_set_data</code>.</p>
+behaves like <code>nng_http_set_body</code>.</p>
 <p>On client <em>conn</em> objects, these functions update the request object, but on server
 <em>conn</em> objects, they update the response object.</p>
 <p>These functions also update the relevant “Content-Length” header.</p>
@@ -4667,7 +4681,7 @@ to be disassociated from the HTTP server where it was created.</p>
 WebSocket), where the underlying HTTP connection will be taken over for
 some other purpose, and should not be used any further by the server.</p>
 <p>This function is most useful when called from a handler function.
-(See [<code>nng_http_handler_alloc</code>].)</p>
+(See <a href="api//api/http.html#handlers"><code>nng_http_handler_alloc</code></a>.)</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -4675,7 +4689,7 @@ some other purpose, and should not be used any further by the server.</p>
 </p>
 <p>It is the responsibility of the caller to dispose of the underlying connection when it is no longer needed.
 Furthermore, the HTTP server will no longer send any responses to the hijacked connection, so the caller should do that as well if appropriate.
-(See [<code>nng_http_write_response</code>].)</p>
+(See <a href="api//api/http.html#sending-the-response-explicitly"><code>nng_http_write_response</code></a>.)</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -4798,7 +4812,7 @@ the HTTP request associated with <em>conn</em>.
 The entire request is sent,
 including headers, and if present, the request body data.
 (The request body can be set with
-[<code>nng_http_set_data</code>] or [<code>nng_http_copy_data</code>].)</p>
+<a href="api//api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="api//api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.)</p>
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>, and the final result
 may be obtained via <a href="api//api/aio.html#result-of-operation"><code>nng_aio_result</code></a>.</p>
@@ -4892,8 +4906,8 @@ URIs from being supported, but doing so will require setting the handler to matc
 <p>The NNG HTTP framework is optimized for URLs shorter than 200 characters.</p>
 </div>
 <p>Additionally each handler has a method it is registered to handle
-(the default is “GET” andc can be changed with [<code>nng_http_handler_set_method</code>]), and
-optionally a “Host” header it can be matched against (see [<code>nng_http_handler_set_host</code>]).</p>
+(the default is “GET” andc can be changed with <a href="api//api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a>), and
+optionally a “Host” header it can be matched against (see <a href="api//api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a>).</p>
 <p>In some cases, a handler may reference a logical tree rather (directory)
 rather than just a single element.
 (See [<code>nng_http_handler_set_tree</code>]).</p>
@@ -4908,9 +4922,9 @@ On success, a pointer to the handler is stored at the located pointed to by <em>
 <p>The handler function is specified by <em>cb</em>.
 This function uses the asynchronous I/O framework.</p>
 <p>The function receives the connection on <em>conn</em>, and an optional data pointer that was set
-previously with [<code>nng_http_handler_set_data</code>] as the second argument. The
+previously with <a href="api//api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a> as the second argument. The
 final argument is the <a href="api//api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, which must be “finished” to complete the operation.</p>
-<p>The handler may call [<code>nng_http_write_response</code>] to send the response, or
+<p>The handler may call <a href="api//api/http.html#sending-the-response-explicitly"><code>nng_http_write_response</code></a> to send the response, or
 it may simply let the framework do so on its behalf. The server will perform
 this step if the callback has not already done so.</p>
 <p>Response headers may be set using <a href="api//api/http.html#modifying-headers"><code>nng_http_set_header</code></a>, and request headers
@@ -4924,11 +4938,11 @@ the response body may be set using either <a href="api//api/http.html#storing-bo
   note
 </p>
 <p>The request body is only collected for the handler if the
-[<code>nng_http_handler_collect_body</code>] function has been called for the handler.</p>
+<a href="api//api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a> function has been called for the handler.</p>
 </div>
 <p>The HTTP status should be set for the transaction using <a href="api//api/http.html#http-status"><code>nng_http_set_status</code></a>.</p>
 <p>Finally, the handler should finish the operation by calling the <a href="api//TODO.html"><code>nng_aio_finish</code></a> function
-after having set the status to [<code>NNG_OK</code>].
+after having set the status to <a href="api//api/errors.html#NNG_OK"><code>NNG_OK</code></a>.
 If any other status is set on the <em>aio</em>, then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.</p>
 <p>The <em>aio</em> may be scheduled for deferred completion using the <a href="api//TODO.html"><code>nng_aio_start</code></a>.</p>
@@ -4957,7 +4971,7 @@ then a value of <code>application/octet-stream</code> is assumed.</p>
 </code></pre>
 <p>The <a name="a045"></a><code>nng_http_handler_alloc_redirect</code> function creates a handler with
 a function that simply directions from the URI at <em>path</em> to the given <em>location</em>.</p>
-<p>The HTTP reply it creates will be with [status code][<code>nng_http_status</code>] <em>status</em>,
+<p>The HTTP reply it creates will be with <a href="api//api/http.html#http-status">status code</a> <em>status</em>,
 which should be a 3XX code such as 301, and a <code>Location:</code> header will contain the URL
 referenced by <em>location</em>, with any residual suffix from the request
 URI appended.</p>
@@ -4978,9 +4992,9 @@ of the new site, such as <code>https://newsite.example.com</code> as the new loc
 </p>
 <p>Be sure to use the appropriate value for <em>status</em>.
 Permanent redirection should use [<code>NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY</code>] (301)
-and temporary redirections should use [<code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code>] (307).
+and temporary redirections should use <a href="api//api/http.html#NNG_HTTP_STATUS_TEMPORARY_REDIRECT"><code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code></a> (307).
 In REST APIs, using a redirection to supply the new location of an object
-created with <code>POST</code> should use [<code>NNG_HTTP_STATUS_SEE_OTHER</code>] (303).</p>
+created with <code>POST</code> should use <a href="api//api/http.html#NNG_HTTP_STATUS_SEE_OTHER"><code>NNG_HTTP_STATUS_SEE_OTHER</code></a> (303).</p>
 </div>
 <h3 id="collecting-request-body"><a class="header" href="#collecting-request-body">Collecting Request Body</a></h3>
 <pre><code class="language-c">void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
@@ -4994,7 +5008,7 @@ connection before calling the callback for the <em>handler</em>.</p>
 Furthermore, the data that the client may sent is limited by the
 value of <em>maxsz</em>.
 If the client attempts to send more data than <em>maxsz</em>, then the
-request will be terminated with [<code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code>] (413).</p>
+request will be terminated with <a href="api//api/http.html#NNG_HTTP_STATUS_CONTENT_TOO_LARGE"><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code></a> (413).</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -5101,6 +5115,7 @@ explicitly by setting the “Connection: close” header, the connection will be
 response is fully sent.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -5221,6 +5236,7 @@ library and the application is controlled in a similar, but different
 manner depending upon the link options and how the library is built.)</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -5409,6 +5425,7 @@ iteration is undefined; entries may be repeated or omitted during such an iterat
 table indices.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -5660,6 +5677,7 @@ unambiguously (meaning it must not match any other option specification.)</p>
 </code></pre>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -7227,6 +7245,7 @@ the <em>inproc</em> transport to communicate across this boundary.</p>
 library within the same process.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -7390,6 +7409,7 @@ which can be used to control access, can be set using the function
 <a href="tran//TODO.html"><code>nng_listener_set_security_descriptor</code></a>.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -7518,6 +7538,7 @@ These behave in exactly the same fashion as for the <em><a href="tran//tran/ipc.
 </div>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -7692,6 +7713,7 @@ keep-alive mechanism is implemented.</p>
 <p>TODO: Document the tunables for this.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -8132,10 +8154,10 @@ They may silently truncate data.</p>
 <ul>
 <li>[<code>nng_http_req_set_method</code>]</li>
 <li>[<code>nng_http_res_set_status</code>]</li>
-<li>[<code>nng_http_handler_collect_body</code>]</li>
-<li>[<code>nng_http_handler_set_data</code>]</li>
-<li>[<code>nng_http_handler_set_host</code>]</li>
-<li>[<code>nng_http_handler_set_method</code>]</li>
+<li><a href="migrate//api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a></li>
+<li><a href="migrate//api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a></li>
+<li><a href="migrate//api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a></li>
+<li><a href="migrate//api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a></li>
 <li>[<code>nng_http_handler_set_tree</code>]</li>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
@@ -8167,6 +8189,7 @@ It is possible to use NNG with ZeroTier using TCP/IP, and a future update
 is planned to provided coexistence between ZeroTier &amp; the native stack’s TCP/IP using lwIP.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -8350,6 +8373,7 @@ way to specify the local address is using the <code>NNG_OPT_LOCADDR</code> optio
 dialer before starting to dial.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
@@ -8464,7 +8488,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_http_client_get_tls</code>, <a href="api/http.html#a032">1</a><br/>
 <code>nng_http_client_set_tls</code>, <a href="api/http.html#a033">1</a><br/>
 <code>nng_http_close</code>, <a href="api/http.html#a021">1</a><br/>
-<code>nng_http_copy_data</code>, <a href="api/http.html#a020">1</a><br/>
+<code>nng_http_copy_body</code>, <a href="api/http.html#a020">1</a><br/>
 <code>nng_http_del_header</code>, <a href="api/http.html#a017">1</a><br/>
 <code>nng_http_get_data</code>, <a href="api/http.html#a018">1</a><br/>
 <code>nng_http_get_header</code>, <a href="api/http.html#a013">1</a><br/>
@@ -8490,7 +8514,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_http_read_all</code>, <a href="api/http.html#a025">1</a><br/>
 <code>nng_http_read_response</code>, <a href="api/http.html#a037">1</a><br/>
 <code>nng_http_reset</code>, <a href="api/http.html#a022">1</a><br/>
-<code>nng_http_set_data</code>, <a href="api/http.html#a019">1</a><br/>
+<code>nng_http_set_body</code>, <a href="api/http.html#a019">1</a><br/>
 <code>nng_http_set_header</code>, <a href="api/http.html#a016">1</a><br/>
 <code>nng_http_set_method</code>, <a href="api/http.html#a002">1</a><br/>
 <code>nng_http_set_status</code>, <a href="api/http.html#a012">1</a><br/>

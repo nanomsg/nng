@@ -538,10 +538,10 @@ They may silently truncate data.</p>
 <ul>
 <li>[<code>nng_http_req_set_method</code>]</li>
 <li>[<code>nng_http_res_set_status</code>]</li>
-<li>[<code>nng_http_handler_collect_body</code>]</li>
-<li>[<code>nng_http_handler_set_data</code>]</li>
-<li>[<code>nng_http_handler_set_host</code>]</li>
-<li>[<code>nng_http_handler_set_method</code>]</li>
+<li><a href="/api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a></li>
+<li><a href="/api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a></li>
+<li><a href="/api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a></li>
+<li><a href="/api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a></li>
 <li>[<code>nng_http_handler_set_tree</code>]</li>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
@@ -573,6 +573,7 @@ It is possible to use NNG with ZeroTier using TCP/IP, and a future update
 is planned to provided coexistence between ZeroTier &amp; the native stack’s TCP/IP using lwIP.</p>
 <!-- Symbol cross reference -->
 <!-- HTTP -->
+<!-- HTTP Status -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
