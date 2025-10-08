@@ -255,13 +255,13 @@ void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
 void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
 ```
 
-The {{i:`nng_http_set_data`}} function sets the outgoing body content to _data_,
+The {{i:`nng_http_set_body`}} function sets the outgoing body content to _data_,
 which must be _size_ bytes long. The caller must ensure that _data_ remains
 valid for the duration of the transaction.
 
-The {{i:`nng_http_copy_data`}} function makes a copy of _data_, which
+The {{i:`nng_http_copy_body`}} function makes a copy of _data_, which
 will be freed automatically when the transaction is finished, but otherwise
-behaves like `nng_http_set_data`.
+behaves like `nng_http_set_body`.
 
 On client _conn_ objects, these functions update the request object, but on server
 _conn_ objects, they update the response object.
@@ -489,7 +489,7 @@ the HTTP request associated with _conn_.
 The entire request is sent,
 including headers, and if present, the request body data.
 (The request body can be set with
-[`nng_http_set_data`] or [`nng_http_copy_data`].)
+[`nng_http_set_body`] or [`nng_http_copy_body`].)
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
