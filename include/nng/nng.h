@@ -896,6 +896,14 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // headers from the peer on a pipe.
 #define NNG_OPT_WS_HEADER "ws:header:"
 
+// These options allow for iterating over HTTP headers.  The iteration is
+// started and advances by getting NNG_OPT_WS_HEADER_NEXT (which returns a bool
+// that is true if there was a header, or false if no more headers are
+// available).  The HTTP_OPT_WS_HEADER_RESET is a boolean option that always
+// returns true. Reading it resets the iteration to the beginning.  The
+// NNG_OPT_WS_HEADER_KEY and NNG_OPT_WS_HEADER_VALUE options obtain the header
+// name and value for the current (established by NNG_OPT_WS_HEADER_NEXT) HTTP
+// header.
 #define NNG_OPT_WS_HEADER_NEXT "ws:hdr-next"
 #define NNG_OPT_WS_HEADER_RESET "ws:hdr-reset"
 #define NNG_OPT_WS_HEADER_KEY "ws:hdr-key"

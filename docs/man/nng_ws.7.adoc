@@ -114,6 +114,30 @@ macro `NNG_OPT_WS_HEADER`, followed by the name of header field.
 
 Such options can be set on dialers and listener, and retrieved from pipes.
 
+((`NNG_OPT_WS_HEADER_NEXT`))::
+
+(bool) Reading this option advances the header iteration so that the values
+supplied by by `NNG_OPT_WS_HEADER_KEY` and `NNG_OPT_WS_HEADER_VALUE` represnt the
+next HTTP header.  This option is `true` if advancing succeeded, `false`
+if there are no more headers. This option is only valid on connected streams or pipes.
+
+((`NNG_OPT_WS_HEADER_RESET`)):
+
+(bool) Reset the HTTP header iteration so the next call to `NNG_OPT_WS_HEADER_NEXT`
+will start at the first HTTP header.
+
+((`NNG_OPT_WS_HEADER_KEY`)):
+
+(string) This option provides the HTTP header key or name for the currently
+selected HTTP header. It is invalid to read this until `NNG_OPT_WS_HEADER_NEXT` has
+been read with a `true` result.
+
+((`NNG_OPT_WS_HEADER_VALUE`)):
+
+(string) This option provides the HTTP header value of the currently selected
+HTTP header. It is invalid to read this until `NNG_OPT_WS_HEADER_NEXT` has
+been read with a `true` result.
+
 ((`NNG_OPT_WS_RECV_TEXT`))::
 
 (bool) Enable receiving of TEXT frames at the WebSocket layer.
