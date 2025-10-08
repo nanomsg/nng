@@ -410,7 +410,7 @@ for display to users.</p>
 </div>
 <h3 id="retrieving-headers"><a class="header" href="#retrieving-headers">Retrieving Headers</a></h3>
 <pre><code class="language-c">const char *nng_http_get_header(nng_http *conn, const char *key);
-bool nng_next_header(nng_http *conn, const char **keyp, const char **valuep, void **next);
+bool nng_http_next_header(nng_http *conn, const char **keyp, const char **valuep, void **next);
 </code></pre>
 <p>The <a name="a013"></a><code>nng_http_get_header</code> returns the header value matching <em>key</em> that was received over <em>conn</em>,
 or <code>NULL</code> if no such header exists.</p>
@@ -776,7 +776,8 @@ final argument is the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_a
 it may simply let the framework do so on its behalf. The server will perform
 this step if the callback has not already done so.</p>
 <p>Response headers may be set using <a href="/api/http.html#modifying-headers"><code>nng_http_set_header</code></a>, and request headers
-may be accessed by using <a href="/api/http.html#retrieving-headers"><code>nng_http_get_header</code></a>.</p>
+may be accessed by using <a href="/api/http.html#retrieving-headers"><code>nng_http_get_header</code></a>. They can also be iterated
+over using <a href="/api/http.html#retrieving-headers"><code>nng_http_next_header</code></a></p>
 <p>Likewise the request body may be accessed, using <a href="/api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a>, and
 the response body may be set using either <a href="/api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="/api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-note">

@@ -318,7 +318,7 @@ nng_err nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
 nng_err nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
 nng_err nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
 nng_err nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
-nng_err nng_stream_get_string(nng_stream *s, const char *opt, char **valp);
+nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp);
 </code></pre>
 <p><a name="a008"></a>
 <a name="a009"></a>
@@ -330,8 +330,8 @@ These functions are used to obtain value of an option named <em>opt</em> from th
 referenced by <em>valp</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.</p>
-<p>In the case of <code>nng_stream_get_string</code>, the string is created as if by <a href="/api/memory.html#duplicate-string"><code>nng_strdup</code></a>, and must be freed by
-the caller using <a href="/api/memory.html#free-string"><code>nng_strfree</code></a> when no longer needed.</p>
+<p>In the case of <code>nng_stream_get_string</code>, the string pointer is only guaranteed to be valid while the
+stream exists. Callers should make a copy of the data if required before closing the stream.</p>
 <h2 id="stream-factories"><a class="header" href="#stream-factories">Stream Factories</a></h2>
 <pre><code class="language-c">typedef struct nng_stream_dialer nng_stream_dialer;
 typedef struct nng_stream_listener nng_stream_listener;
@@ -459,14 +459,14 @@ nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, b
 nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
-nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, char **valp);
+nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, const char **valp);
 
 nng_err nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
 nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
 nng_err nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
-nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, char **valp);
+nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, const char **valp);
 
 nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 nng_err nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
@@ -511,8 +511,8 @@ The <code>nng_stream_dialer_get_</code> and <code>nng_stream_listener_get_</code
 The <code>nng_stream_dialer_set_</code> and <code>nng_stream_listener_set_</code> function families change the value for the <em>dialer</em> or <em>listener</em>, taking it from <em>val</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.</p>
-<p>In the case of <code>nng_stream_dialer_get_string</code> and <code>nng_stream_listener_get_string</code>, the string is created as if by <a href="/api/memory.html#duplicate-string"><code>nng_strdup</code></a>, and must be freed by
-the caller using <a href="/api/memory.html#free-string"><code>nng_strfree</code></a> when no longer needed.</p>
+<p>In the case of <code>nng_stream_dialer_get_string</code> and <code>nng_stream_listener_get_string</code>, the memory holding
+the string is only valid as long as the associated object remains open.</p>
 <p>In the case of <code>nng_stream_dialer_set_string</code> and <code>nng_stream_listener_set_string</code>, the string contents are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.</p>
 <p>In the case of <code>nng_stream_dialer_set_addr</code> and <code>nng_stream_listener_set_addr</code>, the contents of <em>addr</em> are copied if necessary, so that the caller
