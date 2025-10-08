@@ -28,6 +28,21 @@ nng_http_get_header(nng_http *conn, const char *key)
 }
 
 nng_err
+nng_http_next_header(
+    nng_http *conn, const char **key, const char **val, void **ptr)
+{
+#ifdef NNG_SUP_HTTP
+	return (nni_http_next_header(conn, key, val, ptr));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(key);
+	NNI_ARG_UNUSED(val);
+	NNI_ARG_UNUSED(ptr);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_err
 nng_http_set_header(nng_http *conn, const char *key, const char *val)
 {
 #ifdef NNG_SUPP_HTTP

@@ -188,7 +188,7 @@ Status codes are defined by the IETF. Here are definitions that NNG provides for
 
 ```c
 const char *nng_http_get_header(nng_http *conn, const char *key);
-bool nng_next_header(nng_http *conn, const char **keyp, const char **valuep, void **next);
+bool nng_http_next_header(nng_http *conn, const char **keyp, const char **valuep, void **next);
 ```
 
 The {{i:`nng_http_get_header`}} returns the header value matching _key_ that was received over _conn_,
@@ -614,7 +614,8 @@ it may simply let the framework do so on its behalf. The server will perform
 this step if the callback has not already done so.
 
 Response headers may be set using [`nng_http_set_header`], and request headers
-may be accessed by using [`nng_http_get_header`].
+may be accessed by using [`nng_http_get_header`]. They can also be iterated
+over using [`nng_http_next_header`]
 
 Likewise the request body may be accessed, using [`nng_http_get_body`], and
 the response body may be set using either [`nng_http_set_body`] or [`nng_http_copy_body`].

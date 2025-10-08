@@ -197,6 +197,15 @@ NNG_DECL void nng_http_del_header(nng_http *, const char *);
 // It returns NULL if no matching header can be found.
 NNG_DECL const char *nng_http_get_header(nng_http *, const char *);
 
+// nng_http_next_header iterates over HTTP headers.  For clients,
+// it iterates over the response header, but for servers it iterates ovre the
+// request header. The key will receive the name of the header, and the value
+// the will receive its value. The caller starts the iteration by setting ptr
+// to NULL, and then the value must be preserved. The function returns NNG_OK
+// on success, or NNG_ENOENT if there are no more headers.
+NNG_DECL nng_err nng_http_next_header(
+    nng_http *, const char **key, const char **val, void **ptr);
+
 // nng_http_get_body returns the body sent by the peer, if one is attached.
 NNG_DECL void nng_http_get_body(nng_http *, void **, size_t *);
 

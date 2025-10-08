@@ -1372,6 +1372,38 @@ http_get_header(const nni_list *hdrs, const char *key)
 	return (NULL);
 }
 
+static bool
+http_next_header(
+    const nni_list *hdrs, const char **key, const char **val, void **ptr)
+{
+	http_header *h;
+
+	if (*ptr == NULL) {
+		h = nni_list_first(hdrs);
+	} else {
+		h = nni_list_next(hdrs, *ptr);
+	}
+	if (h == NULL) {
+		return (false);
+	}
+
+	*ptr = h;
+	*key = h->name;
+	*val = h->value;
+	return (true);
+}
+
+bool
+nni_http_next_header(
+    nng_http *conn, const char **key, const char **val, void **ptr)
+{
+	if (conn->client) {
+		return (http_next_header(&conn->res.data.hdrs, key, val, ptr));
+	} else {
+		return (http_next_header(&conn->req.data.hdrs, key, val, ptr));
+	}
+}
+
 const char *
 nni_http_get_header(nng_http *conn, const char *key)
 {
