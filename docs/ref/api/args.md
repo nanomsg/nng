@@ -60,9 +60,9 @@ returned.
 
 This function may return the following errors:
 
-- [`NNG_ARG_AMBIGU`]: Parsed option matches more than one specification.
-- [`NNG_ARG_MISSING`]: Option requires an argument, but one is not present.
-- [`NNG_ARG_INVAL`]: An invalid (unknown) argument is present in _argv_.
+- `NNG_ARG_AMBIG`: Parsed option matches more than one specification.
+- `NNG_ARG_MISSING`: Option requires an argument, but one is not present.
+- `NNG_ARG_INVAL`: An invalid (unknown) argument is present in _argv_.
 
 ### Option Specification
 

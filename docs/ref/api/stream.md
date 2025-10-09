@@ -36,7 +36,7 @@ The {{i:`nng_stream_send`}} function starts sending data asynchronously over the
 The data is sent from the scatter/gather vector located in the [`nng_aio`] _aio_,
 which must have been previously set using [`nng_aio_set_iov`].
 
-The {{i:`nng_stream_recv`}} function starts receiving data [asynchronously over the stream _s_
+The {{i:`nng_stream_recv`}} function starts receiving data asynchronously over the stream _s_
 into the scatter/gather vector located in the [`nng_aio`] _aio_,
 which must have been previously set using [`nng_aio_set_iov`].
 

@@ -498,3 +498,4 @@
 [error]: ../api/errors.md
 [duration]: ../api/time.md#duration-type
 [polyamorous]: ../proto/pair.md#polyamorous-mode
+[libnanomsg]: https://github.com/nanomsg/nanomsg
