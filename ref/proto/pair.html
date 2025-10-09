@@ -247,7 +247,7 @@
 <p>The <a name="a001"></a><em>PAIR</em> protocol<a name="a002"></a> implements a peer-to-peer pattern, where
 relationships between peers are one-to-one.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
-<p>The <a href="TODO.html"><code>nng_pair_open</code></a> functions create a <em>PAIR</em> socket.</p>
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_pair0_open</code></a> and <a href="../api/sock.html#opening-a-socket"><code>nng_pair1_open</code></a> functions create a <em>PAIR</em> socket.</p>
 <p>Normally, this pattern will block when attempting to send a message if
 no peer is able to receive the message.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
@@ -259,7 +259,7 @@ no peer is able to receive the message.</p>
 prevents discarding messages most of the time, there are topologies involving
 where messages may be discarded.
 Applications that require reliable delivery semantics should consider using
-<a href="./req.html"><em>REQ</em></a> sockets, or implement their own acknowledgment layer on top of <em>PAIR</em> sockets.</p>
+<a href="../proto/req.html"><em>REQ</em></a> sockets, or implement their own acknowledgment layer on top of <em>PAIR</em> sockets.</p>
 </div>
 <h3 id="protocol-versions"><a class="header" href="#protocol-versions">Protocol Versions</a></h3>
 <p>Version 0 is the legacy version of this protocol.
@@ -271,11 +271,10 @@ information, and is suitable when building simple one-to-one topologies.</p>
   tip
 </p>
 <p>Use version 0 if you need to communicate with other implementations,
-including the legacy <a href="TODO.html">libnanomsg</a> library or
-<a href="TODO.html">mangos</a>.</p>
+including the legacy <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> library or <a href="https://github.com/nanomsg/mangos">mangos</a>.</p>
 </div>
 <p>Version 1 of the protocol offers improved protection against loops when
-used with <a href="TODO.html">devices</a>.</p>
+used with <a href="../TODO.html">devices</a>.</p>
 <h3 id="polyamorous-mode"><a class="header" href="#polyamorous-mode">Polyamorous Mode</a></h3>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -292,7 +291,7 @@ will reject new connections if it already has an active connection to another
 peer.</p>
 <p><em>Polyamorous</em><a name="a003"></a> changes this, to allow a socket to communicate with
 multiple directly-connected peers.
-This mode is enabled by opening a socket using <a href="TODO.html"><code>nng_pair1_open_poly</code></a>.</p>
+This mode is enabled by opening a socket using <a href="../api/sock.html#opening-a-socket"><code>nng_pair1_open_poly</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -303,12 +302,11 @@ This mode is enabled by opening a socket using <a href="TODO.html"><code>nng_pai
 <p>In polyamorous mode a socket can support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an outgoing message by setting the
-<a href="TODO.html"><code>nng_pipe</code></a> to use for the outgoing message using
-<a href="../api/msg/nng_msg_pipe.html"><code>nng_msg_set_pipe</code></a>.</p>
+<a href="../api/pipe.html#pipes"><code>nng_pipe</code></a> to use for the outgoing message using <a href="../api/msg.html#message-pipe"><code>nng_msg_set_pipe</code></a>.</p>
 <p>If no remote peer is specified by the sender, then the protocol will select
 any available connected peer.</p>
 <p>Most often the value of the outgoing pipe will be obtained from an incoming
-message using <a href="../api/msg/nng_msg_pipe.html"><code>nng_msg_get_pipe</code></a>,
+message using <a href="../api/msg.html#message-pipe"><code>nng_msg_get_pipe</code></a>.
 such as when replying to an incoming message.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -316,7 +314,7 @@ such as when replying to an incoming message.</p>
   note
 </p>
 <p>Directed send <em>only</em> works with directly connected peers.
-It will not function across <a href="TODO.html">device</a> proxies.</p>
+It will not function across <a href="../TODO.html">device</a> proxies.</p>
 </div>
 <p>In order to prevent head-of-line blocking, if the peer on the given pipe
 is not able to receive (or the pipe is no longer available, such as if the
@@ -326,25 +324,36 @@ to the sender.</p>
 <p>The following protocol-specific options are available.</p>
 <ul>
 <li>
-<p><a href="TODO.html"><code>NNG_OPT_MAXTTL</code></a>:
+<p><a href="../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a>:
 (<code>int</code>, version 1 only). Maximum time-to-live.</p>
 </li>
 <li>
 <p><code>NNG_OPT_PAIR1_POLY</code>:
 (<code>bool</code>, version 1 only) This option is no longer supported.
 Formerly it was used to configure <em>polyamorous</em> mode, but that mode
-is now established by using the <code>nng_pair1_open_poly</code> function.</p>
+is now established by using the <a href="../api/sock.html#opening-a-socket"><code>nng_pair1_open_poly</code></a> function.</p>
 </li>
 </ul>
 <h3 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h3>
 <p>Version 0 of the pair protocol has no protocol-specific headers.</p>
 <p>Version 1 of the pair protocol uses a single 32-bit unsigned value. The
 low-order (big-endian) byte of this value contains a “hop” count, and is
-used in conjunction with the
-<a href="TODO.html"><code>NNG_OPT_MAXTTL</code></a> option to guard against
+used in conjunction with the <a href="../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a> option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 

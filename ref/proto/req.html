@@ -270,20 +270,19 @@ some reason.)</p>
 </div>
 <p><a name="a005"></a>
 The requester generally only has one outstanding request at a time unless
-in <a href="TODO.html">raw mode</a>,
+in <a href="../api/sock.html#raw-mode-sockets">raw mode</a>,
 and it will generally attempt to spread work requests to different peer repliers.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>This property, when combined with a <a href="TODO.html">device</a>
-can help provide a degree of load-balancing.</p>
+<p>This property, when combined with a <a href="../TODO.html">device</a> can help provide a degree of load-balancing.</p>
 </div>
-<p>The <em>REQ</em> protocol is the requester side, and the <a href="./rep.html"><em>REP</em></a> protocol
+<p>The <em>REQ</em> protocol is the requester side, and the <a href="../proto/rep.html"><em>REP</em></a> protocol
 is the replier side.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
-<p>The <a href="TODO.html"><code>nng_req0_open</code></a> functions create a <em>REQ</em> socket.
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_req0_open</code></a> function creates a <em>REQ</em> socket.
 This socket may be used to send messages (requests), and then to receive replies.</p>
 <p>Generally a reply can only be received after sending a request.
 (Attempts to receive a message will result in <code>NNG_ESTATE</code> if there is no
@@ -296,10 +295,10 @@ This will cause the requester to discard any reply from the earlier request,
 but it will not stop a replier
 from processing a request it has already received or terminate a request
 that has already been placed on the wire.</p>
-<p><a href="TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations"><a class="header" href="#context-operations">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="TODO.html">contexts</a> for concurrent
-use cases using <a href="TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="../TODO.html">contexts</a> for concurrent
+use cases using <a href="../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>The <code>NNG_OPT_REQ_RESENDTIME</code> value may be configured differently
 on contexts created this way.</p>
 <p>Each context may have at most one outstanding request, and operates
@@ -315,7 +314,7 @@ a separate socket.</p>
 <ul>
 <li>
 <p><a name="a006"></a><code>NNG_OPT_REQ_RESENDTIME</code>: <br />
-(<a href="../api/util/nng_duration.html"><code>nng_duration</code></a>) <br />
+(<a href="../api/time.html#duration-type"><code>nng_duration</code></a>) <br />
 When a new request is started, a timer of this duration is also started.
 If no reply is received before this timer expires, then the request will
 be resent. <br />
@@ -325,12 +324,12 @@ the original request was sent disconnects. <br />
 <br />
 Resending may be deferred up to the value of the <code>NNG_OPT_RESENDTICK</code> parameter. <br />
 <br />
-If the value is set to <a href="../api/util/nng_duration.html"><code>NNG_DURATION_INFINITE</code></a>, then resends are disabled
+If the value is set to <a href="../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>, then resends are disabled
 altogether. This should be used when the request is not idemptoent.</p>
 </li>
 <li>
 <p><a name="a007"></a><code>NNG_OPT_REQ_RESENDTICK</code>: <br />
-(<a href="../api/util/nng_duration.html"><code>nng_duration</code></a>) <br />
+(<a href="../api/time.html#duration-type"><code>nng_duration</code></a>) <br />
 This is the granularity of the clock that is used to check for resending.
 The default is a second. Setting this to a higher rate will allow for
 more timely resending to occur, but may incur significant additional
@@ -350,7 +349,7 @@ last element in the array, and <em>must</em> have the most significant bit set.<
 <p>There may be additional <strong>peer ID</strong>s preceding the request ID.
 These will be distinguishable from the request ID by having their most
 significant bit clear.</p>
-<p>When a request message is received by a forwarding node (such as a <a href="TODO.html">device</a>),
+<p>When a request message is received by a forwarding node (such as a <a href="../TODO.html">device</a>),
 the forwarding node prepends a
 32-bit peer ID (which <em>must</em> have the most significant bit clear),
 which is the forwarder’s way of identifying the directly connected
@@ -369,6 +368,18 @@ message, stripping it from the front of the message as it does so.</p>
 <p>When the reply finally arrives back at the initiating requester, it
 should have only a single element in the message, which will be the
 request ID it originally used for the request.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 

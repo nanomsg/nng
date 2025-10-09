@@ -277,7 +277,7 @@ Furthermore, the more traffic <em>in aggregate</em> that occurs across the topol
 the more likely that message loss is to occur.</p>
 </div>
 <h2 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h2>
-<p>The <a href="TODO.html"><code>nng_bus0_open</code></a> functions create a bus socket.
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_bus0_open</code></a> functions create a bus socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.</p>
 <h2 id="protocol-versions"><a class="header" href="#protocol-versions">Protocol Versions</a></h2>
@@ -286,17 +286,29 @@ Sending messages will attempt to deliver to each directly connected peer.</p>
 <h2 id="protocol-options"><a class="header" href="#protocol-options">Protocol Options</a></h2>
 <p>The <em>BUS</em> protocol has no protocol-specific options.</p>
 <h2 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h2>
-<p>When using a <em>BUS</em> socket in <a href="TODO.html">raw mode</a>, received messages will
-contain the incoming <a href="TODO.html">pipe</a> ID as the sole element in the header.
+<p>When using a <em>BUS</em> socket in <a href="../api/sock.html#raw-mode-sockets">raw mode</a>, received messages will
+contain the incoming <a href="../api/pipe.html">pipe</a> ID as the sole element in the header.
 If a message containing such a header is sent using a raw <em>BUS</em> socket, then,
 the message will be delivered to all connected pipes <em>except</em> the one
 identified in the header.
-This behavior is intended for use with <a href="TODO.html">device</a>
+This behavior is intended for use with <a href="../TODO.html">device</a>
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.
 If no header is present, then a message is sent to all connected pipes.</p>
 <p>When using normal (cooked mode) <em>BUS</em> sockets, no message headers are present.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 

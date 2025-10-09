@@ -266,9 +266,9 @@ consumption.</p>
 the message body.
 Applications should construct their messages accordingly.</p>
 <h2 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h2>
-<p>The <a href="TODO.html"><code>nng_pub0_open</code></a> functions create a publisher socket.
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_pub0_open</code></a> function creates a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
-Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
+Attempts to receive messages will result in <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
 <h2 id="protocol-versions"><a class="header" href="#protocol-versions">Protocol Versions</a></h2>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
@@ -276,6 +276,18 @@ Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>The <em>PUB</em> protocol has no protocol-specific options.</p>
 <h2 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h2>
 <p>The <em>PUB</em> protocol has no protocol-specific headers.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 

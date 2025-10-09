@@ -260,9 +260,9 @@ received after the survey has finished are discarded.</p>
 as well as certain kinds of <a name="a006"></a>service discovery problems.</p>
 </div>
 <p>The <em>SURVEYOR</em> protocol is the surveyor side, and the
-<a href="./respondent.html"><em>RESPONDENT</em></a> protocol is the respondent side.</p>
+<a href="../proto/respondent.html"><em>RESPONDENT</em></a> protocol is the respondent side.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
-<p>The <a href="TODO.html"><code>nng_surveyor0_open</code></a>
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_surveyor0_open</code></a>
 functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
@@ -270,16 +270,16 @@ A surveyor can normally expect to receive at most one reply from each responder.
 (Messages can be duplicated in some topologies,
 so there is no guarantee of this.)</p>
 <p>Attempts to receive on a socket with no outstanding survey will result
-in <code>NNG_ESTATE</code>.
+in <a href="../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a>.
 If the survey times out while the surveyor is waiting
-for replies, then the result will be <code>NNG_ETIMEDOUT</code>.</p>
+for replies, then the result will be <a href="../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>.</p>
 <p>Only one survey can be outstanding at a time; sending another survey will
 cancel the prior one, and any responses from respondents from the prior
 survey that arrive after this will be discarded.</p>
-<p><a href="TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations"><a class="header" href="#context-operations">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="TODO.html">contexts</a> for concurrent
-use cases using <a href="TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="../TODO.html">contexts</a> for concurrent
+use cases using <a href="../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
 Other contexts on the same socket may have overlapping surveys
@@ -305,7 +305,7 @@ At the time of writing, no other versions of this protocol have been defined.
 <p>The following protocol-specific option is available.</p>
 <ul>
 <li><a name="a007"></a><code>NNG_OPT_SURVEYOR_SURVEYTIME</code>: <br />
-(<a href="../api/util/nng_duration.html"><code>nng_duration</code></a>) <br />
+(<a href="../api/time.html#duration-type"><code>nng_duration</code></a>) <br />
 <br />
 When a new survey is started, a timer of this duration is started.
 Any responses arriving this time will be discarded.
@@ -324,8 +324,7 @@ last element in the array, and <em>must</em> have the most significant bit set.<
 <p>There may be additional <strong>peer ID</strong>s preceding the survey ID.
 These will be distinguishable from the survey ID by having their most
 significant bit clear.</p>
-<p>When a survey message is received by a forwarding node (such as a
-<a href="TODO.html">device</a>),
+<p>When a survey message is received by a forwarding node (such as a <a href="../TODO.html">device</a>),
 the forwarding node prepends a
 32-bit peer ID (which <em>must</em> have the most significant bit clear),
 which is the forwarder’s way of identifying the directly connected
@@ -345,9 +344,21 @@ message, stripping it from the front of the message as it does so.</p>
 should have only a single element in the message, which will be the
 survey ID it originally used for the request.</p>
 <p>More detail can be found in the <a href="TODO.html">sp-surveyor-01 RFC</a> document.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <p><hr/>
 <p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: An earlier and incompatible version of the protocol was used in older
-pre-releases of <a href="TODO.html">nanomsg</a>, but was not released in any production version.</p>
+pre-releases of <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a>, but was not released in any production version.</p>
 
                     </main>
 

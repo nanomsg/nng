@@ -260,18 +260,18 @@ election in cluster configurations, as well as certain kinds of service
 discovery problems.</p>
 </div>
 <p>The <em>RESPONDENT</em> protocol is the respondent side, and the
-<a href="./surveyor.html"><em>SURVEYOR</em></a> protocol is the surveyor side.</p>
+<a href="../proto/surveyor.html"><em>SURVEYOR</em></a> protocol is the surveyor side.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
-<p>The <a href="TODO.html"><code>nng_respondent0_open</code></a> functions create a
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_respondent0_open</code></a> functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
 reply will be sent to surveyor from whom the last survey was received.</p>
 <p>Respondents may discard a survey by simply not replying to it.</p>
-<p><a href="TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations"><a class="header" href="#context-operations">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="TODO.html">contexts</a> for concurrent
-use cases using <a href="TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="../TODO.html">contexts</a> for concurrent
+use cases using <a href="../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
 Replies made using a context will be returned to the the surveyor that
@@ -287,10 +287,22 @@ At the time of writing, no other versions of this protocol have been defined.
 <p>The <em>respondent</em> protocol has no protocol-specific options.</p>
 <h3 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h3>
 <p>The <em>RESPONDENT</em> protocol uses a <a name="a004"></a><em>backtrace</em> in the header.
-This is more fully documented in the <a href="./surveyor.html"><em>SURVEYOR</em></a> manual.</p>
+This is more fully documented in the <a href="../proto/surveyor.html"><em>SURVEYOR</em></a> manual.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <p><hr/>
 <p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: An earlier and incompatible version of the protocol was used in older
-pre-releases of <a href="TODO.html">nanomsg</a>, but was not released in any production version.</p>
+pre-releases of <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a>, but was not released in any production version.</p>
 
                     </main>
 

@@ -266,15 +266,15 @@ They will however be unable to communicate with each other using that URL.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>While <em>inproc</em> accepts the option <code>NNG_OPT_RECVMAXSZ</code> for
+<p>While <em>inproc</em> accepts the option <a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> for
 compatibility, the value of the option is ignored with no enforcement.
 As <em>inproc</em> peers are in the same address space, they are implicitly
 trusted, so the protection afforded by <code>NNG_OPT_RECVMAXSZ</code> is unnecessary.</p>
 </div>
 <h2 id="mixing-implementations"><a class="header" href="#mixing-implementations">Mixing Implementations</a></h2>
 <p>When mixing the <em>NNG</em> library with other implementations of these
-protocols in the same process (such as the <em>mangos</em>
-or <em>libnanomsg</em> implementations), it will not be possible to utilize
+protocols in the same process (such as the <a href="https://github.com/nanomsg/mangos">mangos</a>
+or <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> implementations), it will not be possible to utilize
 the <em>inproc</em> transport to communicate across this boundary.</p>
 <p>This limitation also extends to using different instances of the <em>NNG</em>
 library within the same process.</p>

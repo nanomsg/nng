@@ -5848,11 +5848,11 @@ The Scalability Protocols are a principally a collection of common networking
 patterns found in applications.</p>
 <p>The following patterns are included:</p>
 <h2 id="request---reply"><a class="header" href="#request---reply">Request - Reply</a></h2>
-<p>The <a name="a002"></a>request/reply pattern is made up of the <a href="proto/req.html"><em>REQ</em></a> and <a href="proto/rep.html"><em>REP</em></a> protocols.
+<p>The <a name="a002"></a>request/reply pattern is made up of the <a href="proto/../proto/req.html"><em>REQ</em></a> and <a href="proto/../proto/rep.html"><em>REP</em></a> protocols.
 This most often used when implementing RPC-like services, where
 a given request is matched by a single reply.</p>
 <h2 id="pipeline"><a class="header" href="#pipeline">Pipeline</a></h2>
-<p>The <a name="a003"></a>pipeline pattern is made up of the <a href="proto/push.html"><em>PUSH</em></a> and <a href="proto/pull.html"><em>PULL</em></a>
+<p>The <a name="a003"></a>pipeline pattern is made up of the <a href="proto/../proto/push.html"><em>PUSH</em></a> and <a href="proto/../proto/pull.html"><em>PULL</em></a>
 protocols.</p>
 <p>In this pattern communication is <a name="a004"></a>half-duplex, in that one side sends
 data and another side receives.</p>
@@ -5862,6 +5862,18 @@ of <a name="a006"></a>flow control to data production and consumption.</p>
 <h2 id="publish---subscribe"><a class="header" href="#publish---subscribe">Publish - Subscribe</a></h2>
 <h2 id="bus"><a class="header" href="#bus">Bus</a></h2>
 <h2 id="pair"><a class="header" href="#pair">Pair</a></h2>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -5963,7 +5975,7 @@ Furthermore, the more traffic <em>in aggregate</em> that occurs across the topol
 the more likely that message loss is to occur.</p>
 </div>
 <h2 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h2>
-<p>The <a href="proto/TODO.html"><code>nng_bus0_open</code></a> functions create a bus socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_bus0_open</code></a> functions create a bus socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.</p>
 <h2 id="protocol-versions"><a class="header" href="#protocol-versions">Protocol Versions</a></h2>
@@ -5972,17 +5984,29 @@ Sending messages will attempt to deliver to each directly connected peer.</p>
 <h2 id="protocol-options"><a class="header" href="#protocol-options">Protocol Options</a></h2>
 <p>The <em>BUS</em> protocol has no protocol-specific options.</p>
 <h2 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h2>
-<p>When using a <em>BUS</em> socket in <a href="proto/TODO.html">raw mode</a>, received messages will
-contain the incoming <a href="proto/TODO.html">pipe</a> ID as the sole element in the header.
+<p>When using a <em>BUS</em> socket in <a href="proto/../api/sock.html#raw-mode-sockets">raw mode</a>, received messages will
+contain the incoming <a href="proto/../api/pipe.html">pipe</a> ID as the sole element in the header.
 If a message containing such a header is sent using a raw <em>BUS</em> socket, then,
 the message will be delivered to all connected pipes <em>except</em> the one
 identified in the header.
-This behavior is intended for use with <a href="proto/TODO.html">device</a>
+This behavior is intended for use with <a href="proto/../TODO.html">device</a>
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.
 If no header is present, then a message is sent to all connected pipes.</p>
 <p>When using normal (cooked mode) <em>BUS</em> sockets, no message headers are present.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6054,7 +6078,7 @@ If no header is present, then a message is sent to all connected pipes.</p>
 <p>The <a name="a001"></a><em>PAIR</em> protocol<a name="a002"></a> implements a peer-to-peer pattern, where
 relationships between peers are one-to-one.</p>
 <h3 id="socket-operations-1"><a class="header" href="#socket-operations-1">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_pair_open</code></a> functions create a <em>PAIR</em> socket.</p>
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_pair0_open</code></a> and <a href="proto/../api/sock.html#opening-a-socket"><code>nng_pair1_open</code></a> functions create a <em>PAIR</em> socket.</p>
 <p>Normally, this pattern will block when attempting to send a message if
 no peer is able to receive the message.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
@@ -6066,7 +6090,7 @@ no peer is able to receive the message.</p>
 prevents discarding messages most of the time, there are topologies involving
 where messages may be discarded.
 Applications that require reliable delivery semantics should consider using
-<a href="proto/./req.html"><em>REQ</em></a> sockets, or implement their own acknowledgment layer on top of <em>PAIR</em> sockets.</p>
+<a href="proto/../proto/req.html"><em>REQ</em></a> sockets, or implement their own acknowledgment layer on top of <em>PAIR</em> sockets.</p>
 </div>
 <h3 id="protocol-versions-1"><a class="header" href="#protocol-versions-1">Protocol Versions</a></h3>
 <p>Version 0 is the legacy version of this protocol.
@@ -6078,11 +6102,10 @@ information, and is suitable when building simple one-to-one topologies.</p>
   tip
 </p>
 <p>Use version 0 if you need to communicate with other implementations,
-including the legacy <a href="proto/TODO.html">libnanomsg</a> library or
-<a href="proto/TODO.html">mangos</a>.</p>
+including the legacy <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> library or <a href="https://github.com/nanomsg/mangos">mangos</a>.</p>
 </div>
 <p>Version 1 of the protocol offers improved protection against loops when
-used with <a href="proto/TODO.html">devices</a>.</p>
+used with <a href="proto/../TODO.html">devices</a>.</p>
 <h3 id="polyamorous-mode"><a class="header" href="#polyamorous-mode">Polyamorous Mode</a></h3>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -6099,7 +6122,7 @@ will reject new connections if it already has an active connection to another
 peer.</p>
 <p><em>Polyamorous</em><a name="a003"></a> changes this, to allow a socket to communicate with
 multiple directly-connected peers.
-This mode is enabled by opening a socket using <a href="proto/TODO.html"><code>nng_pair1_open_poly</code></a>.</p>
+This mode is enabled by opening a socket using <a href="proto/../api/sock.html#opening-a-socket"><code>nng_pair1_open_poly</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -6110,12 +6133,11 @@ This mode is enabled by opening a socket using <a href="proto/TODO.html"><code>n
 <p>In polyamorous mode a socket can support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an outgoing message by setting the
-<a href="proto/TODO.html"><code>nng_pipe</code></a> to use for the outgoing message using
-<a href="proto/../api/msg/nng_msg_pipe.html"><code>nng_msg_set_pipe</code></a>.</p>
+<a href="proto/../api/pipe.html#pipes"><code>nng_pipe</code></a> to use for the outgoing message using <a href="proto/../api/msg.html#message-pipe"><code>nng_msg_set_pipe</code></a>.</p>
 <p>If no remote peer is specified by the sender, then the protocol will select
 any available connected peer.</p>
 <p>Most often the value of the outgoing pipe will be obtained from an incoming
-message using <a href="proto/../api/msg/nng_msg_pipe.html"><code>nng_msg_get_pipe</code></a>,
+message using <a href="proto/../api/msg.html#message-pipe"><code>nng_msg_get_pipe</code></a>.
 such as when replying to an incoming message.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -6123,7 +6145,7 @@ such as when replying to an incoming message.</p>
   note
 </p>
 <p>Directed send <em>only</em> works with directly connected peers.
-It will not function across <a href="proto/TODO.html">device</a> proxies.</p>
+It will not function across <a href="proto/../TODO.html">device</a> proxies.</p>
 </div>
 <p>In order to prevent head-of-line blocking, if the peer on the given pipe
 is not able to receive (or the pipe is no longer available, such as if the
@@ -6133,25 +6155,36 @@ to the sender.</p>
 <p>The following protocol-specific options are available.</p>
 <ul>
 <li>
-<p><a href="proto/TODO.html"><code>NNG_OPT_MAXTTL</code></a>:
+<p><a href="proto/../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a>:
 (<code>int</code>, version 1 only). Maximum time-to-live.</p>
 </li>
 <li>
 <p><code>NNG_OPT_PAIR1_POLY</code>:
 (<code>bool</code>, version 1 only) This option is no longer supported.
 Formerly it was used to configure <em>polyamorous</em> mode, but that mode
-is now established by using the <code>nng_pair1_open_poly</code> function.</p>
+is now established by using the <a href="proto/../api/sock.html#opening-a-socket"><code>nng_pair1_open_poly</code></a> function.</p>
 </li>
 </ul>
 <h3 id="protocol-headers-1"><a class="header" href="#protocol-headers-1">Protocol Headers</a></h3>
 <p>Version 0 of the pair protocol has no protocol-specific headers.</p>
 <p>Version 1 of the pair protocol uses a single 32-bit unsigned value. The
 low-order (big-endian) byte of this value contains a “hop” count, and is
-used in conjunction with the
-<a href="proto/TODO.html"><code>NNG_OPT_MAXTTL</code></a> option to guard against
+used in conjunction with the <a href="proto/../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a> option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6242,9 +6275,9 @@ consumption.</p>
 the message body.
 Applications should construct their messages accordingly.</p>
 <h2 id="socket-operations-2"><a class="header" href="#socket-operations-2">Socket Operations</a></h2>
-<p>The <a href="proto/TODO.html"><code>nng_pub0_open</code></a> functions create a publisher socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_pub0_open</code></a> function creates a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
-Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
+Attempts to receive messages will result in <a href="proto/../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
 <h2 id="protocol-versions-2"><a class="header" href="#protocol-versions-2">Protocol Versions</a></h2>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
@@ -6252,6 +6285,18 @@ Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>The <em>PUB</em> protocol has no protocol-specific options.</p>
 <h2 id="protocol-headers-2"><a class="header" href="#protocol-headers-2">Protocol Headers</a></h2>
 <p>The <em>PUB</em> protocol has no protocol-specific headers.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6322,7 +6367,7 @@ Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
 <h1 id="pull-protocol"><a class="header" href="#pull-protocol">PULL protocol</a></h1>
 <p>The <a name="a001"></a><em>PULL</em> protocol<a name="a002"></a> is one half of a
 <a name="a003"></a>pipeline pattern.
-The other half is the <a href="proto/./push.html"><em>PUSH</em></a> protocol.</p>
+The other half is the <a href="proto/../proto/push.html"><em>PUSH</em></a> protocol.</p>
 <p>In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent
 by a pusher will be sent to one of its peer pullers,
@@ -6330,8 +6375,7 @@ chosen in a round-robin fashion
 from the set of connected peers available for receiving.
 This property makes this pattern useful in <a name="a004"></a>load-balancing scenarios.</p>
 <h3 id="socket-operations-3"><a class="header" href="#socket-operations-3">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_pull0_open</code></a> functions create a
-<em>PULL</em> socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_pull0_open</code></a> function creates a <em>PULL</em> socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>When receiving messages, the <em>PULL</em> protocol accepts messages as
@@ -6345,6 +6389,18 @@ order in which messages are handled is undefined.</p>
 <p>The <em>PULL</em> protocol has no protocol-specific options.</p>
 <h3 id="protocol-headers-3"><a class="header" href="#protocol-headers-3">Protocol Headers</a></h3>
 <p>The <em>PULL</em> protocol has no protocol-specific headers.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6415,14 +6471,14 @@ order in which messages are handled is undefined.</p>
 <h1 id="push-protocol"><a class="header" href="#push-protocol">PUSH protocol</a></h1>
 <h2 id="description"><a class="header" href="#description">DESCRIPTION</a></h2>
 <p>The <a name="a001"></a><em>PUSH</em> protocol<a name="a002"></a> is one half of a <a name="a003"></a>pipeline pattern.
-The other side is the <a href="proto/./pull.html"><em>PULL</em></a> protocol.</p>
+The other side is the <a href="proto/../proto/pull.html"><em>PULL</em></a> protocol.</p>
 <p>In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent by a pusher will be sent to one of its peer pullers,
 chosen in a round-robin fashion
 from the set of connected peers available for receiving.
 This property makes this pattern useful in <a name="a004"></a>load-balancing scenarios.</p>
 <h3 id="socket-operations-4"><a class="header" href="#socket-operations-4">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_push0_open</code></a> call creates a <em>PUSH</em> socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_push0_open</code></a> function creates a <em>PUSH</em> socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>Send operations will observe flow control (back-pressure), so that
@@ -6438,14 +6494,14 @@ wait until one is available, or the operation times out.</p>
 to avoid dropping messages, no guarantee of delivery is made.
 Furthermore, as there is no capability for message acknowledgment,
 applications that need reliable delivery are encouraged to consider the
-<a href="proto/./req.html"><em>REQ</em></a> protocol instead.</p>
+<a href="proto/../proto/req.html"><em>REQ</em></a> protocol instead.</p>
 </div>
 <h3 id="protocol-versions-4"><a class="header" href="#protocol-versions-4">Protocol Versions</a></h3>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
 <h3 id="protocol-options-4"><a class="header" href="#protocol-options-4">Protocol Options</a></h3>
 <ul>
-<li><a href="proto/TODO.html"><code>NNG_OPT_SENDBUF</code></a>:
+<li><a href="proto/../api/sock.html#NNG_OPT_SENDBUF"><code>NNG_OPT_SENDBUF</code></a>:
 (<code>int</code>, 0 - 8192)
 Normally this is set to zero, indicating that send operations are unbuffered.
 In unbuffered operation, send operations will wait until a suitable peer is available to receive the message.
@@ -6462,6 +6518,18 @@ buffer determined by this option.</p>
 </div>
 <h3 id="protocol-headers-4"><a class="header" href="#protocol-headers-4">Protocol Headers</a></h3>
 <p>The <em>PUSH</em> protocol has no protocol-specific headers.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6545,9 +6613,9 @@ It is also reliable, in that a requester will keep retrying until
 a reply is received.</p>
 </div>
 <p>The <em>REP</em> protocol is the replier side, and the
-<a href="proto/./req.html"><em>REP</em></a> protocol is the requester side.</p>
+<a href="proto/../proto/req.html"><em>REP</em></a> protocol is the requester side.</p>
 <h2 id="socket-operations-5"><a class="header" href="#socket-operations-5">Socket Operations</a></h2>
-<p>The <a href="proto/TODO.html"><code>nng_rep0_open</code></a> functions create a replier socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_rep0_open</code></a> functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.</p>
 <p>Generally a reply can only be sent after receiving a request.</p>
@@ -6555,10 +6623,10 @@ replies.</p>
 was previously received.</p>
 <p>Likewise, only one receive operation may be pending at a time.
 Any additional concurrent receive operations will result in <code>NNG_ESTATE</code>.</p>
-<p><a href="proto/TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h2 id="context-operations"><a class="header" href="#context-operations">Context Operations</a></h2>
-<p>This protocol supports the creation of <a href="proto/TODO.html">contexts</a> for concurrent
-use cases using <a href="proto/TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Each context may have at most one outstanding request, and operates
 independently of the others.
 The restrictions for order of operations with sockets apply equally
@@ -6571,7 +6639,19 @@ a separate socket.</p>
 <p>The <em>REP</em> protocol has no protocol-specific options.</p>
 <h2 id="protocol-headers-5"><a class="header" href="#protocol-headers-5">Protocol Headers</a></h2>
 <p>The <em>REP</em> protocol uses a <a name="a004"></a><em>backtrace</em> in the header.
-This is more fully documented in the <a href="proto/./req.html"><em>REQ</em></a> chapter.</p>
+This is more fully documented in the <a href="proto/../proto/req.html"><em>REQ</em></a> chapter.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6666,20 +6746,19 @@ some reason.)</p>
 </div>
 <p><a name="a005"></a>
 The requester generally only has one outstanding request at a time unless
-in <a href="proto/TODO.html">raw mode</a>,
+in <a href="proto/../api/sock.html#raw-mode-sockets">raw mode</a>,
 and it will generally attempt to spread work requests to different peer repliers.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>This property, when combined with a <a href="proto/TODO.html">device</a>
-can help provide a degree of load-balancing.</p>
+<p>This property, when combined with a <a href="proto/../TODO.html">device</a> can help provide a degree of load-balancing.</p>
 </div>
-<p>The <em>REQ</em> protocol is the requester side, and the <a href="proto/./rep.html"><em>REP</em></a> protocol
+<p>The <em>REQ</em> protocol is the requester side, and the <a href="proto/../proto/rep.html"><em>REP</em></a> protocol
 is the replier side.</p>
 <h3 id="socket-operations-6"><a class="header" href="#socket-operations-6">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_req0_open</code></a> functions create a <em>REQ</em> socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_req0_open</code></a> function creates a <em>REQ</em> socket.
 This socket may be used to send messages (requests), and then to receive replies.</p>
 <p>Generally a reply can only be received after sending a request.
 (Attempts to receive a message will result in <code>NNG_ESTATE</code> if there is no
@@ -6692,10 +6771,10 @@ This will cause the requester to discard any reply from the earlier request,
 but it will not stop a replier
 from processing a request it has already received or terminate a request
 that has already been placed on the wire.</p>
-<p><a href="proto/TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations-1"><a class="header" href="#context-operations-1">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="proto/TODO.html">contexts</a> for concurrent
-use cases using <a href="proto/TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>The <code>NNG_OPT_REQ_RESENDTIME</code> value may be configured differently
 on contexts created this way.</p>
 <p>Each context may have at most one outstanding request, and operates
@@ -6711,7 +6790,7 @@ a separate socket.</p>
 <ul>
 <li>
 <p><a name="a006"></a><code>NNG_OPT_REQ_RESENDTIME</code>: <br />
-(<a href="proto/../api/util/nng_duration.html"><code>nng_duration</code></a>) <br />
+(<a href="proto/../api/time.html#duration-type"><code>nng_duration</code></a>) <br />
 When a new request is started, a timer of this duration is also started.
 If no reply is received before this timer expires, then the request will
 be resent. <br />
@@ -6721,12 +6800,12 @@ the original request was sent disconnects. <br />
 <br />
 Resending may be deferred up to the value of the <code>NNG_OPT_RESENDTICK</code> parameter. <br />
 <br />
-If the value is set to <a href="proto/../api/util/nng_duration.html"><code>NNG_DURATION_INFINITE</code></a>, then resends are disabled
+If the value is set to <a href="proto/../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>, then resends are disabled
 altogether. This should be used when the request is not idemptoent.</p>
 </li>
 <li>
 <p><a name="a007"></a><code>NNG_OPT_REQ_RESENDTICK</code>: <br />
-(<a href="proto/../api/util/nng_duration.html"><code>nng_duration</code></a>) <br />
+(<a href="proto/../api/time.html#duration-type"><code>nng_duration</code></a>) <br />
 This is the granularity of the clock that is used to check for resending.
 The default is a second. Setting this to a higher rate will allow for
 more timely resending to occur, but may incur significant additional
@@ -6746,7 +6825,7 @@ last element in the array, and <em>must</em> have the most significant bit set.<
 <p>There may be additional <strong>peer ID</strong>s preceding the request ID.
 These will be distinguishable from the request ID by having their most
 significant bit clear.</p>
-<p>When a request message is received by a forwarding node (such as a <a href="proto/TODO.html">device</a>),
+<p>When a request message is received by a forwarding node (such as a <a href="proto/../TODO.html">device</a>),
 the forwarding node prepends a
 32-bit peer ID (which <em>must</em> have the most significant bit clear),
 which is the forwarder’s way of identifying the directly connected
@@ -6765,6 +6844,18 @@ message, stripping it from the front of the message as it does so.</p>
 <p>When the reply finally arrives back at the initiating requester, it
 should have only a single element in the message, which will be the
 request ID it originally used for the request.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6849,18 +6940,18 @@ election in cluster configurations, as well as certain kinds of service
 discovery problems.</p>
 </div>
 <p>The <em>RESPONDENT</em> protocol is the respondent side, and the
-<a href="proto/./surveyor.html"><em>SURVEYOR</em></a> protocol is the surveyor side.</p>
+<a href="proto/../proto/surveyor.html"><em>SURVEYOR</em></a> protocol is the surveyor side.</p>
 <h3 id="socket-operations-7"><a class="header" href="#socket-operations-7">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_respondent0_open</code></a> functions create a
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_respondent0_open</code></a> functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
 reply will be sent to surveyor from whom the last survey was received.</p>
 <p>Respondents may discard a survey by simply not replying to it.</p>
-<p><a href="proto/TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations-2"><a class="header" href="#context-operations-2">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="proto/TODO.html">contexts</a> for concurrent
-use cases using <a href="proto/TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
 Replies made using a context will be returned to the the surveyor that
@@ -6876,10 +6967,22 @@ At the time of writing, no other versions of this protocol have been defined.
 <p>The <em>respondent</em> protocol has no protocol-specific options.</p>
 <h3 id="protocol-headers-7"><a class="header" href="#protocol-headers-7">Protocol Headers</a></h3>
 <p>The <em>RESPONDENT</em> protocol uses a <a name="a004"></a><em>backtrace</em> in the header.
-This is more fully documented in the <a href="proto/./surveyor.html"><em>SURVEYOR</em></a> manual.</p>
+This is more fully documented in the <a href="proto/../proto/surveyor.html"><em>SURVEYOR</em></a> manual.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <p><hr/>
 <p><a name="footnote-1"><a href="proto/respondent.html#to-footnote-1">1</a></a>: An earlier and incompatible version of the protocol was used in older
-pre-releases of <a href="proto/TODO.html">nanomsg</a>, but was not released in any production version.</p>
+pre-releases of <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a>, but was not released in any production version.</p>
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -6952,7 +7055,7 @@ pre-releases of <a href="proto/TODO.html">nanomsg</a>, but was not released in a
 In this pattern, a publisher sends data, which is broadcast to all subscribers.
 The subscribing applications only see the data to which they have subscribed.</p>
 <p>The <em>SUB</em> protocol is the subscriber side, and the
-<a href="proto/./pub.html"><em>PUB</em></a> protocol is the publisher side.</p>
+<a href="proto/../proto/pub.html"><em>PUB</em></a> protocol is the publisher side.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -6967,9 +7070,9 @@ reduce bandwidth consumption.</p>
 the message body.
 Applications should construct their messages accordingly.</p>
 <h3 id="socket-operations-8"><a class="header" href="#socket-operations-8">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_sub0_open</code></a> functions create a <em>SUB</em> socket.
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_sub0_open</code></a> functions create a <em>SUB</em> socket.
 This socket may be used to receive messages, but is unable to send them.
-Attempts to send messages will result in <code>NNG_ENOTSUP</code>.</p>
+Attempts to send messages will result in <a href="proto/../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
 <h3 id="protocol-versions-8"><a class="header" href="#protocol-versions-8">Protocol Versions</a></h3>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
@@ -6985,6 +7088,18 @@ When <code>false</code>, the subscriber will reject messages if the message queu
 </ul>
 <h3 id="protocol-headers-8"><a class="header" href="#protocol-headers-8">Protocol Headers</a></h3>
 <p>The <em>SUB</em> protocol has no protocol-specific headers.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -7069,9 +7184,9 @@ received after the survey has finished are discarded.</p>
 as well as certain kinds of <a name="a006"></a>service discovery problems.</p>
 </div>
 <p>The <em>SURVEYOR</em> protocol is the surveyor side, and the
-<a href="proto/./respondent.html"><em>RESPONDENT</em></a> protocol is the respondent side.</p>
+<a href="proto/../proto/respondent.html"><em>RESPONDENT</em></a> protocol is the respondent side.</p>
 <h3 id="socket-operations-9"><a class="header" href="#socket-operations-9">Socket Operations</a></h3>
-<p>The <a href="proto/TODO.html"><code>nng_surveyor0_open</code></a>
+<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_surveyor0_open</code></a>
 functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
@@ -7079,16 +7194,16 @@ A surveyor can normally expect to receive at most one reply from each responder.
 (Messages can be duplicated in some topologies,
 so there is no guarantee of this.)</p>
 <p>Attempts to receive on a socket with no outstanding survey will result
-in <code>NNG_ESTATE</code>.
+in <a href="proto/../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a>.
 If the survey times out while the surveyor is waiting
-for replies, then the result will be <code>NNG_ETIMEDOUT</code>.</p>
+for replies, then the result will be <a href="proto/../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>.</p>
 <p>Only one survey can be outstanding at a time; sending another survey will
 cancel the prior one, and any responses from respondents from the prior
 survey that arrive after this will be discarded.</p>
-<p><a href="proto/TODO.html">Raw mode</a> sockets ignore all these restrictions.</p>
+<p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations-3"><a class="header" href="#context-operations-3">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="proto/TODO.html">contexts</a> for concurrent
-use cases using <a href="proto/TODO.html"><code>nng_ctx_open</code></a>.</p>
+<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
 Other contexts on the same socket may have overlapping surveys
@@ -7114,7 +7229,7 @@ At the time of writing, no other versions of this protocol have been defined.
 <p>The following protocol-specific option is available.</p>
 <ul>
 <li><a name="a007"></a><code>NNG_OPT_SURVEYOR_SURVEYTIME</code>: <br />
-(<a href="proto/../api/util/nng_duration.html"><code>nng_duration</code></a>) <br />
+(<a href="proto/../api/time.html#duration-type"><code>nng_duration</code></a>) <br />
 <br />
 When a new survey is started, a timer of this duration is started.
 Any responses arriving this time will be discarded.
@@ -7133,8 +7248,7 @@ last element in the array, and <em>must</em> have the most significant bit set.<
 <p>There may be additional <strong>peer ID</strong>s preceding the survey ID.
 These will be distinguishable from the survey ID by having their most
 significant bit clear.</p>
-<p>When a survey message is received by a forwarding node (such as a
-<a href="proto/TODO.html">device</a>),
+<p>When a survey message is received by a forwarding node (such as a <a href="proto/../TODO.html">device</a>),
 the forwarding node prepends a
 32-bit peer ID (which <em>must</em> have the most significant bit clear),
 which is the forwarder’s way of identifying the directly connected
@@ -7154,9 +7268,21 @@ message, stripping it from the front of the message as it does so.</p>
 should have only a single element in the message, which will be the
 survey ID it originally used for the request.</p>
 <p>More detail can be found in the <a href="proto/TODO.html">sp-surveyor-01 RFC</a> document.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 <p><hr/>
 <p><a name="footnote-1"><a href="proto/surveyor.html#to-footnote-1">1</a></a>: An earlier and incompatible version of the protocol was used in older
-pre-releases of <a href="proto/TODO.html">nanomsg</a>, but was not released in any production version.</p>
+pre-releases of <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a>, but was not released in any production version.</p>
 <div style="break-before: page; page-break-before: always;"></div><style>
 .mdbook-alerts {
   padding: 8px 16px;
@@ -7228,6 +7354,7 @@ pre-releases of <a href="proto/TODO.html">nanomsg</a>, but was not released in a
 <p>This section documents transports for Scalabity Protocols implemented by NNG.</p>
 <ul>
 <li><a href="tran/socket.html">BSD Socket</a></li>
+<li><a href="tran/ipc.html">Inter-Process Transport</a></li>
 <li><a href="tran/inproc.html">Intra-Process Transport</a></li>
 <li><a href="tran/udp.html">UDP</a></li>
 </ul>
@@ -7321,15 +7448,15 @@ They will however be unable to communicate with each other using that URL.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>While <em>inproc</em> accepts the option <code>NNG_OPT_RECVMAXSZ</code> for
+<p>While <em>inproc</em> accepts the option <a href="tran/../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> for
 compatibility, the value of the option is ignored with no enforcement.
 As <em>inproc</em> peers are in the same address space, they are implicitly
 trusted, so the protection afforded by <code>NNG_OPT_RECVMAXSZ</code> is unnecessary.</p>
 </div>
 <h2 id="mixing-implementations"><a class="header" href="#mixing-implementations">Mixing Implementations</a></h2>
 <p>When mixing the <em>NNG</em> library with other implementations of these
-protocols in the same process (such as the <em>mangos</em>
-or <em>libnanomsg</em> implementations), it will not be possible to utilize
+protocols in the same process (such as the <a href="https://github.com/nanomsg/mangos">mangos</a>
+or <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> implementations), it will not be possible to utilize
 the <em>inproc</em> transport to communicate across this boundary.</p>
 <p>This limitation also extends to using different instances of the <em>NNG</em>
 library within the same process.</p>

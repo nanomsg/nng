@@ -246,7 +246,7 @@
 <h1 id="pull-protocol"><a class="header" href="#pull-protocol">PULL protocol</a></h1>
 <p>The <a name="a001"></a><em>PULL</em> protocol<a name="a002"></a> is one half of a
 <a name="a003"></a>pipeline pattern.
-The other half is the <a href="./push.html"><em>PUSH</em></a> protocol.</p>
+The other half is the <a href="../proto/push.html"><em>PUSH</em></a> protocol.</p>
 <p>In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent
 by a pusher will be sent to one of its peer pullers,
@@ -254,8 +254,7 @@ chosen in a round-robin fashion
 from the set of connected peers available for receiving.
 This property makes this pattern useful in <a name="a004"></a>load-balancing scenarios.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
-<p>The <a href="TODO.html"><code>nng_pull0_open</code></a> functions create a
-<em>PULL</em> socket.
+<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_pull0_open</code></a> function creates a <em>PULL</em> socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in <code>NNG_ENOTSUP</code>.</p>
 <p>When receiving messages, the <em>PULL</em> protocol accepts messages as
@@ -269,6 +268,18 @@ order in which messages are handled is undefined.</p>
 <p>The <em>PULL</em> protocol has no protocol-specific options.</p>
 <h3 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h3>
 <p>The <em>PULL</em> protocol has no protocol-specific headers.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 
