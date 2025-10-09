@@ -232,7 +232,6 @@ xref:nng_listener_set.3.adoc[nng_listener_set(3)],
 xref:nng_pipe_get.3.adoc[nng_pipe_get(3)],
 xref:nng_socket_get.3.adoc[nng_socket_get(3)],
 xref:nng_socket_set.3.adoc[nng_socket_set(3)],
-xref:nng_ipc_options.5.adoc[nng_ipc_options(5)],
 xref:nng_tcp_options.5.adoc[nng_tcp_options(5)],
 xref:nng_tls_options.5.adoc[nng_tls_options(5)],
 xref:nng.7.adoc[nng(7)]
