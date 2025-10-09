@@ -1730,7 +1730,7 @@ contexts. For the same reason, <a href="api/../api/sock.html#raw-mode-sockets">r
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Developers with experience with [libnanomsg] may be used to using <a href="api/../api/sock.html#raw-mode-sockets">raw</a> sockets for concurrency.
+<p>Developers with experience with <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> may be used to using <a href="api/../api/sock.html#raw-mode-sockets">raw</a> sockets for concurrency.
 Contexts provide a superior solution, as they are much easier to use, less error prone, and allow
 for easy control of the amount of concurrency used on any given socket.</p>
 </div>
@@ -3977,7 +3977,7 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_EPEERAUTH</code><a name="NNG_EPEERAUTH"></a></td><td>27</td><td>Peer could not be authenticated.</td></tr>
 <tr><td><code>NNG_EBADTYPE</code><a name="NNG_EBADTYPE"></a></td><td>30</td><td>Incorrect type. A type-specific function was used for an object of the wrong type.</td></tr>
 <tr><td><code>NNG_ECONNSHUT</code><a name="NNG_ECONNSHUT"></a></td><td>31</td><td>Connection shutdown. The connection was shut down and cannot be used.</td></tr>
-<tr><td><code>NNG_ESTOPPED</code><a name="NNG_ESTOPPED"></a></td><td>1000</td><td>Operation stopped. The operation was stopped with <a href="api/../api/aio.html#cancellation"><code>nng_aio_stop</code></a> or [<code>nng_aio_close</code>].</td></tr>
+<tr><td><code>NNG_ESTOPPED</code><a name="NNG_ESTOPPED"></a></td><td>1000</td><td>Operation stopped. The operation was stopped with <a href="api/../api/aio.html#cancellation"><code>nng_aio_stop</code></a>.</td></tr>
 <tr><td><code>NNG_EINTERNAL</code><a name="NNG_EINTERNAL"></a></td><td>1000</td><td>An unidentifier internal error occurred.</td></tr>
 <tr><td><code>NNG_ESYSERR</code><a name="NNG_ESYSERR"></a></td><td>0x10000000 - 0x1FFFFFFF</td><td>An unidentified system error occurred. These are errors reported by the operating system.</td></tr>
 <tr><td><code>NNG_ETRANERR</code><a name="NNG_ETRANERR"></a></td><td>0x20000000 - 0x2FFFFFFF</td><td>An unidentified transport error occurred.</td></tr>
@@ -4099,7 +4099,7 @@ void nng_stream_recv(nng_stream *s, nng_aio *aio);
 <p>The <a name="a003"></a><code>nng_stream_send</code> function starts sending data asynchronously over the stream <em>s</em>.
 The data is sent from the scatter/gather vector located in the <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>,
 which must have been previously set using <a href="api/../api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.</p>
-<p>The <a name="a004"></a><code>nng_stream_recv</code> function starts receiving data [asynchronously over the stream <em>s</em>
+<p>The <a name="a004"></a><code>nng_stream_recv</code> function starts receiving data asynchronously over the stream <em>s</em>
 into the scatter/gather vector located in the <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>,
 which must have been previously set using <a href="api/../api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.</p>
 <p>These functions return immediately, with no return value.
@@ -5646,9 +5646,9 @@ referenced by <em>arg</em>.</p>
 returned.</p>
 <p>This function may return the following errors:</p>
 <ul>
-<li>[<code>NNG_ARG_AMBIGU</code>]: Parsed option matches more than one specification.</li>
-<li>[<code>NNG_ARG_MISSING</code>]: Option requires an argument, but one is not present.</li>
-<li>[<code>NNG_ARG_INVAL</code>]: An invalid (unknown) argument is present in <em>argv</em>.</li>
+<li><code>NNG_ARG_AMBIG</code>: Parsed option matches more than one specification.</li>
+<li><code>NNG_ARG_MISSING</code>: Option requires an argument, but one is not present.</li>
+<li><code>NNG_ARG_INVAL</code>: An invalid (unknown) argument is present in <em>argv</em>.</li>
 </ul>
 <h3 id="option-specification"><a class="header" href="#option-specification">Option Specification</a></h3>
 <p>The calling program must first create an array of <a name="a004"></a><code>nng_arg_spec</code> structures

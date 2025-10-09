@@ -277,7 +277,7 @@ void nng_stream_recv(nng_stream *s, nng_aio *aio);
 <p>The <a name="a003"></a><code>nng_stream_send</code> function starts sending data asynchronously over the stream <em>s</em>.
 The data is sent from the scatter/gather vector located in the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>,
 which must have been previously set using <a href="../api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.</p>
-<p>The <a name="a004"></a><code>nng_stream_recv</code> function starts receiving data [asynchronously over the stream <em>s</em>
+<p>The <a name="a004"></a><code>nng_stream_recv</code> function starts receiving data asynchronously over the stream <em>s</em>
 into the scatter/gather vector located in the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>,
 which must have been previously set using <a href="../api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.</p>
 <p>These functions return immediately, with no return value.
