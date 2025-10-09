@@ -312,6 +312,8 @@
 [`nng_http_handler_set_data`]: ../api/http.md#setting-the-callback-argument
 [`nng_http_handler_set_tree`]: ../api/http.md#handling-an-entire-tree
 [`nng_http_transact`]: ../api/http.md#submitting-the-transaction
+[`nng_http_local_address`]: ../api/http.md#socket-addresses
+[`nng_http_remote_address`]: ../api/http.md#socket-addresses
 
 <!-- HTTP Status -->
 

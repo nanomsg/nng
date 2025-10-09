@@ -159,6 +159,16 @@ nni_http_conn_close(nni_http_conn *conn)
 	nni_mtx_unlock(&conn->mtx);
 }
 
+nng_err
+nni_http_get_addr(nni_http_conn *conn, const char *opt, nng_sockaddr *addrp)
+{
+	nng_err rv;
+	nni_mtx_lock(&conn->mtx);
+	rv = nng_stream_get_addr(conn->sock, opt, addrp);
+	nni_mtx_unlock(&conn->mtx);
+	return (rv);
+}
+
 // http_buf_pull_up pulls the content of the read buffer back to the
 // beginning, so that the next read can go at the end.  This avoids the problem
 // of dealing with a read that might wrap.

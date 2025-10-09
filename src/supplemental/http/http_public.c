@@ -307,6 +307,18 @@ nng_http_read_response(nng_http *conn, nng_aio *aio)
 }
 
 nng_err
+nng_http_remote_address(nng_http *conn, nng_sockaddr *addrp)
+{
+	return (nni_http_get_addr(conn, NNG_OPT_REMADDR, addrp));
+}
+
+nng_err
+nng_http_local_address(nng_http *conn, nng_sockaddr *addrp)
+{
+	return (nni_http_get_addr(conn, NNG_OPT_LOCADDR, addrp));
+}
+
+nng_err
 nng_http_handler_alloc(
     nng_http_handler **hp, const char *uri, nng_http_handler_func cb)
 {

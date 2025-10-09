@@ -14,6 +14,9 @@
 #include <complex.h>
 #include <nng/http.h>
 #include <nng/nng.h>
+#ifndef _WIN32
+#include <arpa/inet.h> // for endianness functions
+#endif
 
 #include "../../testing/nuts.h"
 
@@ -130,6 +133,56 @@ httpecho(nng_http *conn, void *arg, nng_aio *aio)
 		nng_aio_finish(aio, rv);
 		return;
 	}
+	nng_http_set_status(conn, NNG_HTTP_STATUS_OK, NULL);
+	nng_aio_finish(aio, 0);
+}
+
+static void
+httpaddrcheck(nng_http *conn, void *arg, nng_aio *aio)
+{
+	nng_err      rv;
+	void        *body;
+	size_t       len;
+	nng_sockaddr loc;
+	nng_sockaddr rem;
+
+	NNI_ARG_UNUSED(arg);
+
+	if (((rv = nng_http_local_address(conn, &loc)) != NNG_OK) ||
+	    ((rv = nng_http_remote_address(conn, &rem)) != NNG_OK)) {
+		nng_aio_finish(aio, rv);
+		return;
+	}
+	if ((loc.s_family != NNG_AF_INET) || (rem.s_family != NNG_AF_INET)) {
+		nng_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST,
+		    "Adddresses were not INET");
+		nng_aio_finish(aio, 0);
+		return;
+	}
+	if ((loc.s_in.sa_addr != htonl(0x7F000001)) ||
+	    (rem.s_in.sa_addr != htonl(0x7F000001))) {
+		nng_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST,
+		    "Adddresses were not localhost");
+		nng_aio_finish(aio, 0);
+		return;
+	}
+	if ((loc.s_in.sa_port == 0) || (rem.s_in.sa_port == 0) ||
+	    (loc.s_in.sa_port == rem.s_in.sa_port)) {
+		nng_http_set_status(
+		    conn, NNG_HTTP_STATUS_BAD_REQUEST, "Port checks failed");
+		nng_aio_finish(aio, 0);
+		return;
+	}
+
+	nng_http_get_body(conn, &body, &len);
+
+	if (((rv = nng_http_copy_body(conn, body, len)) != 0) ||
+	    ((rv = nng_http_set_header(conn, "Content-type", "text/plain")) !=
+	        0)) {
+		nng_aio_finish(aio, rv);
+		return;
+	}
+
 	nng_http_set_status(conn, NNG_HTTP_STATUS_OK, NULL);
 	nng_aio_finish(aio, 0);
 }
@@ -663,6 +716,34 @@ test_server_post_handler(void)
 }
 
 static void
+test_server_addrs_handler(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+	char               txdata[5];
+	char              *rxdata;
+	size_t             size;
+
+	NUTS_PASS(nng_http_handler_alloc(&h, "/addrs", httpaddrcheck));
+	nng_http_handler_set_method(h, "POST");
+
+	server_setup(&st, h);
+
+	snprintf(txdata, sizeof(txdata), "1234");
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/addrs", NULL));
+	nng_http_set_body(st.conn, txdata, strlen(txdata));
+	nng_http_set_method(st.conn, "POST");
+	NUTS_PASS(httpdo(&st, (void **) &rxdata, &size));
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_OK);
+	NUTS_TRUE(size == strlen(txdata));
+	NUTS_TRUE(strncmp(txdata, rxdata, size) == 0);
+	nng_free(rxdata, size);
+
+	server_free(&st);
+}
+
+static void
 test_server_get_redirect(void)
 {
 	const char        *dest;
@@ -1170,6 +1251,7 @@ NUTS_TESTS = {
 	{ "server tree redirect", test_server_tree_redirect },
 	{ "server post redirect", test_server_post_redirect },
 	{ "server post echo tree", test_server_post_echo_tree },
+	{ "server address checks", test_server_addrs_handler },
 	{ "server error page", test_server_error_page },
 	{ "server multiple trees", test_server_multiple_trees },
 	{ "server serve directory", test_serve_directory },

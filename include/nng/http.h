@@ -180,6 +180,13 @@ NNG_DECL void nng_http_set_method(nng_http *, const char *);
 // nng_http_get_method returns the method.
 NNG_DECL const char *nng_http_get_method(nng_http *);
 
+// nng_http_local_address obtains the local socket address for the connection.
+NNG_DECL nng_err nng_http_local_address(nng_http *, nng_sockaddr *);
+
+// nng_http_remote_address obtains the remote socket address for the
+// connection.
+NNG_DECL nng_err nng_http_remote_address(nng_http *, nng_sockaddr *);
+
 // These functions set (replacing any existing), or add (appending)
 // a header to either the request or response.  Clients modify the request
 // headers, and servers (and callbacks on the server) modify response headers.

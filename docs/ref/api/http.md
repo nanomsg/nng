@@ -557,6 +557,17 @@ This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
 may be obtained via [`nng_aio_result`].
 
+### Socket Addresses
+
+```c
+nng_err nng_http_local_address(nng_http *conn, nng_sockaddr *addr);
+nng_err nng_http_remote_address(nng_http *conn, nng_sockaddr *addr);
+```
+
+The {{i:`nng_http_local_address`}} and {{i:`nng_http_remote_address`}} functions
+can be used to determine the local and remote addresses for an HTTP connection.
+This can only be done while the connection is alive.
+
 ### Response Body
 
 ## Server API
@@ -780,6 +791,13 @@ exactly the value of the `Host` header sent by the client.
 > [!NOTE]
 > The port number may be ignored; at present the HTTP server framework
 > does not support a single server listening on different ports concurrently.
+
+### Detecting Addresses
+
+The [`nng_http_local_address`] and [`nng_http_remote_address`] functions
+can be used to determine the local and remote addresses for an HTTP connection
+on the server side (in a handler) just like the can be for HTTP clients
+This can be useful to provide different handling behaviors based on network identity.
 
 ### Handling an Entire Tree
 
