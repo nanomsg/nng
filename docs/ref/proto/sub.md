@@ -19,9 +19,9 @@ Applications should construct their messages accordingly.
 
 ### Socket Operations
 
-The [`nng_sub0_open`][nng_sub_open] functions create a _SUB_ socket.
+The [`nng_sub0_open`] functions create a _SUB_ socket.
 This socket may be used to receive messages, but is unable to send them.
-Attempts to send messages will result in `NNG_ENOTSUP`.
+Attempts to send messages will result in [`NNG_ENOTSUP`].
 
 ### Protocol Versions
 
@@ -43,6 +43,4 @@ The following protocol-specific option is available.
 
 The _SUB_ protocol has no protocol-specific headers.
 
-[nng_sub_open]: TODO.md
-[nng_socket_set]: TODO.md
-[pub]: ./pub.md
+{{#include ../xref.md}}

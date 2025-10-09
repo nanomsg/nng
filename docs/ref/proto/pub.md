@@ -22,9 +22,9 @@ Applications should construct their messages accordingly.
 
 ## Socket Operations
 
-The [`nng_pub0_open`][nng_pub_open] functions create a publisher socket.
+The [`nng_pub0_open`] function creates a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
-Attempts to receive messages will result in `NNG_ENOTSUP`.
+Attempts to receive messages will result in [`NNG_ENOTSUP`].
 
 ## Protocol Versions
 
@@ -39,4 +39,4 @@ The _PUB_ protocol has no protocol-specific options.
 
 The _PUB_ protocol has no protocol-specific headers.
 
-[nng_pub_open]: TODO.md
+{{#include ../xref.md}}

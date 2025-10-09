@@ -23,15 +23,14 @@ in [raw mode][raw],
 and it will generally attempt to spread work requests to different peer repliers.
 
 > [!TIP]
-> This property, when combined with a [device][device]
-> can help provide a degree of load-balancing.
+> This property, when combined with a [device] can help provide a degree of load-balancing.
 
 The _REQ_ protocol is the requester side, and the [_REP_][rep] protocol
 is the replier side.
 
 ### Socket Operations
 
-The [`nng_req0_open`][nng_req_open] functions create a _REQ_ socket.
+The [`nng_req0_open`] function creates a _REQ_ socket.
 This socket may be used to send messages (requests), and then to receive replies.
 
 Generally a reply can only be received after sending a request.
@@ -53,7 +52,7 @@ that has already been placed on the wire.
 ### Context Operations
 
 This protocol supports the creation of [contexts][context] for concurrent
-use cases using [`nng_ctx_open`][nng_ctx_open].
+use cases using [`nng_ctx_open`].
 
 The `NNG_OPT_REQ_RESENDTIME` value may be configured differently
 on contexts created this way.
@@ -75,7 +74,7 @@ Only version 0 of this protocol is supported.
 The following protocol-specific option is available.
 
 - {{i:`NNG_OPT_REQ_RESENDTIME`}}: \
-  ([`nng_duration`][duration]) \
+  ([`nng_duration`]) \
   When a new request is started, a timer of this duration is also started.
   If no reply is received before this timer expires, then the request will
   be resent. \
@@ -85,11 +84,11 @@ The following protocol-specific option is available.
   \
   Resending may be deferred up to the value of the `NNG_OPT_RESENDTICK` parameter. \
   \
-  If the value is set to [`NNG_DURATION_INFINITE`][duration], then resends are disabled
+  If the value is set to [`NNG_DURATION_INFINITE`], then resends are disabled
   altogether. This should be used when the request is not idemptoent.
 
 - {{i:`NNG_OPT_REQ_RESENDTICK`}}: \
-  ([`nng_duration`][duration]) \
+  ([`nng_duration`]) \
   This is the granularity of the clock that is used to check for resending.
   The default is a second. Setting this to a higher rate will allow for
   more timely resending to occur, but may incur significant additional
@@ -111,7 +110,7 @@ There may be additional **peer ID**s preceding the request ID.
 These will be distinguishable from the request ID by having their most
 significant bit clear.
 
-When a request message is received by a forwarding node (such as a [device][device]),
+When a request message is received by a forwarding node (such as a [device]),
 the forwarding node prepends a
 32-bit peer ID (which _must_ have the most significant bit clear),
 which is the forwarder's way of identifying the directly connected
@@ -135,10 +134,4 @@ When the reply finally arrives back at the initiating requester, it
 should have only a single element in the message, which will be the
 request ID it originally used for the request.
 
-[nng_req_open]: TODO.md
-[nng_ctx_open]: TODO.md
-[raw]: TODO.md
-[device]: TODO.md
-[context]: TODO.md
-[rep]: ./rep.md
-[duration]: ../api/util/nng_duration.md
+{{#include ../xref.md}}

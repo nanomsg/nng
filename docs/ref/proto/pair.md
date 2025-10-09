@@ -5,7 +5,7 @@ relationships between peers are one-to-one.
 
 ### Socket Operations
 
-The [`nng_pair_open`][nng_pair_open] functions create a _PAIR_ socket.
+The [`nng_pair0_open`] and [`nng_pair1_open`] functions create a _PAIR_ socket.
 
 Normally, this pattern will block when attempting to send a message if
 no peer is able to receive the message.
@@ -25,8 +25,7 @@ information, and is suitable when building simple one-to-one topologies.
 
 > [!TIP]
 > Use version 0 if you need to communicate with other implementations,
-> including the legacy [libnanomsg][nanomsg] library or
-> [mangos][mangos].
+> including the legacy [libnanomsg] library or [mangos].
 
 Version 1 of the protocol offers improved protection against loops when
 used with [devices][device].
@@ -45,7 +44,7 @@ peer.
 
 _Polyamorous_{{hi:polyamorous mode}} changes this, to allow a socket to communicate with
 multiple directly-connected peers.
-This mode is enabled by opening a socket using [`nng_pair1_open_poly`][nng_pair_open].
+This mode is enabled by opening a socket using [`nng_pair1_open_poly`].
 
 > [!TIP]
 > Polyamorous mode is only available when using pair version 1.
@@ -53,19 +52,18 @@ This mode is enabled by opening a socket using [`nng_pair1_open_poly`][nng_pair_
 In polyamorous mode a socket can support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an outgoing message by setting the
-[`nng_pipe`][pipe] to use for the outgoing message using
-[`nng_msg_set_pipe`][nng_msg_pipe].
+[`nng_pipe`] to use for the outgoing message using [`nng_msg_set_pipe`].
 
 If no remote peer is specified by the sender, then the protocol will select
 any available connected peer.
 
 Most often the value of the outgoing pipe will be obtained from an incoming
-message using [`nng_msg_get_pipe`][nng_msg_pipe],
+message using [`nng_msg_get_pipe`].
 such as when replying to an incoming message.
 
 > [!NOTE]
 > Directed send _only_ works with directly connected peers.
-> It will not function across [device][device] proxies.
+> It will not function across [device] proxies.
 
 In order to prevent head-of-line blocking, if the peer on the given pipe
 is not able to receive (or the pipe is no longer available, such as if the
@@ -76,13 +74,13 @@ to the sender.
 
 The following protocol-specific options are available.
 
-- [`NNG_OPT_MAXTTL`][NNG_OPT_MAXTTL]:
+- [`NNG_OPT_MAXTTL`]:
   (`int`, version 1 only). Maximum time-to-live.
 
 - `NNG_OPT_PAIR1_POLY`:
   (`bool`, version 1 only) This option is no longer supported.
   Formerly it was used to configure _polyamorous_ mode, but that mode
-  is now established by using the `nng_pair1_open_poly` function.
+  is now established by using the [`nng_pair1_open_poly`] function.
 
 ### Protocol Headers
 
@@ -90,17 +88,9 @@ Version 0 of the pair protocol has no protocol-specific headers.
 
 Version 1 of the pair protocol uses a single 32-bit unsigned value. The
 low-order (big-endian) byte of this value contains a "hop" count, and is
-used in conjunction with the
-[`NNG_OPT_MAXTTL`][NNG_OPT_MAXTTL] option to guard against
+used in conjunction with the [`NNG_OPT_MAXTTL`] option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.
 
-[nng_pair_open]: TODO.md
-[NNG_OPT_MAXTTL]: TODO.md
-[device]: TODO.md
-[nanomsg]: TODO.md
-[mangos]: TODO.md
-[pipe]: TODO.md
-[nng_msg_pipe]: ../api/msg/nng_msg_pipe.md
-[req]: ./req.md
+{{#include ../xref.md}}

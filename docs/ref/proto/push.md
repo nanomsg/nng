@@ -13,7 +13,7 @@ This property makes this pattern useful in {{i:load-balancing}} scenarios.
 
 ### Socket Operations
 
-The [`nng_push0_open`][nng_push_open] call creates a _PUSH_ socket.
+The [`nng_push0_open`] function creates a _PUSH_ socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 
@@ -36,7 +36,7 @@ Only version 0 of this protocol is supported.
 
 ### Protocol Options
 
-- [`NNG_OPT_SENDBUF`][NNG_OPT_SENDBUF]:
+- [`NNG_OPT_SENDBUF`]:
   (`int`, 0 - 8192)
   Normally this is set to zero, indicating that send operations are unbuffered.
   In unbuffered operation, send operations will wait until a suitable peer is available to receive the message.
@@ -51,7 +51,4 @@ Only version 0 of this protocol is supported.
 
 The _PUSH_ protocol has no protocol-specific headers.
 
-[nng_push_open]: TODO.md
-[NNG_OPT_SENDBUF]: TODO.md
-[pull]: ./pull.md
-[req]: ./req.md
+{{#include ../xref.md}}

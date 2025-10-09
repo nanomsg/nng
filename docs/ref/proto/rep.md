@@ -16,7 +16,7 @@ The _REP_ protocol is the replier side, and the
 
 ## Socket Operations
 
-The [`nng_rep0_open`][nng_rep_open] functions create a replier socket.
+The [`nng_rep0_open`] functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.
 
@@ -33,7 +33,7 @@ Any additional concurrent receive operations will result in `NNG_ESTATE`.
 ## Context Operations
 
 This protocol supports the creation of [contexts][context] for concurrent
-use cases using [`nng_ctx_open`][nng_ctx_open].
+use cases using [`nng_ctx_open`].
 
 Each context may have at most one outstanding request, and operates
 independently of the others.
@@ -55,8 +55,4 @@ The _REP_ protocol has no protocol-specific options.
 The _REP_ protocol uses a {{ii:backtrace}} in the header.
 This is more fully documented in the [_REQ_][req] chapter.
 
-[nng_rep_open]: TODO.md
-[nng_ctx_open]: TODO.md
-[raw]: TODO.md
-[context]: TODO.md
-[req]: ./req.md
+{{#include ../xref.md}}

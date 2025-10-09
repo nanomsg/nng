@@ -28,7 +28,7 @@ message cannot be delivered for any reason it is discarded.
 
 ## Socket Operations
 
-The [`nng_bus0_open`][nng_bus_open] functions create a bus socket.
+The [`nng_bus0_open`] functions create a bus socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.
 
@@ -44,11 +44,11 @@ The _BUS_ protocol has no protocol-specific options.
 ## Protocol Headers
 
 When using a _BUS_ socket in [raw mode][raw], received messages will
-contain the incoming [pipe][pipe] ID as the sole element in the header.
+contain the incoming [pipe] ID as the sole element in the header.
 If a message containing such a header is sent using a raw _BUS_ socket, then,
 the message will be delivered to all connected pipes _except_ the one
 identified in the header.
-This behavior is intended for use with [device][device]
+This behavior is intended for use with [device]
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.
@@ -56,7 +56,4 @@ If no header is present, then a message is sent to all connected pipes.
 
 When using normal (cooked mode) _BUS_ sockets, no message headers are present.
 
-[nng_bus_open]: TODO.md
-[device]: TODO.md
-[pipe]: TODO.md
-[raw]: TODO.md
+{{#include ../xref.md}}

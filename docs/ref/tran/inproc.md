@@ -28,7 +28,7 @@ When using an [`nng_sockaddr`] structure, the actual structure is of type [`nng_
 The _inproc_ transport has no special options.
 
 > [!NOTE]
-> While _inproc_ accepts the option `NNG_OPT_RECVMAXSZ` for
+> While _inproc_ accepts the option [`NNG_OPT_RECVMAXSZ`] for
 > compatibility, the value of the option is ignored with no enforcement.
 > As _inproc_ peers are in the same address space, they are implicitly
 > trusted, so the protection afforded by `NNG_OPT_RECVMAXSZ` is unnecessary.
@@ -36,8 +36,8 @@ The _inproc_ transport has no special options.
 ## Mixing Implementations
 
 When mixing the _NNG_ library with other implementations of these
-protocols in the same process (such as the _mangos_
-or _libnanomsg_ implementations), it will not be possible to utilize
+protocols in the same process (such as the [mangos]
+or [libnanomsg] implementations), it will not be possible to utilize
 the _inproc_ transport to communicate across this boundary.
 
 This limitation also extends to using different instances of the _NNG_

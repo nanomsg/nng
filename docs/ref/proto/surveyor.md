@@ -17,7 +17,7 @@ The _SURVEYOR_ protocol is the surveyor side, and the
 
 ### Socket Operations
 
-The [`nng_surveyor0_open`][nng_surveyor_open]
+The [`nng_surveyor0_open`]
 functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
@@ -26,9 +26,9 @@ A surveyor can normally expect to receive at most one reply from each responder.
 so there is no guarantee of this.)
 
 Attempts to receive on a socket with no outstanding survey will result
-in `NNG_ESTATE`.
+in [`NNG_ESTATE`].
 If the survey times out while the surveyor is waiting
-for replies, then the result will be `NNG_ETIMEDOUT`.
+for replies, then the result will be [`NNG_ETIMEDOUT`].
 
 Only one survey can be outstanding at a time; sending another survey will
 cancel the prior one, and any responses from respondents from the prior
@@ -39,7 +39,7 @@ survey that arrive after this will be discarded.
 ### Context Operations
 
 This protocol supports the creation of [contexts][context] for concurrent
-use cases using [`nng_ctx_open`][nng_ctx_open].
+use cases using [`nng_ctx_open`].
 
 Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
@@ -62,14 +62,14 @@ survey on the same context.
 Only version 0 of this protocol is supported.
 At the time of writing, no other versions of this protocol have been defined.
 {{footnote: An earlier and incompatible version of the protocol was used in older
-pre-releases of [nanomsg][nanomsg], but was not released in any production version.}}
+pre-releases of [libnanomsg], but was not released in any production version.}}
 
 ### Protocol Options
 
 The following protocol-specific option is available.
 
 - {{i:`NNG_OPT_SURVEYOR_SURVEYTIME`}}: \
-   ([`nng_duration`][duration]) \
+   ([`nng_duration`]) \
    \
    When a new survey is started, a timer of this duration is started.
   Any responses arriving this time will be discarded.
@@ -91,8 +91,7 @@ There may be additional **peer ID**s preceding the survey ID.
 These will be distinguishable from the survey ID by having their most
 significant bit clear.
 
-When a survey message is received by a forwarding node (such as a
-[device][device]),
+When a survey message is received by a forwarding node (such as a [device]),
 the forwarding node prepends a
 32-bit peer ID (which _must_ have the most significant bit clear),
 which is the forwarder's way of identifying the directly connected
@@ -118,12 +117,6 @@ survey ID it originally used for the request.
 
 More detail can be found in the [sp-surveyor-01 RFC][survey_rfc] document.
 
-[nng_surveyor_open]: TODO.md
-[nng_ctx_open]: TODO.md
-[context]: TODO.md
-[nanomsg]: TODO.md
-[raw]: TODO.md
+{{#include ../xref.md}}
+
 [survey_rfc]: TODO.md
-[device]: TODO.md
-[duration]: ../api/util/nng_duration.md
-[respondent]: ./respondent.md

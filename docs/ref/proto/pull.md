@@ -13,8 +13,7 @@ This property makes this pattern useful in {{i:load-balancing}} scenarios.
 
 ### Socket Operations
 
-The [`nng_pull0_open`][nng_pull_open] functions create a
-_PULL_ socket.
+The [`nng_pull0_open`] function creates a _PULL_ socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in `NNG_ENOTSUP`.
 
@@ -36,5 +35,4 @@ The _PULL_ protocol has no protocol-specific options.
 
 The _PULL_ protocol has no protocol-specific headers.
 
-[nng_pull_open]: TODO.md
-[push]: ./push.md
+{{#include ../xref.md}}

@@ -17,7 +17,7 @@ The _RESPONDENT_ protocol is the respondent side, and the
 
 ### Socket Operations
 
-The [`nng_respondent0_open`][nng_respondent_open] functions create a
+The [`nng_respondent0_open`] functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
@@ -30,7 +30,7 @@ Respondents may discard a survey by simply not replying to it.
 ### Context Operations
 
 This protocol supports the creation of [contexts][context] for concurrent
-use cases using [`nng_ctx_open`][nng_ctx_open].
+use cases using [`nng_ctx_open`].
 
 Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
@@ -45,7 +45,7 @@ a separate socket.
 Only version 0 of this protocol is supported.
 At the time of writing, no other versions of this protocol have been defined.
 {{footnote: An earlier and incompatible version of the protocol was used in older
-pre-releases of [nanomsg][nanomsg], but was not released in any production version.}}
+pre-releases of [libnanomsg], but was not released in any production version.}}
 
 ### Protocol Options
 
@@ -56,9 +56,4 @@ The _respondent_ protocol has no protocol-specific options.
 The _RESPONDENT_ protocol uses a {{ii:backtrace}} in the header.
 This is more fully documented in the [_SURVEYOR_][surveyor] manual.
 
-[nng_respondent_open]: TODO.md
-[nng_ctx_open]: TODO.md
-[nanomsg]: TODO.md
-[context]: TODO.md
-[raw]: TODO.md
-[surveyor]: ./surveyor.md
+{{#include ../xref.md}}

@@ -32,6 +32,8 @@
 [`nng_msg_header_insert`]: ../api/msg.md#append-or-insert-header
 [`nng_msg_header_clear`]: ../api/msg.md#clear-the-header
 [`nng_msg_pipe`]: ../api/msg.md#message-pipe
+[`nng_msg_get_pipe`]: ../api/msg.md#message-pipe
+[`nng_msg_set_pipe`]: ../api/msg.md#message-pipe
 [`nng_url`]: ../api/url.md#url-structure
 [`nng_url_parse`]: ../api/url.md#parse-a-url
 [`nng_url_free`]: ../api/url.md#destroy-a-url
@@ -173,9 +175,10 @@
 [`nng_sub0_socket_subscribe`]: ../TODO.md
 [`nng_sub0_socket_unsubscribe`]: ../TODO.md
 [`nng_bus0_open`]: ../api/sock.md#opening-a-socket
+[`nng_pair_open`]: ../api/sock.md#opening-a-socket
 [`nng_pair0_open`]: ../api/sock.md#opening-a-socket
 [`nng_pair1_open`]: ../api/sock.md#opening-a-socket
-[`nng_pair1_poly_open`]: ../api/sock.md#opening-a-socket
+[`nng_pair1_open_poly`]: ../api/sock.md#opening-a-socket
 [`nng_pub0_open`]: ../api/sock.md#opening-a-socket
 [`nng_pull0_open`]: ../api/sock.md#opening-a-socket
 [`nng_push0_open`]: ../api/sock.md#opening-a-socket
@@ -483,6 +486,7 @@
 [pipe]: ../api/pipe.md
 [socket]: ../TODO.md
 [context]: ../TODO.md
+[device]: ../TODO.md
 [dialer]: ../TODO.md
 [listener]: ../TODO.md
 [message]: ../api/msg.md
@@ -499,3 +503,4 @@
 [duration]: ../api/time.md#duration-type
 [polyamorous]: ../proto/pair.md#polyamorous-mode
 [libnanomsg]: https://github.com/nanomsg/nanomsg
+[mangos]: https://github.com/nanomsg/mangos

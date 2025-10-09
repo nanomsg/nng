@@ -30,13 +30,4 @@ of {{i:flow control}} to data production and consumption.
 
 ## Pair
 
-[bus]: bus.md
-[pair]: pair.md
-[push]: push.md
-[pull]: pull.md
-[req]: req.md
-[rep]: rep.md
-[sub]: sub.md
-[pub]: pub.md
-[respondent]: respondent.md
-[surveyor]: surveyor.md
+{{#include ../xref.md}}
