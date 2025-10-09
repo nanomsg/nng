@@ -279,17 +279,6 @@ when using addresses that are not secured with TLS.
   These CAs ("Certificate Authorities") are
   used as trust roots when validating certificates presented by peers.
 
-=== ZeroTier Options
-
-These options are only present if ZeroTier is configured; they are ignored
-otherwise.
-
-*--zt-home*=_DIRECTORY_::
-  Directory for persistent ZeroTier node (key material, etc.)
-  This directory must already exist.
-  Only one program may use a ZeroTier node at a time;
-  file locking is used to prevent this.
-
 == EXAMPLES
 
 .Echo service using request/reply.
