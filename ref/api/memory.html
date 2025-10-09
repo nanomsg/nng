@@ -256,8 +256,8 @@ at least <em>size</em> bytes, and returns a pointer to it.
 The memory will be 64-bit aligned.
 Note that the memory may have random data in it, just like with <code>malloc</code>.</p>
 <p>If memory cannot be allocated for any reason, then <code>NULL</code> will be returned.
-Applications that experience this should treat this like <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
-<p>Memory returned by <code>nng_alloc</code> should be freed when no longer needed using <a href="../../api/memory.html#deallocate-memory"><code>nng_free</code></a>.</p>
+Applications that experience this should treat this like <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
+<p>Memory returned by <code>nng_alloc</code> should be freed when no longer needed using <a href="../api/memory.html#deallocate-memory"><code>nng_free</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -270,26 +270,26 @@ other unpredictable behavior.</p>
 <h2 id="deallocate-memory"><a class="header" href="#deallocate-memory">Deallocate Memory</a></h2>
 <pre><code class="language-c">void nng_free(void *ptr, size_t size);
 </code></pre>
-<p>The <a name="a004"></a><code>nng_free</code> function deallocates memory previously allocated by <a href="../../api/memory.html#allocate-memory"><code>nng_alloc</code></a>.</p>
+<p>The <a name="a004"></a><code>nng_free</code> function deallocates memory previously allocated by <a href="../api/memory.html#allocate-memory"><code>nng_alloc</code></a>.</p>
 <p>The <em>size</em> argument must exactly match the <em>size</em> argument that was supplied to
-<a href="../../api/memory.html#allocate-memory"><code>nng_alloc</code></a> when the memory was allocated.</p>
+<a href="../api/memory.html#allocate-memory"><code>nng_alloc</code></a> when the memory was allocated.</p>
 <h2 id="duplicate-string"><a class="header" href="#duplicate-string">Duplicate String</a></h2>
 <pre><code class="language-c">char *nng_strdup(const char *src);
 </code></pre>
 <p>The <a name="a005"></a><code>nng_strdup</code> duplicates the string <em>src</em> and returns it.</p>
-<p>This is logically equivalent to using <a href="../../api/memory.html#allocate-memory"><code>nng_alloc</code></a>
+<p>This is logically equivalent to using <a href="../api/memory.html#allocate-memory"><code>nng_alloc</code></a>
 to allocate a region of memory of <code>strlen(s) + 1</code> bytes, and then
 using <code>strcpy</code> to copy the string into the destination before
 returning it.</p>
 <p>The returned string should be deallocated with
-<a href="../../api/memory.html#free-string"><code>nng_strfree</code></a>, or may be deallocated using the
-<a href="../../api/memory.html#deallocate-memory"><code>nng_free</code></a> using the length of the returned string plus
+<a href="../api/memory.html#free-string"><code>nng_strfree</code></a>, or may be deallocated using the
+<a href="../api/memory.html#deallocate-memory"><code>nng_free</code></a> using the length of the returned string plus
 one (for the <code>NUL</code> terminating byte).</p>
 <h2 id="free-string"><a class="header" href="#free-string">Free String</a></h2>
 <pre><code class="language-c">void nng_strfree(char *str);
 </code></pre>
 <p>The <a name="a006"></a><code>nng_strfree</code> function is a convenience function that
-can be used to deallocate strings allocated with <a href="../../api/memory.html#duplicate-string"><code>nng_strdup</code></a>.</p>
+can be used to deallocate strings allocated with <a href="../api/memory.html#duplicate-string"><code>nng_strdup</code></a>.</p>
 <p>It is effectively the same as <code>nng_free(strlen(str) + 1)</code>.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or

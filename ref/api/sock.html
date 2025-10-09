@@ -278,7 +278,7 @@ names of the socket’s protocol, and of the protocol peers of the socket use.
 The value stored in <em>name</em> is a fixed string located in program text, and must not be freed
 or altered. It is guaranteed to remain valid while this library is present.</p>
 <p>The <a name="a008"></a><code>nng_socket_raw</code> function determines whether the socket is in
-<a href="../../api/sock.html#raw-mode-sockets">raw mode</a> or not, storing <code>true</code> in <em>raw</em> if it is, or <code>false</code> if it is not.</p>
+<a href="../api/sock.html#raw-mode-sockets">raw mode</a> or not, storing <code>true</code> in <em>raw</em> if it is, or <code>false</code> if it is not.</p>
 <h2 id="opening-a-socket"><a class="header" href="#opening-a-socket">Opening a Socket</a></h2>
 <pre><code class="language-c">int nng_bus0_open(nng_socket *s);
 int nng_pub0_open(nng_socket *s);
@@ -295,18 +295,18 @@ The constructors for sockets are protocol specific so please refer to protocol d
 for more specific information.</p>
 <p>The following functions open a socket in normal mode:</p>
 <ul>
-<li><a name="a009"></a><code>nng_bus0_open</code> - <a href="../../proto/bus.html">BUS</a> version 0</li>
-<li><a name="a010"></a><code>nng_pair0_open</code> - <a href="../../proto/pair.html">PAIR</a> version 0</li>
-<li><a name="a011"></a><code>nng_pair1_open</code> - <a href="../../proto/pair.html">PAIR</a> version 1</li>
-<li><a name="a012"></a><code>nng_pair1_open_poly</code> - <a href="../../proto/pair.html">PAIR</a> version 1, <a href="../../proto/pair.html#polyamorous-mode">polyamorous</a> mode</li>
-<li><a name="a013"></a><code>nng_pub0_open</code> - <a href="../../proto/pub.html">PUB</a> version 0</li>
-<li><a name="a014"></a><code>nng_pull0_open</code> - <a href="../../proto/pull.html">PULL</a> version 0</li>
-<li><a name="a015"></a><code>nng_push0_open</code> - <a href="../../proto/push.html">PUSH</a> version 0</li>
-<li><a name="a016"></a><code>nng_rep0_open</code> - <a href="../../proto/rep.html">REP</a> version 0</li>
-<li><a name="a017"></a><code>nng_req0_open</code> - <a href="../../proto/req.html">REQ</a> version 0</li>
-<li><a name="a018"></a><code>nng_respondent0_open</code> - <a href="../../proto/respondent.html">RESPONDENT</a> version 0</li>
-<li><a name="a019"></a><code>nng_sub0_open</code> - <a href="../../proto/sub.html">SUB</a> version 0</li>
-<li><a name="a020"></a><code>nng_surveyor0_open</code> - <a href="../../proto/surveyor.html">SURVEYOR</a> version 0</li>
+<li><a name="a009"></a><code>nng_bus0_open</code> - <a href="../proto/bus.html">BUS</a> version 0</li>
+<li><a name="a010"></a><code>nng_pair0_open</code> - <a href="../proto/pair.html">PAIR</a> version 0</li>
+<li><a name="a011"></a><code>nng_pair1_open</code> - <a href="../proto/pair.html">PAIR</a> version 1</li>
+<li><a name="a012"></a><code>nng_pair1_open_poly</code> - <a href="../proto/pair.html">PAIR</a> version 1, <a href="../proto/pair.html#polyamorous-mode">polyamorous</a> mode</li>
+<li><a name="a013"></a><code>nng_pub0_open</code> - <a href="../proto/pub.html">PUB</a> version 0</li>
+<li><a name="a014"></a><code>nng_pull0_open</code> - <a href="../proto/pull.html">PULL</a> version 0</li>
+<li><a name="a015"></a><code>nng_push0_open</code> - <a href="../proto/push.html">PUSH</a> version 0</li>
+<li><a name="a016"></a><code>nng_rep0_open</code> - <a href="../proto/rep.html">REP</a> version 0</li>
+<li><a name="a017"></a><code>nng_req0_open</code> - <a href="../proto/req.html">REQ</a> version 0</li>
+<li><a name="a018"></a><code>nng_respondent0_open</code> - <a href="../proto/respondent.html">RESPONDENT</a> version 0</li>
+<li><a name="a019"></a><code>nng_sub0_open</code> - <a href="../proto/sub.html">SUB</a> version 0</li>
+<li><a name="a020"></a><code>nng_surveyor0_open</code> - <a href="../proto/surveyor.html">SURVEYOR</a> version 0</li>
 </ul>
 <h2 id="raw-mode-sockets"><a class="header" href="#raw-mode-sockets">Raw Mode Sockets</a></h2>
 <pre><code class="language-c">int nng_bus0_open_raw(nng_socket *s);
@@ -334,36 +334,36 @@ the protocol specific processing must be performed by the application.</p>
   tip
 </p>
 <p>Most applications do not need to use raw sockets.
-The notable exception is when using <a href="../../TODO.html"><code>nng_device</code></a>, which requires raw sockets.
-To obtain asynchronous behavior, consider using <a href="../../TODO.html">contexts</a> instead.</p>
+The notable exception is when using <a href="../TODO.html"><code>nng_device</code></a>, which requires raw sockets.
+To obtain asynchronous behavior, consider using <a href="../TODO.html">contexts</a> instead.</p>
 </div>
-<p>The following functions open a socket in <a href="../../api/sock.html#raw-mode-sockets">raw</a> mode:</p>
+<p>The following functions open a socket in <a href="../api/sock.html#raw-mode-sockets">raw</a> mode:</p>
 <ul>
-<li><a name="a022"></a><code>nng_bus0_open_raw</code> - <a href="../../proto/bus.html">BUS</a> version 0, raw mode</li>
-<li><a name="a023"></a><code>nng_pair0_open_raw</code> - <a href="../../proto/pair.html">PAIR</a> version 0, raw mode</li>
-<li><a name="a024"></a><code>nng_pair1_open_raw</code> - <a href="../../proto/pair.html">PAIR</a> version 1, raw mode</li>
-<li><a name="a025"></a><code>nng_pub0_open_raw</code> - <a href="../../proto/pub.html">PUB</a> version 0, raw mode</li>
-<li><a name="a026"></a><code>nng_pull0_open_raw</code> - <a href="../../proto/pull.html">PULL</a> version 0, raw mode</li>
-<li><a name="a027"></a><code>nng_push0_open_raw</code> - <a href="../../proto/push.html">PUSH</a> version 0, raw mode</li>
-<li><a name="a028"></a><code>nng_rep0_open_raw</code> - <a href="../../proto/rep.html">REP</a> version 0, raw mode</li>
-<li><a name="a029"></a><code>nng_req0_open_raw</code> - <a href="../../proto/req.html">REP</a> version 0, raw mode</li>
-<li><a name="a030"></a><code>nng_respondent0_open_raw</code> - <a href="../../proto/respondent.html">RESPONDENT</a> version 0, raw mode</li>
-<li><a name="a031"></a><code>nng_sub0_open_raw</code> - <a href="../../proto/sub.html">SUB</a> version 0, raw mode</li>
-<li><a name="a032"></a><code>nng_surveyor0_open_raw</code> - <a href="../../proto/surveyor.html">SURVEYOR</a> version 0, raw mode</li>
+<li><a name="a022"></a><code>nng_bus0_open_raw</code> - <a href="../proto/bus.html">BUS</a> version 0, raw mode</li>
+<li><a name="a023"></a><code>nng_pair0_open_raw</code> - <a href="../proto/pair.html">PAIR</a> version 0, raw mode</li>
+<li><a name="a024"></a><code>nng_pair1_open_raw</code> - <a href="../proto/pair.html">PAIR</a> version 1, raw mode</li>
+<li><a name="a025"></a><code>nng_pub0_open_raw</code> - <a href="../proto/pub.html">PUB</a> version 0, raw mode</li>
+<li><a name="a026"></a><code>nng_pull0_open_raw</code> - <a href="../proto/pull.html">PULL</a> version 0, raw mode</li>
+<li><a name="a027"></a><code>nng_push0_open_raw</code> - <a href="../proto/push.html">PUSH</a> version 0, raw mode</li>
+<li><a name="a028"></a><code>nng_rep0_open_raw</code> - <a href="../proto/rep.html">REP</a> version 0, raw mode</li>
+<li><a name="a029"></a><code>nng_req0_open_raw</code> - <a href="../proto/req.html">REP</a> version 0, raw mode</li>
+<li><a name="a030"></a><code>nng_respondent0_open_raw</code> - <a href="../proto/respondent.html">RESPONDENT</a> version 0, raw mode</li>
+<li><a name="a031"></a><code>nng_sub0_open_raw</code> - <a href="../proto/sub.html">SUB</a> version 0, raw mode</li>
+<li><a name="a032"></a><code>nng_surveyor0_open_raw</code> - <a href="../proto/surveyor.html">SURVEYOR</a> version 0, raw mode</li>
 </ul>
 <h2 id="closing-a-socket"><a class="header" href="#closing-a-socket">Closing a Socket</a></h2>
 <pre><code class="language-c">int nng_socket_close(nng_socket s);
 </code></pre>
 <p>The <a name="a033"></a><code>nng_socket_close</code> function closes a socket, releasing all resources
 associated with it. Any operations that are in progress will be terminated with
-a result of <a href="../../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
+a result of <a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>Closing a socket also invalidates any <a href="../../TODO.html">dialers</a>, <a href="../../TODO.html">listeners</a>,
-<a href="../../api/pipe.html">pipes</a>, or <a href="../../TODO.html">contexts</a> associated with it.</p>
+<p>Closing a socket also invalidates any <a href="../TODO.html">dialers</a>, <a href="../TODO.html">listeners</a>,
+<a href="../api/pipe.html">pipes</a>, or <a href="../TODO.html">contexts</a> associated with it.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -396,8 +396,8 @@ messages over the socket <em>s</em>. The differences in their behaviors are as f
 <p>The semantics of what sending a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support sending at all or may require other pre-conditions first.
-(For example, <a href="../../proto/rep.html">REP</a> sockets cannot normally send data until they have first received a request,
-while <a href="../../proto/sub.html">SUB</a> sockets can only receive data and never send it.)</p>
+(For example, <a href="../proto/rep.html">REP</a> sockets cannot normally send data until they have first received a request,
+while <a href="../proto/sub.html">SUB</a> sockets can only receive data and never send it.)</p>
 </div>
 <h3 id="nng_send"><a class="header" href="#nng_send">nng_send</a></h3>
 <p>The <code>nng_send</code> function is the simplest to use, but is the least efficient.
@@ -406,7 +406,7 @@ made up of zero or more of the following values:</p>
 <ul>
 <li><a name="a037"></a><code>NNG_FLAG_NONBLOCK</code>: <a name="NNG_FLAG_NONBLOCK"></a>
 If the socket cannot accept more data at this time, it does not block, but returns immediately
-with a status of <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be sent.</li>
+with a status of <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be sent.</li>
 </ul>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -417,28 +417,28 @@ with a status of <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</co
 be queues between the sender and the receiver.
 Furthermore, there is no guarantee that the message has actually been delivered.
 Finally, with some protocols, the semantic is implicitly <code>NNG_FLAG_NONBLOCK</code>,
-such as with <a href="../../proto/pub.html">PUB</a> sockets, which are best-effort delivery only.</p>
+such as with <a href="../proto/pub.html">PUB</a> sockets, which are best-effort delivery only.</p>
 </div>
 <h3 id="nng_sendmsg"><a class="header" href="#nng_sendmsg">nng_sendmsg</a></h3>
 <p>The <code>nng_sendmsg</code> function sends the <em>msg</em> over the socket <em>s</em>.</p>
 <p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
 If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="../../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
-cannot accept more data for sending. In such a case, it will return <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
+<p>The <em>flags</em> can contain the value <a href="../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+cannot accept more data for sending. In such a case, it will return <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>This function is preferred over <a href="../../api/sock.html#nng_send"><code>nng_send</code></a>, as it gives access to the message structure and eliminates both
+<p>This function is preferred over <a href="../api/sock.html#nng_send"><code>nng_send</code></a>, as it gives access to the message structure and eliminates both
 a data copy and allocation.</p>
 </div>
 <h3 id="nng_socket_send"><a class="header" href="#nng_socket_send">nng_socket_send</a></h3>
-<p>The <code>nng_socket_send</code> function sends a message asynchronously, using the <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
-The message to send must have been set on <em>aio</em> using the <a href="../../api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
+<p>The <code>nng_socket_send</code> function sends a message asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+The message to send must have been set on <em>aio</em> using the <a href="../api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
 <p>If the operation completes successfully, then the socket will have disposed of the message.
 However, if it fails, then callback of <em>aio</em> should arrange for a final disposition of the message.
-(The message can be retrieved from <em>aio</em> with <a href="../../api/aio.html#messages"><code>nng_aio_get_msg</code></a>.)</p>
+(The message can be retrieved from <em>aio</em> with <a href="../api/aio.html#messages"><code>nng_aio_get_msg</code></a>.)</p>
 <p>Note that callback associated with <em>aio</em> may be called <em>before</em> the message is finally delivered to the recipient.
 For example, the message may be sitting in queue, or located in TCP buffers, or even in flight.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
@@ -448,7 +448,7 @@ For example, the message may be sitting in queue, or located in TCP buffers, or 
 </p>
 <p>This is the preferred function to use for sending data on a socket. While it does require a few extra
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="../../api/sock.html#nng_send"><code>nng_send</code></a> or <a href="../../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>.</p>
+this function instead of <a href="../api/sock.html#nng_send"><code>nng_send</code></a> or <a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>.</p>
 </div>
 <h2 id="receiving-messages"><a class="header" href="#receiving-messages">Receiving Messages</a></h2>
 <pre><code class="language-c">int nng_recv(nng_socket s, void *data, size_t *sizep, int flags);
@@ -465,8 +465,8 @@ messages over the socket <em>s</em>. The differences in their behaviors are as f
 <p>The semantics of what receiving a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
-(For example, <a href="../../proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request,
-while <a href="../../proto/pub.html">PUB</a> sockets can only send data and never receive it.)</p>
+(For example, <a href="../proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request,
+while <a href="../proto/pub.html">PUB</a> sockets can only send data and never receive it.)</p>
 </div>
 <h3 id="nng_recv"><a class="header" href="#nng_recv">nng_recv</a></h3>
 <p>The <code>nng_recv</code> function is the simplest to use, but is the least efficient.
@@ -476,23 +476,23 @@ It receives the content in <em>data</em>, as a message size (in bytes) of up to 
 <ul>
 <li><a name="a041"></a><code>NNG_FLAG_NONBLOCK</code>:
 If the socket has no messages pending for reception at this time, it does not block, but returns immediately
-with a status of <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be received.</li>
+with a status of <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag is absent, the function will wait until data can be received.</li>
 </ul>
 <h3 id="nng_recvmsg"><a class="header" href="#nng_recvmsg">nng_recvmsg</a></h3>
-<p>The <code>nng_recvmsg</code> function receives a message and stores a pointer to the <a href="../../api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="../../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
-has no messages available to receive. In such a case, it will return <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
+<p>The <code>nng_recvmsg</code> function receives a message and stores a pointer to the <a href="../api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
+<p>The <em>flags</em> can contain the value <a href="../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+has no messages available to receive. In such a case, it will return <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>This function is preferred over <a href="../../TODO.html"><code>nng_recv</code></a>, as it gives access to the message structure and eliminates both
+<p>This function is preferred over <a href="../TODO.html"><code>nng_recv</code></a>, as it gives access to the message structure and eliminates both
 a data copy and allocation.</p>
 </div>
 <h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
-<p>The <code>nng_socket_send</code> function receives a message asynchronously, using the <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
-On success, the received message can be retrieved from the <em>aio</em> using the <a href="../../api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
+<p>The <code>nng_socket_send</code> function receives a message asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the socket <em>s</em>.
+On success, the received message can be retrieved from the <em>aio</em> using the <a href="../api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -508,7 +508,7 @@ Failure to do so will leak the memory.</p>
 </p>
 <p>This is the preferred function to use for receiving data on a socket. While it does require a few extra
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="../../TODO.html"><code>nng_recv</code></a> or <a href="../../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>.</p>
+this function instead of <a href="../TODO.html"><code>nng_recv</code></a> or <a href="../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>.</p>
 </div>
 <h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
 <pre><code class="language-c">int nng_socket_get_bool(nng_socket s, const char *opt, bool *valp);
@@ -533,16 +533,16 @@ are available, whether they can be read or written, and the appropriate type to 
   note
 </p>
 <p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
-for an underlying transport, the option should be set on the <a href="../../TODO.html">dialer</a> or <a href="../../TODO.html">listener</a> instead of the <a href="../../TODO.html">socket</a>.</p>
+for an underlying transport, the option should be set on the <a href="../TODO.html">dialer</a> or <a href="../TODO.html">listener</a> instead of the <a href="../TODO.html">socket</a>.</p>
 </div>
 <h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
 <p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="../../TODO.html"><code>nng_device</code></a> device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.</td></tr>
-<tr><td><code>NNG_OPT_RECONNMAXT</code><a name="NNG_OPT_RECONNMAXT"></a></td><td><code>nng_duration</code></td><td>Maximum time <a href="../../TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
-<tr><td><code>NNG_OPT_RECONNMINT</code><a name="NNG_OPT_RECONNMINT"></a></td><td><code>nng_duration</code></td><td>Minimum time <a href="../../TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="../TODO.html"><code>nng_device</code></a> device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.</td></tr>
+<tr><td><code>NNG_OPT_RECONNMAXT</code><a name="NNG_OPT_RECONNMAXT"></a></td><td><code>nng_duration</code></td><td>Maximum time <a href="../TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECONNMINT</code><a name="NNG_OPT_RECONNMINT"></a></td><td><code>nng_duration</code></td><td>Minimum time <a href="../TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
 <tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer locally when receiving.</td></tr>
-<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on <a href="../../TODO.html">dialers</a> and <a href="../../TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on <a href="../TODO.html">dialers</a> and <a href="../TODO.html">listeners</a>.</td></tr>
 <tr><td><code>NNG_OPT_RECVTIMEO</code><a name="NNG_OPT_RECVTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for receiving messages.</td></tr>
 <tr><td><code>NNG_OPT_SENDBUF</code><a name="NNG_OPT_SENDBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer when sending messages.</td></tr>
 <tr><td><code>NNG_OPT_SENDTIMEO</code><a name="NNG_OPT_SENDTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for sending messages.</td></tr>
@@ -554,8 +554,8 @@ for an underlying transport, the option should be set on the <a href="../../TODO
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="../../TODO.html">dialers</a>
-(and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="../../TODO.html">listeners</a>)
+<p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="../TODO.html">dialers</a>
+(and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="../TODO.html">listeners</a>)
 will use. After the dialer or listener is created, changes to the socket’s value will have no affect on that dialer or listener.</p>
 </div>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
@@ -581,7 +581,7 @@ were available in previous versions of NNG.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>These functions are not compatible with <a href="../../TODO.html">contexts</a>.</p>
+<p>These functions are not compatible with <a href="../TODO.html">contexts</a>.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -598,7 +598,7 @@ messages on the socket.</p>
   tip
 </p>
 <p>Using these functions will force the socket to perform extra system calls, and thus
-have a negative impact on performance and latency. It is preferable to use <a href="../../api/aio.html">asynchronous I/O</a>
+have a negative impact on performance and latency. It is preferable to use <a href="../api/aio.html">asynchronous I/O</a>
 when possible.</p>
 </div>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
@@ -606,7 +606,7 @@ when possible.</p>
 <pre><code class="language-c">nng_socket s = NNG_SOCKET_INITIALIZER;
 </code></pre>
 <h3 id="example-2-publishing-a-timestamp"><a class="header" href="#example-2-publishing-a-timestamp">Example 2: Publishing a Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="../../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, and <a href="../../api/time.html"><code>nng_sleep_aio</code></a> to
+<p>This example demonstrates the use of <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, and <a href="../api/time.html"><code>nng_sleep_aio</code></a> to
 build a service that publishes a timestamp at one second intervals. Error handling is elided for the
 sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;
@@ -657,7 +657,7 @@ int main(int argc, char **argv) {
 }
 </code></pre>
 <h3 id="example-3-watching-a-periodic-timestamp"><a class="header" href="#example-3-watching-a-periodic-timestamp">Example 3: Watching a Periodic Timestamp</a></h3>
-<p>This example demonstrates the use of <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="../../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a>, to build a client to
+<p>This example demonstrates the use of <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, <a href="../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a>, to build a client to
 watch for messages received from the service created in Example 2.
 Error handling is elided for the sake of clarity.</p>
 <pre><code class="language-c">#include &lt;stdlib.h&gt;

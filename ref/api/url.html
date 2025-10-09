@@ -293,7 +293,7 @@ the query-information (the part following a ‘?’) and fragment
 if they are not. The returned string will not include the leading ‘?’ or ‘#’
 characters.</p>
 <p>Note that any strings returned by these functions are only valid until
-<em>url</em> is freed with <a href="../../api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
+<em>url</em> is freed with <a href="../api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
 <h2 id="format-a-url"><a class="header" href="#format-a-url">Format a URL</a></h2>
 <pre><code class="language-c">int nng_url_sprintf(char *buf, size_t bufsz, const nng_url *url);
 </code></pre>
@@ -322,7 +322,7 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
   <span class="mdbook-alerts-icon"></span>
   important
 </p>
-<p>Only <a href="../../api/url.html#destroy-a-url"><code>nng_url_free</code></a> should be used to deallocate <code>nng_url</code> objects.</p>
+<p>Only <a href="../api/url.html#destroy-a-url"><code>nng_url_free</code></a> should be used to deallocate <code>nng_url</code> objects.</p>
 </div>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
 <pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
@@ -332,8 +332,8 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <pre><code class="language-c">void nng_url_free(nng_url *url);
 </code></pre>
 <p>The <a name="a013"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
-either <a href="../../api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="../../api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
-<p>This is the only correct way to destroy an <a href="../../api/url.html#url-structure"><code>nng_url</code></a> object.</p>
+either <a href="../api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="../api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
+<p>This is the only correct way to destroy an <a href="../api/url.html#url-structure"><code>nng_url</code></a> object.</p>
 <h2 id="update-a-url-port"><a class="header" href="#update-a-url-port">Update a URL Port</a></h2>
 <pre><code class="language-c">void nng_url_resolve_port(nng_url *url, uint32_t port);
 </code></pre>

@@ -264,7 +264,7 @@ between releases or builds of NNG 2.</p>
 See the <a href="nanomsg.html">Migrating From libnanomsg</a> chapter for details.</p>
 <h2 id="library-initialization"><a class="header" href="#library-initialization">Library Initialization</a></h2>
 <p>It is now required for applications to initialize the library explicitly before using it.
-This is done using the <a href="../../api/init.html#initialization"><code>nng_init</code></a> function.</p>
+This is done using the <a href="../api/init.html#initialization"><code>nng_init</code></a> function.</p>
 <h2 id="removed-headers"><a class="header" href="#removed-headers">Removed Headers</a></h2>
 <p>The following header files are removed, and the declarations they provided are now provided by including <code>&lt;nng/nng.h&gt;</code>.
 Simply remove any references to them.</p>
@@ -294,9 +294,9 @@ Simply remove any references to them.</p>
 <p>The following functions have been renamed as described by the following table.
 The old names are available by defining the macro <code>NNG1_TRANSITION</code> in your compilation environment.</p>
 <div class="table-wrapper"><table><thead><tr><th>Old Name</th><th>New Name</th></tr></thead><tbody>
-<tr><td><code>nng_close</code></td><td><a href="../../api/sock.html#closing-a-socket"><code>nng_socket_close</code></a></td></tr>
-<tr><td><code>nng_recv_aio</code></td><td><a href="../../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a></td></tr>
-<tr><td><code>nng_send_aio</code></td><td><a href="../../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a></td></tr>
+<tr><td><code>nng_close</code></td><td><a href="../api/sock.html#closing-a-socket"><code>nng_socket_close</code></a></td></tr>
+<tr><td><code>nng_recv_aio</code></td><td><a href="../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a></td></tr>
+<tr><td><code>nng_send_aio</code></td><td><a href="../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a></td></tr>
 </tbody></table>
 </div>
 <h2 id="removed-protocol-aliases"><a class="header" href="#removed-protocol-aliases">Removed Protocol Aliases</a></h2>
@@ -316,13 +316,13 @@ The old names are available by defining the macro <code>NNG1_TRANSITION</code> i
 <p>Just add either <code>0</code> or <code>1</code> (in the case of PAIRv1) to get the protocol desired. (Forcing the version number to
 be supplied should avoid surprises later as new versions of protocols are added.)</p>
 <h2 id="nng_flag_alloc-removed"><a class="header" href="#nng_flag_alloc-removed">NNG_FLAG_ALLOC Removed</a></h2>
-<p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="../../api/sock.html#nng_send"><code>nng_send</code></a> and <a href="../../TODO.html"><code>nng_recv</code></a> is removed.
+<p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="../api/sock.html#nng_send"><code>nng_send</code></a> and <a href="../TODO.html"><code>nng_recv</code></a> is removed.
 This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
 suboptimal in terms of performance.</p>
-<p>Modern code should use one of <a href="../../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="../../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>, <a href="../../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, or <a href="../../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a> to get the maximum performance benefit.
-Working directly with <a href="../../api/msg.html#message-structure"><code>nng_msg</code></a> structures gives more control, reduces copies, and reduces allocation activity.</p>
+<p>Modern code should use one of <a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>, <a href="../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, or <a href="../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a> to get the maximum performance benefit.
+Working directly with <a href="../api/msg.html#message-structure"><code>nng_msg</code></a> structures gives more control, reduces copies, and reduces allocation activity.</p>
 <h2 id="error-code-changes"><a class="header" href="#error-code-changes">Error Code Changes</a></h2>
-<p>When an operation fails with <a href="../../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
+<p>When an operation fails with <a href="../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>, it means that the associated [<code>nni_aio</code>] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
 not resubmit an operation that returns it. This is particularly important for callbacks that automatically
 resubmit operations. Failure to observe this rule will lead to an infinite loop
@@ -331,9 +331,9 @@ as any further operations on the object will fail immediately with <code>NNG_EST
 <h2 id="aio-provider-api-changes"><a class="header" href="#aio-provider-api-changes">AIO Provider API changes</a></h2>
 <p>The API used for providers for asynchronous I/O operations has changed slightly.</p>
 <ul>
-<li>The <code>nng_aio_begin</code> function is removed. However a new <a href="../../TODO.html"><code>nng_aio_reset</code></a> function should be called
+<li>The <code>nng_aio_begin</code> function is removed. However a new <a href="../TODO.html"><code>nng_aio_reset</code></a> function should be called
 instead, before performing any other operations on an <em>aio</em> object. (This simply clears certain fields.)</li>
-<li>The <code>nng_aio_defer</code> function is replaced, with a very <a href="../../TODO.html"><code>nng_aio_start</code></a> function. However, this function
+<li>The <code>nng_aio_defer</code> function is replaced, with a very <a href="../TODO.html"><code>nng_aio_start</code></a> function. However, this function
 has slightly different semantics. It will automatically call the callback if the operation cannot be
 scheduled.</li>
 <li>Be aware of the new <code>NNG_ESTOPPED</code> error code, for operations on a handle that is being torn down by
@@ -359,10 +359,10 @@ can be simply removed from your application:</p>
 <code>NNG_OPT_TLS_SERVER_NAME</code>, and similar has been removed.</p>
 <p>Instead configuration must be performed by allocating
 a <code>nng_tls_config</code> object, and then setting fields on it using the appropriate functions,
-after which it may be configured on a listener or dialer using the <a href="../../TODO.html"><code>nng_listener_set_tls</code></a>
-or <a href="../../TODO.html"><code>nng_dialer_set_tls</code></a> functions.</p>
-<p>Likewise, when using the streams API, use the <a href="../../api/stream.html#tls-configuration"><code>nng_stream_listener_set_tls</code></a> or
-<a href="../../api/stream.html#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
+after which it may be configured on a listener or dialer using the <a href="../TODO.html"><code>nng_listener_set_tls</code></a>
+or <a href="../TODO.html"><code>nng_dialer_set_tls</code></a> functions.</p>
+<p>Likewise, when using the streams API, use the <a href="../api/stream.html#tls-configuration"><code>nng_stream_listener_set_tls</code></a> or
+<a href="../api/stream.html#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
 <p>Note that the declarations needed for TLS configuration are now available in <code>&lt;nng/nng.h&gt;</code>,
 rather than the supplemental header.</p>
 <h2 id="old-tls-versions-removed"><a class="header" href="#old-tls-versions-removed">Old TLS Versions Removed</a></h2>
@@ -371,7 +371,7 @@ Further, the <code>NNG_TLS_1_0</code> and <code>NNG_TLS_1_1</code> constants are
 Applications should use <code>NNG_TLS_1_2</code> or even <code>NNG_TLS_1_3</code> instead.</p>
 <h2 id="only-one-tls-keycert-per-configuration"><a class="header" href="#only-one-tls-keycert-per-configuration">Only One TLS Key/Cert Per Configuration</a></h2>
 <p>The ability to configure multiple keys and certificates for a given TLS configuration object is removed.
-(The <a href="../../TODO.html"><code>nng_tls_config_own_cert</code></a> will return <a href="../../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a> if it has already been called for the configuration.)
+(The <a href="../TODO.html"><code>nng_tls_config_own_cert</code></a> will return <a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a> if it has already been called for the configuration.)
 The intended purpose was to support alternative cryptographic algorithms, but this is not necessary, was never
 used, and was error prone.</p>
 <h2 id="tls-peer-certificate-apis-replaced"><a class="header" href="#tls-peer-certificate-apis-replaced">TLS Peer Certificate APIs Replaced</a></h2>
@@ -387,7 +387,7 @@ address separated by a semicolon. This was provided for legacy libnanomsg
 compatibility, and is no longer offered. The correct way to specify a
 local address is by setting <code>NNG_OPT_LOCADDR</code> on the dialer.</p>
 <h2 id="ipc-option-type-changes"><a class="header" href="#ipc-option-type-changes">IPC Option Type Changes</a></h2>
-<p>The types of <a href="../../tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="../../tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="../../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="../../tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
+<p>The types of <a href="../tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="../tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="../tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
 have changed from <code>uint64_t</code> to <code>int</code>. The underlying platforms all use 32-bit quantities for these.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
@@ -459,7 +459,7 @@ or dialer that creates the stream instead.</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
-<a href="../../TODO.html"><code>nng_dialer_set</code></a> or <a href="../../TODO.html"><code>nng_listener_set</code></a> option. This likely means that it is necessary
+<a href="../TODO.html"><code>nng_dialer_set</code></a> or <a href="../TODO.html"><code>nng_listener_set</code></a> option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.</p>
 <p>The following options are copied from the socket when creating a dialer or listener,
@@ -468,9 +468,9 @@ changes. It is recommended to set them properly on the socket before
 creating dialers or listeners, or set them explicitly on the dialer or listener
 directly:</p>
 <ul>
-<li><a href="../../api/sock.html#NNG_OPT_RECONNMINT"><code>NNG_OPT_RECONNMINT</code></a></li>
-<li><a href="../../api/sock.html#NNG_OPT_RECONNMAXT"><code>NNG_OPT_RECONNMAXT</code></a></li>
-<li><a href="../../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></li>
+<li><a href="../api/sock.html#NNG_OPT_RECONNMINT"><code>NNG_OPT_RECONNMINT</code></a></li>
+<li><a href="../api/sock.html#NNG_OPT_RECONNMAXT"><code>NNG_OPT_RECONNMAXT</code></a></li>
+<li><a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></li>
 </ul>
 <p>The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
@@ -478,22 +478,22 @@ before bringing them into the socket itself.</p>
 <h2 id="socket-options"><a class="header" href="#socket-options">Socket Options</a></h2>
 <p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
 have been replaced by functions instead of options.
-Use <a href="../../api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a>, <a href="../../api/sock.html#socket-identity"><code>nng_socket_peer_id</code></a>, <a href="../../api/sock.html#socket-identity"><code>nng_socket_proto_name</code></a>, and <a href="../../api/sock.html#socket-identity"><code>nng_socket_peer_name</code></a> instead.
+Use <a href="../api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a>, <a href="../api/sock.html#socket-identity"><code>nng_socket_peer_id</code></a>, <a href="../api/sock.html#socket-identity"><code>nng_socket_proto_name</code></a>, and <a href="../api/sock.html#socket-identity"><code>nng_socket_peer_name</code></a> instead.
 Note that the new functions provide a reference to a static string, and thus do not require
 allocation, and the returned strings should not be freed. Also the IDs are provided as <code>uint16_t</code>,
 matching the actual wire protocol values, instead of <code>int</code>.</p>
-<p>The <code>NNG_OPT_RAW</code> option has also been replaced by a function, <a href="../../api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
+<p>The <code>NNG_OPT_RAW</code> option has also been replaced by a function, <a href="../api/sock.html#socket-identity"><code>nng_socket_raw</code></a>.</p>
 <p>The <code>NNG_OPT_SENDFD</code> and <code>NNG_OPT_RECVFD</code> options have been replaced by
-<a href="../../api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a> and <a href="../../api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> respectively.</p>
+<a href="../api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a> and <a href="../api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> respectively.</p>
 <p>The <code>NNG_OPT_SOCKNAME</code> function is removed. This was provided for application use, and never used internally by NNG.
 Applications should keep track of this information separately.</p>
 <h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
 <p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBSCRIBE</code> options have been replaced by
-the following functions: <a href="../../TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="../../TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
-<a href="../../TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="../../TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
+the following functions: <a href="../TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="../TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
+<a href="../TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="../TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
 they replace, are only applicable to SUB sockets.</p>
 <h2 id="statistics-use-constified-pointers"><a class="header" href="#statistics-use-constified-pointers">Statistics Use Constified Pointers</a></h2>
-<p>A number of the <a href="../../api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
+<p>A number of the <a href="../api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
 of plain <code>nng_stat *</code>. The ABI has not changed, but it may be necessary to declare
 certain methods variables <code>const</code> to avoid warnings about misuse of <code>const</code>.</p>
 <h2 id="wildcards-not-valid-in-urls"><a class="header" href="#wildcards-not-valid-in-urls">Wildcards Not Valid in URLs</a></h2>
@@ -502,24 +502,24 @@ is removed. The empty string already performs this function, and unlike
 <code>*</code> is RFC compliant.</p>
 <h2 id="url-option-removed"><a class="header" href="#url-option-removed">URL Option Removed</a></h2>
 <p>The <code>NNG_OPT_URL</code> option has been removed.
-It is replaced by the type safe <a href="../../TODO.html"><code>nng_dialer_get_url</code></a> and
-<a href="../../TODO.html"><code>nng_listener_get_url</code></a> functions, which return an <a href="../../api/url.html#url-structure"><code>nng_url</code></a>
+It is replaced by the type safe <a href="../TODO.html"><code>nng_dialer_get_url</code></a> and
+<a href="../TODO.html"><code>nng_listener_get_url</code></a> functions, which return an <a href="../api/url.html#url-structure"><code>nng_url</code></a>
 structure instead of a string.</p>
 <h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
-<p>The details of <a href="../../api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct
+<p>The details of <a href="../api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct
 access of the structure is no longer permitted. Instead new
 accessors functions are provided:</p>
 <ul>
-<li><code>u_scheme</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_scheme</code></a>.</li>
-<li><code>u_port</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_port</code></a>, but this returns a <code>uint16_t</code>.</li>
-<li><code>u_hostname</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_hostname</code></a>.</li>
-<li><code>u_path</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_path</code></a>.</li>
-<li><code>u_query</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_query</code></a>.</li>
-<li><code>u_fragment</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_fragment</code></a>.</li>
-<li><code>u_userinfo</code> is replaced by <a href="../../api/url.html#url-fields"><code>nng_url_userinfo</code></a>.</li>
+<li><code>u_scheme</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_scheme</code></a>.</li>
+<li><code>u_port</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_port</code></a>, but this returns a <code>uint16_t</code>.</li>
+<li><code>u_hostname</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_hostname</code></a>.</li>
+<li><code>u_path</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_path</code></a>.</li>
+<li><code>u_query</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_query</code></a>.</li>
+<li><code>u_fragment</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_fragment</code></a>.</li>
+<li><code>u_userinfo</code> is replaced by <a href="../api/url.html#url-fields"><code>nng_url_userinfo</code></a>.</li>
 <li><code>u_requri</code> is removed - it can be easily formulated from the other fields.</li>
-<li><code>u_host</code> is removed - use <a href="../../api/url.html#url-fields"><code>nng_url_hostname</code></a> and <a href="../../api/url.html#url-fields"><code>nng_url_port</code></a> to construct if needed</li>
-<li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="../../api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
+<li><code>u_host</code> is removed - use <a href="../api/url.html#url-fields"><code>nng_url_hostname</code></a> and <a href="../api/url.html#url-fields"><code>nng_url_port</code></a> to construct if needed</li>
+<li><code>u_rawurl</code> is removed - a “cooked” URL can be obtained from the new <a href="../api/url.html#format-a-url"><code>nng_url_sprintf</code></a> function.</li>
 </ul>
 <h2 id="http-api"><a class="header" href="#http-api">HTTP API</a></h2>
 <p>The entire HTTP API has been refactored and should be much simpler to use and more efficient.
@@ -531,18 +531,18 @@ they may be silently truncated to the limit:</p>
 <li>Hostnames are limited per RFC 1035 to 253 characters (not including terminating “.” or zero byte.)</li>
 <li>HTTP Method names are limited to 32 bytes (the longest IANA registered method is currently 18 bytes, used for WebDAV.)</li>
 <li>The fixed part of URI pathnames used with HTTP handlers is limited to 1024 bytes. (Longer URIs may be accepted
-by using <a href="../../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a> and matching a parent of the directory component.)</li>
+by using <a href="../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a> and matching a parent of the directory component.)</li>
 </ul>
 <p>The following API calls have changed so that they are <code>void</code> returns, and cannot fail.
 They may silently truncate data.</p>
 <ul>
 <li>[<code>nng_http_req_set_method</code>]</li>
 <li>[<code>nng_http_res_set_status</code>]</li>
-<li><a href="../../api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a></li>
-<li><a href="../../api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a></li>
-<li><a href="../../api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a></li>
-<li><a href="../../api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a></li>
-<li><a href="../../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a></li>
+<li><a href="../api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a></li>
+<li><a href="../api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a></li>
+<li><a href="../api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a></li>
+<li><a href="../api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a></li>
+<li><a href="../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a></li>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
 These checks are removed now, but debug builds will assert if an application tries to do so.</p>
@@ -566,7 +566,7 @@ support for security descriptors altogether in NNG.</p>
 <h2 id="command-line-argument-parser-changes"><a class="header" href="#command-line-argument-parser-changes">Command Line Argument Parser Changes</a></h2>
 <p>The supplemental function <code>nng_opts_parse</code> and supporting definitions have moved.
 This functionality is now supplied by a header only library, available in <code>nng/args.h</code>.
-See <a href="../../api/args.html#parse-command-line-arguments"><code>nng_args_parse</code></a> for more information.</p>
+See <a href="../api/args.html#parse-command-line-arguments"><code>nng_args_parse</code></a> for more information.</p>
 <h2 id="zerotier-support-removed"><a class="header" href="#zerotier-support-removed">ZeroTier Support Removed</a></h2>
 <p>The Layer 2 special ZeroTier transport has been removed.
 It is possible to use NNG with ZeroTier using TCP/IP, and a future update

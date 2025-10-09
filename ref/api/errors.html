@@ -289,20 +289,20 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_EBUSY</code><a name="NNG_EBUSY"></a></td><td>4</td><td>Resource busy.</td></tr>
 <tr><td><code>NNG_ETIMEDOUT</code><a name="NNG_ETIMEDOUT"></a></td><td>5</td><td>Timed out. The operation took longer than the allotted time.</td></tr>
 <tr><td><code>NNG_ECONNREFUSED</code><a name="NNG_ECONNREFUSED"></a></td><td>6</td><td>Connection refused. Usually indicates the wrong address or a server is running.</td></tr>
-<tr><td><code>NNG_ECLOSED</code><a name="NNG_ECLOSED"></a></td><td>7</td><td>Object closed. Typically the <a href="../../TODO.html">socket</a> is closed.</td></tr>
+<tr><td><code>NNG_ECLOSED</code><a name="NNG_ECLOSED"></a></td><td>7</td><td>Object closed. Typically the <a href="../TODO.html">socket</a> is closed.</td></tr>
 <tr><td><code>NNG_EAGAIN</code><a name="NNG_EAGAIN"></a></td><td>8</td><td>Try again. Typcally for a non-blocking operation that might succeed later.</td></tr>
 <tr><td><code>NNG_ENOTSUP</code><a name="NNG_ENOTSUP"></a></td><td>9</td><td>Not supported. Perhaps the protocol or transport is not supported, or the operation is not not supported with the transport or protocol.</td></tr>
-<tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="../../TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="../TODO.html">listeners</a>.</td></tr>
 <tr><td><code>NNG_ESTATE</code><a name="NNG_ESTATE"></a></td><td>11</td><td>Incorrect state. The operation cannot be performed in the current state, such as trying to send a response when no request has yet been received.</td></tr>
 <tr><td><code>NNG_ENOENT</code><a name="NNG_ENOENT"></a></td><td>12</td><td>Entry not found (no such object.) Can also indicate that a file does not exist.</td></tr>
 <tr><td><code>NNG_EPROTO</code><a name="NNG_EPROTO"></a></td><td>13</td><td>Protocol error. Typically this indicates incorrect messages over a network.</td></tr>
 <tr><td><code>NNG_EUNREACHABLE</code><a name="NNG_EUNREACHABLE"></a></td><td>14</td><td>Destination unreachable.</td></tr>
-<tr><td><code>NNG_EADDRINVAL</code><a name="NNG_EADDRINVAL"></a></td><td>15</td><td>Address invalid. Like <a href="../../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>, but only for network addresses.</td></tr>
+<tr><td><code>NNG_EADDRINVAL</code><a name="NNG_EADDRINVAL"></a></td><td>15</td><td>Address invalid. Like <a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>, but only for network addresses.</td></tr>
 <tr><td><code>NNG_EPERM</code><a name="NNG_EPERM"></a></td><td>16</td><td>Permission denied.</td></tr>
 <tr><td><code>NNG_EMSGSIZE</code><a name="NNG_EMSGSIZE"></a></td><td>17</td><td>Message too large.</td></tr>
 <tr><td><code>NNG_ECONNABORTED</code><a name="NNG_ECONNABORTED"></a></td><td>18</td><td>Connection aborted. A connection attempt was aborted locally.</td></tr>
 <tr><td><code>NNG_ECONNRESET</code><a name="NNG_ECONNRESET"></a></td><td>19</td><td>Connection reset. The remote peer reset the connection unexpectedly.</td></tr>
-<tr><td><code>NNG_ECANCELED</code><a name="NNG_ECANCELED"></a></td><td>20</td><td>Operation canceled. Typically as a result of <a href="../../api/aio.html#cancellation"><code>nng_aio_cancel</code></a> or similar.</td></tr>
+<tr><td><code>NNG_ECANCELED</code><a name="NNG_ECANCELED"></a></td><td>20</td><td>Operation canceled. Typically as a result of <a href="../api/aio.html#cancellation"><code>nng_aio_cancel</code></a> or similar.</td></tr>
 <tr><td><code>NNG_ENOFILES</code><a name="NNG_ENOFILES"></a></td><td>21</td><td>Out of files. Either the destination file system cannot store files, or all available file handles are used.</td></tr>
 <tr><td><code>NNG_ENOSPC</code><a name="NNG_ENOSPC"></a></td><td>22</td><td>Out of space. Destination table or filesystem is full.</td></tr>
 <tr><td><code>NNG_EEXIST</code><a name="NNG_EEXIST"></a></td><td>23</td><td>Resource already exists.</td></tr>
@@ -312,7 +312,7 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_EPEERAUTH</code><a name="NNG_EPEERAUTH"></a></td><td>27</td><td>Peer could not be authenticated.</td></tr>
 <tr><td><code>NNG_EBADTYPE</code><a name="NNG_EBADTYPE"></a></td><td>30</td><td>Incorrect type. A type-specific function was used for an object of the wrong type.</td></tr>
 <tr><td><code>NNG_ECONNSHUT</code><a name="NNG_ECONNSHUT"></a></td><td>31</td><td>Connection shutdown. The connection was shut down and cannot be used.</td></tr>
-<tr><td><code>NNG_ESTOPPED</code><a name="NNG_ESTOPPED"></a></td><td>1000</td><td>Operation stopped. The operation was stopped with <a href="../../api/aio.html#cancellation"><code>nng_aio_stop</code></a> or [<code>nng_aio_close</code>].</td></tr>
+<tr><td><code>NNG_ESTOPPED</code><a name="NNG_ESTOPPED"></a></td><td>1000</td><td>Operation stopped. The operation was stopped with <a href="../api/aio.html#cancellation"><code>nng_aio_stop</code></a> or [<code>nng_aio_close</code>].</td></tr>
 <tr><td><code>NNG_EINTERNAL</code><a name="NNG_EINTERNAL"></a></td><td>1000</td><td>An unidentifier internal error occurred.</td></tr>
 <tr><td><code>NNG_ESYSERR</code><a name="NNG_ESYSERR"></a></td><td>0x10000000 - 0x1FFFFFFF</td><td>An unidentified system error occurred. These are errors reported by the operating system.</td></tr>
 <tr><td><code>NNG_ETRANERR</code><a name="NNG_ETRANERR"></a></td><td>0x20000000 - 0x2FFFFFFF</td><td>An unidentified transport error occurred.</td></tr>

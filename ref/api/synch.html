@@ -245,32 +245,32 @@
 </style>
 <h1 id="synchronization-primitives"><a class="header" href="#synchronization-primitives">Synchronization Primitives</a></h1>
 <p>In order to allow safely accessing shared state, or to allow coordination between
-different <a href="../../api/thread.html">threads</a>, <em>NNG</em> provides <a name="a001"></a>synchronization primitives in the
+different <a href="../api/thread.html">threads</a>, <em>NNG</em> provides <a name="a001"></a>synchronization primitives in the
 form of mutual exclusion locks and condition variables.</p>
 <p>Correct use of these primitives will be needed when accessing shared state from
-threads, or from callback functions associated with <a href="../../api/aio.html">asynchronous operations</a>.
+threads, or from callback functions associated with <a href="../api/aio.html">asynchronous operations</a>.
 (The need to do this in callbacks is because the callback may be executed under
 a task thread other than the submitting thread.)</p>
 <h2 id="mutual-exclusion-lock"><a class="header" href="#mutual-exclusion-lock">Mutual Exclusion Lock</a></h2>
 <pre><code class="language-c">typedef struct nng_mtx nng_mtx;
 </code></pre>
 <p>Mutual exclusion locks, or <a name="a002"></a>mutex locks, represented by the <a name="a003"></a><code>nng_mtx</code> structure,
-allow only a single <a href="../../api/thread.html">thread</a> to lock “own” the lock, acquired by <a href="../../api/synch.html#acquiring-a-mutex"><code>nng_mtx_lock</code></a>.
+allow only a single <a href="../api/thread.html">thread</a> to lock “own” the lock, acquired by <a href="../api/synch.html#acquiring-a-mutex"><code>nng_mtx_lock</code></a>.
 Any other thread trying to acquire the same mutex will wait until the owner has released the mutex
-by calling <a href="../../api/synch.html#releasing-a-mutex"><code>nng_mtx_unlock</code></a>.</p>
+by calling <a href="../api/synch.html#releasing-a-mutex"><code>nng_mtx_unlock</code></a>.</p>
 <h3 id="creating-a-mutex"><a class="header" href="#creating-a-mutex">Creating a Mutex</a></h3>
 <pre><code class="language-c">int nng_mutx_alloc(nng_mt **mtxp);
 </code></pre>
 <p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_lock</code>.
 On success, a pointer to the mutex is returned through <em>mtxp</em>.
 This function can fail due to insufficient memory or resources, in which
-case it will return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succeed and return zero.</p>
+case it will return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succeed and return zero.</p>
 <h3 id="destroying-a-mutex"><a class="header" href="#destroying-a-mutex">Destroying a Mutex</a></h3>
 <pre><code class="language-c">void nng_mtx_free(nng_mtx *mtx);
 </code></pre>
 <p>When no longer needed, a mutex can be deallocated and its resources returned
 to the caller, by calling <a name="a005"></a><code>nng_mtx_free</code>. The mutex must not be locked
-by any <a href="../../api/thread.html">thread</a> when calling this function.</p>
+by any <a href="../api/thread.html">thread</a> when calling this function.</p>
 <h3 id="acquiring-a-mutex"><a class="header" href="#acquiring-a-mutex">Acquiring a Mutex</a></h3>
 <pre><code class="language-c">void nng_mtx_lock(nng_mtx *mtx);
 </code></pre>
@@ -288,7 +288,7 @@ If it does attempt to do so, the result will be a single party deadlock.</p>
 <pre><code class="language-c">void nng_mtx_unlock(nng_mtx *mtx);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_mtx_unlock</code> function releases a mutex that the calling thread has previously
-acquired with <a href="../../api/synch.html#acquiring-a-mutex"><code>nng_mtx_lock</code></a>.</p>
+acquired with <a href="../api/synch.html#acquiring-a-mutex"><code>nng_mtx_lock</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -301,7 +301,7 @@ that acquired the mutex to begin with.</p>
 <pre><code class="language-c">typedef struct nng_cv nng_cv;
 </code></pre>
 <p>The <a name="a008"></a><code>nng_cv</code> structure implements a <a name="a009"></a>condition variable, associated with the
-the <a href="../../api/synch.html#mutual-exclusion-lock">mutex</a> <em>mtx</em> which was supplied when it was created.</p>
+the <a href="../api/synch.html#mutual-exclusion-lock">mutex</a> <em>mtx</em> which was supplied when it was created.</p>
 <p>Condition variables provide for a way to wait on an arbitrary condition, and to be woken
 when the condition is signaled.
 The mutex is dropped while the caller is asleep, and reacquired atomically when the caller
@@ -329,16 +329,16 @@ void nng_cv_wait(nng_cv *cv);
 </code></pre>
 <p>The <a name="a012"></a><code>nng_cv_until</code> and <a name="a013"></a><code>nng_cv_wait</code> functions put the caller to sleep until the condition
 variable <em>cv</em> is signaled, or (in the case of <code>nng_cv_until</code>), the specified time <em>when</em>
-(as determined by <a href="../../api/time.html#get-the-current-time"><code>nng_clock</code></a> is reached.</p>
+(as determined by <a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a> is reached.</p>
 <p>While <code>nng_cv_wait</code> never fails and so has no return value, the <code>nng_cv_until</code> function can
-return <a href="../../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a> if the time is reached before condition <em>cv</em> is signaled by
-either <a href="../../api/synch.html#signaling-the-condition"><code>nng_cv_wake</code></a> or <a href="../../api/synch.html#signaling-the-condition"><code>nng_cv_wake1</code></a>.</p>
+return <a href="../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a> if the time is reached before condition <em>cv</em> is signaled by
+either <a href="../api/synch.html#signaling-the-condition"><code>nng_cv_wake</code></a> or <a href="../api/synch.html#signaling-the-condition"><code>nng_cv_wake1</code></a>.</p>
 <h3 id="signaling-the-condition"><a class="header" href="#signaling-the-condition">Signaling the Condition</a></h3>
 <pre><code class="language-c">void nng_cv_wake(nng_cv *cv);
 void nng_cv_wake1(nng_cv *cv);
 </code></pre>
 <p>The <a name="a014"></a><code>nng_cv_wake</code> and <a name="a015"></a><code>nng_cv_wake1</code> functions wake threads waiting in
-<a href="../../api/synch.html#waiting-for-the-condition"><code>nng_cv_until</code></a> or <a href="../../api/synch.html#waiting-for-the-condition"><code>nng_cv_wait</code></a>.
+<a href="../api/synch.html#waiting-for-the-condition"><code>nng_cv_until</code></a> or <a href="../api/synch.html#waiting-for-the-condition"><code>nng_cv_wait</code></a>.
 The difference between these functions is that
 <code>nng_cv_wake</code> will wake <em>every</em> thread, whereas <code>nng_cv_wake1</code> will wake up exactly
 one thread (which may be chosen randomly).</p>
@@ -377,9 +377,9 @@ nng_cv_wake(cv);
 nng_mtx_unlock(m);
 </code></pre>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
-<p><a href="../../api/thread.html">Threads</a>,
-<a href="../../api/time.html">Time</a>,
-<a href="../../api/aio.html">Asynchronous I/O</a></p>
+<p><a href="../api/thread.html">Threads</a>,
+<a href="../api/time.html">Time</a>,
+<a href="../api/aio.html">Asynchronous I/O</a></p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from

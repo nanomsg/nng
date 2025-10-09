@@ -247,7 +247,7 @@
 <p>In order to obtain significant scalability, with low-latency, and minimal
 overheads, <em>NNG</em> supports performing operations asynchronously.</p>
 <p>One way that applications can perform work asynchronously and concurrently
-is by using <a href="../../api/thread.html">threads</a>, but threads carry significant resource overheads
+is by using <a href="../api/thread.html">threads</a>, but threads carry significant resource overheads
 and frequently there are limits on the number that can easily be created.</p>
 <p>Additionally, with most network applications, the flow of execution will spend
 the bulk of its time waiting for traffic from a peer.</p>
@@ -272,17 +272,17 @@ can only be used with a single operation at a time.</p>
 Instead the application registers a callback function to be executed
 when the operation is complete (whether successfully or not).
 This callback will be executed exactly once.</p>
-<p>The asynchronous I/O framework also supports <a href="../../api/aio.html#cancellation">cancellation</a> of
+<p>The asynchronous I/O framework also supports <a href="../api/aio.html#cancellation">cancellation</a> of
 operations that are already in progress as well setting a maximum
-<a href="../../api/aio.html#set-timeout">timeout</a> for them to complete.</p>
-<p>It is also possible to initiate an asynchronous operation, and <a href="../../api/aio.html#wait-for-completion">wait</a> for it to
+<a href="../api/aio.html#set-timeout">timeout</a> for them to complete.</p>
+<p>It is also possible to initiate an asynchronous operation, and <a href="../api/aio.html#wait-for-completion">wait</a> for it to
 complete, creating a synchronous flow from an asynchronous one.</p>
 <h2 id="create-handle"><a class="header" href="#create-handle">Create Handle</a></h2>
 <pre><code class="language-c">nng_err nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
 </code></pre>
-<p>The <a name="a004"></a><code>nng_aio_alloc</code> function creates an <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> object, with the
+<p>The <a name="a004"></a><code>nng_aio_alloc</code> function creates an <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> object, with the
 <a name="a005"></a>callback <em>callb</em> taking the argument <em>arg</em>, and returns it in <em>aiop</em>.</p>
-<p>If this succeeds, the function returns zero. Otherwise it may return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
+<p>If this succeeds, the function returns zero. Otherwise it may return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -290,15 +290,15 @@ complete, creating a synchronous flow from an asynchronous one.</p>
 </p>
 <p>The <em>arg</em> should normally be a structure that contains a pointer to the <em>aiop</em>,
 or from which it can be located. This allows <em>callb</em> to check the handle for
-success using <a href="../../api/aio.html#result-of-operation"><code>nng_aio_result</code></a>, as well access other properties of <em>aiop</em>.</p>
+success using <a href="../api/aio.html#result-of-operation"><code>nng_aio_result</code></a>, as well access other properties of <em>aiop</em>.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>The <em>callb</em> may be executed on another <a href="../../api/thread.html">thread</a>, so it may be necessary to use
-<a href="../../api/synch.html">synchronization</a> methods in <em>callb</em> to avoid data races.</p>
+<p>The <em>callb</em> may be executed on another <a href="../api/thread.html">thread</a>, so it may be necessary to use
+<a href="../api/synch.html">synchronization</a> methods in <em>callb</em> to avoid data races.</p>
 </div>
 <h2 id="destroy-handle"><a class="header" href="#destroy-handle">Destroy Handle</a></h2>
 <pre><code class="language-c">void nng_aio_free(nng_aio *aio);
@@ -307,7 +307,7 @@ void nng_aio_reap(nng_aio *aio);
 <p>The <a name="a006"></a><code>nng_aio_free</code> handle destroys the handle <em>aio</em>, waiting for any operations
 and associated callbacks to complete before doing so.</p>
 <p>The <a name="a007"></a><code>nng_aio_reap</code> handle destroys the handle <em>aio</em> asynchronously, using a <em>reaper</em>
-<a href="../../api/thread.html">thread</a> to do so. It does not wait for the object to be destroyed. Thus this function
+<a href="../api/thread.html">thread</a> to do so. It does not wait for the object to be destroyed. Thus this function
 is safe to call from <em>aio</em>’s own callback.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -330,13 +330,13 @@ If the operation is successfully canceled or aborted, then the callback
 will still be called.</p>
 <p>The <a name="a008"></a><code>nng_aio_abort</code> function aborts the operation associated with <em>aio</em>
 and returns immediately without waiting. If cancellation was successful,
-then <a href="../../api/aio.html#result-of-operation"><code>nng_aio_result</code></a> will return <em>err</em>.</p>
+then <a href="../api/aio.html#result-of-operation"><code>nng_aio_result</code></a> will return <em>err</em>.</p>
 <p>The <a name="a009"></a><code>nng_aio_cancel</code> function acts like <code>nng_aio_abort</code>, but uses the error code
-<a href="../../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a><a name="a010"></a>.</p>
-<p>The <a name="a011"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with <a href="../../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>,
+<a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a><a name="a010"></a>.</p>
+<p>The <a name="a011"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with <a href="../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>,
 and then waits the operation and any associated callback to complete.
 This function also marks <em>aio</em> itself permanently stopped, so that any
-new operations scheduled by I/O providers using <a href="../../TODO.html"><code>nng_aio_start</code></a>
+new operations scheduled by I/O providers using <a href="../TODO.html"><code>nng_aio_start</code></a>
 return false. Thus this function should be used to teardown operations.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -345,7 +345,7 @@ return false. Thus this function should be used to teardown operations.</p>
 </p>
 <p>When multiple asynchronous I/O handles are in use and need to be
 deallocated, it is safest to stop all of them using <code>nng_aio_stop</code>,
-before deallocating any of them with <a href="../../api/aio.html#destroy-handle"><code>nng_aio_free</code></a>,
+before deallocating any of them with <a href="../api/aio.html#destroy-handle"><code>nng_aio_free</code></a>,
 particularly if the callbacks might attempt to reschedule further operations.</p>
 </div>
 <h2 id="set-timeout"><a class="header" href="#set-timeout">Set Timeout</a></h2>
@@ -356,15 +356,15 @@ void nng_aio_set_expire(nng_aio *aio, nng_time expiration);
 for the asynchronous operation associated with <em>aio</em>.
 This causes a timer to be started when the operation is actually started.
 If the timer expires before the operation is completed, then it is
-<a href="../../api/aio.html#cancellation">aborted</a> with an error of <code>NNG_ETIMEDOUT</code>.
-The <em>timeout</em> <a href="../../api/time.html">duration</a> is specified as a relative number of milliseconds.</p>
-<p>If the timeout is <a href="../../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>, then no timeout is used.
-If the timeout is <a href="../../api/time.html#duration-type"><code>NNG_DURATION_DEFAULT</code></a>, then a “default” or socket-specific
+<a href="../api/aio.html#cancellation">aborted</a> with an error of <code>NNG_ETIMEDOUT</code>.
+The <em>timeout</em> <a href="../api/time.html">duration</a> is specified as a relative number of milliseconds.</p>
+<p>If the timeout is <a href="../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>, then no timeout is used.
+If the timeout is <a href="../api/time.html#duration-type"><code>NNG_DURATION_DEFAULT</code></a>, then a “default” or socket-specific
 timeout is used.
-(This is frequently the same as <a href="../../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>.)</p>
+(This is frequently the same as <a href="../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>.)</p>
 <p>The <a name="a013"></a><code>nng_aio_set_expire</code> function is similar to <code>nng_aio_set_timeout</code>, but sets
 an expiration time based on the system clock. The <em>expiration</em>
-<a href="../../api/time.html">time</a> is a clock timestamp, such as would be returned by <a href="../../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
+<a href="../api/time.html">time</a> is a clock timestamp, such as would be returned by <a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
 <h2 id="wait-for-completion"><a class="header" href="#wait-for-completion">Wait for Completion</a></h2>
 <pre><code class="language-c">void nng_aio_wait(nng_aio *aio);
 </code></pre>
@@ -378,7 +378,7 @@ function will not be called until the callback has completed.</p>
   important
 </p>
 <p>The <code>nng_aio_wait</code> function should never be called from a function that itself
-is a callback of an <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, either this one or any other.
+is a callback of an <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, either this one or any other.
 Doing so may result in a deadlock.</p>
 </div>
 <h2 id="test-for-completion"><a class="header" href="#test-for-completion">Test for Completion</a></h2>
@@ -386,7 +386,7 @@ Doing so may result in a deadlock.</p>
 </code></pre>
 <p>The <a name="a015"></a><code>nng_aio_busy</code> function returns <code>true</code> if the <em>aio</em> is currently busy performing an
 operation or is executing a completion callback. Otherwise it return <code>false</code>.
-This is the same test used internally by <a href="../../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.</p>
+This is the same test used internally by <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -402,7 +402,7 @@ size_t nng_aio_count(nng_aio *aio);
 <p>The <a name="a016"></a><code>nng_aio_result</code> function returns the result of the operation associated
 with the handle <em>aio</em>.
 If the operation was successful, then 0 is returned.
-Otherwise a non-zero <a href="../../api/errors.html">error</a> code, such as <a href="../../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a> or <a href="../../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>, is returned.</p>
+Otherwise a non-zero <a href="../api/errors.html">error</a> code, such as <a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a> or <a href="../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>, is returned.</p>
 <p>For operations that transfer data, <a name="a017"></a><code>nng_aio_count</code> returns the
 number of bytes transferred by the operation associated with the handle <em>aio</em>.
 Operations that do not transfer data, or do not keep a count, may return zero for this function.</p>
@@ -413,13 +413,13 @@ Operations that do not transfer data, or do not keep a count, may return zero fo
 </p>
 <p>The return value from these functions is undefined if the operation has not completed yet.
 Either call these from the handle’s completion callback, or after waiting for the
-operation to complete with <a href="../../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.</p>
+operation to complete with <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.</p>
 </div>
 <h2 id="messages"><a class="header" href="#messages">Messages</a></h2>
 <pre><code class="language-c">nng_msg *nng_aio_get_msg(nng_aio *aio);
 void nng_aio_set_msg(nng_aio *aio, nng_msg *msg);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_aio_get_msg</code> and <a name="a019"></a><code>nng_aio_set_msg</code> functions retrieve and store a <a href="../../api/msg.html">message</a>
+<p>The <a name="a018"></a><code>nng_aio_get_msg</code> and <a name="a019"></a><code>nng_aio_set_msg</code> functions retrieve and store a <a href="../api/msg.html">message</a>
 in <em>aio</em>.
 For example, if a function to receive data is called, that function can generally be expected
 to store a message on the associated <em>aio</em>, for the application to retrieve with
@@ -445,7 +445,7 @@ then no message is stored on the <em>aio</em>.</p>
 
 int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
 </code></pre>
-<p>For some operations, the unit of data transferred is not a <a href="../../api/msg.html">message</a>, but
+<p>For some operations, the unit of data transferred is not a <a href="../api/msg.html">message</a>, but
 rather a stream of bytes.</p>
 <p>For these operations, an array of <em>niov</em> <a name="a020"></a><code>nng_iov</code> structures can be passed to
 the <a name="a021"></a><code>nng_aio_set_iov</code> function to provide a scatter/gather array of
@@ -462,14 +462,14 @@ The values pointed to by the <code>iov_buf</code> members are <em>not</em> copie
 <p>Most functions using <code>nng_iov</code> do not guarantee to transfer all of the data that they
 are requested to. To be sure that correct amount of data is transferred, as well as to
 start an attempt to complete any partial transfer, check the amount of data transferred by
-calling <a href="../../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>.</p>
+calling <a href="../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>.</p>
 </div>
 <h2 id="inputs-and-outputs"><a class="header" href="#inputs-and-outputs">Inputs and Outputs</a></h2>
 <pre><code class="language-c">void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
 void *nng_aio_get_output(nng_aio *aio, unsigned int index);
 </code></pre>
 <p>Asynchronous operations can take additional input parameters, and
-provide additional result outputs besides the <a href="../../api/aio.html#result-of-operation">result</a> code.</p>
+provide additional result outputs besides the <a href="../api/aio.html#result-of-operation">result</a> code.</p>
 <p>The <code>nng_aio_set_input</code> function sets the input parameter at <em>index</em>
 to <em>param</em> for the operation associated with <em>aio</em>.</p>
 <p>The <code>nng_aio_get_output</code> function returns the output result at <em>index</em>
@@ -505,7 +505,7 @@ in use by an active asynchronous operation.</p>
 void nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
 </code></pre>
 <p><a name="a022"></a>
-Some asynchronous operations, such as those dealing with <a href="../../api/stream.html">streams</a>, use <a name="a023"></a>scatter or <a name="a024"></a>gather
+Some asynchronous operations, such as those dealing with <a href="../api/stream.html">streams</a>, use <a name="a023"></a>scatter or <a name="a024"></a>gather
 vectors, where data to be transferred is either gathered from multiple separate regions of memory, or
 scattered into separate regions of memory. For example a message may have a header located at one location
 in memory, and a payload located in another.</p>
@@ -515,13 +515,13 @@ the elements in <em>iov</em>. For each of these, the segment of size <em>iov_len
 on the stack or another temporary location. The locations referenced by it, <em>must</em> remain valid for
 the duration of the operation, of course.</p>
 <p>Note that many of these operations are not guaranteed to perform a full transfer of data, so even a
-successful operation should check the amount of data actually transferred using <a href="../../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>,
+successful operation should check the amount of data actually transferred using <a href="../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>,
 and if necessary resubmit the operation with a suitably updated vector of <code>nng_iov</code> using this function.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
-<p><a href="../../api/synch.html">Synchronization</a>,
-<a href="../../api/thread.html">Threads</a>,
-<a href="../../api/stream.html">Streams</a>,
-<a href="../../api/time.html">Time</a></p>
+<p><a href="../api/synch.html">Synchronization</a>,
+<a href="../api/thread.html">Threads</a>,
+<a href="../api/stream.html">Streams</a>,
+<a href="../api/time.html">Time</a></p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from

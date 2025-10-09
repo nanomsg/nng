@@ -278,7 +278,7 @@ subject to change at any time and without notice.</p>
 </code></pre>
 <p>The <a name="a003"></a><code>nng_stats_get</code> function takes a snapshot of the statistics for
 the system and returns it through the pointer <em>statsp</em>.
-This function may return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if memory is exhausted, or <a href="../../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if the statistics
+This function may return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if memory is exhausted, or <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if the statistics
 support is not enabled in the build, but is otherwise expected to return zero.</p>
 <h2 id="freeing-a-snapshot"><a class="header" href="#freeing-a-snapshot">Freeing a Snapshot</a></h2>
 <pre><code class="language-c">void nng_stats_free(nng_stat *stat);
@@ -312,8 +312,8 @@ const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener
 const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
-or possibly to find the tree of statistics associated with a specific <a href="../../TODO.html">socket</a>,
-<a href="../../TODO.html">dialer</a>, or <a href="../../TODO.html">listener</a>.</p>
+or possibly to find the tree of statistics associated with a specific <a href="../TODO.html">socket</a>,
+<a href="../TODO.html">dialer</a>, or <a href="../TODO.html">listener</a>.</p>
 <p>The <code>nng_stat_find</code> functions are provided for this purpose.</p>
 <p>The <a name="a008"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
 statistics <em>stat</em>, with the given <em>name</em>. If no such statistic can be found, <code>NULL</code>
@@ -347,8 +347,8 @@ statistics tree.</p>
 The statistic is a counter that only increments.
 Usually the change in the value of the statistic is more interesting
 (as a rate) than the absolute value at any given time. The value should
-be obtained using <a href="../../api/stats.html#statistic-value"><code>nng_stat_value</code></a>.
-The units will be given by the value returned from <a href="../../api/stats.html#statistic-units"><code>nng_stat_unit</code></a>.</p>
+be obtained using <a href="../api/stats.html#statistic-value"><code>nng_stat_value</code></a>.
+The units will be given by the value returned from <a href="../api/stats.html#statistic-units"><code>nng_stat_unit</code></a>.</p>
 </li>
 <li>
 <p><a name="a017"></a><code>NNG_STAT_LEVEL</code>: <a name="NNG_STAT_LEVEL"></a>
@@ -357,25 +357,25 @@ to a specific value at a specific time. For example, this may represent the
 number of messages currently queued for some operation, or the link speed
 of a network interface. Most often the absolute value is more interesting
 than the change in the value over time. Again the value can be obtained with
-<a href="../../api/stats.html#statistic-value"><code>nng_stat_value</code></a>, and any appropriate unit of measurement
-with <a href="../../api/stats.html#statistic-units"><code>nng_stat_unit</code></a>.</p>
+<a href="../api/stats.html#statistic-value"><code>nng_stat_value</code></a>, and any appropriate unit of measurement
+with <a href="../api/stats.html#statistic-units"><code>nng_stat_unit</code></a>.</p>
 </li>
 <li>
 <p><a name="a018"></a><code>NNG_STAT_STRING</code>: <a name="NNG_STAT_STRING"></a>
 The statistic is a string, such as a name. The value
-of the string can be obtained with <a href="../../api/stats.html#statistic-value"><code>nng_stat_string</code></a>.
+of the string can be obtained with <a href="../api/stats.html#statistic-value"><code>nng_stat_string</code></a>.
 The value of this string
-will remain valid until the snapshot is deallocated with <a href="../../api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>.</p>
+will remain valid until the snapshot is deallocated with <a href="../api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>.</p>
 </li>
 <li>
 <p><a name="a019"></a><code>NNG_STAT_BOOLEAN</code>: <a name="NNG_STAT_BOOLEAN"></a>
 The value of the statistic is a truth value (either <code>true</code>
-or <code>false</code>) and can be obtained with <a href="../../api/stats.html#statistic-value"><code>nng_stat_bool</code></a>.</p>
+or <code>false</code>) and can be obtained with <a href="../api/stats.html#statistic-value"><code>nng_stat_bool</code></a>.</p>
 </li>
 <li>
 <p><a name="a020"></a><code>NNG_STAT_ID</code>: <a name="NNG_STAT_ID"></a>
 The value of the statistic is a numeric identifier, such as a socket
-identifier. The value can be obtained with <a href="../../api/stats.html#statistic-value"><code>nng_stat_value</code></a>,
+identifier. The value can be obtained with <a href="../api/stats.html#statistic-value"><code>nng_stat_value</code></a>,
 and will be fixed for the life of the statistic.</p>
 </li>
 </ul>
@@ -386,18 +386,18 @@ bool nng_stat_bool(const nng_stat *stat);
 </code></pre>
 <p>These functions return the value associated with the statistic.</p>
 <p>The <a name="a021"></a><code>nng_stat_value</code> function returns the the numeric value for the statistic <em>stat</em>
-of type <a href="../../api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a>, <a href="../../api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>, or <a href="../../api/stats.html#NNG_STAT_ID"><code>NNG_STAT_ID</code></a>.
+of type <a href="../api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a>, <a href="../api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>, or <a href="../api/stats.html#NNG_STAT_ID"><code>NNG_STAT_ID</code></a>.
 If <em>stat</em> is not one of these types, then it returns zero.</p>
 <p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
-type <a href="../../api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistics is not of this type, then it returns <code>false</code>.</p>
+type <a href="../api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistics is not of this type, then it returns <code>false</code>.</p>
 <p>The <a name="a023"></a><code>nng_stat_string</code> function returns a pointer to a string value for the statistic <em>stat</em>,
-of type <a href="../../api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valid until the snapshot that
-<em>stat</em> was collected with is deallocated with <a href="../../api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>. If the statistic
+of type <a href="../api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valid until the snapshot that
+<em>stat</em> was collected with is deallocated with <a href="../api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>. If the statistic
 is not of type <code>NNG_STAT_STRING</code>, then <code>NULL</code> is returned.</p>
 <h2 id="statistic-units"><a class="header" href="#statistic-units">Statistic Units</a></h2>
 <pre><code class="language-c">int nng_stat_unit(const nng_stat *stat);
 </code></pre>
-<p>For statistics of type <a href="../../api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a> or <a href="../../api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>,
+<p>For statistics of type <a href="../api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a> or <a href="../api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>,
 it is often useful to know what that quantity being reported measures.
 The following units may be returned from <a name="a024"></a><code>nng_stat_unit</code> for such a statistic:</p>
 <ul>
@@ -413,9 +413,9 @@ The following units may be returned from <a name="a024"></a><code>nng_stat_unit<
 <p>Statistics have a timestamp indicating when the value was sampled,
 obtained via <a name="a030"></a><code>nng_stat_timestamp</code>. The timestamp is given in
 in milliseconds since a reference time, and the reference time used
-here is the same reference time used for <a href="../../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
+here is the same reference time used for <a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
-<p><a href="../../api/time.html#get-the-current-time"><code>nng_clock</code></a></p>
+<p><a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a></p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from

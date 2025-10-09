@@ -306,23 +306,23 @@ underlying system.</p>
 <h2 id="wait-asynchronously"><a class="header" href="#wait-asynchronously">Wait Asynchronously</a></h2>
 <pre><code class="language-c">void nng_sleep_aio(nng_duration msec, nng_aio *aio);
 </code></pre>
-<p>It is possible to wait as the action on an <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, which in effect
+<p>It is possible to wait as the action on an <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>, which in effect
 acts like <a name="a010"></a>scheduling a callback to run after a specified period of time.</p>
 <p>The <a name="a011"></a><code>nng_sleep_aio</code> function provides this capability.
 After <em>msec</em> milliseconds have passed, then <em>aio</em>’s callback will be executed.
 If this sleep waits without interruption, and then completes, the result from
-<a href="../../api/aio.html#result-of-operation"><code>nng_aio_result</code></a> will be zero.</p>
+<a href="../api/aio.html#result-of-operation"><code>nng_aio_result</code></a> will be zero.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>If a timeout shorter than <em>msec</em> is set on <em>aio</em> using <a href="../../api/aio.html#set-timeout"><code>nng_aio_set_timeout</code></a>,
-then the sleep will wake up early, with a result code of <a href="../../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>.</p>
+<p>If a timeout shorter than <em>msec</em> is set on <em>aio</em> using <a href="../api/aio.html#set-timeout"><code>nng_aio_set_timeout</code></a>,
+then the sleep will wake up early, with a result code of <a href="../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>.</p>
 </div>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
-<p><a href="../../api/aio.html">Asynchronous Operations</a>,
-<a href="../../api/synch.html">Synchronization</a></p>
+<p><a href="../api/aio.html">Asynchronous Operations</a>,
+<a href="../api/synch.html">Synchronization</a></p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from

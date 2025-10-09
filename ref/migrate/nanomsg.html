@@ -254,7 +254,7 @@ update it for this version of NNG.</p>
 <p>Replace <code>-lnanomsg</code> with <code>-lnng</code>.
 It may be necessary to include additional system libraries, such as <code>-lpthread</code>, depending on your system.</p>
 <h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
-<p>It is necessary to explicitly initialize the library, using the <a href="../../api/init.html#initialization"><code>nng_init</code></a> function.
+<p>It is necessary to explicitly initialize the library, using the <a href="../api/init.html#initialization"><code>nng_init</code></a> function.
 This must be called before any other function.</p>
 <h2 id="types"><a class="header" href="#types">Types</a></h2>
 <p>Sockets, dialers, and listeners in <em>libnanomsg</em> are simple integers.
@@ -265,87 +265,87 @@ headers.</p>
 NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> equivalent.</p>
 <h2 id="api-conversions"><a class="header" href="#api-conversions">API Conversions</a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Nanomsg API</th><th>NNG Equivalent</th><th>Notes</th></tr></thead><tbody>
-<tr><td><code>nn_strerror</code></td><td><a href="../../api/errors.html#human-readable-error-message"><code>nng_strerror</code></a></td><td></td></tr>
+<tr><td><code>nn_strerror</code></td><td><a href="../api/errors.html#human-readable-error-message"><code>nng_strerror</code></a></td><td></td></tr>
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
-<tr><td><code>nn_close</code></td><td><a href="../../api/sock.html#closing-a-socket"><code>nng_socket_close</code> </a></td><td></td></tr>
-<tr><td><code>nn_bind</code></td><td><a href="../../TODO.html"><code>nng_listen</code></a>, <a href="../../TODO.html"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_connect</code></td><td><a href="../../TODO.html"><code>nng_dial</code></a>, <a href="../../TODO.html"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_shutdown</code></td><td><a href="../../TODO.html"><code>nng_listener_close</code></a>, <a href="../../TODO.html"><code>nng_dialer_close</code></a></td><td></td></tr>
-<tr><td><code>nn_allocmsg</code></td><td><a href="../../api/msg.html#create-a-message"><code>nng_msg_alloc</code></a></td><td>There are significant semantic differences.</td></tr>
-<tr><td><code>nn_freemsg</code></td><td><a href="../../api/msg.html#destroy-a-message"><code>nng_msg_free</code></a></td><td></td></tr>
-<tr><td><code>nn_reallocmsg</code></td><td><a href="../../api/msg.html#message-size-and-capacity"><code>nng_msg_realloc</code></a></td><td></td></tr>
-<tr><td><code>nn_send</code></td><td><a href="../../api/sock.html#nng_send"><code>nng_send</code></a></td><td></td></tr>
-<tr><td><code>nn_recv</code></td><td><a href="../../TODO.html"><code>nng_recv</code></a></td><td></td></tr>
-<tr><td><code>nn_sendmsg</code></td><td><a href="../../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a></td><td></td></tr>
-<tr><td><code>nn_getsockopt</code></td><td><a href="../../api/sock.html#socket-options"><code>nng_socket_get</code></a></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
-<tr><td><code>nn_setsockopt</code></td><td><a href="../../api/sock.html#socket-options"><code>nng_socket_set</code></a></td><td></td></tr>
-<tr><td><code>nn_device</code></td><td><a href="../../TODO.html"><code>nng_device</code></a></td><td></td></tr>
+<tr><td><code>nn_close</code></td><td><a href="../api/sock.html#closing-a-socket"><code>nng_socket_close</code> </a></td><td></td></tr>
+<tr><td><code>nn_bind</code></td><td><a href="../TODO.html"><code>nng_listen</code></a>, <a href="../TODO.html"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_connect</code></td><td><a href="../TODO.html"><code>nng_dial</code></a>, <a href="../TODO.html"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_shutdown</code></td><td><a href="../TODO.html"><code>nng_listener_close</code></a>, <a href="../TODO.html"><code>nng_dialer_close</code></a></td><td></td></tr>
+<tr><td><code>nn_allocmsg</code></td><td><a href="../api/msg.html#create-a-message"><code>nng_msg_alloc</code></a></td><td>There are significant semantic differences.</td></tr>
+<tr><td><code>nn_freemsg</code></td><td><a href="../api/msg.html#destroy-a-message"><code>nng_msg_free</code></a></td><td></td></tr>
+<tr><td><code>nn_reallocmsg</code></td><td><a href="../api/msg.html#message-size-and-capacity"><code>nng_msg_realloc</code></a></td><td></td></tr>
+<tr><td><code>nn_send</code></td><td><a href="../api/sock.html#nng_send"><code>nng_send</code></a></td><td></td></tr>
+<tr><td><code>nn_recv</code></td><td><a href="../TODO.html"><code>nng_recv</code></a></td><td></td></tr>
+<tr><td><code>nn_sendmsg</code></td><td><a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a></td><td></td></tr>
+<tr><td><code>nn_getsockopt</code></td><td><a href="../api/sock.html#socket-options"><code>nng_socket_get</code></a></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
+<tr><td><code>nn_setsockopt</code></td><td><a href="../api/sock.html#socket-options"><code>nng_socket_set</code></a></td><td></td></tr>
+<tr><td><code>nn_device</code></td><td><a href="../TODO.html"><code>nng_device</code></a></td><td></td></tr>
 <tr><td><code>nn_poll</code></td><td>None</td><td>Can be constructed using <code>nng_aio</code>. Few if any applications ever used this API.</td></tr>
-<tr><td><code>nn_term</code></td><td><a href="../../api/init.html#finalization"><code>nng_fini</code></a></td><td>The <code>nng_fini</code> API can do this, but is not recommended except when debugging memory leaks.</td></tr>
-<tr><td><code>nn_get_statistic</code></td><td><a href="../../api/stats.html#collecting-a-snapshot"><code>nng_stats_get</code></a></td><td>The statistics in NNG are completely different, with different semantics and no stability guarantees.</td></tr>
+<tr><td><code>nn_term</code></td><td><a href="../api/init.html#finalization"><code>nng_fini</code></a></td><td>The <code>nng_fini</code> API can do this, but is not recommended except when debugging memory leaks.</td></tr>
+<tr><td><code>nn_get_statistic</code></td><td><a href="../api/stats.html#collecting-a-snapshot"><code>nng_stats_get</code></a></td><td>The statistics in NNG are completely different, with different semantics and no stability guarantees.</td></tr>
 <tr><td><code>NN_POLLIN</code></td><td>None</td><td>Used only with <code>nn_poll</code>.</td></tr>
 <tr><td><code>NN_POLLOUT</code></td><td>None</td><td>Used only with <code>nn_poll</code>.</td></tr>
-<tr><td><code>NN_MSG</code></td><td><a href="../../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="../../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a></td><td>There are differences as a separate <a href="../../api/msg.html#message-structure"><code>nng_msg</code></a> structure is involved.</td></tr>
+<tr><td><code>NN_MSG</code></td><td><a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a></td><td>There are differences as a separate <a href="../api/msg.html#message-structure"><code>nng_msg</code></a> structure is involved.</td></tr>
 <tr><td><code>NN_CMSG_ALIGN</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_FIRSTHDR</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_NXTHDR</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_DATA</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_LEN</code></td><td>None</td><td></td></tr>
 <tr><td><code>NN_CMSG_SPACE</code></td><td>None</td><td></td></tr>
-<tr><td><code>struct nn_iovec</code></td><td><a href="../../api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a></td><td></td></tr>
-<tr><td><code>struct nn_msghdr</code></td><td><a href="../../api/msg.html#message-structure"><code>nng_msg</code></a></td><td></td></tr>
-<tr><td><code>struct nn_cmsghdr</code></td><td><a href="../../api/msg.html#message-structure"><code>nng_msg</code></a> and <a href="../../api/msg.html#message-header"><code>nng_msg_header</code></a></td><td></td></tr>
+<tr><td><code>struct nn_iovec</code></td><td><a href="../api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a></td><td></td></tr>
+<tr><td><code>struct nn_msghdr</code></td><td><a href="../api/msg.html#message-structure"><code>nng_msg</code></a></td><td></td></tr>
+<tr><td><code>struct nn_cmsghdr</code></td><td><a href="../api/msg.html#message-structure"><code>nng_msg</code></a> and <a href="../api/msg.html#message-header"><code>nng_msg_header</code></a></td><td></td></tr>
 </tbody></table>
 </div>
 <h2 id="options"><a class="header" href="#options">Options</a></h2>
 <p>The following options are changed.</p>
 <div class="table-wrapper"><table><thead><tr><th>Nanomsg Option</th><th>NNG Eqvaivalent</th><th>Notes</th></tr></thead><tbody>
 <tr><td><code>NN_LINGER</code></td><td>None</td><td>NNG does not support tuning this.</td></tr>
-<tr><td><code>NN_SNDBUF</code></td><td><a href="../../api/sock.html#NNG_OPT_SENDBUF"><code>NNG_OPT_SENDBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
-<tr><td><code>NN_RCVBUF</code></td><td><a href="../../api/sock.html#NNG_OPT_RECVBUF"><code>NNG_OPT_RECVBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
-<tr><td><code>NN_SNDTIMEO</code></td><td><a href="../../api/sock.html#NNG_OPT_SENDTIMEO"><code>NNG_OPT_SENDTIMEO</code></a></td><td></td></tr>
-<tr><td><code>NN_RCVTIMEO</code></td><td><a href="../../api/sock.html#NNG_OPT_RECVTIMEO"><code>NNG_OPT_RECVTIMEO</code></a></td><td></td></tr>
-<tr><td><code>NN_RECONNECT_IVL</code></td><td><a href="../../api/sock.html#NNG_OPT_RECONNMINT"><code>NNG_OPT_RECONNMINT</code></a></td><td></td></tr>
-<tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><a href="../../api/sock.html#NNG_OPT_RECONNMAXT"><code>NNG_OPT_RECONNMAXT</code></a></td><td></td></tr>
+<tr><td><code>NN_SNDBUF</code></td><td><a href="../api/sock.html#NNG_OPT_SENDBUF"><code>NNG_OPT_SENDBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
+<tr><td><code>NN_RCVBUF</code></td><td><a href="../api/sock.html#NNG_OPT_RECVBUF"><code>NNG_OPT_RECVBUF</code></a></td><td>NNG value is given in messages, not bytes.</td></tr>
+<tr><td><code>NN_SNDTIMEO</code></td><td><a href="../api/sock.html#NNG_OPT_SENDTIMEO"><code>NNG_OPT_SENDTIMEO</code></a></td><td></td></tr>
+<tr><td><code>NN_RCVTIMEO</code></td><td><a href="../api/sock.html#NNG_OPT_RECVTIMEO"><code>NNG_OPT_RECVTIMEO</code></a></td><td></td></tr>
+<tr><td><code>NN_RECONNECT_IVL</code></td><td><a href="../api/sock.html#NNG_OPT_RECONNMINT"><code>NNG_OPT_RECONNMINT</code></a></td><td></td></tr>
+<tr><td><code>NN_RECONNECT_IVL_MAX</code></td><td><a href="../api/sock.html#NNG_OPT_RECONNMAXT"><code>NNG_OPT_RECONNMAXT</code></a></td><td></td></tr>
 <tr><td><code>NN_SNDPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
 <tr><td><code>NN_RCVPRIO</code></td><td>None</td><td>Not supported in NNG yet.</td></tr>
-<tr><td><code>NN_RCVFD</code></td><td><a href="../../api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a></td><td>No longer an option, use a function call.</td></tr>
-<tr><td><code>NN_SNDFD</code></td><td><a href="../../api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_RCVFD</code></td><td><a href="../api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_SNDFD</code></td><td><a href="../api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a></td><td>No longer an option, use a function call.</td></tr>
 <tr><td><code>NN_DOMAIN</code></td><td>None</td><td>NNG options are not divided by domain or protocol.</td></tr>
-<tr><td><code>NN_PROTOCOL</code></td><td><a href="../../api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a></td><td>No longer an option. See also <code>nng_socket_proto_name</code>.</td></tr>
+<tr><td><code>NN_PROTOCOL</code></td><td><a href="../api/sock.html#socket-identity"><code>nng_socket_proto_id</code></a></td><td>No longer an option. See also <code>nng_socket_proto_name</code>.</td></tr>
 <tr><td><code>NN_IPV4ONLY</code></td><td>None</td><td>Use URL such as <code>tcp4://</code> to obtain this functionality.</td></tr>
 <tr><td><code>NN_SOCKET_NAME</code></td><td>None</td><td>Removed from NNG.</td></tr>
-<tr><td><code>NN_MAXTTL</code></td><td><a href="../../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></td><td></td></tr>
-<tr><td><code>NN_SUB_SUBSCRIBE</code></td><td><a href="../../TODO.html"><code>nng_sub0_socket_subscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
-<tr><td><code>NN_SUB_UNSUBSCRIBE</code></td><td><a href="../../TODO.html"><code>nng_sub0_socket_unsubscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_MAXTTL</code></td><td><a href="../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></td><td></td></tr>
+<tr><td><code>NN_SUB_SUBSCRIBE</code></td><td><a href="../TODO.html"><code>nng_sub0_socket_subscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_SUB_UNSUBSCRIBE</code></td><td><a href="../TODO.html"><code>nng_sub0_socket_unsubscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
 </tbody></table>
 </div>
 <h2 id="error-codes"><a class="header" href="#error-codes">Error Codes</a></h2>
 <p>Most of the error codes have similar names in NNG, just prefixed with <code>NNG_</code>.
 There are some exceptions. Be aware that the numeric values are <em>not</em> the same.</p>
 <div class="table-wrapper"><table><thead><tr><th>Nanomsg Error</th><th>NNG Error</th><th>Notes</th></tr></thead><tbody>
-<tr><td><code>EINTR</code></td><td><a href="../../api/errors.html#NNG_EINTR"><code>NNG_EINTR</code></a></td><td></td></tr>
-<tr><td><code>ENOMEM</code></td><td><a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a></td><td></td></tr>
-<tr><td><code>EINVAL</code></td><td><a href="../../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>, <a href="../../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>, <a href="../../api/errors.html#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a></td><td>NNG discrimates between different types of errors.</td></tr>
-<tr><td><code>EBUSY</code></td><td><a href="../../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a></td><td></td></tr>
-<tr><td><code>ETIMEDOUT</code></td><td><a href="../../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a></td><td></td></tr>
-<tr><td><code>ECONNREFUSED</code></td><td><a href="../../api/errors.html#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a></td><td></td></tr>
-<tr><td><code>EBADF</code></td><td><a href="../../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>, <a href="../../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a></td><td>Canceling an operation returns differently than using an invalid or closed object.</td></tr>
-<tr><td><code>EAGAIN</code></td><td><a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a></td><td></td></tr>
-<tr><td><code>ENOTSUP</code></td><td><a href="../../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a></td><td></td></tr>
-<tr><td><code>EADDRINUSE</code></td><td><a href="../../api/errors.html#NNG_EADDRINUSE"><code>NNG_EADDRINUSE</code></a></td><td></td></tr>
-<tr><td><code>EFSM</code></td><td><a href="../../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a></td><td>Not a legal POSIX <em>errno</em> value.</td></tr>
-<tr><td><code>ENOENT</code></td><td><a href="../../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a></td><td></td></tr>
-<tr><td><code>EPROTO</code></td><td><a href="../../api/errors.html#NNG_EPROTO"><code>NNG_EPROTO</code></a></td><td></td></tr>
-<tr><td><code>EHOSTUNREACH</code></td><td><a href="../../api/errors.html#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a></td><td></td></tr>
-<tr><td><code>EACCCES</code></td><td><a href="../../api/errors.html#NNG_EPERM"><code>NNG_EPERM</code></a>, <a href="../../api/errors.html#NNG_EWRITEONLY"><code>NNG_EWRITEONLY</code></a>, <a href="../../api/errors.html#NNG_EREADONLY"><code>NNG_EREADONLY</code></a>, <a href="../../api/errors.html#NNG_ECRYPTO"><code>NNG_ECRYPTO</code></a>, <a href="../../api/errors.html#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a></td><td>NNG has more fine grained reasons for access failures.</td></tr>
-<tr><td><code>EMSGSIZE</code></td><td><a href="../../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a></td><td></td></tr>
-<tr><td><code>ECONNABORTED</code></td><td><a href="../../api/errors.html#NNG_ECONNABORTED"><code>NNG_ECONNABORTED</code></a></td><td></td></tr>
-<tr><td><code>ECONNRESET</code></td><td><a href="../../api/errors.html#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a></td><td></td></tr>
-<tr><td><code>EEXIST</code></td><td><a href="../../api/errors.html#NNG_EEXIST"><code>NNG_EEXIST</code></a></td><td></td></tr>
-<tr><td><code>EMFILE</code></td><td><a href="../../api/errors.html#NNG_ENOFILES"><code>NNG_ENOFILES</code></a></td><td></td></tr>
-<tr><td><code>ENOSPC</code></td><td><a href="../../api/errors.html#NNG_ENOSPC"><code>NNG_ENOSPC</code></a></td><td></td></tr>
+<tr><td><code>EINTR</code></td><td><a href="../api/errors.html#NNG_EINTR"><code>NNG_EINTR</code></a></td><td></td></tr>
+<tr><td><code>ENOMEM</code></td><td><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a></td><td></td></tr>
+<tr><td><code>EINVAL</code></td><td><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>, <a href="../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>, <a href="../api/errors.html#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a></td><td>NNG discrimates between different types of errors.</td></tr>
+<tr><td><code>EBUSY</code></td><td><a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a></td><td></td></tr>
+<tr><td><code>ETIMEDOUT</code></td><td><a href="../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a></td><td></td></tr>
+<tr><td><code>ECONNREFUSED</code></td><td><a href="../api/errors.html#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a></td><td></td></tr>
+<tr><td><code>EBADF</code></td><td><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>, <a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a></td><td>Canceling an operation returns differently than using an invalid or closed object.</td></tr>
+<tr><td><code>EAGAIN</code></td><td><a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a></td><td></td></tr>
+<tr><td><code>ENOTSUP</code></td><td><a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a></td><td></td></tr>
+<tr><td><code>EADDRINUSE</code></td><td><a href="../api/errors.html#NNG_EADDRINUSE"><code>NNG_EADDRINUSE</code></a></td><td></td></tr>
+<tr><td><code>EFSM</code></td><td><a href="../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a></td><td>Not a legal POSIX <em>errno</em> value.</td></tr>
+<tr><td><code>ENOENT</code></td><td><a href="../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a></td><td></td></tr>
+<tr><td><code>EPROTO</code></td><td><a href="../api/errors.html#NNG_EPROTO"><code>NNG_EPROTO</code></a></td><td></td></tr>
+<tr><td><code>EHOSTUNREACH</code></td><td><a href="../api/errors.html#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a></td><td></td></tr>
+<tr><td><code>EACCCES</code></td><td><a href="../api/errors.html#NNG_EPERM"><code>NNG_EPERM</code></a>, <a href="../api/errors.html#NNG_EWRITEONLY"><code>NNG_EWRITEONLY</code></a>, <a href="../api/errors.html#NNG_EREADONLY"><code>NNG_EREADONLY</code></a>, <a href="../api/errors.html#NNG_ECRYPTO"><code>NNG_ECRYPTO</code></a>, <a href="../api/errors.html#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a></td><td>NNG has more fine grained reasons for access failures.</td></tr>
+<tr><td><code>EMSGSIZE</code></td><td><a href="../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a></td><td></td></tr>
+<tr><td><code>ECONNABORTED</code></td><td><a href="../api/errors.html#NNG_ECONNABORTED"><code>NNG_ECONNABORTED</code></a></td><td></td></tr>
+<tr><td><code>ECONNRESET</code></td><td><a href="../api/errors.html#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a></td><td></td></tr>
+<tr><td><code>EEXIST</code></td><td><a href="../api/errors.html#NNG_EEXIST"><code>NNG_EEXIST</code></a></td><td></td></tr>
+<tr><td><code>EMFILE</code></td><td><a href="../api/errors.html#NNG_ENOFILES"><code>NNG_ENOFILES</code></a></td><td></td></tr>
+<tr><td><code>ENOSPC</code></td><td><a href="../api/errors.html#NNG_ENOSPC"><code>NNG_ENOSPC</code></a></td><td></td></tr>
 </tbody></table>
 </div>
 <h2 id="local-addresses-for-dialing"><a class="header" href="#local-addresses-for-dialing">Local Addresses for Dialing</a></h2>

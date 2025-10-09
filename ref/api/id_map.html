@@ -267,7 +267,7 @@ will use space efficiently even if identifiers are very far apart.
   important
 </p>
 <p>The function available for <code>nng_id_map</code> are <em>not</em> thread-safe.
-Callers should use a <a href="../../api/synch.html#mutual-exclusion-lock">mutex</a> or similar approach when thread-safety is needed.</p>
+Callers should use a <a href="../api/synch.html#mutual-exclusion-lock">mutex</a> or similar approach when thread-safety is needed.</p>
 </div>
 <h2 id="create-id-map"><a class="header" href="#create-id-map">Create ID Map</a></h2>
 <pre><code class="language-c">#define NNG_MAP_RANDOM 1
@@ -285,7 +285,7 @@ This is useful to reduce the odds of different instances of an application using
 the same identifiers at the same time.</p>
 <p>If both <em>lo</em> and <em>hi</em> are zero, then the values <code>0</code> and <code>0xffffffff</code> are substituted
 in their place, giving a full range of 32-bit identifiers.</p>
-<p>This function can return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if it is unable to allocate resources, otherwise
+<p>This function can return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if it is unable to allocate resources, otherwise
 it returns zero on success.</p>
 <h2 id="destroy-map"><a class="header" href="#destroy-map">Destroy Map</a></h2>
 <pre><code class="language-c">void nng_id_map_free(nng_id_map *map);
@@ -315,7 +315,7 @@ index <em>id</em>.</p>
 <p>The <em>value</em> must not be <code>NULL</code>.</p>
 </div>
 <p>If the table has to grow to accommodate this value, it may fail if insufficient
-memory is available, returning <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it returns zero.</p>
+memory is available, returning <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it returns zero.</p>
 <h2 id="lookup-a-value"><a class="header" href="#lookup-a-value">Lookup a Value</a></h2>
 <pre><code class="language-c">void *nng_id_get(nng_id_map *map, uint64_t id);
 </code></pre>
@@ -331,16 +331,16 @@ largest possible identifier is allocated. After wrapping, only identifiers that 
 in use will be considered.
 No effort is made to order the availability of identifiers based on
 when they were freed.<sup><a name="to-footnote-2"><a href="#footnote-2">2</a></a></sup></p>
-<p>As with <a href="../../api/id_map.html#store-a-value"><code>nng_id_set</code></a>, this may need to allocate memory and can thus
-fail with <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
+<p>As with <a href="../api/id_map.html#store-a-value"><code>nng_id_set</code></a>, this may need to allocate memory and can thus
+fail with <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
 <p>Additionally, if there are no more free identifiers within the range specified
-when <em>map</em> was created, then it will return <a href="../../api/errors.html#NNG_ENOSPC"><code>NNG_ENOSPC</code></a>.</p>
+when <em>map</em> was created, then it will return <a href="../api/errors.html#NNG_ENOSPC"><code>NNG_ENOSPC</code></a>.</p>
 <p>Otherwise it returns zero, indicating success.</p>
 <h2 id="remove-an-id"><a class="header" href="#remove-an-id">Remove an ID</a></h2>
 <pre><code class="language-c">int nng_id_remove(nng_id_map *map, uint64_t id);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_id_remove</code> removes the entry at index <em>id</em> from <em>map</em>.</p>
-<p>If no such entry exist, it will return <a href="../../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a>. Otherwise it returns zero.</p>
+<p>If no such entry exist, it will return <a href="../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a>. Otherwise it returns zero.</p>
 <h2 id="iterating-ids"><a class="header" href="#iterating-ids">Iterating IDs</a></h2>
 <pre><code class="language-c">bool nng_id_visit(nng_id_map *map, uint64_t *id_p, void **value_p, uint32_t *cursor);
 </code></pre>
