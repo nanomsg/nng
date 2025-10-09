@@ -10,8 +10,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-
 #include "../../../testing/nuts.h"
 
 // TLS tests.

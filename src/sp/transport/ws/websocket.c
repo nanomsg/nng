@@ -15,7 +15,6 @@
 
 #include "../../../core/nng_impl.h"
 #include "../../../supplemental/websocket/websocket.h"
-#include "nng/nng.h"
 
 typedef struct ws_dialer   ws_dialer;
 typedef struct ws_listener ws_listener;

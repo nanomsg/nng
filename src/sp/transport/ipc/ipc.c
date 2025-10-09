@@ -11,10 +11,9 @@
 
 #include <stdio.h>
 
-#include "core/defs.h"
-#include "core/nng_impl.h"
-#include "core/pipe.h"
-#include "nng/nng.h"
+#include "../../../core/defs.h"
+#include "../../../core/nng_impl.h"
+#include "../../../core/pipe.h"
 
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or

@@ -9,7 +9,6 @@
 //
 
 #include "../../../testing/nuts.h"
-#include "nng/nng.h"
 
 static void
 test_ws_url_path_filters(void)
