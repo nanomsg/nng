@@ -254,7 +254,7 @@ and for this purpose a header library is supplied.</p>
 </p>
 <p>The functionality described here is entirely contained in the
 <code>nng/args.h</code> header file, and may be used without previously
-initializing the library with <a href="/api/init.html#initialization"><code>nng_init</code></a>, and may even be used
+initializing the library with <a href="../../api/init.html#initialization"><code>nng_init</code></a>, and may even be used
 in programs that are not linked against the NNG library.</p>
 </div>
 <h2 id="parse-command-line-arguments"><a class="header" href="#parse-command-line-arguments">Parse Command Line Arguments</a></h2>
@@ -415,9 +415,14 @@ unambiguously (meaning it must not match any other option specification.)</p>
         exit(1);
     }
 </code></pre>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

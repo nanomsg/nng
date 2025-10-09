@@ -271,7 +271,7 @@ relative to the root directory.</p>
   note
 </p>
 <p>When using relative paths on POSIX systems, the address used and returned
-in properties like <a href="/api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a> will also be relative.
+in properties like <a href="../../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a> will also be relative.
 Consequently, they will only be interpreted the same by processes that have
 the same working directory.
 To ensure maximum portability and safety, absolute paths are recommended
@@ -303,39 +303,44 @@ For example, the name <code>"a\0b"</code> would be represented as <code>abstract
 </p>
 <p>An empty name may be used with a listener to request “auto bind” be used to select a name.
 In this case the system will allocate a free name.
-The name assigned may be retrieved using <a href="/api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a>.</p>
+The name assigned may be retrieved using <a href="../../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a>.</p>
 </div>
 <p>Abstract names do not include the leading <code>NUL</code> byte used in the low-level socket address.</p>
 <p>Abstract sockets do not have any representation in the file system, and are automatically freed by
 the system when no longer in use.</p>
 <p>Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
-of the peer with <a href="/tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and similar options.
+of the peer with <a href="../../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and similar options.
 <sup><a name="to-footnote-2"><a href="#footnote-2">2</a></a></sup></p>
 <h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
-<p>When using an <a href="/TODO.html"><code>nng_sockaddr</code></a> structure,
-the actual structure is of type <a href="/TODO.html"><code>nng_sockaddr_ipc</code></a>,
-except for abstract sockets, which use <a href="/TODO.html"><code>nng_sockaddr_abstract</code></a>.</p>
+<p>When using an <a href="../../TODO.html"><code>nng_sockaddr</code></a> structure,
+the actual structure is of type <a href="../../TODO.html"><code>nng_sockaddr_ipc</code></a>,
+except for abstract sockets, which use <a href="../../TODO.html"><code>nng_sockaddr_abstract</code></a>.</p>
 <h3 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>NNG_OPT_IPC_PERMISSIONS</code></td><td><code>int</code></td><td>Settable on listeners before they start, this is the UNIX file mode used when creating the socket.</td></tr>
-<tr><td><code>NNG_OPT_LOCADDR</code></td><td><a href="/TODO.html"><code>nng_sockaddr</code></a></td><td>Local socket address, either <a href="/TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="/TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
-<tr><td><code>NNG_OPT_REMADDR</code></td><td><a href="/TODO.html"><code>nng_sockaddr</code></a></td><td>Remote socket address, either <a href="/TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="/TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
+<tr><td><code>NNG_OPT_LOCADDR</code></td><td><a href="../../TODO.html"><code>nng_sockaddr</code></a></td><td>Local socket address, either <a href="../../TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="../../TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
+<tr><td><code>NNG_OPT_REMADDR</code></td><td><a href="../../TODO.html"><code>nng_sockaddr</code></a></td><td>Remote socket address, either <a href="../../TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="../../TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.</td></tr>
-<tr><td><a href="/api/streams.html#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write only for listeners before they start, use the named socket for accepting (for use with socket activation).</td></tr>
+<tr><td><a href="../../api/streams.html#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write only for listeners before they start, use the named socket for accepting (for use with socket activation).</td></tr>
 </tbody></table>
 </div>
 <h3 id="other-configuration-parameters"><a class="header" href="#other-configuration-parameters">Other Configuration Parameters</a></h3>
 <p>On Windows systems, the security descriptor for the listener,
 which can be used to control access, can be set using the function
-<a href="/TODO.html"><code>nng_listener_set_security_descriptor</code></a>.</p>
+<a href="../../TODO.html"><code>nng_listener_set_security_descriptor</code></a>.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

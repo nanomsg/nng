@@ -263,12 +263,12 @@ extern nng_err nng_init(nng_init_params *params);
 <p>Before using other interfaces in this library, it is necessary to initialize
 the library. The <a name="a001"></a><code>nng_init</code> function performs this initialization.</p>
 <p>The function is idempotent, although on tear down, every call to <code>nng_init</code> must
-be paired with a call to <a href="/api/init.html#finalization"><code>nng_fini</code></a> or no resources will be released.
+be paired with a call to <a href="../../api/init.html#finalization"><code>nng_fini</code></a> or no resources will be released.
 This allows for libraries consuming these interfaces to safely initialize and finalize
 the library without disrupting other consumers in the same process.</p>
 <p>Further, only the first call to this function may have a value of <em>params</em> other than <code>NULL</code>.
 If <em>params</em> is not <code>NULL</code>, and the library has already been intiazed, then <code>nng_init</code> will
-return <a href="/api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
+return <a href="../../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
 <p>In some cases it is desirable to tune certain runtime parameters for the library, which
 can be done by supplying a non-<code>NULL</code> <em>params</em> argument.</p>
 <h3 id="parameters"><a class="header" href="#parameters">Parameters</a></h3>
@@ -312,12 +312,17 @@ Changes the number of threads used for asynchronous DNS look ups.</p>
 </code></pre>
 <p>When the consumer is ready to deallocate any resources allocated by the library, it should call
 the <a name="a002"></a><code>nng_fini</code> function. Each call to <code>nng_fini</code> should be paired with an earlier call to
-<a href="/api/init.html#initialization"><code>nng_init</code></a>.</p>
+<a href="../../api/init.html#initialization"><code>nng_init</code></a>.</p>
 <p>After calling <code>nng_fini</code>, the consuming application must not make any other calls to NNG functions,
 except that it may use <code>nng_init</code> to initialize the application for further use.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

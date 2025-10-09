@@ -246,15 +246,15 @@
 <h1 id="messages"><a class="header" href="#messages">Messages</a></h1>
 <p>Messages <a name="a001"></a> in Scalability Protocols are the fundamental unit of
 transmission and reception, as these protocols are fundamentally message-oriented.</p>
-<p>Messages have a <a href="/api/msg.html#message-body">body</a><a name="a002"></a>, containing the application-supplied
-payload, and a <a href="/api/msg.html#message-header">header</a><a name="a003"></a>, containing protocol specific routing and similar
+<p>Messages have a <a href="../../api/msg.html#message-body">body</a><a name="a002"></a>, containing the application-supplied
+payload, and a <a href="../../api/msg.html#message-header">header</a><a name="a003"></a>, containing protocol specific routing and similar
 related information.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Only applications using <a href="/api/sock.html#raw-mode-sockets">raw mode</a> need to access the message header.
+<p>Only applications using <a href="../../api/sock.html#raw-mode-sockets">raw mode</a> need to access the message header.
 Very few <em>NNG</em> applications do this.</p>
 </div>
 <h2 id="message-structure"><a class="header" href="#message-structure">Message Structure</a></h2>
@@ -268,7 +268,7 @@ and a header.</p>
 <p>The <a name="a005"></a><code>nng_msg_alloc</code> function allocates a new message.
 It takes a <em>size</em> argument, and returns a message
 with a preallocated body of that size in the <em>msgp</em> parameter.</p>
-<p>If it succeeds, it returns zero, otherwise this function may return <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>,
+<p>If it succeeds, it returns zero, otherwise this function may return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>,
 indicating that insufficient memory is available to allocate a new message.</p>
 <h3 id="destroy-a-message"><a class="header" href="#destroy-a-message">Destroy a Message</a></h3>
 <pre><code class="language-c">void nng_msg_free(nng_msg *msg);
@@ -278,7 +278,7 @@ indicating that insufficient memory is available to allocate a new message.</p>
 <pre><code class="language-c">int nng_msg_dup(nng_msg **dup, nng_msg *msg);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_msg_dup</code> function duplicates the message <em>msg</em>, storing a pointer
-to the new duplicate in <em>dup</em>. This function also returns zero on success, or <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
+to the new duplicate in <em>dup</em>. This function also returns zero on success, or <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
 if memory is exhausted.</p>
 <h2 id="message-size-and-capacity"><a class="header" href="#message-size-and-capacity">Message Size and Capacity</a></h2>
 <pre><code class="language-c">size_t nng_msg_capacity(nng_msg *msg);
@@ -311,7 +311,7 @@ If reallocation fails due to insufficient memory, then the original is left inta
 is at least <em>capacity</em> bytes. Use of this function to ensure the total anticipated
 capacity is present in the message may help prevent many small allocations.</p>
 <p>Both <code>nng_msg_realloc</code> and <code>nng_msg_reserve</code> return zero on success, or may return
-<a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if insufficient memory exists to preform allocation.</p>
+<a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if insufficient memory exists to preform allocation.</p>
 <div class="mdbook-alerts mdbook-alerts-important">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -418,7 +418,7 @@ int nng_msg_header_insert_u64(nng_msg *msg, uint64_t val64);
 </code></pre>
 <p>Appending data to a message header is done by using the <a name="a021"></a><code>nng_msg_header_append</code> functions,
 and inserting data in the header is done using the <a name="a022"></a><code>nng_msg_header_insert</code> functions.</p>
-<p>These functions act just like the <a href="/api/msg.html#add-to-body"><code>nng_msg_append</code></a> and <a href="/api/msg.html#add-to-body"><code>nng_msg_insert</code></a> functions,
+<p>These functions act just like the <a href="../../api/msg.html#add-to-body"><code>nng_msg_append</code></a> and <a href="../../api/msg.html#add-to-body"><code>nng_msg_insert</code></a> functions,
 except that they operate on the message header rather than the message body.</p>
 <h3 id="consume-from-header"><a class="header" href="#consume-from-header">Consume from Header</a></h3>
 <pre><code class="language-c">int nng_msg_header_chop(nng_msg *msg, size_t size);
@@ -433,16 +433,16 @@ int nng_msg_header_trim_u64(nng_msg *msg, uint64_t *val64);
 </code></pre>
 <p>The <a name="a023"></a><code>nng_msg_header_trim</code> functions remove data from the beginning of the message header,
 and the <a name="a024"></a><code>nng_msg_header_chop</code> functions remove data from the end of the message header.</p>
-<p>These functions act just like the <a href="/api/msg.html#consume-from-body"><code>nng_msg_trim</code></a> and <a href="/api/msg.html#consume-from-body"><code>nng_msg_chop</code></a> functions,
+<p>These functions act just like the <a href="../../api/msg.html#consume-from-body"><code>nng_msg_trim</code></a> and <a href="../../api/msg.html#consume-from-body"><code>nng_msg_chop</code></a> functions,
 except that they operate the message header rather than the message body.</p>
 <h2 id="message-pipe"><a class="header" href="#message-pipe">Message Pipe</a></h2>
 <pre><code class="language-c">nng_pipe nng_msg_get_pipe(nng_msg *msg);
 void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
 </code></pre>
-<p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="/api/pipe.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
+<p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="../../api/pipe.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
 This is most often useful when used with protocols that support directing
 a message to a specific peer.
-For example the <a href="/proto/pair.html"><em>PAIR</em></a> version 1 protocol can do
+For example the <a href="../../proto/pair.html"><em>PAIR</em></a> version 1 protocol can do
 this when <code>NNG_OPT_PAIR1_POLY</code> mode is set.</p>
 <p>The <a name="a026"></a><code>nng_msg_get_pipe</code> function returns the pipe that was previously set on the message <em>m</em>,
 either directly by the application, or when the message was received by the protocol.</p>
@@ -473,9 +473,14 @@ while ((val64 = next_datum()) != 0) {
   }
 }
 </code></pre>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

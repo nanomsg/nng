@@ -247,21 +247,21 @@
 <h2 id="description"><a class="header" href="#description">Description</a></h2>
 <p>The <a name="a001"></a><em>socket</em> transport supports communication between
 peers across arbitrary BSD sockets, such as those that are
-created with <a href="/api/misc.html#create-socket-pair"><code>nng_socket_pair</code></a>.</p>
-<p>This transport only supports <a href="/TODO.html">listeners</a>, using <a href="/TODO.html"><code>nng_listener_create</code></a>.</p>
+created with <a href="../../api/misc.html#create-socket-pair"><code>nng_socket_pair</code></a>.</p>
+<p>This transport only supports <a href="../../TODO.html">listeners</a>, using <a href="../../TODO.html"><code>nng_listener_create</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>Attempts to create <a href="/TODO.html">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.</p>
+<p>Attempts to create <a href="../../TODO.html">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.</p>
 </div>
 <p>The socket file descriptor is passed to the listener using
 the <a name="a002"></a><code>NNG_OPT_SOCKET_FD</code> option (as an integer).
-Setting this option will cause the listener to create a <a href="/api/pipe.html">pipe</a>
+Setting this option will cause the listener to create a <a href="../../api/pipe.html">pipe</a>
 backed by the file descriptor.</p>
 <p>The protocol between peers using this transport is compatible with the protocol used
-for the <em><a href="/tran/tcp.html">tcp</a></em> transport, but this is an implementation detail and subject to change without notice.
+for the <em><a href="../../tran/tcp.html">tcp</a></em> transport, but this is an implementation detail and subject to change without notice.
 <sup><a name="to-footnote-1"><a href="#footnote-1">1</a></a></sup></p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -279,7 +279,7 @@ There are no further socket details available.</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>The following transport options are supported by this transport.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="/api/pipe.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
+<tr><td><code>NNG_OPT_SOCKET_FD</code></td><td><code>int</code></td><td>Write-only option, that may be set multiple times on a listener. Each time this is set, the listener will create a <a href="../../api/pipe.html">pipe</a> backed by the given file descriptor passed as an argument.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
@@ -291,17 +291,22 @@ There are no further socket details available.</p>
   note
 </p>
 <p>The <code>NNG_OPT_PEER_GID</code>, <code>NNG_OPT_PEER_PID</code>, <code>NNG_OPT_PEER_UID</code>, and <code>NNG_OPT_PEER_ZONEID</code> options depend on platform support.
-These behave in exactly the same fashion as for the <em><a href="/tran/ipc.html">ipc</a></em> transport.</p>
+These behave in exactly the same fashion as for the <em><a href="../../tran/ipc.html">ipc</a></em> transport.</p>
 </div>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
 <!-- Concept index -->
 <p><hr/>
-<p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: Specifically it is not compatible with the <em><a href="/tran/ipc.html">ipc</a></em> transport.</p>
+<p><a name="footnote-1"><a href="#to-footnote-1">1</a></a>: Specifically it is not compatible with the <em><a href="../../tran/ipc.html">ipc</a></em> transport.</p>
 <p><a name="footnote-2"><a href="#to-footnote-2">2</a></a>: Windows lacks a suitable <code>socketpair</code> equivalent function we could use.</p>
 
                     </main>

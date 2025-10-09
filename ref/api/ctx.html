@@ -246,33 +246,33 @@
 <h1 id="contexts"><a class="header" href="#contexts">Contexts</a></h1>
 <p>Contexts <a name="a001"></a> in Scalability Protocols provide for isolation of protocol-specific
 state machines and associated data, allowing multiple <a name="a002"></a>concurrent <a name="a003"></a>state machines (or transactions)
-to coexist on a single <a href="/TODO.html">socket</a>.</p>
-<p>For example, a <a href="/proto/rep.html">REP</a> server may wish to allow many requests to be serviced concurrently,
+to coexist on a single <a href="../../TODO.html">socket</a>.</p>
+<p>For example, a <a href="../../proto/rep.html">REP</a> server may wish to allow many requests to be serviced concurrently,
 even though some jobs may take significant time to process. Contexts provide for this ability.</p>
 <p>Not all protocols have contexts, because many protocols simply have no state to manage.
 The following protocols support contexts:</p>
 <ul>
-<li><a href="/proto/rep.html">REP</a></li>
-<li><a href="/proto/req.html">REQ</a></li>
-<li><a href="/proto/respondent.html">RESPONDENT</a></li>
-<li><a href="/proto/surveyor.html">SURVEYOR</a></li>
-<li><a href="/proto/sub.html">SUB</a></li>
+<li><a href="../../proto/rep.html">REP</a></li>
+<li><a href="../../proto/req.html">REQ</a></li>
+<li><a href="../../proto/respondent.html">RESPONDENT</a></li>
+<li><a href="../../proto/surveyor.html">SURVEYOR</a></li>
+<li><a href="../../proto/sub.html">SUB</a></li>
 </ul>
 <p>For these protocols, the socket will also have a single, default, context that is used when
 performing send or receive operations on the socket directly.</p>
 <p>Other protocols are stateless, at least with respect to message processing, and have no use for
-contexts. For the same reason, <a href="/api/sock.html#raw-mode-sockets">raw</a> mode sockets do not support contexts.</p>
+contexts. For the same reason, <a href="../../api/sock.html#raw-mode-sockets">raw</a> mode sockets do not support contexts.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Developers with experience with [libnanomsg] may be used to using <a href="/api/sock.html#raw-mode-sockets">raw</a> sockets for concurrency.
+<p>Developers with experience with [libnanomsg] may be used to using <a href="../../api/sock.html#raw-mode-sockets">raw</a> sockets for concurrency.
 Contexts provide a superior solution, as they are much easier to use, less error prone, and allow
 for easy control of the amount of concurrency used on any given socket.</p>
 </div>
 <p>One drawback of contexts is that they cannot be used with file descriptor polling using
-<a href="/api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> or <a href="/api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a>.</p>
+<a href="../../api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> or <a href="../../api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a>.</p>
 <h2 id="context-structure"><a class="header" href="#context-structure">Context Structure</a></h2>
 <pre><code class="language-c">#define NNG_CTX_INITIALIZER // opaque value
 
@@ -285,15 +285,15 @@ to ensure that it cannot be confused with a valid open context.</p>
 <h2 id="creating-a-context"><a class="header" href="#creating-a-context">Creating a Context</a></h2>
 <pre><code class="language-c">int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
 </code></pre>
-<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="/TODO.html">socket</a> <em>s</em>,
+<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="../../TODO.html">socket</a> <em>s</em>,
 and returns it at the location pointed by <em>ctxp</em>.</p>
 <h2 id="context-identity"><a class="header" href="#context-identity">Context Identity</a></h2>
 <pre><code class="language-c">int nng_ctx_id(nng_ctx c);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_ctx_id</code> function returns a positive identifier for the context <em>c</em> if it is valid.
 Otherwise it returns <code>-1</code>.</p>
-<p>A context is considered valid if it was ever opened with <a href="/api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a> function.
-Contexts that are allocated on the stack or statically should be initialized with the macro <a href="/api/ctx.html#context-structure"><code>NNG_CTX_INITIALIZER</code></a>
+<p>A context is considered valid if it was ever opened with <a href="../../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a> function.
+Contexts that are allocated on the stack or statically should be initialized with the macro <a href="../../api/ctx.html#context-structure"><code>NNG_CTX_INITIALIZER</code></a>
 to ensure that they cannot be confused with a valid context before they are opened.</p>
 <h2 id="closing-a-context"><a class="header" href="#closing-a-context">Closing a Context</a></h2>
 <pre><code class="language-c">int nng_ctx_close(nng_ctx ctx);
@@ -309,7 +309,7 @@ call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>Closing the socket associated with <em>ctx</em> using <a href="/api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> also closes this context.</p>
+<p>Closing the socket associated with <em>ctx</em> using <a href="../../api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> also closes this context.</p>
 </div>
 <h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
 <pre><code class="language-c">int nng_ctx_sendmsg(nng_ctx ctx, nng_msg *msg, int flags);
@@ -325,21 +325,21 @@ messages over the socket <em>s</em>. The differences in their behaviors are as f
 <p>The semantics of what sending a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support sending at all or may require other pre-conditions first.
-(For example, <a href="/proto/rep.html">REP</a> sockets cannot normally send data until they have first received a request,
-while <a href="/proto/sub.html">SUB</a> sockets can only receive data and never send it.)</p>
+(For example, <a href="../../proto/rep.html">REP</a> sockets cannot normally send data until they have first received a request,
+while <a href="../../proto/sub.html">SUB</a> sockets can only receive data and never send it.)</p>
 </div>
 <h3 id="nng_ctx_sendmsg"><a class="header" href="#nng_ctx_sendmsg">nng_ctx_sendmsg</a></h3>
 <p>The <code>nng_ctx_sendmsg</code> function sends the <em>msg</em> over the context <em>ctx</em>.</p>
 <p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
 If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="/TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
-cannot accept more data for sending. In such a case, it will return <a href="/api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
+<p>The <em>flags</em> can contain the value <a href="../../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+cannot accept more data for sending. In such a case, it will return <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <h3 id="nng_ctx_send"><a class="header" href="#nng_ctx_send">nng_ctx_send</a></h3>
-<p>The <code>nng_ctx_send</code> function sends a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
-The message to send must have been set on <em>aio</em> using the <a href="/api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
+<p>The <code>nng_ctx_send</code> function sends a message asynchronously, using the <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
+The message to send must have been set on <em>aio</em> using the <a href="../../api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
 <p>If the operation completes successfully, then the context will have disposed of the message.
 However, if it fails, then callback of <em>aio</em> should arrange for a final disposition of the message.
-(The message can be retrieved from <em>aio</em> with <a href="/api/aio.html#messages"><code>nng_aio_get_msg</code></a>.)</p>
+(The message can be retrieved from <em>aio</em> with <a href="../../api/aio.html#messages"><code>nng_aio_get_msg</code></a>.)</p>
 <p>Note that callback associated with <em>aio</em> may be called <em>before</em> the message is finally delivered to the recipient.
 For example, the message may be sitting in queue, or located in TCP buffers, or even in flight.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
@@ -349,7 +349,7 @@ For example, the message may be sitting in queue, or located in TCP buffers, or 
 </p>
 <p>This is the preferred function to use for sending data on a context. While it does require a few extra
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="/api/ctx.html#nng_ctx_sendmsg"><code>nng_ctx_sendmsg</code></a>.</p>
+this function instead of <a href="../../api/ctx.html#nng_ctx_sendmsg"><code>nng_ctx_sendmsg</code></a>.</p>
 </div>
 <h2 id="receiving-messages"><a class="header" href="#receiving-messages">Receiving Messages</a></h2>
 <pre><code class="language-c">int nng_ctx_recvmsg(nng_ctx ctx, nng_msg **msgp, int flags);
@@ -365,15 +365,15 @@ messages over the context <em>ctx</em>. The differences in their behaviors are a
 <p>The semantics of what receiving a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
-(For example, <a href="/proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request.)</p>
+(For example, <a href="../../proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request.)</p>
 </div>
 <h3 id="nng_recvmsg"><a class="header" href="#nng_recvmsg">nng_recvmsg</a></h3>
-<p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="/api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="/TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
-has no messages available to receive. In such a case, it will return <a href="/api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
+<p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="../../api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
+<p>The <em>flags</em> can contain the value <a href="../../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+has no messages available to receive. In such a case, it will return <a href="../../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
-<p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
-On success, the received message can be retrieved from the <em>aio</em> using the <a href="/api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
+<p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
+On success, the received message can be retrieved from the <em>aio</em> using the <a href="../../api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -389,7 +389,7 @@ Failure to do so will leak the memory.</p>
 </p>
 <p>This is the preferred function to use for receiving data on a context. While it does require a few extra
 steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="/api/ctx.html#nng_ctx_recvmsg"><code>nng_ctx_recvmsg</code></a>.</p>
+this function instead of <a href="../../api/ctx.html#nng_ctx_recvmsg"><code>nng_ctx_recvmsg</code></a>.</p>
 </div>
 <h2 id="context-options"><a class="header" href="#context-options">Context Options</a></h2>
 <pre><code class="language-c">int nng_ctx_get_bool(nng_ctx ctx, const char *opt, bool *valp);
@@ -414,7 +414,7 @@ are available for contexts, whether they can be read or written, and the appropr
 <p>These examples show building blocks for a concurrent service based on contexts.</p>
 <h3 id="example-1-context-echo-server"><a class="header" href="#example-1-context-echo-server">Example 1: Context Echo Server</a></h3>
 <p>The following program fragment demonstrates the use of contexts to implement
-a concurrent <a href="/proto/rep.html">REP</a> service that simply echos messages back
+a concurrent <a href="../../proto/rep.html">REP</a> service that simply echos messages back
 to the sender.</p>
 <pre><code class="language-c">struct echo_context {
     nng_ctx ctx;
@@ -452,8 +452,8 @@ echo(void *arg)
 </code></pre>
 <h3 id="example-2-starting-the-echo-service"><a class="header" href="#example-2-starting-the-echo-service">Example 2: Starting the Echo Service</a></h3>
 <p>Given the above fragment, the following example shows setting up the service.
-It assumes that the <a href="/TODO.html">socket</a> has already been
-created and any transports set up as well with functions such as <a href="/TODO.html"><code>nng_dial</code></a> or <a href="/TODO.html"><code>nng_listen</code></a>.</p>
+It assumes that the <a href="../../TODO.html">socket</a> has already been
+created and any transports set up as well with functions such as <a href="../../TODO.html"><code>nng_dial</code></a> or <a href="../../TODO.html"><code>nng_listen</code></a>.</p>
 <pre><code class="language-c">
 #define CONCURRENCY 1024
 
@@ -471,9 +471,14 @@ start_echo_service(nng_socket rep_socket)
     }
 }
 </code></pre>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

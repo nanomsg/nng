@@ -301,19 +301,19 @@ and could be used to listen to port 9999 on the host:</p>
 <li><code>udp://:9999</code></li>
 </ol>
 <h2 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h2>
-<p>When using an <a href="/TODO.html"><code>nng_sockaddr</code></a> structure,
+<p>When using an <a href="../../TODO.html"><code>nng_sockaddr</code></a> structure,
 the actual structure is either of type
-<a href="/TODO.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
-<a href="/TODO.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
+<a href="../../TODO.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
+<a href="../../TODO.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><a href="/api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></td><td><a href="/TODO.html"><code>nng_sockaddr</code></a></td><td>The locally bound address, will be either <a href="/TODO.html"><code>nng_sockaddr_in</code></a> or <a href="/TODO.html"><code>nng_sockaddr_in6</code></a>.</td></tr>
-<tr><td><a href="/api/sock.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></td><td><a href="/TODO.html"><code>nng_sockaddr</code></a></td><td>The remote peer address, will be either <a href="/TODO.html"><code>nng_sockaddr_in</code></a> or <a href="/TODO.html"><code>nng_sockaddr_in6</code></a>. Only valid for <a href="/api/pipe.html">pipe</a> and <a href="/TODO.html">dialer</a> objects.</td></tr>
-<tr><td><a href="/api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
+<tr><td><a href="../../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></td><td><a href="../../TODO.html"><code>nng_sockaddr</code></a></td><td>The locally bound address, will be either <a href="../../TODO.html"><code>nng_sockaddr_in</code></a> or <a href="../../TODO.html"><code>nng_sockaddr_in6</code></a>.</td></tr>
+<tr><td><a href="../../api/sock.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></td><td><a href="../../TODO.html"><code>nng_sockaddr</code></a></td><td>The remote peer address, will be either <a href="../../TODO.html"><code>nng_sockaddr_in</code></a> or <a href="../../TODO.html"><code>nng_sockaddr_in6</code></a>. Only valid for <a href="../../api/pipe.html">pipe</a> and <a href="../../TODO.html">dialer</a> objects.</td></tr>
+<tr><td><a href="../../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
-<tr><td><code>NNG_OPT_UDP_BOUND_PORT</code><a name="NNG_OPT_UDP_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="/TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_UDP_BOUND_PORT</code><a name="NNG_OPT_UDP_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="../../TODO.html">listener</a> objects only.</td></tr>
 </tbody></table>
 </div>
 <h2 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h2>
@@ -334,16 +334,21 @@ the final user accessible payload will be 1140 bytes. Thus this can be likely be
 as a safe maximum to employ for SP payload data across all transports.</p>
 <p>The maximum message size is negotiated as part of establishing a peering relationship,
 and oversize messages will be dropped by the sender before going to the network.</p>
-<p>The maximum message size to receive can be configured with the <a href="/api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> option.</p>
+<p>The maximum message size to receive can be configured with the <a href="../../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> option.</p>
 <h2 id="keep-alive"><a class="header" href="#keep-alive">Keep Alive</a></h2>
 <p>This transports maintains a logical “connection” with each peer, to provide a rough
 facsimile of a connection based semantic. This requires some resource on each peer.
 In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
 keep-alive mechanism is implemented.</p>
 <p>TODO: Document the tunables for this.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->

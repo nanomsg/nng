@@ -265,8 +265,8 @@ request headers, response status, response headers, and so forth.</p>
 performed after the first transaction is complete.</p>
 <p>At any given point in time, an <code>nng_http</code> object can only refer to a single HTTP transaction.
 In NNG, these <code>nng_http</code> objects are used in both the client and server APIs.</p>
-<p>The <code>nng_http</code> object is created by either <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or by an HTTP server
-object which then passes it to an <a href="/api/http.html#handlers"><code>nng_http_handler</code></a> callback function.</p>
+<p>The <code>nng_http</code> object is created by either <a href="../../api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or by an HTTP server
+object which then passes it to an <a href="../../api/http.html#handlers"><code>nng_http_handler</code></a> callback function.</p>
 <h3 id="http-method"><a class="header" href="#http-method">HTTP Method</a></h3>
 <pre><code class="language-c">void nng_http_set_method(nng_http *conn, const char *method);
 const char *nng_http_get_method(nng_http *conn);
@@ -285,8 +285,8 @@ const char *nng_http_get_uri(nng_http *conn);
 <p>The <a name="a004"></a><code>nng_http_set_uri</code> function sets the <a name="a005"></a>URI, which normally appears like a path such as “/docs/index.html”,
 for the next transaction on <em>conn</em>. It sets the URI to <em>uri</em>, and, if <em>query</em> is not <code>NULL</code>, also appends the
 contents of <em>query</em>, separated by either the ‘?’ or ‘&amp;’ character, depending on whether <em>uri</em> already
-contains a query string. It may return <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, or <a href="/api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a> if the the result is too long,
-or <a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if there is some other problem with the URI.</p>
+contains a query string. It may return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, or <a href="../../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a> if the the result is too long,
+or <a href="../../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if there is some other problem with the URI.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -304,7 +304,7 @@ const char *nng_http_get_version(nng_http *conn);
 <p>The <a name="a007"></a><code>nng_http_set_version</code> function is used to select the HTTP protocol version to use for the
 exchange. At present, only the values <code>NNG_HTTP_VERSION_1_0</code> and <code>NNG_HTTP_VERSION_1_1</code> (corresponding to
 “HTTP/1.0” and “HTTP/1.1”) are supported. NNG will default to using “HTTP/1.1” if this function is not called.
-If an unsupported version is supplied, <a href="/api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> will be returned, otherwise zero.</p>
+If an unsupported version is supplied, <a href="../../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> will be returned, otherwise zero.</p>
 <p>The <a name="a008"></a><code>nng_http_get_version</code> function is used to determine the version the client selected. Normally
 there is little need to use this, but there are some subtle semantic differences between HTTP/1.0 and HTTP/1.1.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
@@ -340,72 +340,72 @@ then a built in reason based on the <em>status</em> will be used instead.</p>
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Callbacks used on the server may wish to use <a href="/TODO.html"><code>nng_http_server_set_error</code></a> or <a href="/TODO.html"><code>nng_http_server_set_redirect</code></a> instead of
+<p>Callbacks used on the server may wish to use <a href="../../TODO.html"><code>nng_http_server_set_error</code></a> or <a href="../../TODO.html"><code>nng_http_server_set_redirect</code></a> instead of
 <code>nng_http_set_status</code>, because those functions will also set the response body to a suitable HTML document
 for display to users.</p>
 </div>
 <p>Status codes are defined by the IETF. Here are definitions that NNG provides for convenience:</p>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Code</th><th>Reason Text</th><th>Notes</th></tr></thead><tbody>
-<tr><td><code>NNG_HTTP_STATUS_CONTINUE</code><a name="#NNG_HTTP_STATUS_CONTINUE"></a></td><td>100</td><td>Continue</td><td>Partial transfer, client may send body.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_SWITCHING</code><a name="#NNG_HTTP_STATUS_SWITCHING"></a></td><td>101</td><td>Switching Protocols</td><td>Used when upgrading or hijacking a connection.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PROCESSING</code><a name="#NNG_HTTP_STATUS_PROCESSING"></a></td><td>102</td><td>Processing</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_OK</code><a name="#NNG_HTTP_STATUS_OK"></a></td><td>200</td><td>OK</td><td>Successful result.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_CREATED</code><a name="#NNG_HTTP_STATUS_CREATED"></a></td><td>201</td><td>Created</td><td>Resource created successfully.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_ACCEPTED</code><a name="#NNG_HTTP_STATUS_ACCEPTED"></a></td><td>202</td><td>Created</td><td>Request accepted for future processing.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NOT_AUTHORITATIVE</code><a name="#NNG_HTTP_STATUS_NOT_AUTHORITATIVE"></a></td><td>203</td><td>Not Authoritative</td><td>Request successful, but modified by proxy.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NO_CONTENT</code><a name="#NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>204</td><td>No Content</td><td>Request successful, no content returned.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_RESET_CONTENT</code><a name="#NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>205</td><td>Reset Content</td><td>Request successful, client should reload content.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PARTIAL_CONTENT</code><a name="#NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>206</td><td>Partial Content</td><td>Response to a range request.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_MULTI_STATUS</code><a name="#NNG_HTTP_STATUS_MULTI_STATUS"></a></td><td>207</td><td>Multi-Status</td><td>Used with WebDAV.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_ALREADY_REPORTED</code><a name="#NNG_HTTP_STATUS_ALREADY_REPORTED"></a></td><td>208</td><td>Already Reported</td><td>Used with WebDAV.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_IM_USED</code><a name="#NNG_HTTP_STATUS_IM_USED"></a></td><td>226</td><td>IM Used</td><td>Used with delta encodings, rarely supported.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_MULTIPLE_CHOICES</code><a name="#NNG_HTTP_STATUS_MULTIPLE_CHOICES"></a></td><td>300</td><td>Multiple Choices</td><td>Multiple responses possible, client should choose.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_MOVED_PERMANENTLY</code><a name="#NNG_HTTP_STATUS_MOVED_PERMANENTLY"></a></td><td>301</td><td>Moved Permanently</td><td>Permanent redirection, may be saved by client.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_FOUND</code><a name="#NNG_HTTP_STATUS_FOUND"></a></td><td>302</td><td>Found</td><td>Temporary redirection, client may switch to GET.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_SEE_OTHER</code><a name="#NNG_HTTP_STATUS_SEE_OTHER"></a></td><td>303</td><td>See Other</td><td>Redirect, perhaps after a success POST or PUT.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NOT_MODIFIED</code><a name="#NNG_HTTP_STATUS_NOT_MODIFIED"></a></td><td>304</td><td>Not Modified</td><td>Resource not modified, client may use cached version.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_USE_PROXY</code><a name="#NNG_HTTP_STATUS_USE_PROXY"></a></td><td>305</td><td>Use Proxy</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code><a name="#NNG_HTTP_STATUS_TEMPORARY_REDIRECT"></a></td><td>307</td><td>Temporary Redirect</td><td>Temporary redirect, preserves method.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PERMANENT_REDIRECT</code><a name="#NNG_HTTP_STATUS_PERMANENT_REDIRECT"></a></td><td>308</td><td>Permanent Redirect</td><td>Permanent redirect.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_BAD_REQUEST</code><a name="#NNG_HTTP_STATUS_BAD_REQUEST"></a></td><td>400</td><td>Bad Request</td><td>Generic problem with the request.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UNAUTHORIZED</code><a name="#NNG_HTTP_STATUS_UNAUTHORIZED"></a></td><td>401</td><td>Unauthorized</td><td>Indicates a problem with authentication.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PAYMENT_REQUIRED</code><a name="#NNG_HTTP_STATUS_PAYMENT_REQUIRED"></a></td><td>402</td><td>Payment Required</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_FORBIDDEN</code><a name="#NNG_HTTP_STATUS_FORBIDDEN"></a></td><td>403</td><td>Forbidden</td><td>No permission to access resource.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NOT_FOUND</code><a name="#NNG_HTTP_STATUS_NOT_FOUND"></a></td><td>404</td><td>Not Found</td><td>Resource does not exist.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_METHOD_NOT_ALLOWED</code><a name="#NNG_HTTP_STATUS_METHOD_NOT_ALLOWED"></a></td><td>405</td><td>Method Not Allowed</td><td>Resource does not support the method.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE</code><a name="#NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE"></a></td><td>406</td><td>Not Acceptable</td><td>Could not satisfy accept requirements.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED</code><a name="#NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED"></a></td><td>407</td><td>Proxy Authentication Required</td><td>Proxy requires authentication.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_REQUEST_TIMEOUT</code><a name="#NNG_HTTP_STATUS_REQUEST_TIMEOUT"></a></td><td>408</td><td>Request Timeout</td><td>Timed out waiting for request.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_CONFLICT</code><a name="#NNG_HTTP_STATUS_CONFLICT"></a></td><td>409</td><td>Conflict</td><td>Conflicting request.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_GONE</code><a name="#NNG_HTTP_STATUS_GONE"></a></td><td>410</td><td>Gone</td><td>Resource no longer exists.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_LENGTH_REQUIRED</code><a name="#NNG_HTTP_STATUS_LENGTH_REQUIRED"></a></td><td>411</td><td>Length Required</td><td>Missing Content-Length.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PRECONDITION_FAILED</code><a name="#NNG_HTTP_STATUS_PRECONDITION_FAILED"></a></td><td>412</td><td>Precondition Failed</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code><a name="#NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE"></a></td><td>413</td><td>Content Too Large</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_URI_TOO_LONG</code><a name="#NNG_HTTP_STATUS_URI_TOO_LONG"></a></td><td>414</td><td>URI Too Long</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE</code><a name="#NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE"></a></td><td>415</td><td>Unsupported Media Type</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE</code><a name="#NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE"></a></td><td>416</td><td>Range Not Satisfiable</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_EXPECTATION_FAILED</code><a name="#NNG_HTTP_STATUS_EXPECTATION_FAILED"></a></td><td>417</td><td>Expectation Failed</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_TEAPOT</code><a name="#NNG_HTTP_STATUS_TEAPOT"></a></td><td>418</td><td>I Am A Teapot</td><td>RFC 2324.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY</code><a name="#NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a></td><td>422</td><td>Unprocessable Entity</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_LOCKED</code><a name="#NNG_HTTP_STATUS_LOCKED"></a></td><td>423</td><td>Locked</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_FAILED_DEPENDENCY</code><a name="#NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a></td><td>424</td><td>Failed Dependency</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_TOO_EARLY</code><a name="#NNG_HTTP_STATUS_TOO_EARLY"></a></td><td>425</td><td>Too Early</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UPGRADE_REQUIRED</code><a name="#NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a></td><td>426</td><td>Upgrade Required</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PRECONDITION_REQUIRED</code><a name="#NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a></td><td>428</td><td>Precondition Required</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_TOO_MANY_REQUESTS</code><a name="#NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a></td><td>429</td><td>Too Many Requests</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_HEADERS_TOO_LARGE</code><a name="#NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a></td><td>431</td><td>Headers Too Large</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</code><a name="#NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a></td><td>451</td><td>Unavailable For Legal Reasons</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</code><a name="#NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a></td><td>500</td><td>Internal Server Error</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NOT_IMPLEMENTED</code><a name="#NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a></td><td>501</td><td>Not Implemented</td><td>Server does not implement method.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_BAD_GATEWAY</code><a name="#NNG_HTTP_STATUS_BAD_GATEWAY"></a></td><td>502</td><td>Bad Gateway</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_SERVICE_UNAVAILALE</code><a name="#NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a></td><td>503</td><td>Service Unavailable</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_GATEWAY_TIMEOUT</code><a name="#NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a></td><td>504</td><td>Gateway TImeout</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP</code><a name="#NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP"></a></td><td>505</td><td>HTTP Version Not Supported</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES</code><a name="#NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES"></a></td><td>506</td><td>Variant Also Negotiates</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_INSUFFICIENT_STORAGE</code><a name="#NNG_HTTP_STATUS_INSUFFICIENT_STORAGE"></a></td><td>507</td><td>Variant Also Negotiates</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_LOOP_DETECTED</code><a name="#NNG_HTTP_STATUS_LOOP_DETECTED"></a></td><td>508</td><td>Loop Detected</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NOT_EXTENDED</code><a name="#NNG_HTTP_STATUS_NOT_EXTENDED"></a></td><td>510</td><td>Not Extended</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED</code><a name="#NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED"></a></td><td>511</td><td>Network Authentication Required</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_CONTINUE</code><a name="NNG_HTTP_STATUS_CONTINUE"></a></td><td>100</td><td>Continue</td><td>Partial transfer, client may send body.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_SWITCHING</code><a name="NNG_HTTP_STATUS_SWITCHING"></a></td><td>101</td><td>Switching Protocols</td><td>Used when upgrading or hijacking a connection.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PROCESSING</code><a name="NNG_HTTP_STATUS_PROCESSING"></a></td><td>102</td><td>Processing</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_OK</code><a name="NNG_HTTP_STATUS_OK"></a></td><td>200</td><td>OK</td><td>Successful result.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_CREATED</code><a name="NNG_HTTP_STATUS_CREATED"></a></td><td>201</td><td>Created</td><td>Resource created successfully.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_ACCEPTED</code><a name="NNG_HTTP_STATUS_ACCEPTED"></a></td><td>202</td><td>Created</td><td>Request accepted for future processing.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NOT_AUTHORITATIVE</code><a name="NNG_HTTP_STATUS_NOT_AUTHORITATIVE"></a></td><td>203</td><td>Not Authoritative</td><td>Request successful, but modified by proxy.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NO_CONTENT</code><a name="NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>204</td><td>No Content</td><td>Request successful, no content returned.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_RESET_CONTENT</code><a name="NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>205</td><td>Reset Content</td><td>Request successful, client should reload content.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PARTIAL_CONTENT</code><a name="NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>206</td><td>Partial Content</td><td>Response to a range request.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_MULTI_STATUS</code><a name="NNG_HTTP_STATUS_MULTI_STATUS"></a></td><td>207</td><td>Multi-Status</td><td>Used with WebDAV.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_ALREADY_REPORTED</code><a name="NNG_HTTP_STATUS_ALREADY_REPORTED"></a></td><td>208</td><td>Already Reported</td><td>Used with WebDAV.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_IM_USED</code><a name="NNG_HTTP_STATUS_IM_USED"></a></td><td>226</td><td>IM Used</td><td>Used with delta encodings, rarely supported.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_MULTIPLE_CHOICES</code><a name="NNG_HTTP_STATUS_MULTIPLE_CHOICES"></a></td><td>300</td><td>Multiple Choices</td><td>Multiple responses possible, client should choose.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_MOVED_PERMANENTLY</code><a name="NNG_HTTP_STATUS_MOVED_PERMANENTLY"></a></td><td>301</td><td>Moved Permanently</td><td>Permanent redirection, may be saved by client.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_FOUND</code><a name="NNG_HTTP_STATUS_FOUND"></a></td><td>302</td><td>Found</td><td>Temporary redirection, client may switch to GET.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_SEE_OTHER</code><a name="NNG_HTTP_STATUS_SEE_OTHER"></a></td><td>303</td><td>See Other</td><td>Redirect, perhaps after a success POST or PUT.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NOT_MODIFIED</code><a name="NNG_HTTP_STATUS_NOT_MODIFIED"></a></td><td>304</td><td>Not Modified</td><td>Resource not modified, client may use cached version.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_USE_PROXY</code><a name="NNG_HTTP_STATUS_USE_PROXY"></a></td><td>305</td><td>Use Proxy</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code><a name="NNG_HTTP_STATUS_TEMPORARY_REDIRECT"></a></td><td>307</td><td>Temporary Redirect</td><td>Temporary redirect, preserves method.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PERMANENT_REDIRECT</code><a name="NNG_HTTP_STATUS_PERMANENT_REDIRECT"></a></td><td>308</td><td>Permanent Redirect</td><td>Permanent redirect.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_BAD_REQUEST</code><a name="NNG_HTTP_STATUS_BAD_REQUEST"></a></td><td>400</td><td>Bad Request</td><td>Generic problem with the request.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UNAUTHORIZED</code><a name="NNG_HTTP_STATUS_UNAUTHORIZED"></a></td><td>401</td><td>Unauthorized</td><td>Indicates a problem with authentication.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PAYMENT_REQUIRED</code><a name="NNG_HTTP_STATUS_PAYMENT_REQUIRED"></a></td><td>402</td><td>Payment Required</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_FORBIDDEN</code><a name="NNG_HTTP_STATUS_FORBIDDEN"></a></td><td>403</td><td>Forbidden</td><td>No permission to access resource.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NOT_FOUND</code><a name="NNG_HTTP_STATUS_NOT_FOUND"></a></td><td>404</td><td>Not Found</td><td>Resource does not exist.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_METHOD_NOT_ALLOWED</code><a name="NNG_HTTP_STATUS_METHOD_NOT_ALLOWED"></a></td><td>405</td><td>Method Not Allowed</td><td>Resource does not support the method.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE</code><a name="NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE"></a></td><td>406</td><td>Not Acceptable</td><td>Could not satisfy accept requirements.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED</code><a name="NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED"></a></td><td>407</td><td>Proxy Authentication Required</td><td>Proxy requires authentication.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_REQUEST_TIMEOUT</code><a name="NNG_HTTP_STATUS_REQUEST_TIMEOUT"></a></td><td>408</td><td>Request Timeout</td><td>Timed out waiting for request.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_CONFLICT</code><a name="NNG_HTTP_STATUS_CONFLICT"></a></td><td>409</td><td>Conflict</td><td>Conflicting request.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_GONE</code><a name="NNG_HTTP_STATUS_GONE"></a></td><td>410</td><td>Gone</td><td>Resource no longer exists.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_LENGTH_REQUIRED</code><a name="NNG_HTTP_STATUS_LENGTH_REQUIRED"></a></td><td>411</td><td>Length Required</td><td>Missing Content-Length.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PRECONDITION_FAILED</code><a name="NNG_HTTP_STATUS_PRECONDITION_FAILED"></a></td><td>412</td><td>Precondition Failed</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code><a name="NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE"></a></td><td>413</td><td>Content Too Large</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_URI_TOO_LONG</code><a name="NNG_HTTP_STATUS_URI_TOO_LONG"></a></td><td>414</td><td>URI Too Long</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE</code><a name="NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE"></a></td><td>415</td><td>Unsupported Media Type</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE</code><a name="NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE"></a></td><td>416</td><td>Range Not Satisfiable</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_EXPECTATION_FAILED</code><a name="NNG_HTTP_STATUS_EXPECTATION_FAILED"></a></td><td>417</td><td>Expectation Failed</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_TEAPOT</code><a name="NNG_HTTP_STATUS_TEAPOT"></a></td><td>418</td><td>I Am A Teapot</td><td>RFC 2324.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY</code><a name="NNG_HTTP_STATUS_UNPROCESSABLE_ENTITY"></a></td><td>422</td><td>Unprocessable Entity</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_LOCKED</code><a name="NNG_HTTP_STATUS_LOCKED"></a></td><td>423</td><td>Locked</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_FAILED_DEPENDENCY</code><a name="NNG_HTTP_STATUS_FAILED_DEPENDENCY"></a></td><td>424</td><td>Failed Dependency</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_TOO_EARLY</code><a name="NNG_HTTP_STATUS_TOO_EARLY"></a></td><td>425</td><td>Too Early</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UPGRADE_REQUIRED</code><a name="NNG_HTTP_STATUS_UPGRADE_REQUIRED"></a></td><td>426</td><td>Upgrade Required</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PRECONDITION_REQUIRED</code><a name="NNG_HTTP_STATUS_PRECONDITION_REQUIRED"></a></td><td>428</td><td>Precondition Required</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_TOO_MANY_REQUESTS</code><a name="NNG_HTTP_STATUS_TOO_MANY_REQUESTS"></a></td><td>429</td><td>Too Many Requests</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_HEADERS_TOO_LARGE</code><a name="NNG_HTTP_STATUS_HEADERS_TOO_LARGE"></a></td><td>431</td><td>Headers Too Large</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS</code><a name="NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS"></a></td><td>451</td><td>Unavailable For Legal Reasons</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</code><a name="NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a></td><td>500</td><td>Internal Server Error</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NOT_IMPLEMENTED</code><a name="NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a></td><td>501</td><td>Not Implemented</td><td>Server does not implement method.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_BAD_GATEWAY</code><a name="NNG_HTTP_STATUS_BAD_GATEWAY"></a></td><td>502</td><td>Bad Gateway</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_SERVICE_UNAVAILALE</code><a name="NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a></td><td>503</td><td>Service Unavailable</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_GATEWAY_TIMEOUT</code><a name="NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a></td><td>504</td><td>Gateway TImeout</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP</code><a name="NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP"></a></td><td>505</td><td>HTTP Version Not Supported</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES</code><a name="NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES"></a></td><td>506</td><td>Variant Also Negotiates</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_INSUFFICIENT_STORAGE</code><a name="NNG_HTTP_STATUS_INSUFFICIENT_STORAGE"></a></td><td>507</td><td>Variant Also Negotiates</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_LOOP_DETECTED</code><a name="NNG_HTTP_STATUS_LOOP_DETECTED"></a></td><td>508</td><td>Loop Detected</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NOT_EXTENDED</code><a name="NNG_HTTP_STATUS_NOT_EXTENDED"></a></td><td>510</td><td>Not Extended</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED</code><a name="NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED"></a></td><td>511</td><td>Network Authentication Required</td><td></td></tr>
 </tbody></table>
 </div>
 <h3 id="retrieving-headers"><a class="header" href="#retrieving-headers">Retrieving Headers</a></h3>
@@ -432,11 +432,11 @@ void nng_http_del_header(nng_http *conn, const char *key);
 </code></pre>
 <p>The <a name="a015"></a><code>nng_http_add_header</code>, <a name="a016"></a><code>nng_http_set_header</code>, and <a name="a017"></a><code>nng_http_del_header</code> functions are
 used to add a modify either the request or response headers for <em>conn</em> prior to sending to the connected peer on <em>conn</em>.</p>
-<p>Thus, if the <em>conn</em> is a client connection created by <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, then the request headers are modified.
+<p>Thus, if the <em>conn</em> is a client connection created by <a href="../../api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, then the request headers are modified.
 Conversely, if it is a connection created by an HTTP server and used in a callback function, then the response headers are modified.</p>
 <p>The <code>nng_http_add_header</code> function adds a header with the name <em>key</em>, and the value <em>val</em>, to the list of headers.
 In so doing, it may bring collapse multiple headers with the same name into a comma separated list, following
-the syntax specified in RFC 9110. The function may return <a href="/api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, <a href="/api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a>, or <a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.</p>
+the syntax specified in RFC 9110. The function may return <a href="../../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, <a href="../../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a>, or <a href="../../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.</p>
 <p>The <code>nng_http_set_header</code> function adds the header if it does not already exist, but replaces any and all previously existing
 headers with the same name <em>key</em>, if they exist. In all other respects it behaves similarly to <code>nng_http_add_header</code>.</p>
 <p>The <code>nng_http_del_header</code> removes all headers with name <em>key</em>.</p>
@@ -495,7 +495,7 @@ including any disposing of any underlying file descriptors or related resources.
 </code></pre>
 <p>The <a name="a022"></a><code>nng_http_reset</code> function resets the request and response state of the
 the connection <em>conn</em>, so that it is just as if it had been freshly created with
-<a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or passed into a handler function for a server callback.</p>
+<a href="../../api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or passed into a handler function for a server callback.</p>
 <p>The intended purpose of this function is to clear the object state before reusing the <em>conn</em> for
 subsequent transactions.</p>
 <h3 id="direct-read-and-write"><a class="header" href="#direct-read-and-write">Direct Read and Write</a></h3>
@@ -505,11 +505,11 @@ void nng_http_read_all(nng_http *conn, nng_aio *aio);
 void nng_http_write_all(nng_http *conn, nng_aio *aio);
 </code></pre>
 <p>The <a name="a023"></a><code>nng_http_read</code> and <a name="a024"></a><code>nng_http_write</code> functions read or write data asynchronously from or to the
-connection <em>conn</em>, using the <a href="/api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> that is set in <em>aio</em> with <a href="/api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.
+connection <em>conn</em>, using the <a href="../../api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> that is set in <em>aio</em> with <a href="../../api/aio.html#scatter-gather-vectors"><code>nng_aio_set_iov</code></a>.
 These functions will complete as soon as any data is transferred.
-Use <a href="/api/aio.html#result-of-operation"><code>nng_aio_count</code></a> to determine how much data was actually transferred.</p>
+Use <a href="../../api/aio.html#result-of-operation"><code>nng_aio_count</code></a> to determine how much data was actually transferred.</p>
 <p>The <a name="a025"></a><code>nng_http_read_all</code> and <a name="a026"></a><code>nng_http_write_all</code> functions perform the same task, but will keep resubmitting
-operations until the the entire amount of data requested by the <a href="/api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> is transferred.</p>
+operations until the the entire amount of data requested by the <a href="../../api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> is transferred.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -517,7 +517,7 @@ operations until the the entire amount of data requested by the <a href="/api/ai
 </p>
 <p>These functions perform no special handling for chunked transfers.</p>
 </div>
-<p>These functions are most likely to be useful after hijacking the connection with <a href="/api/http.html#hijacking-connections"><code>nng_http_hijack</code></a>.
+<p>These functions are most likely to be useful after hijacking the connection with <a href="../../api/http.html#hijacking-connections"><code>nng_http_hijack</code></a>.
 They can be used to transfer request or response body data as well.</p>
 <h3 id="hijacking-connections"><a class="header" href="#hijacking-connections">Hijacking Connections</a></h3>
 <pre><code class="language-c">nng_err nng_http_hijack(nng_http *conn);
@@ -529,7 +529,7 @@ to be disassociated from the HTTP server where it was created.</p>
 WebSocket), where the underlying HTTP connection will be taken over for
 some other purpose, and should not be used any further by the server.</p>
 <p>This function is most useful when called from a handler function.
-(See <a href="/api/http.html#handlers"><code>nng_http_handler_alloc</code></a>.)</p>
+(See <a href="../../api/http.html#handlers"><code>nng_http_handler_alloc</code></a>.)</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -537,7 +537,7 @@ some other purpose, and should not be used any further by the server.</p>
 </p>
 <p>It is the responsibility of the caller to dispose of the underlying connection when it is no longer needed.
 Furthermore, the HTTP server will no longer send any responses to the hijacked connection, so the caller should do that as well if appropriate.
-(See <a href="/api/http.html#sending-the-response-explicitly"><code>nng_http_write_response</code></a>.)</p>
+(See <a href="../../api/http.html#sending-the-response-explicitly"><code>nng_http_write_response</code></a>.)</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -554,7 +554,7 @@ Most applications will never need to use this function.</p>
 <p>The <a name="a028"></a><code>nng_http_peer_cert</code> function will obtain the TLS certificate object for the peer, if one is available.
 This can then be used for additional authentication or identity specific logic.</p>
 <p>The certificate must be released with [<code>nng_tls_cert_free</code>] when no longer in use.
-See [<code>nng_tls_cert</code>] for more information about working with TLS certificates.</p>
+See <a href="../../TODO.html"><code>nng_tls_cert</code></a> for more information about working with TLS certificates.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -571,8 +571,8 @@ transactions on those connections.</p>
 <h3 id="client-object"><a class="header" href="#client-object">Client Object</a></h3>
 <pre><code class="language-c">typedef struct nng_http_client nng_http_client;
 </code></pre>
-<p>The <a name="a029"></a><code>nng_http_client</code> object is the client side creator for <a href="/api/http.html#connection-object"><code>nng_http</code></a> objects.
-It is analogous to a <a href="/TODO.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
+<p>The <a name="a029"></a><code>nng_http_client</code> object is the client side creator for <a href="../../api/http.html#connection-object"><code>nng_http</code></a> objects.
+It is analogous to a <a href="../../TODO.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
 <pre><code class="language-c">void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 </code></pre>
@@ -589,7 +589,7 @@ of its resources.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>Any connections created by <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a> are not affected by this function,
+<p>Any connections created by <a href="../../api/http.html#creating-connections"><code>nng_http_client_connect</code></a> are not affected by this function,
 and must be closed explicitly as needed.</p>
 </div>
 <h3 id="client-tls"><a class="header" href="#client-tls">Client TLS</a></h3>
@@ -597,10 +597,10 @@ and must be closed explicitly as needed.</p>
 nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 </code></pre>
 <p>The <a name="a032"></a><code>nng_http_client_get_tls</code> and <a name="a033"></a><code>nng_http_client_set_tls</code> functions are used to
-retrieve or change the <a href="/TODO.html">TLS configuration</a> used when making outbound connections, enabling
+retrieve or change the <a href="../../TODO.html">TLS configuration</a> used when making outbound connections, enabling
 <a name="a034"></a>TLS as a result.</p>
-<p>If TLS has not been previously configured on <em>client</em>, then <code>nng_http_client_get_tls</code> will return <a href="/api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
-Both functions will return <a href="/api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if either HTTP or TLS is not supported.</p>
+<p>If TLS has not been previously configured on <em>client</em>, then <code>nng_http_client_get_tls</code> will return <a href="../../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
+Both functions will return <a href="../../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if either HTTP or TLS is not supported.</p>
 <p>Calling <code>nng_http_client_set_tls</code> invalidates any client previously obtained with
 <code>nng_http_client_get_tls</code>, unless a separate hold on the object was obtained.</p>
 <p>Once TLS is enabled for an <code>nng_http_client</code>, it is not possible to disable TLS.</p>
@@ -610,7 +610,7 @@ Both functions will return <a href="/api/errors.html#NNG_ENOTSUP"><code>NNG_ENOT
   note
 </p>
 <p>The TLS configuration itself cannot be changed once it has been used to create a connection,
-such as by calling <a href="/api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, but a new one can be installed in the client.
+such as by calling <a href="../../api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, but a new one can be installed in the client.
 Existing connections will use the TLS configuration that there were created with.</p>
 </div>
 <h3 id="creating-connections"><a class="header" href="#creating-connections">Creating Connections</a></h3>
@@ -619,9 +619,9 @@ Existing connections will use the TLS configuration that there were created with
 void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
 </code></pre>
 <p>The <a name="a035"></a><code>nng_http_client_connect</code> function makes an outgoing connection to the
-server configured for <em>client</em>, and creates an <a href="/api/http.html#connection-object"><code>nng_http</code></a> object for the connection.</p>
+server configured for <em>client</em>, and creates an <a href="../../api/http.html#connection-object"><code>nng_http</code></a> object for the connection.</p>
 <p>This is done asynchronously, and when the operation succeseds the connection may be
-retried from the <em>aio</em> using <a href="/api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> with index 0.</p>
+retried from the <em>aio</em> using <a href="../../api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> with index 0.</p>
 <h4 id="example-1-connecting-to-google"><a class="header" href="#example-1-connecting-to-google">Example 1: Connecting to Google</a></h4>
 <pre><code class="language-c">nng_aio *aio;
 nng_url *url;
@@ -660,16 +660,16 @@ the HTTP request associated with <em>conn</em>.
 The entire request is sent,
 including headers, and if present, the request body data.
 (The request body can be set with
-<a href="/api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="/api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.)</p>
+<a href="../../api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="../../api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.)</p>
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>, and the final result
-may be obtained via <a href="/api/aio.html#result-of-operation"><code>nng_aio_result</code></a>.</p>
+may be obtained via <a href="../../api/aio.html#result-of-operation"><code>nng_aio_result</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Consider using the [<code>nng_http_transact</code>] function,
+<p>Consider using the <a href="../../api/http.html#submitting-the-transaction"><code>nng_http_transact</code></a> function,
 which provides a simpler interface for performing a complete HTTP client transaction.</p>
 </div>
 <h3 id="obtaining-the-response"><a class="header" href="#obtaining-the-response">Obtaining the Response</a></h3>
@@ -678,7 +678,7 @@ which provides a simpler interface for performing a complete HTTP client transac
 <p>The <a name="a037"></a><code>nng_http_read_response</code> function starts an asynchronous read from the
 HTTP connection <em>conn</em>, reading an HTTP response into the response associated with <em>conn</em>, including all
 of the related headers.</p>
-<p>It does <em>not</em> transfer any response body. To do that, use <a href="/api/http.html#direct-read-and-write"><code>nng_http_read_all</code></a> or <a href="/api/http.html#direct-read-and-write"><code>nng_http_read</code></a>.</p>
+<p>It does <em>not</em> transfer any response body. To do that, use <a href="../../api/http.html#direct-read-and-write"><code>nng_http_read_all</code></a> or <a href="../../api/http.html#direct-read-and-write"><code>nng_http_read</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -692,7 +692,7 @@ need to do so may use the direct read functions.</p>
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>An easier one-shot method for many use cases might be [<code>nng_http_transact</code>].</p>
+<p>An easier one-shot method for many use cases might be <a href="../../api/http.html#submitting-the-transaction"><code>nng_http_transact</code></a>.</p>
 </div>
 <h3 id="submitting-the-transaction"><a class="header" href="#submitting-the-transaction">Submitting the Transaction</a></h3>
 <pre><code class="language-c">void nng_http_transact(nng_http *conn, nng_aio *aio);
@@ -703,11 +703,11 @@ When the function is complete, the <em>aio</em> will be notified.</p>
 HTTP exchange over the connection <em>conn</em>, sending the request
 and attached body data to the remote server, and reading the response.</p>
 <p>The entire response is read, including any associated body, which can
-subsequently be obtained using [<code>nng_http_get_data</code>].</p>
+subsequently be obtained using <a href="../../api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a>.</p>
 <p>This function is intended to make creation of client applications easier,
 by performing multiple asynchronous operations required to complete an
 entire HTTP transaction.</p>
-<p>If an error occurs, the caller should close <em>conn</em> with <a href="/api/http.html#closing-the-connection"><code>nng_http_close</code></a>, as it may not
+<p>If an error occurs, the caller should close <em>conn</em> with <a href="../../api/http.html#closing-the-connection"><code>nng_http_close</code></a>, as it may not
 necessarily be usable with other transactions.</p>
 <div class="mdbook-alerts mdbook-alerts-warning">
 <p class="mdbook-alerts-title">
@@ -731,7 +731,7 @@ request interleaving.</p>
 </div>
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>, and the final result
-may be obtained via [<code>nng_aio_result()</code>].</p>
+may be obtained via <a href="../../api/aio.html#result-of-operation"><code>nng_aio_result</code></a>.</p>
 <h3 id="response-body"><a class="header" href="#response-body">Response Body</a></h3>
 <h2 id="server-api"><a class="header" href="#server-api">Server API</a></h2>
 <h3 id="handlers"><a class="header" href="#handlers">Handlers</a></h3>
@@ -745,7 +745,7 @@ Only the path component of the Request URI is considered when determining whethe
 <p>This implementation limits the <em>path</em> length to 1024 bytes, including the
 zero termination byte. This does not prevent requests with much longer
 URIs from being supported, but doing so will require setting the handler to match a parent path in the tree using
-[<code>nng_http_handler_set_tree</code>].</p>
+<a href="../../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -754,11 +754,11 @@ URIs from being supported, but doing so will require setting the handler to matc
 <p>The NNG HTTP framework is optimized for URLs shorter than 200 characters.</p>
 </div>
 <p>Additionally each handler has a method it is registered to handle
-(the default is “GET” andc can be changed with <a href="/api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a>), and
-optionally a “Host” header it can be matched against (see <a href="/api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a>).</p>
+(the default is “GET” andc can be changed with <a href="../../api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a>), and
+optionally a “Host” header it can be matched against (see <a href="../../api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a>).</p>
 <p>In some cases, a handler may reference a logical tree rather (directory)
 rather than just a single element.
-(See [<code>nng_http_handler_set_tree</code>]).</p>
+(See <a href="../../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a>).</p>
 <h3 id="implementing-a-handler"><a class="header" href="#implementing-a-handler">Implementing a Handler</a></h3>
 <pre><code class="language-c">typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
 
@@ -770,30 +770,30 @@ On success, a pointer to the handler is stored at the located pointed to by <em>
 <p>The handler function is specified by <em>cb</em>.
 This function uses the asynchronous I/O framework.</p>
 <p>The function receives the connection on <em>conn</em>, and an optional data pointer that was set
-previously with <a href="/api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a> as the second argument. The
-final argument is the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, which must be “finished” to complete the operation.</p>
-<p>The handler may call <a href="/api/http.html#sending-the-response-explicitly"><code>nng_http_write_response</code></a> to send the response, or
+previously with <a href="../../api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a> as the second argument. The
+final argument is the <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, which must be “finished” to complete the operation.</p>
+<p>The handler may call <a href="../../api/http.html#sending-the-response-explicitly"><code>nng_http_write_response</code></a> to send the response, or
 it may simply let the framework do so on its behalf. The server will perform
 this step if the callback has not already done so.</p>
-<p>Response headers may be set using <a href="/api/http.html#modifying-headers"><code>nng_http_set_header</code></a>, and request headers
-may be accessed by using <a href="/api/http.html#retrieving-headers"><code>nng_http_get_header</code></a>. They can also be iterated
-over using <a href="/api/http.html#retrieving-headers"><code>nng_http_next_header</code></a></p>
-<p>Likewise the request body may be accessed, using <a href="/api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a>, and
-the response body may be set using either <a href="/api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="/api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.</p>
+<p>Response headers may be set using <a href="../../api/http.html#modifying-headers"><code>nng_http_set_header</code></a>, and request headers
+may be accessed by using <a href="../../api/http.html#retrieving-headers"><code>nng_http_get_header</code></a>. They can also be iterated
+over using <a href="../../api/http.html#retrieving-headers"><code>nng_http_next_header</code></a></p>
+<p>Likewise the request body may be accessed, using <a href="../../api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a>, and
+the response body may be set using either <a href="../../api/http.html#storing-body-content"><code>nng_http_set_body</code></a> or <a href="../../api/http.html#storing-body-content"><code>nng_http_copy_body</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
 <p>The request body is only collected for the handler if the
-<a href="/api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a> function has been called for the handler.</p>
+<a href="../../api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a> function has been called for the handler.</p>
 </div>
-<p>The HTTP status should be set for the transaction using <a href="/api/http.html#http-status"><code>nng_http_set_status</code></a>.</p>
-<p>Finally, the handler should finish the operation by calling the <a href="/TODO.html"><code>nng_aio_finish</code></a> function
-after having set the status to <a href="/api/errors.html#NNG_OK"><code>NNG_OK</code></a>.
+<p>The HTTP status should be set for the transaction using <a href="../../api/http.html#http-status"><code>nng_http_set_status</code></a>.</p>
+<p>Finally, the handler should finish the operation by calling the <a href="../../TODO.html"><code>nng_aio_finish</code></a> function
+after having set the status to <a href="../../api/errors.html#NNG_OK"><code>NNG_OK</code></a>.
 If any other status is set on the <em>aio</em>, then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.</p>
-<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="/TODO.html"><code>nng_aio_start</code></a>.</p>
+<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="../../TODO.html"><code>nng_aio_start</code></a>.</p>
 <h3 id="serving-directories-and-files"><a class="header" href="#serving-directories-and-files">Serving Directories and Files</a></h3>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path, const char *dirname);
 nng_err nng_http_handler_alloc_file(nng_http_handler **hp, const char *path, const char *filename);
@@ -819,7 +819,7 @@ then a value of <code>application/octet-stream</code> is assumed.</p>
 </code></pre>
 <p>The <a name="a045"></a><code>nng_http_handler_alloc_redirect</code> function creates a handler with
 a function that simply directions from the URI at <em>path</em> to the given <em>location</em>.</p>
-<p>The HTTP reply it creates will be with <a href="/api/http.html#http-status">status code</a> <em>status</em>,
+<p>The HTTP reply it creates will be with <a href="../../api/http.html#http-status">status code</a> <em>status</em>,
 which should be a 3XX code such as 301, and a <code>Location:</code> header will contain the URL
 referenced by <em>location</em>, with any residual suffix from the request
 URI appended.</p>
@@ -828,7 +828,7 @@ URI appended.</p>
   <span class="mdbook-alerts-icon"></span>
   tip
 </p>
-<p>Use [<code>nng_http_handler_set_tree</code>] to redirect an entire tree.
+<p>Use <a href="../../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a> to redirect an entire tree.
 For example, it is possible to redirect an entire HTTP site to another
 HTTPS site by specifying <code>/</code> as the path and then using the base
 of the new site, such as <code>https://newsite.example.com</code> as the new location.</p>
@@ -839,10 +839,10 @@ of the new site, such as <code>https://newsite.example.com</code> as the new loc
   tip
 </p>
 <p>Be sure to use the appropriate value for <em>status</em>.
-Permanent redirection should use [<code>NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY</code>] (301)
-and temporary redirections should use <a href="/api/http.html#NNG_HTTP_STATUS_TEMPORARY_REDIRECT"><code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code></a> (307).
+Permanent redirection should use <a href="../../api/http.html#NNG_HTTP_STATUS_MOVED_PERMANENTLY"><code>NNG_HTTP_STATUS_MOVED_PERMANENTLY</code></a> (301)
+and temporary redirections should use <a href="../../api/http.html#NNG_HTTP_STATUS_TEMPORARY_REDIRECT"><code>NNG_HTTP_STATUS_TEMPORARY_REDIRECT</code></a> (307).
 In REST APIs, using a redirection to supply the new location of an object
-created with <code>POST</code> should use <a href="/api/http.html#NNG_HTTP_STATUS_SEE_OTHER"><code>NNG_HTTP_STATUS_SEE_OTHER</code></a> (303).</p>
+created with <code>POST</code> should use <a href="../../api/http.html#NNG_HTTP_STATUS_SEE_OTHER"><code>NNG_HTTP_STATUS_SEE_OTHER</code></a> (303).</p>
 </div>
 <h3 id="collecting-request-body"><a class="header" href="#collecting-request-body">Collecting Request Body</a></h3>
 <pre><code class="language-c">void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
@@ -851,12 +851,12 @@ created with <code>POST</code> should use <a href="/api/http.html#NNG_HTTP_STATU
 framework collect any request body for the request and attach it to the
 connection before calling the callback for the <em>handler</em>.</p>
 <p>Subsequently the data can be retrieved by the handler from the request with the
-<a href="/api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a> function.</p>
+<a href="../../api/http.html#retrieving-body-content"><code>nng_http_get_body</code></a> function.</p>
 <p>The collection is enabled if <em>want</em> is true.
 Furthermore, the data that the client may sent is limited by the
 value of <em>maxsz</em>.
 If the client attempts to send more data than <em>maxsz</em>, then the
-request will be terminated with <a href="/api/http.html#NNG_HTTP_STATUS_CONTENT_TOO_LARGE"><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code></a> (413).</p>
+request will be terminated with <a href="../../api/http.html#NNG_HTTP_STATUS_CONTENT_TOO_LARGE"><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code></a> (413).</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
@@ -903,7 +903,7 @@ The intended use of this function is deallocate any resources associated with <e
 <em>handler</em> will be called for, such as “GET” or “POST”.
 (By default the “GET” method is handled.)</p>
 <p>If <em>method</em> is <code>NULL</code> the handler will be executed for all methods.
-The handler may determine the actual method used with the <a href="/api/http.html#http-method"><code>nng_http_get_method</code></a> function.</p>
+The handler may determine the actual method used with the <a href="../../api/http.html#http-method"><code>nng_http_get_method</code></a> function.</p>
 <p>The server will automatically call “GET” handlers if the client
 sends a “HEAD” request, and will suppress HTTP body data in the responses
 sent for such requests.</p>
@@ -954,16 +954,21 @@ It can also provide a logical fallback instead of relying on a 404 error code.</
 <pre><code class="language-c">void nng_http_write_response(nng_http *conn, nng_aio *aio);
 </code></pre>
 <p>Normally the server will send any attached response, but there are circumstances where
-a response must be sent manually, such as when <a href="/api/http.html#hijacking-connections">hijacking</a> a connection.</p>
+a response must be sent manually, such as when <a href="../../api/http.html#hijacking-connections">hijacking</a> a connection.</p>
 <p>In such a case, <a name="a051"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
-using the <a href="/api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
+using the <a href="../../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
 <p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
 will be reused to receive new requests. For <code>HTTP/1.0</code>, or if the client has requested
 explicitly by setting the “Connection: close” header, the connection will be closed after the
 response is fully sent.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
 <!-- Symbol cross reference -->
 <!-- HTTP -->
 <!-- HTTP Status -->
+<!-- TLS -->
 <!-- Macros -->
 <!-- Protocols -->
 <!-- Transports -->
