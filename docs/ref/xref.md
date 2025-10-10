@@ -101,7 +101,9 @@
 [`nng_aio_set_timeout`]: ../api/aio.md#set-timeout
 [`nng_aio_set_iov`]: ../api/aio.md#scatter-gather-vectors
 [`nng_aio_get_output`]: ../api/aio.md#inputs-and-outputs
+[`nng_aio_get_input`]: ../api/aio.md#inputs-and-outputs
 [`nng_aio_set_input`]: ../api/aio.md#inputs-and-outputs
+[`nng_aio_set_output`]: ../api/aio.md#inputs-and-outputs
 [`nng_iov`]: ../api/aio.md#scatter-gather-vectors
 [`nng_socket_id`]: ../api/sock.md#socket-identity
 [`nng_socket_raw`]: ../api/sock.md#socket-identity
@@ -202,10 +204,9 @@
 [`nng_listener_set_tls`]: ../TODO.md
 [`nng_listener_get_tls`]: ../TODO.md
 [`nng_args_parse`]: ../api/args.md#parse-command-line-arguments
-[`nng_aio_finish`]: ../TODO.md
-[`nng_aio_reset`]: ../TODO.md
-[`nng_aio_start`]: ../TODO.md
-[`nng_aio_set_output`]: ../TODO.md
+[`nng_aio_finish`]: ../api/aio.md#finishing-an-operation
+[`nng_aio_reset`]: ../api/aio.md#starting-an-operation
+[`nng_aio_start`]: ../api/aio.md#starting-an-operation
 [`nng_recv`]: ../TODO.md
 [`nng_listener_get_url`]: ../TODO.md
 [`nng_dialer_get_url`]: ../TODO.md
@@ -506,3 +507,4 @@
 [polyamorous]: ../proto/pair.md#polyamorous-mode
 [libnanomsg]: https://github.com/nanomsg/nanomsg
 [mangos]: https://github.com/nanomsg/mangos
+[I/O provider]: ../api/aio.md#io-providers

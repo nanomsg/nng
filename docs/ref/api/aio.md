@@ -249,8 +249,10 @@ A maximum of four (4) `nng_iov` members may be supplied.
 ## Inputs and Outputs
 
 ```c
-void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
+void *nng_aio_get_input(nng_aio *aio, unsigned int index);
 void *nng_aio_get_output(nng_aio *aio, unsigned int index);
+void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
+void nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
 ```
 
 Asynchronous operations can take additional input parameters, and
@@ -259,11 +261,19 @@ provide additional result outputs besides the [result][`nng_aio_result`] code.
 The `nng_aio_set_input` function sets the input parameter at _index_
 to _param_ for the operation associated with _aio_.
 
-The `nng_aio_get_output` function returns the output result at _index_
-for the operation associated with _aio_.
+The `nng_aio_set_output` function sets the output result at _index_
+to _result_ for the operation associated with _aio_.
+
+The `nng_aio_get_output` function returns the output result previously set by `nng_aio_set_output`.
+
+The `nng_aio_get_input` function returns the input parameter previously set by `nng_aio_set_input`.
 
 The type and semantics of input parameters and output results are determined by specific
 operations. The documentation for the operation should provide details.
+
+> [!TIP]
+> Most applications will not need to use `nng_aio_get_input` or `nng_aio_set_output`, as those
+> are used by [I/O Providers][I/O provider].
 
 The valid values of _index_ range from zero (0) to three (3), as no operation
 currently defined can accept more than four parameters or return more than four additional
@@ -305,6 +315,87 @@ the duration of the operation, of course.
 Note that many of these operations are not guaranteed to perform a full transfer of data, so even a
 successful operation should check the amount of data actually transferred using [`nng_aio_count`],
 and if necessary resubmit the operation with a suitably updated vector of `nng_iov` using this function.
+
+## I/O Providers
+
+This section documents functions that are used by I/O providers, and will not be relevant
+for the majority of applications that simply utilize operations provided for by the library.
+
+However, these functions will be useful if an application wants to implement its own asynchronous operations using [`nng_aio`].
+
+### Starting an Operation
+
+```c
+typedef void (*nng_aio_cancelfn)(nng_aio *aio, void *arg, nng_err err);
+
+void nng_aio_reset(nng_aio *aio);
+bool nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg);
+```
+
+The {{i:`nng_aio_reset`}} function resets various fields in the _aio_.
+It can be called before starting an operation.
+
+The {{i:`nng_aio_start`}} function starts the operation associated with _aio_.
+It implies the same reset as `nng_aio_reset`. Thus, `nng_aio_reset` is typically
+only useful when used with operations that complete synchronously.
+The `nng_aio_start` function also registers the cancellation function _fn_ and
+associated argument _arg_ with the operation. This allows the operation to be canceled.
+
+> [!IMPORTANT]
+> This function must not be called on an _aio_ that is already has an operation in progress.
+
+If _fn_ is `NULL`, then the operation cannot be canceled.
+
+If `nng_aio_start` returns `false`, then the _aio_ has been permanently stopped
+and the operation cannot proceed. In this case the caller should cease all
+work with _aio_, and must not call [`nng_aio_finish`] or any other function,
+as the _aio_ is no longer valid for use.
+
+If `nng_aio_start` returns true, then the operation may proceed.
+
+> [!IMPORTANT]
+> Failure to check the return value from `nng_aio_start` can lead to deadlocks
+> or infinite loops.
+
+If the _aio_ is subsequently canceled, the cancellation routine _fn_ will be called
+with _aio_ and _arg_ and an error value in _err_.
+The _err_ indicates the reason that the operation is being canceled.
+
+If the operation cannot be canceled, _fn_ should just return without making any change.
+
+If _fn_ successfully canceled the operation, it should
+ensure that [`nng_aio_finish`] is called with the error code specified by _err_.
+
+> [!IMPORTANT]
+> It is mandatory that I/O providers call [`nng_aio_finish`]
+> _exactly once_ when they are finished with the operation.
+
+> [!TIP]
+> Ensure that cancellation and completion of the routine are thread safe.
+> This usually involves the use of locks or other synchronization primitives.
+
+### Finishing an Operation
+
+```c
+void nng_aio_finish(nng_aio *aio, nng_err err);
+```
+
+The {{i:`nng_aio_finish`}} function completes the operation associated with _aio_.
+The result of the the status _err_.
+
+This function causes the callback associated with the _aio_ to called.
+The _aio_ may not be referenced again by the caller.
+
+> [!TIP]
+> Set any results using [`nng_aio_set_output`] before calling this function.
+
+The return value subsequently obtained from [`nng_aio_result`] for _aio_ will be _err_.
+
+> [!IMPORTANT]
+> It is mandatory that operation providers call this function
+> _exactly once_ when they are finished with the operation.
+> After calling this function they _must not_ perform any further accesses
+> to the _aio_.
 
 ## See Also
 
