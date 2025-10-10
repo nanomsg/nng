@@ -7,8 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include <nuts.h>
+#include "../../../testing/nuts.h"
 
 #define SURVEYOR0_SELF 0x62
 #define SURVEYOR0_PEER 0x63

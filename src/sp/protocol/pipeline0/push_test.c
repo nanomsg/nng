@@ -7,8 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include <nuts.h>
+#include "../../../testing/nuts.h"
 
 static void
 test_push_identity(void)

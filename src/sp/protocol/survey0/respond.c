@@ -8,10 +8,16 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/idhash.h"
+#include "../../../core/list.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
 
 // Respondent protocol.  The RESPONDENT protocol is the "replier" side of
 // the surveyor pattern.  This is useful for building service discovery, or

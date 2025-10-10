@@ -10,7 +10,14 @@
 
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/idhash.h"
+#include "../../../core/list.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
 
 // Response protocol.  The REP protocol is the "reply" side of a
 // request-reply pair.  This is useful for building RPC servers, for

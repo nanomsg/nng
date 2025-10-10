@@ -8,8 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include "nuts.h"
+#include "../../../testing/nuts.h"
 
 #define SECOND 1000
 

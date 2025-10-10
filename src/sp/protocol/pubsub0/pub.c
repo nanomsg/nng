@@ -8,9 +8,14 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
-
-#include "../../../core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/lmq.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
+#include "../../../core/socket.h"
 
 // Publish protocol.  The PUB protocol simply sends messages out, as
 // a broadcast.  It has nothing more sophisticated because it does not

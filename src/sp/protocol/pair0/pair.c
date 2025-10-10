@@ -8,10 +8,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
-
-#include "core/nng_impl.h"
-#include "core/pipe.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/lmq.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
 
 // Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
 // While a peer is connected to the server, all other peer connection

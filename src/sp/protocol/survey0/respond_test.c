@@ -7,8 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include <nuts.h>
+#include "../../../testing/nuts.h"
 
 #define RESPONDENT0_SELF 0x63
 #define RESPONDENT0_PEER 0x62

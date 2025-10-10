@@ -8,11 +8,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdbool.h>
-#include <stdlib.h>
-
-#include "core/nng_impl.h"
-#include <stdio.h>
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/lmq.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
 
 // Bus protocol.  The BUS protocol, each peer sends a message to its peers.
 // However, bus protocols do not "forward" (absent a device).  So in order

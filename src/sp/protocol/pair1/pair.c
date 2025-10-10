@@ -8,9 +8,16 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
-
-#include "../../../core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/list.h"
+#include "../../../core/lmq.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/platform.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
+#include "../../../core/socket.h"
 
 // Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern.
 

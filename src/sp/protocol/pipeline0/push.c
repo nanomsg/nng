@@ -10,7 +10,13 @@
 
 #include <stdlib.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/lmq.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
 
 // Push protocol.  The PUSH protocol is the "write" side of a pipeline.
 // Push distributes fairly, or tries to, by giving messages in round-robin

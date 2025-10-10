@@ -8,7 +8,15 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/list.h"
+#include "../../../core/message.h"
+#include "../../../core/msgqueue.h"
+#include "../../../core/pipe.h"
+#include "../../../core/platform.h"
+#include "../../../core/protocol.h"
+#include "../../../core/socket.h"
 
 // Surveyor protocol.  The SURVEYOR protocol is the "survey" side of the
 // survey pattern.  This is useful for building service discovery, voting, etc.

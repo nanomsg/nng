@@ -8,9 +8,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
-
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/list.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
 
 // Pull protocol.  The PULL protocol is the "read" side of a pipeline.
 

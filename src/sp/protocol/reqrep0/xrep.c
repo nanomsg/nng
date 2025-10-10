@@ -8,9 +8,15 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
-
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/idhash.h"
+#include "../../../core/message.h"
+#include "../../../core/msgqueue.h"
+#include "../../../core/pipe.h"
+#include "../../../core/platform.h"
+#include "../../../core/protocol.h"
+#include "../../../core/socket.h"
 
 #define REP0_SELF 0x31
 #define REP0_PEER 0x30

@@ -7,9 +7,17 @@
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
 //
-#include <stdio.h>
 
-#include "core/nng_impl.h"
+#include "../../../core/aio.h"
+#include "../../../core/defs.h"
+#include "../../../core/idhash.h"
+#include "../../../core/list.h"
+#include "../../../core/message.h"
+#include "../../../core/pipe.h"
+#include "../../../core/platform.h"
+#include "../../../core/pollable.h"
+#include "../../../core/protocol.h"
+#include "../../../core/socket.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
 // request-reply pair.  This is useful for building RPC clients, for example.

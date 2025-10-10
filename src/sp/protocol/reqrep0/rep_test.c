@@ -7,8 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include <nuts.h>
+#include "../../../testing/nuts.h"
 
 #define REP0_SELF 0x31
 #define REP0_PEER 0x30

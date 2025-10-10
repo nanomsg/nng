@@ -12,9 +12,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "nng/nng.h"
-
-#include "nuts.h"
+#include "../../../testing/nuts.h"
 
 #ifdef NDEBUG
 #define dprintf(...)
