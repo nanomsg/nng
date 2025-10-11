@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
 #include "core/nng_impl.h"
 #include "core/platform.h"
 #include "core/socket.h"
@@ -2061,7 +2060,7 @@ nng_aio_get_output(nng_aio *aio, unsigned index)
 }
 
 void
-nng_aio_finish(nng_aio *aio, int rv)
+nng_aio_finish(nng_aio *aio, nng_err rv)
 {
 	// Preserve the count.
 	nni_aio_finish(aio, rv, nni_aio_count(aio));

@@ -692,7 +692,7 @@ NNG_DECL void nng_aio_reset(nng_aio *);
 // The argument is the value that nng_aio_result() should return.
 // IMPORTANT: Callers must ensure that this is called EXACTLY ONCE on any
 // given aio.
-NNG_DECL void nng_aio_finish(nng_aio *, int);
+NNG_DECL void nng_aio_finish(nng_aio *, nng_err);
 
 // nng_aio_start is used to register a cancellation routine, and indicate
 // that the operation will be completed asynchronously.  It must only be
