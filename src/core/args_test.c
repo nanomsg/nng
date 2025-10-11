@@ -8,9 +8,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <nng/args.h>
-#include <nng/nng.h>
-#include <nuts.h>
+#include "../include/nng/args.h"
+#include "../testing/nuts.h"
 
 static nng_arg_spec case1[] = {
 	// clang-format off

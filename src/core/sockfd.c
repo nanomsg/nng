@@ -10,10 +10,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <nng/nng.h>
-
-#include "core/nng_impl.h"
-#include "core/sockfd.h"
+#include "aio.h"
+#include "defs.h"
+#include "list.h"
+#include "options.h"
+#include "sockfd.h"
+#include "stream.h"
+#include "thread.h"
 
 // We will accept up to this many FDs to be queued up for
 // accept, before we start rejecting with NNG_ENOSPC.  Once

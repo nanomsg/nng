@@ -13,11 +13,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <nng/nng.h>
-
-#include "core/url.h"
 #include "nng_impl.h"
 #include "tcp.h"
+#include "url.h"
 
 typedef struct {
 	nng_stream_dialer ops;

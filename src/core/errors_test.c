@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <nuts.h>
+#include "../testing/nuts.h"
 
 static void
 test_known_errors(void)

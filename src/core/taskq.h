@@ -15,8 +15,6 @@
 #include "list.h"
 #include "platform.h"
 
-#include "nng/nng.h"
-
 typedef struct nni_taskq nni_taskq;
 typedef struct nni_task  nni_task;
 

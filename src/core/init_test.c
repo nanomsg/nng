@@ -7,8 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include <nuts.h>
+#include "../testing/nuts.h"
 
 nng_init_params *nng_init_get_params(void);
 

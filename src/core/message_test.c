@@ -8,11 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
-
-#include <nng/nng.h>
-
-#include "nuts.h"
+#include "../testing/nuts.h"
 
 void
 test_msg_option(void)

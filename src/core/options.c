@@ -9,11 +9,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "options.h"
 #include "defs.h"
-#include "nng/nng.h"
-#include "nng_impl.h"
+#include "strs.h"
 
-#include <stdio.h>
 #include <string.h>
 
 nng_err

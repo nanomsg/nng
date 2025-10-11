@@ -7,7 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <nuts.h>
+#include "../testing/nuts.h"
 
 #include "idhash.h"
 

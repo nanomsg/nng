@@ -11,7 +11,7 @@
 #ifndef CORE_INIT_H
 #define CORE_INIT_H
 
-#include "nng/nng.h"
+#include "defs.h"
 
 // subsystems can call this to obtain a parameter value.
 nng_init_params *nni_init_get_params(void);

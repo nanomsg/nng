@@ -11,9 +11,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "core/defs.h"
-#include "core/nng_impl.h"
-#include "nng/nng.h"
+#include "defs.h"
+#include "platform.h"
+#include "stats.h"
+#include "strs.h"
+#include "thread.h"
 
 typedef struct nng_stat nni_stat;
 

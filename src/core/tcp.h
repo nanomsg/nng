@@ -10,7 +10,7 @@
 #ifndef CORE_TCP_H
 #define CORE_TCP_H
 
-#include "nng/nng.h"
+#include "defs.h"
 
 // These are interfaces we use for TCP internally.  These are not exposed
 // to the public API.

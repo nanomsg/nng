@@ -8,10 +8,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng/nng.h"
-#include "nng_impl.h"
-#include <nuts.h>
-#include <string.h>
+#include "../testing/nuts.h"
+#include "url.h"
 
 void
 test_url_host(void)

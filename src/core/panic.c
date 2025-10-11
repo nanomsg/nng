@@ -17,7 +17,8 @@
 #include <execinfo.h>
 #endif
 
-#include "core/nng_impl.h"
+#include "panic.h"
+#include "platform.h"
 
 // Panic handling.
 void

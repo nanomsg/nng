@@ -7,11 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdio.h>
-#include <string.h>
-
-#include "nuts.h"
-#include <nng/nng.h>
+#include "../testing/nuts.h"
 
 #ifndef _WIN32
 #include <arpa/inet.h> // for endianness functions

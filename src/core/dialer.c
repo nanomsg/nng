@@ -10,11 +10,9 @@
 //
 
 #include "defs.h"
-#include "nng/nng.h"
 #include "nng_impl.h"
 #include "sockimpl.h"
 
-#include <stdio.h>
 #include <string.h>
 
 // Functionality related to dialing.
@@ -481,7 +479,7 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 int
 nni_dialer_start_aio(nni_dialer *d, unsigned flags, nni_aio *aiop)
 {
-	int      rv = 0;
+	int rv = 0;
 
 	if (nni_atomic_flag_test_and_set(&d->d_started)) {
 		return (NNG_ESTATE);
