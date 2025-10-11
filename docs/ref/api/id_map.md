@@ -27,7 +27,7 @@ will use space efficiently even if identifiers are very far apart.
 themselves be much larger than this.}}
 
 > [!IMPORTANT]
-> The function available for `nng_id_map` are _not_ thread-safe.
+> The functions that work with `nng_id_map` are _not_ thread-safe.
 > Callers should use a [mutex] or similar approach when thread-safety is needed.
 
 ## Create ID Map
