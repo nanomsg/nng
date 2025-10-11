@@ -2069,6 +2069,7 @@ nng_aio_finish(nng_aio *aio, nng_err rv)
 bool
 nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg)
 {
+	nni_aio_reset(aio);
 	return (nni_aio_start(aio, fn, arg));
 }
 
