@@ -306,6 +306,7 @@
 [`nng_http_write_all`]: ../api/http.md#direct-read-and-write
 [`nng_http_handler`]: ../api/http.md#handlers
 [`nng_http_handler_alloc`]: ../api/http.md#handlers
+[`nng_http_handler_free`]: ../api/http.md#freeing-handler
 [`nng_http_write_response`]: ../api/http.md#sending-the-response-explicitly
 [`nng_http_handler_collect_body`]: ../api/http.md#collecting-request-body
 [`nng_http_handler_set_host`]: ../api/http.md#filtering-byt-host

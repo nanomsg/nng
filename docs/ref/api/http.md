@@ -644,6 +644,21 @@ sent, if possible, and the connection will be closed.
 
 The _aio_ may be scheduled for deferred completion using the [`nng_aio_start`].
 
+### Freeing Handler
+
+```c
+void nng_http_handler_free(nng_http_handler *h);
+```
+
+The {{i:`nng_http_handler_free`}} function frees an allocated HTTP server handler.
+Normally there is no reason to call this function, because the handler is freed with
+the server it was registered with.
+
+> [!IMPORTANT]
+> It is an error to free a handler that is registered with a server.
+> Any handlers that are registered with servers are automatically freed
+> when the server itself is deallocated.
+
 ### Serving Directories and Files
 
 ```c
