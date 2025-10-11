@@ -12,8 +12,8 @@
 
 #include <string.h>
 
+#include "defs.h"
 #include "nng_impl.h"
-
 #include "sockfd.h"
 #include "tcp.h"
 

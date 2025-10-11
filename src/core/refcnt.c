@@ -6,7 +6,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <core/refcnt.h>
+#include "refcnt.h"
 
 void
 nni_refcnt_init(

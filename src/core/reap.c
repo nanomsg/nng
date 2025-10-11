@@ -8,11 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng_impl.h"
-
 #include "reap.h"
-
-#include <stdbool.h>
+#include "defs.h"
+#include "thread.h"
 
 static nni_reap_list *reap_list = NULL;
 static nni_thr        reap_thr;

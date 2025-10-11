@@ -10,7 +10,6 @@
 
 #include "defs.h"
 #include "list.h"
-#include "nng/nng.h"
 #include "nng_impl.h"
 #include "options.h"
 #include "pipe.h"

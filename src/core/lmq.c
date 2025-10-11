@@ -7,12 +7,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng_impl.h"
+#include "lmq.h"
+#include "defs.h"
+#include "message.h"
 
 // Light-weight message queue. These are derived from our heavy-weight
 // message queues, but are less "featured", but more useful for
 // performance sensitive contexts.  Locking must be done by the caller.
-
 
 // Note that initialization of a queue is guaranteed to succeed.
 // However, if the requested capacity is larger than 2, and memory
@@ -20,15 +21,15 @@
 void
 nni_lmq_init(nni_lmq *lmq, size_t cap)
 {
-	lmq->lmq_len = 0;
-	lmq->lmq_get = 0;
-	lmq->lmq_put = 0;
+	lmq->lmq_len   = 0;
+	lmq->lmq_get   = 0;
+	lmq->lmq_put   = 0;
 	lmq->lmq_alloc = 0;
-	lmq->lmq_mask = 0;
-	lmq->lmq_msgs = NULL;
-	lmq->lmq_msgs = lmq->lmq_buf;
-	lmq->lmq_cap = 2;
-	lmq->lmq_mask = 0x1; // only index 0 and 1
+	lmq->lmq_mask  = 0;
+	lmq->lmq_msgs  = NULL;
+	lmq->lmq_msgs  = lmq->lmq_buf;
+	lmq->lmq_cap   = 2;
+	lmq->lmq_mask  = 0x1; // only index 0 and 1
 	if (cap > 2) {
 		(void) nni_lmq_resize(lmq, cap);
 	} else {

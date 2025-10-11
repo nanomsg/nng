@@ -7,7 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "thread.h"
 
 void
 nni_mtx_init(nni_mtx *mtx)

@@ -10,7 +10,7 @@
 
 #include "idhash.h"
 #include "defs.h"
-#include "nng_impl.h"
+#include "thread.h"
 
 #include <string.h>
 

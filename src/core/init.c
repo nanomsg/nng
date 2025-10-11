@@ -8,12 +8,11 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-#include "core/platform.h"
-#include "core/socket.h"
-#include "nng/nng.h"
+#include "defs.h"
+#include "nng_impl.h"
+#include "platform.h"
+#include "socket.h"
 
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,6 +29,10 @@ extern void nni_tls_sys_fini(void);
 
 #ifndef NNG_NUM_POLLER_THREADS
 #define NNG_NUM_POLLER_THREADS (nni_plat_ncpu())
+#endif
+
+#ifndef NNG_MAX_POLLER_THREADS
+#define NNG_MAX_POLLER_THREADS 8
 #endif
 
 #ifndef NNG_RESOLV_CONCURRENCY

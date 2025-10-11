@@ -8,16 +8,14 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
-
-#include <nuts.h>
+#include "../testing/nuts.h"
 
 void
 test_dial_before_listen(void)
 {
 	nng_socket s1;
 	nng_socket s2;
-	char       *addr;
+	char      *addr;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -44,7 +42,7 @@ test_reconnect(void)
 	nng_socket   s1;
 	nng_socket   s2;
 	nng_listener l;
-	char         *addr;
+	char        *addr;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -82,8 +80,8 @@ test_reconnect_pipe(void)
 	nng_socket   s1;
 	nng_socket   s2;
 	nng_listener l;
-	nng_msg *    msg;
-	char *       addr;
+	nng_msg     *msg;
+	char        *addr;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -126,7 +124,7 @@ test_reconnect_back_off_zero(void)
 	nng_socket s1;
 	nng_socket s2;
 	uint64_t   start;
-	char *     addr;
+	char      *addr;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);

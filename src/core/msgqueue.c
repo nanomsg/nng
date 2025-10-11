@@ -8,7 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng_impl.h"
+#include "msgqueue.h"
+#include "aio.h"
+#include "defs.h"
+#include "list.h"
+#include "message.h"
+#include "pollable.h"
 
 // Message queue.  These operate in some respects like Go channels,
 // but as we have access to the internals, we have made some fundamental

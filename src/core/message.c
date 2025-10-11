@@ -10,7 +10,9 @@
 
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "defs.h"
+#include "message.h"
+#include "platform.h"
 
 // Message API.
 

@@ -14,7 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "core/nng_impl.h"
+#include "defs.h"
+#include "strs.h"
 
 // This file contains implementation of utility functions that are not
 // part of standard C99.  (C11 has added some things here, but we cannot
@@ -28,7 +29,7 @@
 char *
 nni_strdup(const char *src)
 {
-	char * dst;
+	char  *dst;
 	size_t len = strlen(src) + 1;
 
 	if ((dst = nni_alloc(len)) != NULL) {
@@ -157,7 +158,7 @@ nni_asprintf(char **sp, const char *fmt, ...)
 {
 	va_list ap;
 	size_t  len;
-	char *  s;
+	char   *s;
 
 	va_start(ap, fmt);
 	len = vsnprintf(NULL, 0, fmt, ap);

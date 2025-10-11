@@ -8,16 +8,15 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/defs.h"
-#include "core/nng_impl.h"
-
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "core/platform.h"
-#include "nng/nng.h"
+#include "aio.h"
+#include "defs.h"
+#include "platform.h"
+#include "strs.h"
 #include "url.h"
 
 static uint8_t

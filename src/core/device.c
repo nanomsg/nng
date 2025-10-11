@@ -8,7 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "device.h"
+#include "aio.h"
+#include "defs.h"
+#include "message.h"
+#include "protocol.h"
+#include "socket.h"
 
 typedef struct device_data_s device_data;
 typedef struct device_path_s device_path;

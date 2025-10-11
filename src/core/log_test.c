@@ -10,8 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "nuts.h"
-#include <nng/nng.h>
+#include "../testing/nuts.h"
 
 #ifdef NNG_PLATFORM_POSIX
 #include <stdlib.h>

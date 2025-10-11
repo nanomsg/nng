@@ -8,9 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <nuts.h>
+#include "../testing/nuts.h"
 
-#define SECONDS(x) ((x) *1000)
+#define SECONDS(x) ((x) * 1000)
 
 void
 test_stats_socket(void)

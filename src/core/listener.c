@@ -13,10 +13,8 @@
 #include "nng_impl.h"
 #include "strs.h"
 
-#include "nng/nng.h"
 #include "sockimpl.h"
 
-#include <stdio.h>
 #include <string.h>
 
 // Functionality related to listeners.

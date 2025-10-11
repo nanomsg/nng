@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng_impl.h"
-#include <nuts.h>
+#include "../testing/nuts.h"
+#include "list.h"
 
 typedef struct {
 	int           pad[2];
