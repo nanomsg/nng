@@ -9,8 +9,11 @@
 //
 
 #include "aio.h"
-#include "nng_impl.h"
+#include "defs.h"
+#include "message.h"
+#include "reap.h"
 #include "taskq.h"
+
 #include <string.h>
 
 struct nni_aio_expire_q {
