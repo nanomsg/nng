@@ -2815,7 +2815,7 @@ then <a href="api/../api/aio.html#result-of-operation"><code>nng_aio_result</cod
 <p>The <a name="a011"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with <a href="api/../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>,
 and then waits the operation and any associated callback to complete.
 This function also marks <em>aio</em> itself permanently stopped, so that any
-new operations scheduled by I/O providers using <a href="api/../TODO.html"><code>nng_aio_start</code></a>
+new operations scheduled by I/O providers using <a href="api/../api/aio.html#starting-an-operation"><code>nng_aio_start</code></a>
 return false. Thus this function should be used to teardown operations.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -2944,17 +2944,29 @@ start an attempt to complete any partial transfer, check the amount of data tran
 calling <a href="api/../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>.</p>
 </div>
 <h2 id="inputs-and-outputs"><a class="header" href="#inputs-and-outputs">Inputs and Outputs</a></h2>
-<pre><code class="language-c">void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
+<pre><code class="language-c">void *nng_aio_get_input(nng_aio *aio, unsigned int index);
 void *nng_aio_get_output(nng_aio *aio, unsigned int index);
+void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
+void nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
 </code></pre>
 <p>Asynchronous operations can take additional input parameters, and
 provide additional result outputs besides the <a href="api/../api/aio.html#result-of-operation">result</a> code.</p>
 <p>The <code>nng_aio_set_input</code> function sets the input parameter at <em>index</em>
 to <em>param</em> for the operation associated with <em>aio</em>.</p>
-<p>The <code>nng_aio_get_output</code> function returns the output result at <em>index</em>
-for the operation associated with <em>aio</em>.</p>
+<p>The <code>nng_aio_set_output</code> function sets the output result at <em>index</em>
+to <em>result</em> for the operation associated with <em>aio</em>.</p>
+<p>The <code>nng_aio_get_output</code> function returns the output result previously set by <code>nng_aio_set_output</code>.</p>
+<p>The <code>nng_aio_get_input</code> function returns the input parameter previously set by <code>nng_aio_set_input</code>.</p>
 <p>The type and semantics of input parameters and output results are determined by specific
 operations. The documentation for the operation should provide details.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Most applications will not need to use <code>nng_aio_get_input</code> or <code>nng_aio_set_output</code>, as those
+are used by <a href="api/../api/aio.html#io-providers">I/O Providers</a>.</p>
+</div>
 <p>The valid values of <em>index</em> range from zero (0) to three (3), as no operation
 currently defined can accept more than four parameters or return more than four additional
 results.</p>
@@ -2996,6 +3008,91 @@ the duration of the operation, of course.</p>
 <p>Note that many of these operations are not guaranteed to perform a full transfer of data, so even a
 successful operation should check the amount of data actually transferred using <a href="api/../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>,
 and if necessary resubmit the operation with a suitably updated vector of <code>nng_iov</code> using this function.</p>
+<h2 id="io-providers"><a class="header" href="#io-providers">I/O Providers</a></h2>
+<p>This section documents functions that are used by I/O providers, and will not be relevant
+for the majority of applications that simply utilize operations provided for by the library.</p>
+<p>However, these functions will be useful if an application wants to implement its own asynchronous operations using <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a>.</p>
+<h3 id="starting-an-operation"><a class="header" href="#starting-an-operation">Starting an Operation</a></h3>
+<pre><code class="language-c">typedef void (*nng_aio_cancelfn)(nng_aio *aio, void *arg, nng_err err);
+
+void nng_aio_reset(nng_aio *aio);
+bool nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg);
+</code></pre>
+<p>The <a name="a026"></a><code>nng_aio_reset</code> function resets various fields in the <em>aio</em>.
+It can be called before starting an operation.</p>
+<p>The <a name="a027"></a><code>nng_aio_start</code> function starts the operation associated with <em>aio</em>.
+It implies the same reset as <code>nng_aio_reset</code>. Thus, <code>nng_aio_reset</code> is typically
+only useful when used with operations that complete synchronously.
+The <code>nng_aio_start</code> function also registers the cancellation function <em>fn</em> and
+associated argument <em>arg</em> with the operation. This allows the operation to be canceled.</p>
+<div class="mdbook-alerts mdbook-alerts-important">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  important
+</p>
+<p>This function must not be called on an <em>aio</em> that is already has an operation in progress.</p>
+</div>
+<p>If <em>fn</em> is <code>NULL</code>, then the operation cannot be canceled.</p>
+<p>If <code>nng_aio_start</code> returns <code>false</code>, then the <em>aio</em> has been permanently stopped
+and the operation cannot proceed. In this case the caller should cease all
+work with <em>aio</em>, and must not call <a href="api/../api/aio.html#finishing-an-operation"><code>nng_aio_finish</code></a> or any other function,
+as the <em>aio</em> is no longer valid for use.</p>
+<p>If <code>nng_aio_start</code> returns true, then the operation may proceed.</p>
+<div class="mdbook-alerts mdbook-alerts-important">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  important
+</p>
+<p>Failure to check the return value from <code>nng_aio_start</code> can lead to deadlocks
+or infinite loops.</p>
+</div>
+<p>If the <em>aio</em> is subsequently canceled, the cancellation routine <em>fn</em> will be called
+with <em>aio</em> and <em>arg</em> and an error value in <em>err</em>.
+The <em>err</em> indicates the reason that the operation is being canceled.</p>
+<p>If the operation cannot be canceled, <em>fn</em> should just return without making any change.</p>
+<p>If <em>fn</em> successfully canceled the operation, it should
+ensure that <a href="api/../api/aio.html#finishing-an-operation"><code>nng_aio_finish</code></a> is called with the error code specified by <em>err</em>.</p>
+<div class="mdbook-alerts mdbook-alerts-important">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  important
+</p>
+<p>It is mandatory that I/O providers call <a href="api/../api/aio.html#finishing-an-operation"><code>nng_aio_finish</code></a>
+<em>exactly once</em> when they are finished with the operation.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Ensure that cancellation and completion of the routine are thread safe.
+This usually involves the use of locks or other synchronization primitives.</p>
+</div>
+<h3 id="finishing-an-operation"><a class="header" href="#finishing-an-operation">Finishing an Operation</a></h3>
+<pre><code class="language-c">void nng_aio_finish(nng_aio *aio, nng_err err);
+</code></pre>
+<p>The <a name="a028"></a><code>nng_aio_finish</code> function completes the operation associated with <em>aio</em>.
+The result of the the status <em>err</em>.</p>
+<p>This function causes the callback associated with the <em>aio</em> to called.
+The <em>aio</em> may not be referenced again by the caller.</p>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>Set any results using <a href="api/../api/aio.html#inputs-and-outputs"><code>nng_aio_set_output</code></a> before calling this function.</p>
+</div>
+<p>The return value subsequently obtained from <a href="api/../api/aio.html#result-of-operation"><code>nng_aio_result</code></a> for <em>aio</em> will be <em>err</em>.</p>
+<div class="mdbook-alerts mdbook-alerts-important">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  important
+</p>
+<p>It is mandatory that operation providers call this function
+<em>exactly once</em> when they are finished with the operation.
+After calling this function they <em>must not</em> perform any further accesses
+to the <em>aio</em>.</p>
+</div>
 <h2 id="see-also-2"><a class="header" href="#see-also-2">See Also</a></h2>
 <p><a href="api/../api/synch.html">Synchronization</a>,
 <a href="api/../api/thread.html">Threads</a>,
@@ -5018,11 +5115,11 @@ the response body may be set using either <a href="api/../api/http.html#storing-
 <a href="api/../api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a> function has been called for the handler.</p>
 </div>
 <p>The HTTP status should be set for the transaction using <a href="api/../api/http.html#http-status"><code>nng_http_set_status</code></a>.</p>
-<p>Finally, the handler should finish the operation by calling the <a href="api/../TODO.html"><code>nng_aio_finish</code></a> function
+<p>Finally, the handler should finish the operation by calling the <a href="api/../api/aio.html#finishing-an-operation"><code>nng_aio_finish</code></a> function
 after having set the status to <a href="api/../api/errors.html#NNG_OK"><code>NNG_OK</code></a>.
 If any other status is set on the <em>aio</em>, then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.</p>
-<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="api/../TODO.html"><code>nng_aio_start</code></a>.</p>
+<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="api/../api/aio.html#starting-an-operation"><code>nng_aio_start</code></a>.</p>
 <h3 id="serving-directories-and-files"><a class="header" href="#serving-directories-and-files">Serving Directories and Files</a></h3>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path, const char *dirname);
 nng_err nng_http_handler_alloc_file(nng_http_handler **hp, const char *path, const char *filename);
@@ -8196,9 +8293,9 @@ as any further operations on the object will fail immediately with <code>NNG_EST
 <h2 id="aio-provider-api-changes"><a class="header" href="#aio-provider-api-changes">AIO Provider API changes</a></h2>
 <p>The API used for providers for asynchronous I/O operations has changed slightly.</p>
 <ul>
-<li>The <code>nng_aio_begin</code> function is removed. However a new <a href="migrate/../TODO.html"><code>nng_aio_reset</code></a> function should be called
+<li>The <code>nng_aio_begin</code> function is removed. However a new <a href="migrate/../api/aio.html#starting-an-operation"><code>nng_aio_reset</code></a> function should be called
 instead, before performing any other operations on an <em>aio</em> object. (This simply clears certain fields.)</li>
-<li>The <code>nng_aio_defer</code> function is replaced, with a very <a href="migrate/../TODO.html"><code>nng_aio_start</code></a> function. However, this function
+<li>The <code>nng_aio_defer</code> function is replaced, with a very <a href="migrate/../api/aio.html#starting-an-operation"><code>nng_aio_start</code></a> function. However, this function
 has slightly different semantics. It will automatically call the callback if the operation cannot be
 scheduled.</li>
 <li>Be aware of the new <code>NNG_ESTOPPED</code> error code, for operations on a handle that is being torn down by
@@ -8699,13 +8796,16 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_aio_busy</code>, <a href="api/aio.html#a015">1</a><br/>
 <code>nng_aio_cancel</code>, <a href="api/aio.html#a009">1</a><br/>
 <code>nng_aio_count</code>, <a href="api/aio.html#a017">1</a><br/>
+<code>nng_aio_finish</code>, <a href="api/aio.html#a028">1</a><br/>
 <code>nng_aio_free</code>, <a href="api/aio.html#a006">1</a><br/>
 <code>nng_aio_get_msg</code>, <a href="api/aio.html#a018">1</a><br/>
 <code>nng_aio_reap</code>, <a href="api/aio.html#a007">1</a><br/>
+<code>nng_aio_reset</code>, <a href="api/aio.html#a026">1</a><br/>
 <code>nng_aio_result</code>, <a href="api/aio.html#a016">1</a><br/>
 <code>nng_aio_set_expire</code>, <a href="api/aio.html#a013">1</a><br/>
 <code>nng_aio_set_iov</code>, <a href="api/aio.html#a021">1</a>, <a href="api/aio.html#a025">2</a><br/>
 <code>nng_aio_set_msg</code>, <a href="api/aio.html#a019">1</a><br/>
+<code>nng_aio_start</code>, <a href="api/aio.html#a027">1</a><br/>
 <code>nng_aio_stop</code>, <a href="api/aio.html#a011">1</a><br/>
 <code>nng_aio_wait</code>, <a href="api/aio.html#a014">1</a><br/>
 <code>nng_alloc</code>, <a href="api/memory.html#a003">1</a><br/>

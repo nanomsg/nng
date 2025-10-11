@@ -796,11 +796,11 @@ the response body may be set using either <a href="../api/http.html#storing-body
 <a href="../api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a> function has been called for the handler.</p>
 </div>
 <p>The HTTP status should be set for the transaction using <a href="../api/http.html#http-status"><code>nng_http_set_status</code></a>.</p>
-<p>Finally, the handler should finish the operation by calling the <a href="../TODO.html"><code>nng_aio_finish</code></a> function
+<p>Finally, the handler should finish the operation by calling the <a href="../api/aio.html#finishing-an-operation"><code>nng_aio_finish</code></a> function
 after having set the status to <a href="../api/errors.html#NNG_OK"><code>NNG_OK</code></a>.
 If any other status is set on the <em>aio</em>, then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.</p>
-<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="../TODO.html"><code>nng_aio_start</code></a>.</p>
+<p>The <em>aio</em> may be scheduled for deferred completion using the <a href="../api/aio.html#starting-an-operation"><code>nng_aio_start</code></a>.</p>
 <h3 id="serving-directories-and-files"><a class="header" href="#serving-directories-and-files">Serving Directories and Files</a></h3>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path, const char *dirname);
 nng_err nng_http_handler_alloc_file(nng_http_handler **hp, const char *path, const char *filename);
