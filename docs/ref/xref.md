@@ -172,10 +172,10 @@
 [`nng_stream_listener_set_string`]: ../api/stream.md#stream-factory-options
 [`nng_init`]: ../api/init.md#initialization
 [`nng_fini`]: ../api/init.md#finalization
-[`nng_sub0_ctx_subscribe`]: ../TODO.md
-[`nng_sub0_ctx_unsubscribe`]: ../TODO.md
-[`nng_sub0_socket_subscribe`]: ../TODO.md
-[`nng_sub0_socket_unsubscribe`]: ../TODO.md
+[`nng_sub0_ctx_subscribe`]: ../proto/sub.md#context-operations
+[`nng_sub0_ctx_unsubscribe`]: ../proto/sub.md#context-operations
+[`nng_sub0_socket_subscribe`]: ../proto/sub.md#socket-operations
+[`nng_sub0_socket_unsubscribe`]: ../proto/sub.md#socket-operations
 [`nng_bus0_open`]: ../api/sock.md#opening-a-socket
 [`nng_pair_open`]: ../api/sock.md#opening-a-socket
 [`nng_pair0_open`]: ../api/sock.md#opening-a-socket
@@ -454,6 +454,7 @@
 [`NNG_OPT_PEER_GID`]: ../tran/ipc.md#NNG_OPT_PEER_GID
 [`NNG_OPT_PEER_PID`]: ../tran/ipc.md#NNG_OPT_PEER_PID
 [`NNG_OPT_PEER_ZONEID`]: ../tran/ipc.md#NNG_OPT_PEER_ZONEID
+[`NNG_OPT_SUB_PREF_NEW`]: ../proto/sub.md#protocol-options
 [`NNG_OPT_IPC_PERMISSIONS`]: ../tran/ipc.md#NNG_OPT_IPC_PERMISSIONS
 [`NNG_SOCKET_INITIALIZER`]: ../api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: ../api/ctx.md#context-structure
@@ -486,10 +487,11 @@
 <!-- Concept index -->
 
 [aio]: ../api/aio.md
+[cooked]: ../api/sock.md#raw-mode-sockets
 [raw]: ../api/sock.md#raw-mode-sockets
 [pipe]: ../api/pipe.md
-[socket]: ../TODO.md
-[context]: ../TODO.md
+[socket]: ../api/sock.md
+[context]: ../api/ctx.md
 [device]: ../TODO.md
 [dialer]: ../TODO.md
 [listener]: ../TODO.md

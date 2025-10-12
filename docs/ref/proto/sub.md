@@ -19,25 +19,57 @@ Applications should construct their messages accordingly.
 
 ### Socket Operations
 
-The [`nng_sub0_open`] functions create a _SUB_ socket.
-This socket may be used to receive messages, but is unable to send them.
-Attempts to send messages will result in [`NNG_ENOTSUP`].
+```c
+int nng_sub0_open(nng_socket *);
+int nng_sub0_open_raw(nng_socket *);
+int nng_sub0_socket_subscribe(nng_socket id, const void *buf, size_t sz);
+int nng_sub0_socket_unsubscribe(nng_socket id, const void *buf, size_t sz);
+```
+
+The {{i:`nng_sub0_open`}} and {{i:`nng_sub0_open_raw`}} functions create a _SUB_ socket in
+either [cooked] or [raw] mode.
+
+The {{i:`nng_sub0_socket_subscribe`}} function is used to add a subscription topic to the socket.
+Messages that do not match any subscription topic will be filtered out, and unavailable
+for receiving.
+
+A message is deemed to match a subscription if it has at least _sz_ bytes, and the first
+_sz_ bytes are the same as _buf_.
+
+The {{i:`nng_sub0_socket_unsubscribe`}} function removes a subscription from the socket.
+
+> [!NOTE]
+> A socket with no subscriptions cannot receive messages.
+
+> [!TIP]
+> To receive all messages, simply subscribe to a zero length topic.
+
+### Context Operations
+
+The _SUB_ protocol supports [contexts][context].
+
+```c
+int nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz);
+int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
+```
+
+The {{i:`nng_sub0_ctx_subscribe`}} and {{i:`nng_sub0_ctx_unsubscribe`}} functions
+perform manage subscriptions for the context in precisely the same way that
+[`nng_sub0_socket_subscribe`] and [`nng_sub0_socket_unsubscribe`] do.
+
+Each context maintains its own set of subscriptions, and these are also independent
+of socket level subscriptions.
+
+### Protocol Options
+
+| Option                       | Type   | Description                                                                                                                                                                                                           |
+| ---------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| {{i:`NNG_OPT_SUB_PREF_NEW`}} | `bool` | If `true` (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If `false`, the older message is preserved and the newer message is discarded. |
 
 ### Protocol Versions
 
 Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)
-
-### Protocol Options
-
-The following protocol-specific option is available.
-
-- {{i:`NNG_OPT_SUB_PREFNEW`}}: \
-  (`bool`) \
-  \
-  This read/write option specifies the behavior of the subscriber when the queue is full.
-  When `true` (the default), the subscriber will make room in the queue by removing the oldest message.
-  When `false`, the subscriber will reject messages if the message queue does not have room.
 
 ### Protocol Headers
 
