@@ -1260,7 +1260,7 @@ the protocol specific processing must be performed by the application.</p>
 </p>
 <p>Most applications do not need to use raw sockets.
 The notable exception is when using <a href="api/../TODO.html"><code>nng_device</code></a>, which requires raw sockets.
-To obtain asynchronous behavior, consider using <a href="api/../TODO.html">contexts</a> instead.</p>
+To obtain asynchronous behavior, consider using <a href="api/../api/ctx.html">contexts</a> instead.</p>
 </div>
 <p>The following functions open a socket in <a href="api/../api/sock.html#raw-mode-sockets">raw</a> mode:</p>
 <ul>
@@ -1288,7 +1288,7 @@ a result of <a href="api/../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code
   note
 </p>
 <p>Closing a socket also invalidates any <a href="api/../TODO.html">dialers</a>, <a href="api/../TODO.html">listeners</a>,
-<a href="api/../api/pipe.html">pipes</a>, or <a href="api/../TODO.html">contexts</a> associated with it.</p>
+<a href="api/../api/pipe.html">pipes</a>, or <a href="api/../api/ctx.html">contexts</a> associated with it.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1458,7 +1458,7 @@ are available, whether they can be read or written, and the appropriate type to 
   note
 </p>
 <p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
-for an underlying transport, the option should be set on the <a href="api/../TODO.html">dialer</a> or <a href="api/../TODO.html">listener</a> instead of the <a href="api/../TODO.html">socket</a>.</p>
+for an underlying transport, the option should be set on the <a href="api/../TODO.html">dialer</a> or <a href="api/../TODO.html">listener</a> instead of the <a href="api/../api/sock.html">socket</a>.</p>
 </div>
 <h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
 <p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
@@ -1506,7 +1506,7 @@ were available in previous versions of NNG.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>These functions are not compatible with <a href="api/../TODO.html">contexts</a>.</p>
+<p>These functions are not compatible with <a href="api/../api/ctx.html">contexts</a>.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -1709,7 +1709,7 @@ int main(int argc, char **argv) {
 <h1 id="contexts"><a class="header" href="#contexts">Contexts</a></h1>
 <p>Contexts <a name="a001"></a> in Scalability Protocols provide for isolation of protocol-specific
 state machines and associated data, allowing multiple <a name="a002"></a>concurrent <a name="a003"></a>state machines (or transactions)
-to coexist on a single <a href="api/../TODO.html">socket</a>.</p>
+to coexist on a single <a href="api/../api/sock.html">socket</a>.</p>
 <p>For example, a <a href="api/../proto/rep.html">REP</a> server may wish to allow many requests to be serviced concurrently,
 even though some jobs may take significant time to process. Contexts provide for this ability.</p>
 <p>Not all protocols have contexts, because many protocols simply have no state to manage.
@@ -1748,7 +1748,7 @@ to ensure that it cannot be confused with a valid open context.</p>
 <h2 id="creating-a-context"><a class="header" href="#creating-a-context">Creating a Context</a></h2>
 <pre><code class="language-c">int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
 </code></pre>
-<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="api/../TODO.html">socket</a> <em>s</em>,
+<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="api/../api/sock.html">socket</a> <em>s</em>,
 and returns it at the location pointed by <em>ctxp</em>.</p>
 <h2 id="context-identity"><a class="header" href="#context-identity">Context Identity</a></h2>
 <pre><code class="language-c">int nng_ctx_id(nng_ctx c);
@@ -1915,7 +1915,7 @@ echo(void *arg)
 </code></pre>
 <h3 id="example-2-starting-the-echo-service"><a class="header" href="#example-2-starting-the-echo-service">Example 2: Starting the Echo Service</a></h3>
 <p>Given the above fragment, the following example shows setting up the service.
-It assumes that the <a href="api/../TODO.html">socket</a> has already been
+It assumes that the <a href="api/../api/sock.html">socket</a> has already been
 created and any transports set up as well with functions such as <a href="api/../TODO.html"><code>nng_dial</code></a> or <a href="api/../TODO.html"><code>nng_listen</code></a>.</p>
 <pre><code class="language-c">
 #define CONCURRENCY 1024
@@ -2083,7 +2083,7 @@ nng_socket nng_pipe_socket(nng_pipe p);
 <p><a name="a007"></a>
 <a name="a008"></a>
 <a name="a009"></a>
-These functions return the <a href="api/../TODO.html">socket</a>, <a href="api/../TODO.html">dialer</a>, or <a href="api/../TODO.html">listener</a> that created or owns the pipe.</p>
+These functions return the <a href="api/../api/sock.html">socket</a>, <a href="api/../TODO.html">dialer</a>, or <a href="api/../TODO.html">listener</a> that created or owns the pipe.</p>
 <p>If the pipe was does not have an associated dialer or listener, then the associated will
 return [<code>NNG_DIALER_INITIALIZER</code>] or [<code>NNG_LISTENER_INITIALIZER</code>], as appropriate, and
 either [<code>nng_dialer_id</code>] or [<code>nng_listener_id</code>] for the returned object will return -1.</p>
@@ -3822,7 +3822,7 @@ const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener
 const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
-or possibly to find the tree of statistics associated with a specific <a href="api/../TODO.html">socket</a>,
+or possibly to find the tree of statistics associated with a specific <a href="api/../api/sock.html">socket</a>,
 <a href="api/../TODO.html">dialer</a>, or <a href="api/../TODO.html">listener</a>.</p>
 <p>The <code>nng_stat_find</code> functions are provided for this purpose.</p>
 <p>The <a name="a008"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
@@ -4051,7 +4051,7 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_EBUSY</code><a name="NNG_EBUSY"></a></td><td>4</td><td>Resource busy.</td></tr>
 <tr><td><code>NNG_ETIMEDOUT</code><a name="NNG_ETIMEDOUT"></a></td><td>5</td><td>Timed out. The operation took longer than the allotted time.</td></tr>
 <tr><td><code>NNG_ECONNREFUSED</code><a name="NNG_ECONNREFUSED"></a></td><td>6</td><td>Connection refused. Usually indicates the wrong address or a server is running.</td></tr>
-<tr><td><code>NNG_ECLOSED</code><a name="NNG_ECLOSED"></a></td><td>7</td><td>Object closed. Typically the <a href="api/../TODO.html">socket</a> is closed.</td></tr>
+<tr><td><code>NNG_ECLOSED</code><a name="NNG_ECLOSED"></a></td><td>7</td><td>Object closed. Typically the <a href="api/../api/sock.html">socket</a> is closed.</td></tr>
 <tr><td><code>NNG_EAGAIN</code><a name="NNG_EAGAIN"></a></td><td>8</td><td>Try again. Typcally for a non-blocking operation that might succeed later.</td></tr>
 <tr><td><code>NNG_ENOTSUP</code><a name="NNG_ENOTSUP"></a></td><td>9</td><td>Not supported. Perhaps the protocol or transport is not supported, or the operation is not not supported with the transport or protocol.</td></tr>
 <tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="api/../TODO.html">listeners</a>.</td></tr>
@@ -4186,7 +4186,7 @@ using these Streams APIs.</p>
   note
 </p>
 <p>The <code>nng_stream</code> object is used for raw byte stream connections, and
-should not be confused with a <a href="api/../api/pipe.html">pipe</a> object created on a <a href="api/../TODO.html">socket</a> using
+should not be confused with a <a href="api/../api/pipe.html">pipe</a> object created on a <a href="api/../api/sock.html">socket</a> using
 the <a href="api/../TODO.html"><code>nng_listen</code></a>, <a href="api/../TODO.html"><code>nng_dial</code></a> or related functions.</p>
 </div>
 <h2 id="sending-and-receiving-data"><a class="header" href="#sending-and-receiving-data">Sending and Receiving Data</a></h2>
@@ -6749,7 +6749,7 @@ was previously received.</p>
 Any additional concurrent receive operations will result in <code>NNG_ESTATE</code>.</p>
 <p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h2 id="context-operations"><a class="header" href="#context-operations">Context Operations</a></h2>
-<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+<p>This protocol supports the creation of <a href="proto/../api/ctx.html">contexts</a> for concurrent
 use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Each context may have at most one outstanding request, and operates
 independently of the others.
@@ -6897,7 +6897,7 @@ from processing a request it has already received or terminate a request
 that has already been placed on the wire.</p>
 <p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations-1"><a class="header" href="#context-operations-1">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+<p>This protocol supports the creation of <a href="proto/../api/ctx.html">contexts</a> for concurrent
 use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>The <code>NNG_OPT_REQ_RESENDTIME</code> value may be configured differently
 on contexts created this way.</p>
@@ -7074,7 +7074,7 @@ reply will be sent to surveyor from whom the last survey was received.</p>
 <p>Respondents may discard a survey by simply not replying to it.</p>
 <p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
 <h3 id="context-operations-2"><a class="header" href="#context-operations-2">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+<p>This protocol supports the creation of <a href="proto/../api/ctx.html">contexts</a> for concurrent
 use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
@@ -7194,22 +7194,51 @@ reduce bandwidth consumption.</p>
 the message body.
 Applications should construct their messages accordingly.</p>
 <h3 id="socket-operations-8"><a class="header" href="#socket-operations-8">Socket Operations</a></h3>
-<p>The <a href="proto/../api/sock.html#opening-a-socket"><code>nng_sub0_open</code></a> functions create a <em>SUB</em> socket.
-This socket may be used to receive messages, but is unable to send them.
-Attempts to send messages will result in <a href="proto/../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
+<pre><code class="language-c">int nng_sub0_open(nng_socket *);
+int nng_sub0_open_raw(nng_socket *);
+int nng_sub0_socket_subscribe(nng_socket id, const void *buf, size_t sz);
+int nng_sub0_socket_unsubscribe(nng_socket id, const void *buf, size_t sz);
+</code></pre>
+<p>The <a name="a004"></a><code>nng_sub0_open</code> and <a name="a005"></a><code>nng_sub0_open_raw</code> functions create a <em>SUB</em> socket in
+either <a href="proto/../api/sock.html#raw-mode-sockets">cooked</a> or <a href="proto/../api/sock.html#raw-mode-sockets">raw</a> mode.</p>
+<p>The <a name="a006"></a><code>nng_sub0_socket_subscribe</code> function is used to add a subscription topic to the socket.
+Messages that do not match any subscription topic will be filtered out, and unavailable
+for receiving.</p>
+<p>A message is deemed to match a subscription if it has at least <em>sz</em> bytes, and the first
+<em>sz</em> bytes are the same as <em>buf</em>.</p>
+<p>The <a name="a007"></a><code>nng_sub0_socket_unsubscribe</code> function removes a subscription from the socket.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>A socket with no subscriptions cannot receive messages.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>To receive all messages, simply subscribe to a zero length topic.</p>
+</div>
+<h3 id="context-operations-3"><a class="header" href="#context-operations-3">Context Operations</a></h3>
+<p>The <em>SUB</em> protocol supports <a href="proto/../api/ctx.html">contexts</a>.</p>
+<pre><code class="language-c">int nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz);
+int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
+</code></pre>
+<p>The <a name="a008"></a><code>nng_sub0_ctx_subscribe</code> and <a name="a009"></a><code>nng_sub0_ctx_unsubscribe</code> functions
+perform manage subscriptions for the context in precisely the same way that
+<a href="proto/../proto/sub.html#socket-operations"><code>nng_sub0_socket_subscribe</code></a> and <a href="proto/../proto/sub.html#socket-operations"><code>nng_sub0_socket_unsubscribe</code></a> do.</p>
+<p>Each context maintains its own set of subscriptions, and these are also independent
+of socket level subscriptions.</p>
+<h3 id="protocol-options-8"><a class="header" href="#protocol-options-8">Protocol Options</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><a name="a010"></a><code>NNG_OPT_SUB_PREF_NEW</code></td><td><code>bool</code></td><td>If <code>true</code> (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If <code>false</code>, the older message is preserved and the newer message is discarded.</td></tr>
+</tbody></table>
+</div>
 <h3 id="protocol-versions-8"><a class="header" href="#protocol-versions-8">Protocol Versions</a></h3>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
-<h3 id="protocol-options-8"><a class="header" href="#protocol-options-8">Protocol Options</a></h3>
-<p>The following protocol-specific option is available.</p>
-<ul>
-<li><a name="a004"></a><code>NNG_OPT_SUB_PREFNEW</code>: <br />
-(<code>bool</code>) <br />
-<br />
-This read/write option specifies the behavior of the subscriber when the queue is full.
-When <code>true</code> (the default), the subscriber will make room in the queue by removing the oldest message.
-When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</li>
-</ul>
 <h3 id="protocol-headers-8"><a class="header" href="#protocol-headers-8">Protocol Headers</a></h3>
 <p>The <em>SUB</em> protocol has no protocol-specific headers.</p>
 <!-- NOTE: This assumes that any page referencing this is located
@@ -7325,8 +7354,8 @@ for replies, then the result will be <a href="proto/../api/errors.html#NNG_ETIME
 cancel the prior one, and any responses from respondents from the prior
 survey that arrive after this will be discarded.</p>
 <p><a href="proto/../api/sock.html#raw-mode-sockets">Raw mode</a> sockets ignore all these restrictions.</p>
-<h3 id="context-operations-3"><a class="header" href="#context-operations-3">Context Operations</a></h3>
-<p>This protocol supports the creation of <a href="proto/../TODO.html">contexts</a> for concurrent
+<h3 id="context-operations-4"><a class="header" href="#context-operations-4">Context Operations</a></h3>
+<p>This protocol supports the creation of <a href="proto/../api/ctx.html">contexts</a> for concurrent
 use cases using <a href="proto/../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
@@ -8466,8 +8495,8 @@ matching the actual wire protocol values, instead of <code>int</code>.</p>
 Applications should keep track of this information separately.</p>
 <h2 id="subscriptions"><a class="header" href="#subscriptions">Subscriptions</a></h2>
 <p>The <code>NNG_OPT_SUB_SUBSCRIBE</code> and <code>NNG_OPT_SUB_UNSUBSCRIBE</code> options have been replaced by
-the following functions: <a href="migrate/../TODO.html"><code>nng_sub0_socket_subscribe</code></a>, <a href="migrate/../TODO.html"><code>nng_sub0_socket_unsubscribe</code></a>,
-<a href="migrate/../TODO.html"><code>nng_sub0_ctx_subscribe</code></a> and <a href="migrate/../TODO.html"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
+the following functions: <a href="migrate/../proto/sub.html#socket-operations"><code>nng_sub0_socket_subscribe</code></a>, <a href="migrate/../proto/sub.html#socket-operations"><code>nng_sub0_socket_unsubscribe</code></a>,
+<a href="migrate/../proto/sub.html#context-operations"><code>nng_sub0_ctx_subscribe</code></a> and <a href="migrate/../proto/sub.html#context-operations"><code>nng_sub0_ctx_unsubscribe</code></a>. These functions, like the options
 they replace, are only applicable to SUB sockets.</p>
 <h2 id="statistics-use-constified-pointers"><a class="header" href="#statistics-use-constified-pointers">Statistics Use Constified Pointers</a></h2>
 <p>A number of the <a href="migrate/../api/stats.html">statistics</a> functions take, or return, <code>const nng_stat *</code> instead
@@ -8701,8 +8730,8 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>NN_IPV4ONLY</code></td><td>None</td><td>Use URL such as <code>tcp4://</code> to obtain this functionality.</td></tr>
 <tr><td><code>NN_SOCKET_NAME</code></td><td>None</td><td>Removed from NNG.</td></tr>
 <tr><td><code>NN_MAXTTL</code></td><td><a href="migrate/../api/sock.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></td><td></td></tr>
-<tr><td><code>NN_SUB_SUBSCRIBE</code></td><td><a href="migrate/../TODO.html"><code>nng_sub0_socket_subscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
-<tr><td><code>NN_SUB_UNSUBSCRIBE</code></td><td><a href="migrate/../TODO.html"><code>nng_sub0_socket_unsubscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_SUB_SUBSCRIBE</code></td><td><a href="migrate/../proto/sub.html#socket-operations"><code>nng_sub0_socket_subscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
+<tr><td><code>NN_SUB_UNSUBSCRIBE</code></td><td><a href="migrate/../proto/sub.html#socket-operations"><code>nng_sub0_socket_unsubscribe</code></a></td><td>No longer an option, use a function call.</td></tr>
 </tbody></table>
 </div>
 <h2 id="error-codes"><a class="header" href="#error-codes">Error Codes</a></h2>
@@ -8956,7 +8985,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>NNG_OPT_REQ_RESENDTICK</code>, <a href="proto/req.html#a007">1</a><br/>
 <code>NNG_OPT_REQ_RESENDTIME</code>, <a href="proto/req.html#a006">1</a><br/>
 <code>NNG_OPT_SOCKET_FD</code>, <a href="tran/socket.html#a002">1</a><br/>
-<code>NNG_OPT_SUB_PREFNEW</code>, <a href="proto/sub.html#a004">1</a><br/>
+<code>NNG_OPT_SUB_PREF_NEW</code>, <a href="proto/sub.html#a010">1</a><br/>
 <code>NNG_OPT_SURVEYOR_SURVEYTIME</code>, <a href="proto/surveyor.html#a007">1</a><br/>
 <code>nng_pair0_open</code>, <a href="api/sock.html#a010">1</a><br/>
 <code>nng_pair0_open_raw</code>, <a href="api/sock.html#a023">1</a><br/>
@@ -9096,8 +9125,12 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_stream_stop</code>, <a href="api/stream.html#a006">1</a><br/>
 <code>nng_strerror</code>, <a href="api/errors.html#a001">1</a><br/>
 <code>nng_strfree</code>, <a href="api/memory.html#a006">1</a><br/>
-<code>nng_sub0_open</code>, <a href="api/sock.html#a019">1</a><br/>
-<code>nng_sub0_open_raw</code>, <a href="api/sock.html#a031">1</a><br/>
+<code>nng_sub0_ctx_subscribe</code>, <a href="proto/sub.html#a008">1</a><br/>
+<code>nng_sub0_ctx_unsubscribe</code>, <a href="proto/sub.html#a009">1</a><br/>
+<code>nng_sub0_open</code>, <a href="api/sock.html#a019">1</a>, <a href="proto/sub.html#a004">2</a><br/>
+<code>nng_sub0_open_raw</code>, <a href="api/sock.html#a031">1</a>, <a href="proto/sub.html#a005">2</a><br/>
+<code>nng_sub0_socket_subscribe</code>, <a href="proto/sub.html#a006">1</a><br/>
+<code>nng_sub0_socket_unsubscribe</code>, <a href="proto/sub.html#a007">1</a><br/>
 <code>nng_surveyor0_open</code>, <a href="api/sock.html#a020">1</a><br/>
 <code>nng_surveyor0_open_raw</code>, <a href="api/sock.html#a032">1</a><br/>
 <code>nng_system_logger</code>, <a href="api/logging.html#a012">1</a><br/>

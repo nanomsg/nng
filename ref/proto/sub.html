@@ -263,22 +263,51 @@ reduce bandwidth consumption.</p>
 the message body.
 Applications should construct their messages accordingly.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
-<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_sub0_open</code></a> functions create a <em>SUB</em> socket.
-This socket may be used to receive messages, but is unable to send them.
-Attempts to send messages will result in <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
+<pre><code class="language-c">int nng_sub0_open(nng_socket *);
+int nng_sub0_open_raw(nng_socket *);
+int nng_sub0_socket_subscribe(nng_socket id, const void *buf, size_t sz);
+int nng_sub0_socket_unsubscribe(nng_socket id, const void *buf, size_t sz);
+</code></pre>
+<p>The <a name="a004"></a><code>nng_sub0_open</code> and <a name="a005"></a><code>nng_sub0_open_raw</code> functions create a <em>SUB</em> socket in
+either <a href="../api/sock.html#raw-mode-sockets">cooked</a> or <a href="../api/sock.html#raw-mode-sockets">raw</a> mode.</p>
+<p>The <a name="a006"></a><code>nng_sub0_socket_subscribe</code> function is used to add a subscription topic to the socket.
+Messages that do not match any subscription topic will be filtered out, and unavailable
+for receiving.</p>
+<p>A message is deemed to match a subscription if it has at least <em>sz</em> bytes, and the first
+<em>sz</em> bytes are the same as <em>buf</em>.</p>
+<p>The <a name="a007"></a><code>nng_sub0_socket_unsubscribe</code> function removes a subscription from the socket.</p>
+<div class="mdbook-alerts mdbook-alerts-note">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  note
+</p>
+<p>A socket with no subscriptions cannot receive messages.</p>
+</div>
+<div class="mdbook-alerts mdbook-alerts-tip">
+<p class="mdbook-alerts-title">
+  <span class="mdbook-alerts-icon"></span>
+  tip
+</p>
+<p>To receive all messages, simply subscribe to a zero length topic.</p>
+</div>
+<h3 id="context-operations"><a class="header" href="#context-operations">Context Operations</a></h3>
+<p>The <em>SUB</em> protocol supports <a href="../api/ctx.html">contexts</a>.</p>
+<pre><code class="language-c">int nng_sub0_ctx_subscribe(nng_ctx id, const void *buf, size_t sz);
+int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
+</code></pre>
+<p>The <a name="a008"></a><code>nng_sub0_ctx_subscribe</code> and <a name="a009"></a><code>nng_sub0_ctx_unsubscribe</code> functions
+perform manage subscriptions for the context in precisely the same way that
+<a href="../proto/sub.html#socket-operations"><code>nng_sub0_socket_subscribe</code></a> and <a href="../proto/sub.html#socket-operations"><code>nng_sub0_socket_unsubscribe</code></a> do.</p>
+<p>Each context maintains its own set of subscriptions, and these are also independent
+of socket level subscriptions.</p>
+<h3 id="protocol-options"><a class="header" href="#protocol-options">Protocol Options</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td><a name="a010"></a><code>NNG_OPT_SUB_PREF_NEW</code></td><td><code>bool</code></td><td>If <code>true</code> (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If <code>false</code>, the older message is preserved and the newer message is discarded.</td></tr>
+</tbody></table>
+</div>
 <h3 id="protocol-versions"><a class="header" href="#protocol-versions">Protocol Versions</a></h3>
 <p>Only version 0 of this protocol is supported.
 (At the time of writing, no other versions of this protocol have been defined.)</p>
-<h3 id="protocol-options"><a class="header" href="#protocol-options">Protocol Options</a></h3>
-<p>The following protocol-specific option is available.</p>
-<ul>
-<li><a name="a004"></a><code>NNG_OPT_SUB_PREFNEW</code>: <br />
-(<code>bool</code>) <br />
-<br />
-This read/write option specifies the behavior of the subscriber when the queue is full.
-When <code>true</code> (the default), the subscriber will make room in the queue by removing the oldest message.
-When <code>false</code>, the subscriber will reject messages if the message queue does not have room.</li>
-</ul>
 <h3 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h3>
 <p>The <em>SUB</em> protocol has no protocol-specific headers.</p>
 <!-- NOTE: This assumes that any page referencing this is located

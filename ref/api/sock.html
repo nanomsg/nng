@@ -335,7 +335,7 @@ the protocol specific processing must be performed by the application.</p>
 </p>
 <p>Most applications do not need to use raw sockets.
 The notable exception is when using <a href="../TODO.html"><code>nng_device</code></a>, which requires raw sockets.
-To obtain asynchronous behavior, consider using <a href="../TODO.html">contexts</a> instead.</p>
+To obtain asynchronous behavior, consider using <a href="../api/ctx.html">contexts</a> instead.</p>
 </div>
 <p>The following functions open a socket in <a href="../api/sock.html#raw-mode-sockets">raw</a> mode:</p>
 <ul>
@@ -363,7 +363,7 @@ a result of <a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a
   note
 </p>
 <p>Closing a socket also invalidates any <a href="../TODO.html">dialers</a>, <a href="../TODO.html">listeners</a>,
-<a href="../api/pipe.html">pipes</a>, or <a href="../TODO.html">contexts</a> associated with it.</p>
+<a href="../api/pipe.html">pipes</a>, or <a href="../api/ctx.html">contexts</a> associated with it.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -533,7 +533,7 @@ are available, whether they can be read or written, and the appropriate type to 
   note
 </p>
 <p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
-for an underlying transport, the option should be set on the <a href="../TODO.html">dialer</a> or <a href="../TODO.html">listener</a> instead of the <a href="../TODO.html">socket</a>.</p>
+for an underlying transport, the option should be set on the <a href="../TODO.html">dialer</a> or <a href="../TODO.html">listener</a> instead of the <a href="../api/sock.html">socket</a>.</p>
 </div>
 <h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
 <p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
@@ -581,7 +581,7 @@ were available in previous versions of NNG.</p>
   <span class="mdbook-alerts-icon"></span>
   note
 </p>
-<p>These functions are not compatible with <a href="../TODO.html">contexts</a>.</p>
+<p>These functions are not compatible with <a href="../api/ctx.html">contexts</a>.</p>
 </div>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">

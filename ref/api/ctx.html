@@ -246,7 +246,7 @@
 <h1 id="contexts"><a class="header" href="#contexts">Contexts</a></h1>
 <p>Contexts <a name="a001"></a> in Scalability Protocols provide for isolation of protocol-specific
 state machines and associated data, allowing multiple <a name="a002"></a>concurrent <a name="a003"></a>state machines (or transactions)
-to coexist on a single <a href="../TODO.html">socket</a>.</p>
+to coexist on a single <a href="../api/sock.html">socket</a>.</p>
 <p>For example, a <a href="../proto/rep.html">REP</a> server may wish to allow many requests to be serviced concurrently,
 even though some jobs may take significant time to process. Contexts provide for this ability.</p>
 <p>Not all protocols have contexts, because many protocols simply have no state to manage.
@@ -285,7 +285,7 @@ to ensure that it cannot be confused with a valid open context.</p>
 <h2 id="creating-a-context"><a class="header" href="#creating-a-context">Creating a Context</a></h2>
 <pre><code class="language-c">int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
 </code></pre>
-<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="../TODO.html">socket</a> <em>s</em>,
+<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="../api/sock.html">socket</a> <em>s</em>,
 and returns it at the location pointed by <em>ctxp</em>.</p>
 <h2 id="context-identity"><a class="header" href="#context-identity">Context Identity</a></h2>
 <pre><code class="language-c">int nng_ctx_id(nng_ctx c);
@@ -452,7 +452,7 @@ echo(void *arg)
 </code></pre>
 <h3 id="example-2-starting-the-echo-service"><a class="header" href="#example-2-starting-the-echo-service">Example 2: Starting the Echo Service</a></h3>
 <p>Given the above fragment, the following example shows setting up the service.
-It assumes that the <a href="../TODO.html">socket</a> has already been
+It assumes that the <a href="../api/sock.html">socket</a> has already been
 created and any transports set up as well with functions such as <a href="../TODO.html"><code>nng_dial</code></a> or <a href="../TODO.html"><code>nng_listen</code></a>.</p>
 <pre><code class="language-c">
 #define CONCURRENCY 1024
