@@ -261,4 +261,11 @@ extern void *nni_zalloc(size_t);
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);
 
+// nni_inet_ntop is like inet_ntop, but for NNG_AF_INET and NNG_AF_INET6. The
+// output buffer must be able to contain at least 46 bytes.  Note that
+// NNG_AF_UNSPEC is explicitly unsupported, as we do not pass the address
+// length.
+extern char *nni_inet_ntop(
+    enum nng_sockaddr_family af, const uint8_t *addr, char *buf);
+
 #endif // CORE_DEFS_H

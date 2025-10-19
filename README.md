@@ -152,8 +152,10 @@ system (pass `-G Ninja` to CMake) when you can.
 (And not just because Ninja sounds like "NNG" -- it's also
 blindingly fast and has made our lives as developers measurably better.)
 
-If you want to build with TLS support you will also need
-[Mbed TLS](https://tls.mbed.org) or [WolfSSL](https://wolfssl.com).
+If you want to build with TLS support you will also need a supported
+TLS library. Currently [Mbed TLS](https://tls.mbed.org), [WolfSSL](https://wolfssl.com),
+and [OpenSSL](https://openssl.org) all enjoy some level support in NNG.
+
 See the [build instructions](docs/BUILD_TLS.md) for details.
 
 ## Quick Start

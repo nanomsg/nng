@@ -24,17 +24,27 @@ str_sa_inet(const nng_sockaddr_in *sa, char *buf, size_t bufsz)
 {
 	uint8_t *a_bytes = (uint8_t *) &sa->sa_addr;
 	uint8_t *p_bytes = (uint8_t *) &sa->sa_port;
+	char     ipbuf[46];
 
-	snprintf(buf, bufsz, "%u.%u.%u.%u:%u", a_bytes[0], a_bytes[1],
-	    a_bytes[2], a_bytes[3],
+	snprintf(buf, bufsz, "%s:%u",
+	    nni_inet_ntop(NNG_AF_INET, a_bytes, ipbuf),
 	    (((uint16_t) p_bytes[0]) << 8) + p_bytes[1]);
 	return (buf);
 }
 
-// emit an IPv6 address in "short form"
-static char *
-nni_inet_ntop(const uint8_t addr[16], char buf[46])
+// emit an IP address, only NNG_AF_INET and NNG_AF_INET6 explicitly are
+// supported.  (NO support for NNG_AF_UNSPEC.)
+char *
+nni_inet_ntop(enum nng_sockaddr_family af, const uint8_t *addr, char *buf)
 {
+	if (af == NNG_AF_INET) {
+		snprintf(buf, 46, "%u.%u.%u.%u", addr[0], addr[1], addr[2],
+		    addr[3]);
+		return (buf);
+	}
+	if (af != NNG_AF_INET6) {
+		return (NULL);
+	}
 
 	const uint8_t v4map[12] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
 
@@ -106,11 +116,12 @@ str_sa_inet6(const nng_sockaddr_in6 *sa, char *buf, size_t bufsz)
 
 	if (sa->sa_scope) {
 		snprintf(buf, bufsz, "[%s%%%u]:%u",
-		    nni_inet_ntop(sa->sa_addr, istr), sa->sa_scope,
+		    nni_inet_ntop(NNG_AF_INET6, sa->sa_addr, istr),
+		    sa->sa_scope,
 		    (((uint16_t) (p_bytes[0])) << 8) + p_bytes[1]);
 	} else {
 		snprintf(buf, bufsz, "[%s]:%u",
-		    nni_inet_ntop(sa->sa_addr, istr),
+		    nni_inet_ntop(NNG_AF_INET6, sa->sa_addr, istr),
 		    (((uint16_t) (p_bytes[0])) << 8) + p_bytes[1]);
 	}
 	return (buf);

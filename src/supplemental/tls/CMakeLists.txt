@@ -14,7 +14,7 @@
 if (NNG_ENABLE_TLS)
     # List of TLS engines we support.  TLS engines must support TLS 1.2 or better,
     # and must also support DTLS.  Support for PSK is preferred.
-    set(NNG_TLS_ENGINES mbed wolf none)
+    set(NNG_TLS_ENGINES mbed wolf openssl none)
     # We assume Mbed for now.
     set(NNG_TLS_ENGINE mbed CACHE STRING "TLS engine to use.")
     set_property(CACHE NNG_TLS_ENGINE PROPERTY STRINGS ${NNG_TLS_ENGINES})
@@ -28,6 +28,7 @@ endif ()
 
 add_subdirectory(mbedtls)
 add_subdirectory(wolfssl)
+add_subdirectory(openssl)
 
 if (NNG_ENABLE_TLS)
     nng_sources(tls_common.c tls_dialer.c tls_listener.c tls_stream.c)

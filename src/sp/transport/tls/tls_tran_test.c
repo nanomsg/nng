@@ -80,8 +80,9 @@ test_tls_port_zero_bind(void)
 	nng_dialer      d;
 	const nng_url  *url;
 
-	c1 = tls_server_config();
-	c2 = tls_client_config();
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
+	c1 = tls_server_config_ecdsa();
+	c2 = tls_client_config_ecdsa();
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0"));
@@ -113,10 +114,10 @@ test_tls_bad_cert_mutual(void)
 	nng_dialer      d;
 	const nng_url  *url;
 
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	c1 = tls_server_config();
 	c2 = tls_client_config();
 
-	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_tls_config_auth_mode(c1, NNG_TLS_AUTH_MODE_REQUIRED));
@@ -157,10 +158,10 @@ test_tls_cert_mutual(void)
 	nng_dialer      d;
 	const nng_url  *url;
 
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	c1 = tls_server_config_ecdsa();
 	c2 = tls_client_config_ecdsa();
 
-	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_tls_config_auth_mode(c1, NNG_TLS_AUTH_MODE_REQUIRED));
@@ -198,10 +199,10 @@ test_tls_pipe_details(void)
 	nng_pipe        p;
 	const nng_url  *url;
 
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	c1 = tls_server_config_ecdsa();
 	c2 = tls_client_config_ecdsa();
 
-	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_tls_config_auth_mode(c1, NNG_TLS_AUTH_MODE_REQUIRED));
