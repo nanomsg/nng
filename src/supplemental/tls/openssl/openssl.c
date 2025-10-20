@@ -161,6 +161,11 @@ ossl_bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
 	case BIO_CTRL_FLUSH:
 	case BIO_CTRL_POP:
 		return (1);
+	case BIO_CTRL_GET_KTLS_SEND:
+	case BIO_CTRL_GET_KTLS_RECV:
+		// not supported
+		return (0);
+
 	default:
 		nng_log_err(
 		    "NNG-TLS-BIO", "Unsupported BIO CMD %d num %ld", cmd, num);
