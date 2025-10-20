@@ -220,7 +220,10 @@ ossl_init_nng(void)
 static void
 ossl_conn_fini(nng_tls_engine_conn *ec)
 {
-	SSL_free(ec->ssl);
+	if (ec->ssl != NULL) {
+		SSL_free(ec->ssl);
+		ec->ssl = NULL;
+	}
 }
 
 static int
@@ -274,7 +277,9 @@ ossl_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 static void
 ossl_conn_close(nng_tls_engine_conn *ec)
 {
-	(void) SSL_shutdown(ec->ssl);
+	if (ec->ssl != NULL) {
+		(void) SSL_shutdown(ec->ssl);
+	}
 }
 
 static int
