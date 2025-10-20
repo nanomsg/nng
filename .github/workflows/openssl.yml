@@ -1,0 +1,40 @@
+name: openssl
+on:
+  push:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+jobs:
+  build:
+    name: build
+    runs-on: [ubuntu-24.04]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install ninja
+        run: sudo apt-get install ninja-build
+
+      - name: Download OpenSSL source
+        run: |
+          # Replace with the desired OpenSSL version
+          OPENSSL_VERSION="openssl-3.5.4"
+          wget https://www.openssl.org/source/${OPENSSL_VERSION}.tar.gz
+          tar -xzf ${OPENSSL_VERSION}.tar.gz
+          mv ${OPENSSL_VERSION} openssl_src
+
+      - name: Build OpenSSL
+        working-directory: openssl_src
+        run: |
+          ./config --prefix=/usr
+          make
+          sudo make install_sw
+
+      - name: Configure
+        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -D NNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=openssl ..
+
+      - name: Build
+        run: cd build && ninja
+
+      - name: Test
+        run: cd build && ctest --output-on-failure
