@@ -388,12 +388,6 @@ ipc_free(void *arg)
 }
 
 static nng_err
-ipc_conn_get_addr(void *c, void *buf, size_t *szp, nni_opt_type t)
-{
-	return (nni_copyout_sockaddr(&(CONN(c))->sa, buf, szp, t));
-}
-
-static nng_err
 ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 {
 	ULONG id;
@@ -414,14 +408,6 @@ ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static const nni_option ipc_conn_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipc_conn_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ipc_conn_get_addr,
-	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_PID,
 	    .o_get  = ipc_conn_get_peer_pid,

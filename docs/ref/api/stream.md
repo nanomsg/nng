@@ -76,6 +76,18 @@ stream itself.
 > or be aborted, these functions are unsafe to call from functions that may not block, such as the
 > completion function registered with an [`nng_aio`] when it is created.
 
+## Stream Addresses
+
+```c
+nng_err nng_stream_peer_addr(nng_stream *s, const nng_sockaddr **valp);
+nng_err nng_stream_self_addr(nng_stream *s, const nng_sockaddr **valp);
+```
+
+{{hi:`nng_stream_peer_addr`}}
+{{hi:`nng_stream_self_addr`}}
+These functions are used to obtain value of the local (self) or remote (peer) addresses
+for the given stream _s_.
+
 ## Getting Stream Options
 
 ```c
@@ -101,6 +113,10 @@ are available, and which type they may be accessed using.
 
 In the case of `nng_stream_get_string`, the string pointer is only guaranteed to be valid while the
 stream exists. Callers should make a copy of the data if required before closing the stream.
+
+> [!NOTE]:
+> The `nng_stream_get_addr` function is deprecated and will be removed. Use the
+> [`nng_stream_peer_addr`] or [`nng_stream_self_addr`] functions instead.
 
 ## Stream Factories
 

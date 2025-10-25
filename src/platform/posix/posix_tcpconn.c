@@ -333,41 +333,19 @@ tcp_recv(void *arg, nni_aio *aio)
 }
 
 static nng_err
-tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
+tcp_get_peer_addr(void *arg, const nng_sockaddr **addr)
 {
-	nni_tcp_conn           *c = arg;
-	struct sockaddr_storage ss;
-	socklen_t               len = sizeof(ss);
-	int                     fd  = nni_posix_pfd_fd(&c->pfd);
-	nng_err                 rv;
-	nng_sockaddr            sa;
-
-	if (getpeername(fd, (void *) &ss, &len) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == NNG_OK) {
-		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
-	}
-	return (rv);
+	nni_tcp_conn *c = arg;
+	*addr           = &c->peer;
+	return (NNG_OK);
 }
 
 static nng_err
-tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
+tcp_get_self_addr(void *arg, const nng_sockaddr **addr)
 {
-	nni_tcp_conn           *c = arg;
-	struct sockaddr_storage ss;
-	socklen_t               len = sizeof(ss);
-	int                     fd  = nni_posix_pfd_fd(&c->pfd);
-	int                     rv;
-	nng_sockaddr            sa;
-
-	if (getsockname(fd, (void *) &ss, &len) != 0) {
-		return (nni_plat_errno(errno));
-	}
-	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == NNG_OK) {
-		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
-	}
-	return (rv);
+	nni_tcp_conn *c = arg;
+	*addr           = &c->self;
+	return (NNG_OK);
 }
 
 static nng_err
@@ -401,14 +379,6 @@ tcp_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static const nni_option tcp_options[] = {
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = tcp_get_peername,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = tcp_get_sockname,
-	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_get  = tcp_get_nodelay,
@@ -452,13 +422,15 @@ nni_posix_tcp_alloc(nni_tcp_conn **cp, nni_tcp_dialer *d, int fd)
 	nni_aio_list_init(&c->writeq);
 	nni_posix_pfd_init(&c->pfd, fd, tcp_cb, c);
 
-	c->stream.s_free  = tcp_free;
-	c->stream.s_stop  = tcp_stop;
-	c->stream.s_close = tcp_close;
-	c->stream.s_recv  = tcp_recv;
-	c->stream.s_send  = tcp_send;
-	c->stream.s_get   = tcp_get;
-	c->stream.s_set   = tcp_set;
+	c->stream.s_free      = tcp_free;
+	c->stream.s_stop      = tcp_stop;
+	c->stream.s_close     = tcp_close;
+	c->stream.s_recv      = tcp_recv;
+	c->stream.s_send      = tcp_send;
+	c->stream.s_get       = tcp_get;
+	c->stream.s_set       = tcp_set;
+	c->stream.s_peer_addr = tcp_get_peer_addr;
+	c->stream.s_self_addr = tcp_get_self_addr;
 
 	*cp = c;
 	return (0);
@@ -467,9 +439,19 @@ nni_posix_tcp_alloc(nni_tcp_conn **cp, nni_tcp_dialer *d, int fd)
 void
 nni_posix_tcp_start(nni_tcp_conn *c, int nodelay, int keepalive)
 {
+	int fd = nni_posix_pfd_fd(&c->pfd);
 	// Configure the initial socket options.
-	(void) setsockopt(nni_posix_pfd_fd(&c->pfd), IPPROTO_TCP, TCP_NODELAY,
-	    &nodelay, sizeof(int));
-	(void) setsockopt(nni_posix_pfd_fd(&c->pfd), SOL_SOCKET, SO_KEEPALIVE,
-	    &keepalive, sizeof(int));
+	(void) setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(int));
+	(void) setsockopt(
+	    fd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(int));
+
+	struct sockaddr_storage ss;
+	socklen_t               len = sizeof(ss);
+
+	// Get this info now so we can avoid system calls later.
+	(void) getpeername(fd, (void *) &ss, &len);
+	nni_posix_sockaddr2nn(&c->peer, &ss, len);
+
+	(void) getsockname(fd, (void *) &ss, &len);
+	nni_posix_sockaddr2nn(&c->self, &ss, len);
 }

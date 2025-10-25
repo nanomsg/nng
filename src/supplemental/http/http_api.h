@@ -72,8 +72,8 @@ extern void nni_http_read_chunks(
 extern nni_http_req *nni_http_conn_req(nni_http_conn *);
 extern nni_http_res *nni_http_conn_res(nni_http_conn *);
 
-extern nng_err nni_http_get_addr(
-    nni_http_conn *, const char *, nng_sockaddr *);
+extern nng_err nni_http_peer_addr(nni_http_conn *, const nng_sockaddr **);
+extern nng_err nni_http_self_addr(nni_http_conn *, const nng_sockaddr **);
 
 // Private to the server. (Used to support session hijacking.)
 extern void  nni_http_conn_set_ctx(nni_http_conn *, void *);

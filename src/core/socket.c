@@ -1301,7 +1301,8 @@ dialer_start_pipe(nni_dialer *d, nni_pipe *p)
 			char addr[NNG_MAXADDRSTRLEN];
 			nng_log_debug("NNG-PIPEREJECT",
 			    "Pipe on socket<%u> from %s rejected by callback",
-			    nni_pipe_sock_id(p), nni_pipe_peer_addr(p, addr));
+			    nni_pipe_sock_id(p),
+			    nni_pipe_peer_str_addr(p, addr));
 		}
 		nni_pipe_rele(p);
 		return;
@@ -1323,10 +1324,13 @@ dialer_start_pipe(nni_dialer *d, nni_pipe *p)
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	if (nng_log_get_level() >= NNG_LOG_DEBUG) {
-		char addr[NNG_MAXADDRSTRLEN];
+		char peer_addr[NNG_MAXADDRSTRLEN];
+		char self_addr[NNG_MAXADDRSTRLEN];
 		nng_log_debug("NNG-CONNECT",
-		    "Connected pipe<%u> on socket<%u> to %s", nni_pipe_id(p),
-		    nni_sock_id(s), nni_pipe_peer_addr(p, addr));
+		    "Connected pipe<%u> on socket<%u> at %s to %s",
+		    nni_pipe_id(p), nni_sock_id(s),
+		    nni_pipe_self_str_addr(p, self_addr),
+		    nni_pipe_peer_str_addr(p, peer_addr));
 	}
 	nni_pipe_rele(p);
 }
@@ -1429,10 +1433,13 @@ listener_start_pipe(nni_listener *l, nni_pipe *p)
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	if (nng_log_get_level() >= NNG_LOG_DEBUG) {
-		char addr[NNG_MAXADDRSTRLEN];
+		char peer_addr[NNG_MAXADDRSTRLEN];
+		char self_addr[NNG_MAXADDRSTRLEN];
 		nng_log_debug("NNG-ACCEPT",
-		    "Accepted pipe<%u> on socket<%u> from %s", nni_pipe_id(p),
-		    nni_sock_id(s), nni_pipe_peer_addr(p, addr));
+		    "Accepted pipe<%u> on socket<%u> at %s from %s",
+		    nni_pipe_id(p), nni_sock_id(s),
+		    nni_pipe_self_str_addr(p, self_addr),
+		    nni_pipe_peer_str_addr(p, peer_addr));
 	}
 
 	// the socket now "owns" the pipe, and a pipe close should immediately
