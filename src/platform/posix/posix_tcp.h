@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -26,6 +26,8 @@ struct nni_tcp_conn {
 	nni_aio        *dial_aio;
 	nni_tcp_dialer *dialer;
 	nni_reap_node   reap;
+	nng_sockaddr    peer;
+	nng_sockaddr    self;
 };
 
 extern int  nni_posix_tcp_alloc(nni_tcp_conn **, nni_tcp_dialer *, int);
