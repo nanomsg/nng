@@ -12,7 +12,6 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
-#include <malloc.h>
 #include <stdio.h>
 
 static LPFN_ACCEPTEX             acceptex;

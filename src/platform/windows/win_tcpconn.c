@@ -9,11 +9,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
 
 #include "win_tcp.h"
 
-#include <malloc.h>
 #include <stdio.h>
 
 static void
@@ -180,7 +179,7 @@ tcp_send_start(nni_tcp_conn *c)
 }
 
 static void
-tcp_send_cancel(nni_aio *aio, void *arg, int rv)
+tcp_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
@@ -263,30 +262,6 @@ tcp_close(void *arg)
 }
 
 static nng_err
-tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	nng_sockaddr  sa;
-
-	if (nni_win_sockaddr2nn(&sa, &c->peername, sizeof(c->peername)) < 0) {
-		return (NNG_EADDRINVAL);
-	}
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
-static nng_err
-tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	nng_sockaddr  sa;
-
-	if (nni_win_sockaddr2nn(&sa, &c->sockname, sizeof(c->sockname)) < 0) {
-		return (NNG_EADDRINVAL);
-	}
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
-static nng_err
 tcp_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c   = arg;
@@ -314,15 +289,23 @@ tcp_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
+static nng_err
+tcp_self_addr(void *arg, const nng_sockaddr **sap)
+{
+	nni_tcp_conn *c = arg;
+	*sap            = &c->sockname;
+	return (NNG_OK);
+}
+
+static nng_err
+tcp_peer_addr(void *arg, const nng_sockaddr **sap)
+{
+	nni_tcp_conn *c = arg;
+	*sap            = &c->peername;
+	return (NNG_OK);
+}
+
 static const nni_option tcp_options[] = {
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = tcp_get_peername,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = tcp_get_sockname,
-	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_get  = tcp_get_nodelay,
@@ -336,14 +319,14 @@ static const nni_option tcp_options[] = {
 	},
 };
 
-static int
+static nng_err
 tcp_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c = arg;
 	return (nni_getopt(tcp_options, name, c, buf, szp, t));
 }
 
-static int
+static nng_err
 tcp_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_conn *c = arg;
@@ -397,14 +380,16 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
 	nni_cv_init(&c->cv, &c->mtx);
 	nni_aio_list_init(&c->recv_aios);
 	nni_aio_list_init(&c->send_aios);
-	c->conn_aio    = NULL;
-	c->ops.s_close = tcp_close;
-	c->ops.s_stop  = tcp_stop;
-	c->ops.s_free  = tcp_free;
-	c->ops.s_send  = tcp_send;
-	c->ops.s_recv  = tcp_recv;
-	c->ops.s_get   = tcp_get;
-	c->ops.s_set   = tcp_set;
+	c->conn_aio        = NULL;
+	c->ops.s_close     = tcp_close;
+	c->ops.s_stop      = tcp_stop;
+	c->ops.s_free      = tcp_free;
+	c->ops.s_send      = tcp_send;
+	c->ops.s_recv      = tcp_recv;
+	c->ops.s_get       = tcp_get;
+	c->ops.s_set       = tcp_set;
+	c->ops.s_peer_addr = tcp_peer_addr;
+	c->ops.s_self_addr = tcp_self_addr;
 
 	nni_win_io_init(&c->recv_io, tcp_recv_cb, c);
 	nni_win_io_init(&c->send_io, tcp_send_cb, c);

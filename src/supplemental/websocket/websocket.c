@@ -193,6 +193,8 @@ static void    ws_str_send(void *, nng_aio *);
 static void    ws_str_recv(void *, nng_aio *);
 static nng_err ws_str_get(void *, const char *, void *, size_t *, nni_type);
 static nng_err ws_str_peer_cert(void *, nng_tls_cert **);
+static nng_err ws_str_self_addr(void *, const nng_sockaddr **);
+static nng_err ws_str_peer_addr(void *, const nng_sockaddr **);
 
 static void ws_listener_close(void *);
 static void ws_listener_free(void *);
@@ -1402,6 +1404,8 @@ ws_init(nni_ws **wsp)
 	ws->ops.s_recv      = ws_str_recv;
 	ws->ops.s_get       = ws_str_get;
 	ws->ops.s_peer_cert = ws_str_peer_cert;
+	ws->ops.s_peer_addr = ws_str_peer_addr;
+	ws->ops.s_self_addr = ws_str_self_addr;
 
 	ws->fragsize = 1 << 20; // we won't send a frame larger than this
 	*wsp         = ws;
@@ -2840,4 +2844,18 @@ ws_str_peer_cert(void *arg, nng_tls_cert **certp)
 	}
 	nni_mtx_unlock(&ws->mtx);
 	return (nni_http_conn_peer_cert(ws->http, certp));
+}
+
+static nng_err
+ws_str_peer_addr(void *arg, const nng_sockaddr **sap)
+{
+	nni_ws *ws = arg;
+	return (nni_http_peer_addr(ws->http, sap));
+}
+
+static nng_err
+ws_str_self_addr(void *arg, const nng_sockaddr **sap)
+{
+	nni_ws *ws = arg;
+	return (nni_http_self_addr(ws->http, sap));
 }

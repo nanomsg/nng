@@ -421,12 +421,23 @@ nni_pipe_bump_error(nni_pipe *p, int err)
 }
 
 char *
-nni_pipe_peer_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
+nni_pipe_peer_str_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
 {
 	nng_sockaddr sa;
 	size_t       sz = sizeof(sa);
 	sa.s_family     = AF_UNSPEC;
 	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
+	nng_str_sockaddr(&sa, buf, NNG_MAXADDRSTRLEN);
+	return (buf);
+}
+
+char *
+nni_pipe_self_str_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
+{
+	nng_sockaddr sa;
+	size_t       sz = sizeof(sa);
+	sa.s_family     = AF_UNSPEC;
+	nni_pipe_getopt(p, NNG_OPT_LOCADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
 	nng_str_sockaddr(&sa, buf, NNG_MAXADDRSTRLEN);
 	return (buf);
 }

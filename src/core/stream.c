@@ -133,6 +133,15 @@ void
 nng_stream_free(nng_stream *s)
 {
 	if (s != NULL) {
+		// These are mandatory - we have checks here for completeness.
+		NNI_ASSERT(s->s_close != NULL);
+		NNI_ASSERT(s->s_stop != NULL);
+		NNI_ASSERT(s->s_send != NULL);
+		NNI_ASSERT(s->s_recv != NULL);
+		NNI_ASSERT(s->s_free != NULL);
+		NNI_ASSERT(s->s_peer_addr != NULL);
+		NNI_ASSERT(s->s_self_addr != NULL);
+
 		s->s_free(s);
 	}
 }
@@ -155,6 +164,15 @@ nng_err
 nni_stream_get(
     nng_stream *s, const char *nm, void *data, size_t *szp, nni_type t)
 {
+	// TODO: eventually this needs die
+	if ((strcmp(nm, NNG_OPT_REMADDR) == 0) ||
+	    (strcmp(nm, NNG_OPT_LOCADDR) == 0)) {
+		if (t != NNI_TYPE_SOCKADDR) {
+			return (NNG_EBADTYPE);
+		}
+		return (nng_stream_get_addr(s, nm, (nng_sockaddr *) data));
+	}
+
 	return (s->s_get(s, nm, data, szp, t));
 }
 
@@ -382,7 +400,29 @@ nng_stream_get_ms(nng_stream *s, const char *n, nng_duration *v)
 nng_err
 nng_stream_get_addr(nng_stream *s, const char *n, nng_sockaddr *v)
 {
-	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_SOCKADDR));
+	const nng_sockaddr *sap;
+	int                 rv = NNG_ENOTSUP;
+	if (strcmp(n, NNG_OPT_LOCADDR) == 0) {
+		rv = nng_stream_self_addr(s, &sap);
+	} else if (strcmp(n, NNG_OPT_REMADDR) == 0) {
+		rv = nng_stream_peer_addr(s, &sap);
+	}
+	if (rv == NNG_OK) {
+		*v = *sap;
+	}
+	return (rv);
+}
+
+nng_err
+nng_stream_self_addr(nng_stream *s, const nng_sockaddr **sa)
+{
+	return (s->s_self_addr(s, &*sa));
+}
+
+nng_err
+nng_stream_peer_addr(nng_stream *s, const nng_sockaddr **sa)
+{
+	return (s->s_peer_addr(s, &*sa));
 }
 
 nng_err

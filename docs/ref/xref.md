@@ -170,6 +170,8 @@
 [`nng_stream_listener_set_size`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_addr`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_string`]: ../api/stream.md#stream-factory-options
+[`nng_stream_peer_addr`]: ../api/stream.md#stream-addresses
+[`nng_stream_self_addr`]: ../api/stream.md#stream-addresses
 [`nng_init`]: ../api/init.md#initialization
 [`nng_fini`]: ../api/init.md#finalization
 [`nng_sub0_ctx_subscribe`]: ../proto/sub.md#context-operations

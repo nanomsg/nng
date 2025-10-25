@@ -143,6 +143,8 @@ tls_stream_conn_cb(void *arg)
 
 static nng_err tls_stream_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t);
+static nng_err tls_stream_self_addr(void *arg, const nng_sockaddr **);
+static nng_err tls_stream_peer_addr(void *arg, const nng_sockaddr **);
 static nng_err tls_stream_peer_cert(void *arg, nng_tls_cert **);
 
 int
@@ -168,6 +170,8 @@ nni_tls_stream_alloc(tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio)
 	ts->stream.s_send      = tls_stream_send;
 	ts->stream.s_recv      = tls_stream_recv;
 	ts->stream.s_get       = tls_stream_get;
+	ts->stream.s_self_addr = tls_stream_self_addr;
+	ts->stream.s_peer_addr = tls_stream_peer_addr;
 	ts->stream.s_peer_cert = tls_stream_peer_cert;
 
 	nni_aio_init(&ts->conn_aio, tls_stream_conn_cb, ts);
@@ -235,4 +239,18 @@ tls_stream_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 		return (rv);
 	}
 	return (nni_getopt(tls_stream_options, name, ts, buf, szp, t));
+}
+
+static nng_err
+tls_stream_self_addr(void *arg, const nng_sockaddr **sap)
+{
+	tls_stream *ts = arg;
+	return (nng_stream_self_addr(ts->conn.bio, sap));
+}
+
+static nng_err
+tls_stream_peer_addr(void *arg, const nng_sockaddr **sap)
+{
+	tls_stream *ts = arg;
+	return (nng_stream_peer_addr(ts->conn.bio, sap));
 }

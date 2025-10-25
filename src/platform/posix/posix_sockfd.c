@@ -328,15 +328,6 @@ sfd_recv(void *arg, nni_aio *aio)
 }
 
 static nng_err
-sfd_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	NNI_ARG_UNUSED(arg);
-	nng_sockaddr sa;
-	sa.s_family = NNG_AF_UNSPEC;
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
-static nng_err
 sfd_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_sfd_conn *c = arg;
@@ -406,14 +397,6 @@ sfd_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 
 static const nni_option sfd_options[] = {
 	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = sfd_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = sfd_get_addr,
-	},
-	{
 	    .o_name = NNG_OPT_PEER_PID,
 	    .o_get  = sfd_get_peer_pid,
 	},
@@ -448,6 +431,15 @@ sfd_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 	return (nni_setopt(sfd_options, name, c, buf, sz, t));
 }
 
+static nng_err
+sfd_addr(void *arg, const nng_sockaddr **sap)
+{
+	static nng_sockaddr sa = { .s_family = NNG_AF_UNSPEC };
+	NNI_ARG_UNUSED(arg);
+	*sap = &sa;
+	return (NNG_OK);
+}
+
 nng_err
 nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 {
@@ -464,13 +456,15 @@ nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 	nni_aio_list_init(&c->readq);
 	nni_aio_list_init(&c->writeq);
 
-	c->stream.s_free  = sfd_free;
-	c->stream.s_close = sfd_close;
-	c->stream.s_stop  = sfd_stop;
-	c->stream.s_recv  = sfd_recv;
-	c->stream.s_send  = sfd_send;
-	c->stream.s_get   = sfd_get;
-	c->stream.s_set   = sfd_set;
+	c->stream.s_free      = sfd_free;
+	c->stream.s_close     = sfd_close;
+	c->stream.s_stop      = sfd_stop;
+	c->stream.s_recv      = sfd_recv;
+	c->stream.s_send      = sfd_send;
+	c->stream.s_get       = sfd_get;
+	c->stream.s_set       = sfd_set;
+	c->stream.s_peer_addr = sfd_addr;
+	c->stream.s_self_addr = sfd_addr;
 
 	*cp = c;
 	return (NNG_OK);

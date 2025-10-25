@@ -9,8 +9,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/aio.h"
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
+#include "win_impl.h"
 
 #include "win_ipc.h"
 
@@ -276,7 +276,7 @@ ipc_send_cb(nni_win_io *io, int rv, size_t num)
 }
 
 static void
-ipc_send_cancel(nni_aio *aio, void *arg, int rv)
+ipc_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	ipc_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
@@ -388,12 +388,6 @@ ipc_free(void *arg)
 }
 
 static nng_err
-ipc_conn_get_addr(void *c, void *buf, size_t *szp, nni_opt_type t)
-{
-	return (nni_copyout_sockaddr(&(CONN(c))->sa, buf, szp, t));
-}
-
-static nng_err
 ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 {
 	ULONG id;
@@ -414,14 +408,6 @@ ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static const nni_option ipc_conn_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipc_conn_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ipc_conn_get_addr,
-	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_PID,
 	    .o_get  = ipc_conn_get_peer_pid,
@@ -445,6 +431,14 @@ ipc_get(void *arg, const char *nm, void *val, size_t *szp, nni_opt_type t)
 	return (nni_getopt(ipc_conn_options, nm, c, val, szp, t));
 }
 
+static nng_err
+ipc_addr(void *arg, const nng_sockaddr **sap)
+{
+	ipc_conn *c = arg;
+	*sap        = &c->sa;
+	return (NNG_OK);
+}
+
 int
 nni_win_ipc_init(
     nng_stream **connp, HANDLE p, const nng_sockaddr *sa, bool dialer)
@@ -459,15 +453,17 @@ nni_win_ipc_init(
 	nni_cv_init(&c->cv, &c->mtx);
 	nni_aio_list_init(&c->recv_aios);
 	nni_aio_list_init(&c->send_aios);
-	c->dialer         = dialer;
-	c->sa             = *sa;
-	c->stream.s_free  = ipc_free;
-	c->stream.s_close = ipc_close;
-	c->stream.s_stop  = ipc_stop;
-	c->stream.s_send  = ipc_send;
-	c->stream.s_recv  = ipc_recv;
-	c->stream.s_get   = ipc_get;
-	c->stream.s_set   = ipc_set;
+	c->dialer             = dialer;
+	c->sa                 = *sa;
+	c->stream.s_free      = ipc_free;
+	c->stream.s_close     = ipc_close;
+	c->stream.s_stop      = ipc_stop;
+	c->stream.s_send      = ipc_send;
+	c->stream.s_recv      = ipc_recv;
+	c->stream.s_get       = ipc_get;
+	c->stream.s_set       = ipc_set;
+	c->stream.s_self_addr = ipc_addr;
+	c->stream.s_peer_addr = ipc_addr;
 
 	nni_win_io_init(&c->recv_io, ipc_recv_cb, c);
 	nni_win_io_init(&c->send_io, ipc_send_cb, c);

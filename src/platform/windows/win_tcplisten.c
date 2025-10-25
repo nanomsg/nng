@@ -9,12 +9,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-
-#include <malloc.h>
 #include <stdbool.h>
 #include <stdio.h>
 
+#include "../../core/nng_impl.h"
 #include "win_tcp.h"
 
 typedef struct tcp_listener {
@@ -220,10 +218,12 @@ tcp_accept_cancel(nni_aio *aio, void *arg, nng_err rv)
 static void
 tcp_listener_accepted(tcp_listener *l)
 {
-	BOOL          nd;
-	BOOL          ka;
-	nni_tcp_conn *c;
-	nni_aio      *aio;
+	BOOL             nd;
+	BOOL             ka;
+	nni_tcp_conn    *c;
+	nni_aio         *aio;
+	SOCKADDR_STORAGE sockname;
+	SOCKADDR_STORAGE peername;
 
 	aio          = nni_list_first(&l->aios);
 	c            = l->pend_conn;
@@ -232,7 +232,9 @@ tcp_listener_accepted(tcp_listener *l)
 	nd           = l->nodelay;
 
 	nni_aio_list_remove(aio);
-	nni_win_get_acceptex_sockaddrs(c->buf, &c->sockname, &c->peername);
+	nni_win_get_acceptex_sockaddrs(c->buf, &sockname, &peername);
+	nni_win_sockaddr2nn(&c->sockname, &sockname, sizeof(sockname));
+	nni_win_sockaddr2nn(&c->peername, &peername, sizeof(peername));
 
 	(void) setsockopt(c->s, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 	    (char *) &l->s, sizeof(l->s));

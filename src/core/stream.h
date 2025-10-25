@@ -50,6 +50,8 @@ struct nng_stream {
 	void (*s_send)(void *, nng_aio *);
 	nng_err (*s_get)(void *, const char *, void *, size_t *, nni_type);
 	nng_err (*s_set)(void *, const char *, const void *, size_t, nni_type);
+	nng_err (*s_peer_addr)(void *, const nng_sockaddr **);
+	nng_err (*s_self_addr)(void *, const nng_sockaddr **);
 	nng_err (*s_peer_cert)(void *, nng_tls_cert **);
 };
 

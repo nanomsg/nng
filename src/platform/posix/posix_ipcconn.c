@@ -300,6 +300,14 @@ ipc_recv(void *arg, nni_aio *aio)
 }
 
 static nng_err
+ipc_sock_addr(void *arg, const nng_sockaddr **sap)
+{
+	ipc_conn *c = arg;
+	*sap        = &c->sa;
+	return (NNG_OK);
+}
+
+static nng_err
 ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
@@ -367,13 +375,6 @@ ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_int(id, buf, szp, t));
 }
 
-static nng_err
-ipc_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	ipc_conn *c = arg;
-	return (nni_copyout_sockaddr(&c->sa, buf, szp, t));
-}
-
 static void
 ipc_stop(void *arg)
 {
@@ -413,14 +414,6 @@ ipc_free(void *arg)
 
 static const nni_option ipc_options[] = {
 	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipc_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ipc_get_addr,
-	},
-	{
 	    .o_name = NNG_OPT_IPC_PEER_PID,
 	    .o_get  = ipc_get_peer_pid,
 	},
@@ -455,7 +448,7 @@ ipc_set(void *arg, const char *name, const void *val, size_t sz, nni_type t)
 	return (nni_setopt(ipc_options, name, c, val, sz, t));
 }
 
-int
+nng_err
 nni_posix_ipc_alloc(
     nni_ipc_conn **cp, nni_sockaddr *sa, nni_ipc_dialer *d, int fd)
 {
@@ -465,16 +458,18 @@ nni_posix_ipc_alloc(
 		return (NNG_ENOMEM);
 	}
 
-	c->closed         = false;
-	c->dialer         = d;
-	c->stream.s_free  = ipc_free;
-	c->stream.s_close = ipc_close;
-	c->stream.s_stop  = ipc_stop;
-	c->stream.s_send  = ipc_send;
-	c->stream.s_recv  = ipc_recv;
-	c->stream.s_get   = ipc_get;
-	c->stream.s_set   = ipc_set;
-	c->sa             = *sa;
+	c->closed             = false;
+	c->dialer             = d;
+	c->stream.s_free      = ipc_free;
+	c->stream.s_close     = ipc_close;
+	c->stream.s_stop      = ipc_stop;
+	c->stream.s_send      = ipc_send;
+	c->stream.s_recv      = ipc_recv;
+	c->stream.s_get       = ipc_get;
+	c->stream.s_set       = ipc_set;
+	c->stream.s_self_addr = ipc_sock_addr,
+	c->stream.s_peer_addr = ipc_sock_addr;
+	c->sa                 = *sa;
 
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->readq);

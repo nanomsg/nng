@@ -31,7 +31,7 @@ static nni_mtx   resolv_mtx;
 static nni_cv    resolv_cv;
 
 static void
-resolv_cancel(nni_aio *aio, void *arg, int rv)
+resolv_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	nni_resolv_item *item = arg;
 

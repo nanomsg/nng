@@ -9,11 +9,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
 
 #include "win_tcp.h"
 
-#include <malloc.h>
 #include <stdio.h>
 
 struct nni_tcp_dialer {
@@ -145,8 +144,9 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 	} else {
-		DWORD yes = 1;
-		int   len;
+		DWORD            yes = 1;
+		int              len;
+		SOCKADDR_STORAGE sa;
 
 		(void) setsockopt(c->s, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT,
 		    (char *) &yes, sizeof(yes));
@@ -157,8 +157,13 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 		(void) setsockopt(
 		    c->s, IPPROTO_TCP, TCP_NODELAY, (char *) &nd, sizeof(nd));
 
-		len = sizeof(SOCKADDR_STORAGE);
-		(void) getsockname(c->s, (SOCKADDR *) &c->sockname, &len);
+		len = sizeof(sa);
+		(void) getsockname(c->s, (SOCKADDR *) &sa, &len);
+		nni_win_sockaddr2nn(&c->sockname, &sa, len);
+
+		len = sizeof(sa);
+		(void) getpeername(c->s, (SOCKADDR *) &sa, &len);
+		nni_win_sockaddr2nn(&c->peername, &sa, len);
 
 		nni_aio_set_output(aio, 0, c);
 		nni_aio_finish(aio, 0, 0);
@@ -169,19 +174,21 @@ void
 nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 {
 	SOCKET           s;
-	SOCKADDR_STORAGE ss;
+	SOCKADDR_STORAGE peername;
+	SOCKADDR_STORAGE sockname;
 	int              len;
 	nni_tcp_conn    *c;
 	int              rv;
 
 	nni_aio_reset(aio);
 
-	if ((len = nni_win_nn2sockaddr(&ss, sa)) <= 0) {
+	if ((len = nni_win_nn2sockaddr(&peername, sa)) <= 0) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
 	}
 
-	if ((s = socket(ss.ss_family, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+	if ((s = socket(peername.ss_family, SOCK_STREAM, 0)) ==
+	    INVALID_SOCKET) {
 		nni_aio_finish_error(aio, nni_win_error(GetLastError()));
 		return;
 	}
@@ -191,8 +198,6 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-
-	c->peername = ss;
 
 	nni_win_io_init(&c->conn_io, tcp_dial_cb, c);
 
@@ -209,18 +214,21 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	// same family, unless a different default was requested.
 	if (d->srclen != 0) {
 		len = (int) d->srclen;
+		memcpy(&sockname, &d->src, len);
 		memcpy(&c->sockname, &d->src, len);
 	} else {
-		ZeroMemory(&c->sockname, sizeof(c->sockname));
-		c->sockname.ss_family = ss.ss_family;
+		ZeroMemory(&sockname, sizeof(sockname));
+		sockname.ss_family = peername.ss_family;
 	}
-	if (bind(s, (SOCKADDR *) &c->sockname, len) != 0) {
+	if (bind(s, (SOCKADDR *) &sockname, len) != 0) {
 		rv = nni_win_error(GetLastError());
 		nni_mtx_unlock(&d->mtx);
 		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	nni_win_sockaddr2nn(&c->sockname, &sockname, sizeof(sockname));
 
 	if (!nni_aio_start(aio, tcp_dial_cancel, d)) {
 		nni_mtx_unlock(&d->mtx);
@@ -234,7 +242,7 @@ nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 
 	// dialing is concurrent.
 	if (!nni_win_connectex(
-	        s, (SOCKADDR *) &c->peername, len, &c->conn_io.olpd)) {
+	        s, (SOCKADDR *) &peername, len, &c->conn_io.olpd)) {
 		if ((rv = GetLastError()) != ERROR_IO_PENDING) {
 			nni_aio_list_remove(aio);
 			nni_mtx_unlock(&d->mtx);

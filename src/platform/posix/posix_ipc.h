@@ -45,7 +45,7 @@ struct nni_ipc_dialer {
 #endif
 };
 
-extern int nni_posix_ipc_alloc(
+extern nng_err nni_posix_ipc_alloc(
     nni_ipc_conn **, nni_sockaddr *, nni_ipc_dialer *, int);
 extern void nni_posix_ipc_dialer_rele(nni_ipc_dialer *);
 extern void nni_posix_ipc_dialer_cb(void *arg, unsigned events);

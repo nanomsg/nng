@@ -9,7 +9,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../core/nng_impl.h"
 
 #include "win_ipc.h"
 
@@ -158,7 +158,7 @@ ipc_listener_set_sec_desc(void *arg, void *desc)
 	return (NNG_OK);
 }
 
-static int
+static nng_err
 ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	ipc_listener *l = arg;
@@ -175,7 +175,7 @@ static const nni_option ipc_listener_options[] = {
 	},
 };
 
-static int
+static nng_err
 ipc_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
@@ -183,7 +183,7 @@ ipc_listener_set(
 	return (nni_setopt(ipc_listener_options, name, l, buf, sz, t));
 }
 
-static int
+static nng_err
 ipc_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {

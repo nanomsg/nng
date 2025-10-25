@@ -131,6 +131,8 @@ test_websocket_conn_props(void)
 	nng_stream_listener *l = NULL;
 	nng_sockaddr         sa1;
 	nng_sockaddr         sa2;
+	const nng_sockaddr  *sap1;
+	const nng_sockaddr  *sap2;
 	size_t               sz;
 	nng_aio             *daio = NULL;
 	nng_aio             *laio = NULL;
@@ -182,11 +184,15 @@ test_websocket_conn_props(void)
 	NUTS_TRUE(c2 != NULL);
 
 	//  Let's compare the peer addresses
+	NUTS_PASS(nng_stream_self_addr(c1, &sap1));
+	NUTS_PASS(nng_stream_peer_addr(c2, &sap2));
 	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
 	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
 	NUTS_TRUE(sa1.s_family == sa2.s_family);
 	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
 	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
+	NUTS_TRUE(memcmp(sap1, &sa1, sizeof(sa1)) == 0);
+	NUTS_TRUE(memcmp(sap2, &sa2, sizeof(sa2)) == 0);
 
 	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
 	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
