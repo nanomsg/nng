@@ -9,11 +9,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/options.h"
 #include "nng/nng.h"
 #include "nng_impl.h"
 #include "sockimpl.h"
 
 #include <stdio.h>
+#include <string.h>
 
 // This file contains functions related to pipe objects.
 //
@@ -345,6 +347,13 @@ nni_pipe_getopt(
 	if (rv != NNG_ENOTSUP) {
 		return (rv);
 	}
+	if (strcmp(name, NNG_OPT_REMADDR) == 0) {
+		return (
+		    nni_copyout_sockaddr(nni_pipe_peer_addr(p), val, szp, t));
+	} else if (strcmp(name, NNG_OPT_LOCADDR) == 0) {
+		return (
+		    nni_copyout_sockaddr(nni_pipe_self_addr(p), val, szp, t));
+	}
 
 	// Maybe the endpoint knows? The guarantees on pipes ensure that the
 	// pipe will not outlive its creating endpoint.
@@ -420,25 +429,29 @@ nni_pipe_bump_error(nni_pipe *p, int err)
 	}
 }
 
+const nng_sockaddr *
+nni_pipe_peer_addr(nni_pipe *p)
+{
+	return (p->p_tran_ops.p_peer_addr(p->p_tran_data));
+}
+
+const nng_sockaddr *
+nni_pipe_self_addr(nni_pipe *p)
+{
+	return (p->p_tran_ops.p_self_addr(p->p_tran_data));
+}
+
 char *
 nni_pipe_peer_str_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
 {
-	nng_sockaddr sa;
-	size_t       sz = sizeof(sa);
-	sa.s_family     = AF_UNSPEC;
-	nni_pipe_getopt(p, NNG_OPT_REMADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
-	nng_str_sockaddr(&sa, buf, NNG_MAXADDRSTRLEN);
+	nng_str_sockaddr(nni_pipe_peer_addr(p), buf, NNG_MAXADDRSTRLEN);
 	return (buf);
 }
 
 char *
 nni_pipe_self_str_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN])
 {
-	nng_sockaddr sa;
-	size_t       sz = sizeof(sa);
-	sa.s_family     = AF_UNSPEC;
-	nni_pipe_getopt(p, NNG_OPT_LOCADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
-	nng_str_sockaddr(&sa, buf, NNG_MAXADDRSTRLEN);
+	nng_str_sockaddr(nni_pipe_self_addr(p), buf, NNG_MAXADDRSTRLEN);
 	return (buf);
 }
 

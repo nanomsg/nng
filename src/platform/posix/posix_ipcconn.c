@@ -299,12 +299,11 @@ ipc_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
-static nng_err
-ipc_sock_addr(void *arg, const nng_sockaddr **sap)
+static const nng_sockaddr *
+ipc_sock_addr(void *arg)
 {
 	ipc_conn *c = arg;
-	*sap        = &c->sa;
-	return (NNG_OK);
+	return (&c->sa);
 }
 
 static nng_err

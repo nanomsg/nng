@@ -145,6 +145,20 @@ tlstran_pipe_fini(void *arg)
 	nni_mtx_fini(&p->mtx);
 }
 
+static const nng_sockaddr *
+tlstran_pipe_peer_addr(void *arg)
+{
+	tlstran_pipe *p = arg;
+	return (nng_stream_peer_addr(p->tls));
+}
+
+static const nng_sockaddr *
+tlstran_pipe_self_addr(void *arg)
+{
+	tlstran_pipe *p = arg;
+	return (nng_stream_self_addr(p->tls));
+}
+
 static void
 tlstran_ep_match(tlstran_ep *ep)
 {
@@ -975,6 +989,8 @@ static nni_sp_pipe_ops tlstran_pipe_ops = {
 	.p_peer      = tlstran_pipe_peer,
 	.p_getopt    = tlstran_pipe_getopt,
 	.p_peer_cert = tlstran_pipe_peer_cert,
+	.p_peer_addr = tlstran_pipe_peer_addr,
+	.p_self_addr = tlstran_pipe_self_addr,
 };
 
 static nni_option tlstran_ep_options[] = {

@@ -1077,6 +1077,19 @@ dtls_pipe_peer_cert(void *arg, nng_tls_cert **certp)
 
 	return (nni_tls_peer_cert(&p->tls, certp));
 }
+static const nng_sockaddr *
+dtls_pipe_peer_addr(void *arg)
+{
+	dtls_pipe *p = arg;
+	return (&p->peer_addr);
+}
+
+static const nng_sockaddr *
+dtls_pipe_self_addr(void *arg)
+{
+	dtls_pipe *p = arg;
+	return (&p->ep->self_sa);
+}
 
 static void
 dtls_ep_fini(void *arg)
@@ -1694,6 +1707,8 @@ static nni_sp_pipe_ops dtls_pipe_ops = {
 	.p_peer      = dtls_pipe_peer,
 	.p_getopt    = dtls_pipe_getopt,
 	.p_peer_cert = dtls_pipe_peer_cert,
+	.p_peer_addr = dtls_pipe_peer_addr,
+	.p_self_addr = dtls_pipe_self_addr,
 };
 
 static const nni_option dtls_ep_opts[] = {

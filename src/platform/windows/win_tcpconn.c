@@ -289,20 +289,18 @@ tcp_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
-static nng_err
-tcp_self_addr(void *arg, const nng_sockaddr **sap)
+static const nng_sockaddr *
+tcp_self_addr(void *arg)
 {
 	nni_tcp_conn *c = arg;
-	*sap            = &c->sockname;
-	return (NNG_OK);
+	return (&c->sockname);
 }
 
-static nng_err
+static const nng_sockaddr *
 tcp_peer_addr(void *arg, const nng_sockaddr **sap)
 {
 	nni_tcp_conn *c = arg;
-	*sap            = &c->peername;
-	return (NNG_OK);
+	return (&c->peername);
 }
 
 static const nni_option tcp_options[] = {

@@ -336,6 +336,20 @@ wstran_pipe_peer_cert(void *arg, nng_tls_cert **certp)
 	return (nng_stream_peer_cert(p->ws, certp));
 }
 
+static const nng_sockaddr *
+wstran_pipe_peer_addr(void *arg)
+{
+	ws_pipe *p = arg;
+	return (nng_stream_peer_addr(p->ws));
+}
+
+static const nng_sockaddr *
+wstran_pipe_self_addr(void *arg)
+{
+	ws_pipe *p = arg;
+	return (nng_stream_self_addr(p->ws));
+}
+
 static size_t
 wstran_pipe_size(void)
 {
@@ -353,6 +367,8 @@ static nni_sp_pipe_ops ws_pipe_ops = {
 	.p_peer      = wstran_pipe_peer,
 	.p_getopt    = wstran_pipe_getopt,
 	.p_peer_cert = wstran_pipe_peer_cert,
+	.p_peer_addr = wstran_pipe_peer_addr,
+	.p_self_addr = wstran_pipe_self_addr,
 };
 
 static void

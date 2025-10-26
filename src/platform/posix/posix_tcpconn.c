@@ -332,20 +332,18 @@ tcp_recv(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
-static nng_err
-tcp_get_peer_addr(void *arg, const nng_sockaddr **addr)
+static const nng_sockaddr *
+tcp_get_peer_addr(void *arg)
 {
 	nni_tcp_conn *c = arg;
-	*addr           = &c->peer;
-	return (NNG_OK);
+	return (&c->peer);
 }
 
-static nng_err
-tcp_get_self_addr(void *arg, const nng_sockaddr **addr)
+static const nng_sockaddr *
+tcp_get_self_addr(void *arg)
 {
 	nni_tcp_conn *c = arg;
-	*addr           = &c->self;
-	return (NNG_OK);
+	return (&c->self);
 }
 
 static nng_err

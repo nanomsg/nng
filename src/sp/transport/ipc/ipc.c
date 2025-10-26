@@ -955,6 +955,20 @@ ipc_pipe_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_stream_get(p->conn, name, buf, szp, t));
 }
 
+static const nng_sockaddr *
+ipc_pipe_peer_addr(void *arg)
+{
+	ipc_pipe *p = arg;
+	return (nng_stream_peer_addr(p->conn));
+}
+
+static const nng_sockaddr *
+ipc_pipe_self_addr(void *arg)
+{
+	ipc_pipe *p = arg;
+	return (nng_stream_self_addr(p->conn));
+}
+
 static size_t
 ipc_pipe_size(void)
 {
@@ -962,15 +976,17 @@ ipc_pipe_size(void)
 }
 
 static nni_sp_pipe_ops ipc_tran_pipe_ops = {
-	.p_size   = ipc_pipe_size,
-	.p_init   = ipc_pipe_init,
-	.p_fini   = ipc_pipe_fini,
-	.p_stop   = ipc_pipe_stop,
-	.p_send   = ipc_pipe_send,
-	.p_recv   = ipc_pipe_recv,
-	.p_close  = ipc_pipe_close,
-	.p_peer   = ipc_pipe_peer,
-	.p_getopt = ipc_pipe_get,
+	.p_size      = ipc_pipe_size,
+	.p_init      = ipc_pipe_init,
+	.p_fini      = ipc_pipe_fini,
+	.p_stop      = ipc_pipe_stop,
+	.p_send      = ipc_pipe_send,
+	.p_recv      = ipc_pipe_recv,
+	.p_close     = ipc_pipe_close,
+	.p_peer      = ipc_pipe_peer,
+	.p_getopt    = ipc_pipe_get,
+	.p_peer_addr = ipc_pipe_peer_addr,
+	.p_self_addr = ipc_pipe_self_addr,
 };
 
 static const nni_option ipc_ep_options[] = {

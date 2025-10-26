@@ -401,28 +401,27 @@ nng_err
 nng_stream_get_addr(nng_stream *s, const char *n, nng_sockaddr *v)
 {
 	const nng_sockaddr *sap;
-	int                 rv = NNG_ENOTSUP;
 	if (strcmp(n, NNG_OPT_LOCADDR) == 0) {
-		rv = nng_stream_self_addr(s, &sap);
+		sap = nng_stream_self_addr(s);
 	} else if (strcmp(n, NNG_OPT_REMADDR) == 0) {
-		rv = nng_stream_peer_addr(s, &sap);
+		sap = nng_stream_peer_addr(s);
+	} else {
+		return (NNG_ENOTSUP);
 	}
-	if (rv == NNG_OK) {
-		*v = *sap;
-	}
-	return (rv);
+	memcpy(v, sap, sizeof(nng_sockaddr));
+	return (NNG_OK);
 }
 
-nng_err
-nng_stream_self_addr(nng_stream *s, const nng_sockaddr **sa)
+const nng_sockaddr *
+nng_stream_self_addr(nng_stream *s)
 {
-	return (s->s_self_addr(s, &*sa));
+	return (s->s_self_addr(s));
 }
 
-nng_err
-nng_stream_peer_addr(nng_stream *s, const nng_sockaddr **sa)
+const nng_sockaddr *
+nng_stream_peer_addr(nng_stream *s)
 {
-	return (s->s_peer_addr(s, &*sa));
+	return (s->s_peer_addr(s));
 }
 
 nng_err

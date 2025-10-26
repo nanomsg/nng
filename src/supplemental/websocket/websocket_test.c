@@ -184,8 +184,8 @@ test_websocket_conn_props(void)
 	NUTS_TRUE(c2 != NULL);
 
 	//  Let's compare the peer addresses
-	NUTS_PASS(nng_stream_self_addr(c1, &sap1));
-	NUTS_PASS(nng_stream_peer_addr(c2, &sap2));
+	sap1 = nng_stream_self_addr(c1);
+	sap2 = nng_stream_peer_addr(c2);
 	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
 	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
 	NUTS_TRUE(sa1.s_family == sa2.s_family);

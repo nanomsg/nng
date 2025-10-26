@@ -71,6 +71,8 @@ extern void nni_pipe_bump_error(nni_pipe *, int);
 
 extern char *nni_pipe_peer_str_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN]);
 extern char *nni_pipe_self_str_addr(nni_pipe *p, char buf[NNG_MAXADDRSTRLEN]);
+const nng_sockaddr *nni_pipe_peer_addr(nni_pipe *p);
+const nng_sockaddr *nni_pipe_self_addr(nni_pipe *p);
 
 extern int nni_pipe_alloc_dialer(void **, nni_dialer *);
 extern int nni_pipe_alloc_listener(void **, nni_listener *);

@@ -160,16 +160,16 @@ nni_http_conn_close(nni_http_conn *conn)
 	nni_mtx_unlock(&conn->mtx);
 }
 
-nng_err
-nni_http_peer_addr(nni_http_conn *conn, const nng_sockaddr **sap)
+const nng_sockaddr *
+nni_http_peer_addr(nni_http_conn *conn)
 {
-	return nng_stream_peer_addr(conn->sock, sap);
+	return (nng_stream_peer_addr(conn->sock));
 }
 
-nng_err
-nni_http_self_addr(nni_http_conn *conn, const nng_sockaddr **sap)
+const nng_sockaddr *
+nni_http_self_addr(nni_http_conn *conn)
 {
-	return nng_stream_self_addr(conn->sock, sap);
+	return (nng_stream_self_addr(conn->sock));
 }
 
 // http_buf_pull_up pulls the content of the read buffer back to the

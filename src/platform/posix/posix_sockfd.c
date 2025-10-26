@@ -431,13 +431,12 @@ sfd_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 	return (nni_setopt(sfd_options, name, c, buf, sz, t));
 }
 
-static nng_err
-sfd_addr(void *arg, const nng_sockaddr **sap)
+static const nng_sockaddr *
+sfd_addr(void *arg)
 {
 	static nng_sockaddr sa = { .s_family = NNG_AF_UNSPEC };
 	NNI_ARG_UNUSED(arg);
-	*sap = &sa;
-	return (NNG_OK);
+	return &sa;
 }
 
 nng_err

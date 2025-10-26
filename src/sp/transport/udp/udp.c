@@ -261,6 +261,20 @@ udp_pipe_start(udp_pipe *p, udp_ep *ep, const nng_sockaddr *sa)
 	return (udp_add_pipe(ep, p));
 }
 
+static const nng_sockaddr *
+udp_pipe_peer_addr(void *arg)
+{
+	udp_pipe *p = arg;
+	return (&p->peer_addr);
+}
+
+static const nng_sockaddr *
+udp_pipe_self_addr(void *arg)
+{
+	udp_pipe *p = arg;
+	return (&p->ep->self_sa);
+}
+
 static void
 udp_pipe_fini(void *arg)
 {
@@ -1693,15 +1707,17 @@ udp_pipe_size(void)
 }
 
 static nni_sp_pipe_ops udp_pipe_ops = {
-	.p_size   = udp_pipe_size,
-	.p_init   = udp_pipe_init,
-	.p_fini   = udp_pipe_fini,
-	.p_stop   = udp_pipe_stop,
-	.p_send   = udp_pipe_send,
-	.p_recv   = udp_pipe_recv,
-	.p_close  = udp_pipe_close,
-	.p_peer   = udp_pipe_peer,
-	.p_getopt = udp_pipe_getopt,
+	.p_size      = udp_pipe_size,
+	.p_init      = udp_pipe_init,
+	.p_fini      = udp_pipe_fini,
+	.p_stop      = udp_pipe_stop,
+	.p_send      = udp_pipe_send,
+	.p_recv      = udp_pipe_recv,
+	.p_close     = udp_pipe_close,
+	.p_peer      = udp_pipe_peer,
+	.p_getopt    = udp_pipe_getopt,
+	.p_peer_addr = udp_pipe_peer_addr,
+	.p_self_addr = udp_pipe_self_addr,
 };
 
 static const nni_option udp_ep_opts[] = {

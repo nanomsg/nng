@@ -1162,8 +1162,8 @@ NNG_DECL nng_err nng_stream_get_string(
     nng_stream *, const char *, const char **);
 NNG_DECL nng_err nng_stream_get_addr(
     nng_stream *, const char *, nng_sockaddr *);
-NNG_DECL nng_err nng_stream_peer_addr(nng_stream *, const nng_sockaddr **);
-NNG_DECL nng_err nng_stream_self_addr(nng_stream *, const nng_sockaddr **);
+NNG_DECL const nng_sockaddr *nng_stream_peer_addr(nng_stream *);
+NNG_DECL const nng_sockaddr *nng_stream_self_addr(nng_stream *);
 NNG_DECL nng_err nng_stream_peer_cert(nng_stream *, nng_tls_cert **);
 
 NNG_DECL nng_err nng_stream_dialer_alloc(nng_stream_dialer **, const char *);

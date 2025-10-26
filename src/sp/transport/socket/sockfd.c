@@ -115,6 +115,20 @@ sfd_tran_pipe_stop(void *arg)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+static const nng_sockaddr *
+sfd_tran_pipe_peer_addr(void *arg)
+{
+	sfd_tran_pipe *p = arg;
+	return (nng_stream_peer_addr(p->conn));
+}
+
+static const nng_sockaddr *
+sfd_tran_pipe_self_addr(void *arg)
+{
+	sfd_tran_pipe *p = arg;
+	return (nng_stream_self_addr(p->conn));
+}
+
 static int
 sfd_tran_pipe_init(void *arg, nni_pipe *npipe)
 {
@@ -814,15 +828,18 @@ sfd_tran_pipe_size(void)
 }
 
 static nni_sp_pipe_ops sfd_tran_pipe_ops = {
-	.p_size   = sfd_tran_pipe_size,
-	.p_init   = sfd_tran_pipe_init,
-	.p_fini   = sfd_tran_pipe_fini,
-	.p_stop   = sfd_tran_pipe_stop,
-	.p_send   = sfd_tran_pipe_send,
-	.p_recv   = sfd_tran_pipe_recv,
-	.p_close  = sfd_tran_pipe_close,
-	.p_peer   = sfd_tran_pipe_peer,
-	.p_getopt = sfd_tran_pipe_getopt,
+	.p_size      = sfd_tran_pipe_size,
+	.p_init      = sfd_tran_pipe_init,
+	.p_fini      = sfd_tran_pipe_fini,
+	.p_stop      = sfd_tran_pipe_stop,
+	.p_send      = sfd_tran_pipe_send,
+	.p_recv      = sfd_tran_pipe_recv,
+	.p_close     = sfd_tran_pipe_close,
+	.p_peer      = sfd_tran_pipe_peer,
+	.p_getopt    = sfd_tran_pipe_getopt,
+	.p_peer_addr = sfd_tran_pipe_peer_addr,
+	.p_self_addr = sfd_tran_pipe_self_addr,
+
 };
 
 static const nni_option sfd_tran_ep_opts[] = {

@@ -36,6 +36,7 @@ struct inproc_pipe {
 	uint16_t      peer;
 	uint16_t      proto;
 	nni_pipe     *pipe;
+	nng_sockaddr  sa;
 };
 
 struct inproc_queue {
@@ -247,18 +248,6 @@ inproc_pipe_peer(void *arg)
 	return (pipe->peer);
 }
 
-static nng_err
-inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	inproc_pipe *p = arg;
-	nni_sockaddr sa;
-
-	memset(&sa, 0, sizeof(sa));
-	sa.s_inproc.sa_family = NNG_AF_INPROC;
-	nni_strlcpy(sa.s_inproc.sa_name, p->addr, sizeof(sa.s_inproc.sa_name));
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
 static void
 inproc_ep_init(inproc_ep *ep, nni_sock *sock, const nng_url *url)
 {
@@ -418,6 +407,13 @@ inproc_accept_clients(inproc_ep *srv)
 			spipe->send_queue = &pair->queues[1];
 			spipe->recv_queue = &pair->queues[0];
 
+			cpipe->sa.s_inproc.sa_family = NNG_AF_INPROC;
+			nni_strlcpy(cpipe->sa.s_inproc.sa_name, cpipe->addr,
+			    sizeof(cpipe->sa.s_inproc.sa_name));
+			spipe->sa.s_inproc.sa_family = NNG_AF_INPROC;
+			nni_strlcpy(spipe->sa.s_inproc.sa_name, spipe->addr,
+			    sizeof(spipe->sa.s_inproc.sa_name));
+
 			inproc_conn_finish(caio, 0, cli, cpipe);
 			inproc_conn_finish(saio, 0, srv, spipe);
 		}
@@ -563,14 +559,6 @@ inproc_ep_get_addr(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static const nni_option inproc_pipe_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = inproc_pipe_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = inproc_pipe_get_addr,
-	},
 	// terminate list
 	{
 	    .o_name = NULL,
@@ -584,6 +572,13 @@ inproc_pipe_getopt(
 	return (nni_getopt(inproc_pipe_options, name, arg, v, szp, t));
 }
 
+static const nng_sockaddr *
+inproc_pipe_addr(void *arg)
+{
+	inproc_pipe *p = arg;
+	return (&p->sa);
+}
+
 static size_t
 inproc_pipe_size(void)
 {
@@ -591,15 +586,17 @@ inproc_pipe_size(void)
 }
 
 static nni_sp_pipe_ops inproc_pipe_ops = {
-	.p_size   = inproc_pipe_size,
-	.p_init   = inproc_pipe_init,
-	.p_fini   = inproc_pipe_fini,
-	.p_send   = inproc_pipe_send,
-	.p_recv   = inproc_pipe_recv,
-	.p_close  = inproc_pipe_close,
-	.p_stop   = inproc_pipe_stop,
-	.p_peer   = inproc_pipe_peer,
-	.p_getopt = inproc_pipe_getopt,
+	.p_size      = inproc_pipe_size,
+	.p_init      = inproc_pipe_init,
+	.p_fini      = inproc_pipe_fini,
+	.p_send      = inproc_pipe_send,
+	.p_recv      = inproc_pipe_recv,
+	.p_close     = inproc_pipe_close,
+	.p_stop      = inproc_pipe_stop,
+	.p_peer      = inproc_pipe_peer,
+	.p_getopt    = inproc_pipe_getopt,
+	.p_peer_addr = inproc_pipe_addr,
+	.p_self_addr = inproc_pipe_addr,
 };
 
 static const nni_option inproc_ep_options[] = {

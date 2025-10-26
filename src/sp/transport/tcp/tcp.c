@@ -566,6 +566,20 @@ tcptran_pipe_peer(void *arg)
 	return (p->peer);
 }
 
+static const nng_sockaddr *
+tcptran_pipe_peer_addr(void *arg)
+{
+	tcptran_pipe *p = arg;
+	return (nng_stream_peer_addr(p->conn));
+}
+
+static const nng_sockaddr *
+tcptran_pipe_self_addr(void *arg)
+{
+	tcptran_pipe *p = arg;
+	return (nng_stream_self_addr(p->conn));
+}
+
 static nng_err
 tcptran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
@@ -970,15 +984,17 @@ tcptran_pipe_size(void)
 }
 
 static nni_sp_pipe_ops tcptran_pipe_ops = {
-	.p_size   = tcptran_pipe_size,
-	.p_init   = tcptran_pipe_init,
-	.p_fini   = tcptran_pipe_fini,
-	.p_stop   = tcptran_pipe_stop,
-	.p_send   = tcptran_pipe_send,
-	.p_recv   = tcptran_pipe_recv,
-	.p_close  = tcptran_pipe_close,
-	.p_peer   = tcptran_pipe_peer,
-	.p_getopt = tcptran_pipe_getopt,
+	.p_size      = tcptran_pipe_size,
+	.p_init      = tcptran_pipe_init,
+	.p_fini      = tcptran_pipe_fini,
+	.p_stop      = tcptran_pipe_stop,
+	.p_send      = tcptran_pipe_send,
+	.p_recv      = tcptran_pipe_recv,
+	.p_close     = tcptran_pipe_close,
+	.p_peer      = tcptran_pipe_peer,
+	.p_peer_addr = tcptran_pipe_peer_addr,
+	.p_self_addr = tcptran_pipe_self_addr,
+	.p_getopt    = tcptran_pipe_getopt,
 };
 
 static const nni_option tcptran_ep_opts[] = {

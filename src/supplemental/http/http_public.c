@@ -309,23 +309,15 @@ nng_http_read_response(nng_http *conn, nng_aio *aio)
 nng_err
 nng_http_remote_address(nng_http *conn, nng_sockaddr *addrp)
 {
-	const nng_sockaddr *sap;
-	nng_err             rv;
-	if ((rv = nni_http_peer_addr(conn, &sap)) == NNG_OK) {
-		*addrp = *sap;
-	}
-	return (rv);
+	*addrp = *(nni_http_peer_addr(conn));
+	return (NNG_OK);
 }
 
 nng_err
 nng_http_local_address(nng_http *conn, nng_sockaddr *addrp)
 {
-	const nng_sockaddr *sap;
-	nng_err             rv;
-	if ((rv = nni_http_self_addr(conn, &sap)) == NNG_OK) {
-		*addrp = *sap;
-	}
-	return (rv);
+	*addrp = *(nni_http_self_addr(conn));
+	return (NNG_OK);
 }
 
 nng_err

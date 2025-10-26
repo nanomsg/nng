@@ -431,12 +431,11 @@ ipc_get(void *arg, const char *nm, void *val, size_t *szp, nni_opt_type t)
 	return (nni_getopt(ipc_conn_options, nm, c, val, szp, t));
 }
 
-static nng_err
-ipc_addr(void *arg, const nng_sockaddr **sap)
+static const nng_sockaddr *
+ipc_addr(void *arg)
 {
 	ipc_conn *c = arg;
-	*sap        = &c->sa;
-	return (NNG_OK);
+	return (&c->sa);
 }
 
 int
