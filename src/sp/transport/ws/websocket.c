@@ -234,7 +234,7 @@ wstran_listener_bind(void *arg, nng_url *url)
 	if ((rv = nng_stream_listener_listen(l->listener)) == NNG_OK) {
 		int port;
 		nng_stream_listener_get_int(
-		    l->listener, NNG_OPT_TCP_BOUND_PORT, &port);
+		    l->listener, NNG_OPT_BOUND_PORT, &port);
 		url->u_port = (uint32_t) port;
 	}
 	return (rv);

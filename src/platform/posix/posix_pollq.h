@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -19,10 +19,8 @@
 // that is not very performant on many systems.   So we emulate this using
 // one of several possible different backends.
 
-#include "core/nng_impl.h"
-
-typedef struct nni_posix_pfd nni_posix_pfd;
-typedef void (*nni_posix_pfd_cb)(void *, unsigned);
+// #include "core/nng_impl.h"
+#include "../../core/defs.h"
 
 #if defined(NNG_POLLQ_KQUEUE)
 #include "posix_pollq_kqueue.h"

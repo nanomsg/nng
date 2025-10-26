@@ -374,7 +374,7 @@ nuts_marry_ex(
 	if ((strstr(url, ":0") != NULL) &&
 	    // If a TCP port of zero was selected, let's ask for the actual
 	    // port bound.
-	    (nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port) == 0) &&
+	    (nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port) == 0) &&
 	    (port > 0)) {
 		replace_port_zero(url, addr, port);
 		url = addr;

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -8,8 +8,6 @@
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
 //
-
-#include "core/nng_impl.h"
 
 #include <errno.h>
 #include <netinet/in.h>
@@ -21,16 +19,22 @@
 #define SOCK_CLOEXEC 0
 #endif
 
-#include "posix_tcp.h"
-
 #ifndef NNG_HAVE_INET6
-#ifdef HAVE_NNG_HAVE_INET6_BSD
+#ifdef NNG_HAVE_INET6_BSD
 #define NNG_HAVE_INET6
 #include <netinet6/in6.h>
 #else
 #undef NNG_ENABLE_IPV6
 #endif
 #endif
+
+#include "../../core/aio.h"
+#include "../../core/defs.h"
+#include "../../core/options.h"
+#include "../../core/platform.h"
+#include "../../core/refcnt.h"
+
+#include "posix_tcp.h"
 
 struct nni_tcp_dialer {
 	nni_list                connq; // pending connections

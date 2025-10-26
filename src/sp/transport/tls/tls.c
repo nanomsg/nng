@@ -877,7 +877,7 @@ tlstran_ep_bind(void *arg, nng_url *url)
 	if (rv == NNG_OK) {
 		int port;
 		nng_stream_listener_get_int(
-		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);
+		    ep->listener, NNG_OPT_BOUND_PORT, &port);
 		url->u_port = (uint32_t) port;
 	}
 	nni_mtx_unlock(&ep->mtx);

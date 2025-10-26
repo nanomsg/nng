@@ -32,7 +32,7 @@
 #endif
 
 #ifndef NNG_HAVE_INET6
-#ifdef HAVE_NNG_HAVE_INET6_BSD
+#ifdef NNG_HAVE_INET6_BSD
 #define NNG_HAVE_INET6
 #include <netinet6/in6.h>
 #else

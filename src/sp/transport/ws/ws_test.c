@@ -24,7 +24,7 @@ test_ws_url_path_filters(void)
 
 	snprintf(addr, sizeof(addr), "ws://127.0.0.1:0/ws-url-path-filters");
 	NUTS_PASS(nng_listen(s1, addr, &l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 
 	snprintf(
 	    addr, sizeof(addr), "ws://127.0.0.1:%d/some-other-location", port);
@@ -58,16 +58,16 @@ test_wild_card_port(void)
 	NUTS_OPEN(s5);
 	NUTS_OPEN(s6);
 	NUTS_PASS(nng_listen(s1, "ws://127.0.0.1:0/one", &l1, 0));
-	NUTS_PASS(nng_listener_get_int(l1, NNG_OPT_TCP_BOUND_PORT, &port1));
+	NUTS_PASS(nng_listener_get_int(l1, NNG_OPT_BOUND_PORT, &port1));
 	NUTS_TRUE(port1 != 0);
 	snprintf(ws_url, sizeof(ws_url), "ws4://127.0.0.1:%d/two", port1);
 	NUTS_PASS(nng_listen(s2, ws_url, &l2, 0));
-	NUTS_PASS(nng_listener_get_int(l2, NNG_OPT_TCP_BOUND_PORT, &port2));
+	NUTS_PASS(nng_listener_get_int(l2, NNG_OPT_BOUND_PORT, &port2));
 	NUTS_TRUE(port1 != 0);
 	NUTS_TRUE(port1 == port2);
 	// Now try a different wild card port.
 	NUTS_PASS(nng_listen(s3, "ws4://127.0.0.1:0/three", &l3, 0));
-	NUTS_PASS(nng_listener_get_int(l3, NNG_OPT_TCP_BOUND_PORT, &port3));
+	NUTS_PASS(nng_listener_get_int(l3, NNG_OPT_BOUND_PORT, &port3));
 	NUTS_TRUE(port3 != 0);
 	NUTS_TRUE(port3 != port1);
 
@@ -127,7 +127,7 @@ test_empty_host(void)
 	// we use ws4 to ensure 127.0.0.1 binding
 	snprintf(addr, sizeof(addr), "ws4://:0/test");
 	NUTS_PASS(nng_listen(s1, addr, &l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	nng_msleep(100);
 
 	snprintf(addr, sizeof(addr), "ws://127.0.0.1:%u/test", port);
@@ -165,7 +165,7 @@ test_ws_recv_max(void)
 	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &sz));
 	NUTS_TRUE(sz == 100);
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 
 	NUTS_OPEN(s1);
 	snprintf(url, sizeof(url), addr, port);

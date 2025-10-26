@@ -86,7 +86,7 @@ test_udp_port_zero_bind(void)
 	NUTS_MATCH(nng_url_hostname(u1), nng_url_hostname(u2));
 	NUTS_MATCH(nng_url_path(u1), nng_url_path(u2));
 	NUTS_TRUE(nng_url_port(u1) == nng_url_port(u2));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port == (int) nng_url_port(u1));
 
 	NUTS_CLOSE(s2);

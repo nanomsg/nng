@@ -833,18 +833,15 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // state current). This is a boolean.
 #define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
 
-// Local TCP port number.  This is used on a listener, and is intended
+// Local TCP or UDP port number.  This is used on a listener, and is intended
 // to be used after starting the listener in combination with a wildcard
 // (0) local port.  This determines the actual ephemeral port that was
-// selected and bound.  The value is provided as an int, but only the
-// low order 16 bits will be set.  This is provided in native byte order,
+// selected and bound.  The value is provided as an int, but in practice
+// port numbers are only 16-bits. This is provided in native byte order,
 // which makes it more convenient than using the NNG_OPT_LOCADDR option.
-#define NNG_OPT_TCP_BOUND_PORT "tcp-bound-port"
+#define NNG_OPT_BOUND_PORT "bound-port"
 
 // UDP options.
-
-// UDP alias for convenience uses the same value
-#define NNG_OPT_UDP_BOUND_PORT NNG_OPT_TCP_BOUND_PORT
 
 // UDP short message size.  Messages smaller than (or equal to) this
 // will be copied, instead of loan up.  This can allow for a faster

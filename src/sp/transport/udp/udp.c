@@ -1740,7 +1740,7 @@ static const nni_option udp_ep_opts[] = {
 	    .o_get  = udp_ep_get_remaddr,
 	},
 	{
-	    .o_name = NNG_OPT_TCP_BOUND_PORT,
+	    .o_name = NNG_OPT_BOUND_PORT,
 	    .o_get  = udp_ep_get_port,
 	},
 	// terminate list

@@ -274,6 +274,9 @@ The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
 before bringing them into the socket itself.
 
+The `NNG_OPT_TCP_BOUND_PORT` port is renamed to just [`NNG_OPT_BOUND_PORT`],
+and is available for listeners using transports based on either TCP or UDP.
+
 ## Socket Options
 
 The `NNG_OPT_PROTO`, `NNG_OPT_PROTONAME`, `NNG_OPT_PEER`, and `NNG_OPT_PEERNAME` options

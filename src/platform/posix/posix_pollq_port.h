@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,6 +12,11 @@
 #define PLATFORM_POSIX_POLLQ_PORT_H
 
 #include <poll.h>
+
+#include "../../core/platform.h"
+
+typedef struct nni_posix_pfd nni_posix_pfd;
+typedef void (*nni_posix_pfd_cb)(void *, unsigned);
 
 typedef struct nni_posix_pollq nni_posix_pollq;
 

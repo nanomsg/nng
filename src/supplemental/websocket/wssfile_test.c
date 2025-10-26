@@ -81,7 +81,7 @@ test_invalid_verify(void)
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 
 	nng_msleep(100);
 
@@ -128,7 +128,7 @@ test_no_verify(void)
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 
 	nng_msleep(100);
 	snprintf(addr, sizeof(addr), "wss://127.0.0.1:%u/test", port);
@@ -178,7 +178,7 @@ test_verify_works(void)
 	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 
 	// It can take a bit for the listener to start up in clouds.
 	nng_msleep(200);
@@ -239,7 +239,7 @@ test_tls_config(void)
 
 	init_listener_wss_file(l);
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 
 	// make sure we cannot change the auth mode while running
 

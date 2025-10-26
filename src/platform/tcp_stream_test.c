@@ -164,7 +164,7 @@ test_tcp_listen_port_zero_not_bound(void)
 
 	// start a listening stream listener but do not call accept
 	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
-	NUTS_FAIL(nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &p),
+	NUTS_FAIL(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &p),
 	    NNG_ESTATE);
 	nng_stream_listener_free(l);
 }
@@ -204,8 +204,7 @@ test_tcp_listen_activation(void)
 
 	NUTS_PASS(nng_stream_listener_alloc(&l1, addr));
 	NUTS_PASS(nng_stream_listener_listen(l1));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l1, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l1, NNG_OPT_BOUND_PORT, &port));
 
 	snprintf(url, sizeof(url), "tcp4://127.0.0.1:%u", port);
 	NUTS_PASS(nng_stream_dialer_alloc(&d, url));

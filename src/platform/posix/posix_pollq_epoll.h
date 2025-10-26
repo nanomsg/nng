@@ -13,6 +13,12 @@
 
 #include <poll.h>
 
+#include "../../core/list.h"
+#include "../../core/platform.h"
+
+typedef struct nni_posix_pfd nni_posix_pfd;
+typedef void (*nni_posix_pfd_cb)(void *, unsigned);
+
 // nni_posix_pfd is the handle used by the poller.  It's internals are private
 // to the poller.
 struct nni_posix_pfd {

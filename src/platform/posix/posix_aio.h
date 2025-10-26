@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,7 +17,6 @@
 // that is not very performant on many systems.   So we emulate this using
 // one of several possible different backends.
 
-#include "core/nng_impl.h"
 #include "posix_pollq.h"
 
 #include <sys/stat.h>  // needed for musl build

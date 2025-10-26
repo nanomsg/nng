@@ -9,9 +9,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
-#include "nng/nng.h"
-
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -29,13 +26,20 @@
 #endif
 
 #ifndef NNG_HAVE_INET6
-#ifdef HAVE_NNG_HAVE_INET6_BSD
+#ifdef NNG_HAVE_INET6_BSD
 #define NNG_HAVE_INET6
 #include <netinet6/in6.h>
 #else
 #undef NNG_ENABLE_IPV6
 #endif
 #endif
+
+#include "../../core/aio.h"
+#include "../../core/defs.h"
+#include "../../core/list.h"
+#include "../../core/options.h"
+#include "../../core/platform.h"
+#include "../../core/url.h"
 
 #include "posix_tcp.h"
 
@@ -480,7 +484,7 @@ static const nni_option tcp_listener_options[] = {
 	    .o_get  = tcp_listener_get_keepalive,
 	},
 	{
-	    .o_name = NNG_OPT_TCP_BOUND_PORT,
+	    .o_name = NNG_OPT_BOUND_PORT,
 	    .o_get  = tcp_listener_get_port,
 	},
 	{

@@ -871,7 +871,7 @@ http_server_start(nni_http_server *s)
 	if (s->port == 0) {
 		int port;
 		nng_stream_listener_get_int(
-		    s->listener, NNG_OPT_TCP_BOUND_PORT, &port);
+		    s->listener, NNG_OPT_BOUND_PORT, &port);
 		s->port = (uint32_t) port;
 	}
 	nng_stream_listener_accept(s->listener, &s->accaio);

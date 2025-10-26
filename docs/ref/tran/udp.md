@@ -66,13 +66,11 @@ the actual structure is either of type
 The following transport options are supported by this transport,
 where supported by the underlying platform.
 
-| Option                                                        | Type             | Description                                                                                                                      |
-| ------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| [`NNG_OPT_LOCADDR`]                                           | [`nng_sockaddr`] | The locally bound address, will be either [`nng_sockaddr_in`] or [`nng_sockaddr_in6`].                                           |
-| [`NNG_OPT_REMADDR`]                                           | [`nng_sockaddr`] | The remote peer address, will be either [`nng_sockaddr_in`] or [`nng_sockaddr_in6`]. Only valid for [pipe] and [dialer] objects. |
-| [`NNG_OPT_RECVMAXSZ`]                                         | `size_t`         | Maximum size of incoming messages, will be limited to at most 65000.                                                             |
-| `NNG_OPT_UDP_COPY_MAX`<a name="NNG_OPT_UDP_COPY_MAX"></a>     | `size_t`         | Threshold above which received messages are "loaned" up, rather than a new message being allocated and copied into.              |
-| `NNG_OPT_UDP_BOUND_PORT`<a name="NNG_OPT_UDP_BOUND_PORT"></a> | `int`            | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                              |
+| Option                                                    | Type     | Description                                                                                                         |
+| --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
+| [`NNG_OPT_RECVMAXSZ`]                                     | `size_t` | Maximum size of incoming messages, will be limited to at most 65000.                                                |
+| `NNG_OPT_UDP_COPY_MAX`<a name="NNG_OPT_UDP_COPY_MAX"></a> | `size_t` | Threshold above which received messages are "loaned" up, rather than a new message being allocated and copied into. |
+| `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>     | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                 |
 
 ## Maximum Message Size
 

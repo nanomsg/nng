@@ -517,7 +517,7 @@ static const nni_option tcp_listener_options[] = {
 	    .o_get  = tcp_listener_get_keepalive,
 	},
 	{
-	    .o_name = NNG_OPT_TCP_BOUND_PORT,
+	    .o_name = NNG_OPT_BOUND_PORT,
 	    .o_get  = tcp_listener_get_port,
 	},
 	{

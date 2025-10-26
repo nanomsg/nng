@@ -100,8 +100,7 @@ test_tls_large_message(void)
 	    c1, nuts_server_crt, nuts_server_key, NULL));
 	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
 	NUTS_PASS(nng_stream_listener_listen(l));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 
@@ -187,8 +186,7 @@ test_tls_ecdsa(void)
 	    c1, nuts_ecdsa_server_crt, nuts_ecdsa_server_key, NULL));
 	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
 	NUTS_PASS(nng_stream_listener_listen(l));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 
@@ -274,8 +272,7 @@ test_tls_null_server_name(void)
 	    c1, nuts_server_crt, nuts_server_key, NULL));
 	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
 	NUTS_PASS(nng_stream_listener_listen(l));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 
@@ -383,8 +380,7 @@ test_tls_psk(void)
 	NUTS_PASS(nng_tls_config_psk(c1, "identity", key, sizeof(key)));
 	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
 	NUTS_PASS(nng_stream_listener_listen(l));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 
@@ -477,8 +473,7 @@ test_tls_psk_server_identities(void)
 	NUTS_PASS(nng_tls_config_psk(c1, identity, key, sizeof(key)));
 	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
 	NUTS_PASS(nng_stream_listener_listen(l));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 
@@ -567,8 +562,7 @@ test_tls_psk_bad_identity(void)
 	NUTS_PASS(nng_tls_config_psk(c1, "identity1", key, sizeof(key)));
 	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
 	NUTS_PASS(nng_stream_listener_listen(l));
-	NUTS_PASS(
-	    nng_stream_listener_get_int(l, NNG_OPT_TCP_BOUND_PORT, &port));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
 	NUTS_TRUE(port > 0);
 	NUTS_TRUE(port < 65536);
 

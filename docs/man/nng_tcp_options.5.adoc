@@ -22,7 +22,7 @@ nng_tcp_options - TCP-specific options
 
 #define NNG_OPT_TCP_NODELAY    "tcp-nodelay"
 #define NNG_OPT_TCP_KEEPALIVE  "tcp-keepalive"
-#define NNG_OPT_TCP_BOUND_PORT "tcp-bound-port"
+#define NNG_OPT_BOUND_PORT "bound-port"
 ----
 
 == DESCRIPTION
@@ -89,10 +89,10 @@ First, it can be used to detect dead peers on an otherwise quiescent network.
 Second, it can be used to keep connection table entries in NAT and other
 middleware from being expiring due to lack of activity.
 
-[[NNG_OPT_TCP_BOUND_PORT]]
-((`NNG_OPT_TCP_BOUND_PORT`))::
+[[NNG_OPT_BOUND_PORT]]
+((`NNG_OPT_BOUND_PORT`))::
 (`int`)
-This option is available on listeners, after the listern has bound to
+This option is available on listeners, after the listener has bound to
 a port, and provides the port bound to in native byte order.
 This is most useful when using a listener with an ephemeral port
 (configured by using port 0 at configuration time), as it allows
