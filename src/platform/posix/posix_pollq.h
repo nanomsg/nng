@@ -19,9 +19,6 @@
 // that is not very performant on many systems.   So we emulate this using
 // one of several possible different backends.
 
-// #include "core/nng_impl.h"
-#include "../../core/defs.h"
-
 #if defined(NNG_POLLQ_KQUEUE)
 #include "posix_pollq_kqueue.h"
 #elif defined(NNG_POLLQ_PORTS)
