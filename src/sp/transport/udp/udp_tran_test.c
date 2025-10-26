@@ -60,7 +60,6 @@ test_udp_port_zero_bind(void)
 {
 	nng_socket     s1;
 	nng_socket     s2;
-	nng_sockaddr   sa;
 	nng_listener   l;
 	nng_dialer     d;
 	int            port;
@@ -76,10 +75,6 @@ test_udp_port_zero_bind(void)
 	NUTS_MATCH(nng_url_scheme(u1), "udp");
 	NUTS_MATCH(nng_url_hostname(u1), "127.0.0.1");
 	NUTS_MATCH(nng_url_path(u1), "");
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
-	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(nng_url_port(u1)));
-	NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
 	NUTS_PASS(nng_dial_url(s2, u1, &d, 0));
 	NUTS_PASS(nng_dialer_get_url(d, &u2));
 	NUTS_MATCH(nng_url_scheme(u1), nng_url_scheme(u2));
@@ -465,9 +460,6 @@ test_udp_pipe(void)
 	size_t       sz;
 	char        *addr;
 	nng_msg     *msg;
-	nng_pipe     p;
-	nng_sockaddr sa0;
-	nng_sockaddr sa1;
 
 	NUTS_ADDR(addr, "udp4");
 
@@ -478,7 +470,6 @@ test_udp_pipe(void)
 	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_UDP_COPY_MAX, &sz));
 	NUTS_TRUE(sz == 100);
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa0));
 
 	NUTS_OPEN(s1);
 	NUTS_PASS(nng_dial(s1, addr, NULL, 0));
@@ -488,10 +479,7 @@ test_udp_pipe(void)
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_sendmsg(s0, msg, 0));
 	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
-	p = nng_msg_get_pipe(msg);
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa1));
 
-	NUTS_TRUE(memcmp(&sa0.s_in, &sa1.s_in, sizeof(sa0.s_in)) == 0);
 	nng_msg_free(msg);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
@@ -506,7 +494,6 @@ test_udp_reconnect_dialer(void)
 	nng_dialer   d;
 	char        *addr;
 	nng_msg     *msg;
-	nng_sockaddr sa0;
 
 	NUTS_LOGGING();
 	NUTS_ADDR(addr, "udp4");
@@ -519,7 +506,6 @@ test_udp_reconnect_dialer(void)
 	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 2000));
 	NUTS_PASS(nng_listener_create(&l, s0, addr));
 	NUTS_PASS(nng_listener_start(l, 0));
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa0));
 
 	NUTS_PASS(nng_sub0_open(&s1));
 	NUTS_PASS(nng_sub0_socket_subscribe(s1, "", 0));

@@ -41,10 +41,10 @@ test_tcp_port_zero_bind(void)
 {
 	nng_socket     s1;
 	nng_socket     s2;
-	nng_sockaddr   sa;
 	nng_listener   l;
 	const nng_url *u;
 	char           addr[NNG_MAXADDRSTRLEN];
+	int            port;
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -53,10 +53,9 @@ test_tcp_port_zero_bind(void)
 	NUTS_MATCH(nng_url_scheme(u), "tcp");
 	nng_url_sprintf(addr, sizeof(addr), u);
 	NUTS_TRUE(memcmp(addr, "tcp://", 6) == 0);
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
-	NUTS_TRUE(sa.s_in.sa_port != 0);
-	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x7f000001));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port > 0);
+	NUTS_TRUE(port <= 0xffff);
 	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
@@ -205,25 +204,22 @@ static void
 check_props_v4(nng_msg *msg)
 {
 	nng_pipe     p;
-	size_t       z;
 	nng_sockaddr la;
 	nng_sockaddr ra;
 	bool         b;
 
 	p = nng_msg_get_pipe(msg);
 	NUTS_TRUE(nng_pipe_id(p) > 0);
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la));
-	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_LOCADDR, &z), NNG_EBADTYPE);
+	NUTS_PASS(nng_pipe_self_addr(p, &la));
 	NUTS_TRUE(la.s_family == NNG_AF_INET);
 	NUTS_TRUE(la.s_in.sa_port != 0);
 	NUTS_TRUE(la.s_in.sa_addr == nuts_be32(0x7f000001));
 
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra));
+	NUTS_PASS(nng_pipe_peer_addr(p, &ra));
 	NUTS_TRUE(ra.s_family == NNG_AF_INET);
 	NUTS_TRUE(ra.s_in.sa_port != 0);
 	NUTS_TRUE(ra.s_in.sa_addr == nuts_be32(0x7f000001));
 	NUTS_TRUE(ra.s_in.sa_port != la.s_in.sa_port);
-	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z), NNG_EBADTYPE);
 
 	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b));
 	NUTS_TRUE(b == false); // default
@@ -239,7 +235,6 @@ void
 check_props_v6(nng_msg *msg)
 {
 	nng_pipe     p;
-	size_t       z;
 	nng_sockaddr la;
 	nng_sockaddr ra;
 	bool         b;
@@ -247,18 +242,16 @@ check_props_v6(nng_msg *msg)
 
 	p = nng_msg_get_pipe(msg);
 	NUTS_TRUE(nng_pipe_id(p) > 0);
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &la));
-	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_LOCADDR, &z), NNG_EBADTYPE);
+	NUTS_PASS(nng_pipe_self_addr(p, &la));
 	NUTS_TRUE(la.s_family == NNG_AF_INET6);
 	NUTS_TRUE(la.s_in6.sa_port != 0);
 	NUTS_TRUE(memcmp(la.s_in6.sa_addr, self, 16) == 0);
 
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &ra));
+	NUTS_PASS(nng_pipe_peer_addr(p, &ra));
 	NUTS_TRUE(ra.s_family == NNG_AF_INET6);
 	NUTS_TRUE(ra.s_in6.sa_port != 0);
 	NUTS_TRUE(memcmp(ra.s_in6.sa_addr, self, 16) == 0);
 	NUTS_TRUE(ra.s_in6.sa_port != la.s_in6.sa_port);
-	NUTS_FAIL(nng_pipe_get_size(p, NNG_OPT_REMADDR, &z), NNG_EBADTYPE);
 
 	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TCP_KEEPALIVE, &b));
 	NUTS_TRUE(b == false); // default

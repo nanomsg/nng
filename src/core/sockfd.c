@@ -173,23 +173,10 @@ sfd_listener_set_fd(void *arg, const void *buf, size_t sz, nni_type t)
 	return (NNG_OK);
 }
 
-static nng_err
-sfd_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	NNI_ARG_UNUSED(arg);
-	nng_sockaddr sa;
-	sa.s_family = NNG_AF_UNSPEC;
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
 static const nni_option sfd_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_SOCKET_FD,
 	    .o_set  = sfd_listener_set_fd,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = sfd_listener_get_addr,
 	},
 	{
 	    .o_name = NULL,

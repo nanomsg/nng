@@ -347,13 +347,6 @@ nni_pipe_getopt(
 	if (rv != NNG_ENOTSUP) {
 		return (rv);
 	}
-	if (strcmp(name, NNG_OPT_REMADDR) == 0) {
-		return (
-		    nni_copyout_sockaddr(nni_pipe_peer_addr(p), val, szp, t));
-	} else if (strcmp(name, NNG_OPT_LOCADDR) == 0) {
-		return (
-		    nni_copyout_sockaddr(nni_pipe_self_addr(p), val, szp, t));
-	}
 
 	// Maybe the endpoint knows? The guarantees on pipes ensure that the
 	// pipe will not outlive its creating endpoint.

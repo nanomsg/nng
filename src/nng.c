@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "core/pipe.h"
 #include "core/platform.h"
 #include "core/socket.h"
 
@@ -868,12 +869,6 @@ nng_listener_set_string(nng_listener id, const char *n, const char *v)
 	    id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
 }
 
-int
-nng_listener_set_addr(nng_listener id, const char *n, const nng_sockaddr *v)
-{
-	return (listener_set(id, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
-}
-
 static int
 listener_get(
     nng_listener lid, const char *name, void *v, size_t *szp, nni_type t)
@@ -917,12 +912,6 @@ int
 nng_listener_get_ms(nng_listener id, const char *n, nng_duration *v)
 {
 	return (listener_get(id, n, v, NULL, NNI_TYPE_DURATION));
-}
-
-int
-nng_listener_get_addr(nng_listener id, const char *n, nng_sockaddr *v)
-{
-	return (listener_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
 }
 
 int
@@ -1429,12 +1418,6 @@ nng_pipe_get_ms(nng_pipe id, const char *n, nng_duration *v)
 }
 
 nng_err
-nng_pipe_get_addr(nng_pipe id, const char *n, nng_sockaddr *v)
-{
-	return (pipe_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
-}
-
-nng_err
 nng_pipe_peer_cert(nng_pipe p, nng_tls_cert **certp)
 {
 	nng_err   rv;
@@ -1503,6 +1486,30 @@ int
 nng_pipe_id(nng_pipe p)
 {
 	return (((int) p.id > 0) ? (int) p.id : -1);
+}
+
+nng_err
+nng_pipe_peer_addr(nng_pipe p, nng_sockaddr *sap)
+{
+	nng_err   rv;
+	nni_pipe *pipe;
+	if ((rv = nni_pipe_find(&pipe, p.id)) == NNG_OK) {
+		*sap = *(nni_pipe_peer_addr(pipe));
+		nni_pipe_rele(pipe);
+	}
+	return (rv);
+}
+
+nng_err
+nng_pipe_self_addr(nng_pipe p, nng_sockaddr *sap)
+{
+	nng_err   rv;
+	nni_pipe *pipe;
+	if ((rv = nni_pipe_find(&pipe, p.id)) == NNG_OK) {
+		*sap = *(nni_pipe_self_addr(pipe));
+		nni_pipe_rele(pipe);
+	}
+	return (rv);
 }
 
 // Message handling.

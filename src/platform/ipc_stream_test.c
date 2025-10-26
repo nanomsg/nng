@@ -29,9 +29,9 @@ test_ipc_stream(void)
 	nng_aio             *aio1;
 	nng_aio             *aio2;
 	nng_iov              iov;
-	nng_sockaddr         sa2;
 	char                 buf1[5];
 	char                 buf2[5];
+	const nng_sockaddr  *sap;
 
 	NUTS_ADDR(url, "ipc");
 	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
@@ -85,9 +85,9 @@ test_ipc_stream(void)
 
 	NUTS_TRUE(memcmp(buf1, buf2, 5) == 0);
 
-	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
-	NUTS_TRUE(sa2.s_ipc.sa_family == NNG_AF_IPC);
-	NUTS_MATCH(sa2.s_ipc.sa_path, url + strlen("ipc://"));
+	sap = nng_stream_self_addr(c2);
+	NUTS_TRUE(sap->s_ipc.sa_family == NNG_AF_IPC);
+	NUTS_MATCH(sap->s_ipc.sa_path, url + strlen("ipc://"));
 
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);

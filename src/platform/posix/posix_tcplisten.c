@@ -307,25 +307,6 @@ tcp_listener_accept(void *arg, nni_aio *aio)
 }
 
 static nng_err
-tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	tcp_listener *l = arg;
-	nng_sockaddr  sa;
-	nni_mtx_lock(&l->mtx);
-	if (l->started) {
-		struct sockaddr_storage ss;
-		socklen_t               len = sizeof(ss);
-		(void) getsockname(
-		    nni_posix_pfd_fd(&l->pfd), (void *) &ss, &len);
-		(void) nni_posix_sockaddr2nn(&sa, &ss, len);
-	} else {
-		sa.s_family = NNG_AF_UNSPEC;
-	}
-	nni_mtx_unlock(&l->mtx);
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
-static nng_err
 tcp_listener_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	tcp_listener *l = arg;
@@ -384,29 +365,33 @@ tcp_listener_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 static nng_err
 tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	tcp_listener *l = arg;
-	nng_sockaddr  sa;
-	size_t        sz;
-	int           port;
-	uint8_t      *paddr;
+	tcp_listener           *l = arg;
+	int                     port;
+	struct sockaddr_storage ss;
+	socklen_t               len = sizeof(ss);
 
-	sz = sizeof(sa);
-	(void) tcp_listener_get_locaddr(l, &sa, &sz, NNI_TYPE_SOCKADDR);
-
-	switch (sa.s_family) {
-	case NNG_AF_INET:
-		paddr = (void *) &sa.s_in.sa_port;
-		break;
-
-	case NNG_AF_INET6:
-		paddr = (void *) &sa.s_in6.sa_port;
-		break;
-
-	default:
+	nni_mtx_lock(&l->mtx);
+	if (!l->started) {
+		nni_mtx_unlock(&l->mtx);
 		return (NNG_ESTATE);
 	}
+	(void) getsockname(nni_posix_pfd_fd(&l->pfd), (void *) &ss, &len);
+	nni_mtx_unlock(&l->mtx);
 
-	NNI_GET16(paddr, port);
+	switch (ss.ss_family) {
+	case AF_INET:
+		port =
+		    htons(((struct sockaddr_in *) ((void *) (&ss)))->sin_port);
+		break;
+	case AF_INET6:
+		port = htons(
+		    ((struct sockaddr_in6 *) ((void *) (&ss)))->sin6_port);
+		break;
+	default:
+		port = 0;
+		break;
+	}
+
 	return (nni_copyout_int(port, buf, szp, t));
 }
 
@@ -469,10 +454,6 @@ tcp_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
 #endif
 
 static const nni_option tcp_listener_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = tcp_listener_get_locaddr,
-	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_set  = tcp_listener_set_nodelay,

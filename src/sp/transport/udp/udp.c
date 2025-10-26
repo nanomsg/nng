@@ -993,26 +993,10 @@ udp_pipe_get_recvmax(void *arg, void *v, size_t *szp, nni_type t)
 	return (rv);
 }
 
-static nng_err
-udp_pipe_get_remaddr(void *arg, void *v, size_t *szp, nni_type t)
-{
-	udp_pipe *p  = arg;
-	udp_ep   *ep = p->ep;
-	nng_err   rv;
-	nni_mtx_lock(&ep->mtx);
-	rv = nni_copyout_sockaddr(&p->peer_addr, v, szp, t);
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
-}
-
 static nni_option udp_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = udp_pipe_get_recvmax,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = udp_pipe_get_remaddr,
 	},
 	{
 	    .o_name = NULL,
@@ -1547,22 +1531,6 @@ udp_ep_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static nng_err
-udp_ep_get_remaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	udp_ep      *ep = arg;
-	nng_err      rv;
-	nng_sockaddr sa;
-
-	if (!ep->dialer) {
-		return (NNG_ENOTSUP);
-	}
-	sa = ep->peer_sa;
-
-	rv = nni_copyout_sockaddr(&sa, v, szp, t);
-	return (rv);
-}
-
-static nng_err
 udp_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	udp_ep *ep = arg;
@@ -1734,10 +1702,6 @@ static const nni_option udp_ep_opts[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
 	    .o_get  = udp_ep_get_locaddr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = udp_ep_get_remaddr,
 	},
 	{
 	    .o_name = NNG_OPT_BOUND_PORT,

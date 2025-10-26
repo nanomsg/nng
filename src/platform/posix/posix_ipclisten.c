@@ -217,13 +217,6 @@ ipc_remove_stale(const char *path)
 }
 
 static nng_err
-ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	ipc_listener *l = arg;
-	return (nni_copyout_sockaddr(&l->sa, buf, szp, t));
-}
-
-static nng_err
 ipc_listener_set_perms(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	ipc_listener *l = arg;
@@ -307,10 +300,6 @@ ipc_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
 #endif
 
 static const nni_option ipc_listener_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipc_listener_get_addr,
-	},
 	{
 	    .o_name = NNG_OPT_IPC_PERMISSIONS,
 	    .o_set  = ipc_listener_set_perms,

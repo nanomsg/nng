@@ -565,14 +565,12 @@ nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfg)
 }
 
 nng_err
-nng_http_server_get_addr(nng_http_server *srv, nng_sockaddr *addr)
+nng_http_server_get_port(nng_http_server *srv, int *port)
 {
 #ifdef NNG_SUPP_HTTP
-	size_t size = sizeof(nng_sockaddr);
-	if (srv == NULL || addr == NULL)
-		return NNG_EINVAL;
+	size_t size = sizeof(*port);
 	return (nni_http_server_get(
-	    srv, NNG_OPT_LOCADDR, addr, &size, NNI_TYPE_SOCKADDR));
+	    srv, NNG_OPT_BOUND_PORT, port, &size, NNI_TYPE_INT32));
 #else
 	NNI_ARG_UNUSED(srv);
 	NNI_ARG_UNUSED(addr);

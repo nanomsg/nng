@@ -376,10 +376,8 @@ NNG_DECL nng_err nng_http_server_set_tls(nng_http_server *, nng_tls_config *);
 // nng_http_server_set_tls function is called, so be careful.
 NNG_DECL nng_err nng_http_server_get_tls(nng_http_server *, nng_tls_config **);
 
-// nng_http_server_get_addr obtains the address with which the server was
-// initialized or returns NNG_EINVAL. Useful for instance when the port has
-// been automatically assigned.
-NNG_DECL nng_err nng_http_server_get_addr(nng_http_server *, nng_sockaddr *);
+// nng_http_server_get_port obtains the TCP the server is listening on.
+NNG_DECL nng_err nng_http_server_get_port(nng_http_server *, int *);
 
 // nng_http_server_set_error_page sets a custom error page (HTML) content
 // to be sent for the given error code.  This is used when the error is

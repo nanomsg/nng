@@ -24,7 +24,7 @@ name in the file system where the socket or named pipe should be created.
 
 > [!NOTE]
 > When using relative paths on POSIX systems, the address used and returned
-> in properties like [`NNG_OPT_LOCADDR`] will also be relative.
+> in functions such as [`nng_pipe_peer_addr`] will also be relative.
 > Consequently, they will only be interpreted the same by processes that have
 > the same working directory.
 > To ensure maximum portability and safety, absolute paths are recommended
@@ -50,10 +50,11 @@ Abstract sockets use a URI-encoded name after the {{i:`abstract://`}} scheme, wh
 in the path, including embedded `NUL` bytes.
 For example, the name `"a\0b"` would be represented as `abstract://a%00b`.
 
-> [!TIP]
-> An empty name may be used with a listener to request "auto bind" be used to select a name.
-> In this case the system will allocate a free name.
-> The name assigned may be retrieved using [`NNG_OPT_LOCADDR`].
+> [!NOTE]
+> _NNG_ no longer supports "auto binding" where the kernel allocates a random unused name.
+> A simple solution to this is to allocate a large random number, such as a random UUID
+> or a concatenation of four random values from [`nng_random`]. The chance of a collision
+> can be made arbitrarily small by appending additional random values.
 
 Abstract names do not include the leading `NUL` byte used in the low-level socket address.
 
@@ -76,16 +77,14 @@ except for abstract sockets, which use [`nng_sockaddr_abstract`].
 The following transport options are supported by this transport,
 where supported by the underlying platform.
 
-| Option                    | Type             | Description                                                                                                        |
-| ------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `NNG_OPT_IPC_PERMISSIONS` | `int`            | Settable on listeners before they start, this is the UNIX file mode used when creating the socket.                 |
-| `NNG_OPT_LOCADDR`         | [`nng_sockaddr`] | Local socket address, either [`nng_sockaddr_ipc`] or [`nng_sockaddr_abstract`].                                    |
-| `NNG_OPT_REMADDR`         | [`nng_sockaddr`] | Remote socket address, either [`nng_sockaddr_ipc`] or [`nng_sockaddr_abstract`].                                   |
-| `NNG_OPT_PEER_GID`        | `int`            | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
-| `NNG_OPT_PEER_PID`        | `int`            | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
-| `NNG_OPT_PEER_UID`        | `int`            | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
-| `NNG_OPT_PEER_ZONEID`     | `int`            | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.      |
-| [`NNG_OPT_LISTEN_FD`]     | `int`            | Write only for listeners before they start, use the named socket for accepting (for use with socket activation).   |
+| Option                    | Type  | Description                                                                                                        |
+| ------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
+| `NNG_OPT_IPC_PERMISSIONS` | `int` | Settable on listeners before they start, this is the UNIX file mode used when creating the socket.                 |
+| `NNG_OPT_PEER_GID`        | `int` | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
+| `NNG_OPT_PEER_PID`        | `int` | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
+| `NNG_OPT_PEER_UID`        | `int` | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
+| `NNG_OPT_PEER_ZONEID`     | `int` | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.      |
+| [`NNG_OPT_LISTEN_FD`]     | `int` | Write only for listeners before they start, use the named socket for accepting (for use with socket activation).   |
 
 ### Other Configuration Parameters
 

@@ -71,7 +71,6 @@ Generally, the following option values are also available for TLS objects,
 when appropriate for the context:
 
 * xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
-* xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
 * xref:nng_tcp_options.5.adoc#NNG_OPT_TCP_KEEPALIVE[`NNG_OPT_TCP_KEEPALIVE`]
 * xref:nng_tcp_options.5.adoc#NNG_OPT_TCP_NODELAY[`NNG_OPT_TCP_NODELAY`]
 

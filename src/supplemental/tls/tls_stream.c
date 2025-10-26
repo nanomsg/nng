@@ -111,10 +111,10 @@ tls_stream_recv(void *arg, nng_aio *aio)
 static void
 tls_stream_conn_cb(void *arg)
 {
-	tls_stream  *ts = arg;
-	nng_stream  *bio;
-	int          rv;
-	nng_sockaddr sa;
+	tls_stream         *ts = arg;
+	nng_stream         *bio;
+	int                 rv;
+	const nng_sockaddr *sa;
 
 	if ((rv = nni_aio_result(&ts->conn_aio)) != 0) {
 		nni_aio_finish_error(ts->user_aio, rv);
@@ -123,13 +123,9 @@ tls_stream_conn_cb(void *arg)
 	}
 
 	bio = nni_aio_get_output(&ts->conn_aio, 0);
-	if ((rv = nng_stream_get_addr(bio, NNG_OPT_REMADDR, &sa)) != 0) {
-		nni_aio_finish_error(ts->user_aio, rv);
-		nni_tls_stream_free(ts);
-		return;
-	};
+	sa  = nng_stream_peer_addr(bio);
 
-	if ((rv = nni_tls_start(&ts->conn, &tls_stream_bio, bio, &sa)) != 0) {
+	if ((rv = nni_tls_start(&ts->conn, &tls_stream_bio, bio, sa)) != 0) {
 		// NB: if this fails, it *will* have set the bio either way.
 		// So nni_tls_stream_free will also free the bio.
 		nni_aio_finish_error(ts->user_aio, rv);

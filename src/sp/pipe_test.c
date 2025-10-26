@@ -265,9 +265,22 @@ test_pipe_reject(void)
 	fini_cases(&push, &pull);
 }
 
+static void
+test_pipe_invalid(void)
+{
+	nng_pipe     p;
+	nng_sockaddr sa;
+	p.id = 45; // a random invalid pipe
+
+	NUTS_FAIL(nng_pipe_peer_addr(p, &sa), NNG_ENOENT);
+	NUTS_FAIL(nng_pipe_self_addr(p, &sa), NNG_ENOENT);
+	NUTS_FAIL(nng_pipe_close(p), NNG_ENOENT);
+}
+
 NUTS_TESTS = {
 	{ "pipe msg id", test_pipe_msg_id },
 	{ "pipe reconnect", test_pipe_reconnect },
 	{ "pipe reject", test_pipe_reject },
+	{ "pipe invalid", test_pipe_invalid },
 	{ NULL, NULL },
 };

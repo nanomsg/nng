@@ -125,7 +125,6 @@
 [`nng_stream_get_int`]: ../api/stream.md#getting-stream-options
 [`nng_stream_get_ms`]: ../api/stream.md#getting-stream-options
 [`nng_stream_get_size`]: ../api/stream.md#getting-stream-options
-[`nng_stream_get_addr`]: ../api/stream.md#getting-stream-options
 [`nng_stream_get_string`]: ../api/stream.md#getting-stream-options
 [`nng_stream_dialer`]: ../api/stream.md#stream-factories
 [`nng_stream_listener`]: ../api/stream.md#stream-factories
@@ -162,7 +161,6 @@
 [`nng_stream_listener_get_int`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_get_ms`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_get_size`]: ../api/stream.md#stream-factory-options
-[`nng_stream_listener_get_addr`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_get_string`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_bool`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_int`]: ../api/stream.md#stream-factory-options
@@ -257,9 +255,10 @@
 [`nng_pipe_get_int`]: ../api/pipe.md#pipe-options
 [`nng_pipe_get_ms`]: ../api/pipe.md#pipe-options
 [`nng_pipe_get_size`]: ../api/pipe.md#pipe-options
-[`nng_pipe_get_addr`]: ../api/pipe.md#pipe-options
 [`nng_pipe_get_string`]: ../api/pipe.md#pipe-options
 [`nng_pipe_notify`]: ../api/pipe.md#pipe-notifications
+[`nng_pipe_peer_addr`]: ../api/pipe.md#pipe-socket-addresses
+[`nng_pipe_self_addr`]: ../api/pipe.md#pipe-socket-addresses
 [`nng_sockaddr`]: ../TODO.md
 [`nng_sockaddr_in`]: ../TODO.md
 [`nng_sockaddr_in6`]: ../TODO.md
@@ -451,7 +450,6 @@
 [`NNG_OPT_RECVBUF`]: ../api/sock.md#NNG_OPT_RECVBUF
 [`NNG_OPT_RECVMAXSZ`]: ../api/sock.md#NNG_OPT_RECVMAXSZ
 [`NNG_OPT_LOCADDR`]: ../api/sock.md#NNG_OPT_LOCADDR
-[`NNG_OPT_REMADDR`]: ../api/sock.md#NNG_OPT_REMADDR
 [`NNG_OPT_PEER_UID`]: ../tran/ipc.md#NNG_OPT_PEER_UID
 [`NNG_OPT_PEER_GID`]: ../tran/ipc.md#NNG_OPT_PEER_GID
 [`NNG_OPT_PEER_PID`]: ../tran/ipc.md#NNG_OPT_PEER_PID

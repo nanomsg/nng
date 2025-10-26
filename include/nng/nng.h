@@ -444,8 +444,6 @@ NNG_DECL int nng_listener_set_size(nng_listener, const char *, size_t);
 NNG_DECL int nng_listener_set_uint64(nng_listener, const char *, uint64_t);
 NNG_DECL int nng_listener_set_string(nng_listener, const char *, const char *);
 NNG_DECL int nng_listener_set_ms(nng_listener, const char *, nng_duration);
-NNG_DECL int nng_listener_set_addr(
-    nng_listener, const char *, const nng_sockaddr *);
 NNG_DECL int nng_listener_set_tls(nng_listener, nng_tls_config *);
 NNG_DECL int nng_listener_set_security_descriptor(nng_listener, void *);
 NNG_DECL int nng_listener_get_url(nng_listener id, const nng_url **urlp);
@@ -457,7 +455,6 @@ NNG_DECL int nng_listener_get_uint64(nng_listener, const char *, uint64_t *);
 NNG_DECL int nng_listener_get_string(
     nng_listener, const char *, const char **);
 NNG_DECL int nng_listener_get_ms(nng_listener, const char *, nng_duration *);
-NNG_DECL int nng_listener_get_addr(nng_listener, const char *, nng_sockaddr *);
 NNG_DECL int nng_listener_get_tls(nng_listener, nng_tls_config **);
 
 // nng_strerror returns a human-readable string associated with the error
@@ -775,7 +772,8 @@ NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, const char **);
 NNG_DECL nng_err nng_pipe_get_strdup(nng_pipe, const char *, char **);
 NNG_DECL nng_err nng_pipe_get_strcpy(nng_pipe, const char *, char *, size_t);
 NNG_DECL nng_err nng_pipe_get_strlen(nng_pipe, const char *, size_t *);
-NNG_DECL nng_err nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
+NNG_DECL nng_err nng_pipe_peer_addr(nng_pipe, nng_sockaddr *);
+NNG_DECL nng_err nng_pipe_self_addr(nng_pipe, nng_sockaddr *);
 NNG_DECL nng_err nng_pipe_peer_cert(nng_pipe, nng_tls_cert **);
 
 NNG_DECL nng_err      nng_pipe_close(nng_pipe);
@@ -793,7 +791,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_RECVTIMEO "recv-timeout"
 #define NNG_OPT_SENDTIMEO "send-timeout"
 #define NNG_OPT_LOCADDR "local-address"
-#define NNG_OPT_REMADDR "remote-address"
 #define NNG_OPT_MAXTTL "ttl-max"
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
@@ -1157,8 +1154,6 @@ NNG_DECL nng_err nng_stream_get_size(nng_stream *, const char *, size_t *);
 NNG_DECL nng_err nng_stream_get_uint64(nng_stream *, const char *, uint64_t *);
 NNG_DECL nng_err nng_stream_get_string(
     nng_stream *, const char *, const char **);
-NNG_DECL nng_err nng_stream_get_addr(
-    nng_stream *, const char *, nng_sockaddr *);
 NNG_DECL const nng_sockaddr *nng_stream_peer_addr(nng_stream *);
 NNG_DECL const nng_sockaddr *nng_stream_self_addr(nng_stream *);
 NNG_DECL nng_err nng_stream_peer_cert(nng_stream *, nng_tls_cert **);
@@ -1229,8 +1224,6 @@ NNG_DECL nng_err nng_stream_listener_get_uint64(
     nng_stream_listener *, const char *, uint64_t *);
 NNG_DECL nng_err nng_stream_listener_get_string(
     nng_stream_listener *, const char *, const char **);
-NNG_DECL nng_err nng_stream_listener_get_addr(
-    nng_stream_listener *, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_stream_listener_set_bool(
     nng_stream_listener *, const char *, bool);
 NNG_DECL nng_err nng_stream_listener_set_int(

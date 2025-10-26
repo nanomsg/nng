@@ -571,7 +571,7 @@ nng_url_sprintf(char *str, size_t size, const nng_url *url)
 		return (snprintf(str, size, "%s://%s", scheme, url->u_path));
 	}
 
-	if (url->u_port == nni_url_default_port(scheme)) {
+	if (url->u_port != 0 && url->u_port == nni_url_default_port(scheme)) {
 		do_port = false;
 	}
 	if (strchr(host, ':') != 0) {

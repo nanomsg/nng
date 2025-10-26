@@ -503,10 +503,6 @@ tcp_listener_get_listen_fd(void *arg, void *buf, size_t *szp, nni_type t)
 
 static const nni_option tcp_listener_options[] = {
 	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = tcp_listener_get_locaddr,
-	},
-	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_set  = tcp_listener_set_nodelay,
 	    .o_get  = tcp_listener_get_nodelay,

@@ -350,7 +350,7 @@ test_sockfd_close_peer(void)
 }
 
 void
-test_sockfd_listener_sockaddr(void)
+test_sockfd_listener_no_port(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
 	// this test verifies that closing a socket peer
@@ -358,14 +358,14 @@ test_sockfd_listener_sockaddr(void)
 	int          fds[2];
 	nng_socket   s0;
 	nng_listener l;
-	nng_sockaddr sa;
+	int          port;
 
 	NUTS_PASS(nng_socket_pair(fds));
 	NUTS_OPEN(s0);
 	NUTS_PASS(nng_listen(s0, "socket://", &l, 0));
 	NUTS_PASS(nng_listener_set_int(l, NNG_OPT_SOCKET_FD, fds[0]));
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	NUTS_ASSERT(sa.s_family == NNG_AF_UNSPEC);
+	NUTS_FAIL(
+	    nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port), NNG_ENOTSUP);
 	close(fds[1]);
 	NUTS_CLOSE(s0);
 #else
@@ -401,9 +401,9 @@ test_sockfd_pipe_sockaddr(void)
 	NUTS_SEND(s0, "something");
 	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
 	p = nng_msg_get_pipe(msg);
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_LOCADDR, &sa));
+	NUTS_PASS(nng_pipe_self_addr(p, &sa));
 	NUTS_ASSERT(sa.s_family == NNG_AF_UNSPEC);
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa));
+	NUTS_PASS(nng_pipe_peer_addr(p, &sa));
 	NUTS_ASSERT(sa.s_family == NNG_AF_UNSPEC);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
@@ -574,7 +574,7 @@ NUTS_TESTS = {
 	{ "socket exchange large", test_sfd_large },
 	{ "socket close pending", test_sockfd_close_pending },
 	{ "socket close peer", test_sockfd_close_peer },
-	{ "socket listener address", test_sockfd_listener_sockaddr },
+	{ "socket listener no port", test_sockfd_listener_no_port },
 	{ "socket pipe address", test_sockfd_pipe_sockaddr },
 	{ "socket pipe peer id", test_sockfd_pipe_peer },
 	{ "socket listen full", test_sfd_listen_full },

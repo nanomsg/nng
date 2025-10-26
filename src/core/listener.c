@@ -10,6 +10,7 @@
 //
 
 #include "defs.h"
+#include "nng/nng.h"
 #include "nng_impl.h"
 #include "strs.h"
 

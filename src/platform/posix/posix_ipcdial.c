@@ -249,14 +249,6 @@ error:
 	nni_aio_finish_error(aio, rv);
 }
 
-static nng_err
-ipc_dialer_get_remaddr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	ipc_dialer *d = arg;
-
-	return (nni_copyout_sockaddr(&d->sa, buf, szp, t));
-}
-
 #ifdef NNG_TEST_LIB
 static nng_err
 ipc_dialer_set_test_no_connect(
@@ -274,10 +266,6 @@ ipc_dialer_set_test_no_connect(
 #endif
 
 static const nni_option ipc_dialer_options[] = {
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ipc_dialer_get_remaddr,
-	},
 #ifdef NNG_TEST_LIB
 	{
 	    .o_name = "test-no-connect",

@@ -190,7 +190,7 @@ httpaddrcheck(nng_http *conn, void *arg, nng_aio *aio)
 static void
 server_setup(struct server_test *st, nng_http_handler *h)
 {
-	nng_sockaddr sa;
+	int port;
 	memset(st, 0, sizeof(*st));
 	NUTS_PASS(nng_url_parse(&st->url, "http://127.0.0.1:0"));
 	NUTS_PASS(nng_aio_alloc(&st->aio, NULL, NULL));
@@ -200,8 +200,8 @@ server_setup(struct server_test *st, nng_http_handler *h)
 		NUTS_PASS(nng_http_server_add_handler(st->s, h));
 	}
 	NUTS_PASS(nng_http_server_start(st->s));
-	NUTS_PASS(nng_http_server_get_addr(st->s, &sa));
-	nng_url_resolve_port(st->url, nng_sockaddr_port(&sa));
+	NUTS_PASS(nng_http_server_get_port(st->s, &port));
+	nng_url_resolve_port(st->url, (uint32_t) port);
 	nng_url_sprintf(st->urlstr, sizeof(st->urlstr), st->url);
 
 	NUTS_PASS(nng_http_client_alloc(&st->cli, st->url));

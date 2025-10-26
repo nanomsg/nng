@@ -158,18 +158,7 @@ ipc_listener_set_sec_desc(void *arg, void *desc)
 	return (NNG_OK);
 }
 
-static nng_err
-ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	ipc_listener *l = arg;
-	return ((nni_copyout_sockaddr(&l->sa, buf, szp, t)));
-}
-
 static const nni_option ipc_listener_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipc_listener_get_addr,
-	},
 	{
 	    .o_name = NULL,
 	},

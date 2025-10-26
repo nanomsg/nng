@@ -69,10 +69,7 @@ test_ipc_dialer_properties(void)
 	NUTS_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
 	// Dialers don't have local addresses.
 	NUTS_FAIL(nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
-
 	NUTS_FAIL(nng_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
-	NUTS_PASS(nng_dialer_get_addr(d, NNG_OPT_REMADDR, &sa));
-	NUTS_TRUE(sa.s_family == NNG_AF_IPC);
 
 	z = 8192;
 	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));
@@ -126,19 +123,13 @@ test_ipc_listener_properties(void)
 {
 	nng_socket   s;
 	nng_listener l;
-	nng_sockaddr sa;
 	size_t       z;
 	char        *addr;
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listen(s, addr, &l, 0));
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	NUTS_TRUE(sa.s_ipc.sa_family == NNG_AF_IPC);
-	NUTS_MATCH(sa.s_ipc.sa_path, addr + strlen("ipc://"));
 
-	NUTS_FAIL(
-	    nng_listener_set_addr(l, NNG_OPT_LOCADDR, &sa), NNG_EREADONLY);
 	z = 8192;
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, z));
 	z = 0;
@@ -419,63 +410,14 @@ test_abstract_sockets(void)
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_MARRY_EX(s1, s2, addr, &p1, &p2);
-	NUTS_PASS(nng_pipe_get_addr(p1, NNG_OPT_REMADDR, &sa1));
-	NUTS_PASS(nng_pipe_get_addr(p2, NNG_OPT_LOCADDR, &sa2));
+	NUTS_PASS(nng_pipe_peer_addr(p1, &sa1));
+	NUTS_PASS(nng_pipe_self_addr(p2, &sa2));
 	NUTS_TRUE(sa1.s_family == sa2.s_family);
 	NUTS_TRUE(sa1.s_family == NNG_AF_ABSTRACT);
 	NUTS_TRUE(sa1.s_abstract.sa_len == strlen(addr) - strlen(prefix));
 	NUTS_TRUE(sa2.s_abstract.sa_len == strlen(addr) - strlen(prefix));
 	NUTS_SEND(s1, "ping");
 	NUTS_RECV(s2, "ping");
-	NUTS_CLOSE(s1);
-	NUTS_CLOSE(s2);
-#else
-	NUTS_SKIP("No abstract sockets.");
-#endif
-}
-
-void
-test_abstract_auto_bind(void)
-{
-#ifdef NNG_HAVE_ABSTRACT_SOCKETS
-	nng_socket   s1;
-	nng_socket   s2;
-	char         addr[40];
-	char         name[12];
-	nng_sockaddr sa;
-	nng_listener l;
-	size_t       len;
-
-	snprintf(addr, sizeof(addr), "abstract://");
-
-	NUTS_OPEN(s1);
-	NUTS_OPEN(s2);
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
-	NUTS_PASS(nng_listen(s1, addr, &l, 0));
-
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	// Under linux there are either 8 or 5 hex characters.
-	NUTS_TRUE(sa.s_family == NNG_AF_ABSTRACT);
-	NUTS_TRUE(sa.s_abstract.sa_len < 10);
-
-	len = sa.s_abstract.sa_len;
-	memcpy(name, sa.s_abstract.sa_name, len);
-	name[len] = '\0';
-	NUTS_TRUE(strlen(name) == len);
-
-	(void) snprintf(addr, sizeof(addr), "abstract://%s", name);
-	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
-
-	// first send the ping
-	NUTS_SEND(s1, "ping");
-	NUTS_RECV(s2, "ping");
-
-	NUTS_SEND(s2, "pong");
-	NUTS_RECV(s1, "pong");
-
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
 #else
@@ -518,7 +460,6 @@ test_abstract_null(void)
 	char       name[40];
 	char       rng[20];
 
-	nng_sockaddr sa;
 	nng_listener l;
 	size_t       len;
 
@@ -533,18 +474,6 @@ test_abstract_null(void)
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_listen(s1, addr, &l, 0));
-
-	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	// Under linux there are either 8 or 5 hex characters.
-	NUTS_TRUE(sa.s_family == NNG_AF_ABSTRACT);
-	NUTS_TRUE(sa.s_abstract.sa_len < 32);
-	len = sa.s_abstract.sa_len;
-	NUTS_TRUE(len == 20);
-	NUTS_TRUE(sa.s_abstract.sa_name[0] == 'a');
-	NUTS_TRUE(sa.s_abstract.sa_name[1] == '\0');
-	NUTS_TRUE(sa.s_abstract.sa_name[2] == 'b');
-	NUTS_TRUE(sa.s_abstract.sa_name[3] == '_');
-	NUTS_TRUE(memcmp(&sa.s_abstract.sa_name[4], rng, 16) == 0);
 
 	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
 
@@ -599,8 +528,8 @@ test_unix_alias(void)
 	NUTS_TRUE(nng_msg_len(msg) == 5);
 	NUTS_MATCH(nng_msg_body(msg), "ping");
 	p = nng_msg_get_pipe(msg);
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa1));
-	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa2));
+	NUTS_PASS(nng_pipe_peer_addr(p, &sa1));
+	NUTS_PASS(nng_pipe_self_addr(p, &sa2));
 	NUTS_TRUE(sa1.s_family == sa2.s_family);
 	NUTS_TRUE(sa1.s_family == NNG_AF_IPC);
 	NUTS_MATCH(sa1.s_ipc.sa_path, sa2.s_ipc.sa_path);
@@ -704,7 +633,6 @@ TEST_LIST = {
 	{ "ipc listen duplicate", test_ipc_listen_duplicate },
 	{ "ipc listen accept cancel", test_ipc_listen_accept_cancel },
 	{ "ipc abstract sockets", test_abstract_sockets },
-	{ "ipc abstract auto bind", test_abstract_auto_bind },
 	{ "ipc abstract name too long", test_abstract_too_long },
 	{ "ipc abstract embedded null", test_abstract_null },
 	{ "ipc unix alias", test_unix_alias },

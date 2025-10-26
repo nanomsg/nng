@@ -609,10 +609,6 @@ static const nni_option inproc_ep_options[] = {
 	    .o_name = NNG_OPT_LOCADDR,
 	    .o_get  = inproc_ep_get_addr,
 	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = inproc_ep_get_addr,
-	},
 	// terminate list
 	{
 	    .o_name = NULL,

@@ -84,6 +84,16 @@ either [`nng_dialer_id`] or [`nng_listener_id`] for the returned object will ret
 > The socket, or the endpoint, returned by these functions may be in the process of closing,
 > and might not be further usable as a result. (Other functions will result in [`NNG_ECLOSED`].)
 
+## Pipe Socket Addresses
+
+```c
+nng_err nng_pipe_peer_addr(nng_pipe p, nng_sockaddr *sap);
+nng_err nng_pipe_self_addr(nng_pipe p, nng_sockaddr *sap);
+```
+
+The [`nng_sockaddr`] for the local (self) or remote (peer) of the pipe is available using these
+functions. The associated address will be stored in the location pointed to by _sap_.
+
 ## Pipe Options
 
 ```c
@@ -91,7 +101,6 @@ nng_err nng_pipe_get_bool(nng_pipe p, const char *opt, bool *valp);
 nng_err nng_pipe_get_int(nng_pipe p, const char *opt, int *valp);
 nng_err nng_pipe_get_ms(nng_pipe p, const char *opt, nng_duration *valp);
 nng_err nng_pipe_get_size(nng_pipe p, const char *opt, size_t *valp);
-nng_err nng_pipe_get_addr(nng_pipe p, const char *opt, nng_sockaddr *valp);
 nng_err nng_pipe_get_string(nng_pipe p, const char *opt, const char **valp);
 nng_err nng_pipe_get_strcpy(nng_pipe p, const char *opt, char *val, size_t len);
 nng_err nng_pipe_get_strdup(nng_pipe p, const char *opt, char **valp);
@@ -102,7 +111,6 @@ nng_err nng_pipe_get_strlen(nng_pipe p, const char *opt, size_t *lenp);
 {{hi:`nng_pipe_get_int`}}
 {{hi:`nng_pipe_get_ms`}}
 {{hi:`nng_pipe_get_size`}}
-{{hi:`nng_pipe_get_addr`}}
 {{hi:`nng_pipe_get_string`}}
 {{hi:`nng_pipe_get_strcpy`}}
 {{hi:`nng_pipe_get_strdup`}}

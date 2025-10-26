@@ -103,7 +103,6 @@ nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp)
 {{hi:`nng_stream_get_int`}}
 {{hi:`nng_stream_get_ms`}}
 {{hi:`nng_stream_get_size`}}
-{{hi:`nng_stream_get_addr`}}
 {{hi:`nng_stream_get_string`}}
 These functions are used to obtain value of an option named _opt_ from the stream _s_, and store it in the location
 referenced by _valp_.
@@ -113,10 +112,6 @@ are available, and which type they may be accessed using.
 
 In the case of `nng_stream_get_string`, the string pointer is only guaranteed to be valid while the
 stream exists. Callers should make a copy of the data if required before closing the stream.
-
-> [!NOTE]:
-> The `nng_stream_get_addr` function is deprecated and will be removed. Use the
-> [`nng_stream_peer_addr`] or [`nng_stream_self_addr`] functions instead.
 
 ## Stream Factories
 

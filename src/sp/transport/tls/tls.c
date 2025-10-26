@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "../../../core/nng_impl.h"
+#include "nng/nng.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be
 // supplied as well, and uses the supplemental TLS v1.2 code.  It is not
@@ -343,20 +344,15 @@ tlstran_pipe_recv_cb(void *arg)
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
-			nng_sockaddr_storage ss;
-			nng_sockaddr        *sa = (nng_sockaddr *) &ss;
-			char                 peername[64] = "unknown";
-			if ((rv = nng_stream_get_addr(
-			         p->tls, NNG_OPT_REMADDR, sa)) == 0) {
-				(void) nng_str_sockaddr(
-				    sa, peername, sizeof(peername));
-			}
+			char peer[NNG_MAXADDRSTRLEN];
+
 			nng_log_warn("NNG-RCVMAX",
 			    "Oversize message of %lu bytes (> %lu) "
 			    "on socket<%u> pipe<%u> from TLS %s",
 			    (unsigned long) len, (unsigned long) p->rcvmax,
 			    nni_pipe_sock_id(p->npipe), nni_pipe_id(p->npipe),
-			    peername);
+			    nng_str_sockaddr(nng_stream_peer_addr(p->tls),
+			        peer, sizeof(peer)));
 			rv = NNG_EMSGSIZE;
 			goto recv_error;
 		}

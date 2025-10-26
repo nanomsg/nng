@@ -337,14 +337,9 @@ tcptran_pipe_recv_cb(void *arg)
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
-			nng_sockaddr_storage ss;
-			nng_sockaddr        *sa = (nng_sockaddr *) &ss;
-			char                 peername[64] = "unknown";
-			if ((rv = nng_stream_get_addr(
-			         p->conn, NNG_OPT_REMADDR, sa)) == 0) {
-				(void) nng_str_sockaddr(
-				    sa, peername, sizeof(peername));
-			}
+			char peername[NNG_MAXADDRSTRLEN];
+			(void) nng_str_sockaddr(nng_stream_peer_addr(p->conn),
+			    peername, sizeof(peername));
 			nng_log_warn("NNG-RCVMAX",
 			    "Oversize message of %lu bytes (> %lu) "
 			    "on socket<%u> pipe<%u> from TCP %s",

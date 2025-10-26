@@ -164,15 +164,6 @@ nng_err
 nni_stream_get(
     nng_stream *s, const char *nm, void *data, size_t *szp, nni_type t)
 {
-	// TODO: eventually this needs die
-	if ((strcmp(nm, NNG_OPT_REMADDR) == 0) ||
-	    (strcmp(nm, NNG_OPT_LOCADDR) == 0)) {
-		if (t != NNI_TYPE_SOCKADDR) {
-			return (NNG_EBADTYPE);
-		}
-		return (nng_stream_get_addr(s, nm, (nng_sockaddr *) data));
-	}
-
 	return (s->s_get(s, nm, data, szp, t));
 }
 
@@ -397,21 +388,6 @@ nng_stream_get_ms(nng_stream *s, const char *n, nng_duration *v)
 	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_DURATION));
 }
 
-nng_err
-nng_stream_get_addr(nng_stream *s, const char *n, nng_sockaddr *v)
-{
-	const nng_sockaddr *sap;
-	if (strcmp(n, NNG_OPT_LOCADDR) == 0) {
-		sap = nng_stream_self_addr(s);
-	} else if (strcmp(n, NNG_OPT_REMADDR) == 0) {
-		sap = nng_stream_peer_addr(s);
-	} else {
-		return (NNG_ENOTSUP);
-	}
-	memcpy(v, sap, sizeof(nng_sockaddr));
-	return (NNG_OK);
-}
-
 const nng_sockaddr *
 nng_stream_self_addr(nng_stream *s)
 {
@@ -507,13 +483,6 @@ nng_stream_listener_get_ms(
     nng_stream_listener *l, const char *n, nng_duration *v)
 {
 	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_DURATION));
-}
-
-nng_err
-nng_stream_listener_get_addr(
-    nng_stream_listener *l, const char *n, nng_sockaddr *v)
-{
-	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_SOCKADDR));
 }
 
 nng_err

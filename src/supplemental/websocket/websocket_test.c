@@ -18,10 +18,8 @@
 void
 test_websocket_wildcard(void)
 {
-	nng_stream_dialer   *d = NULL;
-	nng_stream_listener *l = NULL;
-	nng_sockaddr         sa1;
-	nng_sockaddr         sa2;
+	nng_stream_dialer   *d    = NULL;
+	nng_stream_listener *l    = NULL;
 	nng_aio             *daio = NULL;
 	nng_aio             *laio = NULL;
 	nng_aio             *aio1 = NULL;
@@ -32,20 +30,19 @@ test_websocket_wildcard(void)
 	char                 buf1[8];
 	char                 buf2[8];
 	char                 uri[64];
+	const nng_sockaddr  *sap1;
+	const nng_sockaddr  *sap2;
+	int                  port;
 
 	NUTS_PASS(nng_stream_listener_alloc(&l, "ws://127.0.0.1:0/test"));
 
 	NUTS_PASS(nng_stream_listener_listen(l));
 
-	// Let's get the address we're going to use to dial -- also check
-	// that it is correct.
-	NUTS_PASS(nng_stream_listener_get_addr(l, NNG_OPT_LOCADDR, &sa1));
-	NUTS_TRUE(sa1.s_in.sa_port != 0);
-	NUTS_TRUE(sa1.s_family == NNG_AF_INET);
-	NUTS_TRUE(nuts_be32(sa1.s_in.sa_addr) == 0x7F000001u);
+	// Let's get the port we're going to use to dial.
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port != 0);
 
-	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test",
-	    nuts_be16(sa1.s_in.sa_port));
+	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
 
 	NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
 	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
@@ -71,16 +68,16 @@ test_websocket_wildcard(void)
 	NUTS_TRUE(c2 != NULL);
 
 	//  Let's compare the peer addresses
-	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
-	NUTS_TRUE(sa1.s_family == sa2.s_family);
-	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
-	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
+	sap2 = nng_stream_peer_addr(c2);
+	NUTS_TRUE(sap2->s_family == NNG_AF_INET);
+	NUTS_TRUE(nuts_be32(sap2->s_in.sa_addr) == 0x7F000001u);
+	NUTS_TRUE(sap2->s_in.sa_port != 0);
 
-	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
-	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
-	NUTS_TRUE(sa1.s_family == sa2.s_family);
-	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
-	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
+	sap1 = nng_stream_peer_addr(c1);
+	sap2 = nng_stream_self_addr(c2);
+	NUTS_TRUE(sap1->s_family == sap2->s_family);
+	NUTS_TRUE(sap1->s_in.sa_addr == sap2->s_in.sa_addr);
+	NUTS_TRUE(sap1->s_in.sa_port == sap2->s_in.sa_port);
 
 	// This relies on send completing for for just 5 bytes, and on
 	// recv doing the same.  Technically this isn't/ guaranteed, but
@@ -129,8 +126,6 @@ test_websocket_conn_props(void)
 {
 	nng_stream_dialer   *d = NULL;
 	nng_stream_listener *l = NULL;
-	nng_sockaddr         sa1;
-	nng_sockaddr         sa2;
 	const nng_sockaddr  *sap1;
 	const nng_sockaddr  *sap2;
 	size_t               sz;
@@ -186,19 +181,15 @@ test_websocket_conn_props(void)
 	//  Let's compare the peer addresses
 	sap1 = nng_stream_self_addr(c1);
 	sap2 = nng_stream_peer_addr(c2);
-	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
-	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
-	NUTS_TRUE(sa1.s_family == sa2.s_family);
-	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
-	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
-	NUTS_TRUE(memcmp(sap1, &sa1, sizeof(sa1)) == 0);
-	NUTS_TRUE(memcmp(sap2, &sa2, sizeof(sa2)) == 0);
+	NUTS_TRUE(sap1->s_family == sap2->s_family);
+	NUTS_TRUE(sap1->s_in.sa_addr == sap2->s_in.sa_addr);
+	NUTS_TRUE(sap1->s_in.sa_port == sap2->s_in.sa_port);
 
-	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
-	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
-	NUTS_TRUE(sa1.s_family == sa2.s_family);
-	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
-	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
+	sap1 = nng_stream_peer_addr(c1);
+	sap2 = nng_stream_self_addr(c2);
+	NUTS_TRUE(sap1->s_family == sap2->s_family);
+	NUTS_TRUE(sap1->s_in.sa_addr == sap2->s_in.sa_addr);
+	NUTS_TRUE(sap1->s_in.sa_port == sap2->s_in.sa_port);
 
 	NUTS_PASS(nng_stream_get_bool(c1, NNG_OPT_TCP_NODELAY, &on));
 	NUTS_TRUE(on == true);

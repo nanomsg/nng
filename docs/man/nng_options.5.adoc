@@ -25,7 +25,6 @@ nng_options - socket, dialer, listener, and pipe options
 #define NNG_OPT_RECVTIMEO     "recv-timeout"
 #define NNG_OPT_SENDTIMEO     "send-timeout"
 #define NNG_OPT_LOCADDR       "local-address"
-#define NNG_OPT_REMADDR       "remote-address"
 #define NNG_OPT_URL           "url"
 #define NNG_OPT_MAXTTL        "ttl-max"
 #define NNG_OPT_RECVMAXSZ     "recv-size-max"
@@ -75,7 +74,7 @@ description of the option.
 [[NNG_OPT_LOCADDR]]
 ((`NNG_OPT_LOCADDR`))::
 (xref:nng_sockaddr.5.adoc[`nng_sockaddr`])
-This read-only option may be used on listeners, dialers and connected pipes, and
+This read-only option may be used dialers and
 represents the local address used for communication.
 NOTE: Not all transports support this option, and some transports may support it on
 listeners but not dialers.
@@ -152,13 +151,6 @@ are established.)
 +
 NOTE: Some transports may have further message size restrictions.
 
-
-[[NNG_OPT_REMADDR]]
-((`NNG_OPT_REMADDR`))::
-(xref:nng_sockaddr.5.adoc[`nng_sockaddr`])
-This read-only option may be used on dialers and connected pipes, and
-represents the address of a remote peer.
-Not all transports support this option.
 
 [[NNG_OPT_MAXTTL]]
 ((`NNG_OPT_MAXTTL`))::
