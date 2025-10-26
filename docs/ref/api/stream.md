@@ -79,8 +79,8 @@ stream itself.
 ## Stream Addresses
 
 ```c
-nng_err nng_stream_peer_addr(nng_stream *s, const nng_sockaddr **valp);
-nng_err nng_stream_self_addr(nng_stream *s, const nng_sockaddr **valp);
+const nng_sockaddr *nng_stream_peer_addr(nng_stream *s);
+const nng_sockaddr *nng_stream_self_addr(nng_stream *s);
 ```
 
 {{hi:`nng_stream_peer_addr`}}
