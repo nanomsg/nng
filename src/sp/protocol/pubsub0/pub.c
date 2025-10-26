@@ -410,7 +410,6 @@ static nni_proto_sock_ops pub0_sock_ops = {
 };
 
 static nni_proto pub0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PUB_V0, "pub" },
 	.proto_peer     = { NNI_PROTO_SUB_V0, "sub" },
 	.proto_flags    = NNI_PROTO_FLAG_SND,
@@ -419,7 +418,6 @@ static nni_proto pub0_proto = {
 };
 
 static nni_proto pub0_proto_raw = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PUB_V0, "pub" },
 	.proto_peer     = { NNI_PROTO_SUB_V0, "sub" },
 	.proto_flags    = NNI_PROTO_FLAG_SND | NNI_PROTO_FLAG_RAW,

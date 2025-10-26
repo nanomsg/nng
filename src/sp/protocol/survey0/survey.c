@@ -608,7 +608,6 @@ static nni_proto_sock_ops surv0_sock_ops = {
 };
 
 static nni_proto surv0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { SURVEYOR0_SELF, SURVEYOR0_SELF_NAME },
 	.proto_peer     = { SURVEYOR0_PEER, SURVEYOR0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,

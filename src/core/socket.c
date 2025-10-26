@@ -577,11 +577,6 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	nni_sock *s = NULL;
 	int       rv;
 
-	if (proto->proto_version != NNI_PROTOCOL_VERSION) {
-		// unsupported protocol version
-		return (NNG_ENOTSUP);
-	}
-
 	if ((rv = nni_sock_create(&s, proto)) != 0) {
 		return (rv);
 	}

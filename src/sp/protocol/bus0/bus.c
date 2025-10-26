@@ -503,7 +503,6 @@ static nni_proto_sock_ops bus0_sock_ops_raw = {
 };
 
 static nni_proto bus0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_peer     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
@@ -512,7 +511,6 @@ static nni_proto bus0_proto = {
 };
 
 static nni_proto bus0_proto_raw = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_peer     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,

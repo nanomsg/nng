@@ -673,7 +673,6 @@ static nni_proto_sock_ops rep0_sock_ops = {
 };
 
 static nni_proto rep0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { REP0_SELF, REP0_SELF_NAME },
 	.proto_peer     = { REP0_PEER, REP0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,

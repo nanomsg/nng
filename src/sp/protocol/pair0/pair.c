@@ -560,7 +560,6 @@ static nni_proto_sock_ops pair0_sock_ops = {
 
 // Legacy protocol (v0)
 static nni_proto pair0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PAIR_V0, "pair" },
 	.proto_peer     = { NNI_PROTO_PAIR_V0, "pair" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
@@ -569,7 +568,6 @@ static nni_proto pair0_proto = {
 };
 
 static nni_proto pair0_proto_raw = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PAIR_V0, "pair" },
 	.proto_peer     = { NNI_PROTO_PAIR_V0, "pair" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,

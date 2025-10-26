@@ -933,7 +933,6 @@ static nni_proto_sock_ops req0_sock_ops = {
 };
 
 static nni_proto req0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { REQ0_SELF, REQ0_SELF_NAME },
 	.proto_peer     = { REQ0_PEER, REQ0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,

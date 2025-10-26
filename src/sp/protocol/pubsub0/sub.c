@@ -683,7 +683,6 @@ static nni_proto_sock_ops sub0_sock_ops = {
 };
 
 static nni_proto sub0_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_SUB_V0, "sub" },
 	.proto_peer     = { NNI_PROTO_PUB_V0, "pub" },
 	.proto_flags    = NNI_PROTO_FLAG_RCV,

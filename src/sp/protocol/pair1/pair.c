@@ -793,7 +793,6 @@ static nni_proto_sock_ops pair1_sock_ops = {
 };
 
 static nni_proto pair1_proto = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { PAIR1_SELF, PAIR1_SELF_NAME },
 	.proto_peer     = { PAIR1_PEER, PAIR1_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
@@ -821,7 +820,6 @@ static nni_proto_sock_ops pair1_sock_ops_raw = {
 };
 
 static nni_proto pair1_proto_raw = {
-	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { PAIR1_SELF, PAIR1_SELF_NAME },
 	.proto_peer     = { PAIR1_PEER, PAIR1_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
