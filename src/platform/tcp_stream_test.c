@@ -425,12 +425,6 @@ test_tcp_dialer_loc_addr(void)
 	nng_stream_dialer *d;
 	nng_sockaddr       sa;
 	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
-	NUTS_PASS(nng_stream_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa));
-	NUTS_TRUE(sa.s_family == NNG_AF_UNSPEC);
-
-	// cannot set a local port
-	sa.s_in.sa_family = NNG_AF_INET;
-	sa.s_in.sa_port   = 8080;
 	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
 	    NNG_EADDRINVAL);
 

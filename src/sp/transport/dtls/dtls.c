@@ -1514,23 +1514,6 @@ dtls_ep_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static nng_err
-dtls_ep_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	dtls_ep     *ep = arg;
-	nng_sockaddr sa;
-
-	nni_mtx_lock(&ep->mtx);
-	if (ep->udp != NULL) {
-		(void) nng_udp_sockname(ep->udp, &sa);
-	} else {
-		sa = ep->self_sa;
-	}
-	nni_mtx_unlock(&ep->mtx);
-
-	return (nni_copyout_sockaddr(&sa, v, szp, t));
-}
-
-static nng_err
 dtls_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	dtls_ep *ep = arg;
@@ -1685,10 +1668,6 @@ static const nni_option dtls_ep_opts[] = {
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = dtls_ep_get_recvmaxsz,
 	    .o_set  = dtls_ep_set_recvmaxsz,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = dtls_ep_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_BOUND_PORT,

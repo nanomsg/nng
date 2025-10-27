@@ -341,20 +341,6 @@ tcp_dialer_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static nng_err
-tcp_dialer_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
-{
-	nni_tcp_dialer *d = arg;
-	nng_sockaddr    sa;
-
-	nni_mtx_lock(&d->mtx);
-	if (nni_posix_sockaddr2nn(&sa, &d->src, d->srclen) != 0) {
-		sa.s_family = NNG_AF_UNSPEC;
-	}
-	nni_mtx_unlock(&d->mtx);
-	return (nni_copyout_sockaddr(&sa, buf, szp, t));
-}
-
-static nng_err
 tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_dialer         *d = arg;
@@ -412,7 +398,6 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 static const nni_option tcp_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = tcp_dialer_get_locaddr,
 	    .o_set  = tcp_dialer_set_locaddr,
 	},
 	{

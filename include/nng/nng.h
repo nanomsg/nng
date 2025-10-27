@@ -834,8 +834,7 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // to be used after starting the listener in combination with a wildcard
 // (0) local port.  This determines the actual ephemeral port that was
 // selected and bound.  The value is provided as an int, but in practice
-// port numbers are only 16-bits. This is provided in native byte order,
-// which makes it more convenient than using the NNG_OPT_LOCADDR option.
+// port numbers are only 16-bits.
 #define NNG_OPT_BOUND_PORT "bound-port"
 
 // UDP options.
@@ -1177,8 +1176,6 @@ NNG_DECL nng_err nng_stream_dialer_get_uint64(
     nng_stream_dialer *, const char *, uint64_t *);
 NNG_DECL nng_err nng_stream_dialer_get_string(
     nng_stream_dialer *, const char *, const char **);
-NNG_DECL nng_err nng_stream_dialer_get_addr(
-    nng_stream_dialer *, const char *, nng_sockaddr *);
 NNG_DECL nng_err nng_stream_dialer_set_bool(
     nng_stream_dialer *, const char *, bool);
 NNG_DECL nng_err nng_stream_dialer_set_int(

@@ -267,14 +267,12 @@ stream = nng_aio_get_output(aio, 0);
 ## Stream Factory Options
 
 ```c
-nng_err nng_stream_dialer_get_addr(nng_stream_dialer *dialer, const char *opt, nng_sockaddr *valp);
 nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, bool *valp);
 nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
 nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, const char **valp);
 
-nng_err nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
 nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
@@ -288,7 +286,6 @@ nng_err nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng
 nng_err nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
 nng_err nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
 
-nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 nng_err nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
 nng_err nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
 nng_err nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
@@ -300,7 +297,6 @@ nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char
 {{hi:`nng_stream_dialer_get_int`}}
 {{hi:`nng_stream_dialer_get_ms`}}
 {{hi:`nng_stream_dialer_get_size`}}
-{{hi:`nng_stream_dialer_get_addr`}}
 {{hi:`nng_stream_dialer_get_string`}}
 {{hi:`nng_stream_dialer_set_bool`}}
 {{hi:`nng_stream_dialer_set_int`}}
@@ -333,7 +329,7 @@ the string is only valid as long as the associated object remains open.
 In the case of `nng_stream_dialer_set_string` and `nng_stream_listener_set_string`, the string contents are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.
 
-In the case of `nng_stream_dialer_set_addr` and `nng_stream_listener_set_addr`, the contents of _addr_ are copied if necessary, so that the caller
+In the case of `nng_stream_dialer_set_addr`, the contents of _addr_ are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.
 
 ### Example 4: Socket Activation<a name="socket-activation"></a>

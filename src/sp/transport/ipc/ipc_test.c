@@ -67,9 +67,6 @@ test_ipc_dialer_properties(void)
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
-	// Dialers don't have local addresses.
-	NUTS_FAIL(nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
-	NUTS_FAIL(nng_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
 
 	z = 8192;
 	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));

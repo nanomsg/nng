@@ -149,7 +149,6 @@
 [`nng_stream_dialer_get_int`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_get_ms`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_get_size`]: ../api/stream.md#stream-factory-options
-[`nng_stream_dialer_get_addr`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_get_string`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_set_bool`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_set_int`]: ../api/stream.md#stream-factory-options
@@ -222,12 +221,10 @@
 [`nng_listener_create`]: ../TODO.md
 [`nng_listener_close`]: ../TODO.md
 [`nng_listener_set`]: ../TODO.md
-[`nng_socket_set`]: ../api/sock.md#socket-options
 [`nng_socket_set_bool`]: ../api/sock.md#socket-options
 [`nng_socket_set_int`]: ../api/sock.md#socket-options
 [`nng_socket_set_ms`]: ../api/sock.md#socket-options
 [`nng_socket_set_size`]: ../api/sock.md#socket-options
-[`nng_socket_get`]: ../api/sock.md#socket-options
 [`nng_socket_get_bool`]: ../api/sock.md#socket-options
 [`nng_socket_get_int`]: ../api/sock.md#socket-options
 [`nng_socket_get_ms`]: ../api/sock.md#socket-options
@@ -449,7 +446,6 @@
 [`NNG_OPT_SENDBUF`]: ../api/sock.md#NNG_OPT_SENDBUF
 [`NNG_OPT_RECVBUF`]: ../api/sock.md#NNG_OPT_RECVBUF
 [`NNG_OPT_RECVMAXSZ`]: ../api/sock.md#NNG_OPT_RECVMAXSZ
-[`NNG_OPT_LOCADDR`]: ../api/sock.md#NNG_OPT_LOCADDR
 [`NNG_OPT_PEER_UID`]: ../tran/ipc.md#NNG_OPT_PEER_UID
 [`NNG_OPT_PEER_GID`]: ../tran/ipc.md#NNG_OPT_PEER_GID
 [`NNG_OPT_PEER_PID`]: ../tran/ipc.md#NNG_OPT_PEER_PID

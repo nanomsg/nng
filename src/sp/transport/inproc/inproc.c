@@ -547,17 +547,6 @@ inproc_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	return (rv);
 }
 
-static nng_err
-inproc_ep_get_addr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	inproc_ep   *ep = arg;
-	nng_sockaddr sa;
-	sa.s_inproc.sa_family = NNG_AF_INPROC;
-	nni_strlcpy(
-	    sa.s_inproc.sa_name, ep->addr, sizeof(sa.s_inproc.sa_name));
-	return (nni_copyout_sockaddr(&sa, v, szp, t));
-}
-
 static const nni_option inproc_pipe_options[] = {
 	// terminate list
 	{
@@ -604,10 +593,6 @@ static const nni_option inproc_ep_options[] = {
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = inproc_ep_get_recvmaxsz,
 	    .o_set  = inproc_ep_set_recvmaxsz,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = inproc_ep_get_addr,
 	},
 	// terminate list
 	{

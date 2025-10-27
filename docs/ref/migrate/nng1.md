@@ -173,12 +173,13 @@ address separated by a semicolon. This was provided for legacy libnanomsg
 compatibility, and is no longer offered. The correct way to specify a
 local address is by setting `NNG_OPT_LOCADDR` on the dialer.
 
-## Support for Remote Address Options Removed
+## Support for Address Options Removed
 
-The `NNG_OPT_REMADDR` option is removed. For streams and pipes, there are
+The `NNG_OPT_REMADDR` and `NNG_OPT_LOCADDR` options are removed. For streams and pipes, there are
 [`nng_stream_peer_addr`] and [`nng_pipe_peer_addr`] functions. For dialers
 and stream dialers, the application should track the relevant information
-used to configure the listener.
+used to configure the listener. Functions formerly used to configure these are
+removed as well.
 
 ## IPC Option Type Changes
 
@@ -228,6 +229,7 @@ and are thus removed:
 - `nng_stream_listener_set_ptr`
 - `nng_stream_listener_get_uint64`
 - `nng_stream_listener_set_uint64`
+- `nng_stream_listener_get_addr`
 - `nng_ctx_get_ptr` (not documented)
 - `nng_ctx_set_ptr` (not documented)
 
@@ -379,6 +381,10 @@ They may silently truncate data.
 The HTTP handler objects may not be modified once in use. Previously this would fail with `NNG_EBUSY`.
 These checks are removed now, but debug builds will assert if an application tries to do so.
 
+The `nng_http_server_get_addr` function is removed. Instead there is now
+[`nng_http_server_get_port`] which can be used to obtain the port actually bound if the server
+was configured with port 0.
+
 ## WebSocket API
 
 The `NNG_OPT_WSS_REQUEST_HEADERS`, `NNG_OPT_WSS_RESPONSE_HEADERS` and
@@ -417,7 +423,7 @@ is planned to provided coexistence between ZeroTier & the native stack's TCP/IP 
 
 ## Abstract Autobinding No Longer Supported
 
-As we have removed `NNG_OPT_LOCADDR` for listeners, it is no longer possible to meaningfully
+As we have removed `NNG_OPT_LOCADDR`, it is no longer possible to meaningfully
 use autobinding with abstract sockets on Linux. This is trivially worked around by using a
 large (say 128-bit) random integer as the name.
 

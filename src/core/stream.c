@@ -441,13 +441,6 @@ nng_stream_dialer_get_ms(nng_stream_dialer *d, const char *n, nng_duration *v)
 }
 
 nng_err
-nng_stream_dialer_get_addr(
-    nng_stream_dialer *d, const char *n, nng_sockaddr *v)
-{
-	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_SOCKADDR));
-}
-
-nng_err
 nng_stream_dialer_get_tls(nng_stream_dialer *d, nng_tls_config **cfgp)
 {
 	return (nni_stream_dialer_get_tls(d, cfgp));

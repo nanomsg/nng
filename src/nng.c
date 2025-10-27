@@ -792,12 +792,6 @@ nng_dialer_get_ms(nng_dialer id, const char *n, nng_duration *v)
 }
 
 int
-nng_dialer_get_addr(nng_dialer id, const char *n, nng_sockaddr *v)
-{
-	return (dialer_get(id, n, v, NULL, NNI_TYPE_SOCKADDR));
-}
-
-int
 nng_dialer_get_tls(nng_dialer id, nng_tls_config **cfgp)
 {
 	int         rv;
