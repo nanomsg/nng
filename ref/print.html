@@ -2095,12 +2095,17 @@ either [<code>nng_dialer_id</code>] or [<code>nng_listener_id</code>] for the re
 <p>The socket, or the endpoint, returned by these functions may be in the process of closing,
 and might not be further usable as a result. (Other functions will result in <a href="api/../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.)</p>
 </div>
+<h2 id="pipe-socket-addresses"><a class="header" href="#pipe-socket-addresses">Pipe Socket Addresses</a></h2>
+<pre><code class="language-c">nng_err nng_pipe_peer_addr(nng_pipe p, nng_sockaddr *sap);
+nng_err nng_pipe_self_addr(nng_pipe p, nng_sockaddr *sap);
+</code></pre>
+<p>The <a href="api/../TODO.html"><code>nng_sockaddr</code></a> for the local (self) or remote (peer) of the pipe is available using these
+functions. The associated address will be stored in the location pointed to by <em>sap</em>.</p>
 <h2 id="pipe-options"><a class="header" href="#pipe-options">Pipe Options</a></h2>
 <pre><code class="language-c">nng_err nng_pipe_get_bool(nng_pipe p, const char *opt, bool *valp);
 nng_err nng_pipe_get_int(nng_pipe p, const char *opt, int *valp);
 nng_err nng_pipe_get_ms(nng_pipe p, const char *opt, nng_duration *valp);
 nng_err nng_pipe_get_size(nng_pipe p, const char *opt, size_t *valp);
-nng_err nng_pipe_get_addr(nng_pipe p, const char *opt, nng_sockaddr *valp);
 nng_err nng_pipe_get_string(nng_pipe p, const char *opt, const char **valp);
 nng_err nng_pipe_get_strcpy(nng_pipe p, const char *opt, char *val, size_t len);
 nng_err nng_pipe_get_strdup(nng_pipe p, const char *opt, char **valp);
@@ -2113,7 +2118,6 @@ nng_err nng_pipe_get_strlen(nng_pipe p, const char *opt, size_t *lenp);
 <a name="a014"></a>
 <a name="a015"></a>
 <a name="a016"></a>
-<a name="a017"></a>
 These functions are used to obtain value of an option named <em>opt</em> from the pipe <em>p</em>, and store it in the location
 referenced by <em>valp</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
@@ -2138,7 +2142,7 @@ typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
 
 nng_err nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
+<p>The <a name="a017"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
 to be called whenever the pipe event specified by
 <em>ev</em> occurs on the socket <em>s</em>.
 The callback <em>cb</em> will be passed <em>arg</em> as its final argument.</p>
@@ -2147,9 +2151,9 @@ Each event may have at most one callback registered.
 Registering a callback implicitly unregisters any previously registered.</p>
 <p>The following pipe events are supported:</p>
 <div class="table-wrapper"><table><thead><tr><th>Event</th><th>Description</th></tr></thead><tbody>
-<tr><td><a name="a019"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="api/../api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
-<tr><td><a name="a020"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
-<tr><td><a name="a021"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
+<tr><td><a name="a018"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="api/../api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
+<tr><td><a name="a019"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
+<tr><td><a name="a020"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
 </tbody></table>
 </div><div class="mdbook-alerts mdbook-alerts-warning">
 <p class="mdbook-alerts-title">
@@ -4252,41 +4256,35 @@ nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp)
 <a name="a012"></a>
 <a name="a013"></a>
 <a name="a014"></a>
-<a name="a015"></a>
 These functions are used to obtain value of an option named <em>opt</em> from the stream <em>s</em>, and store it in the location
 referenced by <em>valp</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.</p>
 <p>In the case of <code>nng_stream_get_string</code>, the string pointer is only guaranteed to be valid while the
 stream exists. Callers should make a copy of the data if required before closing the stream.</p>
-<blockquote>
-<p>[!NOTE]:
-The <code>nng_stream_get_addr</code> function is deprecated and will be removed. Use the
-<a href="api/../api/stream.html#stream-addresses"><code>nng_stream_peer_addr</code></a> or <a href="api/../api/stream.html#stream-addresses"><code>nng_stream_self_addr</code></a> functions instead.</p>
-</blockquote>
 <h2 id="stream-factories"><a class="header" href="#stream-factories">Stream Factories</a></h2>
 <pre><code class="language-c">typedef struct nng_stream_dialer nng_stream_dialer;
 typedef struct nng_stream_listener nng_stream_listener;
 </code></pre>
-<p><a name="a016"></a>
-The <a name="a017"></a><code>nng_stream_listener</code> object and <a name="a018"></a><code>nng_stream_listener</code> objects can be thought of as factories that
+<p><a name="a015"></a>
+The <a name="a016"></a><code>nng_stream_listener</code> object and <a name="a017"></a><code>nng_stream_listener</code> objects can be thought of as factories that
 create <a href="api/../api/stream.html#stream-type"><code>nng_stream</code></a> streams.</p>
 <p>The <code>nng_stream_listener</code> object a handle to a listener, which creates streams by accepting incoming connection requests.
-In a BSD socket implementation, this is the entity responsible for doing <a name="a019"></a><code>bind</code>, <a name="a020"></a><code>listen</code> and <a name="a021"></a><code>accept</code>.
+In a BSD socket implementation, this is the entity responsible for doing <a name="a018"></a><code>bind</code>, <a name="a019"></a><code>listen</code> and <a name="a020"></a><code>accept</code>.
 Normally a listener may be used to accept multiple, possibly many, concurrent connections.</p>
 <p>The <code>nng_stream_dialer</code> object is a handle to a dialer, which creates streams by making outgoing
 connection requests. While there isn’t a specific BSD socket analogue, this can be thought of as a factory for TCP sockets
-created by opening them with <a name="a022"></a><code>socket</code> and then calling <a name="a023"></a><code>connect</code> on them.</p>
+created by opening them with <a name="a021"></a><code>socket</code> and then calling <a name="a022"></a><code>connect</code> on them.</p>
 <h2 id="creating-a-stream-factory"><a class="header" href="#creating-a-stream-factory">Creating a Stream Factory</a></h2>
 <pre><code class="language-c">nng_err nng_stream_dialer_alloc(nng_stream_dialer **dialerp, const char *url);
 nng_err nng_stream_dialer_alloc_url(nng_stream_dialer **dialerp, const nng_url *url);
 nng_err nng_stream_listener_alloc(nng_stream_listener **lstenerp, const char *url);
 nng_err nng_stream_listener_alloc_url(nng_stream_listener **listenerp, const nng_url *url);
 </code></pre>
-<p>The <a name="a024"></a><code>nng_stream_dialer_alloc</code> and <a name="a025"></a><code>nng_stream_dialer_alloc_url</code> functions create a stream dialer, associated the
-<a name="a026"></a>URL specified by <em>url</em> represented as a string, or as an <a href="api/../api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The dialer is returned in the location
+<p>The <a name="a023"></a><code>nng_stream_dialer_alloc</code> and <a name="a024"></a><code>nng_stream_dialer_alloc_url</code> functions create a stream dialer, associated the
+<a name="a025"></a>URL specified by <em>url</em> represented as a string, or as an <a href="api/../api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The dialer is returned in the location
 <em>dialerp</em> references.</p>
-<p>The <a name="a027"></a><code>nng_stream_listener_alloc</code> and <a name="a028"></a><code>nng_stream_listener_alloc_url</code> functions create a stream listener, associated the
+<p>The <a name="a026"></a><code>nng_stream_listener_alloc</code> and <a name="a027"></a><code>nng_stream_listener_alloc_url</code> functions create a stream listener, associated the
 URL specified by <em>url</em> represented as a string, or as an <a href="api/../api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The listener is returned in the location
 <em>listenerp</em> references.</p>
 <h3 id="example-1-creating-a-tcp-listener"><a class="header" href="#example-1-creating-a-tcp-listener">Example 1: Creating a TCP Listener</a></h3>
@@ -4302,14 +4300,14 @@ void nng_stream_listener_close(nng_stream_listener *listener);
 void nng_stream_listener_stop(nng_stream_listener *listener);
 void nng_stream_listener_free(nng_stream_listener *listener);
 </code></pre>
-<p>The <a name="a029"></a><code>nng_stream_dialer_close</code> and <a name="a030"></a><code>nng_stream_listener_close</code> functions close the stream <em>dialer</em> or <em>listener</em>,
+<p>The <a name="a028"></a><code>nng_stream_dialer_close</code> and <a name="a029"></a><code>nng_stream_listener_close</code> functions close the stream <em>dialer</em> or <em>listener</em>,
 preventing it from creating new connections.
 This will generally include closing any underlying file used for creating such connections.
 However, some requests may still be pending when this function returns, as it does not wait for the shutdown to complete.</p>
-<p>The <a name="a031"></a><code>nng_stream_dialer_stop</code> and <a name="a032"></a><code>nng_stream_listener_stop</code> functions performs the same action,
+<p>The <a name="a030"></a><code>nng_stream_dialer_stop</code> and <a name="a031"></a><code>nng_stream_listener_stop</code> functions performs the same action,
 but also wait until all outstanding requests are serviced, and the <em>dialer</em> or <em>listener</em> is completely stopped.
 Because they blocks, these functions must not be called in contexts where blocking is not allowed.</p>
-<p>The <a name="a033"></a><code>nng_stream_dialer_free</code> and <a name="a034"></a><code>nng_stream_listener_free</code> function performs the same action as
+<p>The <a name="a032"></a><code>nng_stream_dialer_free</code> and <a name="a033"></a><code>nng_stream_listener_free</code> function performs the same action as
 <code>nng_stream_dialer_stop</code> or <code>nng_stream_listener_stop</code>, but also deallocates the <em>dialer</em> or <em>listener</em>, and any associated resources.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -4322,7 +4320,7 @@ callbacks are running that could reference an object after it is deallocated.</p
 <h2 id="making-outgoing-connections"><a class="header" href="#making-outgoing-connections">Making Outgoing Connections</a></h2>
 <pre><code class="language-c">void nng_stream_dialer_dial(nng_stream_dialer *dialer, nng_aio *aio);
 </code></pre>
-<p>The <a name="a035"></a><code>nng_stream_dialer_dial</code> initiates an outgoing connection asynchronously, using the <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
+<p>The <a name="a034"></a><code>nng_stream_dialer_dial</code> initiates an outgoing connection asynchronously, using the <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
 If it successfully establishes a connection, it creates an <a href="api/../api/stream.html#stream-type"><code>nng_stream</code></a>, which can be obtained as the first
 output result on <em>aio</em> using the <a href="api/../api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> function with index zero.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
@@ -4356,10 +4354,10 @@ stream = nng_aio_get_output(aio, 0);
 <pre><code class="language-c">nng_err nng_stream_listener_listen(nng_stream_listener *listener);
 void nng_stream_listener_accept(nng_stream_listener *listener, nng_aio *aio);
 </code></pre>
-<p>Accepting incoming connections is performed in two steps. The first step, <a name="a036"></a><code>nng_stream_listener_listen</code> is to setup for
+<p>Accepting incoming connections is performed in two steps. The first step, <a name="a035"></a><code>nng_stream_listener_listen</code> is to setup for
 listening. For a TCP implementation of this, for example, this would perform the <code>bind</code> and the <code>listen</code> steps. This will bind
 to the address represented by the URL that was specific when the listener was created with <a href="api/../api/stream.html#creating-a-stream-factory"><code>nng_stream_listener_alloc</code></a>.</p>
-<p>In the second step, <a name="a037"></a><code>nng_stream_listener_accept</code> accepts an incoming connection on <em>listener</em> asynchronously, using the <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
+<p>In the second step, <a name="a036"></a><code>nng_stream_listener_accept</code> accepts an incoming connection on <em>listener</em> asynchronously, using the <a href="api/../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
 If an incoming connection is accepted, it will be represented as an <a href="api/../api/stream.html#stream-type"><code>nng_stream</code></a>, which can be obtained from the <em>aio</em> as the first
 output result using the <a href="api/../api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> function with index zero.</p>
 <h3 id="example-3-accepting-an-inbound-stream"><a class="header" href="#example-3-accepting-an-inbound-stream">Example 3: Accepting an Inbound Stream</a></h3>
@@ -4386,14 +4384,12 @@ if (nng_aio_result(aio) != 0) {
 stream = nng_aio_get_output(aio, 0);
 </code></pre>
 <h2 id="stream-factory-options"><a class="header" href="#stream-factory-options">Stream Factory Options</a></h2>
-<pre><code class="language-c">nng_err nng_stream_dialer_get_addr(nng_stream_dialer *dialer, const char *opt, nng_sockaddr *valp);
-nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, bool *valp);
+<pre><code class="language-c">nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, bool *valp);
 nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
 nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, const char **valp);
 
-nng_err nng_stream_listener_get_addr(nng_stream_listener *listener, const char *opt, nng_sockaddr *valp);
 nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
@@ -4407,14 +4403,14 @@ nng_err nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng
 nng_err nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
 nng_err nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
 
-nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 nng_err nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
 nng_err nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
 nng_err nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
 nng_err nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
 nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
 </code></pre>
-<p><a name="a038"></a>
+<p><a name="a037"></a>
+<a name="a038"></a>
 <a name="a039"></a>
 <a name="a040"></a>
 <a name="a041"></a>
@@ -4436,8 +4432,6 @@ nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char
 <a name="a057"></a>
 <a name="a058"></a>
 <a name="a059"></a>
-<a name="a060"></a>
-<a name="a061"></a>
 These functions are used to retrieve or change the value of an option named <em>opt</em> from the stream <em>dialer</em> or <em>listener</em>.
 The <code>nng_stream_dialer_get_</code> and <code>nng_stream_listener_get_</code> function families retrieve the value, and store it in the location <em>valp</em> references.
 The <code>nng_stream_dialer_set_</code> and <code>nng_stream_listener_set_</code> function families change the value for the <em>dialer</em> or <em>listener</em>, taking it from <em>val</em>.</p>
@@ -4447,12 +4441,12 @@ are available, and which type they may be accessed using.</p>
 the string is only valid as long as the associated object remains open.</p>
 <p>In the case of <code>nng_stream_dialer_set_string</code> and <code>nng_stream_listener_set_string</code>, the string contents are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.</p>
-<p>In the case of <code>nng_stream_dialer_set_addr</code> and <code>nng_stream_listener_set_addr</code>, the contents of <em>addr</em> are copied if necessary, so that the caller
+<p>In the case of <code>nng_stream_dialer_set_addr</code>, the contents of <em>addr</em> are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.</p>
 <h3 id="example-4-socket-activation"><a class="header" href="#example-4-socket-activation">Example 4: Socket Activation<a name="socket-activation"></a></a></h3>
-<p>Some <a href="api/../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects, depending on the underlying transport and platform, can support a technique known as “<a name="a062"></a>socket activation”,
+<p>Some <a href="api/../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects, depending on the underlying transport and platform, can support a technique known as “<a name="a060"></a>socket activation”,
 where the file descriptor used for listening and accepting is supplied externally, such as by a system service manager.
-In this case, the application supplies the file descriptor or <code>SOCKET</code> object using the <a name="a063"></a><code>NNG_OPT_LISTEN_FD</code> option,
+In this case, the application supplies the file descriptor or <code>SOCKET</code> object using the <a name="a061"></a><code>NNG_OPT_LISTEN_FD</code> option,
 instead of calling <a href="api/../api/stream.html#accepting-incoming-connections"><code>nng_stream_listener_listen</code></a>.</p>
 <div class="mdbook-alerts mdbook-alerts-tip">
 <p class="mdbook-alerts-title">
@@ -4480,13 +4474,13 @@ nng_err nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *t
 nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
 nng_err nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
 </code></pre>
-<p>Both <a href="api/../api/stream.html#stream-factories"><code>nng_stream_dialer</code></a> and <a href="api/../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects may support configuration of <a name="a064"></a>TLS parameters.
-The <a name="a065"></a><code>nng_stream_dialer_set_tls</code> and <a name="a066"></a><code>nng_stream_listener_set_tls</code> functions support setting the
+<p>Both <a href="api/../api/stream.html#stream-factories"><code>nng_stream_dialer</code></a> and <a href="api/../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects may support configuration of <a name="a062"></a>TLS parameters.
+The <a name="a063"></a><code>nng_stream_dialer_set_tls</code> and <a name="a064"></a><code>nng_stream_listener_set_tls</code> functions support setting the
 configuration of a <a href="api/../TODO.html"><code>nng_tls_config</code></a> object supplied by <em>tls</em> on <em>dialer</em> or <em>listener</em>.
 This must be performed before the <em>listener</em> starts listening with <a href="api/../api/stream.html#accepting-incoming-connections"><code>nng_stream_listener_listen</code></a>, or the dialer starts an outgoing connection
 as a result of <a href="api/../api/stream.html#making-outgoing-connections"><code>nng_stream_dialer_dial</code></a>.</p>
 <p>The configuration object that was previously established (which may be a default if one was not explicitly
-configured) can be obtained with the <a name="a067"></a><code>nng_stream_dialer_get_tls</code> and <a name="a068"></a><code>nng_stream_listener_get_tls</code>.
+configured) can be obtained with the <a name="a065"></a><code>nng_stream_dialer_get_tls</code> and <a name="a066"></a><code>nng_stream_listener_get_tls</code>.
 They will return a pointer to the <a href="api/../TODO.html"><code>nng_tls_config</code></a> object in question at the location referenced by <em>tlsp</em>.</p>
 <div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
@@ -7733,7 +7727,7 @@ relative to the root directory.</p>
   note
 </p>
 <p>When using relative paths on POSIX systems, the address used and returned
-in properties like <a href="tran/../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a> will also be relative.
+in functions such as <a href="tran/../api/pipe.html#pipe-socket-addresses"><code>nng_pipe_peer_addr</code></a> will also be relative.
 Consequently, they will only be interpreted the same by processes that have
 the same working directory.
 To ensure maximum portability and safety, absolute paths are recommended
@@ -7758,14 +7752,15 @@ longer than 128 bytes, including the <code>ipc://</code> prefix.</p>
 Abstract sockets use a URI-encoded name after the <a name="a008"></a><code>abstract://</code> scheme, which allows arbitrary values to be conveyed
 in the path, including embedded <code>NUL</code> bytes.
 For example, the name <code>"a\0b"</code> would be represented as <code>abstract://a%00b</code>.</p>
-<div class="mdbook-alerts mdbook-alerts-tip">
+<div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
-  tip
+  note
 </p>
-<p>An empty name may be used with a listener to request “auto bind” be used to select a name.
-In this case the system will allocate a free name.
-The name assigned may be retrieved using <a href="tran/../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a>.</p>
+<p><em>NNG</em> no longer supports “auto binding” where the kernel allocates a random unused name.
+A simple solution to this is to allocate a large random number, such as a random UUID
+or a concatenation of four random values from <a href="tran/../api/misc.html#get-random-number"><code>nng_random</code></a>. The chance of a collision
+can be made arbitrarily small by appending additional random values.</p>
 </div>
 <p>Abstract names do not include the leading <code>NUL</code> byte used in the low-level socket address.</p>
 <p>Abstract sockets do not have any representation in the file system, and are automatically freed by
@@ -7782,8 +7777,6 @@ except for abstract sockets, which use <a href="tran/../TODO.html"><code>nng_soc
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>NNG_OPT_IPC_PERMISSIONS</code></td><td><code>int</code></td><td>Settable on listeners before they start, this is the UNIX file mode used when creating the socket.</td></tr>
-<tr><td><code>NNG_OPT_LOCADDR</code></td><td><a href="tran/../TODO.html"><code>nng_sockaddr</code></a></td><td>Local socket address, either <a href="tran/../TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="tran/../TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
-<tr><td><code>NNG_OPT_REMADDR</code></td><td><a href="tran/../TODO.html"><code>nng_sockaddr</code></a></td><td>Remote socket address, either <a href="tran/../TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="tran/../TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
@@ -8077,11 +8070,9 @@ the actual structure is either of type
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><a href="tran/../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></td><td><a href="tran/../TODO.html"><code>nng_sockaddr</code></a></td><td>The locally bound address, will be either <a href="tran/../TODO.html"><code>nng_sockaddr_in</code></a> or <a href="tran/../TODO.html"><code>nng_sockaddr_in6</code></a>.</td></tr>
-<tr><td><a href="tran/../api/sock.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></td><td><a href="tran/../TODO.html"><code>nng_sockaddr</code></a></td><td>The remote peer address, will be either <a href="tran/../TODO.html"><code>nng_sockaddr_in</code></a> or <a href="tran/../TODO.html"><code>nng_sockaddr_in6</code></a>. Only valid for <a href="tran/../api/pipe.html">pipe</a> and <a href="tran/../TODO.html">dialer</a> objects.</td></tr>
 <tr><td><a href="tran/../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
-<tr><td><code>NNG_OPT_UDP_BOUND_PORT</code><a name="NNG_OPT_UDP_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="tran/../TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="tran/../TODO.html">listener</a> objects only.</td></tr>
 </tbody></table>
 </div>
 <h2 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h2>
@@ -8405,6 +8396,12 @@ to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
 compatibility, and is no longer offered. The correct way to specify a
 local address is by setting <code>NNG_OPT_LOCADDR</code> on the dialer.</p>
+<h2 id="support-for-address-options-removed"><a class="header" href="#support-for-address-options-removed">Support for Address Options Removed</a></h2>
+<p>The <code>NNG_OPT_REMADDR</code> and <code>NNG_OPT_LOCADDR</code> options are removed. For streams and pipes, there are
+<a href="migrate/../api/stream.html#stream-addresses"><code>nng_stream_peer_addr</code></a> and <a href="migrate/../api/pipe.html#pipe-socket-addresses"><code>nng_pipe_peer_addr</code></a> functions. For dialers
+and stream dialers, the application should track the relevant information
+used to configure the listener. Functions formerly used to configure these are
+removed as well.</p>
 <h2 id="ipc-option-type-changes"><a class="header" href="#ipc-option-type-changes">IPC Option Type Changes</a></h2>
 <p>The types of <a href="migrate/../tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="migrate/../tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="migrate/../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="migrate/../tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
 have changed from <code>uint64_t</code> to <code>int</code>. The underlying platforms all use 32-bit quantities for these.</p>
@@ -8447,6 +8444,7 @@ and are thus removed:</p>
 <li><code>nng_stream_listener_set_ptr</code></li>
 <li><code>nng_stream_listener_get_uint64</code></li>
 <li><code>nng_stream_listener_set_uint64</code></li>
+<li><code>nng_stream_listener_get_addr</code></li>
 <li><code>nng_ctx_get_ptr</code> (not documented)</li>
 <li><code>nng_ctx_set_ptr</code> (not documented)</li>
 </ul>
@@ -8471,6 +8469,8 @@ such as one ending in a suffix like <code>_bool</code> (to access a <code>bool</
 <li><code>nng_stream_listener_set</code></li>
 </ul>
 <h2 id="stream-options"><a class="header" href="#stream-options">Stream Options</a></h2>
+<p>The <code>nng_stream_get_addr</code> function is removed.
+Use the new <a href="migrate/../api/stream.html#stream-addresses"><code>nng_stream_peer_addr</code></a> or [<code>nng_stream_peer_self_addr</code>] instead.</p>
 <p>The ability to set options on streams after they have been created is no longer present.
 (It turns out that this was not very useful.) All functions <code>nng_stream_set_xxx</code> are removed.
 For tuning the <code>NNG_OPT_TCP_NODELAY</code> or similar properties, set the option on the listener
@@ -8494,6 +8494,11 @@ directly:</p>
 <p>The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
 before bringing them into the socket itself.</p>
+<p>The <code>NNG_OPT_TCP_BOUND_PORT</code> port is renamed to just [<code>NNG_OPT_BOUND_PORT</code>],
+and is available for listeners using transports based on either TCP or UDP.</p>
+<p>The <code>nng_pipe_get_addr</code> function has been removed, and replaced with the new
+<a href="migrate/../api/pipe.html#pipe-socket-addresses"><code>nng_pipe_peer_addr</code></a> and <a href="migrate/../api/pipe.html#pipe-socket-addresses"><code>nng_pipe_self_addr</code></a> functions. These should be
+easier to use.</p>
 <h2 id="socket-options-1"><a class="header" href="#socket-options-1">Socket Options</a></h2>
 <p>The <code>NNG_OPT_PROTO</code>, <code>NNG_OPT_PROTONAME</code>, <code>NNG_OPT_PEER</code>, and <code>NNG_OPT_PEERNAME</code> options
 have been replaced by functions instead of options.
@@ -8565,6 +8570,9 @@ They may silently truncate data.</p>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
 These checks are removed now, but debug builds will assert if an application tries to do so.</p>
+<p>The <code>nng_http_server_get_addr</code> function is removed. Instead there is now
+[<code>nng_http_server_get_port</code>] which can be used to obtain the port actually bound if the server
+was configured with port 0.</p>
 <h2 id="websocket-api"><a class="header" href="#websocket-api">WebSocket API</a></h2>
 <p>The <code>NNG_OPT_WSS_REQUEST_HEADERS</code>, <code>NNG_OPT_WSS_RESPONSE_HEADERS</code> and
 <code>NNG_OPT_WS_OPT_WS_REQUEST_HEADERS</code>, <code>NNG_OPT_WS_RESPONSE_HEADERS</code> have been removed.</p>
@@ -8590,6 +8598,15 @@ See <a href="migrate/../api/args.html#parse-command-line-arguments"><code>nng_ar
 <p>The Layer 2 special ZeroTier transport has been removed.
 It is possible to use NNG with ZeroTier using TCP/IP, and a future update
 is planned to provided coexistence between ZeroTier &amp; the native stack’s TCP/IP using lwIP.</p>
+<h2 id="abstract-autobinding-no-longer-supported"><a class="header" href="#abstract-autobinding-no-longer-supported">Abstract Autobinding No Longer Supported</a></h2>
+<p>As we have removed <code>NNG_OPT_LOCADDR</code>, it is no longer possible to meaningfully
+use autobinding with abstract sockets on Linux. This is trivially worked around by using a
+large (say 128-bit) random integer as the name.</p>
+<p>This can be done via using of <a href="migrate/../api/misc.html#get-random-number"><code>nng_random</code></a> combined with <code>sprintf</code>, as the following example demonstrates:</p>
+<pre><code class="language-c">char url[256];
+snprintf(url, sizeof (url), `abstract://my-app-%08x-%08x-%08x-%08x",
+    nni_random(), nni_random(), nni_random(), nni_random());
+</code></pre>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -8704,8 +8721,8 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_send</code></td><td><a href="migrate/../api/sock.html#nng_send"><code>nng_send</code></a></td><td></td></tr>
 <tr><td><code>nn_recv</code></td><td><a href="migrate/../TODO.html"><code>nng_recv</code></a></td><td></td></tr>
 <tr><td><code>nn_sendmsg</code></td><td><a href="migrate/../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a></td><td></td></tr>
-<tr><td><code>nn_getsockopt</code></td><td><a href="migrate/../api/sock.html#socket-options"><code>nng_socket_get</code></a></td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
-<tr><td><code>nn_setsockopt</code></td><td><a href="migrate/../api/sock.html#socket-options"><code>nng_socket_set</code></a></td><td></td></tr>
+<tr><td><code>nn_getsockopt</code></td><td>[<code>nng_socket_get</code>]</td><td>NNG has typed accessors for options, and also separate functions for dialers and listeners.</td></tr>
+<tr><td><code>nn_setsockopt</code></td><td>[<code>nng_socket_set</code>]</td><td></td></tr>
 <tr><td><code>nn_device</code></td><td><a href="migrate/../TODO.html"><code>nng_device</code></a></td><td></td></tr>
 <tr><td><code>nn_poll</code></td><td>None</td><td>Can be constructed using <code>nng_aio</code>. Few if any applications ever used this API.</td></tr>
 <tr><td><code>nn_term</code></td><td><a href="migrate/../api/init.html#finalization"><code>nng_fini</code></a></td><td>The <code>nng_fini</code> API can do this, but is not recommended except when debugging memory leaks.</td></tr>
@@ -8795,7 +8812,7 @@ dialer before starting to dial.</p>
 <p>ABI, <a href="api/misc.html#a010">1</a><br/>
 abstract sockets, <a href="tran/ipc.html#a007">1</a><br/>
 <code>abstract://</code>, <a href="tran/ipc.html#a008">1</a><br/>
-<code>accept</code>, <a href="api/stream.html#a021">1</a><br/>
+<code>accept</code>, <a href="api/stream.html#a020">1</a><br/>
 <code>AF_UNIX</code>, <a href="api/misc.html#a004">1</a><br/>
 aio, <a href="api/aio.html#a002">1</a><br/>
 allocations, <a href="api/memory.html#a002">1</a><br/>
@@ -8804,7 +8821,7 @@ asynchronous I/O, <a href="api/aio.html#a003">1</a><br/>
 back-pressure, <a href="proto/index.html#a005">1</a><br/>
 backtrace, <a href="proto/rep.html#a004">1</a>, <a href="proto/req.html#a008">2</a>, <a href="proto/respondent.html#a004">3</a>, <a href="proto/surveyor.html#a008">4</a><br/>
 best-effort, <a href="proto/bus.html#a003">1</a><br/>
-<code>bind</code>, <a href="api/stream.html#a019">1</a><br/>
+<code>bind</code>, <a href="api/stream.html#a018">1</a><br/>
 body, <a href="api/msg.html#a002">1</a><br/>
 <em>BUS</em>, <a href="proto/bus.html#a002">1</a><br/>
 <em>BUS</em> protocol, <a href="proto/bus.html#a001">1</a><br/>
@@ -8814,7 +8831,7 @@ command-line arguments, <a href="api/args.html#a002">1</a><br/>
 concurrency, <a href="api/thread.html#a002">1</a><br/>
 concurrent, <a href="api/ctx.html#a002">1</a><br/>
 condition variable, <a href="api/synch.html#a009">1</a><br/>
-<code>connect</code>, <a href="api/stream.html#a023">1</a><br/>
+<code>connect</code>, <a href="api/stream.html#a022">1</a><br/>
 connection, <a href="api/pipe.html#a003">1</a><br/>
 context, <a href="api/ctx.html#a001">1</a><br/>
 CPU-bound, <a href="api/thread.html#a003">1</a><br/>
@@ -8838,7 +8855,7 @@ intra-process, <a href="tran/inproc.html#a003">1</a><br/>
 IPv4, <a href="tran/udp.html#a003">1</a><br/>
 IPv6, <a href="tran/udp.html#a004">1</a><br/>
 leader election, <a href="proto/surveyor.html#a005">1</a><br/>
-<code>listen</code>, <a href="api/stream.html#a020">1</a><br/>
+<code>listen</code>, <a href="api/stream.html#a019">1</a><br/>
 load-balancing, <a href="proto/pull.html#a004">1</a>, <a href="proto/push.html#a004">2</a>, <a href="proto/req.html#a005">3</a><br/>
 Log handlers, <a href="api/logging.html#a007">1</a><br/>
 memory, <a href="api/memory.html#a001">1</a><br/>
@@ -8994,7 +9011,7 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_mtx_lock</code>, <a href="api/synch.html#a004">1</a>, <a href="api/synch.html#a006">2</a><br/>
 <code>nng_mtx_unlock</code>, <a href="api/synch.html#a007">1</a><br/>
 <code>nng_null_logger</code>, <a href="api/logging.html#a010">1</a><br/>
-<code>NNG_OPT_LISTEN_FD</code>, <a href="api/stream.html#a063">1</a><br/>
+<code>NNG_OPT_LISTEN_FD</code>, <a href="api/stream.html#a061">1</a><br/>
 <code>NNG_OPT_REQ_RESENDTICK</code>, <a href="proto/req.html#a007">1</a><br/>
 <code>NNG_OPT_REQ_RESENDTIME</code>, <a href="proto/req.html#a006">1</a><br/>
 <code>NNG_OPT_SOCKET_FD</code>, <a href="tran/socket.html#a002">1</a><br/>
@@ -9009,21 +9026,20 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_pipe</code>, <a href="api/pipe.html#a001">1</a><br/>
 <code>nng_pipe_close</code>, <a href="api/pipe.html#a006">1</a><br/>
 <code>nng_pipe_dialer</code>, <a href="api/pipe.html#a007">1</a><br/>
-<code>NNG_PIPE_EV_ADD_POST</code>, <a href="api/pipe.html#a020">1</a><br/>
-<code>NNG_PIPE_EV_ADD_PRE</code>, <a href="api/pipe.html#a019">1</a><br/>
-<code>NNG_PIPE_EV_REM_POST</code>, <a href="api/pipe.html#a021">1</a><br/>
-<code>nng_pipe_get_addr</code>, <a href="api/pipe.html#a014">1</a><br/>
+<code>NNG_PIPE_EV_ADD_POST</code>, <a href="api/pipe.html#a019">1</a><br/>
+<code>NNG_PIPE_EV_ADD_PRE</code>, <a href="api/pipe.html#a018">1</a><br/>
+<code>NNG_PIPE_EV_REM_POST</code>, <a href="api/pipe.html#a020">1</a><br/>
 <code>nng_pipe_get_bool</code>, <a href="api/pipe.html#a010">1</a><br/>
 <code>nng_pipe_get_int</code>, <a href="api/pipe.html#a011">1</a><br/>
 <code>nng_pipe_get_ms</code>, <a href="api/pipe.html#a012">1</a><br/>
 <code>nng_pipe_get_size</code>, <a href="api/pipe.html#a013">1</a><br/>
-<code>nng_pipe_get_strcpy</code>, <a href="api/pipe.html#a016">1</a><br/>
-<code>nng_pipe_get_strdup</code>, <a href="api/pipe.html#a017">1</a><br/>
-<code>nng_pipe_get_string</code>, <a href="api/pipe.html#a015">1</a><br/>
+<code>nng_pipe_get_strcpy</code>, <a href="api/pipe.html#a015">1</a><br/>
+<code>nng_pipe_get_strdup</code>, <a href="api/pipe.html#a016">1</a><br/>
+<code>nng_pipe_get_string</code>, <a href="api/pipe.html#a014">1</a><br/>
 <code>nng_pipe_id</code>, <a href="api/pipe.html#a005">1</a><br/>
 <code>NNG_PIPE_INITIALIZER</code>, <a href="api/pipe.html#a004">1</a><br/>
 <code>nng_pipe_listener</code>, <a href="api/pipe.html#a008">1</a><br/>
-<code>nng_pipe_notify</code>, <a href="api/pipe.html#a018">1</a><br/>
+<code>nng_pipe_notify</code>, <a href="api/pipe.html#a017">1</a><br/>
 <code>nng_pipe_socket</code>, <a href="api/pipe.html#a009">1</a><br/>
 <code>nng_pub0_open</code>, <a href="api/sock.html#a013">1</a><br/>
 <code>nng_pub0_open_raw</code>, <a href="api/sock.html#a025">1</a><br/>
@@ -9084,55 +9100,53 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br/>
 <code>nng_strdup</code>, <a href="api/memory.html#a005">1</a><br/>
 <code>nng_stream</code>, <a href="api/stream.html#a002">1</a><br/>
 <code>nng_stream_close</code>, <a href="api/stream.html#a005">1</a><br/>
-<code>nng_stream_dialer_alloc</code>, <a href="api/stream.html#a024">1</a><br/>
-<code>nng_stream_dialer_alloc_url</code>, <a href="api/stream.html#a025">1</a><br/>
-<code>nng_stream_dialer_close</code>, <a href="api/stream.html#a029">1</a><br/>
-<code>nng_stream_dialer_dial</code>, <a href="api/stream.html#a035">1</a><br/>
-<code>nng_stream_dialer_free</code>, <a href="api/stream.html#a033">1</a><br/>
-<code>nng_stream_dialer_get_addr</code>, <a href="api/stream.html#a042">1</a><br/>
-<code>nng_stream_dialer_get_bool</code>, <a href="api/stream.html#a038">1</a><br/>
-<code>nng_stream_dialer_get_int</code>, <a href="api/stream.html#a039">1</a><br/>
-<code>nng_stream_dialer_get_ms</code>, <a href="api/stream.html#a040">1</a><br/>
-<code>nng_stream_dialer_get_size</code>, <a href="api/stream.html#a041">1</a><br/>
-<code>nng_stream_dialer_get_string</code>, <a href="api/stream.html#a043">1</a><br/>
-<code>nng_stream_dialer_get_tls</code>, <a href="api/stream.html#a067">1</a><br/>
-<code>nng_stream_dialer_set_addr</code>, <a href="api/stream.html#a048">1</a><br/>
-<code>nng_stream_dialer_set_bool</code>, <a href="api/stream.html#a044">1</a><br/>
-<code>nng_stream_dialer_set_int</code>, <a href="api/stream.html#a045">1</a><br/>
-<code>nng_stream_dialer_set_ms</code>, <a href="api/stream.html#a046">1</a><br/>
-<code>nng_stream_dialer_set_size</code>, <a href="api/stream.html#a047">1</a><br/>
-<code>nng_stream_dialer_set_string</code>, <a href="api/stream.html#a049">1</a><br/>
-<code>nng_stream_dialer_set_tls</code>, <a href="api/stream.html#a065">1</a><br/>
-<code>nng_stream_dialer_stop</code>, <a href="api/stream.html#a031">1</a><br/>
+<code>nng_stream_dialer_alloc</code>, <a href="api/stream.html#a023">1</a><br/>
+<code>nng_stream_dialer_alloc_url</code>, <a href="api/stream.html#a024">1</a><br/>
+<code>nng_stream_dialer_close</code>, <a href="api/stream.html#a028">1</a><br/>
+<code>nng_stream_dialer_dial</code>, <a href="api/stream.html#a034">1</a><br/>
+<code>nng_stream_dialer_free</code>, <a href="api/stream.html#a032">1</a><br/>
+<code>nng_stream_dialer_get_bool</code>, <a href="api/stream.html#a037">1</a><br/>
+<code>nng_stream_dialer_get_int</code>, <a href="api/stream.html#a038">1</a><br/>
+<code>nng_stream_dialer_get_ms</code>, <a href="api/stream.html#a039">1</a><br/>
+<code>nng_stream_dialer_get_size</code>, <a href="api/stream.html#a040">1</a><br/>
+<code>nng_stream_dialer_get_string</code>, <a href="api/stream.html#a041">1</a><br/>
+<code>nng_stream_dialer_get_tls</code>, <a href="api/stream.html#a065">1</a><br/>
+<code>nng_stream_dialer_set_addr</code>, <a href="api/stream.html#a046">1</a><br/>
+<code>nng_stream_dialer_set_bool</code>, <a href="api/stream.html#a042">1</a><br/>
+<code>nng_stream_dialer_set_int</code>, <a href="api/stream.html#a043">1</a><br/>
+<code>nng_stream_dialer_set_ms</code>, <a href="api/stream.html#a044">1</a><br/>
+<code>nng_stream_dialer_set_size</code>, <a href="api/stream.html#a045">1</a><br/>
+<code>nng_stream_dialer_set_string</code>, <a href="api/stream.html#a047">1</a><br/>
+<code>nng_stream_dialer_set_tls</code>, <a href="api/stream.html#a063">1</a><br/>
+<code>nng_stream_dialer_stop</code>, <a href="api/stream.html#a030">1</a><br/>
 <code>nng_stream_free</code>, <a href="api/stream.html#a007">1</a><br/>
-<code>nng_stream_get_addr</code>, <a href="api/stream.html#a014">1</a><br/>
 <code>nng_stream_get_bool</code>, <a href="api/stream.html#a010">1</a><br/>
 <code>nng_stream_get_int</code>, <a href="api/stream.html#a011">1</a><br/>
 <code>nng_stream_get_ms</code>, <a href="api/stream.html#a012">1</a><br/>
 <code>nng_stream_get_size</code>, <a href="api/stream.html#a013">1</a><br/>
-<code>nng_stream_get_string</code>, <a href="api/stream.html#a015">1</a><br/>
-<code>nng_stream_listener</code>, <a href="api/stream.html#a017">1</a>, <a href="api/stream.html#a018">2</a><br/>
-<code>nng_stream_listener_accept</code>, <a href="api/stream.html#a037">1</a><br/>
-<code>nng_stream_listener_alloc</code>, <a href="api/stream.html#a027">1</a><br/>
-<code>nng_stream_listener_alloc_url</code>, <a href="api/stream.html#a028">1</a><br/>
-<code>nng_stream_listener_close</code>, <a href="api/stream.html#a030">1</a><br/>
-<code>nng_stream_listener_free</code>, <a href="api/stream.html#a034">1</a><br/>
-<code>nng_stream_listener_get_addr</code>, <a href="api/stream.html#a054">1</a><br/>
-<code>nng_stream_listener_get_bool</code>, <a href="api/stream.html#a050">1</a><br/>
-<code>nng_stream_listener_get_int</code>, <a href="api/stream.html#a051">1</a><br/>
-<code>nng_stream_listener_get_ms</code>, <a href="api/stream.html#a052">1</a><br/>
-<code>nng_stream_listener_get_size</code>, <a href="api/stream.html#a053">1</a><br/>
-<code>nng_stream_listener_get_string</code>, <a href="api/stream.html#a055">1</a><br/>
-<code>nng_stream_listener_get_tls</code>, <a href="api/stream.html#a068">1</a><br/>
-<code>nng_stream_listener_listen</code>, <a href="api/stream.html#a036">1</a><br/>
-<code>nng_stream_listener_set_addr</code>, <a href="api/stream.html#a060">1</a><br/>
-<code>nng_stream_listener_set_bool</code>, <a href="api/stream.html#a056">1</a><br/>
-<code>nng_stream_listener_set_int</code>, <a href="api/stream.html#a057">1</a><br/>
-<code>nng_stream_listener_set_ms</code>, <a href="api/stream.html#a058">1</a><br/>
-<code>nng_stream_listener_set_size</code>, <a href="api/stream.html#a059">1</a><br/>
-<code>nng_stream_listener_set_string</code>, <a href="api/stream.html#a061">1</a><br/>
-<code>nng_stream_listener_set_tls</code>, <a href="api/stream.html#a066">1</a><br/>
-<code>nng_stream_listener_stop</code>, <a href="api/stream.html#a032">1</a><br/>
+<code>nng_stream_get_string</code>, <a href="api/stream.html#a014">1</a><br/>
+<code>nng_stream_listener</code>, <a href="api/stream.html#a016">1</a>, <a href="api/stream.html#a017">2</a><br/>
+<code>nng_stream_listener_accept</code>, <a href="api/stream.html#a036">1</a><br/>
+<code>nng_stream_listener_alloc</code>, <a href="api/stream.html#a026">1</a><br/>
+<code>nng_stream_listener_alloc_url</code>, <a href="api/stream.html#a027">1</a><br/>
+<code>nng_stream_listener_close</code>, <a href="api/stream.html#a029">1</a><br/>
+<code>nng_stream_listener_free</code>, <a href="api/stream.html#a033">1</a><br/>
+<code>nng_stream_listener_get_addr</code>, <a href="api/stream.html#a052">1</a><br/>
+<code>nng_stream_listener_get_bool</code>, <a href="api/stream.html#a048">1</a><br/>
+<code>nng_stream_listener_get_int</code>, <a href="api/stream.html#a049">1</a><br/>
+<code>nng_stream_listener_get_ms</code>, <a href="api/stream.html#a050">1</a><br/>
+<code>nng_stream_listener_get_size</code>, <a href="api/stream.html#a051">1</a><br/>
+<code>nng_stream_listener_get_string</code>, <a href="api/stream.html#a053">1</a><br/>
+<code>nng_stream_listener_get_tls</code>, <a href="api/stream.html#a066">1</a><br/>
+<code>nng_stream_listener_listen</code>, <a href="api/stream.html#a035">1</a><br/>
+<code>nng_stream_listener_set_addr</code>, <a href="api/stream.html#a058">1</a><br/>
+<code>nng_stream_listener_set_bool</code>, <a href="api/stream.html#a054">1</a><br/>
+<code>nng_stream_listener_set_int</code>, <a href="api/stream.html#a055">1</a><br/>
+<code>nng_stream_listener_set_ms</code>, <a href="api/stream.html#a056">1</a><br/>
+<code>nng_stream_listener_set_size</code>, <a href="api/stream.html#a057">1</a><br/>
+<code>nng_stream_listener_set_string</code>, <a href="api/stream.html#a059">1</a><br/>
+<code>nng_stream_listener_set_tls</code>, <a href="api/stream.html#a064">1</a><br/>
+<code>nng_stream_listener_stop</code>, <a href="api/stream.html#a031">1</a><br/>
 <code>nng_stream_peer_addr</code>, <a href="api/stream.html#a008">1</a><br/>
 <code>nng_stream_recv</code>, <a href="api/stream.html#a004">1</a><br/>
 <code>nng_stream_self_addr</code>, <a href="api/stream.html#a009">1</a><br/>
@@ -9199,14 +9213,14 @@ request/reply pattern, <a href="proto/rep.html#a003">1</a>, <a href="proto/req.h
 scatter, <a href="api/aio.html#a023">1</a><br/>
 scheduling, <a href="api/time.html#a010">1</a><br/>
 service discovery, <a href="proto/surveyor.html#a006">1</a><br/>
-<code>socket</code>, <a href="api/stream.html#a022">1</a><br/>
+<code>socket</code>, <a href="api/stream.html#a021">1</a><br/>
 socket, <a href="api/sock.html#a001">1</a><br/>
-socket activation, <a href="api/stream.html#a062">1</a><br/>
+socket activation, <a href="api/stream.html#a060">1</a><br/>
 <em>socket</em> transport, <a href="tran/socket.html#a001">1</a><br/>
 <code>socket://</code>, <a href="tran/socket.html#a003">1</a><br/>
 state machines, <a href="api/ctx.html#a003">1</a><br/>
 statistics, <a href="api/stats.html#a001">1</a><br/>
-stream factory, <a href="api/stream.html#a016">1</a><br/>
+stream factory, <a href="api/stream.html#a015">1</a><br/>
 streams, <a href="api/stream.html#a001">1</a><br/>
 <em>SUB</em>, <a href="proto/sub.html#a002">1</a><br/>
 <em>SUB</em> protocol, <a href="proto/sub.html#a001">1</a><br/>
@@ -9218,7 +9232,7 @@ synchronization primitives, <a href="api/synch.html#a001">1</a><br/>
 threads, <a href="api/thread.html#a001">1</a><br/>
 thundering herd, <a href="api/synch.html#a016">1</a><br/>
 timeout, <a href="api/aio.html#a012">1</a><br/>
-TLS, <a href="api/stream.html#a064">1</a>, <a href="api/http.html#a034">2</a><br/>
+TLS, <a href="api/stream.html#a062">1</a>, <a href="api/http.html#a034">2</a><br/>
 UDP, <a href="tran/udp.html#a002">1</a><br/>
 <em>udp</em> transport, <a href="tran/udp.html#a001">1</a><br/>
 <code>udp://</code>, <a href="tran/udp.html#a005">1</a><br/>
@@ -9226,7 +9240,7 @@ Universal Resource Locator, <a href="api/url.html#a001">1</a><br/>
 UNIX domain sockets, <a href="tran/ipc.html#a003">1</a><br/>
 <code>unix://</code>, <a href="tran/ipc.html#a006">1</a><br/>
 URI, <a href="api/http.html#a005">1</a><br/>
-URL, <a href="api/url.html#a002">1</a>, <a href="api/stream.html#a026">2</a><br/>
+URL, <a href="api/url.html#a002">1</a>, <a href="api/stream.html#a025">2</a><br/>
 version number, <a href="api/misc.html#a006">1</a><br/>
 voting, <a href="proto/surveyor.html#a004">1</a><br/></p>
 

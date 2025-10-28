@@ -271,7 +271,7 @@ relative to the root directory.</p>
   note
 </p>
 <p>When using relative paths on POSIX systems, the address used and returned
-in properties like <a href="../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a> will also be relative.
+in functions such as <a href="../api/pipe.html#pipe-socket-addresses"><code>nng_pipe_peer_addr</code></a> will also be relative.
 Consequently, they will only be interpreted the same by processes that have
 the same working directory.
 To ensure maximum portability and safety, absolute paths are recommended
@@ -296,14 +296,15 @@ longer than 128 bytes, including the <code>ipc://</code> prefix.</p>
 Abstract sockets use a URI-encoded name after the <a name="a008"></a><code>abstract://</code> scheme, which allows arbitrary values to be conveyed
 in the path, including embedded <code>NUL</code> bytes.
 For example, the name <code>"a\0b"</code> would be represented as <code>abstract://a%00b</code>.</p>
-<div class="mdbook-alerts mdbook-alerts-tip">
+<div class="mdbook-alerts mdbook-alerts-note">
 <p class="mdbook-alerts-title">
   <span class="mdbook-alerts-icon"></span>
-  tip
+  note
 </p>
-<p>An empty name may be used with a listener to request “auto bind” be used to select a name.
-In this case the system will allocate a free name.
-The name assigned may be retrieved using <a href="../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a>.</p>
+<p><em>NNG</em> no longer supports “auto binding” where the kernel allocates a random unused name.
+A simple solution to this is to allocate a large random number, such as a random UUID
+or a concatenation of four random values from <a href="../api/misc.html#get-random-number"><code>nng_random</code></a>. The chance of a collision
+can be made arbitrarily small by appending additional random values.</p>
 </div>
 <p>Abstract names do not include the leading <code>NUL</code> byte used in the low-level socket address.</p>
 <p>Abstract sockets do not have any representation in the file system, and are automatically freed by
@@ -320,8 +321,6 @@ except for abstract sockets, which use <a href="../TODO.html"><code>nng_sockaddr
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
 <tr><td><code>NNG_OPT_IPC_PERMISSIONS</code></td><td><code>int</code></td><td>Settable on listeners before they start, this is the UNIX file mode used when creating the socket.</td></tr>
-<tr><td><code>NNG_OPT_LOCADDR</code></td><td><a href="../TODO.html"><code>nng_sockaddr</code></a></td><td>Local socket address, either <a href="../TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="../TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
-<tr><td><code>NNG_OPT_REMADDR</code></td><td><a href="../TODO.html"><code>nng_sockaddr</code></a></td><td>Remote socket address, either <a href="../TODO.html"><code>nng_sockaddr_ipc</code></a> or <a href="../TODO.html"><code>nng_sockaddr_abstract</code></a>.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>

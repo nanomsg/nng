@@ -309,11 +309,9 @@ the actual structure is either of type
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <div class="table-wrapper"><table><thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead><tbody>
-<tr><td><a href="../api/sock.html#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></td><td><a href="../TODO.html"><code>nng_sockaddr</code></a></td><td>The locally bound address, will be either <a href="../TODO.html"><code>nng_sockaddr_in</code></a> or <a href="../TODO.html"><code>nng_sockaddr_in6</code></a>.</td></tr>
-<tr><td><a href="../api/sock.html#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></td><td><a href="../TODO.html"><code>nng_sockaddr</code></a></td><td>The remote peer address, will be either <a href="../TODO.html"><code>nng_sockaddr_in</code></a> or <a href="../TODO.html"><code>nng_sockaddr_in6</code></a>. Only valid for <a href="../api/pipe.html">pipe</a> and <a href="../TODO.html">dialer</a> objects.</td></tr>
 <tr><td><a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
-<tr><td><code>NNG_OPT_UDP_BOUND_PORT</code><a name="NNG_OPT_UDP_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="../TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="../TODO.html">listener</a> objects only.</td></tr>
 </tbody></table>
 </div>
 <h2 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h2>

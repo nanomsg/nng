@@ -325,12 +325,17 @@ either [<code>nng_dialer_id</code>] or [<code>nng_listener_id</code>] for the re
 <p>The socket, or the endpoint, returned by these functions may be in the process of closing,
 and might not be further usable as a result. (Other functions will result in <a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.)</p>
 </div>
+<h2 id="pipe-socket-addresses"><a class="header" href="#pipe-socket-addresses">Pipe Socket Addresses</a></h2>
+<pre><code class="language-c">nng_err nng_pipe_peer_addr(nng_pipe p, nng_sockaddr *sap);
+nng_err nng_pipe_self_addr(nng_pipe p, nng_sockaddr *sap);
+</code></pre>
+<p>The <a href="../TODO.html"><code>nng_sockaddr</code></a> for the local (self) or remote (peer) of the pipe is available using these
+functions. The associated address will be stored in the location pointed to by <em>sap</em>.</p>
 <h2 id="pipe-options"><a class="header" href="#pipe-options">Pipe Options</a></h2>
 <pre><code class="language-c">nng_err nng_pipe_get_bool(nng_pipe p, const char *opt, bool *valp);
 nng_err nng_pipe_get_int(nng_pipe p, const char *opt, int *valp);
 nng_err nng_pipe_get_ms(nng_pipe p, const char *opt, nng_duration *valp);
 nng_err nng_pipe_get_size(nng_pipe p, const char *opt, size_t *valp);
-nng_err nng_pipe_get_addr(nng_pipe p, const char *opt, nng_sockaddr *valp);
 nng_err nng_pipe_get_string(nng_pipe p, const char *opt, const char **valp);
 nng_err nng_pipe_get_strcpy(nng_pipe p, const char *opt, char *val, size_t len);
 nng_err nng_pipe_get_strdup(nng_pipe p, const char *opt, char **valp);
@@ -343,7 +348,6 @@ nng_err nng_pipe_get_strlen(nng_pipe p, const char *opt, size_t *lenp);
 <a name="a014"></a>
 <a name="a015"></a>
 <a name="a016"></a>
-<a name="a017"></a>
 These functions are used to obtain value of an option named <em>opt</em> from the pipe <em>p</em>, and store it in the location
 referenced by <em>valp</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
@@ -368,7 +372,7 @@ typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
 
 nng_err nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
+<p>The <a name="a017"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
 to be called whenever the pipe event specified by
 <em>ev</em> occurs on the socket <em>s</em>.
 The callback <em>cb</em> will be passed <em>arg</em> as its final argument.</p>
@@ -377,9 +381,9 @@ Each event may have at most one callback registered.
 Registering a callback implicitly unregisters any previously registered.</p>
 <p>The following pipe events are supported:</p>
 <div class="table-wrapper"><table><thead><tr><th>Event</th><th>Description</th></tr></thead><tbody>
-<tr><td><a name="a019"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="../api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
-<tr><td><a name="a020"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
-<tr><td><a name="a021"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
+<tr><td><a name="a018"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="../api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
+<tr><td><a name="a019"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
+<tr><td><a name="a020"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
 </tbody></table>
 </div><div class="mdbook-alerts mdbook-alerts-warning">
 <p class="mdbook-alerts-title">
