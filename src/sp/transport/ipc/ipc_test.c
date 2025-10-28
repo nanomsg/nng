@@ -58,11 +58,10 @@ test_ipc_dialer_perms(void)
 void
 test_ipc_dialer_properties(void)
 {
-	nng_socket   s;
-	nng_dialer   d;
-	nng_sockaddr sa;
-	size_t       z;
-	char        *addr;
+	nng_socket s;
+	nng_dialer d;
+	size_t     z;
+	char      *addr;
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
