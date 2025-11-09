@@ -172,7 +172,7 @@ nni_tls_stream_alloc(tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio)
 
 	nni_aio_init(&ts->conn_aio, tls_stream_conn_cb, ts);
 
-	if ((rv = nni_tls_init(&ts->conn, cfg)) != 0) {
+	if ((rv = nni_tls_init(&ts->conn, cfg, false)) != 0) {
 		nni_tls_stream_free(ts);
 		return (rv);
 	}

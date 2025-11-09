@@ -114,8 +114,8 @@ tls_log_err(const char *msgid, const char *context, int errnum)
 static int
 wolf_net_send(WOLFSSL *ssl, char *buf, int len, void *ctx)
 {
-	size_t sz = len;
-	int    rv;
+	size_t  sz = len;
+	nng_err rv;
 	(void) ssl;
 
 	rv = nng_tls_engine_send(ctx, (const uint8_t *) buf, &sz);
@@ -136,8 +136,8 @@ wolf_net_send(WOLFSSL *ssl, char *buf, int len, void *ctx)
 static int
 wolf_net_recv(WOLFSSL *ssl, char *buf, int len, void *ctx)
 {
-	size_t sz = len;
-	int    rv;
+	size_t  sz = len;
+	nng_err rv;
 	(void) ssl;
 
 	rv = nng_tls_engine_recv(ctx, (uint8_t *) buf, &sz);

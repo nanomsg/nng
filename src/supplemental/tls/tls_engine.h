@@ -268,13 +268,13 @@ extern nng_tls_engine nng_tls_engine_ops;
 // accept more data yet), or some other error.  On success the count is
 // updated with the number of bytes actually sent.  The first argument
 // is the context structure passed in when starting the engine.
-extern int nng_tls_engine_send(void *, const uint8_t *, size_t *);
+extern nng_err nng_tls_engine_send(void *, const uint8_t *, size_t *);
 
 // nng_tls_engine_recv is called by the engine to receive data over
 // the underlying connection.  It returns zero on success, NNG_EAGAIN
 // if the operation can't be completed yet (there is no data available
 // for reading), or some other error.  On success the count is updated
 // with the number of bytes actually received.
-extern int nng_tls_engine_recv(void *, uint8_t *, size_t *);
+extern nng_err nng_tls_engine_recv(void *, uint8_t *, size_t *);
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_ENGINE_H

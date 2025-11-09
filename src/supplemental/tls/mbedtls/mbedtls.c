@@ -211,8 +211,8 @@ tls_mk_err(int err)
 static int
 net_send(void *tls, const unsigned char *buf, size_t len)
 {
-	size_t sz = len;
-	int    rv;
+	size_t  sz = len;
+	nng_err rv;
 
 	rv = nng_tls_engine_send(tls, buf, &sz);
 	switch (rv) {
@@ -228,8 +228,8 @@ net_send(void *tls, const unsigned char *buf, size_t len)
 static int
 net_recv(void *tls, unsigned char *buf, size_t len)
 {
-	size_t sz = len;
-	int    rv;
+	size_t  sz = len;
+	nng_err rv;
 
 	rv = nng_tls_engine_recv(tls, buf, &sz);
 	switch (rv) {
@@ -993,7 +993,7 @@ tls_engine_init(void)
 #endif
 	// Uncomment the following to have noisy debug from mbedTLS.
 	// This may be useful when trying to debug failures.
-	// mbedtls_debug_set_threshold(9);
+	mbedtls_debug_set_threshold(1);
 
 	mbedtls_ssl_cookie_init(&mbed_ssl_cookie_ctx);
 	rv = mbedtls_ssl_cookie_setup(&mbed_ssl_cookie_ctx, tls_random, NULL);

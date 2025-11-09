@@ -215,8 +215,6 @@ static void
 dtls_bio_recv_done(dtls_pipe *p)
 {
 	nng_aio *aio;
-	uint8_t *ptr;
-	size_t   resid;
 	nni_msg *msg;
 
 	while ((!nni_lmq_empty(&p->rx_mq)) &&
@@ -225,22 +223,7 @@ dtls_bio_recv_done(dtls_pipe *p)
 		nni_aio_list_remove(aio);
 		nni_lmq_get(&p->rx_mq, &msg);
 
-		// assumption we only have a body, because we don't bother to
-		// fill in the header for raw UDP.
-
-		resid = nni_msg_len(msg);
-		ptr   = nni_msg_body(msg);
-
-		for (unsigned i = 0; i < aio->a_nio && resid > 0; i++) {
-			size_t num = resid > aio->a_iov[i].iov_len
-			    ? aio->a_iov[i].iov_len
-			    : resid;
-			memcpy(aio->a_iov[i].iov_buf, ptr, num);
-			ptr += num;
-			resid -= num;
-		}
-		nni_aio_finish(aio, NNG_OK, nni_msg_len(msg));
-		nni_msg_free(msg);
+		nni_aio_finish_msg(aio, msg);
 	}
 }
 
@@ -264,11 +247,19 @@ static void
 dtls_bio_send(void *arg, nng_aio *aio)
 {
 	dtls_pipe *p = arg;
+	nni_iov    iov;
+	nni_msg   *msg;
 
 	nni_mtx_lock(&p->lower_mtx);
 	if (!p->closed) {
 		nni_aio_set_input(aio, 0, &p->peer_addr);
+		msg         = nni_aio_get_msg(aio);
+		iov.iov_buf = nni_msg_body(msg);
+		iov.iov_len = nni_msg_len(msg);
+		nng_aio_set_iov(aio, 1, &iov);
 		nng_udp_send(p->ep->udp, aio);
+	} else {
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 	nni_mtx_unlock(&p->lower_mtx);
 }
@@ -341,6 +332,8 @@ dtls_pipe_send(void *arg, nni_aio *aio)
 	nni_mtx_lock(&ep->mtx);
 	sndmax = p->send_max;
 	if (!nni_aio_start(aio, dtls_pipe_send_cancel, p)) {
+		nni_aio_set_msg(aio, NULL);
+		nni_msg_free(msg);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
@@ -766,7 +759,7 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	p->recv_max  = ep->rcvmax;
 	*pp          = p;
 
-	if (((rv = nni_tls_init(&p->tls, ep->tlscfg)) != NNG_OK) ||
+	if (((rv = nni_tls_init(&p->tls, ep->tlscfg, true)) != NNG_OK) ||
 	    ((rv = nni_tls_start(&p->tls, &dtls_bio_ops, p, sa)) != NNG_OK) ||
 	    ((rv = dtls_add_pipe(ep, p)) != NNG_OK)) {
 		nni_pipe_close(p->npipe);
@@ -919,6 +912,7 @@ dtls_add_pipe(dtls_ep *ep, dtls_pipe *p)
 			id = 1;
 		}
 	}
+	p->id = id;
 	return (nni_id_set(&ep->pipes, id, p));
 }
 
@@ -979,11 +973,12 @@ dtls_rx_cb(void *arg)
 	}
 	NNI_ASSERT(p != NULL);
 
-	if (nni_msg_alloc(&msg, nni_aio_count(aio)) != NNG_OK) {
+	size_t len = nni_aio_count(aio);
+	if (nni_msg_alloc(&msg, len) != NNG_OK) {
 		// TODO BUMP A NO RECV ALLOC STAT
 		goto fail;
 	}
-	memcpy(nni_msg_body(msg), ep->rx_buf, nni_aio_count(aio));
+	memcpy(nni_msg_body(msg), ep->rx_buf, len);
 	dtls_start_rx(ep);
 	nni_pipe_hold(p->npipe);
 	nni_mtx_unlock(&ep->mtx);
@@ -1405,13 +1400,18 @@ dtls_resolv_cb(void *arg)
 		ep->self_sa.s_family = ep->peer_sa.s_family;
 	}
 
-	if (ep->udp == NULL) {
-		if ((rv = nng_udp_open(&ep->udp, &ep->self_sa)) != NNG_OK) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
-			nni_mtx_unlock(&ep->mtx);
-			return;
-		}
+	// Close the socket if it was open, because we need to
+	// start with a fresh port.
+	if (ep->udp != NULL) {
+		nng_udp_close(ep->udp);
+		ep->udp = NULL;
+	}
+
+	if ((rv = nng_udp_open(&ep->udp, &ep->self_sa)) != NNG_OK) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
+		nni_mtx_unlock(&ep->mtx);
+		return;
 	}
 
 	if ((rv = dtls_pipe_alloc(ep, &p, &ep->peer_sa)) != NNG_OK) {

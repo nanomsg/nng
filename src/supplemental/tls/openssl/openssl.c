@@ -25,6 +25,7 @@
 #include "../../../core/list.h"
 #include "../../../core/strs.h"
 #include "../tls_engine.h"
+#include "nng/nng.h"
 
 // library code for openssl
 static int ossl_libcode;
@@ -116,8 +117,8 @@ tls_log_err(const char *msgid, const char *context, int errnum)
 static int
 ossl_net_send(BIO *bio, const char *buf, size_t len, size_t *lenp)
 {
-	void *ctx = BIO_get_data(bio);
-	int   rv;
+	void   *ctx = BIO_get_data(bio);
+	nng_err rv;
 
 	switch (rv = nng_tls_engine_send(ctx, (const uint8_t *) buf, &len)) {
 	case NNG_OK:
@@ -135,8 +136,8 @@ ossl_net_send(BIO *bio, const char *buf, size_t len, size_t *lenp)
 static int
 ossl_net_recv(BIO *bio, char *buf, size_t len, size_t *lenp)
 {
-	void *ctx = BIO_get_data(bio);
-	int   rv;
+	void   *ctx = BIO_get_data(bio);
+	nng_err rv;
 
 	switch (rv = nng_tls_engine_recv(ctx, (uint8_t *) buf, &len)) {
 	case NNG_OK:
@@ -348,7 +349,8 @@ ossl_conn_handshake(nng_tls_engine_conn *ec)
 
 	rv = SSL_do_handshake(ec->ssl);
 	if (rv == 1) {
-		nng_log_debug("NNG-TLS-HS", "TLS handshake complete");
+		nng_log_debug("NNG-TLS-HS", "TLS handshake complete %s",
+		    ec->mode == NNG_TLS_MODE_CLIENT ? "client" : "server");
 		return (NNG_OK);
 	}
 	rv = SSL_get_error(ec->ssl, rv);

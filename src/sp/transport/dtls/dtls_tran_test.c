@@ -449,7 +449,7 @@ test_dtls_reqrep_multi(void)
 	nng_tls_config_free(c1);
 }
 
-#define NCLIENT 3
+#define NCLIENT 10
 void
 test_dtls_pub_multi(void)
 {
@@ -493,7 +493,7 @@ test_dtls_pub_multi(void)
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 1000; i++) {
 		size_t len = nng_random() % (sizeof(msg) - 1);
 		memset(msg, 'a' + i % 26, sizeof(buf));
 		msg[len] = 0;
