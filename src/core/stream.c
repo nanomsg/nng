@@ -12,10 +12,12 @@
 
 #include <string.h>
 
+#include "aio.h"
 #include "defs.h"
-#include "nng_impl.h"
+#include "platform.h"
 #include "sockfd.h"
 #include "tcp.h"
+#include "url.h"
 
 #include "../supplemental/tls/tls_api.h"
 #include "../supplemental/websocket/websocket.h"
