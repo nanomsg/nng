@@ -13,9 +13,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../core/nng_impl.h"
+#include "../../core/aio.h"
+#include "../../core/defs.h"
+#include "../../core/message.h"
+#include "../../core/options.h"
+#include "../../core/platform.h"
+#include "../../core/reap.h"
+#include "../../core/stream.h"
+#include "../../core/strs.h"
+#include "../../core/url.h"
 #include "../../supplemental/http/http_api.h"
-#include "nng/http.h"
 
 #include "base64.h"
 #include "nng/nng.h"

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
+#include "../../core/defs.h"
 
 // This stub file exists to support configuration of the stream subsystem
 // when websocket support is unconfigured.
