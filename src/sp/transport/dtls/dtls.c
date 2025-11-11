@@ -979,7 +979,6 @@ dtls_rx_cb(void *arg)
 		goto fail;
 	}
 	memcpy(nni_msg_body(msg), ep->rx_buf, len);
-	dtls_start_rx(ep);
 	nni_pipe_hold(p->npipe);
 	nni_mtx_unlock(&ep->mtx);
 
@@ -1001,6 +1000,10 @@ dtls_rx_cb(void *arg)
 		nni_pipe_close(p->npipe);
 	}
 	nni_pipe_rele(p->npipe);
+
+	nni_mtx_lock(&ep->mtx);
+	dtls_start_rx(ep);
+	nni_mtx_unlock(&ep->mtx);
 	return;
 
 fail:
@@ -1187,7 +1190,7 @@ dtls_timer_cb(void *arg)
 
 		if (p->dialer && now > p->next_refresh) {
 			p->send_op      = OPCODE_CREQ;
-			p->next_refresh = p->expire + p->refresh;
+			p->next_refresh = now + p->refresh;
 			dtls_pipe_send_tls(p);
 		}
 		if (refresh == NNG_DURATION_INFINITE && p->refresh > 0) {
