@@ -131,6 +131,7 @@ These functions return 0 on success, and non-zero otherwise.
 [horizontal]
 `NNG_EBADTYPE`:: Incorrect type for option.
 `NNG_ECLOSED`:: Parameter _p_ does not refer to an open pipe.
+`NNG_ENOENT`:: Parameter _p_ does not refer to an existing pipe.
 `NNG_ENOTSUP`:: The option _opt_ is not supported.
 `NNG_ENOMEM`:: Insufficient memory exists.
 `NNG_EINVAL`:: Size of destination _val_ too small for object.
