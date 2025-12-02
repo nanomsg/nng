@@ -98,16 +98,13 @@ nni_plat_pipe_open(int *wfd, int *rfd)
 	return (0);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-result"
 void
 nni_plat_pipe_raise(int wfd)
 {
 	char c = 1;
 
-	(void) write(wfd, &c, 1);
+	if (write(wfd, &c, 1)) {};
 }
-#pragma GCC diagnostic pop
 
 void
 nni_plat_pipe_clear(int rfd)
