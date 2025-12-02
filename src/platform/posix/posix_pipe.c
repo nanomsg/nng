@@ -103,7 +103,7 @@ nni_plat_pipe_raise(int wfd)
 {
 	char c = 1;
 
-	if (write(wfd, &c, 1)) {};
+	if (write(wfd, &c, 1)) {}
 }
 
 void
