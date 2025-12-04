@@ -133,6 +133,16 @@ The `nng_pipe_get_strlen` function is used to obtain the length of the string. T
 to find the size of the buffer needed by the `nng_pipe_get_strcpy` function for a property.
 Note that like `strlen`, this size does not account for the zero byte to terminate the string.
 
+### Errors
+
+The pipe option functions can return the following errors:
+
+- [`NNG_ENOENT`]: The pipe _p_ does not refer to an existing pipe.
+- [`NNG_ENOTSUP`]: The option _opt_ is not supported.
+- [`NNG_EBADTYPE`]: Incorrect type used for the option.
+- [`NNG_ENOMEM`]: Insufficient memory (returned by `nng_pipe_get_strdup` if allocation fails).
+- [`NNG_ENOSPC`]: Buffer too small (returned by `nng_pipe_get_strcpy` if buffer is insufficient).
+
 ## Pipe Notifications
 
 ```c
