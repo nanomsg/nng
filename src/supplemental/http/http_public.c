@@ -192,6 +192,8 @@ nng_http_set_version(nng_http *conn, const char *version)
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_set_version(conn, version));
 #else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(version);
 	return (NNG_ENOTSUP);
 #endif
 }
@@ -573,7 +575,7 @@ nng_http_server_get_port(nng_http_server *srv, int *port)
 	    srv, NNG_OPT_BOUND_PORT, port, &size, NNI_TYPE_INT32));
 #else
 	NNI_ARG_UNUSED(srv);
-	NNI_ARG_UNUSED(addr);
+	NNI_ARG_UNUSED(port);
 	return (NNG_ENOTSUP);
 #endif
 }
