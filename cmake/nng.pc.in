@@ -10,3 +10,6 @@ Description: @CPACK_PACKAGE_DESCRIPTION_SUMMARY@
 URL: https://@CPACK_PACKAGE_VENDOR@
 Cflags: -I"${includedir}"
 Libs: -L"${libdir}" -lnng
+# -pthread is only relevant when statically linking, if linking to a shared
+# lib the dependencies needed for pthread are already resolved.
+Libs.private: -pthread
