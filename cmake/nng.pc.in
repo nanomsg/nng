@@ -1,6 +1,6 @@
 # This template is used to generate nng.pc using CMake's
 # `configure_file(... @ONLY)` using CMake variables.
-prefix="@CMAKE_INSTALL_PREFIX@"
+prefix=@CMAKE_INSTALL_PREFIX@
 libdir=@CMAKE_INSTALL_FULL_LIBDIR@
 includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
