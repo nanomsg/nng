@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -85,7 +85,7 @@ nni_tcp_dialer_fini(nni_tcp_dialer *d)
 	nni_mtx_lock(&d->mtx);
 	if (!nni_list_empty(&d->aios)) {
 		nni_mtx_unlock(&d->mtx);
-		nni_reap(&tcp_dialer_reap_list, nni_tcp_dialer_fini);
+		nni_reap(&tcp_dialer_reap_list, d);
 		return;
 	}
 	nni_mtx_unlock(&d->mtx);
