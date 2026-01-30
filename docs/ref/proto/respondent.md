@@ -43,9 +43,11 @@ a separate socket.
 ### Protocol Versions
 
 Only version 0 of this protocol is supported.
-At the time of writing, no other versions of this protocol have been defined.
-{{footnote: An earlier and incompatible version of the protocol was used in older
-pre-releases of [libnanomsg], but was not released in any production version.}}
+At the time of writing, no other versions of this protocol have been defined.[^resp1]
+
+[^resp1]:
+    An earlier and incompatible version of the protocol was used in older pre-releases of [libnanomsg],
+    but was not released in any production version.
 
 ### Protocol Options
 

@@ -6,10 +6,10 @@ typedef enum ... nng_err;
 
 Many _NNG_ functions can fail for a variety of reasons.
 These functions tend to return either zero on success,
-or a non-zero error code to indicate failure.
-{{footnote: This convention goes back to UNIX system calls,
+or a non-zero error code to indicate failure.[^errno]
+[^errno]: This convention goes back to UNIX system calls,
 which behave the same way, but _NNG_ does not use a separate
-_errno_ variable.}}
+_errno_ variable.
 
 All these error codes are `nng_err`.
 

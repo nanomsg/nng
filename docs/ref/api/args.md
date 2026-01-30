@@ -36,11 +36,14 @@ This function exists largely to stand in for {{i:`getopt`}} from POSIX systems,
 but it is available on all platforms, and it includes some capabilities missing from `getopt`.
 
 The function parses arguments from
-`main`{{footnote: Parsing argument strings from other sources can be done as well,
-although usually then _idx_ will be initialized to zero.}}
+`main`
 (using _argc_ and _argv_),
-starting at the index referenced by _idx_.
+starting at the index referenced by _idx_.[^args]
 (New invocations typically set the value pointed to by _idx_ to 1.)
+
+[^args]:
+    Parsing argument strings from other sources can be done as well,
+    although usually then _idx_ will be initialized to zero.
 
 Options are parsed as specified by _spec_ (see [Argument Specification](#argument-specification).)
 The value of the parsed option will be stored at the address indicated by

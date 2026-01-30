@@ -17,12 +17,14 @@ Setting this option will cause the listener to create a [pipe]
 backed by the file descriptor.
 
 The protocol between peers using this transport is compatible with the protocol used
-for the _[tcp]_ transport, but this is an implementation detail and subject to change without notice.
-{{footnote: Specifically it is not compatible with the _[ipc]_ transport.}}
+for the _[tcp]_ transport, but this is an implementation detail and subject to change without notice.[^sock_ipc]
+
+[^sock_ipc]: Specifically it is not compatible with the _[ipc]_ transport.
 
 > [!NOTE]
-> This transport is _experimental_, and at present is only supported on POSIX platforms.
-> {{footnote: Windows lacks a suitable `socketpair` equivalent function we could use.}}
+> This transport is _experimental_, and at present is only supported on POSIX platforms.[^socketpair_win]
+
+[^socketpair_win]: Windows lacks a suitable `socketpair` equivalent function we could use.
 
 ## URL Format
 

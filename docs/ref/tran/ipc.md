@@ -39,9 +39,11 @@ name in the file system where the socket or named pipe should be created.
 
 #### UNIX Aliases
 
-The {{i:`unix://`}} scheme is an alias for `ipc://` and can be used inter-changeably, but only on POSIX systems.
-{{footnote:The purpose of this scheme is to support a future transport making use of `AF_UNIX`
-on Windows systems, at which time it will be necessary to discriminate between the Named Pipes and the `AF_UNIX` based transports.}}
+The {{i:`unix://`}} scheme is an alias for `ipc://` and can be used inter-changeably, but only on POSIX systems.[^ipc_unix]
+
+[^ipc_unix]:
+    The purpose of this scheme is to support a future transport making use of `AF_UNIX`
+    on Windows systems, at which time it will be necessary to discriminate between the Named Pipes and the `AF_UNIX` based transports.
 
 #### Abstract Names
 
@@ -62,9 +64,11 @@ Abstract sockets do not have any representation in the file system, and are auto
 the system when no longer in use.
 
 Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
-of the peer with [`NNG_OPT_PEER_UID`], and similar options.
-{{footnote: This property makes it important that names be chosen randomly to
-prevent unauthorized access, or that checks against the peer credentials are made, or ideally, both.}}
+of the peer with [`NNG_OPT_PEER_UID`], and similar options.[^peer_random]
+
+[^peer_random]:
+    This property makes it important that names be chosen randomly to
+    prevent unauthorized access, or that checks against the peer credentials are made, or ideally, both.
 
 ### Socket Address
 

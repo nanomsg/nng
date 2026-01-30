@@ -8,9 +8,10 @@ title = "NNG Reference Manual (DRAFT)"
 smart-punctuation = true
 fold.enable = true
 fold.level = 2
-additional-css = ["theme/pagetoc.css"]
-additional-js = ["theme/pagetoc.js"]
+# additional-css = ["theme/pagetoc.css"]
+# additional-js = ["theme/pagetoc.js"]
 site-url = "/ref/"
+sidebar-header-nav = true
 
 # [output.markdown]
 
@@ -25,14 +26,10 @@ site-url = "/ref/"
 # [output.epub]
 # epub-version = 3
 
-[preprocessor.alerts]
-
 [preprocessor.indexing]
 
 
 # [preprocessor.inline-highlighting]
 # default-language = "c"
 
-[preprocessor.footnote]
-
-[preprocessor.pagetoc]
+# [preprocessor.footnote]

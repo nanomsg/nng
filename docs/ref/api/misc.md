@@ -25,8 +25,9 @@ These file descriptors, which are returned in the _fds_ array, are suitable for
 use with the [Socket transport][socktran].
 
 On POSIX platforms, this is a thin wrapper around the standard `socketpair` function,
-using the {{i:`AF_UNIX`}} family and the `SOCK_STREAM` socket type.
-{{footnote: At present only POSIX platforms implementing `socketpair` support this function.}}
+using the {{i:`AF_UNIX`}} family and the `SOCK_STREAM` socket type.[^socketpair]
+
+[^socketpair]: At present only POSIX platforms implementing `socketpair` support this function.
 
 This will return zero on success, or an error number. On platforms that lack this
 capability, such as Windows, it will return `NNG_ENOTSUP`.

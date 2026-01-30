@@ -23,8 +23,9 @@ can also be randomly within the range.
 
 The identifiers are 64-bit unsigned integers and can be sparse; the structure
 will use space efficiently even if identifiers are very far apart.
-{{footnote: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifiers may
-themselves be much larger than this.}}
+[^id_map]
+[^id_map]: The ID map is capable of storing at most 2<sup>32</sup> identifiers, even though the identifiers may
+themselves be much larger than this.
 
 > [!IMPORTANT]
 > The functions that work with `nng_id_map` are _not_ thread-safe.
@@ -108,9 +109,12 @@ Identifiers are allocated in increasing order, without reusing old identifiers u
 largest possible identifier is allocated. After wrapping, only identifiers that are no longer
 in use will be considered.
 No effort is made to order the availability of identifiers based on
-when they were freed.{{footnote: The concern about possibly reusing a
-recently released identifier comes into consideration after the range has wrapped.
-Given a sufficiently large range, this is unlikely to be a concern.}}
+when they were freed.[^id_reuse]
+
+[^id_reuse]:
+    The concern about possibly reusing a
+    recently released identifier comes into consideration after the range has wrapped.
+    Given a sufficiently large range, this is unlikely to be a concern.
 
 As with [`nng_id_set`], this may need to allocate memory and can thus
 fail with [`NNG_ENOMEM`].
