@@ -1,7 +1,6 @@
 [book]
 authors = ["Garrett D'Amore"]
 language = "en"
-multilingual = false
 src = "ref"
 title = "NNG Reference Manual (DRAFT)"
 

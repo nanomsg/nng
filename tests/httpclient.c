@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -22,7 +22,7 @@
 #include "convey.h"
 
 TestMain("HTTP Client", {
-	Convey("Given a TCP connection to example.com", {
+	Convey("Given a TCP connection to httpbin.org", {
 		nng_aio         *aio;
 		nng_http_client *cli;
 		nng_http        *http;
@@ -30,7 +30,7 @@ TestMain("HTTP Client", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 
-		So(nng_url_parse(&url, "http://example.com/") == 0);
+		So(nng_url_parse(&url, "http://httpbin.org/get") == 0);
 
 		nng_aio_set_timeout(aio, 10000);
 		So(nng_http_client_alloc(&cli, url) == 0);
@@ -96,7 +96,7 @@ TestMain("HTTP Client", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 
-		So(nng_url_parse(&url, "http://example.com/") == 0);
+		So(nng_url_parse(&url, "http://httpbin.org/") == 0);
 
 		So(nng_http_client_alloc(&cli, url) == 0);
 		nng_aio_set_timeout(aio, 10000); // 10 sec timeout

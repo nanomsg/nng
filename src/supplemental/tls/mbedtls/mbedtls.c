@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -21,6 +21,12 @@
 #include "../tls_engine.h"
 
 #include <mbedtls/version.h> // Must be first in order to pick up version
+
+#if MBEDTLS_VERSION_MAJOR > 3
+#ifndef MBEDTLS_PSA_CRYPTO_C
+#define MBEDTLS_PSA_CRYPTO_C 1
+#endif
+#endif
 
 #include <mbedtls/error.h>
 #ifdef MBEDTLS_PSA_CRYPTO_C
@@ -98,15 +104,21 @@ struct nng_tls_engine_config {
 	char              *server_name;
 	mbedtls_x509_crt   ca_certs;
 	mbedtls_x509_crl   crl;
-	int                min_ver;
-	int                max_ver;
-	nng_tls_mode       mode;
-	nni_list           pairs;
-	nni_list           psks;
+#if MBEDTLS_VERSION_MAJOR < 4
+	int min_ver;
+	int max_ver;
+#else
+	mbedtls_ssl_protocol_version min_ver;
+	mbedtls_ssl_protocol_version max_ver;
+#endif
+	nng_tls_mode mode;
+	nni_list     pairs;
+	nni_list     psks;
 };
 
 static mbedtls_ssl_cookie_ctx mbed_ssl_cookie_ctx;
 
+#if MBEDTLS_VERSION_MAJOR < 4
 static void
 tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
 {
@@ -140,6 +152,7 @@ tls_random(void *arg, unsigned char *buf, size_t sz)
 {
 	return (tls_get_entropy(arg, buf, sz));
 }
+#endif
 
 static void
 tls_log_err(const char *msgid, const char *context, int errnum)
@@ -491,6 +504,8 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 
 	// We *require* TLS v1.2 or newer, which is also known as SSL
 	// v3.3.
+
+#if MBEDTLS_VERSION_MAJOR < 4
 	cfg->min_ver = MBEDTLS_SSL_MINOR_VERSION_3;
 #ifdef MBEDTLS_SSL_PROTO_TLS1_3
 	cfg->max_ver = MBEDTLS_SSL_MINOR_VERSION_4;
@@ -505,6 +520,14 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 
 	mbedtls_ssl_conf_rng(&cfg->cfg_ctx, tls_random, cfg);
 	mbedtls_ssl_conf_dbg(&cfg->cfg_ctx, tls_dbg, cfg);
+
+#else // MBEDTLS_VERSION_MAJOR >= 4
+
+	cfg->max_ver = MBEDTLS_SSL_VERSION_TLS1_3;
+	cfg->min_ver = MBEDTLS_SSL_VERSION_TLS1_2;
+	mbedtls_ssl_conf_min_tls_version(&cfg->cfg_ctx, cfg->min_ver);
+	mbedtls_ssl_conf_max_tls_version(&cfg->cfg_ctx, cfg->max_ver);
+#endif
 
 	if (cfg->mode == NNG_TLS_MODE_SERVER) {
 		mbedtls_ssl_conf_dtls_cookies(&cfg->cfg_ctx,
@@ -674,9 +697,12 @@ config_own_cert(nng_tls_engine_config *cfg, const char *cert, const char *key,
 #if MBEDTLS_VERSION_MAJOR < 3
 	rv = mbedtls_pk_parse_key(&p->key, pem, len, (const uint8_t *) pass,
 	    pass != NULL ? strlen(pass) : 0);
-#else
+#elif MBEDTLS_VERSION_MAJOR < 4
 	rv = mbedtls_pk_parse_key(&p->key, pem, len, (const uint8_t *) pass,
 	    pass != NULL ? strlen(pass) : 0, tls_random, NULL);
+#else
+	rv = mbedtls_pk_parse_key(&p->key, pem, len, (const uint8_t *) pass,
+	    pass != NULL ? strlen(pass) : 0);
 #endif
 	if (rv != 0) {
 		tls_log_err("NNG-TLS-KEY", "Failure parsing private key", rv);
@@ -920,6 +946,7 @@ cert_not_after(nng_tls_engine_cert *cert, struct tm *tmp)
 	return (NNG_OK);
 }
 
+#if MBEDTLS_VERSION_MAJOR < 4
 static int
 config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
     nng_tls_version max_ver)
@@ -955,10 +982,11 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 		v2 = MBEDTLS_SSL_MINOR_VERSION_3;
 		break;
 #endif
-	case NNG_TLS_1_3: // We lack support for 1.3, so treat as 1.2.
+	case NNG_TLS_1_3:
 #ifdef MBEDTLS_SSL_PROTO_TLS1_3
 		v2 = MBEDTLS_SSL_MINOR_VERSION_4;
 #else
+		// We lack support for 1.3, so treat as 1.2.
 		v2 = MBEDTLS_SSL_MINOR_VERSION_3;
 #endif
 		break;
@@ -977,6 +1005,54 @@ config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	mbedtls_ssl_conf_max_version(&cfg->cfg_ctx, maj, cfg->max_ver);
 	return (0);
 }
+#else
+static int
+config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
+    nng_tls_version max_ver)
+{
+	mbedtls_ssl_protocol_version v1, v2;
+
+	if (min_ver > max_ver) {
+		nng_log_err("TLS-CFG-VER",
+		    "TLS maximum version must be larger than mimumum version");
+		return (NNG_ENOTSUP);
+	}
+	switch (min_ver) {
+	case NNG_TLS_1_2:
+		v1 = MBEDTLS_SSL_VERSION_TLS1_2;
+		break;
+	case NNG_TLS_1_3:
+		v1 = MBEDTLS_SSL_VERSION_TLS1_3;
+		break;
+	default:
+		nng_log_err(
+		    "TLS-CFG-VER", "TLS minimum version not supported");
+		return (NNG_ENOTSUP);
+	}
+
+	switch (max_ver) {
+	case NNG_TLS_1_2:
+		v2 = MBEDTLS_SSL_VERSION_TLS1_2;
+		break;
+	case NNG_TLS_1_3:
+		v2 = MBEDTLS_SSL_VERSION_TLS1_3;
+		break;
+	default:
+		// Note that this means that if we ever TLS 1.4 or 2.0,
+		// then this will break.  That's sufficiently far out
+		// to justify not worrying about it.
+		nng_log_err(
+		    "TLS-CFG-VER", "TLS maximum version not supported");
+		return (NNG_ENOTSUP);
+	}
+
+	cfg->min_ver = v1;
+	cfg->max_ver = v2;
+	mbedtls_ssl_conf_min_tls_version(&cfg->cfg_ctx, cfg->min_ver);
+	mbedtls_ssl_conf_max_tls_version(&cfg->cfg_ctx, cfg->max_ver);
+	return (0);
+}
+#endif
 
 static nng_err
 tls_engine_init(void)
@@ -996,7 +1072,11 @@ tls_engine_init(void)
 	mbedtls_debug_set_threshold(1);
 
 	mbedtls_ssl_cookie_init(&mbed_ssl_cookie_ctx);
+#if MBEDTLS_VERSION_MAJOR < 4
 	rv = mbedtls_ssl_cookie_setup(&mbed_ssl_cookie_ctx, tls_random, NULL);
+#else
+	rv = mbedtls_ssl_cookie_setup(&mbed_ssl_cookie_ctx);
+#endif
 	if (rv != 0) {
 		tls_log_err("NNG_TLS_INIT",
 		    "Failed initializing SSL cookie system", rv);

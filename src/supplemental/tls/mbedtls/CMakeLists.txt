@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -35,6 +35,10 @@ if (NNG_TLS_ENGINE STREQUAL "mbed")
         else()
             nng_find_package(MbedTLS)
         endif()
-        nng_link_libraries_public(MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509)
+        if (TARGET MbedTLS::tfpsacrypto)
+            nng_link_libraries_public(MbedTLS::mbedtls MbedTLS::tfpsacrypto MbedTLS::mbedx509)
+        else()
+            nng_link_libraries_public(MbedTLS::mbedtls MbedTLS::mbedcrypto MbedTLS::mbedx509)
+        endif()
     endif()
 endif()
