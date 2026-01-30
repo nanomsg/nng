@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -50,6 +50,8 @@ struct nni_stat_item {
 		bool           sv_bool;
 		int            sv_id;
 	} si_u;
+#else
+	char si_reserved; // structure cannot be empty per C
 #endif
 };
 
