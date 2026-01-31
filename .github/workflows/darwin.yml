@@ -8,14 +8,11 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v1
 
-      - name: Install Mbed TLS
-        run: brew install mbedtls
-
       - name: Install ninja
         run: brew install ninja
 
       - name: Configure
-        run: mkdir build && cd build && cmake -G Ninja -DNNG_ENABLE_TLS=ON ..
+        run: mkdir build && cd build && cmake -G Ninja ..
 
       - name: build
         run: cd build && ninja
