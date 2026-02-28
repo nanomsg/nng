@@ -108,6 +108,9 @@ extern void nni_sp_sfd_register(void);
 #ifdef NNG_TRANSPORT_DTLS
 extern void nni_sp_dtls_register(void);
 #endif
+#ifdef NNG_TRANSPORT_OFI
+extern void nni_sp_ofi_register(void);
+#endif
 
 void
 nni_sp_tran_sys_init(void)
@@ -138,6 +141,9 @@ nni_sp_tran_sys_init(void)
 #endif
 #ifdef NNG_TRANSPORT_DTLS
 	nni_sp_dtls_register();
+#endif
+#ifdef NNG_TRANSPORT_OFI
+	nni_sp_ofi_register();
 #endif
 }
 

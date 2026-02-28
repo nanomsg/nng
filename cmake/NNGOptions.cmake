@@ -144,6 +144,14 @@ CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_DTLS
     "NNG_ENABLE_TLS" OFF)
 mark_as_advanced(NNG_TRANSPORT_DTLS)
 
+option(NNG_TRANSPORT_OFI "Enable OFI/libfabric (RDMA) transport (EXPERIMENTAL)" OFF)
+mark_as_advanced(NNG_TRANSPORT_OFI)
+if (NNG_TRANSPORT_OFI)
+    set(NNG_OFI_PROVIDER "" CACHE STRING
+        "libfabric provider name (empty=auto, 'tcp' for local test, 'cxi' for Slingshot)")
+    mark_as_advanced(NNG_OFI_PROVIDER)
+endif ()
+
 if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     # Make sure things we *MUST* have are enabled.
     set(NNG_SUPP_WEBSOCKET ON)
