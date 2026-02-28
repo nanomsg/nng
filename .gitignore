@@ -14,3 +14,4 @@ compile_flags.txt
 .zed
 .nova
 *~
+.worktrees/
