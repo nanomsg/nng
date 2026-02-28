@@ -6,6 +6,7 @@
 
 #include "../../../core/nng_impl.h"
 
+#include <stdio.h>
 #include <rdma/fabric.h>
 #include <rdma/fi_cm.h>
 #include <rdma/fi_domain.h>
@@ -204,6 +205,9 @@ static nni_sp_pipe_ops ofi_pipe_ops = {
 
 // ─── Listener ops ──────────────────────────────────────────────────────────
 
+// Forward declaration for the EQ thread function.
+static void ofi_listener_eq_thr(void *);
+
 static nng_err
 ofi_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 {
@@ -211,12 +215,10 @@ ofi_listener_init(void *arg, nng_url *url, nni_listener *nlistener)
 	NNI_ARG_UNUSED(url);
 
 	l->nlistener = nlistener;
-	l->proto =
-	    nni_sock_proto_id(nni_listener_sock(nlistener));
+	l->proto     = nni_sock_proto_id(nni_listener_sock(nlistener));
 	nni_mtx_init(&l->mtx);
 	nni_cv_init(&l->cv, &l->mtx);
 	NNI_LIST_INIT(&l->waitpipes, ofi_pipe, node);
-	// fabric/domain/pep init happens in l_bind (Task 3).
 	return (NNG_OK);
 }
 
@@ -224,8 +226,27 @@ static void
 ofi_listener_fini(void *arg)
 {
 	ofi_listener *l = arg;
+
+	// Free libfabric resources in reverse creation order.
+	if (l->pep != NULL) {
+		fi_close(&l->pep->fid);
+		l->pep = NULL;
+	}
+	if (l->domain != NULL) {
+		fi_close(&l->domain->fid);
+		l->domain = NULL;
+	}
+	if (l->eq != NULL) {
+		fi_close(&l->eq->fid);
+		l->eq = NULL;
+	}
+	if (l->fabric != NULL) {
+		fi_close(&l->fabric->fid);
+		l->fabric = NULL;
+	}
 	if (l->fi != NULL) {
 		fi_freeinfo(l->fi);
+		l->fi = NULL;
 	}
 	nni_cv_fini(&l->cv);
 	nni_mtx_fini(&l->mtx);
@@ -234,39 +255,182 @@ ofi_listener_fini(void *arg)
 static nng_err
 ofi_listener_bind(void *arg, nng_url *url)
 {
-	// Implemented in Task 3.
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(url);
-	return (NNG_ENOTSUP);
+	ofi_listener   *l = arg;
+	struct fi_info *hints;
+	char            port_str[8];
+	int             rv;
+	const char     *node;
+	const char     *svc;
+	struct fi_eq_attr eq_attr = {
+		.size     = 64,
+		.wait_obj = FI_WAIT_UNSPEC,
+	};
+
+	hints = fi_allocinfo();
+	if (hints == NULL) {
+		return (NNG_ENOMEM);
+	}
+	hints->ep_attr->type = FI_EP_MSG;
+	hints->caps          = FI_MSG;
+	hints->mode          = 0;
+#ifdef NNG_OFI_DEFAULT_PROVIDER
+	hints->fabric_attr->prov_name = strdup(NNG_OFI_DEFAULT_PROVIDER);
+#endif
+
+	node = (strlen(url->u_hostname) > 0) ? url->u_hostname : NULL;
+	if (url->u_port != 0) {
+		(void) snprintf(port_str, sizeof(port_str), "%u", url->u_port);
+		svc = port_str;
+	} else {
+		svc = NULL;
+	}
+
+	rv = fi_getinfo(FI_VERSION(FI_MAJOR_VERSION, FI_MINOR_VERSION),
+	    node, svc, FI_SOURCE, hints, &l->fi);
+	fi_freeinfo(hints);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+
+	rv = fi_fabric2(l->fi, &l->fabric, 0, NULL);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+	rv = fi_eq_open(l->fabric, &eq_attr, &l->eq, NULL);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+	rv = fi_domain(l->fabric, l->fi, &l->domain, NULL);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+	rv = fi_passive_ep(l->fabric, l->fi, &l->pep, NULL);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+	rv = fi_pep_bind(l->pep, &l->eq->fid, 0);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+	rv = fi_listen(l->pep);
+	if (rv != 0) {
+		return (ofi_err(rv));
+	}
+
+	rv = nni_thr_init(&l->eq_thr, ofi_listener_eq_thr, l);
+	if (rv != 0) {
+		return (rv);
+	}
+	l->started = true;
+	nni_thr_run(&l->eq_thr);
+	return (NNG_OK);
+}
+
+// ofi_listener_eq_thr polls the passive endpoint EQ for connection events.
+// For Task 3, connection requests are rejected; Task 4 will accept them.
+static void
+ofi_listener_eq_thr(void *arg)
+{
+	ofi_listener          *l = arg;
+	struct fi_eq_cm_entry  entry;
+	struct fi_eq_err_entry err_entry;
+	uint32_t               event;
+	ssize_t                rv;
+
+	for (;;) {
+		nni_mtx_lock(&l->mtx);
+		if (l->closed) {
+			nni_mtx_unlock(&l->mtx);
+			return;
+		}
+		nni_mtx_unlock(&l->mtx);
+
+		// Block up to 200ms so shutdown latency is bounded.
+		rv = fi_eq_sread(
+		    l->eq, &event, &entry, sizeof(entry), 200, 0);
+
+		if (rv == -FI_EAGAIN || rv == 0) {
+			continue;
+		}
+		if (rv == -FI_EAVAIL) {
+			// Error event on EQ — read and log it.
+			fi_eq_readerr(l->eq, &err_entry, 0);
+			nng_log_warn("NNG-OFI",
+			    "EQ error: prov_errno=%d", err_entry.prov_errno);
+			continue;
+		}
+		if (rv < 0) {
+			// Closed or unrecoverable — exit the thread.
+			return;
+		}
+
+		if (event == FI_CONNREQ) {
+			// Task 4 will accept; for now reject.
+			fi_reject(l->pep, entry.fid, NULL, 0);
+			if (entry.info != NULL) {
+				fi_freeinfo(entry.info);
+			}
+		}
+	}
 }
 
 static void
 ofi_listener_accept(void *arg, nni_aio *aio)
 {
-	// Implemented in Task 3.
-	NNI_ARG_UNUSED(arg);
-	nni_aio_finish_error(aio, NNG_ENOTSUP);
+	ofi_listener *l = arg;
+	ofi_pipe     *p;
+
+	nni_mtx_lock(&l->mtx);
+	if (l->closed) {
+		nni_mtx_unlock(&l->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	if ((p = nni_list_first(&l->waitpipes)) != NULL) {
+		nni_list_remove(&l->waitpipes, p);
+		nni_mtx_unlock(&l->mtx);
+		nni_aio_set_output(aio, 0, p->npipe);
+		nni_aio_finish(aio, 0, 0);
+		return;
+	}
+	// No pipe ready yet; save AIO for when one arrives (Task 4).
+	l->useraio = aio;
+	nni_mtx_unlock(&l->mtx);
 }
 
 static void
 ofi_listener_close(void *arg)
 {
 	ofi_listener *l = arg;
+	nni_aio      *aio;
+
 	nni_mtx_lock(&l->mtx);
 	l->closed = true;
+	aio       = l->useraio;
+	l->useraio = NULL;
 	nni_cv_wake(&l->cv);
 	nni_mtx_unlock(&l->mtx);
+
+	if (aio != NULL) {
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
 }
 
 static void
 ofi_listener_stop(void *arg)
 {
 	ofi_listener *l = arg;
+
 	nni_mtx_lock(&l->mtx);
-	l->fini = true;
+	l->fini   = true;
 	l->closed = true;
 	nni_cv_wake(&l->cv);
 	nni_mtx_unlock(&l->mtx);
+
+	if (l->started) {
+		nni_thr_fini(&l->eq_thr);
+		l->started = false;
+	}
 }
 
 static nng_err

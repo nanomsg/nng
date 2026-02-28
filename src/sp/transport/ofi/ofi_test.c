@@ -11,11 +11,23 @@ void
 test_ofi_scheme_recognized(void)
 {
 	// nni_sp_tran_find is internal API exposed via nng_testing.
-	// A non-NULL result means the "ofi" scheme was registered.
 	NUTS_TRUE(nni_sp_tran_find("ofi") != NULL);
+}
+
+void
+test_ofi_listen(void)
+{
+	nng_socket s;
+	char       addr[64];
+
+	nuts_scratch_addr("ofi", sizeof(addr), addr);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listen(s, addr, NULL, 0));
+	NUTS_CLOSE(s);
 }
 
 TEST_LIST = {
 	{ "ofi-scheme-recognized", test_ofi_scheme_recognized },
+	{ "ofi-listen", test_ofi_listen },
 	{ NULL, NULL },
 };

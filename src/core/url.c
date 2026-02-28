@@ -275,6 +275,7 @@ static const char *nni_schemes[] = {
 	"dtls",
 	"dtls4",
 	"dtls6",
+	"ofi",
 	// we don't support these
 	"file",
 	"mailto",
