@@ -5,16 +5,17 @@
 // file was obtained (LICENSE.txt).
 
 #include "../../../testing/nuts.h"
+#include "../../../sp/transport.h"
 
-// Placeholder - real tests are added in subsequent tasks.
 void
-test_ofi_placeholder(void)
+test_ofi_scheme_recognized(void)
 {
-	// Nothing to test yet; this just ensures the test binary links.
-	NUTS_PASS(0);
+	// nni_sp_tran_find is internal API exposed via nng_testing.
+	// A non-NULL result means the "ofi" scheme was registered.
+	NUTS_TRUE(nni_sp_tran_find("ofi") != NULL);
 }
 
 TEST_LIST = {
-	{ "ofi-placeholder", test_ofi_placeholder },
+	{ "ofi-scheme-recognized", test_ofi_scheme_recognized },
 	{ NULL, NULL },
 };
