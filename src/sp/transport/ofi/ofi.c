@@ -15,6 +15,7 @@
 #include <rdma/fi_domain.h>
 #include <rdma/fi_endpoint.h>
 #include <rdma/fi_errno.h>
+#include "platform/posix/posix_pollq.h"
 
 // OFI/libfabric transport for NNG.
 // Uses FI_EP_MSG (reliable connected) endpoints over the configured
@@ -75,8 +76,7 @@ struct ofi_pipe {
 	uint16_t      peer;  // peer SP protocol ID (extracted from nego header)
 	uint16_t      proto; // local SP protocol ID
 	bool          closed;
-	bool          cq_running;
-	bool          cq_thr_started;
+	nni_posix_pfd cq_pfd;
 	nni_list_node node; // link in oep->waitpipes
 
 	struct fid_ep *ep;    // active endpoint (owned)
@@ -95,7 +95,6 @@ struct ofi_pipe {
 	nni_list sendq; // pending send AIOs (Task 5)
 	nni_list recvq; // pending recv AIOs (Task 5)
 	nni_mtx  mtx;
-	nni_thr  cq_thr;
 };
 
 // ── Error mapping ─────────────────────────────────────────────────────────
@@ -135,7 +134,7 @@ ofi_err(ssize_t rv)
 // ── Forward declarations ──────────────────────────────────────────────────
 
 static void ofi_ep_eq_thread(void *);
-static void ofi_pipe_cq_thread(void *);
+static void ofi_cq_pfd_cb(void *, unsigned);
 static void ofi_pipe_nego_start(ofi_pipe *);
 static void ofi_pipe_nego_complete(ofi_pipe *, bool);
 static nng_err ofi_pipe_alloc(
@@ -199,6 +198,7 @@ ofi_pipe_fini(void *arg)
 		p->rx_buf = NULL;
 	}
 	nni_mtx_fini(&p->mtx);
+	nni_posix_pfd_fini(&p->cq_pfd);
 }
 
 static void
@@ -207,12 +207,8 @@ ofi_pipe_stop(void *arg)
 	ofi_pipe *p = arg;
 	nni_mtx_lock(&p->mtx);
 	p->closed     = true;
-	p->cq_running = false;
 	nni_mtx_unlock(&p->mtx);
-	if (p->cq_thr_started) {
-		nni_thr_fini(&p->cq_thr);
-		p->cq_thr_started = false;
-	}
+	nni_posix_pfd_stop(&p->cq_pfd);
 }
 
 static void
@@ -223,7 +219,6 @@ ofi_pipe_close(void *arg)
 
 	nni_mtx_lock(&p->mtx);
 	p->closed     = true;
-	p->cq_running = false;
 	nni_mtx_unlock(&p->mtx);
 
 	// Cancel any recv AIOs queued by the SP protocol layer.  Without
@@ -638,17 +633,13 @@ ofi_pipe_drain_cqs(ofi_pipe *p)
 	}
 }
 
-// Option A: dedicated polling thread per pipe.
-// NOTE: ofi_pipe_drain_cqs is the function to keep when migrating to
-// Option B (fd-based poller). Only this thread body changes.
 static void
-ofi_pipe_cq_thread(void *arg)
+ofi_cq_pfd_cb(void *arg, unsigned events)
 {
+	(void) events;
 	ofi_pipe *p = arg;
-	while (p->cq_running) {
-		ofi_pipe_drain_cqs(p);
-		nni_msleep(1); // ~1 kHz poll; replace with fd-wait in Option B
-	}
+	ofi_pipe_drain_cqs(p);
+	nni_posix_pfd_arm(&p->cq_pfd, POLLIN);
 }
 
 // ── Pipe allocation helper ────────────────────────────────────────────────
@@ -722,14 +713,10 @@ ofi_pipe_alloc(ofi_ep *ep, struct fid_ep *fid_ep, struct fid_cq *tx_cq,
 	}
 
 	// Start the CQ polling thread (drives nego, then data in Task 5).
-	p->cq_running = true;
-	rv = nni_thr_init(&p->cq_thr, ofi_pipe_cq_thread, p);
-	if (rv != 0) {
-		p->cq_running = false;
-		goto fail;
-	}
-	p->cq_thr_started = true;
-	nni_thr_run(&p->cq_thr);
+	int wait_fd;
+	fi_control(&p->rx_cq->fid, FI_GETWAIT, &wait_fd);
+	nni_posix_pfd_init(&p->cq_pfd, wait_fd, ofi_cq_pfd_cb, p);
+	nni_posix_pfd_arm(&p->cq_pfd, POLLIN);
 
 	// Send our SP negotiation header (queued on the EP until connected).
 	ofi_pipe_nego_start(p);
@@ -800,8 +787,7 @@ ofi_ep_eq_thread(void *arg)
 			struct fi_cq_attr cq_attr = {
 				.size     = 64,
 				.format   = FI_CQ_FORMAT_MSG,
-				.wait_obj = FI_WAIT_NONE,
-			};
+				.wait_obj = FI_WAIT_FD,			};
 
 			rv = fi_endpoint(
 			    ofi_domain, req_info, &new_ep, NULL);
@@ -1237,8 +1223,7 @@ ofi_dialer_connect(void *arg, nni_aio *aio)
 	struct fi_cq_attr cq_attr  = {
 		.size     = 64,
 		.format   = FI_CQ_FORMAT_MSG,
-		.wait_obj = FI_WAIT_NONE,
-	};
+		.wait_obj = FI_WAIT_FD,	};
 	int rv;
 
 	nni_aio_reset(aio);
