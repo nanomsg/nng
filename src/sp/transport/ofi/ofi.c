@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+
 #include <netinet/in.h>
 #include <rdma/fabric.h>
 #include <rdma/fi_cm.h>
@@ -508,129 +510,168 @@ ofi_pipe_drain_cqs(ofi_pipe *p)
 	struct fi_cq_msg_entry cqe[16];
 	struct fi_cq_err_entry cq_err;
 	ssize_t                n;
+	int                    wait_fd = nni_posix_pfd_fd(&p->cq_pfd);
+	bool                   found;
 
-	// --- TX completions ---
-	while ((n = fi_cq_read(p->tx_cq, cqe, 16)) > 0) {
-		for (ssize_t i = 0; i < n; i++) {
-			nni_mtx_lock(&p->mtx);
-			nni_aio *aio = nni_list_first(&p->sendq);
-			if (aio == NULL) {
-				// Nego TX completion — no queued AIO; absorb.
-				nni_mtx_unlock(&p->mtx);
-				continue;
-			}
-			nni_aio_list_remove(aio);
-			nni_mtx_unlock(&p->mtx);
 
-			nni_msg *msg = nni_aio_get_msg(aio);
-			size_t   len = nni_msg_len(msg);
-			nni_aio_set_msg(aio, NULL);
-			nni_msg_free(msg);
-			nni_pipe_bump_tx(p->npipe, len);
-			nni_aio_finish_sync(aio, 0, len);
-			
-			nni_mtx_lock(&p->mtx);
-			ofi_pipe_do_send(p);
-			nni_mtx_unlock(&p->mtx);
-		}
-	}
-	if (n == -FI_EAVAIL) {
-		fi_cq_readerr(p->tx_cq, &cq_err, 0);
-		nng_log_warn("NNG-OFI", "TX CQ error: prov_errno=%d err=%d",
-		    cq_err.prov_errno, cq_err.err);
-		nni_pipe_close(p->npipe);
-		return;
-	}
-	if (n < 0 && n != -FI_EAGAIN) {
-		nni_pipe_close(p->npipe);
-		return;
-	}
+	// The FI_WAIT_FD mechanism uses a Unix pipe: the provider writes one
+	// byte per completion, but fi_cq_read() does NOT drain those bytes.
+	// If we only call fi_cq_read(), the pipe stays readable and kqueue
+	// fires again on every re-arm, creating a busy spin loop with zero
+	// actual completions.
+	//
+	// Fix: loop until both CQs return EAGAIN AND the pipe is empty.
+	// If new completions arrive in the race window between "last EAGAIN"
+	// and "pipe drained", their pipe bytes are consumed here; their CQ
+	// entries are found in the next inner CQ pass so no data is lost.
+	do {
+		found = false;
 
-	// --- RX completions ---
-	while ((n = fi_cq_read(p->rx_cq, cqe, 16)) > 0) {
-		for (ssize_t i = 0; i < n; i++) {
-			nni_mtx_lock(&p->mtx);
-			bool nego_done = (p->peer != 0);
-			nni_mtx_unlock(&p->mtx);
-
-			if (!nego_done) {
-				// Negotiation RX completion.
-				// Note: do NOT rely on cqe[i].len — the sockets
-				// provider may report 0 even for valid receives.
-				// We pre-posted a full-sized buffer and the nego
-				// is a fixed 8-byte packet; just copy it.
-				struct iovec  rx_iov;
-				struct fi_msg rx_msg;
-				memcpy(p->rx_nego, p->rx_buf, OFI_NEGO_SZ);
-				ofi_pipe_nego_complete(p, true);
-				// Re-post RX buffer for data messages.
-				rx_iov.iov_base = p->rx_buf;
-				rx_iov.iov_len  = OFI_BOUNCE_SZ;
-				memset(&rx_msg, 0, sizeof(rx_msg));
-				rx_msg.msg_iov   = &rx_iov;
-				rx_msg.desc      = fi_mr_desc(p->rx_mr);
-				rx_msg.iov_count = 1;
-				rx_msg.addr      = FI_ADDR_UNSPEC;
-				fi_recvmsg(p->ep, &rx_msg, 0);
-				continue;
-			}
-
-			// Data message: [uint64 total_len][header+body].
-			// Read msglen from the framing header in rx_buf rather
-			// than from cqe[i].len (provider may not set it).
-			uint64_t msglen;
-			NNI_GET64((uint8_t *) p->rx_buf, msglen);
-			if (msglen > (uint64_t)(OFI_BOUNCE_SZ - 8)) {
-				nni_pipe_close(p->npipe);
-				continue;
-			}
-
-			nni_msg *msg;
-			if (nni_msg_alloc(&msg, (size_t) msglen) != 0) {
-				nni_pipe_close(p->npipe);
-				continue;
-			}
-			memcpy(nni_msg_body(msg), (uint8_t *) p->rx_buf + 8,
-			    (size_t) msglen);
-
-			nni_mtx_lock(&p->mtx);
-			nni_aio *aio = nni_list_first(&p->recvq);
-			if (aio != NULL) {
-				nni_aio_list_remove(aio);
-			}
-			nni_mtx_unlock(&p->mtx);
-
-			if (aio != NULL) {
-				nni_pipe_bump_rx(p->npipe, (size_t) msglen);
-				nni_aio_set_msg(aio, msg);
-				nni_aio_finish_sync(aio, 0, (size_t) msglen);
-
-				// Re-post RX buffer.
-				struct iovec  rx_iov;
-				struct fi_msg rx_msg;
-				rx_iov.iov_base = p->rx_buf;
-				rx_iov.iov_len  = OFI_BOUNCE_SZ;
-				memset(&rx_msg, 0, sizeof(rx_msg));
-				rx_msg.msg_iov   = &rx_iov;
-				rx_msg.desc      = fi_mr_desc(p->rx_mr);
-				rx_msg.iov_count = 1;
-				rx_msg.addr      = FI_ADDR_UNSPEC;
-				fi_recvmsg(p->ep, &rx_msg, 0);
-			} else {
+		// --- TX completions ---
+		while ((n = fi_cq_read(p->tx_cq, cqe, 16)) > 0) {
+			found = true;
+			for (ssize_t i = 0; i < n; i++) {
 				nni_mtx_lock(&p->mtx);
-				p->rx_msg_cache = msg;
+				nni_aio *aio = nni_list_first(&p->sendq);
+				if (aio == NULL) {
+					// Nego TX completion — absorb.
+					nni_mtx_unlock(&p->mtx);
+					continue;
+				}
+				nni_aio_list_remove(aio);
+				nni_mtx_unlock(&p->mtx);
+
+				nni_msg *msg = nni_aio_get_msg(aio);
+				size_t   len = nni_msg_len(msg);
+				nni_aio_set_msg(aio, NULL);
+				nni_msg_free(msg);
+				nni_pipe_bump_tx(p->npipe, len);
+				nni_aio_finish_sync(aio, 0, len);
+
+				nni_mtx_lock(&p->mtx);
+				ofi_pipe_do_send(p);
 				nni_mtx_unlock(&p->mtx);
 			}
 		}
-	}
-	if (n == -FI_EAVAIL) {
-		fi_cq_readerr(p->rx_cq, &cq_err, 0);
-		nng_log_warn("NNG-OFI", "RX CQ error: prov_errno=%d err=%d",
-		    cq_err.prov_errno, cq_err.err);
-		nni_pipe_close(p->npipe);
-	} else if (n < 0 && n != -FI_EAGAIN) {
-		nni_pipe_close(p->npipe);
-	}
+		if (n == -FI_EAVAIL) {
+			fi_cq_readerr(p->tx_cq, &cq_err, 0);
+			nng_log_warn("NNG-OFI",
+			    "TX CQ error: prov_errno=%d err=%d",
+			    cq_err.prov_errno, cq_err.err);
+			nni_pipe_close(p->npipe);
+			return;
+		}
+		if (n < 0 && n != -FI_EAGAIN) {
+			nni_pipe_close(p->npipe);
+			return;
+		}
+
+		// --- RX completions ---
+		while ((n = fi_cq_read(p->rx_cq, cqe, 16)) > 0) {
+			found = true;
+			for (ssize_t i = 0; i < n; i++) {
+				nni_mtx_lock(&p->mtx);
+				bool nego_done = (p->peer != 0);
+				nni_mtx_unlock(&p->mtx);
+
+				if (!nego_done) {
+					// Negotiation RX.
+					struct iovec  rx_iov;
+					struct fi_msg rx_msg;
+					memcpy(p->rx_nego, p->rx_buf,
+					    OFI_NEGO_SZ);
+					ofi_pipe_nego_complete(p, true);
+					// Re-post RX for data phase.
+					rx_iov.iov_base = p->rx_buf;
+					rx_iov.iov_len  = OFI_BOUNCE_SZ;
+					memset(&rx_msg, 0, sizeof(rx_msg));
+					rx_msg.msg_iov   = &rx_iov;
+					rx_msg.desc      = fi_mr_desc(p->rx_mr);
+					rx_msg.iov_count = 1;
+					rx_msg.addr      = FI_ADDR_UNSPEC;
+					fi_recvmsg(p->ep, &rx_msg, 0);
+					continue;
+				}
+
+				// Data message framing: [uint64 len][payload].
+				uint64_t msglen;
+				NNI_GET64((uint8_t *) p->rx_buf, msglen);
+				if (msglen > (uint64_t)(OFI_BOUNCE_SZ - 8)) {
+					nni_pipe_close(p->npipe);
+					continue;
+				}
+
+				nni_msg *msg;
+				if (nni_msg_alloc(&msg, (size_t) msglen) != 0) {
+					nni_pipe_close(p->npipe);
+					continue;
+				}
+				memcpy(nni_msg_body(msg),
+				    (uint8_t *) p->rx_buf + 8,
+				    (size_t) msglen);
+
+				nni_mtx_lock(&p->mtx);
+				nni_aio *aio = nni_list_first(&p->recvq);
+				if (aio != NULL) {
+					nni_aio_list_remove(aio);
+				}
+				nni_mtx_unlock(&p->mtx);
+
+				if (aio != NULL) {
+					nni_pipe_bump_rx(p->npipe,
+					    (size_t) msglen);
+					nni_aio_set_msg(aio, msg);
+					nni_aio_finish_sync(aio, 0,
+					    (size_t) msglen);
+
+					// Re-post RX buffer.
+					struct iovec  rx_iov;
+					struct fi_msg rx_msg;
+					rx_iov.iov_base = p->rx_buf;
+					rx_iov.iov_len  = OFI_BOUNCE_SZ;
+					memset(&rx_msg, 0, sizeof(rx_msg));
+					rx_msg.msg_iov   = &rx_iov;
+					rx_msg.desc      = fi_mr_desc(p->rx_mr);
+					rx_msg.iov_count = 1;
+					rx_msg.addr      = FI_ADDR_UNSPEC;
+					fi_recvmsg(p->ep, &rx_msg, 0);
+				} else {
+					nni_mtx_lock(&p->mtx);
+					p->rx_msg_cache = msg;
+					nni_mtx_unlock(&p->mtx);
+				}
+			}
+		}
+		if (n == -FI_EAVAIL) {
+			fi_cq_readerr(p->rx_cq, &cq_err, 0);
+			nng_log_warn("NNG-OFI",
+			    "RX CQ error: prov_errno=%d err=%d",
+			    cq_err.prov_errno, cq_err.err);
+			nni_pipe_close(p->npipe);
+			return;
+		} else if (n < 0 && n != -FI_EAGAIN) {
+			nni_pipe_close(p->npipe);
+			return;
+		}
+
+		// --- Drain the notification pipe ---
+		// The XNET provider writes one byte per completion; fi_cq_read()
+		// leaves those bytes in the pipe.  Read them out so kqueue won't
+		// re-fire spuriously on the next arm().  If the read returns data,
+		// completions may have raced in — loop to catch them.
+		{
+			char    buf[64];
+			ssize_t r;
+			while ((r = read(wait_fd, buf, sizeof(buf))) > 0) {
+				found = true;
+			}
+			if (r < 0 && errno != EAGAIN) {
+				nng_log_warn("NNG-OFI", "read error: %s (fd=%d)\n", strerror(errno), wait_fd);
+			}
+			(void) r; // EAGAIN / EWOULDBLOCK means empty
+		}
+
+	} while (found);
 }
 
 static void
@@ -698,6 +739,7 @@ ofi_pipe_alloc(ofi_ep *ep, struct fid_ep *fid_ep, struct fid_cq *tx_cq,
 		goto fail;
 	}
 
+
 	// Pre-post the RX buffer so the peer's nego header can arrive.
 	{
 		struct iovec  iov;
@@ -713,7 +755,7 @@ ofi_pipe_alloc(ofi_ep *ep, struct fid_ep *fid_ep, struct fid_cq *tx_cq,
 	}
 
 	// Start the CQ polling thread (drives nego, then data in Task 5).
-	int wait_fd;
+	int wait_fd = -1;
 	fi_control(&p->rx_cq->fid, FI_GETWAIT, &wait_fd);
 	nni_posix_pfd_init(&p->cq_pfd, wait_fd, ofi_cq_pfd_cb, p);
 	nni_posix_pfd_arm(&p->cq_pfd, POLLIN);
@@ -745,6 +787,8 @@ ofi_ep_eq_thread(void *arg)
 	uint32_t               event;
 	ssize_t                n;
 	int                    rv;
+	int                    iteration = 0;
+
 
 	for (;;) {
 		nni_mtx_lock(&ep->mtx);
@@ -756,6 +800,9 @@ ofi_ep_eq_thread(void *arg)
 
 		// Block up to 10 ms so shutdown latency is bounded.
 		n = fi_eq_sread(ep->eq, &event, &entry, sizeof(entry), 10, 0);
+		iteration++;
+		if (iteration <= 5 || (iteration % 50) == 0) {
+		}
 
 		if (n == -FI_EAGAIN || n == -FI_ETIMEDOUT || n == 0) {
 			continue;
@@ -764,6 +811,13 @@ ofi_ep_eq_thread(void *arg)
 			fi_eq_readerr(ep->eq, &err_entry, 0);
 			nng_log_warn("NNG-OFI", "EQ error: prov_errno=%d",
 			    err_entry.prov_errno);
+			nni_mtx_lock(&ep->mtx);
+			nni_aio *aio = ep->useraio;
+			ep->useraio  = NULL;
+			nni_mtx_unlock(&ep->mtx);
+			if (aio != NULL) {
+				nni_aio_finish_error(aio, ofi_err(-err_entry.err));
+			}
 			continue;
 		}
 		if (n < 0) {
@@ -777,6 +831,7 @@ ofi_ep_eq_thread(void *arg)
 			}
 			return;
 		}
+
 
 		if (event == FI_CONNREQ) {
 			// ── Listener: accept incoming connection ──────────
