@@ -122,6 +122,25 @@ cmake -G Ninja \
 
 ---
 
+
+## Hybrid Transport (MSG and RDM)
+
+The OFI transport dynamically supports two different libfabric programming models:
+
+1. **Connected Message (FI_EP_MSG)**: Used for connection-oriented providers like TCP, Sockets, and InfiniBand. This uses the standard `fi_connect`/`fi_accept` state machine.
+2. **Reliable Datagram (FI_EP_RDM)**: Used for connectionless providers like HPE Slingshot (CXI). This uses Address Vectors (AV) and a manual handshake to simulate connection establishment over datagrams.
+
+The transport automatically selects the best model based on what the provider supports.
+
+### Forcing a Mode
+
+For testing purposes, you can force the transport into a specific mode:
+
+```sh
+# Force Reliable Datagram mode
+NNG_OFI_FORCE_RDM=1 ./my_app
+```
+
 ## Provider Selection
 
 The transport selects its libfabric provider at process startup using
