@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <netinet/in.h>
 #include <rdma/fabric.h>
 #include <rdma/fi_cm.h>
 #include <rdma/fi_domain.h>
@@ -24,8 +25,9 @@ typedef struct ofi_pipe ofi_pipe;
 typedef struct ofi_ep   ofi_ep;
 
 // Per-pipe TX/RX bounce buffer size.
-// Must fit the 8-byte SP header; Task 5 extends this for user messages.
-#define OFI_BOUNCE_SZ (64 * 1024)
+// Must be >= the NNG socket option NNG_OPT_RECVMAXSZ (default 1 MB).
+// Framing adds 8 bytes for the length prefix.
+#define OFI_BOUNCE_SZ (1024 * 1024)
 
 // Wire size of the SP negotiation header (same format as TCP transport).
 #define OFI_NEGO_SZ 8
@@ -210,26 +212,118 @@ static void
 ofi_pipe_close(void *arg)
 {
 	ofi_pipe *p = arg;
+	nni_aio  *aio;
+
 	nni_mtx_lock(&p->mtx);
 	p->closed     = true;
 	p->cq_running = false;
 	nni_mtx_unlock(&p->mtx);
+
+	// Cancel any recv AIOs queued by the SP protocol layer.  Without
+	// this the SP recv loop hangs indefinitely waiting for messages that
+	// will never arrive, blocking pipe teardown and socket shutdown.
+	for (;;) {
+		nni_mtx_lock(&p->mtx);
+		aio = nni_list_first(&p->recvq);
+		if (aio != NULL) {
+			nni_aio_list_remove(aio);
+		}
+		nni_mtx_unlock(&p->mtx);
+		if (aio == NULL) {
+			break;
+		}
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
+
+	// Cancel any send AIOs that are outstanding.
+	for (;;) {
+		nni_mtx_lock(&p->mtx);
+		aio = nni_list_first(&p->sendq);
+		if (aio != NULL) {
+			nni_aio_list_remove(aio);
+		}
+		nni_mtx_unlock(&p->mtx);
+		if (aio == NULL) {
+			break;
+		}
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
 }
 
 static void
 ofi_pipe_send(void *arg, nni_aio *aio)
 {
-	// Implemented in Task 5.
-	NNI_ARG_UNUSED(arg);
-	nni_aio_finish_error(aio, NNG_ENOTSUP);
+	ofi_pipe     *p = arg;
+	nni_msg      *msg;
+	size_t        hlen, blen, total;
+	struct iovec  tx_iov;
+	struct fi_msg tx_msg;
+	int           rv;
+
+	nni_aio_reset(aio);
+	nni_mtx_lock(&p->mtx);
+	if (p->closed) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	if (!nni_aio_start(aio, NULL, p)) {
+		nni_mtx_unlock(&p->mtx);
+		return;
+	}
+	msg   = nni_aio_get_msg(aio);
+	hlen  = nni_msg_header_len(msg);
+	blen  = nni_msg_len(msg);
+	total = hlen + blen;
+	if (total + 8 > OFI_BOUNCE_SZ) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, NNG_EMSGSIZE);
+		return;
+	}
+	// Pack into registered TX bounce buffer: [8-byte len][header][body]
+	NNI_PUT64((uint8_t *) p->tx_buf, (uint64_t) total);
+	memcpy((uint8_t *) p->tx_buf + 8, nni_msg_header(msg), hlen);
+	memcpy((uint8_t *) p->tx_buf + 8 + hlen, nni_msg_body(msg), blen);
+
+	nni_list_append(&p->sendq, aio);
+
+	tx_iov.iov_base = p->tx_buf;
+	tx_iov.iov_len  = total + 8;
+	memset(&tx_msg, 0, sizeof(tx_msg));
+	tx_msg.msg_iov   = &tx_iov;
+	tx_msg.desc      = fi_mr_desc(p->tx_mr);
+	tx_msg.iov_count = 1;
+	tx_msg.addr      = FI_ADDR_UNSPEC;
+	tx_msg.context   = aio; // used to distinguish data TX from nego TX
+	rv               = fi_sendmsg(p->ep, &tx_msg, 0);
+	if (rv != 0) {
+		nni_aio_list_remove(aio);
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, ofi_err(rv));
+		return;
+	}
+	nni_mtx_unlock(&p->mtx);
 }
 
 static void
 ofi_pipe_recv(void *arg, nni_aio *aio)
 {
-	// Implemented in Task 5.
-	NNI_ARG_UNUSED(arg);
-	nni_aio_finish_error(aio, NNG_ENOTSUP);
+	ofi_pipe *p = arg;
+
+	nni_aio_reset(aio);
+	nni_mtx_lock(&p->mtx);
+	if (p->closed) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	if (!nni_aio_start(aio, NULL, p)) {
+		nni_mtx_unlock(&p->mtx);
+		return;
+	}
+	nni_list_append(&p->recvq, aio);
+	nni_mtx_unlock(&p->mtx);
+	// The CQ thread delivers this AIO when a message arrives.
 }
 
 static uint16_t
@@ -329,65 +423,150 @@ ofi_pipe_nego_complete(ofi_pipe *p, bool success)
 
 // ── CQ polling thread ─────────────────────────────────────────────────────
 //
-// Phase 1 (nego): polls TX and RX CQs for the 8-byte SP header exchange.
-// When both TX (our header sent) and RX (peer's header received) complete,
-// calls ofi_pipe_nego_complete to validate and deliver the pipe.
-// Phase 2 (data): stub sleep loop — full send/recv implemented in Task 5.
+// A single ofi_pipe_drain_cqs call handles both phases:
+//   - TX completions: absorb nego TX (sendq empty) or finish data send AIOs.
+//   - RX completions: detect nego vs data by p->peer == 0; call
+//     ofi_pipe_nego_complete on nego, unpack framed message and deliver to
+//     a queued recv AIO on data.
+// TX is always drained before RX so that when nego_complete delivers the
+// pipe (asynchronously via nni_aio_finish → task queue), no data send AIO
+// can be in sendq yet when the pending nego TX completion is processed.
 
 static void
-ofi_pipe_cq_thread(void *arg)
+ofi_pipe_drain_cqs(ofi_pipe *p)
 {
-	ofi_pipe              *p = arg;
-	struct fi_cq_msg_entry cqe;
+	struct fi_cq_msg_entry cqe[16];
+	struct fi_cq_err_entry cq_err;
 	ssize_t                n;
-	bool                   nego_tx_done = false;
-	bool                   nego_rx_done = false;
 
-	// Phase 1: wait for nego TX + RX completions.
-	while (p->cq_running && (!nego_tx_done || !nego_rx_done)) {
-		if (!nego_tx_done) {
-			n = fi_cq_read(p->tx_cq, &cqe, 1);
-			if (n == 1) {
-				nego_tx_done = true;
-			} else if (n < 0 && n != -FI_EAGAIN) {
-				nng_log_warn("NNG-OFI",
-				    "TX CQ error during nego: %s",
-				    fi_strerror((int) -n));
-				ofi_pipe_nego_complete(p, false);
-				return;
+	// --- TX completions ---
+	while ((n = fi_cq_read(p->tx_cq, cqe, 16)) > 0) {
+		for (ssize_t i = 0; i < n; i++) {
+			nni_mtx_lock(&p->mtx);
+			nni_aio *aio = nni_list_first(&p->sendq);
+			if (aio == NULL) {
+				// Nego TX completion — no queued AIO; absorb.
+				nni_mtx_unlock(&p->mtx);
+				continue;
 			}
-		}
+			nni_aio_list_remove(aio);
+			nni_mtx_unlock(&p->mtx);
 
-		if (!nego_rx_done) {
-			n = fi_cq_read(p->rx_cq, &cqe, 1);
-			if (n == 1) {
-				// Copy from rx_buf (which was registered) into
-				// rx_nego.
-				memcpy(p->rx_nego, p->rx_buf, OFI_NEGO_SZ);
-				nego_rx_done = true;
-			} else if (n < 0 && n != -FI_EAGAIN) {
-				nng_log_warn("NNG-OFI",
-				    "RX CQ error during nego: %s",
-				    fi_strerror((int) -n));
-				ofi_pipe_nego_complete(p, false);
-				return;
-			}
-		}
-
-		if (!nego_tx_done || !nego_rx_done) {
-			nni_msleep(1);
+			nni_msg *msg = nni_aio_get_msg(aio);
+			size_t   len = nni_msg_len(msg);
+			nni_aio_set_msg(aio, NULL);
+			nni_msg_free(msg);
+			nni_pipe_bump_tx(p->npipe, len);
+			nni_aio_finish_sync(aio, 0, len);
 		}
 	}
-
-	if (!p->cq_running) {
+	if (n == -FI_EAVAIL) {
+		fi_cq_readerr(p->tx_cq, &cq_err, 0);
+		nng_log_warn("NNG-OFI", "TX CQ error: prov_errno=%d err=%d",
+		    cq_err.prov_errno, cq_err.err);
+		nni_pipe_close(p->npipe);
+		return;
+	}
+	if (n < 0 && n != -FI_EAGAIN) {
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
-	ofi_pipe_nego_complete(p, true);
+	// --- RX completions ---
+	while ((n = fi_cq_read(p->rx_cq, cqe, 16)) > 0) {
+		for (ssize_t i = 0; i < n; i++) {
+			nni_mtx_lock(&p->mtx);
+			bool nego_done = (p->peer != 0);
+			nni_mtx_unlock(&p->mtx);
 
-	// Phase 2 (Task 5): data-path CQ draining.
+			if (!nego_done) {
+				// Negotiation RX completion.
+				// Note: do NOT rely on cqe[i].len — the sockets
+				// provider may report 0 even for valid receives.
+				// We pre-posted a full-sized buffer and the nego
+				// is a fixed 8-byte packet; just copy it.
+				struct iovec  rx_iov;
+				struct fi_msg rx_msg;
+				memcpy(p->rx_nego, p->rx_buf, OFI_NEGO_SZ);
+				ofi_pipe_nego_complete(p, true);
+				// Re-post RX buffer for data messages.
+				rx_iov.iov_base = p->rx_buf;
+				rx_iov.iov_len  = OFI_BOUNCE_SZ;
+				memset(&rx_msg, 0, sizeof(rx_msg));
+				rx_msg.msg_iov   = &rx_iov;
+				rx_msg.desc      = fi_mr_desc(p->rx_mr);
+				rx_msg.iov_count = 1;
+				rx_msg.addr      = FI_ADDR_UNSPEC;
+				fi_recvmsg(p->ep, &rx_msg, 0);
+				continue;
+			}
+
+			// Data message: [uint64 total_len][header+body].
+			// Read msglen from the framing header in rx_buf rather
+			// than from cqe[i].len (provider may not set it).
+			uint64_t msglen;
+			NNI_GET64((uint8_t *) p->rx_buf, msglen);
+			if (msglen > (uint64_t)(OFI_BOUNCE_SZ - 8)) {
+				nni_pipe_close(p->npipe);
+				continue;
+			}
+
+			nni_msg *msg;
+			if (nni_msg_alloc(&msg, (size_t) msglen) != 0) {
+				nni_pipe_close(p->npipe);
+				continue;
+			}
+			memcpy(nni_msg_body(msg), (uint8_t *) p->rx_buf + 8,
+			    (size_t) msglen);
+
+			nni_mtx_lock(&p->mtx);
+			nni_aio *aio = nni_list_first(&p->recvq);
+			if (aio != NULL) {
+				nni_aio_list_remove(aio);
+			}
+			nni_mtx_unlock(&p->mtx);
+
+			if (aio != NULL) {
+				nni_pipe_bump_rx(p->npipe, (size_t) msglen);
+				nni_aio_set_msg(aio, msg);
+				nni_aio_finish_sync(aio, 0, (size_t) msglen);
+			} else {
+				nni_msg_free(msg); // no receiver queued; discard
+			}
+
+			// Re-post RX buffer.
+			struct iovec  rx_iov;
+			struct fi_msg rx_msg;
+			rx_iov.iov_base = p->rx_buf;
+			rx_iov.iov_len  = OFI_BOUNCE_SZ;
+			memset(&rx_msg, 0, sizeof(rx_msg));
+			rx_msg.msg_iov   = &rx_iov;
+			rx_msg.desc      = fi_mr_desc(p->rx_mr);
+			rx_msg.iov_count = 1;
+			rx_msg.addr      = FI_ADDR_UNSPEC;
+			fi_recvmsg(p->ep, &rx_msg, 0);
+		}
+	}
+	if (n == -FI_EAVAIL) {
+		fi_cq_readerr(p->rx_cq, &cq_err, 0);
+		nng_log_warn("NNG-OFI", "RX CQ error: prov_errno=%d err=%d",
+		    cq_err.prov_errno, cq_err.err);
+		nni_pipe_close(p->npipe);
+	} else if (n < 0 && n != -FI_EAGAIN) {
+		nni_pipe_close(p->npipe);
+	}
+}
+
+// Option A: dedicated polling thread per pipe.
+// NOTE: ofi_pipe_drain_cqs is the function to keep when migrating to
+// Option B (fd-based poller). Only this thread body changes.
+static void
+ofi_pipe_cq_thread(void *arg)
+{
+	ofi_pipe *p = arg;
 	while (p->cq_running) {
-		nni_msleep(5);
+		ofi_pipe_drain_cqs(p);
+		nni_msleep(1); // ~1 kHz poll; replace with fd-wait in Option B
 	}
 }
 
@@ -712,11 +891,27 @@ ofi_listener_bind(void *arg, nng_url *url)
 {
 	ofi_ep *ep = arg;
 	int     rv;
-	NNI_ARG_UNUSED(url);
 
 	rv = fi_listen(ep->pep);
 	if (rv != 0) {
 		return (ofi_err(rv));
+	}
+
+	// After fi_listen the OS assigns an ephemeral port if url->u_port
+	// was 0.  Retrieve the actual bound address so that callers of
+	// nng_listener_get_url() see the real port number.
+	if (url->u_port == 0) {
+		struct sockaddr_storage ss;
+		size_t                  addrlen = sizeof(ss);
+		if (fi_getname(&ep->pep->fid, &ss, &addrlen) == 0) {
+			if (ss.ss_family == AF_INET) {
+				url->u_port = ntohs(
+				    ((struct sockaddr_in *) &ss)->sin_port);
+			} else if (ss.ss_family == AF_INET6) {
+				url->u_port = ntohs(
+				    ((struct sockaddr_in6 *) &ss)->sin6_port);
+			}
+		}
 	}
 
 	rv = nni_thr_init(&ep->eq_thr, ofi_ep_eq_thread, ep);

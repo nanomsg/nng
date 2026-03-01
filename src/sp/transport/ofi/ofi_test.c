@@ -43,9 +43,16 @@ test_ofi_connect(void)
 	NUTS_CLOSE(s2);
 }
 
+void
+test_ofi_exchange(void)
+{
+	nuts_tran_exchange("ofi");
+}
+
 TEST_LIST = {
 	{ "ofi-scheme-recognized", test_ofi_scheme_recognized },
 	{ "ofi-listen", test_ofi_listen },
 	{ "ofi-connect", test_ofi_connect },
+	{ "ofi-exchange", test_ofi_exchange },
 	{ NULL, NULL },
 };
