@@ -90,6 +90,8 @@ struct ofi_pipe {
 	uint8_t tx_nego[OFI_NEGO_SZ]; // outgoing SP header bytes
 	uint8_t rx_nego[OFI_NEGO_SZ]; // received SP header bytes
 
+	nni_msg *rx_msg_cache; // cached RX message
+
 	nni_list sendq; // pending send AIOs (Task 5)
 	nni_list recvq; // pending recv AIOs (Task 5)
 	nni_mtx  mtx;
@@ -152,6 +154,7 @@ ofi_pipe_init(void *arg, nni_pipe *npipe)
 {
 	ofi_pipe *p = arg;
 	p->npipe    = npipe;
+	p->rx_msg_cache = NULL;
 	nni_mtx_init(&p->mtx);
 	nni_aio_list_init(&p->sendq);
 	nni_aio_list_init(&p->recvq);
@@ -163,6 +166,10 @@ ofi_pipe_fini(void *arg)
 {
 	ofi_pipe *p = arg;
 	// ofi_pipe_stop has already joined cq_thr; safe to free resources.
+	if (p->rx_msg_cache != NULL) {
+		nni_msg_free(p->rx_msg_cache);
+		p->rx_msg_cache = NULL;
+	}
 	if (p->ep != NULL) {
 		fi_close(&p->ep->fid);
 		p->ep = NULL;
@@ -251,14 +258,65 @@ ofi_pipe_close(void *arg)
 }
 
 static void
-ofi_pipe_send(void *arg, nni_aio *aio)
+ofi_pipe_send_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
-	ofi_pipe     *p = arg;
+	ofi_pipe *p = arg;
+	nni_mtx_lock(&p->mtx);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_mtx_unlock(&p->mtx);
+}
+
+static void
+ofi_pipe_do_send(ofi_pipe *p)
+{
+	nni_aio      *aio;
 	nni_msg      *msg;
 	size_t        hlen, blen, total;
 	struct iovec  tx_iov;
 	struct fi_msg tx_msg;
 	int           rv;
+
+	aio = nni_list_first(&p->sendq);
+	if (aio == NULL) {
+		return;
+	}
+	msg   = nni_aio_get_msg(aio);
+	hlen  = nni_msg_header_len(msg);
+	blen  = nni_msg_len(msg);
+	total = hlen + blen;
+
+	NNI_PUT64((uint8_t *) p->tx_buf, (uint64_t) total);
+	memcpy((uint8_t *) p->tx_buf + 8, nni_msg_header(msg), hlen);
+	memcpy((uint8_t *) p->tx_buf + 8 + hlen, nni_msg_body(msg), blen);
+
+	tx_iov.iov_base = p->tx_buf;
+	tx_iov.iov_len  = total + 8;
+	memset(&tx_msg, 0, sizeof(tx_msg));
+	tx_msg.msg_iov   = &tx_iov;
+	tx_msg.desc      = fi_mr_desc(p->tx_mr);
+	tx_msg.iov_count = 1;
+	tx_msg.addr      = FI_ADDR_UNSPEC;
+	tx_msg.context   = aio;
+	rv               = fi_sendmsg(p->ep, &tx_msg, 0);
+	if (rv != 0) {
+		nni_aio_list_remove(aio);
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, ofi_err(rv));
+		nni_mtx_lock(&p->mtx);
+	}
+}
+
+static void
+ofi_pipe_send(void *arg, nni_aio *aio)
+{
+	ofi_pipe     *p = arg;
+	nni_msg      *msg;
+	size_t        hlen, blen, total;
 
 	nni_aio_reset(aio);
 	nni_mtx_lock(&p->mtx);
@@ -267,7 +325,7 @@ ofi_pipe_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if (!nni_aio_start(aio, NULL, p)) {
+	if (!nni_aio_start(aio, ofi_pipe_send_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
@@ -280,26 +338,23 @@ ofi_pipe_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EMSGSIZE);
 		return;
 	}
-	// Pack into registered TX bounce buffer: [8-byte len][header][body]
-	NNI_PUT64((uint8_t *) p->tx_buf, (uint64_t) total);
-	memcpy((uint8_t *) p->tx_buf + 8, nni_msg_header(msg), hlen);
-	memcpy((uint8_t *) p->tx_buf + 8 + hlen, nni_msg_body(msg), blen);
 
 	nni_list_append(&p->sendq, aio);
+	if (nni_list_first(&p->sendq) == aio) {
+		ofi_pipe_do_send(p);
+	}
+	nni_mtx_unlock(&p->mtx);
+}
 
-	tx_iov.iov_base = p->tx_buf;
-	tx_iov.iov_len  = total + 8;
-	memset(&tx_msg, 0, sizeof(tx_msg));
-	tx_msg.msg_iov   = &tx_iov;
-	tx_msg.desc      = fi_mr_desc(p->tx_mr);
-	tx_msg.iov_count = 1;
-	tx_msg.addr      = FI_ADDR_UNSPEC;
-	tx_msg.context   = aio; // used to distinguish data TX from nego TX
-	rv               = fi_sendmsg(p->ep, &tx_msg, 0);
-	if (rv != 0) {
+static void
+ofi_pipe_recv_cancel(nni_aio *aio, void *arg, nng_err rv)
+{
+	ofi_pipe *p = arg;
+	nni_mtx_lock(&p->mtx);
+	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, ofi_err(rv));
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_mtx_unlock(&p->mtx);
@@ -317,13 +372,33 @@ ofi_pipe_recv(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if (!nni_aio_start(aio, NULL, p)) {
+	if (!nni_aio_start(aio, ofi_pipe_recv_cancel, p)) {
 		nni_mtx_unlock(&p->mtx);
+		return;
+	}
+	if (p->rx_msg_cache != NULL) {
+		nni_msg *msg = p->rx_msg_cache;
+		p->rx_msg_cache = NULL;
+		nni_pipe_bump_rx(p->npipe, nni_msg_len(msg));
+		nni_aio_set_msg(aio, msg);
+		
+		struct iovec  rx_iov;
+		struct fi_msg rx_msg;
+		rx_iov.iov_base = p->rx_buf;
+		rx_iov.iov_len  = OFI_BOUNCE_SZ;
+		memset(&rx_msg, 0, sizeof(rx_msg));
+		rx_msg.msg_iov   = &rx_iov;
+		rx_msg.desc      = fi_mr_desc(p->rx_mr);
+		rx_msg.iov_count = 1;
+		rx_msg.addr      = FI_ADDR_UNSPEC;
+		fi_recvmsg(p->ep, &rx_msg, 0);
+		
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
 		return;
 	}
 	nni_list_append(&p->recvq, aio);
 	nni_mtx_unlock(&p->mtx);
-	// The CQ thread delivers this AIO when a message arrives.
 }
 
 static uint16_t
@@ -458,6 +533,10 @@ ofi_pipe_drain_cqs(ofi_pipe *p)
 			nni_msg_free(msg);
 			nni_pipe_bump_tx(p->npipe, len);
 			nni_aio_finish_sync(aio, 0, len);
+			
+			nni_mtx_lock(&p->mtx);
+			ofi_pipe_do_send(p);
+			nni_mtx_unlock(&p->mtx);
 		}
 	}
 	if (n == -FI_EAVAIL) {
@@ -530,21 +609,23 @@ ofi_pipe_drain_cqs(ofi_pipe *p)
 				nni_pipe_bump_rx(p->npipe, (size_t) msglen);
 				nni_aio_set_msg(aio, msg);
 				nni_aio_finish_sync(aio, 0, (size_t) msglen);
-			} else {
-				nni_msg_free(msg); // no receiver queued; discard
-			}
 
-			// Re-post RX buffer.
-			struct iovec  rx_iov;
-			struct fi_msg rx_msg;
-			rx_iov.iov_base = p->rx_buf;
-			rx_iov.iov_len  = OFI_BOUNCE_SZ;
-			memset(&rx_msg, 0, sizeof(rx_msg));
-			rx_msg.msg_iov   = &rx_iov;
-			rx_msg.desc      = fi_mr_desc(p->rx_mr);
-			rx_msg.iov_count = 1;
-			rx_msg.addr      = FI_ADDR_UNSPEC;
-			fi_recvmsg(p->ep, &rx_msg, 0);
+				// Re-post RX buffer.
+				struct iovec  rx_iov;
+				struct fi_msg rx_msg;
+				rx_iov.iov_base = p->rx_buf;
+				rx_iov.iov_len  = OFI_BOUNCE_SZ;
+				memset(&rx_msg, 0, sizeof(rx_msg));
+				rx_msg.msg_iov   = &rx_iov;
+				rx_msg.desc      = fi_mr_desc(p->rx_mr);
+				rx_msg.iov_count = 1;
+				rx_msg.addr      = FI_ADDR_UNSPEC;
+				fi_recvmsg(p->ep, &rx_msg, 0);
+			} else {
+				nni_mtx_lock(&p->mtx);
+				p->rx_msg_cache = msg;
+				nni_mtx_unlock(&p->mtx);
+			}
 		}
 	}
 	if (n == -FI_EAVAIL) {
@@ -924,15 +1005,39 @@ ofi_listener_bind(void *arg, nng_url *url)
 }
 
 static void
+ofi_listener_accept_cancel(nni_aio *aio, void *arg, nng_err rv)
+{
+	ofi_ep *ep = arg;
+	nni_mtx_lock(&ep->mtx);
+	if (ep->useraio == aio) {
+		ep->useraio = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_mtx_unlock(&ep->mtx);
+}
+
+static void
 ofi_listener_accept(void *arg, nni_aio *aio)
 {
 	ofi_ep   *ep = arg;
 	ofi_pipe *p;
 
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	if (!nni_aio_start(aio, ofi_listener_accept_cancel, ep)) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
+	if (ep->useraio != NULL) {
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
 	if ((p = nni_list_first(&ep->waitpipes)) != NULL) {
@@ -1109,6 +1214,20 @@ ofi_dialer_fini(void *arg)
 }
 
 static void
+ofi_dialer_connect_cancel(nni_aio *aio, void *arg, nng_err rv)
+{
+	ofi_ep *ep = arg;
+	nni_mtx_lock(&ep->mtx);
+	if (ep->useraio == aio) {
+		ep->useraio = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_mtx_unlock(&ep->mtx);
+}
+
+static void
 ofi_dialer_connect(void *arg, nni_aio *aio)
 {
 	ofi_ep           *ep = arg;
@@ -1122,10 +1241,20 @@ ofi_dialer_connect(void *arg, nni_aio *aio)
 	};
 	int rv;
 
+	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	if (!nni_aio_start(aio, ofi_dialer_connect_cancel, ep)) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
+	if (ep->useraio != NULL) {
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
 	ep->useraio = aio;
