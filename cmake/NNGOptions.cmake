@@ -40,7 +40,7 @@ option(NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
 # for the public library.
 option(NNG_ELIDE_DEPRECATED "Elide deprecated functionality." OFF)
 
-option(NNG_ENABLE_CUSTOM_ALLOC "Enable overridable function pointers for allocation functions." ON)
+option(NNG_ENABLE_CUSTOM_ALLOC "Enable overridable function pointers for allocation functions." OFF)
 mark_as_advanced(NNG_ENABLE_CUSTOM_ALLOC)
 
 option(NNG_ENABLE_STATS "Enable statistics." ON)
