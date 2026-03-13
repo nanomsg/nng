@@ -36,23 +36,33 @@ static pfnSetThreadDescription set_thread_desc;
 
 #include <stdlib.h>
 
+#ifdef NNG_ENABLE_CUSTOM_ALLOC
+void* (*nni_malloc_fn)(size_t) = malloc;
+void* (*nni_calloc_fn)(size_t, size_t) = calloc;
+void (*nni_free_fn)(void*) = free;
+#else
+#define nni_malloc_fn malloc
+#define nni_calloc_fn calloc
+#define nni_free_fn free
+#endif
+
 void *
 nni_alloc(size_t sz)
 {
-	return (sz > 0 ? malloc(sz) : NULL);
+	return (sz > 0 ? nni_malloc_fn(sz) : NULL);
 }
 
 void *
 nni_zalloc(size_t sz)
 {
-	return (sz > 0 ? calloc(1, sz) : NULL);
+	return (sz > 0 ? nni_calloc_fn(1, sz) : NULL);
 }
 
 void
 nni_free(void *b, size_t z)
 {
 	NNI_ARG_UNUSED(z);
-	free(b);
+	nni_free_fn(b);
 }
 
 void

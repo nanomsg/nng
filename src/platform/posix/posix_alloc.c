@@ -13,24 +13,34 @@
 
 #include <stdlib.h>
 
+#ifdef NNG_ENABLE_CUSTOM_ALLOC
+void* (*nni_malloc_fn)(size_t) = malloc;
+void* (*nni_calloc_fn)(size_t, size_t) = calloc;
+void (*nni_free_fn)(void*) = free;
+#else
+#define nni_malloc_fn malloc
+#define nni_calloc_fn calloc
+#define nni_free_fn free
+#endif
+
 // POSIX memory allocation.  This is pretty much standard C.
 void *
 nni_alloc(size_t sz)
 {
-	return (sz > 0 ? malloc(sz) : NULL);
+	return (sz > 0 ? nni_malloc_fn(sz) : NULL);
 }
 
 void *
 nni_zalloc(size_t sz)
 {
-	return (sz > 0 ? calloc(1, sz) : NULL);
+	return (sz > 0 ? nni_calloc_fn(1, sz) : NULL);
 }
 
 void
 nni_free(void *ptr, size_t size)
 {
 	NNI_ARG_UNUSED(size);
-	free(ptr);
+	nni_free_fn(ptr);
 }
 
 #endif // NNG_PLATFORM_POSIX
