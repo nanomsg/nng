@@ -1213,7 +1213,7 @@ udp_ep_init(
 	ep->proto            = nni_sock_proto_id(sock);
 	ep->peer             = nni_sock_peer_id(sock);
 	ep->url              = url;
-	ep->refresh          = NNG_UDP_REFRESH; // one minute by default
+	ep->refresh          = NNG_UDP_REFRESH; // five seconds by default
 	ep->rcvmax           = NNG_UDP_RECVMAX;
 	ep->copymax          = NNG_UDP_COPYMAX;
 	if ((rv = nni_msg_alloc(&ep->rx_payload, ep->rcvmax) != 0)) {
