@@ -164,6 +164,43 @@ if (NNG_MAX_POLLER_THREADS)
     add_definitions(-DNNG_MAX_POLLER_THREADS=${NNG_MAX_POLLER_THREADS})
 endif()
 
+# UDP transport tuning
+set(NNG_UDP_TXQUEUE_LEN 0 CACHE STRING "UDP TX queue length, 0 for default (32)")
+mark_as_advanced(NNG_UDP_TXQUEUE_LEN)
+if (NNG_UDP_TXQUEUE_LEN)
+    add_definitions(-DNNG_UDP_TXQUEUE_LEN=${NNG_UDP_TXQUEUE_LEN})
+endif()
+
+set(NNG_UDP_RXQUEUE_LEN 0 CACHE STRING "UDP RX queue length, 0 for default (16)")
+mark_as_advanced(NNG_UDP_RXQUEUE_LEN)
+if (NNG_UDP_RXQUEUE_LEN)
+    add_definitions(-DNNG_UDP_RXQUEUE_LEN=${NNG_UDP_RXQUEUE_LEN})
+endif()
+
+set(NNG_UDP_RECVMAX 0 CACHE STRING "UDP max receive size in bytes, 0 for default (65000)")
+mark_as_advanced(NNG_UDP_RECVMAX)
+if (NNG_UDP_RECVMAX)
+    add_definitions(-DNNG_UDP_RECVMAX=${NNG_UDP_RECVMAX})
+endif()
+
+set(NNG_UDP_COPYMAX 0 CACHE STRING "UDP copy-vs-loan threshold in bytes, 0 for default (1024)")
+mark_as_advanced(NNG_UDP_COPYMAX)
+if (NNG_UDP_COPYMAX)
+    add_definitions(-DNNG_UDP_COPYMAX=${NNG_UDP_COPYMAX})
+endif()
+
+set(NNG_UDP_REFRESH 0 CACHE STRING "UDP connection refresh interval in nanoseconds, 0 for default (5s)")
+mark_as_advanced(NNG_UDP_REFRESH)
+if (NNG_UDP_REFRESH)
+    add_definitions(-DNNG_UDP_REFRESH=${NNG_UDP_REFRESH})
+endif()
+
+set(NNG_UDP_CONNRETRY 0 CACHE STRING "UDP connection retry interval in nanoseconds, 0 for default (200ms)")
+mark_as_advanced(NNG_UDP_CONNRETRY)
+if (NNG_UDP_CONNRETRY)
+    add_definitions(-DNNG_UDP_CONNRETRY=${NNG_UDP_CONNRETRY})
+endif()
+
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
