@@ -13,16 +13,6 @@
 
 #include <stdlib.h>
 
-#ifdef NNG_ENABLE_CUSTOM_ALLOC
-void* (*nni_malloc_fn)(size_t) = malloc;
-void* (*nni_calloc_fn)(size_t, size_t) = calloc;
-void (*nni_free_fn)(void*) = free;
-#else
-#define nni_malloc_fn malloc
-#define nni_calloc_fn calloc
-#define nni_free_fn free
-#endif
-
 // POSIX memory allocation.  This is pretty much standard C.
 void *
 nni_alloc(size_t sz)

@@ -551,9 +551,7 @@ NNG_DECL int nng_ctx_set_int(nng_ctx, const char *, int);
 NNG_DECL int nng_ctx_set_size(nng_ctx, const char *, size_t);
 NNG_DECL int nng_ctx_set_ms(nng_ctx, const char *, nng_duration);
 
-#ifdef NNG_ENABLE_CUSTOM_ALLOC
 NNG_DECL void nng_alloc_set(void* (*malloc)(size_t), void* (*calloc)(size_t, size_t), void (*free)(void*));
-#endif
 
 // nng_alloc is used to allocate memory.  It's intended purpose is for
 // allocating memory suitable for message buffers with nng_send().
@@ -1330,6 +1328,10 @@ typedef struct {
 	// will be used. Default is controlled by NNG_RESOLV_CONCURRENCY
 	// compile time variable.
 	int16_t num_resolver_threads;
+
+	void* (*malloc_fn)(size_t);
+	void* (*calloc_fn)(size_t, size_t);
+	void (*free_fn)(void*);
 } nng_init_params;
 
 // Initialize the library.  May be called multiple times, but

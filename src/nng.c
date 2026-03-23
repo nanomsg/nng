@@ -48,24 +48,6 @@ nng_socket_id(nng_socket s)
 	return (((int) s.id > 0) ? (int) s.id : -1);
 }
 
-#ifdef NNG_ENABLE_CUSTOM_ALLOC
-void
-nng_alloc_set(void* (*malloc)(size_t), void* (*calloc)(size_t, size_t), void (*free)(void*))
-{
-	if (malloc) {
-		nni_malloc_fn = malloc;
-	}
-
-	if (calloc) {
-		nni_calloc_fn = calloc;
-	}
-
-	if (free) {
-		nni_free_fn = free;
-	}
-}
-#endif
-
 void *
 nng_alloc(size_t sz)
 {

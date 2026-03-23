@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "alloc.h"
 #include "defs.h"
 #include "nng_impl.h"
 #include "platform.h"
@@ -74,6 +75,15 @@ nng_init(const nng_init_params *params)
 	if (params == NULL) {
 		params = &zero;
 	}
+	init_params.malloc_fn = params->malloc_fn
+			? params->malloc_fn
+			: malloc;
+	init_params.calloc_fn = params->calloc_fn
+			? params->calloc_fn
+			: calloc;
+	init_params.free_fn = params->free_fn
+			? params->free_fn
+			: free;
 	init_params.num_task_threads     = params->num_task_threads
 	        ? params->num_task_threads
 	        : NNG_NUM_TASKQ_THREADS;
@@ -96,7 +106,9 @@ nng_init(const nng_init_params *params)
 	    ? params->num_resolver_threads
 	    : NNG_RESOLV_CONCURRENCY;
 
-	if (((rv = nni_plat_init(&init_params)) != 0) ||
+	if (
+		((rv = nni_alloc_set(init_params.malloc_fn, init_params.calloc_fn, init_params.free_fn)) != 0) ||
+		((rv = nni_plat_init(&init_params)) != 0) ||
 	    ((rv = nni_taskq_sys_init(&init_params)) != 0) ||
 	    ((rv = nni_reap_sys_init()) != 0) ||
 	    ((rv = nni_aio_sys_init(&init_params)) != 0) ||
