@@ -17,5 +17,5 @@ int nni_alloc_set(void* malloc_fn(size_t), void* calloc_fn(size_t, size_t), void
         return 0;
     }
 
-    return -1;
+    return NNG_EINVAL;
 }
