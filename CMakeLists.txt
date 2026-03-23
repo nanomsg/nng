@@ -113,8 +113,6 @@ if (NOT WIN32)
     mark_as_advanced(NNG_SETSTACKSIZE)
 endif ()
 
-nng_defines_if(NNG_ENABLE_CUSTOM_ALLOC NNG_ENABLE_CUSTOM_ALLOC)
-
 nng_defines_if(NNG_ENABLE_STATS NNG_ENABLE_STATS)
 
 # IPv6 enable
