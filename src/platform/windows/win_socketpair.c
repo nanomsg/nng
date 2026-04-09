@@ -16,7 +16,7 @@
 #include <errno.h>
 #include <sys/socket.h>
 
-int
+nng_err
 nni_socket_pair(int fds[2])
 {
 	int rv;
@@ -28,7 +28,7 @@ nni_socket_pair(int fds[2])
 	return (0);
 }
 #else
-int
+nng_err
 nni_socket_pair(int fds[2])
 {
 	NNI_ARG_UNUSED(fds);
