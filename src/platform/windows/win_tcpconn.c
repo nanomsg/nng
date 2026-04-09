@@ -297,7 +297,7 @@ tcp_self_addr(void *arg)
 }
 
 static const nng_sockaddr *
-tcp_peer_addr(void *arg, const nng_sockaddr **sap)
+tcp_peer_addr(void *arg)
 {
 	nni_tcp_conn *c = arg;
 	return (&c->peername);
