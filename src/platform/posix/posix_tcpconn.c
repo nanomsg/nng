@@ -13,6 +13,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
@@ -55,10 +56,15 @@ tcp_dowrite(nni_tcp_conn *c)
 			continue;
 		}
 
+		size_t count = 0;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
-				iovec[niov].iov_len  = aiov[i].iov_len;
+				size_t len = aiov[i].iov_len;
+				if (len > INT_MAX - count)
+					len = INT_MAX - count;
+				iovec[niov].iov_len  = len;
 				iovec[niov].iov_base = aiov[i].iov_buf;
+				count += len;
 				niov++;
 			}
 		}
@@ -120,10 +126,15 @@ tcp_doread(nni_tcp_conn *c)
 			nni_aio_finish_error(aio, NNG_EINVAL);
 			continue;
 		}
+		size_t count = 0;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
-				iovec[niov].iov_len  = aiov[i].iov_len;
+				size_t len = aiov[i].iov_len;
+				if (len > INT_MAX - count)
+					len = INT_MAX - count;
+				iovec[niov].iov_len  = len;
 				iovec[niov].iov_base = aiov[i].iov_buf;
+				count += len;
 				niov++;
 			}
 		}

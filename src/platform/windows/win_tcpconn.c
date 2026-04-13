@@ -40,10 +40,15 @@ tcp_recv_start(nni_tcp_conn *c)
 		nni_aio_get_iov(aio, &naiov, &aiov);
 
 		// Put the AIOs in Windows form.
+		size_t count = 0;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
+				size_t len = aiov[i].iov_len;
+				if (len > INT_MAX - count)
+					len = INT_MAX - count;
 				iov[niov].buf = aiov[i].iov_buf;
-				iov[niov].len = (ULONG) aiov[i].iov_len;
+				iov[niov].len = (ULONG) len;
+				count += len;
 				niov++;
 			}
 		}
@@ -159,10 +164,15 @@ tcp_send_start(nni_tcp_conn *c)
 		nni_aio_get_iov(aio, &naiov, &aiov);
 
 		// Put the AIOs in Windows form.
+		size_t count = 0;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
+				size_t len = aiov[i].iov_len;
+				if (len > INT_MAX - count)
+					len = INT_MAX - count;
 				iov[niov].buf = aiov[i].iov_buf;
-				iov[niov].len = (ULONG) aiov[i].iov_len;
+				iov[niov].len = (ULONG) len;
+				count += len;
 				niov++;
 			}
 		}
