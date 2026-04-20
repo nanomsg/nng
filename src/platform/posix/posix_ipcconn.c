@@ -13,7 +13,6 @@
 #include "platform/posix/posix_peerid.h"
 #include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <string.h>
@@ -60,9 +59,8 @@ ipc_dowrite(ipc_conn *c)
 		size_t count = 0;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
-				size_t len = aiov[i].iov_len;
-				if (len > INT_MAX - count)
-					len = INT_MAX - count;
+				size_t len = nni_aio_iov_clamp_len(
+				    aiov[i].iov_len, count);
 				iovec[niov].iov_len  = len;
 				iovec[niov].iov_base = aiov[i].iov_buf;
 				count += len;
@@ -130,9 +128,8 @@ ipc_doread(ipc_conn *c)
 		size_t count = 0;
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
-				size_t len = aiov[i].iov_len;
-				if (len > INT_MAX - count)
-					len = INT_MAX - count;
+				size_t len = nni_aio_iov_clamp_len(
+				    aiov[i].iov_len, count);
 				iovec[niov].iov_len  = len;
 				iovec[niov].iov_base = aiov[i].iov_buf;
 				count += len;

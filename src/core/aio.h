@@ -148,6 +148,12 @@ extern size_t nni_aio_iov_advance(nni_aio *, size_t);
 // nni_aio_iov_count returns the number of bytes referenced by the aio iov.
 extern size_t nni_aio_iov_count(nni_aio *);
 
+// nni_aio_iov_clamp_len returns len clamped so that count + len does not
+// exceed INT_MAX, using a subtraction-based check that cannot wrap.
+// Used when building platform iov lists whose cumulative byte count must
+// not exceed INT_MAX (required by XNU sendmsg/readv and Windows WSABUF).
+extern size_t nni_aio_iov_clamp_len(size_t len, size_t count);
+
 extern int nni_aio_set_iov(nni_aio *, unsigned, const nni_iov *);
 
 extern void         nni_aio_set_timeout(nni_aio *, nng_duration);
