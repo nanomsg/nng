@@ -18,10 +18,14 @@
 // Verifies the platform iov clamp handles cumulative iov totals exceeding
 // INT_MAX without triggering EINVAL (macOS/XNU sendmsg).  We build an
 // oversized iov cheaply by referencing a single chunk 8 times; peak memory
-// stays at ~256 MiB.
+// stays at ~256 MiB.  Not meaningful on Windows: named-pipe IPC uses
+// WriteFile (no scatter/gather) and already clamps writes to 16 MiB.
 void
 test_ipc_stream_iov_exceeds_int_max(void)
 {
+#ifndef NNG_PLATFORM_POSIX
+	NUTS_SKIP("Not POSIX");
+#else
 	nng_stream_dialer   *d    = NULL;
 	nng_stream_listener *l    = NULL;
 	char                *url;
@@ -89,6 +93,7 @@ test_ipc_stream_iov_exceeds_int_max(void)
 	nng_stream_free(c1);
 	nng_stream_close(c2);
 	nng_stream_free(c2);
+#endif
 }
 
 NUTS_TESTS = {
