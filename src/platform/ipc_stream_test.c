@@ -55,7 +55,7 @@ test_ipc_stream_iov_exceeds_int_max(void)
 	// 32-bit signed kernel cap while committing only ~256 MiB of memory.
 	const size_t per = ((size_t) INT_MAX / 8) + 1;
 	char        *buf = malloc(per);
-	NUTS_TRUE(buf != NULL);
+	NUTS_ASSERT(buf != NULL);
 	memset(buf, 'A', per);
 
 	nng_iov iov[8];
