@@ -377,7 +377,6 @@ nni_plat_udp_close(nni_plat_udp *udp)
 {
 	nni_plat_udp_stop(udp);
 	nni_posix_pfd_fini(&udp->udp_pfd);
-	(void) close(udp->udp_fd);
 	nni_mtx_fini(&udp->udp_mtx);
 	NNI_FREE_STRUCT(udp);
 }

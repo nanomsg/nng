@@ -180,6 +180,7 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 	}
 
 	(void) close(pfd->fd);
+	pfd->fd = -1;
 }
 
 static void
