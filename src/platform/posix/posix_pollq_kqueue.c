@@ -150,6 +150,7 @@ nni_posix_pfd_fini(nni_posix_pfd *pf)
 	nni_posix_pfd_stop(pf);
 
 	(void) close(pf->fd);
+	pf->fd = -1;
 	nni_cv_fini(&pf->cv);
 }
 

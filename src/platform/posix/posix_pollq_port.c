@@ -117,6 +117,7 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 
 	// We're exclusive now.
 	(void) close(pfd->fd);
+	pfd->fd = -1;
 }
 
 int
