@@ -62,6 +62,24 @@ nni_plat_make_parent_dirs(const char *path)
 	return (0);
 }
 
+static int
+nni_plat_file_put_close_fd(int fd)
+{
+	int rv = nni_plat_errno(errno);
+
+	(void) close(fd);
+	return (rv);
+}
+
+static int
+nni_plat_file_put_close_file(FILE *f)
+{
+	int rv = nni_plat_errno(errno);
+
+	(void) fclose(f);
+	return (rv);
+}
+
 // nni_plat_file_put writes the named file, with the provided data,
 // and the given size.  If the file already exists it is overwritten.
 // The permissions on the file should be limited to read and write
@@ -70,6 +88,7 @@ int
 nni_plat_file_put(const char *name, const void *data, size_t len)
 {
 	FILE *f;
+	int   fd;
 	int   rv = 0;
 
 	// It is possible that the name contains a directory path
@@ -81,8 +100,17 @@ nni_plat_file_put(const char *name, const void *data, size_t len)
 		}
 	}
 
-	if ((f = fopen(name, "wb")) == NULL) {
+	if ((fd = open(name, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
 		return (nni_plat_errno(errno));
+	}
+	if (fchmod(fd, S_IRUSR | S_IWUSR) != 0) {
+		return (nni_plat_file_put_close_fd(fd));
+	}
+	if ((f = fdopen(fd, "wb")) == NULL) {
+		return (nni_plat_file_put_close_fd(fd));
+	}
+	if (ftruncate(fd, 0) != 0) {
+		return (nni_plat_file_put_close_file(f));
 	}
 	if (fwrite(data, 1, len, f) != len) {
 		rv = nni_plat_errno(errno);
