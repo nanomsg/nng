@@ -1,6 +1,7 @@
 name: coverage
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
     paths-ignore: ["docs/**", "**.adoc", "**.md"]
 jobs:
   linux-coverage:
