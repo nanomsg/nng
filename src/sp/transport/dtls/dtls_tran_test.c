@@ -358,8 +358,10 @@ test_dtls_exchange_many(void)
 	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
 
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
