@@ -1,8 +1,7 @@
 name: linux
 on:
-  push:
-    paths-ignore: ["docs/**", "**.adoc", "**.md"]
   pull_request:
+    types: [opened, synchronize, reopened]
     paths-ignore: ["docs/**", "**.adoc", "**.md"]
 jobs:
   build:
