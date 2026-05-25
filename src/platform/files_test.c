@@ -15,18 +15,58 @@
 #include <string.h>
 
 #ifdef NNG_PLATFORM_POSIX
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+static int
+test_file_mode(const char *path, mode_t *modep)
+{
+	int         fd;
+	int         rv;
+	struct stat st;
+
+	if ((fd = open(path, O_RDONLY)) < 0) {
+		return (-1);
+	}
+	rv = fstat(fd, &st);
+	(void) close(fd);
+	if (rv != 0) {
+		return (rv);
+	}
+	*modep = st.st_mode;
+	return (0);
+}
+
+static int
+test_chmod_file(const char *path, mode_t mode)
+{
+	int fd;
+	int rv;
+
+	if ((fd = open(path, O_RDWR)) < 0) {
+		return (-1);
+	}
+	rv = fchmod(fd, mode);
+	(void) close(fd);
+	return (rv);
+}
 #endif
 
 static void
 test_permissions(void)
 {
 #ifdef NNG_PLATFORM_POSIX
-	char  *temp;
-	char  *file;
-	void  *data;
-	size_t n;
+	char        *temp;
+	char        *file;
+	void        *data;
+	size_t       n;
+	mode_t       mode;
+#ifdef __linux__
+	char       *fifo;
+	int         fd;
+#endif
+
 	if (geteuid() == 0) {
 		NUTS_SKIP("Cannot test permissions as root");
 		return;
@@ -35,9 +75,29 @@ test_permissions(void)
 	NUTS_TRUE(temp != NULL);
 	file = nni_file_join(temp, "nng_files_perms_test");
 	NUTS_PASS(nni_file_put(file, "abc", 4));
-	chmod(file, 0);
+	NUTS_PASS(test_file_mode(file, &mode));
+	NUTS_TRUE((mode & (S_IRWXG | S_IRWXO)) == 0);
+	NUTS_PASS(test_chmod_file(file,
+	    S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
+	NUTS_PASS(nni_file_put(file, "def", 4));
+	NUTS_PASS(test_file_mode(file, &mode));
+	NUTS_TRUE((mode & (S_IRWXG | S_IRWXO)) == 0);
+	// Exercise the path where we can open the file but cannot chmod it.
+	NUTS_FAIL(nni_file_put("/dev/null", "x", 2), NNG_EPERM);
+#ifdef __linux__
+	fifo = nni_file_join(temp, "nng_files_perms_fifo");
+	NUTS_TRUE(fifo != NULL);
+	nni_file_delete(fifo);
+	NUTS_TRUE(mkfifo(fifo, S_IRUSR | S_IWUSR) == 0);
+	NUTS_TRUE((fd = open(fifo, O_RDONLY | O_NONBLOCK)) >= 0);
+	NUTS_FAIL(nni_file_put(fifo, "abc", 4), NNG_EINVAL);
+	(void) close(fd);
+	nni_file_delete(fifo);
+	nni_strfree(fifo);
+#endif
+	NUTS_PASS(test_chmod_file(file, 0));
 	NUTS_FAIL(nni_file_get(file, &data, &n), NNG_EPERM);
-	NUTS_FAIL(nni_file_put(file, "def", 4), NNG_EPERM);
+	NUTS_FAIL(nni_file_put(file, "ghi", 4), NNG_EPERM);
 	nni_file_delete(file);
 	nni_strfree(file);
 	nni_strfree(temp);
