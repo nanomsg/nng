@@ -143,7 +143,8 @@ extern size_t nni_aio_iov_count(nni_aio *);
 // INT_MAX, adds *len to *count, and returns true if *len was reduced.
 // Used when building platform iov lists whose cumulative byte count must
 // not exceed INT_MAX (XNU sendmsg/readv, Windows WSABUF); callers should
-// stop appending entries on a true return.
+// stop appending entries on a true return.  Caller must seed *count to
+// a value <= INT_MAX (typically 0).
 extern bool nni_aio_iov_clamp_len(size_t *len, size_t *count);
 
 extern nng_err nni_aio_set_iov(nni_aio *, unsigned, const nni_iov *);
