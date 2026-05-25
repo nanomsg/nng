@@ -10,6 +10,7 @@
 //
 
 #include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -331,6 +332,8 @@ test_ipc_stream_iov_exceeds_int_max(void)
 {
 #ifndef NNG_PLATFORM_POSIX
 	NUTS_SKIP("Not POSIX");
+#elif SIZE_MAX <= UINT32_MAX
+	NUTS_SKIP("Requires 64-bit size_t");
 #else
 	nng_stream_dialer   *d    = NULL;
 	nng_stream_listener *l    = NULL;

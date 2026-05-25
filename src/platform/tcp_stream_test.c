@@ -9,6 +9,7 @@
 //
 
 #include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -428,6 +429,9 @@ test_tcp_listen_activation_bad_arg(void)
 void
 test_tcp_stream_iov_exceeds_int_max(void)
 {
+#if SIZE_MAX <= UINT32_MAX
+	NUTS_SKIP("Requires 64-bit size_t");
+#else
 	nng_stream_dialer   *d    = NULL;
 	nng_stream_listener *l    = NULL;
 	nng_aio             *daio = NULL;
@@ -496,6 +500,7 @@ test_tcp_stream_iov_exceeds_int_max(void)
 	nng_stream_free(c2);
 	nng_stream_dialer_free(d);
 	nng_stream_listener_free(l);
+#endif
 }
 
 void
