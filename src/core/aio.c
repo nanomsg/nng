@@ -742,11 +742,16 @@ nni_aio_iov_count(nni_aio *aio)
 	return (residual);
 }
 
-size_t
-nni_aio_iov_clamp_len(size_t len, size_t count)
+bool
+nni_aio_iov_clamp_len(size_t *len, size_t *count)
 {
-	size_t headroom = (size_t) INT_MAX - count;
-	return (len < headroom ? len : headroom);
+	size_t headroom = (size_t) INT_MAX - *count;
+	bool   clamped  = *len > headroom;
+	if (clamped) {
+		*len = headroom;
+	}
+	*count += *len;
+	return clamped;
 }
 
 size_t
