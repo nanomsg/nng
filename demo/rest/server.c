@@ -207,12 +207,14 @@ rest_handle(nng_http *conn, void *arg, nng_aio *aio)
 	nng_http_get_body(conn, &data, &sz);
 	job->http_aio = aio;
 
-	if ((rv = nng_msg_alloc(&job->msg, sz)) != 0) {
+	if ((rv = nng_msg_alloc(&job->msg, 0)) != 0) {
 		rest_http_fatal(job, rv);
 		return;
 	}
-
-	memcpy(nng_msg_body(job->msg), data, sz);
+	if ((rv = nng_msg_append(job->msg, data, sz)) != 0) {
+		rest_http_fatal(job, rv);
+		return;
+	}
 	nng_aio_set_msg(job->aio, job->msg);
 	job->state = SEND_REQ;
 	nng_ctx_send(job->ctx, job->aio);
