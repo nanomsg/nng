@@ -52,10 +52,14 @@ ipc_dowrite(ipc_conn *c)
 		int           niov;
 		unsigned      i;
 
-		for (niov = 0, i = 0; i < naiov; i++) {
+		size_t count   = 0;
+		bool   clamped = false;
+		for (niov = 0, i = 0; !clamped && i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
-				iovec[niov].iov_len  = aiov[i].iov_len;
 				iovec[niov].iov_base = aiov[i].iov_buf;
+				iovec[niov].iov_len  = aiov[i].iov_len;
+				clamped = nni_aio_iov_clamp_len(
+				    &iovec[niov].iov_len, &count);
 				niov++;
 			}
 		}
@@ -122,10 +126,14 @@ ipc_doread(ipc_conn *c)
 			nni_aio_finish_error(aio, NNG_EINVAL);
 			continue;
 		}
-		for (niov = 0, i = 0; i < naiov; i++) {
+		size_t count   = 0;
+		bool   clamped = false;
+		for (niov = 0, i = 0; !clamped && i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
-				iovec[niov].iov_len  = aiov[i].iov_len;
 				iovec[niov].iov_base = aiov[i].iov_buf;
+				iovec[niov].iov_len  = aiov[i].iov_len;
+				clamped = nni_aio_iov_clamp_len(
+				    &iovec[niov].iov_len, &count);
 				niov++;
 			}
 		}
