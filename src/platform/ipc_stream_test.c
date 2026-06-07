@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -16,7 +16,8 @@
 
 #include <nng/nng.h>
 
-#include <nuts.h>
+#include "../../src/testing/nuts.h"
+
 
 void
 test_ipc_stream(void)
