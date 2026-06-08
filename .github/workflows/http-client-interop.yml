@@ -25,7 +25,7 @@ jobs:
           docker run -d --rm \
             --name nng-httpbin \
             -p 127.0.0.1:18080:8080 \
-            ghcr.io/mccutchen/go-httpbin:v2.23.0
+            ghcr.io/mccutchen/go-httpbin:2.23.0
 
           for i in $(seq 1 30); do
             if curl -fsS http://127.0.0.1:18080/get >/dev/null; then
