@@ -25,6 +25,7 @@ nng_sources_if(NNG_SUPP_HTTP
         http_public.c
         http_schemes.c
         http_server.c)
+nng_test_if(NNG_SUPP_HTTP http_client_test)
 nng_test_if(NNG_SUPP_HTTP http_server_test)
 if (NNG_SUPP_HTTP AND NNG_HTTP_INTEROP_TESTS)
     nng_test(http_client_interop_test)

@@ -88,7 +88,5 @@ else ()
     endmacro(add_nng_test1)
 endif ()
 
-add_nng_test1(httpclient 60 NNG_SUPP_HTTP)
-
 # c++ tests
 add_nng_cpp_test(cplusplus_pair 5)
