@@ -36,12 +36,6 @@
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
 
-# convey.c needs its own link to pthreads.
-if (NOT WIN32)
-    find_package(Threads)
-    set(THRLIB Threads::Threads)
-endif ()
-
 if (NNG_TESTS)
 
     nng_check_sym(nl_langinfo langinfo.h NNG_HAVE_LANGINFO)
@@ -50,16 +44,7 @@ if (NNG_TESTS)
     else ()
         set(TIMEOUT_FACTOR 1)
     endif ()
-    set(NNG_TEST_PORT 13000)
-    macro(add_nng_test NAME TIMEOUT)
-        add_executable(${NAME} ${NAME}.c convey.c)
-        target_link_libraries(${NAME} nng_testing ${THRLIB})
-        add_test(NAME nng.${NAME} COMMAND ${NAME} -v -p TEST_PORT=${NNG_TEST_PORT})
-        math(EXPR TIMEOUT ${TIMEOUT}*${TIMEOUT_FACTOR})
-        set_tests_properties(nng.${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-        math(EXPR NNG_TEST_PORT "${NNG_TEST_PORT}+20")
-    endmacro(add_nng_test)
-
+    set(TEST_PORT 13000)
     macro(add_nng_cpp_test NAME TIMEOUT)
         if (NOT NNG_ENABLE_COVERAGE)
             enable_language(CXX)
@@ -67,28 +52,14 @@ if (NNG_TESTS)
             target_link_libraries(${NAME} nng_testing)
             add_test(NAME nng.${NAME} COMMAND ${NAME} ${TEST_PORT})
             set_tests_properties(nng.${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-            math(EXPR TEST_PORT "${NNG_TEST_PORT}+20")
+            math(EXPR TEST_PORT "${TEST_PORT}+20")
         endif ()
     endmacro(add_nng_cpp_test)
-
-    macro(add_nng_test1 NAME TIMEOUT COND1)
-        if (${COND1})
-            add_nng_test(${NAME} ${TIMEOUT})
-        else ()
-            message(STATUS "Test ${NAME} disabled (unconfigured)")
-        endif ()
-    endmacro()
 
 else ()
-    macro(add_nng_test NAME TIMEOUT)
-    endmacro(add_nng_test)
     macro(add_nng_cpp_test NAME TIMEOUT)
     endmacro(add_nng_cpp_test)
-    macro(add_nng_test1 NAME TIMEOUT COND1)
-    endmacro(add_nng_test1)
 endif ()
-
-add_nng_test1(httpclient 60 NNG_SUPP_HTTP)
 
 # c++ tests
 add_nng_cpp_test(cplusplus_pair 5)

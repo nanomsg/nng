@@ -1,14 +1,4 @@
-== About C-Convey
+== About Tests
 
-The convey framework in this directory was originally started for
-this project, but has since been promoted to a project of it's own.
-Please see it's home page on https://github.com/gdamore/c-convey[github]
-for updates and further information.
-
-The convey framework is licensed under the same terms as the rest
-of this project (MIT style license).
-
-Having said that, we are moving towards a new testing infrastructure.
-See the acutest.h header in this directory, along with testutil.h.
-
-Please do not write new tests in c-convey format.
+Tests in this tree use the nuts.h helpers, which wrap acutest.h and common
+NNG test utilities.

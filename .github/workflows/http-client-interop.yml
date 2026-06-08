@@ -1,0 +1,47 @@
+name: http-client-interop
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+jobs:
+  build:
+    name: http client interop
+    runs-on: [ubuntu-24.04]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Install ninja
+        run: sudo apt-get install ninja-build
+
+      - name: Configure
+        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_HTTP_INTEROP_TESTS=ON ..
+
+      - name: Build
+        run: cd build && ninja
+
+      - name: Start go-httpbin
+        run: |
+          docker run -d --rm \
+            --name nng-httpbin \
+            -p 127.0.0.1:18080:8080 \
+            ghcr.io/mccutchen/go-httpbin:2.23.0
+
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:18080/get >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          docker logs nng-httpbin
+          exit 1
+
+      - name: Test
+        env:
+          NNG_HTTPBIN_URL: http://127.0.0.1:18080
+        run: cd build && ctest -R nng.supplemental.http_client_interop_test --output-on-failure
+
+      - name: Stop go-httpbin
+        if: always()
+        run: docker stop nng-httpbin || true
