@@ -63,6 +63,7 @@ tls_stream_reap(void *arg)
 {
 	tls_stream *ts = arg;
 
+	nni_aio_fini(&ts->conn_aio);
 	nni_tls_fini(&ts->conn);
 	NNI_FREE_STRUCT(ts);
 }
