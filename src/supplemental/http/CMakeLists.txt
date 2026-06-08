@@ -26,3 +26,8 @@ nng_sources_if(NNG_SUPP_HTTP
         http_schemes.c
         http_server.c)
 nng_test_if(NNG_SUPP_HTTP http_server_test)
+if (NNG_SUPP_HTTP AND NNG_HTTP_INTEROP_TESTS)
+    nng_test(http_client_interop_test)
+else ()
+    message(STATUS "Test http_client_interop_test disabled (unconfigured)")
+endif ()

@@ -25,6 +25,7 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 # build these must enable them explicitly.  Some of these switches
 # must be enabled rather early as we use their values later.
 option(NNG_TESTS "Build and run tests." ${NNG_NATIVE_BUILD})
+option(NNG_HTTP_INTEROP_TESTS "Build HTTP client interoperability tests." OFF)
 option(NNG_TOOLS "Build extra tools." ${NNG_NATIVE_BUILD})
 option(NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 option(NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
