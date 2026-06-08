@@ -9,7 +9,7 @@ A clang-format configuration file is included in the project, you should
 use that.  (clang format requires that the style file live at the top of
 of the project tree, not somewhere else, such as this etc directory.)  The
 format rules are probably inappropriate for the test/ subdirectory, as
-the Convey framework has a style all it's own.
+the test helpers have a style all their own.
 
 The style is based loosely on WebKit, but is really modified -- someday
 if clang-format ever learns about BSD KNF I'll probably switch to that.
