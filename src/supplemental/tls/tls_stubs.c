@@ -114,6 +114,17 @@ nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
 	return (NNG_ENOTSUP);
 }
 
+int
+nng_tls_config_psk(nng_tls_config *cfg, const char *identity,
+    const uint8_t *key, size_t key_len)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(identity);
+	NNI_ARG_UNUSED(key);
+	NNI_ARG_UNUSED(key_len);
+	return (NNG_ENOTSUP);
+}
+
 void
 nng_tls_config_hold(nng_tls_config *cfg)
 {
