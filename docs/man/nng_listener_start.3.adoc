@@ -44,7 +44,9 @@ This function returns 0 on success, and non-zero otherwise.
 == ERRORS
 
 [horizontal]
+`NNG_EADDRINUSE`:: The address specified by the listener is already in use.
 `NNG_ECLOSED`:: Parameter _l_ does not refer to an open listener.
+`NNG_EPERM`:: Permission was denied when binding to the address.
 `NNG_ESTATE`:: The listener _l_ is already started.
 
 == SEE ALSO
