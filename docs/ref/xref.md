@@ -284,6 +284,8 @@
 [`nng_http_client_connect`]: ../api/http.md#creating-connections
 [`nng_http_client_set_tls`]: ../api/http.md#client-tls
 [`nng_http_client_get_tls`]: ../api/http.md#client-tls
+[`nng_http_server_set_tls`]: ../api/http.md#server-tls
+[`nng_http_server_get_tls`]: ../api/http.md#server-tls
 [`nng_http_peer_cert`]: ../api/http.md#obtaining-tls-connection-details
 [`nng_http_close`]: ../api/http.md#closing-the-connection
 [`nng_http_reset`]: ../api/http.md#reset-connection-state

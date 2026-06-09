@@ -414,7 +414,7 @@ nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 ```
 
 The {{i:`nng_http_client_get_tls`}} and {{i:`nng_http_client_set_tls`}} functions are used to
-retrieve or change the [TLS configuration][`nng_tls_config`] used when making outbound connections, enabling
+retrieve or change the [`nng_tls_config`] used when making outbound connections, enabling
 {{i:TLS}} as a result.
 
 If TLS has not been previously configured on _client_, then `nng_http_client_get_tls` will return [`NNG_EINVAL`].
@@ -571,6 +571,34 @@ This can only be done while the connection is alive.
 ### Response Body
 
 ## Server API
+
+### Server TLS
+
+```c
+nng_err nng_http_server_get_tls(nng_http_server *server, nng_tls_config **tlsp);
+nng_err nng_http_server_set_tls(nng_http_server *server, nng_tls_config *tls);
+```
+
+The [`nng_http_server_get_tls`] and [`nng_http_server_set_tls`] functions are used to
+retrieve or change the [`nng_tls_config`] used by _server_ when accepting connections,
+enabling {{i:TLS}} as a result.
+
+The `nng_http_server_set_tls` function overwrites any previous TLS configuration.
+It also invalidates any value previously obtained from `nng_http_server_get_tls` unless the application
+obtained a separate hold on that object.
+
+The `nng_http_server_get_tls` function returns the TLS configuration with an extra hold on behalf of
+the caller.
+The caller should release that hold with [`nng_tls_config_free`] when the configuration is no longer needed.
+
+If TLS has not been previously configured on _server_, then `nng_http_server_get_tls` will return
+[`NNG_EINVAL`].
+Both functions will return [`NNG_ENOTSUP`] if either HTTP or TLS is not supported.
+The `nng_http_server_set_tls` function will return [`NNG_EBUSY`] if the server has already been started.
+
+> [!TIP]
+> Server TLS configurations normally need a local certificate and private key, configured with
+> [`nng_tls_config_own_cert`] or [`nng_tls_config_cert_key_file`].
 
 ### Handlers
 
