@@ -9,6 +9,8 @@
 //
 
 #include "core/nng_impl.h"
+
+#include <limits.h>
 #include <string.h>
 
 struct nni_aio_expire_q {
@@ -707,6 +709,19 @@ nni_aio_iov_count(nni_aio *aio)
 		residual += aio->a_iov[i].iov_len;
 	}
 	return (residual);
+}
+
+bool
+nni_aio_iov_clamp_len(size_t *len, size_t *count)
+{
+	NNI_ASSERT(*count <= (size_t) INT_MAX);
+	size_t headroom = (size_t) INT_MAX - *count;
+	bool   clamped  = *len > headroom;
+	if (clamped) {
+		*len = headroom;
+	}
+	*count += *len;
+	return clamped;
 }
 
 size_t
