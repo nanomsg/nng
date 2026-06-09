@@ -88,6 +88,18 @@ const nng_sockaddr *nng_stream_self_addr(nng_stream *s);
 These functions are used to obtain value of the local (self) or remote (peer) addresses
 for the given stream _s_.
 
+## TLS Peer Certificates
+
+```c
+nng_err nng_stream_peer_cert(nng_stream *s, nng_tls_cert **certp);
+```
+
+{{hi:`nng_stream_peer_cert`}}
+The `nng_stream_peer_cert` function obtains the peer TLS certificate for a stream, when one is available.
+The certificate is returned in the location referenced by _certp_ and must be released with
+[`nng_tls_cert_free`] when it is no longer needed.
+See [`nng_tls_cert`] for more information.
+
 ## Getting Stream Options
 
 ```c

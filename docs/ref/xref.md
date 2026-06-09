@@ -120,6 +120,7 @@
 [`nng_stream_close`]: ../api/stream.md#closing-a-stream
 [`nng_stream_stop`]: ../api/stream.md#closing-a-stream
 [`nng_stream_free`]: ../api/stream.md#closing-a-stream
+[`nng_stream_peer_cert`]: ../api/stream.md#tls-peer-certificates
 [`nng_stream_get`]: ../api/stream.md#getting-stream-options
 [`nng_stream_get_bool`]: ../api/stream.md#getting-stream-options
 [`nng_stream_get_int`]: ../api/stream.md#getting-stream-options
@@ -198,10 +199,10 @@
 [`nng_req0_open_raw`]: ../api/sock.md#raw-mode-sockets
 [`nng_sub0_open_raw`]: ../api/sock.md#raw-mode-sockets
 [`nng_surveyor0_open_raw`]: ../api/sock.md#raw-mode-sockets
-[`nng_dialer_set_tls`]: ../TODO.md
-[`nng_dialer_get_tls`]: ../TODO.md
-[`nng_listener_set_tls`]: ../TODO.md
-[`nng_listener_get_tls`]: ../TODO.md
+[`nng_dialer_set_tls`]: ../api/tls.md#using-configuration-objects
+[`nng_dialer_get_tls`]: ../api/tls.md#using-configuration-objects
+[`nng_listener_set_tls`]: ../api/tls.md#using-configuration-objects
+[`nng_listener_get_tls`]: ../api/tls.md#using-configuration-objects
 [`nng_args_parse`]: ../api/args.md#parse-command-line-arguments
 [`nng_aio_finish`]: ../api/aio.md#finishing-an-operation
 [`nng_aio_reset`]: ../api/aio.md#starting-an-operation
@@ -209,8 +210,18 @@
 [`nng_recv`]: ../TODO.md
 [`nng_listener_get_url`]: ../TODO.md
 [`nng_dialer_get_url`]: ../TODO.md
-[`nng_tls_config`]: ../TODO.md
-[`nng_tls_config_own_cert`]: ../TODO.md
+[`nng_tls_config`]: ../api/tls.md#configuration-objects
+[`nng_tls_config_alloc`]: ../api/tls.md#configuration-objects
+[`nng_tls_config_hold`]: ../api/tls.md#configuration-objects
+[`nng_tls_config_free`]: ../api/tls.md#configuration-objects
+[`nng_tls_config_auth_mode`]: ../api/tls.md#authentication-mode
+[`nng_tls_config_ca_chain`]: ../api/tls.md#certificates-and-keys
+[`nng_tls_config_ca_file`]: ../api/tls.md#certificates-and-keys
+[`nng_tls_config_own_cert`]: ../api/tls.md#certificates-and-keys
+[`nng_tls_config_cert_key_file`]: ../api/tls.md#certificates-and-keys
+[`nng_tls_config_server_name`]: ../api/tls.md#certificates-and-keys
+[`nng_tls_config_psk`]: ../api/tls.md#pre-shared-keys
+[`nng_tls_config_version`]: ../api/tls.md#tls-versions
 [`nng_listener_set_security_descriptor`]: ../TODO.md
 [`nng_device`]: ../TODO.md
 [`nng_dial`]: ../TODO.md
@@ -256,6 +267,7 @@
 [`nng_pipe_notify`]: ../api/pipe.md#pipe-notifications
 [`nng_pipe_peer_addr`]: ../api/pipe.md#pipe-socket-addresses
 [`nng_pipe_self_addr`]: ../api/pipe.md#pipe-socket-addresses
+[`nng_pipe_peer_cert`]: ../api/tls.md#peer-certificates
 [`nng_sockaddr`]: ../TODO.md
 [`nng_sockaddr_in`]: ../TODO.md
 [`nng_sockaddr_in6`]: ../TODO.md
@@ -272,6 +284,7 @@
 [`nng_http_client_connect`]: ../api/http.md#creating-connections
 [`nng_http_client_set_tls`]: ../api/http.md#client-tls
 [`nng_http_client_get_tls`]: ../api/http.md#client-tls
+[`nng_http_peer_cert`]: ../api/http.md#obtaining-tls-connection-details
 [`nng_http_close`]: ../api/http.md#closing-the-connection
 [`nng_http_reset`]: ../api/http.md#reset-connection-state
 [`nng_http_get_version`]: ../api/http.md#http-protocol-versions
@@ -380,8 +393,28 @@
 
 <!-- TLS -->
 
-[`nng_tls_cert`]: ../TODO.md
-[`nng_tls_cert`]: ../TODO.md
+[`nng_tls_cert`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_parse_pem`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_parse_der`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_der`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_free`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_subject`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_issuer`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_serial_number`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_subject_cn`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_next_alt`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_not_before`]: ../api/tls.md#peer-certificates
+[`nng_tls_cert_not_after`]: ../api/tls.md#peer-certificates
+[`nng_tls_engine_name`]: ../api/tls.md#tls-engine
+[`nng_tls_engine_description`]: ../api/tls.md#tls-engine
+[`nng_tls_engine_fips_mode`]: ../api/tls.md#tls-engine
+[`NNG_TLS_MODE_CLIENT`]: ../api/tls.md#configuration-objects
+[`NNG_TLS_MODE_SERVER`]: ../api/tls.md#configuration-objects
+[`NNG_TLS_AUTH_MODE_NONE`]: ../api/tls.md#authentication-mode
+[`NNG_TLS_AUTH_MODE_OPTIONAL`]: ../api/tls.md#authentication-mode
+[`NNG_TLS_AUTH_MODE_REQUIRED`]: ../api/tls.md#authentication-mode
+[`NNG_TLS_1_2`]: ../api/tls.md#tls-versions
+[`NNG_TLS_1_3`]: ../api/tls.md#tls-versions
 
 <!-- Macros -->
 
@@ -437,7 +470,7 @@
 [`NNG_UNIT_MILLIS`]: ../api/stats.md#statistic-units
 [`NNG_UNIT_EVENTS`]: ../api/stats.md#statistic-units
 [`NNG_FLAG_NONBLOCK`]: ../TODO.md
-[`NNG_OPT_LISTEN_FD`]: ../api/streams.md#socket-activation
+[`NNG_OPT_LISTEN_FD`]: ../api/stream.md#socket-activation
 [`NNG_OPT_MAXTTL`]: ../api/sock.md#NNG_OPT_MAXTTL
 [`NNG_OPT_RECONNMAXT`]: ../api/sock.md#NNG_OPT_RECONNMAXT
 [`NNG_OPT_RECONNMINT`]: ../api/sock.md#NNG_OPT_RECONNMINT
@@ -452,6 +485,10 @@
 [`NNG_OPT_PEER_ZONEID`]: ../tran/ipc.md#NNG_OPT_PEER_ZONEID
 [`NNG_OPT_SUB_PREF_NEW`]: ../proto/sub.md#protocol-options
 [`NNG_OPT_IPC_PERMISSIONS`]: ../tran/ipc.md#NNG_OPT_IPC_PERMISSIONS
+[`NNG_OPT_TCP_KEEPALIVE`]: ../tran/tcp.md#transport-options
+[`NNG_OPT_TCP_NODELAY`]: ../tran/tcp.md#transport-options
+[`NNG_OPT_TLS_VERIFIED`]: ../tran/tls.md#NNG_OPT_TLS_VERIFIED
+[`NNG_OPT_TLS_PEER_CN`]: ../tran/tls.md#NNG_OPT_TLS_PEER_CN
 [`NNG_SOCKET_INITIALIZER`]: ../api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: ../api/ctx.md#context-structure
 [`NNG_PIPE_INITIALIZER`]: ../api/pipe.md#initialization
@@ -478,7 +515,10 @@
 [ipc]: ../tran/ipc.md
 [inproc]: ../tran/inproc.md
 [tcp]: ../tran/tcp.md
+[TLS]: ../api/tls.md
+[TLS transport]: ../tran/tls.md
 [udp]: ../tran/udp.md
+[streams]: ../api/stream.md
 
 <!-- Concept index -->
 

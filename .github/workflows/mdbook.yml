@@ -27,7 +27,7 @@ jobs:
           mdbook-version: "0.5.2"
 
       - run: cargo install mdbook-indexing
-      - run: mdbook build -d ./book docs
+      - run: mdbook build -d ./docs/book docs
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
