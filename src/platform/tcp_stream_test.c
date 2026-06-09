@@ -25,7 +25,7 @@ void
 test_tcp_stream_iov_exceeds_int_max(void)
 {
 #if SIZE_MAX <= UINT32_MAX
-	NUTS_SKIP("Requires 64-bit size_t");
+	// Requires 64-bit size_t.
 #else
 	nng_stream_dialer   *d    = NULL;
 	nng_stream_listener *l    = NULL;

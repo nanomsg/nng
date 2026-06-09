@@ -25,9 +25,9 @@ void
 test_ipc_stream_iov_exceeds_int_max(void)
 {
 #ifndef NNG_PLATFORM_POSIX
-	NUTS_SKIP("Not POSIX");
+	// Not POSIX: named-pipe IPC uses WriteFile (no scatter/gather).
 #elif SIZE_MAX <= UINT32_MAX
-	NUTS_SKIP("Requires 64-bit size_t");
+	// Requires 64-bit size_t.
 #else
 	nng_stream_dialer   *d    = NULL;
 	nng_stream_listener *l    = NULL;
