@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fe10a458.js";
+            window.path_to_searchindex_js = "../searchindex-8131c6ff.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9d8f23fd.js"></script>
@@ -498,7 +498,7 @@ and must be closed explicitly as needed.</p>
 nng_err nng_http_client_set_tls(nng_http_client *client, nng_tls_config *tls);
 </code></pre>
 <p>The <a name="a032"></a><code>nng_http_client_get_tls</code> and <a name="a033"></a><code>nng_http_client_set_tls</code> functions are used to
-retrieve or change the <a href="../api/tls.html#configuration-objects">TLS configuration</a> used when making outbound connections, enabling
+retrieve or change the <a href="../api/tls.html#configuration-objects"><code>nng_tls_config</code></a> used when making outbound connections, enabling
 <a name="a034"></a>TLS as a result.</p>
 <p>If TLS has not been previously configured on <em>client</em>, then <code>nng_http_client_get_tls</code> will return <a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
 Both functions will return <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if either HTTP or TLS is not supported.</p>
@@ -624,10 +624,32 @@ can be used to determine the local and remote addresses for an HTTP connection.
 This can only be done while the connection is alive.</p>
 <h3 id="response-body"><a class="header" href="#response-body">Response Body</a></h3>
 <h2 id="server-api"><a class="header" href="#server-api">Server API</a></h2>
+<h3 id="server-tls"><a class="header" href="#server-tls">Server TLS</a></h3>
+<pre><code class="language-c">nng_err nng_http_server_get_tls(nng_http_server *server, nng_tls_config **tlsp);
+nng_err nng_http_server_set_tls(nng_http_server *server, nng_tls_config *tls);
+</code></pre>
+<p>The <a href="../api/http.html#server-tls"><code>nng_http_server_get_tls</code></a> and <a href="../api/http.html#server-tls"><code>nng_http_server_set_tls</code></a> functions are used to
+retrieve or change the <a href="../api/tls.html#configuration-objects"><code>nng_tls_config</code></a> used by <em>server</em> when accepting connections,
+enabling <a name="a042"></a>TLS as a result.</p>
+<p>The <code>nng_http_server_set_tls</code> function overwrites any previous TLS configuration.
+It also invalidates any value previously obtained from <code>nng_http_server_get_tls</code> unless the application
+obtained a separate hold on that object.</p>
+<p>The <code>nng_http_server_get_tls</code> function returns the TLS configuration with an extra hold on behalf of
+the caller.
+The caller should release that hold with <a href="../api/tls.html#configuration-objects"><code>nng_tls_config_free</code></a> when the configuration is no longer needed.</p>
+<p>If TLS has not been previously configured on <em>server</em>, then <code>nng_http_server_get_tls</code> will return
+<a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
+Both functions will return <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> if either HTTP or TLS is not supported.
+The <code>nng_http_server_set_tls</code> function will return <a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a> if the server has already been started.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Server TLS configurations normally need a local certificate and private key, configured with
+<a href="../api/tls.html#certificates-and-keys"><code>nng_tls_config_own_cert</code></a> or <a href="../api/tls.html#certificates-and-keys"><code>nng_tls_config_cert_key_file</code></a>.</p>
+</blockquote>
 <h3 id="handlers"><a class="header" href="#handlers">Handlers</a></h3>
 <pre><code class="language-c">typedef struct nng_http_handler nng_http_handler;
 </code></pre>
-<p>An <a name="a042"></a><code>nng_http_handler</code> encapsulates a function used used to handle
+<p>An <a name="a043"></a><code>nng_http_handler</code> encapsulates a function used used to handle
 incoming requests on an HTTP server, routed based on method and URI,
 and the parameters used with that function.</p>
 <p>Every handler has a Request-URI to which it refers, which is determined by the <em>path</em> argument.
@@ -651,7 +673,7 @@ rather than just a single element.
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 </code></pre>
-<p>The <a name="a043"></a><code>nng_http_handler_alloc</code> function allocates a generic handler
+<p>The <a name="a044"></a><code>nng_http_handler_alloc</code> function allocates a generic handler
 which will be used to process requests coming into an HTTP server.
 On success, a pointer to the handler is stored at the located pointed to by <em>hp</em>.</p>
 <p>The handler function is specified by <em>cb</em>.
@@ -681,7 +703,7 @@ sent, if possible, and the connection will be closed.</p>
 <h3 id="freeing-handler"><a class="header" href="#freeing-handler">Freeing Handler</a></h3>
 <pre><code class="language-c">void nng_http_handler_free(nng_http_handler *h);
 </code></pre>
-<p>The <a name="a044"></a><code>nng_http_handler_free</code> function frees an allocated HTTP server handler.
+<p>The <a name="a045"></a><code>nng_http_handler_free</code> function frees an allocated HTTP server handler.
 Normally there is no reason to call this function, because the handler is freed with
 the server it was registered with.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
@@ -694,7 +716,7 @@ when the server itself is deallocated.</p>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path, const char *dirname);
 nng_err nng_http_handler_alloc_file(nng_http_handler **hp, const char *path, const char *filename);
 </code></pre>
-<p>The <a name="a045"></a><code>nng_http_handler_alloc_directory</code> and <a name="a046"></a><code>nng_http_handler_alloc_file</code>
+<p>The <a name="a046"></a><code>nng_http_handler_alloc_directory</code> and <a name="a047"></a><code>nng_http_handler_alloc_file</code>
 create handlers pre-configured to act as static content servers for either a full
 directory at <em>dirname</em>, or the single file at <em>filename</em>. These support the “GET” and “HEAD”
 methods, and the directory variant will dynamically generate <code>index.html</code> content based on
@@ -705,7 +727,7 @@ determined, the content type is set to “application/octet-stream”.</p>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_static(nng_http_handler **hp, const char *path,
         const void *data, size_t size, const char *content_type);
 </code></pre>
-<p>The <a name="a047"></a><code>nng_http_handler_alloc_static</code> function creates a handler that
+<p>The <a name="a048"></a><code>nng_http_handler_alloc_static</code> function creates a handler that
 serves the content located in <em>data</em> (consisting of <em>size</em> bytes) at the URI <em>path</em>.
 The <em>content_type</em> determines the “Content-Type” header. If <code>NULL</code> is specified
 then a value of <code>application/octet-stream</code> is assumed.</p>
@@ -713,7 +735,7 @@ then a value of <code>application/octet-stream</code> is assumed.</p>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *path,
         nng_http_status status, const char *location);
 </code></pre>
-<p>The <a name="a048"></a><code>nng_http_handler_alloc_redirect</code> function creates a handler with
+<p>The <a name="a049"></a><code>nng_http_handler_alloc_redirect</code> function creates a handler with
 a function that simply directions from the URI at <em>path</em> to the given <em>location</em>.</p>
 <p>The HTTP reply it creates will be with <a href="../api/http.html#http-status">status code</a> <em>status</em>,
 which should be a 3XX code such as 301, and a <code>Location:</code> header will contain the URL
@@ -737,7 +759,7 @@ created with <code>POST</code> should use <a href="../api/http.html#NNG_HTTP_STA
 <h3 id="collecting-request-body"><a class="header" href="#collecting-request-body">Collecting Request Body</a></h3>
 <pre><code class="language-c">void nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
 </code></pre>
-<p>The <a name="a049"></a><code>nng_http_handler_collect_body</code> function requests that HTTP server
+<p>The <a name="a050"></a><code>nng_http_handler_collect_body</code> function requests that HTTP server
 framework collect any request body for the request and attach it to the
 connection before calling the callback for the <em>handler</em>.</p>
 <p>Subsequently the data can be retrieved by the handler from the request with the
@@ -775,7 +797,7 @@ create few limitations.</p>
 <pre><code class="language-c">void nng_http_handler_set_data(nng_http_handler *handler, void *data,
     void (*dtor)(void *));
 </code></pre>
-<p>The <a name="a050"></a><code>nng_http_handler_set_data</code> function is used to set the
+<p>The <a name="a051"></a><code>nng_http_handler_set_data</code> function is used to set the
 <em>data</em> argument that will be passed to the callback.</p>
 <p>Additionally, when the handler is deallocated, if <em>dtor</em> is not <code>NULL</code>,
 then it will be called with <em>data</em> as its argument.
@@ -783,7 +805,7 @@ The intended use of this function is deallocate any resources associated with <e
 <h3 id="setting-the-method"><a class="header" href="#setting-the-method">Setting the Method</a></h3>
 <pre><code class="language-c">void nng_http_handler_set_method(nng_http_handler *handler, const char *method);
 </code></pre>
-<p>The <a name="a051"></a><code>nng_http_handler_set_method</code> function sets the <em>method</em> that the
+<p>The <a name="a052"></a><code>nng_http_handler_set_method</code> function sets the <em>method</em> that the
 <em>handler</em> will be called for, such as “GET” or “POST”.
 (By default the “GET” method is handled.)</p>
 <p>If <em>method</em> is <code>NULL</code> the handler will be executed for all methods.
@@ -798,7 +820,7 @@ sent for such requests.</p>
 <h3 id="filtering-by-host"><a class="header" href="#filtering-by-host">Filtering by Host</a></h3>
 <pre><code class="language-c">void nng_http_handler_set_host(nng_http_handler *handler, const char *host);
 </code></pre>
-<p>The <a name="a052"></a><code>nng_http_handler_set_host</code> function is used to limit the scope of the
+<p>The <a name="a053"></a><code>nng_http_handler_set_host</code> function is used to limit the scope of the
 <em>handler</em> so that it will only be called when the specified <em>host</em> matches
 the value of the <code>Host:</code> HTTP header.</p>
 <p>This can be used to create servers with different content for different virtual hosts.</p>
@@ -818,7 +840,7 @@ This can be useful to provide different handling behaviors based on network iden
 <h3 id="handling-an-entire-tree"><a class="header" href="#handling-an-entire-tree">Handling an Entire Tree</a></h3>
 <pre><code class="language-c">void nng_http_handler_set_tree(nng_http_handler *handler);
 </code></pre>
-<p>The <a name="a053"></a><code>nng_http_handler_set_tree</code> function causes the <em>handler</em> to be matched if the request URI sent
+<p>The <a name="a054"></a><code>nng_http_handler_set_tree</code> function causes the <em>handler</em> to be matched if the request URI sent
 by the client is a logical child of the path for <em>handler</em>, and no more specific
 <em>handler</em> has been registered.</p>
 <p>This is useful in cases when the handler would like to examine the entire path
@@ -835,7 +857,7 @@ It can also provide a logical fallback instead of relying on a 404 error code.</
 </code></pre>
 <p>Normally the server will send any attached response, but there are circumstances where
 a response must be sent manually, such as when <a href="../api/http.html#hijacking-connections">hijacking</a> a connection.</p>
-<p>In such a case, <a name="a054"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
+<p>In such a case, <a name="a055"></a><code>nng_http_write_response</code> can be called, which will send the response and any attached data, asynchronously
 using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.</p>
 <p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
 will be reused to receive new requests. For <code>HTTP/1.0</code>, or if the client has requested
