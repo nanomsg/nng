@@ -162,18 +162,6 @@ When set, the stream will send TEXT frames instead of BINARY frames.
 NOTE: NNG does not check the frame data, and will attempt to send whatever the client requests.
 Peers that are compliant with RFC 6455 will discard TEXT frames (and break the connection) if they do not contain valid UTF-8.
 
-// ((`NNG_OPT_TLS_CONFIG`))::
-
-// (`nng_tls_config *`) The underlying TLS
-// configuration object for `wss://` endpoints.
-// A hold is placed on the underlying
-// configuration object before returning it.
-// The caller should release the object with
-// xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
-// longer needs the TLS configuration.
-
-// TIP: Use this option when advanced TLS configuration is required.
-
 `NNG_OPT_TLS_VERIFIED`::
 (`bool`) Whether the remote peer has been properly verified using TLS
 authentication.
@@ -182,6 +170,11 @@ May return incorrect results if peer authentication is disabled.
 `NNG_OPT_TLS_PEER_CN`::
 (string) This read-only option returns the common name of the peer certificate.
 May return incorrect results if peer authentication is disabled.
+
+// TODO(mdbook, #2181): When converting this WebSocket page, restore TLS
+// configuration coverage for `wss://` endpoints. Include how
+// `nng_tls_config` is supplied or obtained through the relevant
+// dialer/listener and stream APIs, and document hold/reference behavior.
 
 // We should also look at a hook mechanism for listeners. Probably this could
 // look like NNG_OPT_WS_LISTEN_HOOK_FUNC which would take a function pointer
@@ -192,7 +185,6 @@ May return incorrect results if peer authentication is disabled.
 == SEE ALSO
 
 [.text-left]
-xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
 xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
 xref:nng_sockaddr_in.5.adoc[nng_sockaddr_in(5)],
 xref:nng_sockaddr_in6.5.adoc[nng_sockaddr_in6(5)],
