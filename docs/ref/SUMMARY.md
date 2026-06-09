@@ -36,6 +36,8 @@
 
   - [Streams](./api/stream.md)
 
+  - [TLS](./api/tls.md)
+
   - [HTTP](./api/http.md)
 
   - [Miscellaneous](./api/misc.md)
@@ -61,6 +63,8 @@
 
   - [Intra-Process Transport](./tran/inproc.md)
   - [Inter-Process Transport](./tran/ipc.md)
+  - [TCP Transport](./tran/tcp.md)
+  - [TLS Transport](./tran/tls.md)
   - [BSD Socket (Experimental)](./tran/socket.md)
   - [UDP Transport (Experimental)](./tran/udp.md)
 
