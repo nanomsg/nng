@@ -250,7 +250,7 @@ extern void *(*nni_malloc_fn)(size_t);
 
 extern void *(*nni_calloc_fn)(size_t, size_t);
 
-extern void (*nni_free_fn)(void *);
+extern void (*nni_free_fn)(void *, size_t);
 
 // nni_alloc allocates memory.  In most cases this can just be malloc().
 // However, you may provide a different allocator, for example it is

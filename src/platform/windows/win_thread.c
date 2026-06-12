@@ -51,8 +51,7 @@ nni_zalloc(size_t sz)
 void
 nni_free(void *b, size_t z)
 {
-	NNI_ARG_UNUSED(z);
-	nni_free_fn(b);
+	nni_free_fn(b, z);
 }
 
 void

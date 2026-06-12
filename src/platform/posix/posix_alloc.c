@@ -29,8 +29,7 @@ nni_zalloc(size_t sz)
 void
 nni_free(void *ptr, size_t size)
 {
-	NNI_ARG_UNUSED(size);
-	nni_free_fn(ptr);
+	nni_free_fn(ptr, size);
 }
 
 #endif // NNG_PLATFORM_POSIX
