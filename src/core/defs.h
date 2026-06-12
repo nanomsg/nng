@@ -246,11 +246,11 @@ typedef nni_type nni_opt_type;
 #endif // defined(__BYTE_ORDER)
 #endif // defined() endianness
 
-extern void* (*nni_malloc_fn)(size_t);
+extern void *(*nni_malloc_fn)(size_t);
 
-extern void* (*nni_calloc_fn)(size_t, size_t);
+extern void *(*nni_calloc_fn)(size_t, size_t);
 
-extern void (*nni_free_fn)(void*);
+extern void (*nni_free_fn)(void *);
 
 // nni_alloc allocates memory.  In most cases this can just be malloc().
 // However, you may provide a different allocator, for example it is

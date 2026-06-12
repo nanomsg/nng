@@ -50,7 +50,8 @@ nng_socket_id(nng_socket s)
 }
 
 int
-nng_alloc_set(void* (*malloc_fn)(size_t), void* (*calloc_fn)(size_t, size_t), void (*free_fn)(void*))
+nng_alloc_set(void *(*malloc_fn)(size_t), void *(*calloc_fn)(size_t, size_t),
+    void (*free_fn)(void *))
 {
 	return (nni_alloc_set(malloc_fn, calloc_fn, free_fn));
 }
