@@ -75,15 +75,16 @@ nng_init(const nng_init_params *params)
 	if (params == NULL) {
 		params = &zero;
 	}
-	init_params.malloc_fn = params->malloc_fn
-			? params->malloc_fn
-			: malloc;
-	init_params.calloc_fn = params->calloc_fn
-			? params->calloc_fn
-			: calloc;
-	init_params.free_fn = params->free_fn
-			? params->free_fn
-			: free;
+	if (((params->malloc_fn != NULL) || (params->calloc_fn != NULL) ||
+			(params->free_fn != NULL)) &&
+		!((params->malloc_fn != NULL) && (params->calloc_fn != NULL) &&
+			(params->free_fn != NULL))) {
+		nni_atomic_flag_reset(&init_busy);
+		return (NNG_EINVAL);
+	}
+	init_params.malloc_fn = params->malloc_fn ? params->malloc_fn : malloc;
+	init_params.calloc_fn = params->calloc_fn ? params->calloc_fn : calloc;
+	init_params.free_fn   = params->free_fn   ? params->free_fn   : free;
 	init_params.num_task_threads     = params->num_task_threads
 	        ? params->num_task_threads
 	        : NNG_NUM_TASKQ_THREADS;
