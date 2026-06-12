@@ -107,6 +107,8 @@ nng_init(const nng_init_params *params)
 	    ? params->num_resolver_threads
 	    : NNG_RESOLV_CONCURRENCY;
 
+	init_count++;
+
 	if (
 		((rv = nni_alloc_set(init_params.malloc_fn, init_params.calloc_fn, init_params.free_fn)) != 0) ||
 		((rv = nni_plat_init(&init_params)) != 0) ||
@@ -124,7 +126,6 @@ nng_init(const nng_init_params *params)
 
 	nng_log_notice(
 	    "NNG-INIT", "NNG library version %s initialized", nng_version());
-	init_count++;
 	nni_atomic_flag_reset(&init_busy);
 	return (rv);
 }
