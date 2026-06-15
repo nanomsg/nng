@@ -1329,7 +1329,7 @@ typedef struct {
 
 	void *(*malloc_fn)(size_t);
 	void *(*calloc_fn)(size_t, size_t);
-	void (*free_fn)(void *);
+	void (*free_fn)(void *, size_t);
 } nng_init_params;
 
 // Initialize the library.  May be called multiple times, but
