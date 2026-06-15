@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "alloc.h"
 #include "defs.h"
 #include "nng_impl.h"
 #include "platform.h"
@@ -74,6 +75,16 @@ nng_init(const nng_init_params *params)
 	if (params == NULL) {
 		params = &zero;
 	}
+	if (((params->malloc_fn != NULL) || (params->calloc_fn != NULL) ||
+			(params->free_fn != NULL)) &&
+		!((params->malloc_fn != NULL) && (params->calloc_fn != NULL) &&
+			(params->free_fn != NULL))) {
+		nni_atomic_flag_reset(&init_busy);
+		return (NNG_EINVAL);
+	}
+	init_params.malloc_fn = params->malloc_fn ? params->malloc_fn : nni_malloc_fn;
+	init_params.calloc_fn = params->calloc_fn ? params->calloc_fn : nni_calloc_fn;
+	init_params.free_fn   = params->free_fn   ? params->free_fn   : nni_free_fn;
 	init_params.num_task_threads     = params->num_task_threads
 	        ? params->num_task_threads
 	        : NNG_NUM_TASKQ_THREADS;
@@ -96,7 +107,11 @@ nng_init(const nng_init_params *params)
 	    ? params->num_resolver_threads
 	    : NNG_RESOLV_CONCURRENCY;
 
-	if (((rv = nni_plat_init(&init_params)) != 0) ||
+	init_count++;
+
+	if (
+		((rv = nni_alloc_set(init_params.malloc_fn, init_params.calloc_fn, init_params.free_fn)) != 0) ||
+		((rv = nni_plat_init(&init_params)) != 0) ||
 	    ((rv = nni_taskq_sys_init(&init_params)) != 0) ||
 	    ((rv = nni_reap_sys_init()) != 0) ||
 	    ((rv = nni_aio_sys_init(&init_params)) != 0) ||
@@ -111,7 +126,6 @@ nng_init(const nng_init_params *params)
 
 	nng_log_notice(
 	    "NNG-INIT", "NNG library version %s initialized", nng_version());
-	init_count++;
 	nni_atomic_flag_reset(&init_busy);
 	return (rv);
 }
