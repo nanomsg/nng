@@ -82,9 +82,9 @@ nng_init(const nng_init_params *params)
 		nni_atomic_flag_reset(&init_busy);
 		return (NNG_EINVAL);
 	}
-	init_params.malloc_fn = params->malloc_fn ? params->malloc_fn : malloc;
-	init_params.calloc_fn = params->calloc_fn ? params->calloc_fn : calloc;
-	init_params.free_fn   = params->free_fn   ? params->free_fn   : free;
+	init_params.malloc_fn = params->malloc_fn ? params->malloc_fn : nni_malloc_fn;
+	init_params.calloc_fn = params->calloc_fn ? params->calloc_fn : nni_calloc_fn;
+	init_params.free_fn   = params->free_fn   ? params->free_fn   : nni_free_fn;
 	init_params.num_task_threads     = params->num_task_threads
 	        ? params->num_task_threads
 	        : NNG_NUM_TASKQ_THREADS;
