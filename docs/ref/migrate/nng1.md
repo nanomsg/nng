@@ -98,6 +98,17 @@ as any further operations on the object will fail immediately with `NNG_ESTOPPED
 
 The error codes `NNG_EAMBIGUOUS` and `NNG_ENOARG` have been removed.
 
+## Device Socket Ownership
+
+The [`nng_device`] and [`nng_device_aio`] functions now take ownership of the sockets
+when the device starts successfully. Applications must not use those sockets again,
+including closing them with [`nng_socket_close`]. Attempts to use a socket owned by a
+device fail with `NNG_EBUSY`.
+
+The device closes the sockets when the device stops. If an application needs to stop a
+device under program control, it should use [`nng_device_aio`], cancel the aio, and wait
+for it to complete.
+
 ## AIO Provider API changes
 
 The API used for providers for asynchronous I/O operations has changed slightly.

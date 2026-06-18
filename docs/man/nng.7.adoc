@@ -125,7 +125,7 @@ For example, xref:nng_req.7.adoc[_req_] sockets will automatically
 match a reply to a request, and resend requests periodically if no reply
 was received.
 
-There are situations, such as with xref:nng_device.3.adoc[proxies],
+There are situations, such as with proxies,
 where it is desirable to bypass these semantics and simply pass messages
 to and from the socket with no extra semantic handling.
 This is possible using _raw_ mode sockets.
@@ -137,7 +137,7 @@ and is responsible for supplying any additional socket semantics.
 Typically this means that the application will need to inspect message
 headers on incoming messages, and supply them on outgoing messages.
 
-TIP: The xref:nng_device.3.adoc[`nng_device()`] function only works with raw mode
+TIP: The `nng_device()` function only works with raw mode
 sockets, but as it only forwards the messages, no additional application
 processing is needed.
 

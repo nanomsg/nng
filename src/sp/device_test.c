@@ -57,10 +57,10 @@ test_device_incompatible(void)
 void
 test_device_forward(void)
 {
-	nng_thread     *thr;
 	struct dev_data d;
 	nng_duration    tmo = SECOND(1);
 	nng_socket      e1, e2;
+	nng_aio        *aio;
 
 	// will be a pair variant
 	NUTS_PASS(nng_pair1_open_raw(&d.s1));
@@ -74,28 +74,30 @@ test_device_forward(void)
 
 	NUTS_MARRY(e1, d.s1);
 	NUTS_MARRY(e2, d.s2);
-	NUTS_PASS(nng_thread_create(&thr, dodev, &d));
-	nng_thread_set_name(thr, "device thread");
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_device_aio(aio, d.s1, d.s2);
 
 	NUTS_SEND(e1, "ping");
 	NUTS_RECV(e2, "ping");
 	NUTS_SEND(e2, "pong");
 	NUTS_RECV(e1, "pong");
 
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	nng_aio_free(aio);
+
 	NUTS_CLOSE(e1);
 	NUTS_CLOSE(e2);
-	NUTS_CLOSE(d.s1);
-	NUTS_CLOSE(d.s2);
-	nng_thread_destroy(thr);
 }
 
 void
 test_device_reflect(void)
 {
-	nng_thread     *thr;
 	struct dev_data d;
 	nng_duration    tmo = SECOND(1);
 	nng_socket      e1;
+	nng_aio        *aio;
 
 	// will be a pair variant
 	NUTS_PASS(nng_pair1_open_raw(&d.s1));
@@ -105,17 +107,20 @@ test_device_reflect(void)
 	NUTS_PASS(nng_socket_set_ms(e1, NNG_OPT_SENDTIMEO, tmo));
 
 	NUTS_MARRY(e1, d.s1);
-	NUTS_PASS(nng_thread_create(&thr, dodev, &d));
-	nng_thread_set_name(thr, "device thread");
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_device_aio(aio, d.s1, d.s2);
 
 	NUTS_SEND(e1, "ping");
 	NUTS_RECV(e1, "ping");
 	NUTS_SEND(e1, "pong");
 	NUTS_RECV(e1, "pong");
 
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	nng_aio_free(aio);
+
 	NUTS_CLOSE(e1);
-	NUTS_CLOSE(d.s1);
-	nng_thread_destroy(thr);
 }
 
 void
@@ -141,6 +146,8 @@ test_device_aio(void)
 	// cancellation of this aio is how we stop it
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_device_aio(aio, d.s1, d.s2);
+	NUTS_FAIL(nng_socket_close(d.s1), NNG_EBUSY);
+	NUTS_FAIL(nng_socket_close(d.s2), NNG_EBUSY);
 
 	NUTS_SEND(e1, "ping");
 	NUTS_RECV(e2, "ping");
@@ -154,8 +161,6 @@ test_device_aio(void)
 
 	NUTS_CLOSE(e1);
 	NUTS_CLOSE(e2);
-	NUTS_CLOSE(d.s1);
-	NUTS_CLOSE(d.s2);
 }
 
 NUTS_TESTS = {

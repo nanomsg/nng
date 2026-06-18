@@ -100,6 +100,7 @@ struct nni_socket {
 
 	bool s_closing; // Socket is closing
 	bool s_closed;  // Socket closed, protected by global lock
+	bool s_device;  // Socket is owned by a device, protected by global lock
 
 	nni_mtx          s_pipe_cbs_mtx;
 	nni_sock_pipe_cb s_pipe_cbs[NNG_PIPE_EV_NUM];
@@ -343,6 +344,8 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 	if ((s = nni_id_get(&sock_ids, id)) != NULL) {
 		if (s->s_closed) {
 			rv = NNG_ECLOSED;
+		} else if (s->s_device) {
+			rv = NNG_EBUSY;
 		} else {
 			s->s_ref++;
 			*sockp = s;
@@ -352,6 +355,47 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 	}
 	nni_mtx_unlock(&sock_lk);
 
+	return (rv);
+}
+
+nng_err
+nni_sock_device_hold(nni_sock *s1, nni_sock *s2)
+{
+	nng_err rv = NNG_OK;
+
+	if ((s1 == NULL) || (s2 == NULL)) {
+		return (NNG_EINVAL);
+	}
+
+	if (((uintptr_t) s1 < (uintptr_t) s2) || (s2 == s1)) {
+		nni_mtx_lock(&s1->s_mx);
+		if (s2 != s1) {
+			nni_mtx_lock(&s2->s_mx);
+		}
+	} else {
+		nni_mtx_lock(&s2->s_mx);
+		nni_mtx_lock(&s1->s_mx);
+	}
+
+	nni_mtx_lock(&sock_lk);
+	if (s1->s_closed || s2->s_closed || s1->s_closing || s2->s_closing) {
+		rv = NNG_ECLOSED;
+	} else if (s1->s_device || s2->s_device) {
+		rv = NNG_EBUSY;
+	} else {
+		s1->s_device = true;
+		s1->s_ref++;
+		if (s2 != s1) {
+			s2->s_device = true;
+			s2->s_ref++;
+		}
+	}
+	nni_mtx_unlock(&sock_lk);
+
+	nni_mtx_unlock(&s1->s_mx);
+	if (s2 != s1) {
+		nni_mtx_unlock(&s2->s_mx);
+	}
 	return (rv);
 }
 
@@ -521,6 +565,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	s->s_pipe_ops  = *proto->proto_pipe_ops;
 	s->s_closed    = false;
 	s->s_closing   = false;
+	s->s_device    = false;
 
 	if (proto->proto_ctx_ops != NULL) {
 		s->s_ctx_ops = *proto->proto_ctx_ops;
@@ -610,8 +655,8 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 // further access to the socket will function, and any threads blocked
 // in entry points will be woken (and the functions they are blocked
 // in will return NNG_ECLOSED.)
-int
-nni_sock_shutdown(nni_sock *sock)
+static int
+sock_shutdown(nni_sock *sock, bool device)
 {
 	nni_pipe     *pipe;
 	nni_dialer   *d;
@@ -620,6 +665,14 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_ctx      *nctx;
 
 	nni_mtx_lock(&sock->s_mx);
+	nni_mtx_lock(&sock_lk);
+	if (sock->s_device && !device) {
+		nni_mtx_unlock(&sock_lk);
+		nni_mtx_unlock(&sock->s_mx);
+		return (NNG_EBUSY);
+	}
+	nni_mtx_unlock(&sock_lk);
+
 	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
@@ -696,16 +749,27 @@ nni_sock_shutdown(nni_sock *sock)
 	return (0);
 }
 
+int
+nni_sock_shutdown(nni_sock *sock)
+{
+	return (sock_shutdown(sock, false));
+}
+
 // nni_sock_close shuts down the socket, then releases any resources
 // associated with it.  It is a programmer error to reference the
 // socket after this function is called, as the pointer may reference
 // invalid memory or other objects.
-void
-nni_sock_close(nni_sock *s)
+static int
+sock_close(nni_sock *s, bool device)
 {
+	int rv;
+
 	// Shutdown everything if not already done.  This operation
 	// is idempotent.
-	nni_sock_shutdown(s);
+	if (((rv = sock_shutdown(s, device)) != 0) && (rv != NNG_ECLOSED)) {
+		nni_sock_rele(s);
+		return (rv);
+	}
 
 	nni_mtx_lock(&sock_lk);
 	if (s->s_closed) {
@@ -713,9 +777,10 @@ nni_sock_close(nni_sock *s)
 		// is drop our reference count.
 		nni_mtx_unlock(&sock_lk);
 		nni_sock_rele(s);
-		return;
+		return (0);
 	}
 	s->s_closed = true;
+	s->s_device = false;
 	nni_id_remove(&sock_ids, s->s_id);
 
 	// We might have been removed from the list already, e.g. by
@@ -738,6 +803,19 @@ nni_sock_close(nni_sock *s)
 	nni_mtx_unlock(&s->s_mx);
 
 	sock_destroy(s);
+	return (0);
+}
+
+int
+nni_sock_close(nni_sock *s)
+{
+	return (sock_close(s, false));
+}
+
+void
+nni_sock_close_device(nni_sock *s)
+{
+	(void) sock_close(s, true);
 }
 
 void
@@ -756,7 +834,7 @@ nni_sock_closeall(void)
 		s->s_ref++;
 		nni_list_node_remove(&s->s_node);
 		nni_mtx_unlock(&sock_lk);
-		nni_sock_close(s);
+		nni_sock_close_device(s);
 	}
 }
 

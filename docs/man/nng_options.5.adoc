@@ -157,7 +157,7 @@ NOTE: Some transports may have further message size restrictions.
 (`int`)
 (((time-to-live)))
 This is the maximum number of times a message may traverse across
-a xref:nng_device.3.adoc[`nng_device()`] forwarders.
+a `nng_device()` forwarder.
 The intention here is to prevent ((forwarding loops)) in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.
 +

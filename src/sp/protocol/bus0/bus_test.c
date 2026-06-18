@@ -92,7 +92,11 @@ test_bus_device(void)
 	NUTS_RECV(s2, "three");
 	NUTS_RECV(s3, "two");
 
-	NUTS_CLOSE(s1);
+	NUTS_FAIL(nng_socket_close(s1), NNG_EBUSY);
+	nng_aio_cancel(aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s3);
 

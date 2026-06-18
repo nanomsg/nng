@@ -76,7 +76,6 @@ The following function family is used to create forwarders or relayers
 that route messages from one socket to another.
 
 |===
-|xref:nng_device.3.adoc[nng_device()]|message forwarding device
 |===
 
 === HTTP Support
