@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8131c6ff.js";
+            window.path_to_searchindex_js = "../searchindex-25cb884d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-9d8f23fd.js"></script>
+        <script src="../toc-d664ef41.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -262,7 +262,7 @@ the protocol specific processing must be performed by the application.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>Most applications do not need to use raw sockets.
-The notable exception is when using <a href="../TODO.html"><code>nng_device</code></a>, which requires raw sockets.
+The notable exception is when using <a href="../api/device.html"><code>nng_device</code></a>, which requires raw sockets.
 To obtain asynchronous behavior, consider using <a href="../api/ctx.html">contexts</a> instead.</p>
 </blockquote>
 <p>The following functions open a socket in <a href="../api/sock.html#raw-mode-sockets">raw</a> mode:</p>
@@ -435,7 +435,7 @@ for an underlying transport, the option should be set on the <a href="../TODO.ht
 <tr><th>Option</th><th>Type</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="../TODO.html"><code>nng_device</code></a> device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.</td></tr>
+<tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="../api/device.html"><code>nng_device</code></a> device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.</td></tr>
 <tr><td><code>NNG_OPT_RECONNMAXT</code><a name="NNG_OPT_RECONNMAXT"></a></td><td><code>nng_duration</code></td><td>Maximum time <a href="../TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
 <tr><td><code>NNG_OPT_RECONNMINT</code><a name="NNG_OPT_RECONNMINT"></a></td><td><code>nng_duration</code></td><td>Minimum time <a href="../TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
 <tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer locally when receiving.</td></tr>
@@ -609,7 +609,7 @@ int main(int argc, char **argv) {
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../api/ctx.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../api/device.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -623,7 +623,7 @@ int main(int argc, char **argv) {
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../api/ctx.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../api/device.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

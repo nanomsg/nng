@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Intra-Process Transport - NNG Reference Manual (DRAFT)</title>
+        <title>Devices - NNG Reference Manual (DRAFT)</title>
 
 
         <!-- Custom HTML head -->
@@ -174,38 +174,80 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="inproc-transport"><a class="header" href="#inproc-transport">INPROC Transport</a></h1>
-<p>The <a name="a001"></a><em>inproc</em> transport<a name="a002"></a><a name="a003"></a>intra-process provides communication support between
-sockets within the same process.
-This may be used as an alternative
-to slower transports when data must be moved within the same process.</p>
-<p>This transport tries hard to avoid copying data, and thus is very
-light-weight.</p>
-<h2 id="url-format"><a class="header" href="#url-format">URL Format</a></h2>
-<p>This transport uses URLs using the scheme <a name="a004"></a><code>inproc://</code>, followed by
-an arbitrary string of text, terminated by a <code>NUL</code> byte.</p>
-<p>Multiple URLs can be used within the
-same application, and they will not interfere with one another.</p>
-<p>Two applications may also use the same URL without interfering with each other.
-They will however be unable to communicate with each other using that URL.</p>
-<h2 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h2>
-<p>When using an <a href="../TODO.html"><code>nng_sockaddr</code></a> structure, the actual structure is of type <a href="../TODO.html"><code>nng_sockaddr_inproc</code></a>.</p>
-<h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
-<p>The <em>inproc</em> transport has no special options.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>While <em>inproc</em> accepts the option <a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> for
-compatibility, the value of the option is ignored with no enforcement.
-As <em>inproc</em> peers are in the same address space, they are implicitly
-trusted, so the protection afforded by <code>NNG_OPT_RECVMAXSZ</code> is unnecessary.</p>
-</blockquote>
-<h2 id="mixing-implementations"><a class="header" href="#mixing-implementations">Mixing Implementations</a></h2>
-<p>When mixing the <em>NNG</em> library with other implementations of these
-protocols in the same process (such as the <a href="https://github.com/nanomsg/mangos">mangos</a>
-or <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> implementations), it will not be possible to utilize
-the <em>inproc</em> transport to communicate across this boundary.</p>
-<p>This limitation also extends to using different instances of the <em>NNG</em>
-library within the same process.</p>
+                        <h1 id="devices"><a class="header" href="#devices">Devices</a></h1>
+<pre><code class="language-c">nng_err nng_device(nng_socket s1, nng_socket s2);
+void nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2);
+</code></pre>
+<p><a name="a001"></a>
+<a name="a002"></a>
+<a name="a003"></a>
+The <a name="a004"></a><code>nng_device</code> and <a name="a005"></a><code>nng_device_aio</code> functions forward messages
+received from one <a href="../api/sock.html">socket</a> to another socket.
+Devices are useful for creating forwarders, proxies, and other network
+topologies that improve scalability, reliability, or isolation.</p>
+<p>Only <a href="../api/sock.html#raw-mode-sockets">raw</a> mode sockets may be used with devices.
+These sockets are created using the <code>_raw</code> forms of the protocol constructors,
+such as <a href="../api/sock.html#raw-mode-sockets"><code>nng_req0_open_raw</code></a>.</p>
+<h2 id="socket-ownership"><a class="header" href="#socket-ownership">Socket Ownership</a></h2>
+<p>When either function starts the device successfully, ownership of the sockets
+transfers to the device.
+The application must not use those sockets again, including closing them with
+<a href="../api/sock.html#closing-a-socket"><code>nng_socket_close</code></a>.
+Attempts to use sockets that are owned by a device fail with <a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
+<p>The device closes the sockets when it stops.
+If the device fails to start, ownership remains with the caller, and the caller
+is still responsible for closing the sockets.</p>
+<h2 id="synchronous-devices"><a class="header" href="#synchronous-devices">Synchronous Devices</a></h2>
+<p>The <a name="a006"></a><code>nng_device</code> function starts the device and blocks until the device
+stops.
+This form is intended for simple applications where the device is the primary
+control flow.</p>
+<p>Applications that need to stop a device under program control should use
+<a href="../api/device.html#asynchronous-devices"><code>nng_device_aio</code></a> instead.</p>
+<h2 id="asynchronous-devices"><a class="header" href="#asynchronous-devices">Asynchronous Devices</a></h2>
+<p>The <a name="a007"></a><code>nng_device_aio</code> function starts the device in the background and
+returns immediately.
+To stop the device, cancel the <em>aio</em> with <a href="../api/aio.html#cancellation"><code>nng_aio_cancel</code></a> and then wait for
+the operation to complete with <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.
+The sockets are closed by the device during teardown.</p>
+<h2 id="reflectors"><a class="header" href="#reflectors">Reflectors</a></h2>
+<p>One socket may be initialized with <a href="../api/sock.html#socket-structure"><code>NNG_SOCKET_INITIALIZER</code></a> instead of being
+opened.
+In this case the other socket must be valid, bidirectional, raw, and able to
+peer with itself, such as <a href="../proto/pair.html">PAIR</a> or <a href="../proto/bus.html">BUS</a>.
+The device acts as a reflector, returning messages received from the valid
+socket back to that socket.</p>
+<h2 id="forwarders"><a class="header" href="#forwarders">Forwarders</a></h2>
+<p>When both sockets are valid, they must be compatible peers.
+For example, <a href="../proto/pub.html">PUB</a> may be paired with <a href="../proto/sub.html">SUB</a>, and <a href="../proto/bus.html">BUS</a> may be
+paired with <a href="../proto/bus.html">BUS</a>.</p>
+<p>When a protocol has routing information in the message header, the device uses
+the raw protocol processing to preserve and update that information as needed.
+This lets replies and responses return through forwarders to the correct
+requesters or surveyors.</p>
+<p>Devices operate in best-effort delivery mode.
+If a received message cannot be accepted by the other socket because of
+backpressure or another error, the message is discarded.</p>
+<h2 id="return-values"><a class="header" href="#return-values">Return Values</a></h2>
+<p>The <a name="a008"></a><code>nng_device</code> function returns <code>NNG_OK</code> if the device stops without an
+error, or an error code if the device fails.
+The <a name="a009"></a><code>nng_device_aio</code> function reports its result through the supplied
+<em>aio</em>.</p>
+<h2 id="errors"><a class="header" href="#errors">Errors</a></h2>
+<dl>
+<dt id="nng_ebusy"><a class="header" href="#nng_ebusy"><a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a></a></dt>
+<dd>At least one socket is already owned by a device.</dd>
+<dt id="nng_eclosed"><a class="header" href="#nng_eclosed"><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a></a></dt>
+<dd>At least one socket is not open.</dd>
+<dt id="nng_einval"><a class="header" href="#nng_einval"><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a></a></dt>
+<dd>The sockets are not compatible, are not raw, or are both invalid.</dd>
+<dt id="nng_enomem"><a class="header" href="#nng_enomem"><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a></a></dt>
+<dd>Insufficient memory is available.</dd>
+</dl>
+<h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
+<p><a href="../api/aio.html">Asynchronous I/O</a>,
+<a href="../api/sock.html">Sockets</a>,
+<a href="../proto/index.html">Protocols</a></p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -223,11 +265,11 @@ library within the same process.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../tran/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../api/sock.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../tran/ipc.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../api/ctx.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -237,11 +279,11 @@ library within the same process.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../tran/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../api/sock.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../tran/ipc.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../api/ctx.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
