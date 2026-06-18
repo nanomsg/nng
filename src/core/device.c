@@ -84,8 +84,13 @@ device_cancel(nni_aio *aio, void *arg, nng_err rv)
 
 	nni_mtx_lock(&device_mtx);
 	if (d->user == aio) {
+		if (d->rv == 0) {
+			d->rv = rv;
+		}
 		for (int i = 0; i < d->num_paths; i++) {
-			nni_aio_abort(&d->paths[i].aio, rv);
+			if (d->paths[i].state != NNI_DEVICE_STATE_FINI) {
+				nni_aio_abort(&d->paths[i].aio, rv);
+			}
 		}
 	}
 	nni_mtx_unlock(&device_mtx);
@@ -100,7 +105,15 @@ device_cb(void *arg)
 	int          next;
 
 	nni_mtx_lock(&device_mtx);
-	if ((rv = nni_aio_result(&p->aio)) != 0) {
+	rv = nni_aio_result(&p->aio);
+	if (rv == 0) {
+		rv = d->rv;
+		if ((rv != 0) && (p->state == NNI_DEVICE_STATE_RECV)) {
+			nni_msg_free(nni_aio_get_msg(&p->aio));
+			nni_aio_set_msg(&p->aio, NULL);
+		}
+	}
+	if (rv != 0) {
 		if (p->state == NNI_DEVICE_STATE_SEND) {
 			nni_msg_free(nni_aio_get_msg(&p->aio));
 			nni_aio_set_msg(&p->aio, NULL);
@@ -111,7 +124,8 @@ device_cb(void *arg)
 			d->rv = rv;
 		}
 		for (int i = 0; i < d->num_paths; i++) {
-			if (p != &d->paths[i]) {
+			if ((p != &d->paths[i]) &&
+			    (d->paths[i].state != NNI_DEVICE_STATE_FINI)) {
 				nni_aio_abort(&d->paths[i].aio, rv);
 			}
 		}
