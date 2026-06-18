@@ -12,6 +12,8 @@
 
   - [Sockets](./api/sock.md)
 
+  - [Devices](./api/device.md)
+
   - [Contexts](./api/ctx.md)
 
   - [Pipes](./api/pipe.md)

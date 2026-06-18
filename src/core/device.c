@@ -36,6 +36,7 @@ struct device_data_s {
 	int           num_paths;
 	int           running;
 	int           rv;
+	bool          owned;
 	device_path   paths[2];
 	nni_reap_node reap;
 };
@@ -59,9 +60,20 @@ device_fini(void *arg)
 	for (int i = 0; i < d->num_paths; i++) {
 		nni_aio_fini(&d->paths[i].aio);
 	}
-	nni_sock_rele(d->paths[0].src);
-	nni_sock_rele(d->paths[0].dst);
 	NNI_FREE_STRUCT(d);
+}
+
+static void
+device_close(device_data *d)
+{
+	if (!d->owned) {
+		return;
+	}
+	d->owned = false;
+	nni_sock_close_device(d->paths[0].src);
+	if (d->paths[0].dst != d->paths[0].src) {
+		nni_sock_close_device(d->paths[0].dst);
+	}
 }
 
 static void
@@ -72,8 +84,13 @@ device_cancel(nni_aio *aio, void *arg, nng_err rv)
 
 	nni_mtx_lock(&device_mtx);
 	if (d->user == aio) {
+		if (d->rv == 0) {
+			d->rv = rv;
+		}
 		for (int i = 0; i < d->num_paths; i++) {
-			nni_aio_abort(&d->paths[i].aio, rv);
+			if (d->paths[i].state != NNI_DEVICE_STATE_FINI) {
+				nni_aio_abort(&d->paths[i].aio, rv);
+			}
 		}
 	}
 	nni_mtx_unlock(&device_mtx);
@@ -85,9 +102,18 @@ device_cb(void *arg)
 	device_path *p = arg;
 	device_data *d = p->d;
 	int          rv;
+	int          next;
 
-	if ((rv = nni_aio_result(&p->aio)) != 0) {
-		nni_mtx_lock(&device_mtx);
+	nni_mtx_lock(&device_mtx);
+	rv = nni_aio_result(&p->aio);
+	if (rv == 0) {
+		rv = d->rv;
+		if ((rv != 0) && (p->state == NNI_DEVICE_STATE_RECV)) {
+			nni_msg_free(nni_aio_get_msg(&p->aio));
+			nni_aio_set_msg(&p->aio, NULL);
+		}
+	}
+	if (rv != 0) {
 		if (p->state == NNI_DEVICE_STATE_SEND) {
 			nni_msg_free(nni_aio_get_msg(&p->aio));
 			nni_aio_set_msg(&p->aio, NULL);
@@ -98,35 +124,53 @@ device_cb(void *arg)
 			d->rv = rv;
 		}
 		for (int i = 0; i < d->num_paths; i++) {
-			if (p != &d->paths[i]) {
+			if ((p != &d->paths[i]) &&
+			    (d->paths[i].state != NNI_DEVICE_STATE_FINI)) {
 				nni_aio_abort(&d->paths[i].aio, rv);
 			}
 		}
 		if (d->running == 0) {
-			if (d->user != NULL) {
-				nni_aio_finish_error(d->user, d->rv);
-				d->user = NULL;
-			}
+			nni_aio *user = d->user;
+			nng_err  err  = d->rv;
 
+			d->user = NULL;
+			nni_mtx_unlock(&device_mtx);
+			device_close(d);
+			if (user != NULL) {
+				nni_aio_finish_error(user, err);
+			}
 			nni_reap(&device_reap, d);
+			return;
 		}
 		nni_mtx_unlock(&device_mtx);
 		return;
 	}
 
+	next = p->state;
 	switch (p->state) {
 	case NNI_DEVICE_STATE_INIT:
 		break;
 	case NNI_DEVICE_STATE_SEND:
 		p->state = NNI_DEVICE_STATE_RECV;
-		nni_sock_recv(p->src, &p->aio);
 		break;
 	case NNI_DEVICE_STATE_RECV:
 		// Leave the message where it is.
 		p->state = NNI_DEVICE_STATE_SEND;
-		nni_sock_send(p->dst, &p->aio);
 		break;
 	case NNI_DEVICE_STATE_FINI:
+		break;
+	}
+	nni_aio_reset(&p->aio);
+	nni_mtx_unlock(&device_mtx);
+
+	switch (next) {
+	case NNI_DEVICE_STATE_SEND:
+		nni_sock_recv(p->src, &p->aio);
+		break;
+	case NNI_DEVICE_STATE_RECV:
+		nni_sock_send(p->dst, &p->aio);
+		break;
+	default:
 		break;
 	}
 }
@@ -198,10 +242,8 @@ device_init(device_data **dp, nni_sock *s1, nni_sock *s2)
 
 		nni_aio_set_timeout(&p->aio, NNG_DURATION_INFINITE);
 	}
-	nni_sock_hold(d->paths[0].src);
-	nni_sock_hold(d->paths[0].dst);
-
 	d->num_paths = num_paths;
+	d->owned     = false;
 	*dp          = d;
 	return (0);
 }
@@ -234,7 +276,15 @@ nni_device(nni_aio *aio, nni_sock *s1, nni_sock *s2)
 	if (!nni_aio_start(aio, device_cancel, d)) {
 		nni_mtx_unlock(&device_mtx);
 		nni_reap(&device_reap, d);
+		return;
 	}
+	if ((rv = nni_sock_device_hold(d->paths[0].src, d->paths[0].dst)) != 0) {
+		nni_mtx_unlock(&device_mtx);
+		nni_aio_finish_error(aio, rv);
+		nni_reap(&device_reap, d);
+		return;
+	}
+	d->owned = true;
 	device_start(d, aio);
 	nni_mtx_unlock(&device_mtx);
 }

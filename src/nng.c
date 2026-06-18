@@ -37,8 +37,7 @@ nng_socket_close(nng_socket s)
 		return (rv);
 	}
 	// No release -- close releases it.
-	nni_sock_close(sock);
-	return (0);
+	return (nni_sock_close(sock));
 }
 
 int

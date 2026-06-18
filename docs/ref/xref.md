@@ -223,7 +223,8 @@
 [`nng_tls_config_psk`]: ../api/tls.md#pre-shared-keys
 [`nng_tls_config_version`]: ../api/tls.md#tls-versions
 [`nng_listener_set_security_descriptor`]: ../TODO.md
-[`nng_device`]: ../TODO.md
+[`nng_device`]: ../api/device.md
+[`nng_device_aio`]: ../api/device.md#asynchronous-devices
 [`nng_dial`]: ../TODO.md
 [`nng_dialer_create`]: ../TODO.md
 [`nng_dialer_close`]: ../TODO.md
@@ -500,6 +501,7 @@
 
 <!-- Protocols -->
 
+[protocol]: ../proto/index.md
 [bus]: ../proto/bus.md
 [pair]: ../proto/pair.md
 [pub]: ../proto/pub.md
@@ -530,7 +532,7 @@
 [pipe]: ../api/pipe.md
 [socket]: ../api/sock.md
 [context]: ../api/ctx.md
-[device]: ../TODO.md
+[device]: ../api/device.md
 [dialer]: ../TODO.md
 [listener]: ../TODO.md
 [message]: ../api/msg.md
