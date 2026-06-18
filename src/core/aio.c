@@ -372,8 +372,6 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	if (!aio->a_sleep) {
 		aio->a_expire_ok = false;
 	}
-	aio->a_result = NNG_OK;
-
 	// Do this outside the lock.  Note that we don't strictly need to have
 	// done this for the failure cases below (the task framework does the
 	// right thing if the task isn't prepped), but those should be uncommon
@@ -403,6 +401,7 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 		nni_task_dispatch(&aio->a_task);
 		return (false);
 	}
+	aio->a_result = NNG_OK;
 	if (timeout) {
 		aio->a_sleep     = false;
 		aio->a_result    = aio->a_expire_ok ? NNG_OK : NNG_ETIMEDOUT;
