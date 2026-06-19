@@ -440,7 +440,6 @@ nni_plat_fini(void)
 	nni_win_udp_sysfini();
 	nni_win_tcp_sysfini();
 	nni_win_io_sysfini();
-	WSACleanup();
 	if (hKernel32 != NULL) {
 		FreeLibrary(hKernel32);
 	}
