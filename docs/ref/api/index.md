@@ -23,6 +23,7 @@ include the `nng/nng.h` header file like so:
 - [Memory](memory.md)
 - [Time](time.md)
 - [URLs](url.md)
+- [Socket Addresses](sockaddr.md)
 - [Synchronization](synch.md)
 - [Threads](thr.md)
 - [Logging](logging.md)

@@ -269,12 +269,16 @@
 [`nng_pipe_peer_addr`]: ../api/pipe.md#pipe-socket-addresses
 [`nng_pipe_self_addr`]: ../api/pipe.md#pipe-socket-addresses
 [`nng_pipe_peer_cert`]: ../api/tls.md#peer-certificates
-[`nng_sockaddr`]: ../TODO.md
-[`nng_sockaddr_in`]: ../TODO.md
-[`nng_sockaddr_in6`]: ../TODO.md
-[`nng_sockaddr_ipc`]: ../TODO.md
-[`nng_sockaddr_inproc`]: ../TODO.md
-[`nng_sockaddr_abstract`]: ../TODO.md
+[`nng_sockaddr`]: ../api/sockaddr.md#socket-addresses
+[`nng_sockaddr_in`]: ../api/sockaddr.md#ipv4-addresses
+[`nng_sockaddr_in6`]: ../api/sockaddr.md#ipv6-addresses
+[`nng_sockaddr_ipc`]: ../api/sockaddr.md#ipc-addresses
+[`nng_sockaddr_inproc`]: ../api/sockaddr.md#in-process-addresses
+[`nng_sockaddr_abstract`]: ../api/sockaddr.md#abstract-addresses
+[`nng_str_sockaddr`]: ../api/sockaddr.md#format-an-address
+[`nng_sockaddr_port`]: ../api/sockaddr.md#address-port
+[`nng_sockaddr_equal`]: ../api/sockaddr.md#compare-addresses
+[`nng_sockaddr_hash`]: ../api/sockaddr.md#hash-an-address
 
 <!-- HTTP -->
 
@@ -523,6 +527,7 @@
 [TLS transport]: ../tran/tls.md
 [udp]: ../tran/udp.md
 [streams]: ../api/stream.md
+[id map]: ../api/id_map.md
 
 <!-- Concept index -->
 
