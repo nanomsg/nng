@@ -18,6 +18,10 @@
 #include <malloc.h>
 #include <stdio.h>
 
+#ifndef NNG_UDP_SOCK_BUFSZ
+#define NNG_UDP_SOCK_BUFSZ (1024 * 1024)
+#endif
+
 struct nni_plat_udp {
 	SOCKET           s;
 	nni_mtx          lk;
@@ -32,6 +36,26 @@ struct nni_plat_udp {
 
 static void udp_recv_cb(nni_win_io *, int, size_t);
 static void udp_recv_start(nni_plat_udp *);
+
+static void
+nni_win_udp_set_bufsize(SOCKET s)
+{
+#if defined(SOL_SOCKET) && \
+    (defined(SO_RCVBUF) || defined(SO_SNDBUF))
+	int bufsz = NNG_UDP_SOCK_BUFSZ;
+
+#ifdef SO_RCVBUF
+	(void) setsockopt(
+	    s, SOL_SOCKET, SO_RCVBUF, (char *) &bufsz, sizeof(bufsz));
+#endif
+#ifdef SO_SNDBUF
+	(void) setsockopt(
+	    s, SOL_SOCKET, SO_SNDBUF, (char *) &bufsz, sizeof(bufsz));
+#endif
+#else
+	NNI_ARG_UNUSED(s);
+#endif
+}
 
 // nni_plat_udp_open initializes a UDP socket, binding to the local
 // address specified specified.
@@ -61,6 +85,7 @@ nni_plat_udp_open(nni_plat_udp **udpp, const nni_sockaddr *sa)
 		nni_plat_udp_close(u);
 		return (rv);
 	}
+	nni_win_udp_set_bufsize(u->s);
 	// Don't inherit the handle (CLOEXEC really).
 	SetHandleInformation((HANDLE) u->s, HANDLE_FLAG_INHERIT, 0);
 	no = 0;
