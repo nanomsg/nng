@@ -1411,6 +1411,24 @@ nng_pipe_get_ms(nng_pipe id, const char *n, nng_duration *v)
 }
 
 nng_err
+nng_pipe_get_scheme(nng_pipe p, const char **schemep)
+{
+	nng_err     rv;
+	nni_pipe   *pipe;
+	const char *scheme;
+
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
+		return (rv);
+	}
+	scheme = nni_pipe_scheme(pipe);
+	if (scheme != NULL) {
+		*schemep = scheme;
+	}
+	nni_pipe_rele(pipe);
+	return (scheme == NULL ? NNG_ENOTSUP : NNG_OK);
+}
+
+nng_err
 nng_pipe_peer_cert(nng_pipe p, nng_tls_cert **certp)
 {
 	nng_err   rv;

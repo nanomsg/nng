@@ -377,6 +377,18 @@ nni_pipe_dialer_id(nni_pipe *p)
 	return (p->p_dialer ? nni_dialer_id(p->p_dialer) : 0);
 }
 
+const char *
+nni_pipe_scheme(nni_pipe *p)
+{
+	if (p->p_dialer != NULL) {
+		return (nng_url_scheme(nni_dialer_url(p->p_dialer)));
+	}
+	if (p->p_listener != NULL) {
+		return (nng_url_scheme(nni_listener_url(p->p_listener)));
+	}
+	return (NULL);
+}
+
 void
 nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
 {

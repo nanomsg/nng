@@ -149,6 +149,31 @@ fini_cases(struct testcase *push, struct testcase *pull)
 }
 
 static void
+start_cases(struct testcase *push, struct testcase *pull)
+{
+	NUTS_PASS(nng_listener_start(pull->l, 0));
+	NUTS_PASS(nng_dialer_start(push->d, 0));
+	NUTS_TRUE(expect(pull, &pull->add_pre, 1));
+	NUTS_TRUE(expect(pull, &pull->add_post, 1));
+	NUTS_TRUE(expect(pull, &pull->rem, 0));
+	NUTS_TRUE(expect(pull, &pull->err, 0));
+	NUTS_TRUE(expect(push, &push->add_pre, 1));
+	NUTS_TRUE(expect(push, &push->add_post, 1));
+	NUTS_TRUE(expect(push, &push->rem, 0));
+	NUTS_TRUE(expect(push, &push->err, 0));
+}
+
+static void
+check_pipe_scheme(nng_pipe p, const char *want)
+{
+	const char *scheme;
+
+	scheme = NULL;
+	NUTS_PASS(nng_pipe_get_scheme(p, &scheme));
+	NUTS_MATCH(scheme, want);
+}
+
+static void
 test_pipe_msg_id(void)
 {
 	static struct testcase push = { 0 };
@@ -160,18 +185,7 @@ test_pipe_msg_id(void)
 
 	init_cases(addr, &push, &pull);
 
-	NUTS_PASS(nng_listener_start(pull.l, 0));
-	NUTS_PASS(nng_dialer_start(push.d, 0));
-	NUTS_TRUE(expect(&pull, &pull.add_pre, 1));
-	NUTS_TRUE(expect(&pull, &pull.add_post, 1));
-	NUTS_TRUE(expect(&pull, &pull.add_pre, 1));
-	NUTS_TRUE(expect(&pull, &pull.add_post, 1));
-	NUTS_TRUE(expect(&pull, &pull.rem, 0));
-	NUTS_TRUE(expect(&pull, &pull.err, 0));
-	NUTS_TRUE(expect(&push, &push.add_pre, 1));
-	NUTS_TRUE(expect(&push, &push.add_post, 1));
-	NUTS_TRUE(expect(&push, &push.rem, 0));
-	NUTS_TRUE(expect(&push, &push.err, 0));
+	start_cases(&push, &pull);
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_msg_append(msg, "hello", strlen("hello") + 1));
@@ -183,6 +197,46 @@ test_pipe_msg_id(void)
 	NUTS_MATCH(nng_msg_body(msg), "hello");
 	NUTS_TRUE(nng_pipe_id(nng_msg_get_pipe(msg)) == nng_pipe_id(pull.p));
 	nng_msg_free(msg);
+	fini_cases(&push, &pull);
+}
+
+static void
+test_pipe_dialer_scheme(void)
+{
+	struct testcase push = { 0 };
+	struct testcase pull = { 0 };
+	char           *addr;
+
+	NUTS_ADDR(addr, "inproc");
+
+	init_cases(addr, &push, &pull);
+	start_cases(&push, &pull);
+
+	NUTS_TRUE(
+	    nng_dialer_id(nng_pipe_dialer(push.p)) == nng_dialer_id(push.d));
+	NUTS_TRUE(nng_listener_id(nng_pipe_listener(push.p)) < 0);
+	check_pipe_scheme(push.p, "inproc");
+
+	fini_cases(&push, &pull);
+}
+
+static void
+test_pipe_listener_scheme(void)
+{
+	struct testcase push = { 0 };
+	struct testcase pull = { 0 };
+	char           *addr;
+
+	NUTS_ADDR(addr, "inproc");
+
+	init_cases(addr, &push, &pull);
+	start_cases(&push, &pull);
+
+	NUTS_TRUE(nng_dialer_id(nng_pipe_dialer(pull.p)) < 0);
+	NUTS_TRUE(nng_listener_id(nng_pipe_listener(pull.p)) ==
+	    nng_listener_id(pull.l));
+	check_pipe_scheme(pull.p, "inproc");
+
 	fini_cases(&push, &pull);
 }
 
@@ -270,15 +324,19 @@ test_pipe_invalid(void)
 {
 	nng_pipe     p;
 	nng_sockaddr sa;
+	const char  *scheme;
 	p.id = 45; // a random invalid pipe
 
 	NUTS_FAIL(nng_pipe_peer_addr(p, &sa), NNG_ENOENT);
 	NUTS_FAIL(nng_pipe_self_addr(p, &sa), NNG_ENOENT);
+	NUTS_FAIL(nng_pipe_get_scheme(p, &scheme), NNG_ENOENT);
 	NUTS_FAIL(nng_pipe_close(p), NNG_ENOENT);
 }
 
 NUTS_TESTS = {
 	{ "pipe msg id", test_pipe_msg_id },
+	{ "pipe dialer scheme", test_pipe_dialer_scheme },
+	{ "pipe listener scheme", test_pipe_listener_scheme },
 	{ "pipe reconnect", test_pipe_reconnect },
 	{ "pipe reject", test_pipe_reject },
 	{ "pipe invalid", test_pipe_invalid },
