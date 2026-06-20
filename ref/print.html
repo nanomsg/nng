@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-25cb884d.js";
+            window.path_to_searchindex_js = "searchindex-b67bc03e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d664ef41.js"></script>
+        <script src="toc-141194f1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -347,6 +347,7 @@ include the <code>nng/nng.h</code> header file like so:</p>
 <li><a href="#memory">Memory</a></li>
 <li><a href="#time">Time</a></li>
 <li><a href="#urls">URLs</a></li>
+<li><a href="#socket-addresses">Socket Addresses</a></li>
 <li><a href="#synchronization-primitives">Synchronization</a></li>
 <li><a href="api/thr.html">Threads</a></li>
 <li><a href="#logging">Logging</a></li>
@@ -1466,7 +1467,7 @@ and might not be further usable as a result. (Other functions will result in <a 
 <pre><code class="language-c">nng_err nng_pipe_peer_addr(nng_pipe p, nng_sockaddr *sap);
 nng_err nng_pipe_self_addr(nng_pipe p, nng_sockaddr *sap);
 </code></pre>
-<p>The <a href="TODO.html"><code>nng_sockaddr</code></a> for the local (self) or remote (peer) of the pipe is available using these
+<p>The <a href="#socket-addresses"><code>nng_sockaddr</code></a> for the local (self) or remote (peer) of the pipe is available using these
 functions. The associated address will be stored in the location pointed to by <em>sap</em>.</p>
 <h2 id="pipe-options"><a class="header" href="#pipe-options">Pipe Options</a></h2>
 <pre><code class="language-c">nng_err nng_pipe_get_bool(nng_pipe p, const char *opt, bool *valp);
@@ -1805,6 +1806,237 @@ a URL with a new port. This will have no effect if the URL already has a non-zer
 <h2 id="see-also-2"><a class="header" href="#see-also-2">See Also</a></h2>
 <p>More information about Universal Resource Locators can be found in
 <a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="socket-addresses"><a class="header" href="#socket-addresses">Socket Addresses</a></h1>
+<pre><code class="language-c">typedef union nng_sockaddr {
+    uint16_t              s_family;
+    nng_sockaddr_ipc      s_ipc;
+    nng_sockaddr_inproc   s_inproc;
+    nng_sockaddr_in6      s_in6;
+    nng_sockaddr_in       s_in;
+    nng_sockaddr_abstract s_abstract;
+    nng_sockaddr_storage  s_storage;
+} nng_sockaddr;
+
+enum nng_sockaddr_family {
+    NNG_AF_UNSPEC   = 0,
+    NNG_AF_INPROC   = 1,
+    NNG_AF_IPC      = 2,
+    NNG_AF_INET     = 3,
+    NNG_AF_INET6    = 4,
+    NNG_AF_ABSTRACT = 5
+};
+</code></pre>
+<p>An <a name="a001"></a><code>nng_sockaddr</code> is used to represent the addresses used by
+underlying transports, such as TCP/IP addresses, IPC paths, and in-process
+names.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The name <code>sockaddr</code> reflects its similarity to POSIX <code>struct sockaddr</code>.
+In <em>NNG</em>, these addresses are more closely associated with <a href="#pipes"><code>nng_pipe</code></a>
+and transport endpoints than with <a href="#sockets">sockets</a>.</p>
+</blockquote>
+<p>The structure is a union with different members for different address types.
+Every member structure has a <code>uint16_t</code> address family as its first field.
+This overlaps the <code>s_family</code> member of the union and indicates which member
+is valid.</p>
+<p>The <code>s_storage</code> member reserves enough space to store any supported socket
+address family. Applications should use the family-specific members instead
+when inspecting an address.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Family</th><th>Member</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NNG_AF_UNSPEC</code></td><td>none</td><td>Invalid or unspecified address.</td></tr>
+<tr><td><code>NNG_AF_INPROC</code></td><td><code>s_inproc</code></td><td>In-process address for the <a href="#inproc-transport">inproc transport</a>.</td></tr>
+<tr><td><code>NNG_AF_IPC</code></td><td><code>s_ipc</code></td><td>Inter-process address for the <a href="#ipc-transport">IPC transport</a>.</td></tr>
+<tr><td><code>NNG_AF_INET</code></td><td><code>s_in</code></td><td>IPv4 address used by TCP, TLS, UDP, and similar IP transports.</td></tr>
+<tr><td><code>NNG_AF_INET6</code></td><td><code>s_in6</code></td><td>IPv6 address used by TCP, TLS, UDP, and similar IP transports.</td></tr>
+<tr><td><code>NNG_AF_ABSTRACT</code></td><td><code>s_abstract</code></td><td>Abstract socket address for the <a href="#ipc-transport">IPC transport</a> on Linux systems.</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="in-process-addresses"><a class="header" href="#in-process-addresses">In-Process Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_inproc {
+    uint16_t sa_family;
+    char     sa_name[NNG_MAXADDRLEN];
+} nng_sockaddr_inproc;
+</code></pre>
+<p>An <a name="a002"></a><code>nng_sockaddr_inproc</code> is the flavor of <a href="#socket-addresses"><code>nng_sockaddr</code></a> used for
+addresses associated with the <a href="#inproc-transport">inproc transport</a>.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_INPROC</code>.</p>
+<p>The <code>sa_name</code> field holds an arbitrary <code>NUL</code>-terminated C string identifying
+the in-process address. No other restrictions are placed on the name.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Applications should use the <code>sizeof</code> operator instead of hard coding the
+size of the <code>sa_name</code> member. The size is guaranteed to be at least 128.</p>
+</blockquote>
+<h2 id="ipc-addresses"><a class="header" href="#ipc-addresses">IPC Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_path nng_sockaddr_ipc;
+
+struct nng_sockaddr_path {
+    uint16_t sa_family;
+    char     sa_path[NNG_MAXADDRLEN];
+};
+</code></pre>
+<p>An <a name="a003"></a><code>nng_sockaddr_ipc</code> is the flavor of <a href="#socket-addresses"><code>nng_sockaddr</code></a> used for
+traditional path-based addresses associated with the <a href="#ipc-transport">IPC transport</a>.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_IPC</code>.</p>
+<p>The <code>sa_path</code> field holds a <code>NUL</code>-terminated C string corresponding to the
+path where the IPC socket is located. On systems using UNIX domain sockets,
+this is a path in the file system. On Windows systems, this is the named pipe
+path without the leading <code>\\.\pipe\</code> portion, which <em>NNG</em> adds automatically.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Applications should use the <code>sizeof</code> operator instead of hard coding the
+size of the <code>sa_path</code> member. The size is guaranteed to be at least 128,
+but paths of this length may not be supported on every system.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Portable applications should restrict themselves to path names of not more
+than 90 bytes. Many systems have limits around 100 bytes, and some systems
+have smaller limits.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If compatibility with legacy <em>nanomsg</em> applications is required, path names
+must not be longer than 122 bytes, including the final <code>NUL</code> byte.
+Legacy versions of <em>nanomsg</em> cannot express URLs longer than 128 bytes,
+including the <code>ipc://</code> prefix.</p>
+</blockquote>
+<h2 id="abstract-addresses"><a class="header" href="#abstract-addresses">Abstract Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_abstract {
+    uint16_t sa_family;
+    uint16_t sa_len;
+    uint8_t  sa_name[107];
+} nng_sockaddr_abstract;
+</code></pre>
+<p>An <a name="a004"></a><code>nng_sockaddr_abstract</code> is the flavor of <a href="#socket-addresses"><code>nng_sockaddr</code></a> used to
+represent abstract socket addresses for the <a href="#ipc-transport">IPC transport</a>.</p>
+<p>Abstract sockets are only supported on Linux at present. These sockets have
+a name that is an array of bytes, with no special meaning. Abstract sockets
+have no presence in the file system, do not honor file permissions, and are
+automatically cleaned up by the operating system when no longer in use.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_ABSTRACT</code>.</p>
+<p>The <code>sa_len</code> field gives the number of bytes stored in <code>sa_name</code>.</p>
+<p>The <code>sa_name</code> field holds the name of the abstract socket. The bytes of the
+name can have any value, including zero.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The name does not include the leading <code>NUL</code> byte used on Linux to
+distinguish abstract socket addresses from path-based socket addresses.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Abstract sockets are Linux-specific. They are not recommended for portable
+applications.</p>
+</blockquote>
+<h2 id="ipv4-addresses"><a class="header" href="#ipv4-addresses">IPv4 Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_in {
+    uint16_t sa_family;
+    uint16_t sa_port;
+    uint32_t sa_addr;
+} nng_sockaddr_in;
+</code></pre>
+<p>An <a name="a005"></a><code>nng_sockaddr_in</code> is the flavor of <a href="#socket-addresses"><code>nng_sockaddr</code></a> used for IPv4
+addresses, including the IP address and TCP or UDP port number. IPv6 addresses
+use <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a> instead.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_INET</code>.</p>
+<p>The <code>sa_port</code> field holds the TCP or UDP port number in network byte order.
+A zero value indicates that no specific port number is specified.</p>
+<p>The <code>sa_addr</code> field holds the IPv4 address in network byte order.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>The <code>sa_port</code> and <code>sa_addr</code> fields are in network byte order to facilitate
+their use with system APIs such as <code>inet_ntop</code>.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>Although this structure appears similar to BSD <code>sockaddr_in</code>, it is not
+the same type, and the two may not be used interchangeably.</p>
+</blockquote>
+<h2 id="ipv6-addresses"><a class="header" href="#ipv6-addresses">IPv6 Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_in6 {
+    uint16_t sa_family;
+    uint16_t sa_port;
+    uint32_t sa_scope;
+    uint8_t  sa_addr[16];
+} nng_sockaddr_in6;
+</code></pre>
+<p>An <a name="a006"></a><code>nng_sockaddr_in6</code> is the flavor of <a href="#socket-addresses"><code>nng_sockaddr</code></a> used for IPv6
+addresses, including the IP address and TCP or UDP port number. IPv4 addresses
+use <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> instead.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_INET6</code>.</p>
+<p>The <code>sa_port</code> field holds the TCP or UDP port number in network byte order.
+A zero value indicates that no specific port number is specified.</p>
+<p>The <code>sa_scope</code> field is the IPv6 scope identifier. It is typically used with
+link-local addresses to identify a specific interface. The details of this
+value are platform-specific.</p>
+<p>The <code>sa_addr</code> field holds the IPv6 address in network byte order.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>The <code>sa_port</code> and <code>sa_addr</code> fields are in network byte order to facilitate
+their use with system APIs such as <code>inet_ntop</code>.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>Although this structure appears similar to BSD <code>sockaddr_in6</code>, it is not
+the same type, and the two may not be used interchangeably.</p>
+</blockquote>
+<h2 id="format-an-address"><a class="header" href="#format-an-address">Format an Address</a></h2>
+<pre><code class="language-c">#define NNG_MAXADDRSTRLEN (NNG_MAXADDRLEN + 16)
+
+const char *nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz);
+</code></pre>
+<p>The <a name="a007"></a><code>nng_str_sockaddr</code> function provides a displayable representation
+of the socket address <em>sa</em> in the buffer <em>buf</em>, which has room for <em>bufsz</em>
+bytes including the terminating <code>NUL</code> byte. The function returns <em>buf</em>.</p>
+<p>If the buffer is too small, the result will be truncated. A buffer of
+<code>NNG_MAXADDRSTRLEN</code> bytes is sufficient to avoid typical truncations, although
+very long IPC paths can still be truncated.</p>
+<p>As long as <em>bufsz</em> is greater than zero, the result will be <code>NUL</code>-terminated.</p>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>The string produced by <code>nng_str_sockaddr</code> is intended for display in logs
+and diagnostics. It is not intended to be parsed, and the display format
+may change without notice.</p>
+</blockquote>
+<h2 id="address-port"><a class="header" href="#address-port">Address Port</a></h2>
+<pre><code class="language-c">uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
+</code></pre>
+<p>The <a name="a008"></a><code>nng_sockaddr_port</code> function returns the port number associated with
+<em>sa</em> in native byte order.</p>
+<p>For <code>NNG_AF_INET</code> and <code>NNG_AF_INET6</code> addresses, this is the TCP or UDP port.
+For address families that do not have a port number, zero is returned.</p>
+<h2 id="compare-addresses"><a class="header" href="#compare-addresses">Compare Addresses</a></h2>
+<pre><code class="language-c">bool nng_sockaddr_equal(const nng_sockaddr *sa1, const nng_sockaddr *sa2);
+</code></pre>
+<p>The <a name="a009"></a><code>nng_sockaddr_equal</code> function returns <code>true</code> if <em>sa1</em> and <em>sa2</em>
+represent the same address, or <code>false</code> otherwise.</p>
+<h2 id="hash-an-address"><a class="header" href="#hash-an-address">Hash an Address</a></h2>
+<pre><code class="language-c">uint64_t nng_sockaddr_hash(const nng_sockaddr *sa);
+</code></pre>
+<p>The <a name="a010"></a><code>nng_sockaddr_hash</code> function returns a non-zero 64-bit hash value
+for <em>sa</em>.</p>
+<p>This value is intended for building indexes, such as with the <a href="#id-map">ID map</a>.
+Collisions are possible. The hash value is not portable between systems and
+may not be portable between versions of <em>NNG</em>.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -3859,7 +4091,7 @@ request interleaving.</p>
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>, and the final result
 may be obtained via <a href="#result-of-operation"><code>nng_aio_result</code></a>.</p>
-<h3 id="socket-addresses"><a class="header" href="#socket-addresses">Socket Addresses</a></h3>
+<h3 id="socket-addresses-1"><a class="header" href="#socket-addresses-1">Socket Addresses</a></h3>
 <pre><code class="language-c">nng_err nng_http_local_address(nng_http *conn, nng_sockaddr *addr);
 nng_err nng_http_remote_address(nng_http *conn, nng_sockaddr *addr);
 </code></pre>
@@ -4077,7 +4309,7 @@ exactly the value of the <code>Host</code> header sent by the client.
 does not support a single server listening on different ports concurrently.</p>
 </blockquote>
 <h3 id="detecting-addresses"><a class="header" href="#detecting-addresses">Detecting Addresses</a></h3>
-<p>The <a href="#socket-addresses"><code>nng_http_local_address</code></a> and <a href="#socket-addresses"><code>nng_http_remote_address</code></a> functions
+<p>The <a href="#socket-addresses-1"><code>nng_http_local_address</code></a> and <a href="#socket-addresses-1"><code>nng_http_remote_address</code></a> functions
 can be used to determine the local and remote addresses for an HTTP connection
 on the server side (in a handler) just like the can be for HTTP clients
 This can be useful to provide different handling behaviors based on network identity.</p>
@@ -5262,7 +5494,7 @@ same application, and they will not interfere with one another.</p>
 <p>Two applications may also use the same URL without interfering with each other.
 They will however be unable to communicate with each other using that URL.</p>
 <h2 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h2>
-<p>When using an <a href="TODO.html"><code>nng_sockaddr</code></a> structure, the actual structure is of type <a href="TODO.html"><code>nng_sockaddr_inproc</code></a>.</p>
+<p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a> structure, the actual structure is of type <a href="#in-process-addresses"><code>nng_sockaddr_inproc</code></a>.</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>The <em>inproc</em> transport has no special options.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -5348,9 +5580,9 @@ the system when no longer in use.</p>
 <p>Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
 of the peer with <a href="#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and similar options.<sup class="footnote-reference" id="fr-peer_random-1"><a href="#footnote-peer_random">2</a></sup></p>
 <h3 id="socket-address-1"><a class="header" href="#socket-address-1">Socket Address</a></h3>
-<p>When using an <a href="TODO.html"><code>nng_sockaddr</code></a> structure,
-the actual structure is of type <a href="TODO.html"><code>nng_sockaddr_ipc</code></a>,
-except for abstract sockets, which use <a href="TODO.html"><code>nng_sockaddr_abstract</code></a>.</p>
+<p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a> structure,
+the actual structure is of type <a href="#ipc-addresses"><code>nng_sockaddr_ipc</code></a>,
+except for abstract sockets, which use <a href="#abstract-addresses"><code>nng_sockaddr_abstract</code></a>.</p>
 <h3 id="transport-options-1"><a class="header" href="#transport-options-1">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
@@ -5426,8 +5658,8 @@ for a <a href="TODO.html">listener</a>, it is better to use an IP address that i
 local system, or the zero address to listen to all interfaces.</p>
 </blockquote>
 <h3 id="socket-address-2"><a class="header" href="#socket-address-2">Socket Address</a></h3>
-<p>When using an <a href="TODO.html"><code>nng_sockaddr</code></a>,
-the concrete type is either <a href="TODO.html"><code>nng_sockaddr_in</code></a> or <a href="TODO.html"><code>nng_sockaddr_in6</code></a>, depending on whether
+<p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a>,
+the concrete type is either <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a>, depending on whether
 IPv4 or IPv6 is in use.</p>
 <h3 id="transport-options-2"><a class="header" href="#transport-options-2">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
@@ -5504,8 +5736,8 @@ If left empty, IPv6 will be selected if available on the host, otherwise IPv4 wi
 The name in the URL is used when validating the certificate supplied by the server.</p>
 </blockquote>
 <h3 id="socket-address-3"><a class="header" href="#socket-address-3">Socket Address</a></h3>
-<p>When using an <a href="TODO.html"><code>nng_sockaddr</code></a> structure,
-the concrete type is either <a href="TODO.html"><code>nng_sockaddr_in</code></a> or <a href="TODO.html"><code>nng_sockaddr_in6</code></a>,
+<p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a> structure,
+the concrete type is either <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a>,
 depending on whether IPv4 or IPv6 is in use.</p>
 <h3 id="transport-options-3"><a class="header" href="#transport-options-3">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
@@ -5660,10 +5892,10 @@ and could be used to listen to port 9999 on the host:</p>
 <li><code>udp://:9999</code></li>
 </ol>
 <h2 id="socket-address-5"><a class="header" href="#socket-address-5">Socket Address</a></h2>
-<p>When using an <a href="TODO.html"><code>nng_sockaddr</code></a> structure,
+<p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a> structure,
 the actual structure is either of type
-<a href="TODO.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
-<a href="TODO.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
+<a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> (for IPv4) or
+<a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
 <h2 id="transport-options-5"><a class="header" href="#transport-options-5">Transport Options</a></h2>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
@@ -6509,6 +6741,15 @@ named pipes, <a href="#a004">1</a><br />
 <code>nng_send</code>, <a href="#a034">1</a><br />
 <code>nng_sendmsg</code>, <a href="#a035">1</a><br />
 <code>nng_sleep_aio</code>, <a href="#a011">1</a><br />
+<code>nng_sockaddr</code>, <a href="#a001">1</a><br />
+<code>nng_sockaddr_abstract</code>, <a href="#a004">1</a><br />
+<code>nng_sockaddr_equal</code>, <a href="#a009">1</a><br />
+<code>nng_sockaddr_hash</code>, <a href="#a010">1</a><br />
+<code>nng_sockaddr_in</code>, <a href="#a005">1</a><br />
+<code>nng_sockaddr_in6</code>, <a href="#a006">1</a><br />
+<code>nng_sockaddr_inproc</code>, <a href="#a002">1</a><br />
+<code>nng_sockaddr_ipc</code>, <a href="#a003">1</a><br />
+<code>nng_sockaddr_port</code>, <a href="#a008">1</a><br />
 <code>nng_socket</code>, <a href="#a002">1</a><br />
 <code>nng_socket_close</code>, <a href="#a033">1</a><br />
 <code>nng_socket_get_recv_poll_fd</code>, <a href="#a043">1</a><br />
@@ -6605,6 +6846,7 @@ named pipes, <a href="#a004">1</a><br />
 <code>nng_stream_stop</code>, <a href="#a006">1</a><br />
 <code>nng_strerror</code>, <a href="#a001">1</a><br />
 <code>nng_strfree</code>, <a href="#a006">1</a><br />
+<code>nng_str_sockaddr</code>, <a href="#a007">1</a><br />
 <code>nng_sub0_ctx_subscribe</code>, <a href="#a008">1</a><br />
 <code>nng_sub0_ctx_unsubscribe</code>, <a href="#a009">1</a><br />
 <code>nng_sub0_open</code>, <a href="#a019">1</a>, <a href="#a004">2</a><br />

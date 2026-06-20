@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Contexts - NNG Reference Manual (DRAFT)</title>
+        <title>Socket Addresses - NNG Reference Manual (DRAFT)</title>
 
 
         <!-- Custom HTML head -->
@@ -174,213 +174,224 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="contexts"><a class="header" href="#contexts">Contexts</a></h1>
-<p>Contexts <a name="a001"></a> in Scalability Protocols provide for isolation of protocol-specific
-state machines and associated data, allowing multiple <a name="a002"></a>concurrent <a name="a003"></a>state machines (or transactions)
-to coexist on a single <a href="../api/sock.html">socket</a>.</p>
-<p>For example, a <a href="../proto/rep.html">REP</a> server may wish to allow many requests to be serviced concurrently,
-even though some jobs may take significant time to process. Contexts provide for this ability.</p>
-<p>Not all protocols have contexts, because many protocols simply have no state to manage.
-The following protocols support contexts:</p>
-<ul>
-<li><a href="../proto/rep.html">REP</a></li>
-<li><a href="../proto/req.html">REQ</a></li>
-<li><a href="../proto/respondent.html">RESPONDENT</a></li>
-<li><a href="../proto/surveyor.html">SURVEYOR</a></li>
-<li><a href="../proto/sub.html">SUB</a></li>
-</ul>
-<p>For these protocols, the socket will also have a single, default, context that is used when
-performing send or receive operations on the socket directly.</p>
-<p>Other protocols are stateless, at least with respect to message processing, and have no use for
-contexts. For the same reason, <a href="../api/sock.html#raw-mode-sockets">raw</a> mode sockets do not support contexts.</p>
-<blockquote class="blockquote-tag blockquote-tag-tip">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>Developers with experience with <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a> may be used to using <a href="../api/sock.html#raw-mode-sockets">raw</a> sockets for concurrency.
-Contexts provide a superior solution, as they are much easier to use, less error prone, and allow
-for easy control of the amount of concurrency used on any given socket.</p>
-</blockquote>
-<p>One drawback of contexts is that they cannot be used with file descriptor polling using
-<a href="../api/sock.html#polling-socket-events"><code>nng_socket_get_recv_poll_fd</code></a> or <a href="../api/sock.html#polling-socket-events"><code>nng_socket_get_send_poll_fd</code></a>.</p>
-<h2 id="context-structure"><a class="header" href="#context-structure">Context Structure</a></h2>
-<pre><code class="language-c">#define NNG_CTX_INITIALIZER // opaque value
+                        <h1 id="socket-addresses"><a class="header" href="#socket-addresses">Socket Addresses</a></h1>
+<pre><code class="language-c">typedef union nng_sockaddr {
+    uint16_t              s_family;
+    nng_sockaddr_ipc      s_ipc;
+    nng_sockaddr_inproc   s_inproc;
+    nng_sockaddr_in6      s_in6;
+    nng_sockaddr_in       s_in;
+    nng_sockaddr_abstract s_abstract;
+    nng_sockaddr_storage  s_storage;
+} nng_sockaddr;
 
-typedef struct nng_ctx_s nng_ctx;
-</code></pre>
-<p>The <a name="a004"></a><code>nng_ctx</code> structure represents context. This is a handle, and
-the members of it are opaque. However, unlike a pointer, it is passed by value.</p>
-<p>A context may be initialized statically with the <a name="a005"></a><code>NNG_CTX_INITIALIZER</code> macro,
-to ensure that it cannot be confused with a valid open context.</p>
-<h2 id="creating-a-context"><a class="header" href="#creating-a-context">Creating a Context</a></h2>
-<pre><code class="language-c">int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
-</code></pre>
-<p>The <a name="a006"></a><code>nng_ctx_open</code> function creates a separate context to be used with the <a href="../api/sock.html">socket</a> <em>s</em>,
-and returns it at the location pointed by <em>ctxp</em>.</p>
-<h2 id="context-identity"><a class="header" href="#context-identity">Context Identity</a></h2>
-<pre><code class="language-c">int nng_ctx_id(nng_ctx c);
-</code></pre>
-<p>The <a name="a007"></a><code>nng_ctx_id</code> function returns a positive identifier for the context <em>c</em> if it is valid.
-Otherwise it returns <code>-1</code>.</p>
-<p>A context is considered valid if it was ever opened with <a href="../api/ctx.html#creating-a-context"><code>nng_ctx_open</code></a> function.
-Contexts that are allocated on the stack or statically should be initialized with the macro <a href="../api/ctx.html#context-structure"><code>NNG_CTX_INITIALIZER</code></a>
-to ensure that they cannot be confused with a valid context before they are opened.</p>
-<h2 id="closing-a-context"><a class="header" href="#closing-a-context">Closing a Context</a></h2>
-<pre><code class="language-c">int nng_ctx_close(nng_ctx ctx);
-</code></pre>
-<p>The <a name="a008"></a><code>nng_ctx_close</code> function closes the context <em>ctx</em>.
-Messages that have been submitted for sending may be flushed or delivered,
-depending upon the transport.</p>
-<p>Further attempts to use the context after this call returns will result in <code>NNG_ECLOSED</code>.
-Threads waiting for operations on the context when this
-call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Closing the socket associated with <em>ctx</em> using <a href="../api/sock.html#closing-a-socket"><code>nng_socket_close</code></a> also closes this context.</p>
-</blockquote>
-<h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
-<pre><code class="language-c">int nng_ctx_sendmsg(nng_ctx ctx, nng_msg *msg, int flags);
-void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
-</code></pre>
-<p>These functions (<a name="a009"></a><code>nng_ctx_sendmsg</code> and <a name="a010"></a><code>nng_ctx_send</code>) send
-messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>The semantics of what sending a message means varies from protocol to
-protocol, so examination of the protocol documentation is encouraged.
-Additionally, some protocols may not support sending at all or may require other pre-conditions first.
-(For example, <a href="../proto/rep.html">REP</a> sockets cannot normally send data until they have first received a request,
-while <a href="../proto/sub.html">SUB</a> sockets can only receive data and never send it.)</p>
-</blockquote>
-<h3 id="nng_ctx_sendmsg"><a class="header" href="#nng_ctx_sendmsg">nng_ctx_sendmsg</a></h3>
-<p>The <code>nng_ctx_sendmsg</code> function sends the <em>msg</em> over the context <em>ctx</em>.</p>
-<p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
-If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
-cannot accept more data for sending. In such a case, it will return <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
-<h3 id="nng_ctx_send"><a class="header" href="#nng_ctx_send">nng_ctx_send</a></h3>
-<p>The <code>nng_ctx_send</code> function sends a message asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
-The message to send must have been set on <em>aio</em> using the <a href="../api/aio.html#messages"><code>nng_aio_set_msg</code></a> function.</p>
-<p>If the operation completes successfully, then the context will have disposed of the message.
-However, if it fails, then callback of <em>aio</em> should arrange for a final disposition of the message.
-(The message can be retrieved from <em>aio</em> with <a href="../api/aio.html#messages"><code>nng_aio_get_msg</code></a>.)</p>
-<p>Note that callback associated with <em>aio</em> may be called <em>before</em> the message is finally delivered to the recipient.
-For example, the message may be sitting in queue, or located in TCP buffers, or even in flight.</p>
-<blockquote class="blockquote-tag blockquote-tag-tip">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>This is the preferred function to use for sending data on a context. While it does require a few extra
-steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="../api/ctx.html#nng_ctx_sendmsg"><code>nng_ctx_sendmsg</code></a>.</p>
-</blockquote>
-<h2 id="receiving-messages"><a class="header" href="#receiving-messages">Receiving Messages</a></h2>
-<pre><code class="language-c">int nng_ctx_recvmsg(nng_ctx ctx, nng_msg **msgp, int flags);
-void nng_ctx_recv(nng_ctx ctx, nng_aio *aio);
-</code></pre>
-<p>These functions (, <a name="a011"></a><code>nng_ctx_recvmsg</code> and <a name="a012"></a><code>nng_ctx_recv</code>) receive
-messages over the context <em>ctx</em>. The differences in their behaviors are as follows.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>The semantics of what receiving a message means varies from protocol to
-protocol, so examination of the protocol documentation is encouraged.
-Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
-(For example, <a href="../proto/req.html">REQ</a> sockets cannot normally receive data until they have first sent a request.)</p>
-</blockquote>
-<h3 id="nng_recvmsg"><a class="header" href="#nng_recvmsg">nng_recvmsg</a></h3>
-<p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="../api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
-has no messages available to receive. In such a case, it will return <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
-<h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
-<p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
-On success, the received message can be retrieved from the <em>aio</em> using the <a href="../api/aio.html#messages"><code>nng_aio_get_msg</code></a> function.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>It is important that the application retrieves the message, and disposes of it accordingly.
-Failure to do so will leak the memory.</p>
-</blockquote>
-<blockquote class="blockquote-tag blockquote-tag-tip">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>This is the preferred function to use for receiving data on a context. While it does require a few extra
-steps on the part of the application, the lowest latencies and highest performance will be achieved by using
-this function instead of <a href="../api/ctx.html#nng_ctx_recvmsg"><code>nng_ctx_recvmsg</code></a>.</p>
-</blockquote>
-<h2 id="context-options"><a class="header" href="#context-options">Context Options</a></h2>
-<pre><code class="language-c">int nng_ctx_get_bool(nng_ctx ctx, const char *opt, bool *valp);
-int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *valp);
-int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *valp);
-int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *valp);
-
-int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int val);
-int nng_ctx_set_int(nng_ctx ctx, const char *opt, int val);
-int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration val);
-int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t val);
-</code></pre>
-<p>Some protocols support certain options that affect the behavior of a specific context.
-For example, most protocols will let you set the defaults timeouts associated with
-send or receive separately for different contexts.</p>
-<p>These functions are used to retrieve or change the value of an option named <em>opt</em> from the context <em>ctx</em>.
-The <code>nng_ctx_get_</code> functions retrieve the value from <em>ctx</em>, and store it in the location <em>valp</em> references.
-The <code>nng_ctx_set_</code> functions change the value for the <em>ctx</em>, taking it from <em>val</em>.</p>
-<p>These functions access an option as a specific type. The protocol documentation will have details about which options
-are available for contexts, whether they can be read or written, and the appropriate type to use.</p>
-<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
-<p>These examples show building blocks for a concurrent service based on contexts.</p>
-<h3 id="example-1-context-echo-server"><a class="header" href="#example-1-context-echo-server">Example 1: Context Echo Server</a></h3>
-<p>The following program fragment demonstrates the use of contexts to implement
-a concurrent <a href="../proto/rep.html">REP</a> service that simply echos messages back
-to the sender.</p>
-<pre><code class="language-c">struct echo_context {
-    nng_ctx ctx;
-    nng_aio *aio;
-    enum { INIT, RECV, SEND } state;
+enum nng_sockaddr_family {
+    NNG_AF_UNSPEC   = 0,
+    NNG_AF_INPROC   = 1,
+    NNG_AF_IPC      = 2,
+    NNG_AF_INET     = 3,
+    NNG_AF_INET6    = 4,
+    NNG_AF_ABSTRACT = 5
 };
-
-void
-echo(void *arg)
-{
-    struct echo_context *ec = arg;
-
-    switch (ec-&gt;state) {
-    case INIT:
-        ec-&gt;state = RECV;
-        nng_ctx_recv(ec-&gt;ctx, ec-&gt;aio);
-        return;
-    case RECV:
-        if (nng_aio_result(ec-&gt;aio) != 0) {
-            // ... handle error
-        }
-        // We reuse the message on the ec-&gt;aio
-        ec-&gt;state = SEND;
-        nng_ctx_send(ec-&gt;ctx, ec-&gt;aio);
-        return;
-    case SEND:
-        if (nng_aio_result(ec-&gt;aio) != 0) {
-            // ... handle error
-        }
-        ec-&gt;state = RECV;
-        nng_ctx_recv(ec-&gt;ctx, ec-&gt;aio);
-        return;
-    }
-}
 </code></pre>
-<h3 id="example-2-starting-the-echo-service"><a class="header" href="#example-2-starting-the-echo-service">Example 2: Starting the Echo Service</a></h3>
-<p>Given the above fragment, the following example shows setting up the service.
-It assumes that the <a href="../api/sock.html">socket</a> has already been
-created and any transports set up as well with functions such as <a href="../TODO.html"><code>nng_dial</code></a> or <a href="../TODO.html"><code>nng_listen</code></a>.</p>
-<pre><code class="language-c">
-#define CONCURRENCY 1024
-
-static struct echo_context ecs[CONCURRENCY];
-
-void
-start_echo_service(nng_socket rep_socket)
-{
-    for (int i = 0; i &lt; CONCURRENCY; i++) {
-        // error checks elided for clarity
-        nng_ctx_open(&amp;ecs[i].ctx, rep_socket);
-        nng_aio_alloc(&amp;ecs[i].aio, echo, ecs+i);
-        ecs[i].state = INIT;
-        echo(ecs+i); // start it running
-    }
-}
+<p>An <a name="a001"></a><code>nng_sockaddr</code> is used to represent the addresses used by
+underlying transports, such as TCP/IP addresses, IPC paths, and in-process
+names.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The name <code>sockaddr</code> reflects its similarity to POSIX <code>struct sockaddr</code>.
+In <em>NNG</em>, these addresses are more closely associated with <a href="../api/pipe.html#pipes"><code>nng_pipe</code></a>
+and transport endpoints than with <a href="../api/sock.html">sockets</a>.</p>
+</blockquote>
+<p>The structure is a union with different members for different address types.
+Every member structure has a <code>uint16_t</code> address family as its first field.
+This overlaps the <code>s_family</code> member of the union and indicates which member
+is valid.</p>
+<p>The <code>s_storage</code> member reserves enough space to store any supported socket
+address family. Applications should use the family-specific members instead
+when inspecting an address.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Family</th><th>Member</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NNG_AF_UNSPEC</code></td><td>none</td><td>Invalid or unspecified address.</td></tr>
+<tr><td><code>NNG_AF_INPROC</code></td><td><code>s_inproc</code></td><td>In-process address for the <a href="../tran/inproc.html">inproc transport</a>.</td></tr>
+<tr><td><code>NNG_AF_IPC</code></td><td><code>s_ipc</code></td><td>Inter-process address for the <a href="../tran/ipc.html">IPC transport</a>.</td></tr>
+<tr><td><code>NNG_AF_INET</code></td><td><code>s_in</code></td><td>IPv4 address used by TCP, TLS, UDP, and similar IP transports.</td></tr>
+<tr><td><code>NNG_AF_INET6</code></td><td><code>s_in6</code></td><td>IPv6 address used by TCP, TLS, UDP, and similar IP transports.</td></tr>
+<tr><td><code>NNG_AF_ABSTRACT</code></td><td><code>s_abstract</code></td><td>Abstract socket address for the <a href="../tran/ipc.html">IPC transport</a> on Linux systems.</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="in-process-addresses"><a class="header" href="#in-process-addresses">In-Process Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_inproc {
+    uint16_t sa_family;
+    char     sa_name[NNG_MAXADDRLEN];
+} nng_sockaddr_inproc;
 </code></pre>
+<p>An <a name="a002"></a><code>nng_sockaddr_inproc</code> is the flavor of <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> used for
+addresses associated with the <a href="../tran/inproc.html">inproc transport</a>.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_INPROC</code>.</p>
+<p>The <code>sa_name</code> field holds an arbitrary <code>NUL</code>-terminated C string identifying
+the in-process address. No other restrictions are placed on the name.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Applications should use the <code>sizeof</code> operator instead of hard coding the
+size of the <code>sa_name</code> member. The size is guaranteed to be at least 128.</p>
+</blockquote>
+<h2 id="ipc-addresses"><a class="header" href="#ipc-addresses">IPC Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_path nng_sockaddr_ipc;
+
+struct nng_sockaddr_path {
+    uint16_t sa_family;
+    char     sa_path[NNG_MAXADDRLEN];
+};
+</code></pre>
+<p>An <a name="a003"></a><code>nng_sockaddr_ipc</code> is the flavor of <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> used for
+traditional path-based addresses associated with the <a href="../tran/ipc.html">IPC transport</a>.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_IPC</code>.</p>
+<p>The <code>sa_path</code> field holds a <code>NUL</code>-terminated C string corresponding to the
+path where the IPC socket is located. On systems using UNIX domain sockets,
+this is a path in the file system. On Windows systems, this is the named pipe
+path without the leading <code>\\.\pipe\</code> portion, which <em>NNG</em> adds automatically.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Applications should use the <code>sizeof</code> operator instead of hard coding the
+size of the <code>sa_path</code> member. The size is guaranteed to be at least 128,
+but paths of this length may not be supported on every system.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Portable applications should restrict themselves to path names of not more
+than 90 bytes. Many systems have limits around 100 bytes, and some systems
+have smaller limits.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If compatibility with legacy <em>nanomsg</em> applications is required, path names
+must not be longer than 122 bytes, including the final <code>NUL</code> byte.
+Legacy versions of <em>nanomsg</em> cannot express URLs longer than 128 bytes,
+including the <code>ipc://</code> prefix.</p>
+</blockquote>
+<h2 id="abstract-addresses"><a class="header" href="#abstract-addresses">Abstract Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_abstract {
+    uint16_t sa_family;
+    uint16_t sa_len;
+    uint8_t  sa_name[107];
+} nng_sockaddr_abstract;
+</code></pre>
+<p>An <a name="a004"></a><code>nng_sockaddr_abstract</code> is the flavor of <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> used to
+represent abstract socket addresses for the <a href="../tran/ipc.html">IPC transport</a>.</p>
+<p>Abstract sockets are only supported on Linux at present. These sockets have
+a name that is an array of bytes, with no special meaning. Abstract sockets
+have no presence in the file system, do not honor file permissions, and are
+automatically cleaned up by the operating system when no longer in use.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_ABSTRACT</code>.</p>
+<p>The <code>sa_len</code> field gives the number of bytes stored in <code>sa_name</code>.</p>
+<p>The <code>sa_name</code> field holds the name of the abstract socket. The bytes of the
+name can have any value, including zero.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The name does not include the leading <code>NUL</code> byte used on Linux to
+distinguish abstract socket addresses from path-based socket addresses.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Abstract sockets are Linux-specific. They are not recommended for portable
+applications.</p>
+</blockquote>
+<h2 id="ipv4-addresses"><a class="header" href="#ipv4-addresses">IPv4 Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_in {
+    uint16_t sa_family;
+    uint16_t sa_port;
+    uint32_t sa_addr;
+} nng_sockaddr_in;
+</code></pre>
+<p>An <a name="a005"></a><code>nng_sockaddr_in</code> is the flavor of <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> used for IPv4
+addresses, including the IP address and TCP or UDP port number. IPv6 addresses
+use <a href="../api/sockaddr.html#ipv6-addresses"><code>nng_sockaddr_in6</code></a> instead.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_INET</code>.</p>
+<p>The <code>sa_port</code> field holds the TCP or UDP port number in network byte order.
+A zero value indicates that no specific port number is specified.</p>
+<p>The <code>sa_addr</code> field holds the IPv4 address in network byte order.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>The <code>sa_port</code> and <code>sa_addr</code> fields are in network byte order to facilitate
+their use with system APIs such as <code>inet_ntop</code>.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>Although this structure appears similar to BSD <code>sockaddr_in</code>, it is not
+the same type, and the two may not be used interchangeably.</p>
+</blockquote>
+<h2 id="ipv6-addresses"><a class="header" href="#ipv6-addresses">IPv6 Addresses</a></h2>
+<pre><code class="language-c">typedef struct nng_sockaddr_in6 {
+    uint16_t sa_family;
+    uint16_t sa_port;
+    uint32_t sa_scope;
+    uint8_t  sa_addr[16];
+} nng_sockaddr_in6;
+</code></pre>
+<p>An <a name="a006"></a><code>nng_sockaddr_in6</code> is the flavor of <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> used for IPv6
+addresses, including the IP address and TCP or UDP port number. IPv4 addresses
+use <a href="../api/sockaddr.html#ipv4-addresses"><code>nng_sockaddr_in</code></a> instead.</p>
+<p>The <code>sa_family</code> field is always <code>NNG_AF_INET6</code>.</p>
+<p>The <code>sa_port</code> field holds the TCP or UDP port number in network byte order.
+A zero value indicates that no specific port number is specified.</p>
+<p>The <code>sa_scope</code> field is the IPv6 scope identifier. It is typically used with
+link-local addresses to identify a specific interface. The details of this
+value are platform-specific.</p>
+<p>The <code>sa_addr</code> field holds the IPv6 address in network byte order.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>The <code>sa_port</code> and <code>sa_addr</code> fields are in network byte order to facilitate
+their use with system APIs such as <code>inet_ntop</code>.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>Although this structure appears similar to BSD <code>sockaddr_in6</code>, it is not
+the same type, and the two may not be used interchangeably.</p>
+</blockquote>
+<h2 id="format-an-address"><a class="header" href="#format-an-address">Format an Address</a></h2>
+<pre><code class="language-c">#define NNG_MAXADDRSTRLEN (NNG_MAXADDRLEN + 16)
+
+const char *nng_str_sockaddr(const nng_sockaddr *sa, char *buf, size_t bufsz);
+</code></pre>
+<p>The <a name="a007"></a><code>nng_str_sockaddr</code> function provides a displayable representation
+of the socket address <em>sa</em> in the buffer <em>buf</em>, which has room for <em>bufsz</em>
+bytes including the terminating <code>NUL</code> byte. The function returns <em>buf</em>.</p>
+<p>If the buffer is too small, the result will be truncated. A buffer of
+<code>NNG_MAXADDRSTRLEN</code> bytes is sufficient to avoid typical truncations, although
+very long IPC paths can still be truncated.</p>
+<p>As long as <em>bufsz</em> is greater than zero, the result will be <code>NUL</code>-terminated.</p>
+<blockquote class="blockquote-tag blockquote-tag-important">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
+<p>The string produced by <code>nng_str_sockaddr</code> is intended for display in logs
+and diagnostics. It is not intended to be parsed, and the display format
+may change without notice.</p>
+</blockquote>
+<h2 id="address-port"><a class="header" href="#address-port">Address Port</a></h2>
+<pre><code class="language-c">uint32_t nng_sockaddr_port(const nng_sockaddr *sa);
+</code></pre>
+<p>The <a name="a008"></a><code>nng_sockaddr_port</code> function returns the port number associated with
+<em>sa</em> in native byte order.</p>
+<p>For <code>NNG_AF_INET</code> and <code>NNG_AF_INET6</code> addresses, this is the TCP or UDP port.
+For address families that do not have a port number, zero is returned.</p>
+<h2 id="compare-addresses"><a class="header" href="#compare-addresses">Compare Addresses</a></h2>
+<pre><code class="language-c">bool nng_sockaddr_equal(const nng_sockaddr *sa1, const nng_sockaddr *sa2);
+</code></pre>
+<p>The <a name="a009"></a><code>nng_sockaddr_equal</code> function returns <code>true</code> if <em>sa1</em> and <em>sa2</em>
+represent the same address, or <code>false</code> otherwise.</p>
+<h2 id="hash-an-address"><a class="header" href="#hash-an-address">Hash an Address</a></h2>
+<pre><code class="language-c">uint64_t nng_sockaddr_hash(const nng_sockaddr *sa);
+</code></pre>
+<p>The <a name="a010"></a><code>nng_sockaddr_hash</code> function returns a non-zero 64-bit hash value
+for <em>sa</em>.</p>
+<p>This value is intended for building indexes, such as with the <a href="../api/id_map.html">ID map</a>.
+Collisions are possible. The hash value is not portable between systems and
+may not be portable between versions of <em>NNG</em>.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -398,11 +409,11 @@ start_echo_service(nng_socket rep_socket)
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../api/device.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../api/url.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../api/pipe.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../api/aio.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -412,11 +423,11 @@ start_echo_service(nng_socket rep_socket)
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../api/device.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../api/url.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../api/pipe.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../api/aio.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-25cb884d.js";
+            window.path_to_searchindex_js = "../searchindex-b67bc03e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d664ef41.js"></script>
+        <script src="../toc-141194f1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -245,7 +245,7 @@ and might not be further usable as a result. (Other functions will result in <a 
 <pre><code class="language-c">nng_err nng_pipe_peer_addr(nng_pipe p, nng_sockaddr *sap);
 nng_err nng_pipe_self_addr(nng_pipe p, nng_sockaddr *sap);
 </code></pre>
-<p>The <a href="../TODO.html"><code>nng_sockaddr</code></a> for the local (self) or remote (peer) of the pipe is available using these
+<p>The <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> for the local (self) or remote (peer) of the pipe is available using these
 functions. The associated address will be stored in the location pointed to by <em>sap</em>.</p>
 <h2 id="pipe-options"><a class="header" href="#pipe-options">Pipe Options</a></h2>
 <pre><code class="language-c">nng_err nng_pipe_get_bool(nng_pipe p, const char *opt, bool *valp);

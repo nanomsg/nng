@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-25cb884d.js";
+            window.path_to_searchindex_js = "../searchindex-b67bc03e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d664ef41.js"></script>
+        <script src="../toc-141194f1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -230,9 +230,9 @@ the system when no longer in use.</p>
 <p>Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
 of the peer with <a href="../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and similar options.<sup class="footnote-reference" id="fr-peer_random-1"><a href="#footnote-peer_random">2</a></sup></p>
 <h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
-<p>When using an <a href="../TODO.html"><code>nng_sockaddr</code></a> structure,
-the actual structure is of type <a href="../TODO.html"><code>nng_sockaddr_ipc</code></a>,
-except for abstract sockets, which use <a href="../TODO.html"><code>nng_sockaddr_abstract</code></a>.</p>
+<p>When using an <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> structure,
+the actual structure is of type <a href="../api/sockaddr.html#ipc-addresses"><code>nng_sockaddr_ipc</code></a>,
+except for abstract sockets, which use <a href="../api/sockaddr.html#abstract-addresses"><code>nng_sockaddr_abstract</code></a>.</p>
 <h3 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
