@@ -31,6 +31,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#ifndef NNG_UDP_SOCK_BUFSZ
+#define NNG_UDP_SOCK_BUFSZ (1024 * 1024)
+#endif
+
 #ifndef NNG_HAVE_INET6
 #ifdef NNG_HAVE_INET6_BSD
 #define NNG_HAVE_INET6
@@ -87,6 +91,26 @@ nni_posix_udp_doclose(nni_plat_udp *udp)
 #if !defined(NNG_HAVE_RECVMSG) || !defined(NNG_HAVE_SENDMSG)
 static uint8_t bouncebuf[65536];
 #endif
+
+static void
+nni_posix_udp_set_bufsize(int fd)
+{
+#if defined(SOL_SOCKET) && \
+    (defined(SO_RCVBUF) || defined(SO_SNDBUF))
+	int bufsz = NNG_UDP_SOCK_BUFSZ;
+
+#ifdef SO_RCVBUF
+	(void) setsockopt(
+	    fd, SOL_SOCKET, SO_RCVBUF, &bufsz, (socklen_t) sizeof(bufsz));
+#endif
+#ifdef SO_SNDBUF
+	(void) setsockopt(
+	    fd, SOL_SOCKET, SO_SNDBUF, &bufsz, (socklen_t) sizeof(bufsz));
+#endif
+#else
+	NNI_ARG_UNUSED(fd);
+#endif
+}
 
 #if !defined(NNG_HAVE_RECVMSG)
 static int
@@ -346,6 +370,7 @@ nni_plat_udp_open(nni_plat_udp **upp, const nni_sockaddr *bindaddr)
 		NNI_FREE_STRUCT(udp);
 		return (rv);
 	}
+	nni_posix_udp_set_bufsize(udp->udp_fd);
 
 	if (bind(udp->udp_fd, (void *) &sa, salen) != 0) {
 		rv = nni_plat_errno(errno);
