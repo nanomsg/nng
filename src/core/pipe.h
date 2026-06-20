@@ -55,6 +55,9 @@ extern uint32_t nni_pipe_listener_id(nni_pipe *);
 // nni_pipe_dialer_id returns the dialer id for the pipe (or 0 if none).
 extern uint32_t nni_pipe_dialer_id(nni_pipe *);
 
+// nni_pipe_scheme returns the URL scheme for the pipe's creator endpoint.
+extern const char *nni_pipe_scheme(nni_pipe *);
+
 // nni_pipe_rele releases the hold on the pipe placed by nni_pipe_find.
 extern void nni_pipe_rele(nni_pipe *);
 

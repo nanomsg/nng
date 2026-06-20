@@ -143,6 +143,23 @@ The pipe option functions can return the following errors:
 - [`NNG_ENOMEM`]: Insufficient memory (returned by `nng_pipe_get_strdup` if allocation fails).
 - [`NNG_ENOSPC`]: Buffer too small (returned by `nng_pipe_get_strcpy` if buffer is insufficient).
 
+## Pipe Scheme
+
+```c
+nng_err nng_pipe_get_scheme(nng_pipe p, const char **schemep);
+```
+
+{{hi:`nng_pipe_get_scheme`}}
+The `nng_pipe_get_scheme` function returns the scheme from the URL of the endpoint that created
+the pipe, such as `tcp`, `ipc`, or `inproc`.
+The returned string is immutable and does not need to be freed by the caller.
+
+### Errors
+
+The `nng_pipe_get_scheme` function can return the following errors:
+
+- [`NNG_ENOENT`]: The pipe _p_ does not refer to an existing pipe.
+
 ## Pipe Notifications
 
 ```c

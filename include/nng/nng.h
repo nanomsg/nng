@@ -772,6 +772,7 @@ NNG_DECL nng_err nng_pipe_get_string(nng_pipe, const char *, const char **);
 NNG_DECL nng_err nng_pipe_get_strdup(nng_pipe, const char *, char **);
 NNG_DECL nng_err nng_pipe_get_strcpy(nng_pipe, const char *, char *, size_t);
 NNG_DECL nng_err nng_pipe_get_strlen(nng_pipe, const char *, size_t *);
+NNG_DECL nng_err nng_pipe_get_scheme(nng_pipe, const char **);
 NNG_DECL nng_err nng_pipe_peer_addr(nng_pipe, nng_sockaddr *);
 NNG_DECL nng_err nng_pipe_self_addr(nng_pipe, nng_sockaddr *);
 NNG_DECL nng_err nng_pipe_peer_cert(nng_pipe, nng_tls_cert **);
