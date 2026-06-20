@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b67bc03e.js";
+            window.path_to_searchindex_js = "../searchindex-1a2b8220.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-141194f1.js"></script>
@@ -286,6 +286,18 @@ Note that like <code>strlen</code>, this size does not account for the zero byte
 <li><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory (returned by <code>nng_pipe_get_strdup</code> if allocation fails).</li>
 <li><a href="../api/errors.html#NNG_ENOSPC"><code>NNG_ENOSPC</code></a>: Buffer too small (returned by <code>nng_pipe_get_strcpy</code> if buffer is insufficient).</li>
 </ul>
+<h2 id="pipe-scheme"><a class="header" href="#pipe-scheme">Pipe Scheme</a></h2>
+<pre><code class="language-c">nng_err nng_pipe_get_scheme(nng_pipe p, const char **schemep);
+</code></pre>
+<p><a name="a017"></a>
+The <code>nng_pipe_get_scheme</code> function returns the scheme from the URL of the endpoint that created
+the pipe, such as <code>tcp</code>, <code>ipc</code>, or <code>inproc</code>.
+The returned string is immutable and does not need to be freed by the caller.</p>
+<h3 id="errors-1"><a class="header" href="#errors-1">Errors</a></h3>
+<p>The <code>nng_pipe_get_scheme</code> function can return the following errors:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a>: The pipe <em>p</em> does not refer to an existing pipe.</li>
+</ul>
 <h2 id="pipe-notifications"><a class="header" href="#pipe-notifications">Pipe Notifications</a></h2>
 <pre><code class="language-c">typedef enum {
         NNG_PIPE_EV_ADD_PRE,
@@ -297,7 +309,7 @@ typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
 
 nng_err nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg);
 </code></pre>
-<p>The <a name="a017"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
+<p>The <a name="a018"></a><code>nng_pipe_notify</code> function registers the callback function <em>cb</em>
 to be called whenever the pipe event specified by
 <em>ev</em> occurs on the socket <em>s</em>.
 The callback <em>cb</em> will be passed <em>arg</em> as its final argument.</p>
@@ -311,9 +323,9 @@ Registering a callback implicitly unregisters any previously registered.</p>
 <tr><th>Event</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><a name="a018"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="../api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
-<tr><td><a name="a019"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
-<tr><td><a name="a020"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
+<tr><td><a name="a019"></a><code>NNG_PIPE_EV_ADD_PRE</code><a name="NNG_PIPE_EV_ADD_PRE"></a></td><td>This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using <a href="../api/pipe.html#closing-a-pipe"><code>nng_pipe_close</code></a>) at this point, the socket will never see the pipe, and no further events will occur for the given pipe.</td></tr>
+<tr><td><a name="a020"></a><code>NNG_PIPE_EV_ADD_POST</code><a name="NNG_PIPE_EV_ADD_POST"></a></td><td>This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.</td></tr>
+<tr><td><a name="a021"></a><code>NNG_PIPE_EV_REM_POST</code><a name="NNG_PIPE_EV_REM_POST"></a></td><td>This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.</td></tr>
 </tbody>
 </table>
 </div>
