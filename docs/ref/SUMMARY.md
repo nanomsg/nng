@@ -24,6 +24,8 @@
 
   - [URLs](./api/url.md)
 
+  - [Socket Addresses](./api/sockaddr.md)
+
   - [Asynchronous I/O](./api/aio.md)
 
   - [Synchronization](./api/synch.md)
