@@ -1,8 +1,11 @@
 # Transports
 
-This section documents transports for Scalabity Protocols implemented by NNG.
+This section documents transports for Scalability Protocols implemented by NNG.
 
-- [BSD Socket](socket.md)
-- [Inter-Process Transport](ipc.md)
 - [Intra-Process Transport](inproc.md)
+- [Inter-Process Transport](ipc.md)
+- [TCP](tcp.md)
+- [TLS](tls.md)
+- [WebSocket](websocket.md)
+- [BSD Socket](socket.md)
 - [UDP](udp.md)
