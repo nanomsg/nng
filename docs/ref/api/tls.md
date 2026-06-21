@@ -2,7 +2,7 @@
 
 NNG provides {{i:TLS}} ({{i:Transport Layer Security}}) support for transports and
 stream-based services that need encrypted and authenticated communication.
-TLS is used by the [TLS transport], secure WebSocket transport, HTTP clients and servers,
+TLS is used by the [TLS transport], secure [WebSocket transport], HTTP clients and servers,
 and raw [streams] implementations that support it.
 
 TLS support depends on a TLS engine being available when NNG is built.
@@ -180,8 +180,9 @@ They do not add a new hold; applications that need to retain the object independ
 The [Streams API][streams] has corresponding [`nng_stream_dialer_set_tls`],
 [`nng_stream_dialer_get_tls`], [`nng_stream_listener_set_tls`], and
 [`nng_stream_listener_get_tls`] functions.
-HTTP clients and servers also use TLS configuration objects for HTTPS; see [`nng_http_client_set_tls`]
-and related HTTP APIs.
+HTTP clients and servers also use TLS configuration objects for HTTPS, including
+secure [WebSocket transport] endpoints; see [`nng_http_client_set_tls`] and
+related HTTP APIs.
 
 ## Examples
 

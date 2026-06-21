@@ -496,6 +496,17 @@
 [`NNG_OPT_TCP_NODELAY`]: ../tran/tcp.md#transport-options
 [`NNG_OPT_TLS_VERIFIED`]: ../tran/tls.md#NNG_OPT_TLS_VERIFIED
 [`NNG_OPT_TLS_PEER_CN`]: ../tran/tls.md#NNG_OPT_TLS_PEER_CN
+[`NNG_OPT_WS_HEADER`]: ../tran/websocket.md#NNG_OPT_WS_HEADER
+[`NNG_OPT_WS_HEADER_NEXT`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_NEXT
+[`NNG_OPT_WS_HEADER_RESET`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_RESET
+[`NNG_OPT_WS_HEADER_KEY`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_KEY
+[`NNG_OPT_WS_HEADER_VALUE`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_VALUE
+[`NNG_OPT_WS_REQUEST_URI`]: ../tran/websocket.md#NNG_OPT_WS_REQUEST_URI
+[`NNG_OPT_WS_SENDMAXFRAME`]: ../tran/websocket.md#NNG_OPT_WS_SENDMAXFRAME
+[`NNG_OPT_WS_RECVMAXFRAME`]: ../tran/websocket.md#NNG_OPT_WS_RECVMAXFRAME
+[`NNG_OPT_WS_PROTOCOL`]: ../tran/websocket.md#NNG_OPT_WS_PROTOCOL
+[`NNG_OPT_WS_SEND_TEXT`]: ../tran/websocket.md#NNG_OPT_WS_SEND_TEXT
+[`NNG_OPT_WS_RECV_TEXT`]: ../tran/websocket.md#NNG_OPT_WS_RECV_TEXT
 [`NNG_SOCKET_INITIALIZER`]: ../api/sock.md#socket-structure
 [`NNG_CTX_INITIALIZER`]: ../api/ctx.md#context-structure
 [`NNG_PIPE_INITIALIZER`]: ../api/pipe.md#initialization
@@ -525,6 +536,7 @@
 [tcp]: ../tran/tcp.md
 [TLS]: ../api/tls.md
 [TLS transport]: ../tran/tls.md
+[WebSocket transport]: ../tran/websocket.md
 [udp]: ../tran/udp.md
 [streams]: ../api/stream.md
 [id map]: ../api/id_map.md
