@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1a2b8220.js";
+            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-141194f1.js"></script>
+        <script src="../toc-f5500b13.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -177,7 +177,7 @@
                         <h1 id="tls"><a class="header" href="#tls">TLS</a></h1>
 <p>NNG provides <a name="a001"></a>TLS (<a name="a002"></a>Transport Layer Security) support for transports and
 stream-based services that need encrypted and authenticated communication.
-TLS is used by the <a href="../tran/tls.html">TLS transport</a>, secure WebSocket transport, HTTP clients and servers,
+TLS is used by the <a href="../tran/tls.html">TLS transport</a>, secure <a href="../tran/websocket.html">WebSocket transport</a>, HTTP clients and servers,
 and raw <a href="../api/stream.html">streams</a> implementations that support it.</p>
 <p>TLS support depends on a TLS engine being available when NNG is built.
 If TLS support is not enabled, the TLS functions may be present as stubs and will return
@@ -327,8 +327,9 @@ They do not add a new hold; applications that need to retain the object independ
 <p>The <a href="../api/stream.html">Streams API</a> has corresponding <a href="../api/stream.html#tls-configuration"><code>nng_stream_dialer_set_tls</code></a>,
 <a href="../api/stream.html#tls-configuration"><code>nng_stream_dialer_get_tls</code></a>, <a href="../api/stream.html#tls-configuration"><code>nng_stream_listener_set_tls</code></a>, and
 <a href="../api/stream.html#tls-configuration"><code>nng_stream_listener_get_tls</code></a> functions.
-HTTP clients and servers also use TLS configuration objects for HTTPS; see <a href="../api/http.html#client-tls"><code>nng_http_client_set_tls</code></a>
-and related HTTP APIs.</p>
+HTTP clients and servers also use TLS configuration objects for HTTPS, including
+secure <a href="../tran/websocket.html">WebSocket transport</a> endpoints; see <a href="../api/http.html#client-tls"><code>nng_http_client_set_tls</code></a> and
+related HTTP APIs.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
 <p>The following examples use Scalability Protocol <a href="../TODO.html">dialer</a> and <a href="../TODO.html">listener</a> objects.
 For raw <a href="../api/stream.html">streams</a>, use the same configuration steps, but attach the configuration with

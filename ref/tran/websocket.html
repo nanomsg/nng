@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>BUS Protocol - NNG Reference Manual (DRAFT)</title>
+        <title>WebSocket Transport - NNG Reference Manual (DRAFT)</title>
 
 
         <!-- Custom HTML head -->
@@ -174,54 +174,171 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="bus-protocol"><a class="header" href="#bus-protocol">BUS Protocol</a></h1>
-<p>The <a name="a001"></a><em>BUS</em> protocol<a name="a002"></a> provides for building mesh networks where
-every peer is connected to every other peer.
-In this protocol, each message sent by a node is sent to every one of
-its directly connected peers.</p>
+                        <h1 id="websocket-transport"><a class="header" href="#websocket-transport">WebSocket Transport</a></h1>
+<h2 id="description"><a class="header" href="#description">DESCRIPTION</a></h2>
+<p>The <a name="a001"></a><em>WebSocket</em> transport<a name="a002"></a> provides communication
+between peers across a TCP/IP network using
+<a href="https://www.rfc-editor.org/rfc/rfc6455">WebSockets</a>.
+It supports the Scalability Protocols over WebSocket, and also supports
+raw WebSocket connections through the <a href="../api/stream.html">streams</a> API.</p>
+<p>Both IPv4 and IPv6 are supported when the underlying platform supports them.
+The protocol details for Scalability Protocol sockets are documented in the
+<a href="http://nanomsg.org/rfcs/sp-websocket-v1.html">WebSocket Mapping for Scalability Protocols</a>.</p>
+<p>The secure WebSocket schemes use TLS over TCP.
+TLS configuration objects and certificate APIs are documented in <a href="../api/tls.html">TLS</a>, and
+the underlying TCP behavior is similar to the <a href="../tran/tcp.html">TCP</a> and <a href="../tran/tls.html">TLS transport</a> transports.
+WebSocket handshakes use NNG’s <a href="../api/http.html">HTTP Support</a>.</p>
+<h3 id="uri-formats"><a class="header" href="#uri-formats">URI Formats</a></h3>
+<p>This transport uses URIs using the scheme <a name="a003"></a><code>ws://</code>, followed by an
+<a name="a004"></a>IP address or <a name="a005"></a>hostname, an optional TCP port number, and an
+optional path.
+If no port is specified, port 80 is used.
+If no path is specified, <code>/</code> is used.</p>
+<p>For example, <code>ws://localhost/app/pubsub</code> connects to port 80 on <code>localhost</code>,
+using the path <code>/app/pubsub</code>.
+The path is significant: different listeners can share the same host and port
+when they use different WebSocket paths.</p>
+<p>Secure WebSocket endpoints use the <a name="a006"></a><code>wss://</code> scheme and default to TCP port 443.
+The URI format is otherwise the same as <code>ws://</code>.</p>
+<h4 id="forcing-ipv4-or-ipv6"><a class="header" href="#forcing-ipv4-or-ipv6">Forcing IPv4 or IPv6</a></h4>
+<p>To force either IPv4 or IPv6, the scheme may be specified as <code>ws4://</code> or
+<code>ws6://</code> instead of <code>ws://</code>.
+The secure forms are <code>wss4://</code> and <code>wss6://</code>.
+These should only be needed when a hostname might resolve to either address family.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Specifying <code>ws6://</code> or <code>wss6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when listening on wildcard addresses.
+The details vary across operating systems.
+The <code>ws4://</code>, <code>ws6://</code>, <code>wss4://</code>, and <code>wss6://</code> schemes are specific to NNG.</p>
+</blockquote>
+<h4 id="ipv6-addresses"><a class="header" href="#ipv6-addresses">IPv6 Addresses</a></h4>
+<p>For IPv6 literal addresses, the IPv6 address must be enclosed in square brackets.
+For example, <code>ws://[::1]:8080/app/pubsub</code> refers to port 8080 on the IPv6
+loopback address with the path <code>/app/pubsub</code>.</p>
+<h4 id="listening-to-all-addresses"><a class="header" href="#listening-to-all-addresses">Listening to All Addresses</a></h4>
+<p>When listening, a zero IP address can be supplied by either eliding the address
+altogether, or by specifying <code>0.0.0.0</code> (IPv4) or <code>::</code> (IPv6) explicitly.
+If left empty, IPv6 will be selected if available on the host, otherwise IPv4
+will be selected.</p>
+<p>For example, the following URIs are equivalent for listening on port 9999:</p>
+<ul>
+<li><code>ws://0.0.0.0:9999/pipe</code></li>
+<li><code>ws://:9999/pipe</code></li>
+</ul>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>Messages are only sent to directly connected peers.
-This means that in the event that a peer is connected indirectly, it will not
-receive messages.
-When using this protocol to build mesh networks, it
-is therefore important that a <em>fully-connected</em> mesh network be constructed.</p>
+<p>IP addresses may be more reliable than host names for listeners.
+Certificate validation for <code>wss://</code> endpoints generally works best when
+clients use host names rather than IP addresses.</p>
 </blockquote>
-<p>All message delivery in this pattern is <a name="a003"></a>best-effort, which means that
-peers may not receive messages.
-Furthermore, delivery may occur to some,
-all, or none of the directly connected peers.
-(Messages are not delivered when peer nodes are unable to receive.)
-Hence, send operations will never block; instead if the
-message cannot be delivered for any reason it is discarded.</p>
-<blockquote class="blockquote-tag blockquote-tag-tip">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>In order to minimize the likelihood of message loss, this protocol
-should not be used for high throughput communications.
-Furthermore, the more traffic <em>in aggregate</em> that occurs across the topology,
-the more likely that message loss is to occur.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The URL host name, when present, is also used in the HTTP <code>Host</code> header
+during the WebSocket handshake.</p>
 </blockquote>
-<h2 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h2>
-<p>The <a href="../api/sock.html#opening-a-socket"><code>nng_bus0_open</code></a> functions create a bus socket.
-This socket may be used to send and receive messages.
-Sending messages will attempt to deliver to each directly connected peer.</p>
-<h2 id="protocol-versions"><a class="header" href="#protocol-versions">Protocol Versions</a></h2>
-<p>Only version 0 of this protocol is supported.
-(At the time of writing, no other versions of this protocol have been defined.)</p>
-<h2 id="protocol-options"><a class="header" href="#protocol-options">Protocol Options</a></h2>
-<p>The <em>BUS</em> protocol has no protocol-specific options.</p>
-<h2 id="protocol-headers"><a class="header" href="#protocol-headers">Protocol Headers</a></h2>
-<p>When using a <em>BUS</em> socket in <a href="../api/sock.html#raw-mode-sockets">raw mode</a>, received messages will
-contain the incoming <a href="../api/pipe.html">pipe</a> ID as the sole element in the header.
-If a message containing such a header is sent using a raw <em>BUS</em> socket, then,
-the message will be delivered to all connected pipes <em>except</em> the one
-identified in the header.
-This behavior is intended for use with <a href="../api/device.html">device</a>
-configurations consisting of just a single socket.
-Such configurations are useful in the creation of rebroadcasters, and this
-capability prevents a message from being routed back to its source.
-If no header is present, then a message is sent to all connected pipes.</p>
-<p>When using normal (cooked mode) <em>BUS</em> sockets, no message headers are present.</p>
+<h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
+<p>When using an <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a>,
+the concrete type is either <a href="../api/sockaddr.html#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="../api/sockaddr.html#ipv6-addresses"><code>nng_sockaddr_in6</code></a>,
+depending on whether IPv4 or IPv6 is in use.</p>
+<h3 id="shared-http-server-instances"><a class="header" href="#shared-http-server-instances">Shared HTTP Server Instances</a></h3>
+<p>WebSocket listeners use shared HTTP server instances.
+This allows multiple sockets, stream listeners, or other HTTP services in the
+same process to share a hostname and port.
+For example, one process can listen on <code>ws://:8080/one</code> and <code>ws://:8080/two</code>
+with different NNG sockets.</p>
+<p>When a listener is created, it is registered with an existing HTTP server
+instance when one can be found.
+The matching algorithm uses the configured hostname or IP address string and
+port, so listeners are easiest to reason about when they use numeric IP
+addresses or an empty host name.</p>
+<p>Because a shared server instance has one TLS configuration, changing the TLS
+configuration may not be possible after another listener has already started
+that server.
+The shared server instance can also be used by other NNG HTTP services in the
+same process, such as static content handlers.</p>
+<h3 id="scalability-protocol-use"><a class="header" href="#scalability-protocol-use">Scalability Protocol Use</a></h3>
+<p>When the WebSocket transport is used with NNG sockets, it carries binary
+Scalability Protocol messages over WebSocket binary frames.
+The transport sets the WebSocket subprotocol during the handshake.
+For example, a REQ socket advertises the peer protocol name expected by the
+matching REP peer.</p>
+<p>Applications can configure WebSocket headers, frame sizes, TCP options, and
+TLS options on the usual <a href="../TODO.html">dialer</a> and <a href="../TODO.html">listener</a> objects before they are
+started.
+After a connection is established, HTTP handshake headers and the request URI
+can be inspected from the <a href="../api/pipe.html">pipe</a>.</p>
+<h3 id="stream-use"><a class="header" href="#stream-use">Stream Use</a></h3>
+<p>The same <code>ws://</code> and <code>wss://</code> URLs can be used with <a href="../api/stream.html#creating-a-stream-factory"><code>nng_stream_dialer_alloc</code></a>
+and <a href="../api/stream.html#creating-a-stream-factory"><code>nng_stream_listener_alloc</code></a>.
+This mode gives applications direct access to a WebSocket connection as an
+<a href="../api/stream.html#stream-type"><code>nng_stream</code></a>, using <a href="../api/stream.html#sending-and-receiving-data"><code>nng_stream_send</code></a> and <a href="../api/stream.html#sending-and-receiving-data"><code>nng_stream_recv</code></a>.</p>
+<p>Raw WebSocket streams use binary frames by default.
+They can be configured to send or receive text frames with
+<a href="../tran/websocket.html#NNG_OPT_WS_SEND_TEXT"><code>NNG_OPT_WS_SEND_TEXT</code></a> and <a href="../tran/websocket.html#NNG_OPT_WS_RECV_TEXT"><code>NNG_OPT_WS_RECV_TEXT</code></a>, which is useful when
+communicating with third-party WebSocket peers.
+These text-frame options should not be used with Scalability Protocol sockets,
+which require binary protocol data.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>NNG does not validate that text frames contain valid UTF-8.
+Applications that need strict RFC 6455 conformance must validate text data
+themselves and close the connection when invalid data is received.</p>
+</blockquote>
+<h3 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h3>
+<p>The <code>wss://</code>, <code>wss4://</code>, and <code>wss6://</code> schemes use TLS.
+TLS support must be enabled in the NNG build.</p>
+<p>For Scalability Protocol sockets, configure TLS with <a href="../api/tls.html#using-configuration-objects"><code>nng_dialer_set_tls</code></a> or
+<a href="../api/tls.html#using-configuration-objects"><code>nng_listener_set_tls</code></a> before starting the dialer or listener.
+For raw streams, configure TLS with <a href="../api/stream.html#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> or
+<a href="../api/stream.html#tls-configuration"><code>nng_stream_listener_set_tls</code></a> before dialing or listening.</p>
+<p>The set functions take their own hold on the <a href="../api/tls.html#configuration-objects"><code>nng_tls_config</code></a> object, so the
+caller may release its reference after a successful call.
+The corresponding get functions do not add a new hold; callers that retain the
+returned configuration independently should call <a href="../api/tls.html#configuration-objects"><code>nng_tls_config_hold</code></a>.</p>
+<p>Once the underlying HTTP server, dialer, or listener has started using a TLS
+configuration, that configuration cannot be changed.
+This is especially important when multiple <code>wss://</code> listeners share the same
+HTTP server instance.</p>
+<p>Peer certificate information can be obtained with <a href="../api/tls.html#peer-certificates"><code>nng_pipe_peer_cert</code></a> for
+Scalability Protocol pipes or <a href="../api/stream.html#tls-peer-certificates"><code>nng_stream_peer_cert</code></a> for streams.</p>
+<h3 id="transport-and-stream-options"><a class="header" href="#transport-and-stream-options">Transport and Stream Options</a></h3>
+<p>The following options are supported by this transport, where supported by the
+underlying platform.
+Options that change connection behavior must be set before the dialer,
+listener, stream dialer, or stream listener is started.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NNG_OPT_TCP_NODELAY</code></td><td><code>bool</code></td><td>Disable or enable use of <a name="a007"></a>Nagle’s algorithm for TCP connections. Normally should be set to <code>true</code>.</td></tr>
+<tr><td><code>NNG_OPT_TCP_KEEPALIVE</code></td><td><code>bool</code></td><td>Enable or disable use of TCP keep-alive. Set to <code>false</code> by default.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for listener objects only.</td></tr>
+<tr><td><code>NNG_OPT_WS_HEADER</code><a name="NNG_OPT_WS_HEADER"></a></td><td><code>string</code></td><td>Option prefix for HTTP headers. Append the header name to set a handshake header on a dialer or listener, or to retrieve a received header from a connected pipe or stream. For example, <code>NNG_OPT_WS_HEADER "X-Trace-ID"</code> refers to the <code>X-Trace-ID</code> header.</td></tr>
+<tr><td><code>NNG_OPT_WS_PROTOCOL</code><a name="NNG_OPT_WS_PROTOCOL"></a></td><td><code>string</code></td><td>WebSocket subprotocol, corresponding to the <code>Sec-WebSocket-Protocol</code> header. Scalability Protocol sockets configure this automatically.</td></tr>
+<tr><td><code>NNG_OPT_WS_REQUEST_URI</code><a name="NNG_OPT_WS_REQUEST_URI"></a></td><td><code>string</code></td><td>Read-only request URI sent by the client, available from connected pipes and streams. This is useful for listeners that handle a subtree.</td></tr>
+<tr><td><code>NNG_OPT_WS_SENDMAXFRAME</code><a name="NNG_OPT_WS_SENDMAXFRAME"></a></td><td><code>size</code></td><td>Maximum WebSocket frame size to send before fragmenting. The default is 64 KiB. Larger values can improve throughput but may increase latency and peer buffering requirements. There is no WebSocket negotiation for this value.</td></tr>
+<tr><td><code>NNG_OPT_WS_RECVMAXFRAME</code><a name="NNG_OPT_WS_RECVMAXFRAME"></a></td><td><code>size</code></td><td>Maximum WebSocket frame size accepted from the peer. Frames larger than this are rejected. This should not normally be larger than <a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a>.</td></tr>
+<tr><td><code>NNG_OPT_WS_HEADER_RESET</code><a name="NNG_OPT_WS_HEADER_RESET"></a></td><td><code>bool</code></td><td>Read-only option for connected pipes and streams. Reading it resets HTTP header iteration to the beginning.</td></tr>
+<tr><td><code>NNG_OPT_WS_HEADER_NEXT</code><a name="NNG_OPT_WS_HEADER_NEXT"></a></td><td><code>bool</code></td><td>Read-only option for connected pipes and streams. Reading it advances HTTP header iteration. It returns <code>true</code> when another header is available, and <code>false</code> when iteration is complete.</td></tr>
+<tr><td><code>NNG_OPT_WS_HEADER_KEY</code><a name="NNG_OPT_WS_HEADER_KEY"></a></td><td><code>string</code></td><td>Read-only option for connected pipes and streams. Returns the current HTTP header name after <a href="../tran/websocket.html#NNG_OPT_WS_HEADER_NEXT"><code>NNG_OPT_WS_HEADER_NEXT</code></a> has returned <code>true</code>.</td></tr>
+<tr><td><code>NNG_OPT_WS_HEADER_VALUE</code><a name="NNG_OPT_WS_HEADER_VALUE"></a></td><td><code>string</code></td><td>Read-only option for connected pipes and streams. Returns the current HTTP header value after <a href="../tran/websocket.html#NNG_OPT_WS_HEADER_NEXT"><code>NNG_OPT_WS_HEADER_NEXT</code></a> has returned <code>true</code>.</td></tr>
+<tr><td><code>NNG_OPT_WS_SEND_TEXT</code><a name="NNG_OPT_WS_SEND_TEXT"></a></td><td><code>bool</code></td><td>Raw streams only. Send WebSocket text frames instead of binary frames. NNG does not validate UTF-8.</td></tr>
+<tr><td><code>NNG_OPT_WS_RECV_TEXT</code><a name="NNG_OPT_WS_RECV_TEXT"></a></td><td><code>bool</code></td><td>Raw streams only. Accept inbound WebSocket text frames as well as binary frames. NNG does not validate UTF-8.</td></tr>
+<tr><td><code>NNG_OPT_TLS_VERIFIED</code><a name="NNG_OPT_TLS_VERIFIED"></a></td><td><code>bool</code></td><td><code>wss://</code> only. Read-only option indicating whether the remote peer was verified using TLS authentication.</td></tr>
+<tr><td><code>NNG_OPT_TLS_PEER_CN</code><a name="NNG_OPT_TLS_PEER_CN"></a></td><td><code>string</code></td><td><code>wss://</code> only. Read-only option returning the common name from the peer certificate, when available.</td></tr>
+</tbody>
+</table>
+</div>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><code>NNG_OPT_TLS_VERIFIED</code> and <code>NNG_OPT_TLS_PEER_CN</code> may not be meaningful if
+peer authentication is disabled.
+For richer peer certificate information, use <a href="../api/tls.html#peer-certificates"><code>nng_pipe_peer_cert</code></a> or
+<a href="../api/stream.html#tls-peer-certificates"><code>nng_stream_peer_cert</code></a>.</p>
+</blockquote>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -239,11 +356,11 @@ If no header is present, then a message is sent to all connected pipes.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../proto/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../tran/tls.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../proto/pair.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../tran/socket.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -253,11 +370,11 @@ If no header is present, then a message is sent to all connected pipes.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../proto/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../tran/tls.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../proto/pair.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../tran/socket.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
