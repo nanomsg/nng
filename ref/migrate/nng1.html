@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
+            window.path_to_searchindex_js = "../searchindex-b02fcd00.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-5f820576.js"></script>
@@ -495,15 +495,15 @@ They may silently truncate data.</p>
 <li>[<code>nng_http_req_set_method</code>]</li>
 <li>[<code>nng_http_res_set_status</code>]</li>
 <li><a href="../api/http.html#collecting-request-body"><code>nng_http_handler_collect_body</code></a></li>
-<li><a href="../api/http.html#setting-the-callback-argument"><code>nng_http_handler_set_data</code></a></li>
-<li><a href="../api/http.html#filtering-byt-host"><code>nng_http_handler_set_host</code></a></li>
+<li><a href="../api/http.html#setting-callback-argument"><code>nng_http_handler_set_data</code></a></li>
+<li><a href="../api/http.html#filtering-by-host"><code>nng_http_handler_set_host</code></a></li>
 <li><a href="../api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a></li>
 <li><a href="../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a></li>
 </ul>
 <p>The HTTP handler objects may not be modified once in use. Previously this would fail with <code>NNG_EBUSY</code>.
 These checks are removed now, but debug builds will assert if an application tries to do so.</p>
 <p>The <code>nng_http_server_get_addr</code> function is removed. Instead there is now
-[<code>nng_http_server_get_port</code>] which can be used to obtain the port actually bound if the server
+<a href="../api/http.html#listening-port"><code>nng_http_server_get_port</code></a> which can be used to obtain the port actually bound if the server
 was configured with port 0.</p>
 <h2 id="websocket-api"><a class="header" href="#websocket-api">WebSocket API</a></h2>
 <p>The <code>NNG_OPT_WSS_REQUEST_HEADERS</code>, <code>NNG_OPT_WSS_RESPONSE_HEADERS</code> and
