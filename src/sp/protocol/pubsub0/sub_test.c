@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -45,6 +45,7 @@ test_sub_context_cannot_send(void)
 	nng_ctx    ctx;
 	nng_msg   *m;
 	nng_aio   *aio;
+	bool       skipped;
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_ctx_open(&ctx, sub));
@@ -52,8 +53,11 @@ test_sub_context_cannot_send(void)
 	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_aio_set_msg(aio, m);
 	nng_aio_set_timeout(aio, 1000);
+	nng_aio_skip_callback(aio, &skipped);
 	nng_ctx_send(ctx, aio);
-	nng_aio_wait(aio);
+	if (!skipped) {
+		nng_aio_wait(aio);
+	}
 	NUTS_FAIL(nng_aio_result(aio), NNG_ENOTSUP);
 	NUTS_PASS(nng_ctx_close(ctx));
 	NUTS_CLOSE(sub);

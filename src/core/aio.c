@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -335,11 +335,12 @@ nni_aio_busy(nni_aio *aio)
 void
 nni_aio_reset(nni_aio *aio)
 {
-	aio->a_result    = NNG_OK;
-	aio->a_count     = 0;
-	aio->a_abort     = false;
-	aio->a_expire_ok = false;
-	aio->a_sleep     = false;
+	aio->a_result           = NNG_OK;
+	aio->a_count            = 0;
+	aio->a_abort            = false;
+	aio->a_expire_ok        = false;
+	aio->a_sleep            = false;
+	aio->a_skipped_callback = NULL;
 
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
@@ -372,6 +373,11 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	if (!aio->a_sleep) {
 		aio->a_expire_ok = false;
 	}
+
+	// If we're going to run asynchronously, we cannot skip the completion
+	// callback.
+	aio->a_skipped_callback = NULL;
+
 	// Do this outside the lock.  Note that we don't strictly need to have
 	// done this for the failure cases below (the task framework does the
 	// right thing if the task isn't prepped), but those should be uncommon
@@ -463,6 +469,7 @@ nni_aio_finish_impl(
     nni_aio *aio, nng_err rv, size_t count, nni_msg *msg, bool sync)
 {
 	nni_aio_expire_q *eq = aio->a_expire_q;
+	bool             *skipped_cb;
 
 	nni_mtx_lock(&eq->eq_mtx);
 
@@ -475,12 +482,16 @@ nni_aio_finish_impl(
 		aio->a_msg = msg;
 	}
 
-	aio->a_expire     = NNI_TIME_NEVER;
-	aio->a_sleep      = false;
-	aio->a_use_expire = false;
+	aio->a_expire           = NNI_TIME_NEVER;
+	aio->a_sleep            = false;
+	aio->a_use_expire       = false;
+	skipped_cb              = aio->a_skipped_callback;
+	aio->a_skipped_callback = NULL;
 	nni_mtx_unlock(&eq->eq_mtx);
 
-	if (sync) {
+	if (skipped_cb != NULL) {
+		*skipped_cb = true;
+	} else if (sync) {
 		nni_task_exec(&aio->a_task);
 	} else {
 		nni_task_dispatch(&aio->a_task);
@@ -510,6 +521,13 @@ nni_aio_finish_msg(nni_aio *aio, nni_msg *msg)
 {
 	NNI_ASSERT(msg != NULL);
 	nni_aio_finish_impl(aio, 0, nni_msg_len(msg), msg, false);
+}
+
+void
+nni_aio_skip_callback(nni_aio *aio, bool *skipped_callback)
+{
+	*skipped_callback       = false;
+	aio->a_skipped_callback = skipped_callback;
 }
 
 void

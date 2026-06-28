@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -173,6 +173,12 @@ extern bool nni_aio_start(nni_aio *, nni_aio_cancel_fn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 
+// nni_aio_skip_callback indicates that the caller would like to not run a
+// callback if the operation can complete synchronously, and instead be
+// notified by having the boolean variable marked true if the operation was
+// completed synchronously.
+extern void nni_aio_skip_callback(nni_aio *, bool *);
+
 // nni_aio_completion_list is used after removing the aio from an
 // active work queue, and keeping them so that the completions can
 // be run in a deferred manner.  These lists are simple, and intended
@@ -238,6 +244,15 @@ struct nng_aio {
 	// specific operation.
 	void *a_inputs[4];
 	void *a_outputs[4];
+
+	// If non-nil, then when the aio is completed, instead of running the
+	// callback, the addressed boolean will be set to true.  This allows
+	// for a caller to process synchronous completions without relying an a
+	// thread dispatch, which can be used to obtain lower latency at the
+	// cost of more complex processing on the part of the consumer.  The
+	// value pointed to must be false before calling starting an operation.
+	// This pointer is cleared by nng_aio_start.
+	bool *a_skipped_callback;
 
 	// Provider-use fields.
 	nni_aio_cancel_fn a_cancel_fn;

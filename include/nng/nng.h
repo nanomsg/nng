@@ -707,6 +707,17 @@ NNG_DECL void nng_aio_finish(nng_aio *, nng_err);
 typedef void (*nng_aio_cancelfn)(nng_aio *, void *, nng_err);
 NNG_DECL bool nng_aio_start(nng_aio *, nng_aio_cancelfn, void *);
 
+// nng_aio_skip_callback is set on aio to indicate that the caller would prefer
+// to have completion reported synchronously through the supplied bool pointer,
+// if possible. After the caller submits operation for work, it must check the
+// value of the pointed boolean, and if it is true then the function was
+// completed synchronously without any callback being fired.  This avoids
+// unnecessary context switching, but requires the caller to check the boolean
+// status and handle the result synchronously if it is true. If the operation
+// could not be completed synchronously, then the bool will be false, and the
+// callback will be executed on completion.
+NNG_DECL void nng_aio_skip_callback(nng_aio *, bool *);
+
 // nng_aio_sleep does a "sleeping" operation, basically does nothing
 // but wait for the specified number of milliseconds to expire, then
 // calls the callback.  This returns 0, rather than NNG_ETIMEDOUT.
