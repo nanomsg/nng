@@ -303,7 +303,6 @@ $ nngcat --sub --dial=${addr} --quoted &
 == SEE ALSO
 
 [.text-left]
-xref:libnng.3.adoc[libnng(3)],
 xref:nng.7.adoc[nng(7)],
 xref:nng_bus.7.adoc[nng_bus(7)],
 xref:nng_pair.7.adoc[nng_pair(7)],

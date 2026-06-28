@@ -115,9 +115,9 @@ reported to the client to _status_, and the associated text (reason) to _reason_
 then a built in reason based on the _status_ will be used instead.
 
 > [!TIP]
-> Callbacks used on the server may wish to use [`nng_http_server_set_error`] or [`nng_http_server_set_redirect`] instead of
-> `nng_http_set_status`, because those functions will also set the response body to a suitable HTML document
-> for display to users.
+> Callbacks used on the server may wish to call [`nng_http_server_error`] after
+> setting an error status with `nng_http_set_status`, because that will also
+> attach any custom error page configured on the server for display to users.
 
 Status codes are defined by the IETF. Here are definitions that NNG provides for convenience:
 
@@ -572,6 +572,117 @@ This can only be done while the connection is alive.
 
 ## Server API
 
+### Server Object
+
+```c
+typedef struct nng_http_server nng_http_server;
+```
+
+The {{i:`nng_http_server`}} object represents a single HTTP server instance.
+At present, a given server instance listens on exactly one local address.
+
+Server instances are reference counted.
+Applications typically acquire one with [`nng_http_server_hold`], configure it,
+register one or more handlers, optionally install TLS or custom error pages,
+and then start it with [`nng_http_server_start`].
+
+### Acquire a Server
+
+```c
+nng_err nng_http_server_hold(nng_http_server **serverp, const nng_url *url);
+```
+
+The {{i:`nng_http_server_hold`}} function acquires an HTTP server instance suitable
+for serving the URL identified by _url_ and stores it in _serverp_.
+
+If a suitable server instance already exists, its reference count is incremented
+and that existing instance is returned.
+Otherwise a new server is created with an initial hold on behalf of the caller.
+
+The server is not started by this function.
+This gives the application an opportunity to configure it before later calling
+[`nng_http_server_start`].
+
+> [!NOTE]
+> The URL matching logic cannot distinguish between every alias for the same
+> local IP address. When virtual hosting matters, use canonical names or
+> addresses in _url_ to avoid confusion.
+
+This function returns [`NNG_ENOMEM`] if memory cannot be allocated, or
+[`NNG_ENOTSUP`] if HTTP support is unavailable.
+
+### Release a Server
+
+```c
+void nng_http_server_release(nng_http_server *server);
+```
+
+The {{i:`nng_http_server_release`}} function drops a hold previously obtained on
+_server_, usually by [`nng_http_server_hold`].
+
+When the last hold is released, the server and all resources associated with it,
+including registered handlers and active connections, are deallocated.
+If the server is still running at that point, it is stopped first.
+
+> [!IMPORTANT]
+> It is an error to release a server that was not previously held, or to
+> release it more times than it was held.
+
+### Start a Server
+
+```c
+nng_err nng_http_server_start(nng_http_server *server);
+```
+
+The {{i:`nng_http_server_start`}} function starts _server_ listening for
+connections and handling HTTP requests.
+
+Once a server has been started, configuration that affects listener setup,
+such as TLS, can no longer be changed.
+
+Each successful call increments an internal start count.
+The server remains active until a matching number of calls to
+[`nng_http_server_stop`] have been made.
+
+This function may return [`NNG_EADDRINUSE`] if the address or port is already in
+use, [`NNG_EADDRINVAL`] if the configured address is invalid, [`NNG_ENOMEM`] if
+memory cannot be allocated, or [`NNG_ENOTSUP`] if HTTP support is unavailable.
+
+### Stop a Server
+
+```c
+void nng_http_server_stop(nng_http_server *server);
+```
+
+The {{i:`nng_http_server_stop`}} function undoes the effect of a previous call
+to [`nng_http_server_start`].
+
+Each call decrements the server's start count.
+When that count reaches zero, the listener is closed and existing client
+connections are shut down.
+This is a hard stop and does not wait for those connections to close
+gracefully.
+
+Once a server has fully stopped, it cannot be restarted.
+A later call to [`nng_http_server_hold`] for the same URL will return a new
+server instance instead.
+
+Applications usually call [`nng_http_server_release`] after stopping a server
+when they are done with it.
+
+### Listening Port
+
+```c
+nng_err nng_http_server_get_port(nng_http_server *server, int *port);
+```
+
+The {{i:`nng_http_server_get_port`}} function obtains the TCP port number the
+server is listening on.
+
+This is most useful when the server was configured to bind to port zero and the
+application needs to discover the dynamically assigned port after
+[`nng_http_server_start`] succeeds.
+
 ### Server TLS
 
 ```c
@@ -599,6 +710,85 @@ The `nng_http_server_set_tls` function will return [`NNG_EBUSY`] if the server h
 > [!TIP]
 > Server TLS configurations normally need a local certificate and private key, configured with
 > [`nng_tls_config_own_cert`] or [`nng_tls_config_cert_key_file`].
+
+### Registering a Handler
+
+```c
+nng_err nng_http_server_add_handler(nng_http_server *server, nng_http_handler *handler);
+```
+
+The {{i:`nng_http_server_add_handler`}} function registers _handler_ with
+_server_.
+
+If another handler already exists with a conflicting combination of host,
+method, and URI routing, then the function fails with [`NNG_EADDRINUSE`].
+
+If a handler is registered with a server, then it is automatically deallocated
+when the server itself is deallocated unless it is first removed with
+[`nng_http_server_del_handler`].
+
+This function may also return [`NNG_ENOMEM`] or [`NNG_ENOTSUP`].
+
+### Unregistering a Handler
+
+```c
+nng_err nng_http_server_del_handler(nng_http_server *server, nng_http_handler *handler);
+```
+
+The {{i:`nng_http_server_del_handler`}} function removes _handler_ from
+_server_.
+
+Once removed, the caller becomes responsible for either freeing the handler
+with [`nng_http_handler_free`] or registering it with another server instance.
+
+The function returns [`NNG_ENOENT`] if the handler is not currently registered
+with _server_, or [`NNG_ENOTSUP`] if HTTP support is unavailable.
+
+### Custom Error Pages
+
+```c
+nng_err nng_http_server_set_error_page(
+    nng_http_server *server, nng_http_status code, const char *html);
+nng_err nng_http_server_set_error_file(
+    nng_http_server *server, nng_http_status code, const char *path);
+```
+
+The {{i:`nng_http_server_set_error_page`}} and
+{{i:`nng_http_server_set_error_file`}} functions configure custom error page
+content for the HTTP status _code_ on _server_.
+
+The `nng_http_server_set_error_page` function copies the HTML content from
+_html_ and associates it with _code_.
+
+The `nng_http_server_set_error_file` function behaves similarly, except that it
+loads the content from the file at _path_ when the function is called.
+If that file later changes, call the function again to reload the updated
+contents.
+
+These custom pages are used for internally generated framework errors, and they
+can also be applied explicitly by a handler with [`nng_http_server_error`].
+The most recently configured page for a given status code wins, regardless of
+whether it came from the in-memory or file-based variant.
+
+> [!NOTE]
+> If an application directly replaces the response body itself, that body takes
+> precedence over any custom error page configured here.
+
+### Applying a Custom Error Page
+
+```c
+nng_err nng_http_server_error(nng_http_server *server, nng_http *conn);
+```
+
+The {{i:`nng_http_server_error`}} function replaces the response body on _conn_
+with the custom error page associated with the response status currently set on
+that connection.
+
+Applications should call [`nng_http_set_status`] first to establish the desired
+error status code, then call `nng_http_server_error` to attach the configured
+HTML body for that status.
+
+Any response body already present on _conn_ is replaced by this function.
 
 ### Handlers
 

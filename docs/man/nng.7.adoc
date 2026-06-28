@@ -182,10 +182,9 @@ confusion when they are parsed on different systems.
 
 === API
 
-The library API is documented at xref:libnng.3.adoc[libnng(3)].
+The library API is documented in the mdBook API reference under `docs/ref/api/`.
 
 == SEE ALSO
 
 [.text-left]
-xref:libnng.3.adoc[libnng(3)],
 xref:nng_compat.3compat.adoc[nng_compat(3compat)]
