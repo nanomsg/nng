@@ -221,6 +221,12 @@ The URL pointer is stored in _urlp_.
 The returned URL belongs to the dialer or listener.
 It must not be modified or freed by the caller, and it is invalid after the dialer or listener is closed.
 
+> [!NOTE]
+> Older NNG documentation referred to an `NNG_OPT_URL` option for endpoints.
+> That option has been removed.
+> Use `nng_dialer_get_url` and `nng_listener_get_url` instead, which return a
+> typed [`nng_url`] object rather than a string.
+
 ### Errors
 
 These functions can return:
@@ -279,6 +285,26 @@ The function suffix identifies the type used for the option:
 Available options vary by transport and by option.
 Many common options are listed in [Socket Options][socket-options] and transport-specific options are documented
 with each transport.
+
+### Endpoint-Specific Options
+
+The following endpoint-specific option is defined by the core API:
+
+| Option                                        | Type           | Description |
+| --------------------------------------------- | -------------- | ----------- |
+| `NNG_OPT_LOCADDR`<a name="NNG_OPT_LOCADDR"></a> | `nng_sockaddr` | Dialers only. Configures the local address to bind before initiating outgoing connections, when supported by the transport. |
+
+`NNG_OPT_LOCADDR` is most useful for transports such as TCP or UDP where the
+application needs to choose the local interface or source address for outgoing
+connections.
+When used on a TCP dialer, the IP address portion is used as the source
+address, but the port is ignored and an ephemeral port is chosen by the
+system.
+
+> [!NOTE]
+> Support for `NNG_OPT_LOCADDR` depends on the transport.
+> Some transports support it on dialers, some do not, and listeners may expose
+> related local-address information differently or not at all.
 
 > [!NOTE]
 > Socket option values for `NNG_OPT_RECONNMAXT`, `NNG_OPT_RECONNMINT`, and `NNG_OPT_RECVMAXSZ` provide initial defaults

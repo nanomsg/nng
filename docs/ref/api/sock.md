@@ -307,7 +307,7 @@ The following options are available for many protocols, and always use the same 
 | `NNG_OPT_MAXTTL`<a name="NNG_OPT_MAXTTL"></a>         | `int`          | Maximum number of traversals across an [`nng_device`] device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.                                       |
 | `NNG_OPT_RECONNMAXT`<a name="NNG_OPT_RECONNMAXT"></a> | `nng_duration` | Maximum time [dialers][dialer] will delay before trying after failing to connect.                                                                                                 |
 | `NNG_OPT_RECONNMINT`<a name="NNG_OPT_RECONNMINT"></a> | `nng_duration` | Minimum time [dialers][dialer] will delay before trying after failing to connect.                                                                                                 |
-| `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>       | `int`          | Maximum number of messages (0-8192) to buffer locally when receiving.                                                                                                             |
+| `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>       | `int`          | Maximum number of messages (0-8192) to buffer locally when receiving. Not all protocols support receive-side buffering.                                                          |
 | `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a>   | `size_t`       | Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
 | `NNG_OPT_RECVTIMEO`<a name="NNG_OPT_RECVTIMEO"></a>   | `nng_duration` | Default timeout (ms) for receiving messages.                                                                                                                                      |
 | `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>       | `int`          | Maximum number of messages (0-8192) to buffer when sending messages.                                                                                                              |
@@ -319,6 +319,19 @@ The following options are available for many protocols, and always use the same 
 > The `NNG_OPT_RECONNMAXT`, `NNG_OPT_RECONNMINT`, and `NNG_OPT_RECVMAXSZ` options are just the initial defaults that [dialers][dialer]
 > (and for `NNG_OPT_RECVMAXSZ` also [listeners][listener])
 > will use. After the dialer or listener is created, changes to the socket's value will have no affect on that dialer or listener.
+
+> [!NOTE]
+> `NNG_OPT_RECVMAXSZ` should be configured before creating dialers or
+> listeners, especially on hostile networks.
+> Setting it to a non-zero value helps defend against denial-of-service cases
+> where a peer claims an extremely large message size without actually sending
+> the payload.
+
+> [!TIP]
+> `NNG_OPT_MAXTTL` is only meaningful for protocols that support forwarding
+> through devices.
+> Using a consistent value across a topology helps prevent routing loops from
+> circulating messages indefinitely.
 
 ## Polling Socket Events
 
