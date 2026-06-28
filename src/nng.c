@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "core/aio.h"
 #include "core/alloc.h"
 #include "core/defs.h"
 #include "core/nng_impl.h"
@@ -96,12 +97,14 @@ nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 	int       rv;
 	nni_sock *sock;
 	nni_aio   aio;
+	bool      skipped;
 
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
 		return (rv);
 	}
 
 	nni_aio_init(&aio, NULL, NULL);
+	nni_aio_skip_callback(&aio, &skipped);
 	if (flags & NNG_FLAG_NONBLOCK) {
 		nng_aio_set_timeout(&aio, NNG_DURATION_ZERO);
 	} else {
@@ -110,7 +113,9 @@ nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 	nni_sock_recv(sock, &aio);
 	nni_sock_rele(sock);
 
-	nni_aio_wait(&aio);
+	if (!skipped) {
+		nni_aio_wait(&aio);
+	}
 
 	if ((rv = nni_aio_result(&aio)) == 0) {
 		*msgp = nng_aio_get_msg(&aio);
@@ -147,6 +152,7 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 	int       rv;
 	nni_aio   aio;
 	nni_sock *sock;
+	bool      skipped;
 
 	if (msg == NULL) {
 		return (NNG_EINVAL);
@@ -156,6 +162,7 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 	}
 
 	nni_aio_init(&aio, NULL, NULL);
+	nni_aio_skip_callback(&aio, &skipped);
 	if ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK) {
 		nni_aio_set_timeout(&aio, NNG_DURATION_ZERO);
 	} else {
@@ -166,7 +173,9 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 	nni_sock_send(sock, &aio);
 	nni_sock_rele(sock);
 
-	nni_aio_wait(&aio);
+	if (!skipped) {
+		nni_aio_wait(&aio);
+	}
 	rv = nni_aio_result(&aio);
 	nni_aio_fini(&aio);
 
@@ -262,12 +271,14 @@ nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 	int      rv;
 	nni_aio  aio;
 	nni_ctx *ctx;
+	bool     skipped;
 
 	if ((rv = nni_ctx_find(&ctx, cid.id)) != 0) {
 		return (rv);
 	}
 
 	nni_aio_init(&aio, NULL, NULL);
+	nni_aio_skip_callback(&aio, &skipped);
 	if (flags & NNG_FLAG_NONBLOCK) {
 		nng_aio_set_timeout(&aio, NNG_DURATION_ZERO);
 	} else {
@@ -276,7 +287,9 @@ nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 	nni_ctx_recv(ctx, &aio);
 	nni_ctx_rele(ctx);
 
-	nni_aio_wait(&aio);
+	if (!skipped) {
+		nni_aio_wait(&aio);
+	}
 
 	if ((rv = nni_aio_result(&aio)) == 0) {
 		*msgp = nng_aio_get_msg(&aio);
@@ -330,6 +343,7 @@ nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 	int      rv;
 	nni_aio  aio;
 	nni_ctx *ctx;
+	bool     skipped;
 
 	if (msg == NULL) {
 		return (NNG_EINVAL);
@@ -339,6 +353,7 @@ nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 	}
 
 	nni_aio_init(&aio, NULL, NULL);
+	nni_aio_skip_callback(&aio, &skipped);
 	if ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK) {
 		nni_aio_set_timeout(&aio, NNG_DURATION_ZERO);
 	} else {
@@ -349,7 +364,9 @@ nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 	nni_ctx_send(ctx, &aio);
 	nni_ctx_rele(ctx);
 
-	nni_aio_wait(&aio);
+	if (!skipped) {
+		nni_aio_wait(&aio);
+	}
 	rv = nni_aio_result(&aio);
 	nni_aio_fini(&aio);
 
@@ -2091,6 +2108,12 @@ nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg)
 {
 	nni_aio_reset(aio);
 	return (nni_aio_start(aio, fn, arg));
+}
+
+void
+nng_aio_skip_callback(nng_aio *aio, bool *skipped_callback)
+{
+	nni_aio_skip_callback(aio, skipped_callback);
 }
 
 void

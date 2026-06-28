@@ -28,6 +28,7 @@ An {{i:`nng_aio`}}{{hi:aio}} is an opaque structure used in conjunction with
 Every asynchronous operation uses one of these structures, each of which
 can only be used with a single operation at a time.
 
+{{hi:callback}}
 Asynchronous operations are performed without blocking calling application threads.
 Instead the application registers a callback function to be executed
 when the operation is complete (whether successfully or not).
@@ -165,6 +166,44 @@ This is the same test used internally by [`nng_aio_wait`].
 > [!IMPORTANT]
 > The caller is responsible for coordinating any use of this with any reuse of the _aio_.
 > Because the _aio_ can be reused use of this function can be racy.
+
+## Skipping Callbacks
+
+```c
+void nng_aio_skip_callback(nng_aio *aio, bool *skip);
+```
+
+Sometimes it is useful to avoid the use of a callback when an operation can be completed immediately
+without scheduling on an asynchronous thread.
+Applications can opt in to this behavior by calling {{i:`nng_aio_skip_callback`}}, which signals to
+the framework that instead of dispatching a completion callback, the value of _skip_ should be set
+to `true`, indicating that the operation finished immediately.
+
+After starting the operation, the consumer of the _aio_ should check the value of _skip_, and if it is
+true then the completion is finished and the results will be in the _aio_. The [callback] for the _aio_
+will _not_ be executed in this case. If the value is _false_, then the completion will be executed
+asynchronously.
+
+This function should be called before the operation is started, each time an operation is performed.
+The changes made by it to the _aio_ do not persist across operations.
+
+> [!TIP]
+> Use of this function can reduce overhead and latency by eliminating unnecessary context switching,
+> but it does require extra complexity on the part of the caller.
+
+### Example 1: Waiting for An Operation
+
+One of easiest ways to use this function is with [`nng_aio_wait`]. (In fact, the [`nng_sendmsg`] and
+[`nng_recvmsg`] family of functions do this internally.) For example:
+
+```c
+bool skipped;
+nng_aio_skip_callback(aio, &skipped);
+nng_ctx_send(ctx, aio);
+if (!skipped) {
+    nng_aio_wait(aio);
+}
+```
 
 ## Result of Operation
 

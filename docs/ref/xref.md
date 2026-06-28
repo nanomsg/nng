@@ -104,6 +104,7 @@
 [`nng_aio_get_input`]: ../api/aio.md#inputs-and-outputs
 [`nng_aio_set_input`]: ../api/aio.md#inputs-and-outputs
 [`nng_aio_set_output`]: ../api/aio.md#inputs-and-outputs
+[`nng_aio_skip_callback`]: ../api/aio.md#skipping-callbacks
 [`nng_iov`]: ../api/aio.md#scatter-gather-vectors
 [`nng_socket_id`]: ../api/sock.md#socket-identity
 [`nng_socket_raw`]: ../api/sock.md#socket-identity
