@@ -75,7 +75,7 @@ client(const char *url)
 
 	// Allocatate a buffer to recv
 	iov.iov_len = 100;
-	iov.iov_buf = (char *) malloc(sizeof(char) * iov.iov_len);
+	iov.iov_buf = (char *) malloc(iov.iov_len);
 	if ((rv = nng_aio_set_iov(aio, 1, &iov)) != 0) {
 		nng_fatal("call to nng_aio_alloc", rv);
 	}
