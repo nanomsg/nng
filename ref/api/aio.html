@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-43e1109a.js";
+            window.path_to_searchindex_js = "../searchindex-9a44847f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-e1e04f66.js"></script>
@@ -196,7 +196,8 @@ asynchronous operations described in this chapter whenever possible.</p>
 <a name="a003"></a>asynchronous I/O operations.
 Every asynchronous operation uses one of these structures, each of which
 can only be used with a single operation at a time.</p>
-<p>Asynchronous operations are performed without blocking calling application threads.
+<p><a name="a004"></a>
+Asynchronous operations are performed without blocking calling application threads.
 Instead the application registers a callback function to be executed
 when the operation is complete (whether successfully or not).
 This callback will be executed exactly once.</p>
@@ -208,8 +209,8 @@ complete, creating a synchronous flow from an asynchronous one.</p>
 <h2 id="create-handle"><a class="header" href="#create-handle">Create Handle</a></h2>
 <pre><code class="language-c">nng_err nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
 </code></pre>
-<p>The <a name="a004"></a><code>nng_aio_alloc</code> function creates an <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> object, with the
-<a name="a005"></a>callback <em>callb</em> taking the argument <em>arg</em>, and returns it in <em>aiop</em>.</p>
+<p>The <a name="a005"></a><code>nng_aio_alloc</code> function creates an <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> object, with the
+<a name="a006"></a>callback <em>callb</em> taking the argument <em>arg</em>, and returns it in <em>aiop</em>.</p>
 <p>If this succeeds, the function returns zero. Otherwise it may return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
@@ -226,9 +227,9 @@ success using <a href="../api/aio.html#result-of-operation"><code>nng_aio_result
 <pre><code class="language-c">void nng_aio_free(nng_aio *aio);
 void nng_aio_reap(nng_aio *aio);
 </code></pre>
-<p>The <a name="a006"></a><code>nng_aio_free</code> handle destroys the handle <em>aio</em>, waiting for any operations
+<p>The <a name="a007"></a><code>nng_aio_free</code> handle destroys the handle <em>aio</em>, waiting for any operations
 and associated callbacks to complete before doing so.</p>
-<p>The <a name="a007"></a><code>nng_aio_reap</code> handle destroys the handle <em>aio</em> asynchronously, using a <em>reaper</em>
+<p>The <a name="a008"></a><code>nng_aio_reap</code> handle destroys the handle <em>aio</em> asynchronously, using a <em>reaper</em>
 <a href="../api/thread.html">thread</a> to do so. It does not wait for the object to be destroyed. Thus this function
 is safe to call from <em>aio</em>’s own callback.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -247,12 +248,12 @@ completion. If no operation is in progress (perhaps because it has
 already completed), then these operations have no effect.
 If the operation is successfully canceled or aborted, then the callback
 will still be called.</p>
-<p>The <a name="a008"></a><code>nng_aio_abort</code> function aborts the operation associated with <em>aio</em>
+<p>The <a name="a009"></a><code>nng_aio_abort</code> function aborts the operation associated with <em>aio</em>
 and returns immediately without waiting. If cancellation was successful,
 then <a href="../api/aio.html#result-of-operation"><code>nng_aio_result</code></a> will return <em>err</em>.</p>
-<p>The <a name="a009"></a><code>nng_aio_cancel</code> function acts like <code>nng_aio_abort</code>, but uses the error code
-<a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a><a name="a010"></a>.</p>
-<p>The <a name="a011"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with <a href="../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>,
+<p>The <a name="a010"></a><code>nng_aio_cancel</code> function acts like <code>nng_aio_abort</code>, but uses the error code
+<a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a><a name="a011"></a>.</p>
+<p>The <a name="a012"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with <a href="../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>,
 and then waits the operation and any associated callback to complete.
 This function also marks <em>aio</em> itself permanently stopped, so that any
 new operations scheduled by I/O providers using <a href="../api/aio.html#starting-an-operation"><code>nng_aio_start</code></a>
@@ -268,7 +269,7 @@ particularly if the callbacks might attempt to reschedule further operations.</p
 <pre><code class="language-c">void nng_aio_set_timeout(nng_aio *aio, nng_duration timeout);
 void nng_aio_set_expire(nng_aio *aio, nng_time expiration);
 </code></pre>
-<p>The <code>nng_aio_set_timeout</code> function sets a <a name="a012"></a><em>timeout</em>
+<p>The <code>nng_aio_set_timeout</code> function sets a <a name="a013"></a><em>timeout</em>
 for the asynchronous operation associated with <em>aio</em>.
 This causes a timer to be started when the operation is actually started.
 If the timer expires before the operation is completed, then it is
@@ -278,13 +279,13 @@ The <em>timeout</em> <a href="../api/time.html">duration</a> is specified as a r
 If the timeout is <a href="../api/time.html#duration-type"><code>NNG_DURATION_DEFAULT</code></a>, then a “default” or socket-specific
 timeout is used.
 (This is frequently the same as <a href="../api/time.html#duration-type"><code>NNG_DURATION_INFINITE</code></a>.)</p>
-<p>The <a name="a013"></a><code>nng_aio_set_expire</code> function is similar to <code>nng_aio_set_timeout</code>, but sets
+<p>The <a name="a014"></a><code>nng_aio_set_expire</code> function is similar to <code>nng_aio_set_timeout</code>, but sets
 an expiration time based on the system clock. The <em>expiration</em>
 <a href="../api/time.html">time</a> is a clock timestamp, such as would be returned by <a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
 <h2 id="wait-for-completion"><a class="header" href="#wait-for-completion">Wait for Completion</a></h2>
 <pre><code class="language-c">void nng_aio_wait(nng_aio *aio);
 </code></pre>
-<p>The <a name="a014"></a><code>nng_aio_wait</code> function waits for an asynchronous I/O operation to complete.
+<p>The <a name="a015"></a><code>nng_aio_wait</code> function waits for an asynchronous I/O operation to complete.
 If the operation has not been started, or has already completed, then it returns immediately.</p>
 <p>If a callback was set with <em>aio</em> when it was allocated, then this
 function will not be called until the callback has completed.</p>
@@ -297,7 +298,7 @@ Doing so may result in a deadlock.</p>
 <h2 id="test-for-completion"><a class="header" href="#test-for-completion">Test for Completion</a></h2>
 <pre><code class="language-c">bool nng_aio_busy(nng_aio *aio);
 </code></pre>
-<p>The <a name="a015"></a><code>nng_aio_busy</code> function returns <code>true</code> if the <em>aio</em> is currently busy performing an
+<p>The <a name="a016"></a><code>nng_aio_busy</code> function returns <code>true</code> if the <em>aio</em> is currently busy performing an
 operation or is executing a completion callback. Otherwise it return <code>false</code>.
 This is the same test used internally by <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
@@ -305,15 +306,44 @@ This is the same test used internally by <a href="../api/aio.html#wait-for-compl
 <p>The caller is responsible for coordinating any use of this with any reuse of the <em>aio</em>.
 Because the <em>aio</em> can be reused use of this function can be racy.</p>
 </blockquote>
+<h2 id="skipping-callbacks"><a class="header" href="#skipping-callbacks">Skipping Callbacks</a></h2>
+<pre><code class="language-c">void nng_aio_skip_callback(nng_aio *aio, bool *skip);
+</code></pre>
+<p>Sometimes it is useful to avoid the use of a callback when an operation can be completed immediately
+without scheduling on an asynchronous thread.
+Applications can opt in to this behavior by calling <a name="a017"></a><code>nng_aio_skip_callback</code>, which signals to
+the framework that instead of dispatching a completion callback, the value of <em>skip</em> should be set
+to <code>true</code>, indicating that the operation finished immediately.</p>
+<p>After starting the operation, the consumer of the <em>aio</em> should check the value of <em>skip</em>, and if it is
+true then the completion is finished and the results will be in the <em>aio</em>. The [callback] for the <em>aio</em>
+will <em>not</em> be executed in this case. If the value is <em>false</em>, then the completion will be executed
+asynchronously.</p>
+<p>This function should be called before the operation is started, each time an operation is performed.
+The changes made by it to the <em>aio</em> do not persist across operations.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Use of this function can reduce overhead and latency by eliminating unnecessary context switching,
+but it does require extra complexity on the part of the caller.</p>
+</blockquote>
+<h3 id="example-1-waiting-for-an-operation"><a class="header" href="#example-1-waiting-for-an-operation">Example 1: Waiting for An Operation</a></h3>
+<p>One of easiest ways to use this function is with <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>. (In fact, the <a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a> and
+<a href="../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a> family of functions do this internally.) For example:</p>
+<pre><code class="language-c">bool skipped;
+nng_aio_skip_callback(aio, &amp;skipped);
+nng_ctx_send(ctx, aio);
+if (!skipped) {
+    nng_aio_wait(aio);
+}
+</code></pre>
 <h2 id="result-of-operation"><a class="header" href="#result-of-operation">Result of Operation</a></h2>
 <pre><code class="language-c">nng_err nng_aio_result(nng_aio *aio);
 size_t nng_aio_count(nng_aio *aio);
 </code></pre>
-<p>The <a name="a016"></a><code>nng_aio_result</code> function returns the result of the operation associated
+<p>The <a name="a018"></a><code>nng_aio_result</code> function returns the result of the operation associated
 with the handle <em>aio</em>.
 If the operation was successful, then 0 is returned.
 Otherwise a non-zero <a href="../api/errors.html">error</a> code, such as <a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a> or <a href="../api/errors.html#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>, is returned.</p>
-<p>For operations that transfer data, <a name="a017"></a><code>nng_aio_count</code> returns the
+<p>For operations that transfer data, <a name="a019"></a><code>nng_aio_count</code> returns the
 number of bytes transferred by the operation associated with the handle <em>aio</em>.
 Operations that do not transfer data, or do not keep a count, may return zero for this function.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -326,7 +356,7 @@ operation to complete with <a href="../api/aio.html#wait-for-completion"><code>n
 <pre><code class="language-c">nng_msg *nng_aio_get_msg(nng_aio *aio);
 void nng_aio_set_msg(nng_aio *aio, nng_msg *msg);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_aio_get_msg</code> and <a name="a019"></a><code>nng_aio_set_msg</code> functions retrieve and store a <a href="../api/msg.html">message</a>
+<p>The <a name="a020"></a><code>nng_aio_get_msg</code> and <a name="a021"></a><code>nng_aio_set_msg</code> functions retrieve and store a <a href="../api/msg.html">message</a>
 in <em>aio</em>.
 For example, if a function to receive data is called, that function can generally be expected
 to store a message on the associated <em>aio</em>, for the application to retrieve with
@@ -354,8 +384,8 @@ int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
 </code></pre>
 <p>For some operations, the unit of data transferred is not a <a href="../api/msg.html">message</a>, but
 rather a stream of bytes.</p>
-<p>For these operations, an array of <em>niov</em> <a name="a020"></a><code>nng_iov</code> structures can be passed to
-the <a name="a021"></a><code>nng_aio_set_iov</code> function to provide a scatter/gather array of
+<p>For these operations, an array of <em>niov</em> <a name="a022"></a><code>nng_iov</code> structures can be passed to
+the <a name="a023"></a><code>nng_aio_set_iov</code> function to provide a scatter/gather array of
 elements describing the location (<code>iov_buf</code>) and length (<code>iov_len</code>) of data,
 to transfer.</p>
 <p>The <em>iov</em> vector is copied into storage in the <em>aio</em> itself, so that callers may use stack allocated <code>nng_iov</code> structures.
@@ -411,12 +441,12 @@ in use by an active asynchronous operation.</p>
 
 void nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
 </code></pre>
-<p><a name="a022"></a>
-Some asynchronous operations, such as those dealing with <a href="../api/stream.html">streams</a>, use <a name="a023"></a>scatter or <a name="a024"></a>gather
+<p><a name="a024"></a>
+Some asynchronous operations, such as those dealing with <a href="../api/stream.html">streams</a>, use <a name="a025"></a>scatter or <a name="a026"></a>gather
 vectors, where data to be transferred is either gathered from multiple separate regions of memory, or
 scattered into separate regions of memory. For example a message may have a header located at one location
 in memory, and a payload located in another.</p>
-<p>The <a name="a025"></a><code>nng_aio_set_iov</code> function configures the <em>aio</em> to use <em>nio</em> separate segments, described by
+<p>The <a name="a027"></a><code>nng_aio_set_iov</code> function configures the <em>aio</em> to use <em>nio</em> separate segments, described by
 the elements in <em>iov</em>. For each of these, the segment of size <em>iov_len</em> located at <em>iov_buf</em> will be used.</p>
 <p>The elements of <em>iov</em> will be copied into <em>aio</em>, so the vector may be located
 on the stack or another temporary location. The locations referenced by it, <em>must</em> remain valid for
@@ -434,9 +464,9 @@ for the majority of applications that simply utilize operations provided for by 
 void nng_aio_reset(nng_aio *aio);
 bool nng_aio_start(nng_aio *aio, nng_aio_cancelfn fn, void *arg);
 </code></pre>
-<p>The <a name="a026"></a><code>nng_aio_reset</code> function resets various fields in the <em>aio</em>.
+<p>The <a name="a028"></a><code>nng_aio_reset</code> function resets various fields in the <em>aio</em>.
 It can be called before starting an operation.</p>
-<p>The <a name="a027"></a><code>nng_aio_start</code> function starts the operation associated with <em>aio</em>.
+<p>The <a name="a029"></a><code>nng_aio_start</code> function starts the operation associated with <em>aio</em>.
 It implies the same reset as <code>nng_aio_reset</code>. Thus, <code>nng_aio_reset</code> is typically
 only useful when used with operations that complete synchronously.
 The <code>nng_aio_start</code> function also registers the cancellation function <em>fn</em> and
@@ -475,7 +505,7 @@ This usually involves the use of locks or other synchronization primitives.</p>
 <h3 id="finishing-an-operation"><a class="header" href="#finishing-an-operation">Finishing an Operation</a></h3>
 <pre><code class="language-c">void nng_aio_finish(nng_aio *aio, nng_err err);
 </code></pre>
-<p>The <a name="a028"></a><code>nng_aio_finish</code> function completes the operation associated with <em>aio</em>.
+<p>The <a name="a030"></a><code>nng_aio_finish</code> function completes the operation associated with <em>aio</em>.
 The result of the the status <em>err</em>.</p>
 <p>This function causes the callback associated with the <em>aio</em> to called.
 The <em>aio</em> may not be referenced again by the caller.</p>
