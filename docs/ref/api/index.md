@@ -17,6 +17,7 @@ include the `nng/nng.h` header file like so:
 - [Initialization](init.md)
 - [Messages](msg.md)
 - [Sockets](sock.md)
+- [Dialers and Listeners](endpoint.md)
 - [Devices](device.md)
 - [Contexts](ctx.md)
 - [Pipes](pipe.md)
