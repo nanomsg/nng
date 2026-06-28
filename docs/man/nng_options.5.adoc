@@ -41,14 +41,14 @@ nng_options - socket, dialer, listener, and pipe options
 This page documents the various standard options that can be set or
 retrieved on objects.
 
-Dialers (xref:nng_dialer.5.adoc[`nng_dialer`] objects) use the functions
-xref:nng_dialer_get.3.adoc[`nng_dialer_get()`] and
-xref:nng_dialer_set.3.adoc[`nng_dialer_set()`] to set and retrieve option
+Dialers (`nng_dialer` objects) use the functions
+`nng_dialer_get()` and
+`nng_dialer_set()` to set and retrieve option
 values.
 
-Listeners (xref:nng_listener.5.adoc[`nng_listener`] objects) use the functions
-xref:nng_listener_get.3.adoc[`nng_listener_get()`]
-and xref:nng_listener_set.3.adoc[`nng_listener_set()`] to set and
+Listeners (`nng_listener` objects) use the functions
+`nng_listener_get()`
+and `nng_listener_set()` to set and
 retrieve option values.
 
 Pipes (xref:nng_pipe.5.adoc[`nng_pipe`] objects) can only retrieve option values using
@@ -217,10 +217,6 @@ Zones (and this option) are only supported on Solaris and illumos systems, on se
 == SEE ALSO
 
 [.text-left]
-xref:nng_dialer_get.3.adoc[nng_dialer_get(3)],
-xref:nng_dialer_set.3.adoc[nng_dialer_set(3)],
-xref:nng_listener_get.3.adoc[nng_listener_get(3)],
-xref:nng_listener_set.3.adoc[nng_listener_set(3)],
 xref:nng_pipe_get.3.adoc[nng_pipe_get(3)],
 xref:nng_socket_get.3.adoc[nng_socket_get(3)],
 xref:nng_socket_set.3.adoc[nng_socket_set(3)],

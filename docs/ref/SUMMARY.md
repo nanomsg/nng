@@ -12,6 +12,8 @@
 
   - [Sockets](./api/sock.md)
 
+  - [Dialers and Listeners](./api/endpoint.md)
+
   - [Devices](./api/device.md)
 
   - [Contexts](./api/ctx.md)
