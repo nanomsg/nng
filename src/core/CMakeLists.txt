@@ -22,6 +22,8 @@ nng_sources(
 
         aio.c
         aio.h
+        alloc.c
+        alloc.h
         device.c
         device.h
         dialer.c

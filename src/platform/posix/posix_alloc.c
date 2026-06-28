@@ -17,20 +17,19 @@
 void *
 nni_alloc(size_t sz)
 {
-	return (sz > 0 ? malloc(sz) : NULL);
+	return (sz > 0 ? nni_malloc_fn(sz) : NULL);
 }
 
 void *
 nni_zalloc(size_t sz)
 {
-	return (sz > 0 ? calloc(1, sz) : NULL);
+	return (sz > 0 ? nni_calloc_fn(1, sz) : NULL);
 }
 
 void
 nni_free(void *ptr, size_t size)
 {
-	NNI_ARG_UNUSED(size);
-	free(ptr);
+	nni_free_fn(ptr, size);
 }
 
 #endif // NNG_PLATFORM_POSIX

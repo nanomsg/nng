@@ -1326,6 +1326,10 @@ typedef struct {
 	// will be used. Default is controlled by NNG_RESOLV_CONCURRENCY
 	// compile time variable.
 	int16_t num_resolver_threads;
+
+	void *(*malloc_fn)(size_t);
+	void *(*calloc_fn)(size_t, size_t);
+	void (*free_fn)(void *, size_t);
 } nng_init_params;
 
 // Initialize the library.  May be called multiple times, but
