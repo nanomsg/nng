@@ -69,7 +69,7 @@ other languages please check the http://nanomsg.org/[website].
 [horizontal]
 xref:nng_ipc.7.adoc[nng_ipc(7)]:: Inter-process transport
 xref:nng_socket.7.adoc[nng_socket(7)]:: BSD socket transport
-xref:nng_tcp.7.adoc[nng_tcp(7)]:: TCP (and TCPv6) transport
+TCP:: TCP (and TCPv6) transport; see the mdBook transport reference
 
 === Conceptual Overview
 
