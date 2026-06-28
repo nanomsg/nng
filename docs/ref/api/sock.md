@@ -97,8 +97,14 @@ int nng_surveyor0_open_raw(nng_socket *s);
 ```
 
 {{hi:raw mode}}
-Raw mode sockets are used in circumstances when the application needs direct access
-to the message headers to control the protocol details.
+Most applications use sockets in normal, or _cooked_, mode. Cooked sockets
+provide the full semantics of the protocol. For example, [REQ][req] sockets
+match replies to requests and retransmit requests according to the protocol
+rules.
+
+Raw mode sockets are used in circumstances when the application needs direct
+access to the message headers to control the protocol details, or when the
+application needs to bypass the normal protocol state machine.
 
 Such sockets require greater sophistication on the part of the application to use,
 as the application must process the protocol headers specifically.
@@ -106,7 +112,9 @@ The details of the protocol headers, and requirements, are described in the prot
 documentation for each protocol.
 
 Raw mode sockets do not have any kind of state machine associated with them, as all of
-the protocol specific processing must be performed by the application.
+the protocol specific processing must be performed by the application. Typically this
+means inspecting protocol headers on incoming messages and supplying the correct
+headers on outgoing messages.
 
 > [!TIP]
 > Most applications do not need to use raw sockets.

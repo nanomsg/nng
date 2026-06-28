@@ -1,6 +1,6 @@
 = nngcat(1)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -303,7 +303,6 @@ $ nngcat --sub --dial=${addr} --quoted &
 == SEE ALSO
 
 [.text-left]
-xref:nng.7.adoc[nng(7)],
 xref:nng_bus.7.adoc[nng_bus(7)],
 xref:nng_pair.7.adoc[nng_pair(7)],
 xref:nng_pub.7.adoc[nng_pub(7)],
