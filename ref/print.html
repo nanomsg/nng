@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b02fcd00.js";
+            window.path_to_searchindex_js = "searchindex-a876065b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-5f820576.js"></script>
@@ -6089,7 +6089,9 @@ IP or IPv6.</p>
 <a name="a004"></a>IP address or <a name="a005"></a>hostname, and port number, formatted as follows.</p>
 <p>For host names and IPv4 literal addresses, the hostname or IP address is followed by
 a colon, and then a TCP port number. For example, <code>tcp://myservice.net:123</code> would
-refer to a server available at <code>myservice.net</code> on TCP port 123.</p>
+refer to a server available at <code>myservice.net</code> on TCP port 123.
+To contact port 80 on the local host, either <code>tcp://127.0.0.1:80</code> or
+<code>tcp://localhost:80</code> can be used.</p>
 <p>For IPv6 literal addresses, the IPv6 address must be enclosed in square brackets,
 then the colon and finally the TCP port. For example, <code>tcp://[::1]:7890</code> would
 refer to a service running on the IPv6 loopback (<code>::1</code>) on TCP port 7890.</p>
@@ -6097,40 +6099,72 @@ refer to a service running on the IPv6 loopback (<code>::1</code>) on TCP port 7
 <p>To force the selection of either IPv4 or IPv6, the scheme may be specified as either
 <code>tcp4://</code> or <code>tcp6://</code> instead of just <code>tcp://</code>. This should only be needed when
 a hostname that might resolve either way is supplied instead of an explicit IP address.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p><code>tcp4://</code> and <code>tcp6://</code> are specific to NNG and may not be understood by
+other Scalability Protocol implementations.</p>
+<p>Additionally, <code>tcp6://</code> may still permit IPv4 peers via IPv4-mapped IPv6
+addresses on some platforms, especially when listening on wildcard
+addresses.</p>
+</blockquote>
 <h4 id="listening-to-all-addresses"><a class="header" href="#listening-to-all-addresses">Listening to All Addresses</a></h4>
 <p>When listening, a zero IP address can be supplied by either eliding the address altogether,
 or by specifying <code>0.0.0.0</code> (IPv4) or <code>::</code> (IPv6) explicitly. If left empty, IPv6 will
 be selected if available on the host, otherwise IPv4 will be selected.</p>
+<p>For example, the following URIs are equivalent ways to listen on TCP port
+9999 on all IPv4 interfaces:</p>
+<ol>
+<li><code>tcp://0.0.0.0:9999</code></li>
+<li><code>tcp://:9999</code></li>
+</ol>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>IP addresses may be more reliable than host names. Certainly when using the URL
 for a <a href="#dialers-and-listeners">listener</a>, it is better to use an IP address that is known to exist on the
 local system, or the zero address to listen to all interfaces.</p>
 </blockquote>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Prefer numeric IP addresses or hostnames known to resolve only to the
+intended address family. This avoids surprises when a name can resolve to
+both IPv4 and IPv6.</p>
+</blockquote>
 <h3 id="socket-address-2"><a class="header" href="#socket-address-2">Socket Address</a></h3>
 <p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a>,
 the concrete type is either <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a>, depending on whether
 IPv4 or IPv6 is in use.</p>
+<h3 id="other-tcp-relevant-options"><a class="header" href="#other-tcp-relevant-options">Other TCP-Relevant Options</a></h3>
+<p>TCP dialers and listeners may also expose inherited options such as the local
+address and configured URL, depending on the object and context. See the common
+option documentation in the broader API reference for those shared semantics.</p>
 <h3 id="transport-options-2"><a class="header" href="#transport-options-2">Transport Options</a></h3>
 <p>The following transport options are supported by this transport,
-where supported by the underlying platform.</p>
+where supported by the underlying platform.
+Options that change connection behavior should be set before the <a href="#dialers-and-listeners">dialer</a> or
+<a href="#dialers-and-listeners">listener</a> is started.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Option</th><th>Type</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>NNG_OPT_TCP_NODELAY</code></td><td><code>bool</code></td><td>Disable or enable use of <a name="a006"></a>Nagle’s algorithm for TCP connections. Normally should be set to <code>true</code>.</td></tr>
-<tr><td><code>NNG_OPT_TCP_KEEPALIVE</code></td><td><code>bool</code></td><td>Enable or disable use of TCP keep-alive. Set to <code>false</code> by default.</td></tr>
+<tr><td><code>NNG_OPT_TCP_NODELAY</code></td><td><code>bool</code></td><td>Disable or enable use of <a name="a006"></a>Nagle’s algorithm for TCP connections. When <code>true</code> (the default), data is sent promptly rather than waiting to coalesce into larger writes. On low-bandwidth links, enabling Nagle’s algorithm by setting this to <code>false</code> can reduce overhead at the cost of latency.</td></tr>
+<tr><td><code>NNG_OPT_TCP_KEEPALIVE</code></td><td><code>bool</code></td><td>Enable or disable TCP keep-alive. This is <code>false</code> by default. When enabled, the system periodically probes otherwise idle connections to detect dead peers and keep stateful middleboxes from expiring the connection.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read-only option, returns the group ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read-only option, returns the process ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read-only option, returns the user ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read-only option, returns the zone ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
-<tr><td><a href="#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write-only for listeners before they start, use the named socket for accepting (for use with socket activation).</td></tr>
-<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
+<tr><td><a href="#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write-only for listeners before they start. Supplies an already-created listening file descriptor or <code>SOCKET</code>, which is useful for socket activation and similar supervisor-managed startup flows.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only. This is especially useful after binding to port zero to discover the ephemeral port actually selected by the system.</td></tr>
 </tbody>
 </table>
 </div>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>For <code>NNG_OPT_TCP_NODELAY</code> and <code>NNG_OPT_TCP_KEEPALIVE</code>, setting the option on
+a dialer or listener affects connections created afterwards. It does not
+retroactively reconfigure existing live connections.</p>
+</blockquote>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
