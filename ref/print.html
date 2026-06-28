@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f5500b13.js"></script>
+        <script src="toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -341,6 +341,7 @@ include the <code>nng/nng.h</code> header file like so:</p>
 <li><a href="#initialization--finalization">Initialization</a></li>
 <li><a href="#messages">Messages</a></li>
 <li><a href="#sockets">Sockets</a></li>
+<li><a href="#dialers-and-listeners">Dialers and Listeners</a></li>
 <li><a href="#devices">Devices</a></li>
 <li><a href="#contexts">Contexts</a></li>
 <li><a href="#pipes">Pipes</a></li>
@@ -354,7 +355,7 @@ include the <code>nng/nng.h</code> header file like so:</p>
 <li><a href="#statistics">Statistics</a></li>
 <li><a href="#http-support">HTTP</a></li>
 <li><a href="#miscellaneous">Miscellaneous</a></li>
-<li><a href="#errors-2">Errors</a></li>
+<li><a href="#errors-9">Errors</a></li>
 <li><a href="#id-map">ID Map</a></li>
 <li><a href="api/cmd_opts.html">Command Options</a></li>
 </ul>
@@ -775,7 +776,7 @@ associated with it. Any operations that are in progress will be terminated with
 a result of <a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Closing a socket also invalidates any <a href="TODO.html">dialers</a>, <a href="TODO.html">listeners</a>,
+<p>Closing a socket also invalidates any <a href="#dialers-and-listeners">dialers</a>, <a href="#dialers-and-listeners">listeners</a>,
 <a href="#pipes">pipes</a>, or <a href="#contexts">contexts</a> associated with it.</p>
 </blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -824,7 +825,7 @@ such as with <a href="#pub-protocol">PUB</a> sockets, which are best-effort deli
 <p>The <code>nng_sendmsg</code> function sends the <em>msg</em> over the socket <em>s</em>.</p>
 <p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
 If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+<p>The <em>flags</em> can contain the value <a href="#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 cannot accept more data for sending. In such a case, it will return <a href="#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
@@ -872,7 +873,7 @@ with a status of <a href="#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>. If this flag
 </ul>
 <h3 id="nng_recvmsg"><a class="header" href="#nng_recvmsg">nng_recvmsg</a></h3>
 <p>The <code>nng_recvmsg</code> function receives a message and stores a pointer to the <a href="#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+<p>The <em>flags</em> can contain the value <a href="#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return <a href="#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
@@ -913,7 +914,7 @@ are available, whether they can be read or written, and the appropriate type to 
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
-for an underlying transport, the option should be set on the <a href="TODO.html">dialer</a> or <a href="TODO.html">listener</a> instead of the <a href="#sockets">socket</a>.</p>
+for an underlying transport, the option should be set on the <a href="#dialers-and-listeners">dialer</a> or <a href="#dialers-and-listeners">listener</a> instead of the <a href="#sockets">socket</a>.</p>
 </blockquote>
 <h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>
 <p>The following options are available for many protocols, and always use the same types and semantics described below.</p>
@@ -924,10 +925,10 @@ for an underlying transport, the option should be set on the <a href="TODO.html"
 </thead>
 <tbody>
 <tr><td><code>NNG_OPT_MAXTTL</code><a name="NNG_OPT_MAXTTL"></a></td><td><code>int</code></td><td>Maximum number of traversals across an <a href="#devices"><code>nng_device</code></a> device, to prevent forwarding loops. May be 1-255, inclusive. Normally defaults to 8.</td></tr>
-<tr><td><code>NNG_OPT_RECONNMAXT</code><a name="NNG_OPT_RECONNMAXT"></a></td><td><code>nng_duration</code></td><td>Maximum time <a href="TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
-<tr><td><code>NNG_OPT_RECONNMINT</code><a name="NNG_OPT_RECONNMINT"></a></td><td><code>nng_duration</code></td><td>Minimum time <a href="TODO.html">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECONNMAXT</code><a name="NNG_OPT_RECONNMAXT"></a></td><td><code>nng_duration</code></td><td>Maximum time <a href="#dialers-and-listeners">dialers</a> will delay before trying after failing to connect.</td></tr>
+<tr><td><code>NNG_OPT_RECONNMINT</code><a name="NNG_OPT_RECONNMINT"></a></td><td><code>nng_duration</code></td><td>Minimum time <a href="#dialers-and-listeners">dialers</a> will delay before trying after failing to connect.</td></tr>
 <tr><td><code>NNG_OPT_RECVBUF</code><a name="NNG_OPT_RECVBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer locally when receiving.</td></tr>
-<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on <a href="TODO.html">dialers</a> and <a href="TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_OPT_RECVMAXSZ</code><a name="NNG_OPT_RECVMAXSZ"></a></td><td><code>size_t</code></td><td>Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on <a href="#dialers-and-listeners">dialers</a> and <a href="#dialers-and-listeners">listeners</a>.</td></tr>
 <tr><td><code>NNG_OPT_RECVTIMEO</code><a name="NNG_OPT_RECVTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for receiving messages.</td></tr>
 <tr><td><code>NNG_OPT_SENDBUF</code><a name="NNG_OPT_SENDBUF"></a></td><td><code>int</code></td><td>Maximum number of messages (0-8192) to buffer when sending messages.</td></tr>
 <tr><td><code>NNG_OPT_SENDTIMEO</code><a name="NNG_OPT_SENDTIMEO"></a></td><td><code>nng_duration</code></td><td>Default timeout (ms) for sending messages.</td></tr>
@@ -937,8 +938,8 @@ for an underlying transport, the option should be set on the <a href="TODO.html"
 <p> </p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="TODO.html">dialers</a>
-(and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="TODO.html">listeners</a>)
+<p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="#dialers-and-listeners">dialers</a>
+(and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="#dialers-and-listeners">listeners</a>)
 will use. After the dialer or listener is created, changes to the socket’s value will have no affect on that dialer or listener.</p>
 </blockquote>
 <h2 id="polling-socket-events"><a class="header" href="#polling-socket-events">Polling Socket Events</a></h2>
@@ -1089,6 +1090,306 @@ int main(int argc, char **argv) {
 <!-- Transports -->
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="dialers-and-listeners"><a class="header" href="#dialers-and-listeners">Dialers and Listeners</a></h1>
+<pre><code class="language-c">#define NNG_DIALER_INITIALIZER   // opaque value
+#define NNG_LISTENER_INITIALIZER // opaque value
+
+typedef struct nng_dialer_s nng_dialer;
+typedef struct nng_listener_s nng_listener;
+</code></pre>
+<p><a name="a001"></a>
+<a name="a002"></a>
+Dialers and listeners connect a <a href="#sockets">socket</a> to a transport address.
+A <a name="a003"></a><code>nng_dialer</code> initiates outgoing connections to a remote listener.
+An <a name="a004"></a><code>nng_listener</code> accepts incoming connections from remote dialers.</p>
+<p>When a connection is established, NNG creates an <a href="#pipes"><code>nng_pipe</code></a> and attaches it to the socket.
+A dialer creates at most one pipe at a time.
+A listener can create many pipes, which may be open concurrently.</p>
+<p>NNG sometimes refers to dialers and listeners collectively as <a name="a005"></a>endpoints.
+That term is useful when discussing shared behavior, but the public API names are dialer and listener.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The client/server relationship implied by dialer and listener is independent of protocol roles.
+For example, a <a href="#rep-protocol">REP</a> socket can use a dialer to connect to a listener on a <a href="#req-protocol">REQ</a> socket.
+A socket can also have multiple dialers, multiple listeners, or both.</p>
+</blockquote>
+<h2 id="initialization-1"><a class="header" href="#initialization-1">Initialization</a></h2>
+<pre><code class="language-c">nng_dialer d = NNG_DIALER_INITIALIZER;
+nng_listener l = NNG_LISTENER_INITIALIZER;
+</code></pre>
+<p>The <code>nng_dialer</code> and <code>nng_listener</code> structures are opaque handles passed by value.
+They should be initialized with <a href="#initialization-1"><code>NNG_DIALER_INITIALIZER</code></a> or <a href="#initialization-1"><code>NNG_LISTENER_INITIALIZER</code></a> before they are opened,
+so that they cannot be confused with valid open handles.</p>
+<h2 id="creating-and-starting"><a class="header" href="#creating-and-starting">Creating and Starting</a></h2>
+<pre><code class="language-c">int nng_dial(nng_socket s, const char *url, nng_dialer *dialerp, int flags);
+int nng_dial_url(nng_socket s, const nng_url *url, nng_dialer *dialerp, int flags);
+
+int nng_listen(nng_socket s, const char *url, nng_listener *listenerp, int flags);
+int nng_listen_url(nng_socket s, const nng_url *url, nng_listener *listenerp, int flags);
+</code></pre>
+<p>The <a name="a006"></a><code>nng_dial</code> and <a name="a007"></a><code>nng_dial_url</code> functions create a dialer associated with socket <em>s</em>,
+configure it to connect to <em>url</em>, and start it.
+If <em>dialerp</em> is not <code>NULL</code>, the newly created dialer is stored there.</p>
+<p>The <a name="a008"></a><code>nng_listen</code> and <a name="a009"></a><code>nng_listen_url</code> functions create a listener associated with socket <em>s</em>,
+configure it to listen at <em>url</em>, and start it.
+If <em>listenerp</em> is not <code>NULL</code>, the newly created listener is stored there.</p>
+<p>The forms that take <code>const char *url</code> parse the URL from a string.
+The <code>_url</code> forms use an existing <a href="#url-structure"><code>nng_url</code></a> object.</p>
+<p>Because these functions start the dialer or listener immediately, applications usually cannot apply additional
+transport options first.
+Use <a href="#creating-before-starting"><code>nng_dialer_create</code></a> or <a href="#creating-before-starting"><code>nng_listener_create</code></a> when configuration must be applied before starting.</p>
+<h3 id="dialer-connection-behavior"><a class="header" href="#dialer-connection-behavior">Dialer Connection Behavior</a></h3>
+<p>Normally, the first dial attempt is made synchronously, including any required name resolution.
+If the connection is refused or otherwise fails, the error is returned immediately and no retry is scheduled.</p>
+<p>If <a href="#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a> is supplied in <em>flags</em>, the first connection attempt is made asynchronously.
+In that mode, connection failures are retried in the background.</p>
+<p>Once a dialer has connected successfully, it waits for the pipe to close.
+If the pipe closes, the dialer attempts to reconnect asynchronously, even if the original connection was made synchronously.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p><code>NNG_FLAG_NONBLOCK</code> can make startup more resilient, but it can also make initial connection failures harder to diagnose.
+Use <a href="#starting"><code>nng_dialer_start_aio</code></a> when the application needs asynchronous startup and the result of the first dial attempt.</p>
+</blockquote>
+<h3 id="listener-behavior"><a class="header" href="#listener-behavior">Listener Behavior</a></h3>
+<p>The <em>flags</em> argument to <code>nng_listen</code> and <code>nng_listen_url</code> is ignored and reserved for future use.</p>
+<p>A listener continues to accept new connections, associating their pipes with the socket, until either the listener
+or the socket is closed.</p>
+<h3 id="errors"><a class="header" href="#errors">Errors</a></h3>
+<p>The create-and-start functions can return:</p>
+<ul>
+<li><a href="#NNG_EADDRINUSE"><code>NNG_EADDRINUSE</code></a>: The listener address is already in use.</li>
+<li><a href="#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial dial connection.</li>
+<li><a href="#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial dial connection.</li>
+<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The URL or flags are invalid.</li>
+<li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a>: Authentication or authorization failed.</li>
+<li><a href="#NNG_EPROTO"><code>NNG_EPROTO</code></a>: A protocol error occurred.</li>
+<li><a href="#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a>: The remote address is not reachable.</li>
+</ul>
+<h2 id="creating-before-starting"><a class="header" href="#creating-before-starting">Creating Before Starting</a></h2>
+<pre><code class="language-c">int nng_dialer_create(nng_dialer *dialerp, nng_socket s, const char *url);
+int nng_dialer_create_url(nng_dialer *dialerp, nng_socket s, const nng_url *url);
+
+int nng_listener_create(nng_listener *listenerp, nng_socket s, const char *url);
+int nng_listener_create_url(nng_listener *listenerp, nng_socket s, const nng_url *url);
+</code></pre>
+<p>The <a name="a010"></a><code>nng_dialer_create</code> and <a name="a011"></a><code>nng_dialer_create_url</code> functions create a dialer associated with socket <em>s</em>,
+configure it to connect to <em>url</em>, and store it in <em>dialerp</em>.
+The dialer is not started.</p>
+<p>The <a name="a012"></a><code>nng_listener_create</code> and <a name="a013"></a><code>nng_listener_create_url</code> functions create a listener associated with socket <em>s</em>,
+configure it to listen at <em>url</em>, and store it in <em>listenerp</em>.
+The listener is not started.</p>
+<p>Use these functions when the dialer or listener needs additional configuration before it starts, such as transport options,
+TLS configuration, or a listener socket activation file descriptor.</p>
+<h3 id="errors-1"><a class="header" href="#errors-1">Errors</a></h3>
+<p>These functions can return:</p>
+<ul>
+<li><a href="#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+</ul>
+<h2 id="starting"><a class="header" href="#starting">Starting</a></h2>
+<pre><code class="language-c">int nng_dialer_start(nng_dialer dialer, int flags);
+void nng_dialer_start_aio(nng_dialer dialer, int flags, nng_aio *aio);
+int nng_listener_start(nng_listener listener, int flags);
+</code></pre>
+<p>The <a name="a014"></a><code>nng_dialer_start</code> function starts <em>dialer</em>.
+It follows the same synchronous and <code>NNG_FLAG_NONBLOCK</code> behavior described for <a href="#creating-and-starting"><code>nng_dial</code></a>.</p>
+<p>The <a name="a015"></a><code>nng_dialer_start_aio</code> function starts <em>dialer</em> asynchronously using <em>aio</em>.
+It must be called with <code>NNG_FLAG_NONBLOCK</code> in <em>flags</em>.
+When the first dial attempt completes, the operation result is reported through <em>aio</em>.
+Only the first dialing result is reported this way.</p>
+<p>The <a name="a016"></a><code>nng_listener_start</code> function starts <em>listener</em>, causing it to bind to its address and accept connections.
+The <em>flags</em> argument is ignored and reserved for future use.</p>
+<p>Once a dialer or listener has started, it is generally not possible to change its configuration.</p>
+<h3 id="errors-2"><a class="header" href="#errors-2">Errors</a></h3>
+<p><code>nng_dialer_start</code> can return, and <code>nng_dialer_start_aio</code> can report through its AIO, these errors:</p>
+<ul>
+<li><a href="#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial connection.</li>
+<li><a href="#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial connection.</li>
+<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The flags are invalid.</li>
+<li><a href="#NNG_ENOENT"><code>NNG_ENOENT</code></a>: The dialer handle is invalid.</li>
+<li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a>: Authentication or authorization failed.</li>
+<li><a href="#NNG_EPROTO"><code>NNG_EPROTO</code></a>: A protocol error occurred.</li>
+<li><a href="#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The dialer is already started.</li>
+<li><a href="#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a>: The remote address is not reachable.</li>
+</ul>
+<p><code>nng_listener_start</code> can fail with:</p>
+<ul>
+<li><a href="#NNG_EADDRINUSE"><code>NNG_EADDRINUSE</code></a>: The listener address is already in use.</li>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The listener is closed.</li>
+<li><a href="#NNG_EPERM"><code>NNG_EPERM</code></a>: Permission was denied when binding to the address.</li>
+<li><a href="#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The listener is already started.</li>
+</ul>
+<h2 id="closing"><a class="header" href="#closing">Closing</a></h2>
+<pre><code class="language-c">int nng_dialer_close(nng_dialer dialer);
+int nng_listener_close(nng_listener listener);
+</code></pre>
+<p>The <a name="a017"></a><code>nng_dialer_close</code> function closes <em>dialer</em>.
+The <a name="a018"></a><code>nng_listener_close</code> function closes <em>listener</em>.</p>
+<p>Closing a dialer or listener also closes any pipes it created.
+Once this function returns, the dialer or listener and its resources are deallocated.
+Further attempts to use the handle will fail with <a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
+<p>Dialers and listeners are also closed when their associated socket is closed.</p>
+<h3 id="errors-3"><a class="header" href="#errors-3">Errors</a></h3>
+<p>These functions can return:</p>
+<ul>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
+</ul>
+<h2 id="identity"><a class="header" href="#identity">Identity</a></h2>
+<pre><code class="language-c">int nng_dialer_id(nng_dialer dialer);
+int nng_listener_id(nng_listener listener);
+</code></pre>
+<p>The <a name="a019"></a><code>nng_dialer_id</code> and <a name="a020"></a><code>nng_listener_id</code> functions return a positive identifier if the supplied handle is valid.
+Otherwise they return <code>-1</code>.</p>
+<p>A dialer or listener is considered valid if it was ever created by one of the create or create-and-start functions.
+Handles allocated on the stack or statically should be initialized with <a href="#initialization-1"><code>NNG_DIALER_INITIALIZER</code></a> or
+<a href="#initialization-1"><code>NNG_LISTENER_INITIALIZER</code></a> before use.</p>
+<h2 id="associated-urls"><a class="header" href="#associated-urls">Associated URLs</a></h2>
+<pre><code class="language-c">int nng_dialer_get_url(nng_dialer dialer, const nng_url **urlp);
+int nng_listener_get_url(nng_listener listener, const nng_url **urlp);
+</code></pre>
+<p>The <a name="a021"></a><code>nng_dialer_get_url</code> and <a name="a022"></a><code>nng_listener_get_url</code> functions return the URL associated with <em>dialer</em> or <em>listener</em>.
+The URL pointer is stored in <em>urlp</em>.</p>
+<p>The returned URL belongs to the dialer or listener.
+It must not be modified or freed by the caller, and it is invalid after the dialer or listener is closed.</p>
+<h3 id="errors-4"><a class="header" href="#errors-4">Errors</a></h3>
+<p>These functions can return:</p>
+<ul>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
+</ul>
+<h2 id="options"><a class="header" href="#options">Options</a></h2>
+<pre><code class="language-c">int nng_dialer_get_bool(nng_dialer dialer, const char *opt, bool *valp);
+int nng_dialer_get_int(nng_dialer dialer, const char *opt, int *valp);
+int nng_dialer_get_ms(nng_dialer dialer, const char *opt, nng_duration *valp);
+int nng_dialer_get_size(nng_dialer dialer, const char *opt, size_t *valp);
+int nng_dialer_get_addr(nng_dialer dialer, const char *opt, nng_sockaddr *valp);
+int nng_dialer_get_string(nng_dialer dialer, const char *opt, const char **valp);
+int nng_dialer_get_uint64(nng_dialer dialer, const char *opt, uint64_t *valp);
+
+int nng_listener_get_bool(nng_listener listener, const char *opt, bool *valp);
+int nng_listener_get_int(nng_listener listener, const char *opt, int *valp);
+int nng_listener_get_ms(nng_listener listener, const char *opt, nng_duration *valp);
+int nng_listener_get_size(nng_listener listener, const char *opt, size_t *valp);
+int nng_listener_get_string(nng_listener listener, const char *opt, const char **valp);
+int nng_listener_get_uint64(nng_listener listener, const char *opt, uint64_t *valp);
+
+int nng_dialer_set_bool(nng_dialer dialer, const char *opt, bool val);
+int nng_dialer_set_int(nng_dialer dialer, const char *opt, int val);
+int nng_dialer_set_ms(nng_dialer dialer, const char *opt, nng_duration val);
+int nng_dialer_set_size(nng_dialer dialer, const char *opt, size_t val);
+int nng_dialer_set_addr(nng_dialer dialer, const char *opt, const nng_sockaddr *val);
+int nng_dialer_set_string(nng_dialer dialer, const char *opt, const char *val);
+int nng_dialer_set_uint64(nng_dialer dialer, const char *opt, uint64_t val);
+
+int nng_listener_set_bool(nng_listener listener, const char *opt, bool val);
+int nng_listener_set_int(nng_listener listener, const char *opt, int val);
+int nng_listener_set_ms(nng_listener listener, const char *opt, nng_duration val);
+int nng_listener_set_size(nng_listener listener, const char *opt, size_t val);
+int nng_listener_set_string(nng_listener listener, const char *opt, const char *val);
+int nng_listener_set_uint64(nng_listener listener, const char *opt, uint64_t val);
+</code></pre>
+<p>The <a name="a023"></a><code>nng_dialer_get</code> and <a name="a024"></a><code>nng_listener_get</code> function families retrieve option values from a dialer or listener.
+The <a name="a025"></a><code>nng_dialer_set</code> and <a name="a026"></a><code>nng_listener_set</code> function families configure option values on a dialer or listener.</p>
+<p>The function suffix identifies the type used for the option:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Suffix</th><th>Type</th><th>Use</th></tr>
+</thead>
+<tbody>
+<tr><td><code>_bool</code></td><td><code>bool</code></td><td>Boolean options.</td></tr>
+<tr><td><code>_int</code></td><td><code>int</code></td><td>Integer options.</td></tr>
+<tr><td><code>_ms</code></td><td><code>nng_duration</code></td><td>Time durations, stored as milliseconds.</td></tr>
+<tr><td><code>_size</code></td><td><code>size_t</code></td><td>Buffer sizes, maximum message sizes, and similar values.</td></tr>
+<tr><td><code>_addr</code></td><td><code>nng_sockaddr</code></td><td>Socket addresses. This form is available for dialer options only.</td></tr>
+<tr><td><code>_string</code></td><td><code>const char *</code></td><td><code>NUL</code>-terminated UTF-8 or ASCII strings.</td></tr>
+<tr><td><code>_uint64</code></td><td><code>uint64_t</code></td><td>64-bit unsigned values, typically identifiers, network numbers, and similar values.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Available options vary by transport and by option.
+Many common options are listed in <a href="#socket-options">Socket Options</a> and transport-specific options are documented
+with each transport.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Socket option values for <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> provide initial defaults
+for dialers and listeners created afterward.
+Changing those socket options does not affect existing dialers or listeners.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Once a dialer or listener has started, it is generally not possible to change its configuration.</p>
+</blockquote>
+<h3 id="errors-5"><a class="header" href="#errors-5">Errors</a></h3>
+<p>The option functions can return:</p>
+<ul>
+<li><a href="#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a>: The typed accessor does not match the option type.</li>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
+<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The value is invalid, or the destination is too small.</li>
+<li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The option is not supported.</li>
+<li><a href="#NNG_EREADONLY"><code>NNG_EREADONLY</code></a>: The option is read-only.</li>
+<li><a href="#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The dialer or listener is already started.</li>
+<li><a href="#NNG_EWRITEONLY"><code>NNG_EWRITEONLY</code></a>: The option is write-only.</li>
+</ul>
+<h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
+<pre><code class="language-c">int nng_dialer_get_tls(nng_dialer dialer, nng_tls_config **cfgp);
+int nng_dialer_set_tls(nng_dialer dialer, nng_tls_config *cfg);
+int nng_listener_get_tls(nng_listener listener, nng_tls_config **cfgp);
+int nng_listener_set_tls(nng_listener listener, nng_tls_config *cfg);
+</code></pre>
+<p>These functions configure or retrieve TLS configuration objects for dialers and listeners whose transports support TLS.
+They are documented in <a href="#using-configuration-objects">Using Configuration Objects</a>.</p>
+<h2 id="windows-security-descriptors"><a class="header" href="#windows-security-descriptors">Windows Security Descriptors</a></h2>
+<pre><code class="language-c">int nng_listener_set_security_descriptor(nng_listener listener, void *desc);
+</code></pre>
+<p>The <a name="a027"></a><code>nng_listener_set_security_descriptor</code> function configures the Windows security descriptor for <em>listener</em>.
+This is used by transports that expose Windows named objects, such as the <a href="#ipc-transport">IPC transport</a>.
+It must be called before the listener is started.</p>
+<h3 id="errors-6"><a class="header" href="#errors-6">Errors</a></h3>
+<p>This function can return:</p>
+<ul>
+<li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The listener is closed.</li>
+<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The descriptor is invalid.</li>
+<li><a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport or platform does not support security descriptors.</li>
+<li><a href="#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The listener is already started.</li>
+</ul>
+<h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
+<h3 id="connecting-with-convenience-functions"><a class="header" href="#connecting-with-convenience-functions">Connecting With Convenience Functions</a></h3>
+<pre><code class="language-c">nng_socket s;
+nng_dialer d = NNG_DIALER_INITIALIZER;
+
+nng_req0_open(&amp;s);
+nng_dial(s, "tcp://127.0.0.1:8080", &amp;d, 0);
+</code></pre>
+<h3 id="configuring-before-starting"><a class="header" href="#configuring-before-starting">Configuring Before Starting</a></h3>
+<pre><code class="language-c">nng_socket s;
+nng_listener l = NNG_LISTENER_INITIALIZER;
+
+nng_rep0_open(&amp;s);
+nng_listener_create(&amp;l, s, "tcp://127.0.0.1:8080");
+nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 1024 * 1024);
+nng_listener_start(l, 0);
+</code></pre>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="devices"><a class="header" href="#devices">Devices</a></h1>
 <pre><code class="language-c">nng_err nng_device(nng_socket s1, nng_socket s2);
 void nng_device_aio(nng_aio *aio, nng_socket s1, nng_socket s2);
@@ -1148,7 +1449,7 @@ backpressure or another error, the message is discarded.</p>
 error, or an error code if the device fails.
 The <a name="a009"></a><code>nng_device_aio</code> function reports its result through the supplied
 <em>aio</em>.</p>
-<h2 id="errors"><a class="header" href="#errors">Errors</a></h2>
+<h2 id="errors-7"><a class="header" href="#errors-7">Errors</a></h2>
 <dl>
 <dt id="nng_ebusy"><a class="header" href="#nng_ebusy"><a href="#NNG_EBUSY"><code>NNG_EBUSY</code></a></a></dt>
 <dd>At least one socket is already owned by a device.</dd>
@@ -1256,7 +1557,7 @@ while <a href="#sub-protocol">SUB</a> sockets can only receive data and never se
 <p>The <code>nng_ctx_sendmsg</code> function sends the <em>msg</em> over the context <em>ctx</em>.</p>
 <p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
 If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+<p>The <em>flags</em> can contain the value <a href="#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 cannot accept more data for sending. In such a case, it will return <a href="#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <h3 id="nng_ctx_send"><a class="header" href="#nng_ctx_send">nng_ctx_send</a></h3>
 <p>The <code>nng_ctx_send</code> function sends a message asynchronously, using the <a href="#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
@@ -1287,7 +1588,7 @@ Additionally, some protocols may not support receiving at all or may require oth
 </blockquote>
 <h3 id="nng_recvmsg-1"><a class="header" href="#nng_recvmsg-1">nng_recvmsg</a></h3>
 <p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+<p>The <em>flags</em> can contain the value <a href="#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return <a href="#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <h3 id="nng_socket_recv-1"><a class="header" href="#nng_socket_recv-1">nng_socket_recv</a></h3>
 <p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
@@ -1322,7 +1623,7 @@ The <code>nng_ctx_get_</code> functions retrieve the value from <em>ctx</em>, an
 The <code>nng_ctx_set_</code> functions change the value for the <em>ctx</em>, taking it from <em>val</em>.</p>
 <p>These functions access an option as a specific type. The protocol documentation will have details about which options
 are available for contexts, whether they can be read or written, and the appropriate type to use.</p>
-<h2 id="examples-2"><a class="header" href="#examples-2">Examples</a></h2>
+<h2 id="examples-3"><a class="header" href="#examples-3">Examples</a></h2>
 <p>These examples show building blocks for a concurrent service based on contexts.</p>
 <h3 id="example-1-context-echo-server"><a class="header" href="#example-1-context-echo-server">Example 1: Context Echo Server</a></h3>
 <p>The following program fragment demonstrates the use of contexts to implement
@@ -1365,7 +1666,7 @@ echo(void *arg)
 <h3 id="example-2-starting-the-echo-service"><a class="header" href="#example-2-starting-the-echo-service">Example 2: Starting the Echo Service</a></h3>
 <p>Given the above fragment, the following example shows setting up the service.
 It assumes that the <a href="#sockets">socket</a> has already been
-created and any transports set up as well with functions such as <a href="TODO.html"><code>nng_dial</code></a> or <a href="TODO.html"><code>nng_listen</code></a>.</p>
+created and any transports set up as well with functions such as <a href="#creating-and-starting"><code>nng_dial</code></a> or <a href="#creating-and-starting"><code>nng_listen</code></a>.</p>
 <pre><code class="language-c">
 #define CONCURRENCY 1024
 
@@ -1416,8 +1717,8 @@ accurate type checks in functions passing values of this type.</p>
 However it is possible to access a pipe when more information about the
 source of a message is needed, or when more control is required over message delivery.</p>
 </blockquote>
-<p>Pipe objects are created by <a href="TODO.html">dialers</a> and and <a href="TODO.html">listeners</a>.</p>
-<h2 id="initialization-1"><a class="header" href="#initialization-1">Initialization</a></h2>
+<p>Pipe objects are created by <a href="#dialers-and-listeners">dialers</a> and and <a href="#dialers-and-listeners">listeners</a>.</p>
+<h2 id="initialization-2"><a class="header" href="#initialization-2">Initialization</a></h2>
 <p>A pipe may be initialized using the macro <a name="a004"></a><code>NNG_PIPE_INITIALIZER</code>
 before it is opened, to prevent confusion with valid open pipes.</p>
 <p>For example:</p>
@@ -1432,7 +1733,7 @@ Otherwise it returns <code>-1</code>.</p>
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>A pipe is considered valid if it was ever created by the socket.
 Pipes that are allocated on the stack or statically should be initialized with the macro
-<a href="#initialization-1"><code>NNG_PIPE_INITIALIZER</code></a> to ensure that they cannot be confused with a valid pipe.</p>
+<a href="#initialization-2"><code>NNG_PIPE_INITIALIZER</code></a> to ensure that they cannot be confused with a valid pipe.</p>
 </blockquote>
 <h2 id="closing-a-pipe"><a class="header" href="#closing-a-pipe">Closing a Pipe</a></h2>
 <pre><code class="language-c">nng_err nng_pipe_close(nng_pipe p);
@@ -1454,10 +1755,10 @@ nng_socket nng_pipe_socket(nng_pipe p);
 <p><a name="a007"></a>
 <a name="a008"></a>
 <a name="a009"></a>
-These functions return the <a href="#sockets">socket</a>, <a href="TODO.html">dialer</a>, or <a href="TODO.html">listener</a> that created or owns the pipe.</p>
+These functions return the <a href="#sockets">socket</a>, <a href="#dialers-and-listeners">dialer</a>, or <a href="#dialers-and-listeners">listener</a> that created or owns the pipe.</p>
 <p>If the pipe was does not have an associated dialer or listener, then the associated will
-return [<code>NNG_DIALER_INITIALIZER</code>] or [<code>NNG_LISTENER_INITIALIZER</code>], as appropriate, and
-either [<code>nng_dialer_id</code>] or [<code>nng_listener_id</code>] for the returned object will return -1.</p>
+return <a href="#initialization-1"><code>NNG_DIALER_INITIALIZER</code></a> or <a href="#initialization-1"><code>NNG_LISTENER_INITIALIZER</code></a>, as appropriate, and
+either <a href="#identity"><code>nng_dialer_id</code></a> or <a href="#identity"><code>nng_listener_id</code></a> for the returned object will return -1.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The socket, or the endpoint, returned by these functions may be in the process of closing,
@@ -1499,7 +1800,7 @@ The value of <em>len</em> must be large enough to hold the string and the termin
 <p>The <code>nng_pipe_get_strlen</code> function is used to obtain the length of the string. This can be useful
 to find the size of the buffer needed by the <code>nng_pipe_get_strcpy</code> function for a property.
 Note that like <code>strlen</code>, this size does not account for the zero byte to terminate the string.</p>
-<h3 id="errors-1"><a class="header" href="#errors-1">Errors</a></h3>
+<h3 id="errors-8"><a class="header" href="#errors-8">Errors</a></h3>
 <p>The pipe option functions can return the following errors:</p>
 <ul>
 <li><a href="#NNG_ENOENT"><code>NNG_ENOENT</code></a>: The pipe <em>p</em> does not refer to an existing pipe.</li>
@@ -2200,7 +2501,7 @@ size_t nng_aio_count(nng_aio *aio);
 <p>The <a name="a016"></a><code>nng_aio_result</code> function returns the result of the operation associated
 with the handle <em>aio</em>.
 If the operation was successful, then 0 is returned.
-Otherwise a non-zero <a href="#errors-2">error</a> code, such as <a href="#NNG_ECANCELED"><code>NNG_ECANCELED</code></a> or <a href="#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>, is returned.</p>
+Otherwise a non-zero <a href="#errors-9">error</a> code, such as <a href="#NNG_ECANCELED"><code>NNG_ECANCELED</code></a> or <a href="#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a>, is returned.</p>
 <p>For operations that transfer data, <a name="a017"></a><code>nng_aio_count</code> returns the
 number of bytes transferred by the operation associated with the handle <em>aio</em>.
 Operations that do not transfer data, or do not keep a count, may return zero for this function.</p>
@@ -2493,7 +2794,7 @@ one thread (which may be chosen randomly).</p>
 all threads concurrently, but should only be used in circumstances where the application
 does not depend on <em>which</em> thread will be woken. When in doubt, <code>nng_cv_wake</code> is safer.</p>
 </blockquote>
-<h2 id="examples-3"><a class="header" href="#examples-3">Examples</a></h2>
+<h2 id="examples-4"><a class="header" href="#examples-4">Examples</a></h2>
 <h3 id="example-1-allocating-the-condition-variable"><a class="header" href="#example-1-allocating-the-condition-variable">Example 1: Allocating the condition variable</a></h3>
 <pre><code class="language-c">nng_mtx *m;
 nng_cv *cv;
@@ -2812,7 +3113,7 @@ const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
 or possibly to find the tree of statistics associated with a specific <a href="#sockets">socket</a>,
-<a href="TODO.html">dialer</a>, or <a href="TODO.html">listener</a>.</p>
+<a href="#dialers-and-listeners">dialer</a>, or <a href="#dialers-and-listeners">listener</a>.</p>
 <p>The <code>nng_stat_find</code> functions are provided for this purpose.</p>
 <p>The <a name="a008"></a><code>nng_stat_find</code> function returns the first statistic within the subtree of
 statistics <em>stat</em>, with the given <em>name</em>. If no such statistic can be found, <code>NULL</code>
@@ -2928,7 +3229,7 @@ here is the same reference time used for <a href="#get-the-current-time"><code>n
 <!-- Transports -->
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="errors-2"><a class="header" href="#errors-2">Errors</a></h1>
+<h1 id="errors-9"><a class="header" href="#errors-9">Errors</a></h1>
 <pre><code class="language-c">typedef enum ... nng_err;
 </code></pre>
 <p>Many <em>NNG</em> functions can fail for a variety of reasons.
@@ -2975,7 +3276,7 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_ECLOSED</code><a name="NNG_ECLOSED"></a></td><td>7</td><td>Object closed. Typically the <a href="#sockets">socket</a> is closed.</td></tr>
 <tr><td><code>NNG_EAGAIN</code><a name="NNG_EAGAIN"></a></td><td>8</td><td>Try again. Typcally for a non-blocking operation that might succeed later.</td></tr>
 <tr><td><code>NNG_ENOTSUP</code><a name="NNG_ENOTSUP"></a></td><td>9</td><td>Not supported. Perhaps the protocol or transport is not supported, or the operation is not not supported with the transport or protocol.</td></tr>
-<tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="#dialers-and-listeners">listeners</a>.</td></tr>
 <tr><td><code>NNG_ESTATE</code><a name="NNG_ESTATE"></a></td><td>11</td><td>Incorrect state. The operation cannot be performed in the current state, such as trying to send a response when no request has yet been received.</td></tr>
 <tr><td><code>NNG_ENOENT</code><a name="NNG_ENOENT"></a></td><td>12</td><td>Entry not found (no such object.) Can also indicate that a file does not exist.</td></tr>
 <tr><td><code>NNG_EPROTO</code><a name="NNG_EPROTO"></a></td><td>13</td><td>Protocol error. Typically this indicates incorrect messages over a network.</td></tr>
@@ -3042,7 +3343,7 @@ using these Streams APIs.</p>
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The <code>nng_stream</code> object is used for raw byte stream connections, and
 should not be confused with a <a href="#pipes">pipe</a> object created on a <a href="#sockets">socket</a> using
-the <a href="TODO.html"><code>nng_listen</code></a>, <a href="TODO.html"><code>nng_dial</code></a> or related functions.</p>
+the <a href="#creating-and-starting"><code>nng_listen</code></a>, <a href="#creating-and-starting"><code>nng_dial</code></a> or related functions.</p>
 </blockquote>
 <h2 id="sending-and-receiving-data"><a class="header" href="#sending-and-receiving-data">Sending and Receiving Data</a></h2>
 <pre><code class="language-c">void nng_stream_send(nng_stream *s, nng_aio *aio);
@@ -3317,7 +3618,7 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 
 // can now start doing nng_stream_listener_accept...
 </code></pre>
-<h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
+<h2 id="tls-configuration-1"><a class="header" href="#tls-configuration-1">TLS Configuration</a></h2>
 <pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_listener *dialer, nng_tls_config **tlsp);
 nng_err nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *tls);
 nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
@@ -3493,22 +3794,22 @@ nng_err nng_listener_set_tls(nng_listener listener, nng_tls_config *cfg);
 <a name="a027"></a>
 <a name="a028"></a>
 The <code>nng_dialer_set_tls</code> and <code>nng_listener_set_tls</code> functions configure TLS for Scalability Protocol
-<a href="TODO.html">dialer</a> and <a href="TODO.html">listener</a> objects whose transports support TLS.
+<a href="#dialers-and-listeners">dialer</a> and <a href="#dialers-and-listeners">listener</a> objects whose transports support TLS.
 These functions must be called before the dialer or listener is started.
 They take their own hold on the configuration object, so the caller may release its reference after a successful call.</p>
 <p>The <code>nng_dialer_get_tls</code> and <code>nng_listener_get_tls</code> functions retrieve the associated configuration object.
 They do not add a new hold; applications that need to retain the object independently should call
 <a href="#configuration-objects"><code>nng_tls_config_hold</code></a>.</p>
-<p>The <a href="#streams">Streams API</a> has corresponding <a href="#tls-configuration"><code>nng_stream_dialer_set_tls</code></a>,
-<a href="#tls-configuration"><code>nng_stream_dialer_get_tls</code></a>, <a href="#tls-configuration"><code>nng_stream_listener_set_tls</code></a>, and
-<a href="#tls-configuration"><code>nng_stream_listener_get_tls</code></a> functions.
+<p>The <a href="#streams">Streams API</a> has corresponding <a href="#tls-configuration-1"><code>nng_stream_dialer_set_tls</code></a>,
+<a href="#tls-configuration-1"><code>nng_stream_dialer_get_tls</code></a>, <a href="#tls-configuration-1"><code>nng_stream_listener_set_tls</code></a>, and
+<a href="#tls-configuration-1"><code>nng_stream_listener_get_tls</code></a> functions.
 HTTP clients and servers also use TLS configuration objects for HTTPS, including
 secure <a href="#websocket-transport">WebSocket transport</a> endpoints; see <a href="#client-tls"><code>nng_http_client_set_tls</code></a> and
 related HTTP APIs.</p>
-<h2 id="examples-4"><a class="header" href="#examples-4">Examples</a></h2>
-<p>The following examples use Scalability Protocol <a href="TODO.html">dialer</a> and <a href="TODO.html">listener</a> objects.
+<h2 id="examples-5"><a class="header" href="#examples-5">Examples</a></h2>
+<p>The following examples use Scalability Protocol <a href="#dialers-and-listeners">dialer</a> and <a href="#dialers-and-listeners">listener</a> objects.
 For raw <a href="#streams">streams</a>, use the same configuration steps, but attach the configuration with
-<a href="#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> or <a href="#tls-configuration"><code>nng_stream_listener_set_tls</code></a>.</p>
+<a href="#tls-configuration-1"><code>nng_stream_dialer_set_tls</code></a> or <a href="#tls-configuration-1"><code>nng_stream_listener_set_tls</code></a>.</p>
 <p>The examples use certificate files for clarity.
 Files passed to <code>nng_tls_config_cert_key_file</code> must contain both the certificate chain and the private key
 in PEM form.
@@ -3967,7 +4268,7 @@ transactions on those connections.</p>
 <pre><code class="language-c">typedef struct nng_http_client nng_http_client;
 </code></pre>
 <p>The <a name="a029"></a><code>nng_http_client</code> object is the client side creator for <a href="#connection-object"><code>nng_http</code></a> objects.
-It is analogous to a <a href="TODO.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
+It is analogous to a <a href="#dialers-and-listeners">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
 <pre><code class="language-c">void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 </code></pre>
@@ -5622,7 +5923,7 @@ where supported by the underlying platform.</p>
 <h3 id="other-configuration-parameters"><a class="header" href="#other-configuration-parameters">Other Configuration Parameters</a></h3>
 <p>On Windows systems, the security descriptor for the listener,
 which can be used to control access, can be set using the function
-<a href="TODO.html"><code>nng_listener_set_security_descriptor</code></a>.</p>
+<a href="#windows-security-descriptors"><code>nng_listener_set_security_descriptor</code></a>.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -5672,7 +5973,7 @@ be selected if available on the host, otherwise IPv4 will be selected.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>IP addresses may be more reliable than host names. Certainly when using the URL
-for a <a href="TODO.html">listener</a>, it is better to use an IP address that is known to exist on the
+for a <a href="#dialers-and-listeners">listener</a>, it is better to use an IP address that is known to exist on the
 local system, or the zero address to listen to all interfaces.</p>
 </blockquote>
 <h3 id="socket-address-2"><a class="header" href="#socket-address-2">Socket Address</a></h3>
@@ -5695,7 +5996,7 @@ where supported by the underlying platform.</p>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read-only option, returns the user ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read-only option, returns the zone ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><a href="#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write-only for listeners before they start, use the named socket for accepting (for use with socket activation).</td></tr>
-<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
 </table>
 </div>
@@ -5771,7 +6072,7 @@ Options that change connection behavior must be set before the dialer or listene
 <tr><td><code>NNG_OPT_TCP_KEEPALIVE</code></td><td><code>bool</code></td><td>Enable or disable use of TCP keep-alive. Set to <code>false</code> by default.</td></tr>
 <tr><td><code>NNG_OPT_TLS_VERIFIED</code><a name="NNG_OPT_TLS_VERIFIED"></a></td><td><code>bool</code></td><td>Read-only option indicating whether the remote peer was verified using TLS authentication.</td></tr>
 <tr><td><code>NNG_OPT_TLS_PEER_CN</code><a name="NNG_OPT_TLS_PEER_CN"></a></td><td><code>string</code></td><td>Read-only option returning the common name from the peer certificate, when available.</td></tr>
-<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
 </table>
 </div>
@@ -5883,7 +6184,7 @@ The transport sets the WebSocket subprotocol during the handshake.
 For example, a REQ socket advertises the peer protocol name expected by the
 matching REP peer.</p>
 <p>Applications can configure WebSocket headers, frame sizes, TCP options, and
-TLS options on the usual <a href="TODO.html">dialer</a> and <a href="TODO.html">listener</a> objects before they are
+TLS options on the usual <a href="#dialers-and-listeners">dialer</a> and <a href="#dialers-and-listeners">listener</a> objects before they are
 started.
 After a connection is established, HTTP handshake headers and the request URI
 can be inspected from the <a href="#pipes">pipe</a>.</p>
@@ -5904,13 +6205,13 @@ which require binary protocol data.</p>
 Applications that need strict RFC 6455 conformance must validate text data
 themselves and close the connection when invalid data is received.</p>
 </blockquote>
-<h3 id="tls-configuration-1"><a class="header" href="#tls-configuration-1">TLS Configuration</a></h3>
+<h3 id="tls-configuration-2"><a class="header" href="#tls-configuration-2">TLS Configuration</a></h3>
 <p>The <code>wss://</code>, <code>wss4://</code>, and <code>wss6://</code> schemes use TLS.
 TLS support must be enabled in the NNG build.</p>
 <p>For Scalability Protocol sockets, configure TLS with <a href="#using-configuration-objects"><code>nng_dialer_set_tls</code></a> or
 <a href="#using-configuration-objects"><code>nng_listener_set_tls</code></a> before starting the dialer or listener.
-For raw streams, configure TLS with <a href="#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> or
-<a href="#tls-configuration"><code>nng_stream_listener_set_tls</code></a> before dialing or listening.</p>
+For raw streams, configure TLS with <a href="#tls-configuration-1"><code>nng_stream_dialer_set_tls</code></a> or
+<a href="#tls-configuration-1"><code>nng_stream_listener_set_tls</code></a> before dialing or listening.</p>
 <p>The set functions take their own hold on the <a href="#configuration-objects"><code>nng_tls_config</code></a> object, so the
 caller may release its reference after a successful call.
 The corresponding get functions do not add a new hold; callers that retain the
@@ -5976,10 +6277,10 @@ For richer peer certificate information, use <a href="#peer-certificates"><code>
 <p>The <a name="a001"></a><em>socket</em> transport supports communication between
 peers across arbitrary BSD sockets, such as those that are
 created with <a href="#create-socket-pair"><code>nng_socket_pair</code></a>.</p>
-<p>This transport only supports <a href="TODO.html">listeners</a>, using <a href="TODO.html"><code>nng_listener_create</code></a>.</p>
+<p>This transport only supports <a href="#dialers-and-listeners">listeners</a>, using <a href="#creating-before-starting"><code>nng_listener_create</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Attempts to create <a href="TODO.html">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.</p>
+<p>Attempts to create <a href="#dialers-and-listeners">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.</p>
 </blockquote>
 <p>The socket file descriptor is passed to the listener using
 the <a name="a002"></a><code>NNG_OPT_SOCKET_FD</code> option (as an integer).
@@ -6103,7 +6404,7 @@ where supported by the underlying platform.</p>
 <tbody>
 <tr><td><a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
-<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
 </table>
 </div>
@@ -6275,15 +6576,15 @@ can be simply removed from your application:</p>
 </ul>
 <p>Additionally, the header files containing these functions have been removed, such as
 <code>nng/transport/ipc/ipc.h</code>. Simply remove <code>#include</code> references to those files.</p>
-<h2 id="tls-configuration-2"><a class="header" href="#tls-configuration-2">TLS Configuration</a></h2>
+<h2 id="tls-configuration-3"><a class="header" href="#tls-configuration-3">TLS Configuration</a></h2>
 <p>The support for configuring TLS via <code>NNG_OPT_TLS_CONFIG</code>, <code>NNG_TLS_AUTH_MODE</code>, <code>NNG_OPT_TLS_CA_FILE</code>,
 <code>NNG_OPT_TLS_SERVER_NAME</code>, and similar has been removed.</p>
 <p>Instead configuration must be performed by allocating
 a <code>nng_tls_config</code> object, and then setting fields on it using the appropriate functions,
 after which it may be configured on a listener or dialer using the <a href="#using-configuration-objects"><code>nng_listener_set_tls</code></a>
 or <a href="#using-configuration-objects"><code>nng_dialer_set_tls</code></a> functions.</p>
-<p>Likewise, when using the streams API, use the <a href="#tls-configuration"><code>nng_stream_listener_set_tls</code></a> or
-<a href="#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
+<p>Likewise, when using the streams API, use the <a href="#tls-configuration-1"><code>nng_stream_listener_set_tls</code></a> or
+<a href="#tls-configuration-1"><code>nng_stream_dialer_set_tls</code></a> functions.</p>
 <p>Note that the declarations needed for TLS configuration are now available in <code>&lt;nng/nng.h&gt;</code>,
 rather than the supplemental header.</p>
 <h2 id="old-tls-versions-removed"><a class="header" href="#old-tls-versions-removed">Old TLS Versions Removed</a></h2>
@@ -6389,7 +6690,7 @@ or dialer that creates the stream instead.</p>
 <h2 id="transport-options-6"><a class="header" href="#transport-options-6">Transport Options</a></h2>
 <p>A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
-<a href="TODO.html"><code>nng_dialer_set</code></a> or <a href="TODO.html"><code>nng_listener_set</code></a> option. This likely means that it is necessary
+<a href="#options"><code>nng_dialer_set</code></a> or <a href="#options"><code>nng_listener_set</code></a> option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.</p>
 <p>The following options are copied from the socket when creating a dialer or listener,
@@ -6437,8 +6738,8 @@ is removed. The empty string already performs this function, and unlike
 <code>*</code> is RFC compliant.</p>
 <h2 id="url-option-removed"><a class="header" href="#url-option-removed">URL Option Removed</a></h2>
 <p>The <code>NNG_OPT_URL</code> option has been removed.
-It is replaced by the type safe <a href="TODO.html"><code>nng_dialer_get_url</code></a> and
-<a href="TODO.html"><code>nng_listener_get_url</code></a> functions, which return an <a href="#url-structure"><code>nng_url</code></a>
+It is replaced by the type safe <a href="#associated-urls"><code>nng_dialer_get_url</code></a> and
+<a href="#associated-urls"><code>nng_listener_get_url</code></a> functions, which return an <a href="#url-structure"><code>nng_url</code></a>
 structure instead of a string.</p>
 <h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
 <p>The details of <a href="#url-structure"><code>nng_url</code></a> have changed significantly, and direct
@@ -6541,7 +6842,7 @@ update it for this version of NNG.</p>
 <h2 id="link-libraries"><a class="header" href="#link-libraries">Link Libraries</a></h2>
 <p>Replace <code>-lnanomsg</code> with <code>-lnng</code>.
 It may be necessary to include additional system libraries, such as <code>-lpthread</code>, depending on your system.</p>
-<h2 id="initialization-2"><a class="header" href="#initialization-2">Initialization</a></h2>
+<h2 id="initialization-3"><a class="header" href="#initialization-3">Initialization</a></h2>
 <p>It is necessary to explicitly initialize the library, using the <a href="#initialization"><code>nng_init</code></a> function.
 This must be called before any other function.</p>
 <h2 id="types"><a class="header" href="#types">Types</a></h2>
@@ -6562,9 +6863,9 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
 <tr><td><code>nn_close</code></td><td><a href="#closing-a-socket"><code>nng_socket_close</code> </a></td><td></td></tr>
-<tr><td><code>nn_bind</code></td><td><a href="TODO.html"><code>nng_listen</code></a>, <a href="TODO.html"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_connect</code></td><td><a href="TODO.html"><code>nng_dial</code></a>, <a href="TODO.html"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_shutdown</code></td><td><a href="TODO.html"><code>nng_listener_close</code></a>, <a href="TODO.html"><code>nng_dialer_close</code></a></td><td></td></tr>
+<tr><td><code>nn_bind</code></td><td><a href="#creating-and-starting"><code>nng_listen</code></a>, <a href="#creating-before-starting"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_connect</code></td><td><a href="#creating-and-starting"><code>nng_dial</code></a>, <a href="#creating-before-starting"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_shutdown</code></td><td><a href="#closing"><code>nng_listener_close</code></a>, <a href="#closing"><code>nng_dialer_close</code></a></td><td></td></tr>
 <tr><td><code>nn_allocmsg</code></td><td><a href="#create-a-message"><code>nng_msg_alloc</code></a></td><td>There are significant semantic differences.</td></tr>
 <tr><td><code>nn_freemsg</code></td><td><a href="#destroy-a-message"><code>nng_msg_free</code></a></td><td></td></tr>
 <tr><td><code>nn_reallocmsg</code></td><td><a href="#message-size-and-capacity"><code>nng_msg_realloc</code></a></td><td></td></tr>
@@ -6592,7 +6893,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 </tbody>
 </table>
 </div>
-<h2 id="options"><a class="header" href="#options">Options</a></h2>
+<h2 id="options-1"><a class="header" href="#options-1">Options</a></h2>
 <p>The following options are changed.</p>
 <div class="table-wrapper">
 <table>
@@ -6700,7 +7001,9 @@ connection, <a href="#a003">1</a><br />
 context, <a href="#a001">1</a><br />
 CPU-bound, <a href="#a003">1</a><br />
 device, <a href="#a001">1</a><br />
+dialer, <a href="#a001">1</a><br />
 duration, <a href="#a003">1</a><br />
+endpoints, <a href="#a005">1</a><br />
 error message, <a href="#a002">1</a><br />
 event loop, <a href="#a042">1</a><br />
 flow control, <a href="#a006">1</a><br />
@@ -6724,6 +7027,7 @@ IPv4, <a href="#a004">1</a>, <a href="#a003">2</a><br />
 IPv6, <a href="#a005">1</a>, <a href="#a004">2</a><br />
 leader election, <a href="#a005">1</a><br />
 <code>listen</code>, <a href="#a020">1</a><br />
+listener, <a href="#a002">1</a><br />
 load-balancing, <a href="#a004">1</a>, <a href="#a004">2</a>, <a href="#a005">3</a><br />
 Log handlers, <a href="#a007">1</a><br />
 memory, <a href="#a001">1</a><br />
@@ -6777,8 +7081,20 @@ named pipes, <a href="#a004">1</a><br />
 <code>nng_cv_wake1</code>, <a href="#a015">1</a><br />
 <code>nng_device</code>, <a href="#a004">1</a>, <a href="#a006">2</a>, <a href="#a008">3</a><br />
 <code>nng_device_aio</code>, <a href="#a005">1</a>, <a href="#a007">2</a>, <a href="#a009">3</a><br />
+<code>nng_dial</code>, <a href="#a006">1</a><br />
+<code>nng_dialer</code>, <a href="#a003">1</a><br />
+<code>nng_dialer_close</code>, <a href="#a017">1</a><br />
+<code>nng_dialer_create</code>, <a href="#a010">1</a><br />
+<code>nng_dialer_create_url</code>, <a href="#a011">1</a><br />
+<code>nng_dialer_get</code>, <a href="#a023">1</a><br />
 <code>nng_dialer_get_tls</code>, <a href="#a025">1</a><br />
+<code>nng_dialer_get_url</code>, <a href="#a021">1</a><br />
+<code>nng_dialer_id</code>, <a href="#a019">1</a><br />
+<code>nng_dialer_set</code>, <a href="#a025">1</a><br />
 <code>nng_dialer_set_tls</code>, <a href="#a026">1</a><br />
+<code>nng_dialer_start</code>, <a href="#a014">1</a><br />
+<code>nng_dialer_start_aio</code>, <a href="#a015">1</a><br />
+<code>nng_dial_url</code>, <a href="#a007">1</a><br />
 <code>nng_duration</code>, <a href="#a002">1</a><br />
 <code>NNG_DURATION_DEFAULT</code>, <a href="#a005">1</a><br />
 <code>NNG_DURATION_INFINITE</code>, <a href="#a004">1</a><br />
@@ -6847,8 +7163,20 @@ named pipes, <a href="#a004">1</a><br />
 <code>nng_id_visit</code>, <a href="#a008">1</a><br />
 <code>nng_init</code>, <a href="#a001">1</a><br />
 <code>nng_iov</code>, <a href="#a020">1</a>, <a href="#a022">2</a><br />
+<code>nng_listen</code>, <a href="#a008">1</a><br />
+<code>nng_listener</code>, <a href="#a004">1</a><br />
+<code>nng_listener_close</code>, <a href="#a018">1</a><br />
+<code>nng_listener_create</code>, <a href="#a012">1</a><br />
+<code>nng_listener_create_url</code>, <a href="#a013">1</a><br />
+<code>nng_listener_get</code>, <a href="#a024">1</a><br />
 <code>nng_listener_get_tls</code>, <a href="#a027">1</a><br />
+<code>nng_listener_get_url</code>, <a href="#a022">1</a><br />
+<code>nng_listener_id</code>, <a href="#a020">1</a><br />
+<code>nng_listener_set</code>, <a href="#a026">1</a><br />
+<code>nng_listener_set_security_descriptor</code>, <a href="#a027">1</a><br />
 <code>nng_listener_set_tls</code>, <a href="#a028">1</a><br />
+<code>nng_listener_start</code>, <a href="#a016">1</a><br />
+<code>nng_listen_url</code>, <a href="#a009">1</a><br />
 <code>nng_log</code>, <a href="#a001">1</a><br />
 <code>nng_log_auth</code>, <a href="#a002">1</a><br />
 <code>nng_logger</code>, <a href="#a009">1</a><br />

@@ -1,0 +1,533 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Dialers and Listeners - NNG Reference Manual (DRAFT)</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-5f820576.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">NNG Reference Manual (DRAFT)</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="dialers-and-listeners"><a class="header" href="#dialers-and-listeners">Dialers and Listeners</a></h1>
+<pre><code class="language-c">#define NNG_DIALER_INITIALIZER   // opaque value
+#define NNG_LISTENER_INITIALIZER // opaque value
+
+typedef struct nng_dialer_s nng_dialer;
+typedef struct nng_listener_s nng_listener;
+</code></pre>
+<p><a name="a001"></a>
+<a name="a002"></a>
+Dialers and listeners connect a <a href="../api/sock.html">socket</a> to a transport address.
+A <a name="a003"></a><code>nng_dialer</code> initiates outgoing connections to a remote listener.
+An <a name="a004"></a><code>nng_listener</code> accepts incoming connections from remote dialers.</p>
+<p>When a connection is established, NNG creates an <a href="../api/pipe.html#pipes"><code>nng_pipe</code></a> and attaches it to the socket.
+A dialer creates at most one pipe at a time.
+A listener can create many pipes, which may be open concurrently.</p>
+<p>NNG sometimes refers to dialers and listeners collectively as <a name="a005"></a>endpoints.
+That term is useful when discussing shared behavior, but the public API names are dialer and listener.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>The client/server relationship implied by dialer and listener is independent of protocol roles.
+For example, a <a href="../proto/rep.html">REP</a> socket can use a dialer to connect to a listener on a <a href="../proto/req.html">REQ</a> socket.
+A socket can also have multiple dialers, multiple listeners, or both.</p>
+</blockquote>
+<h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
+<pre><code class="language-c">nng_dialer d = NNG_DIALER_INITIALIZER;
+nng_listener l = NNG_LISTENER_INITIALIZER;
+</code></pre>
+<p>The <code>nng_dialer</code> and <code>nng_listener</code> structures are opaque handles passed by value.
+They should be initialized with <a href="../api/endpoint.html#initialization"><code>NNG_DIALER_INITIALIZER</code></a> or <a href="../api/endpoint.html#initialization"><code>NNG_LISTENER_INITIALIZER</code></a> before they are opened,
+so that they cannot be confused with valid open handles.</p>
+<h2 id="creating-and-starting"><a class="header" href="#creating-and-starting">Creating and Starting</a></h2>
+<pre><code class="language-c">int nng_dial(nng_socket s, const char *url, nng_dialer *dialerp, int flags);
+int nng_dial_url(nng_socket s, const nng_url *url, nng_dialer *dialerp, int flags);
+
+int nng_listen(nng_socket s, const char *url, nng_listener *listenerp, int flags);
+int nng_listen_url(nng_socket s, const nng_url *url, nng_listener *listenerp, int flags);
+</code></pre>
+<p>The <a name="a006"></a><code>nng_dial</code> and <a name="a007"></a><code>nng_dial_url</code> functions create a dialer associated with socket <em>s</em>,
+configure it to connect to <em>url</em>, and start it.
+If <em>dialerp</em> is not <code>NULL</code>, the newly created dialer is stored there.</p>
+<p>The <a name="a008"></a><code>nng_listen</code> and <a name="a009"></a><code>nng_listen_url</code> functions create a listener associated with socket <em>s</em>,
+configure it to listen at <em>url</em>, and start it.
+If <em>listenerp</em> is not <code>NULL</code>, the newly created listener is stored there.</p>
+<p>The forms that take <code>const char *url</code> parse the URL from a string.
+The <code>_url</code> forms use an existing <a href="../api/url.html#url-structure"><code>nng_url</code></a> object.</p>
+<p>Because these functions start the dialer or listener immediately, applications usually cannot apply additional
+transport options first.
+Use <a href="../api/endpoint.html#creating-before-starting"><code>nng_dialer_create</code></a> or <a href="../api/endpoint.html#creating-before-starting"><code>nng_listener_create</code></a> when configuration must be applied before starting.</p>
+<h3 id="dialer-connection-behavior"><a class="header" href="#dialer-connection-behavior">Dialer Connection Behavior</a></h3>
+<p>Normally, the first dial attempt is made synchronously, including any required name resolution.
+If the connection is refused or otherwise fails, the error is returned immediately and no retry is scheduled.</p>
+<p>If <a href="../api/sock.html#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a> is supplied in <em>flags</em>, the first connection attempt is made asynchronously.
+In that mode, connection failures are retried in the background.</p>
+<p>Once a dialer has connected successfully, it waits for the pipe to close.
+If the pipe closes, the dialer attempts to reconnect asynchronously, even if the original connection was made synchronously.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p><code>NNG_FLAG_NONBLOCK</code> can make startup more resilient, but it can also make initial connection failures harder to diagnose.
+Use <a href="../api/endpoint.html#starting"><code>nng_dialer_start_aio</code></a> when the application needs asynchronous startup and the result of the first dial attempt.</p>
+</blockquote>
+<h3 id="listener-behavior"><a class="header" href="#listener-behavior">Listener Behavior</a></h3>
+<p>The <em>flags</em> argument to <code>nng_listen</code> and <code>nng_listen_url</code> is ignored and reserved for future use.</p>
+<p>A listener continues to accept new connections, associating their pipes with the socket, until either the listener
+or the socket is closed.</p>
+<h3 id="errors"><a class="header" href="#errors">Errors</a></h3>
+<p>The create-and-start functions can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_EADDRINUSE"><code>NNG_EADDRINUSE</code></a>: The listener address is already in use.</li>
+<li><a href="../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="../api/errors.html#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial dial connection.</li>
+<li><a href="../api/errors.html#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial dial connection.</li>
+<li><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The URL or flags are invalid.</li>
+<li><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="../api/errors.html#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a>: Authentication or authorization failed.</li>
+<li><a href="../api/errors.html#NNG_EPROTO"><code>NNG_EPROTO</code></a>: A protocol error occurred.</li>
+<li><a href="../api/errors.html#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a>: The remote address is not reachable.</li>
+</ul>
+<h2 id="creating-before-starting"><a class="header" href="#creating-before-starting">Creating Before Starting</a></h2>
+<pre><code class="language-c">int nng_dialer_create(nng_dialer *dialerp, nng_socket s, const char *url);
+int nng_dialer_create_url(nng_dialer *dialerp, nng_socket s, const nng_url *url);
+
+int nng_listener_create(nng_listener *listenerp, nng_socket s, const char *url);
+int nng_listener_create_url(nng_listener *listenerp, nng_socket s, const nng_url *url);
+</code></pre>
+<p>The <a name="a010"></a><code>nng_dialer_create</code> and <a name="a011"></a><code>nng_dialer_create_url</code> functions create a dialer associated with socket <em>s</em>,
+configure it to connect to <em>url</em>, and store it in <em>dialerp</em>.
+The dialer is not started.</p>
+<p>The <a name="a012"></a><code>nng_listener_create</code> and <a name="a013"></a><code>nng_listener_create_url</code> functions create a listener associated with socket <em>s</em>,
+configure it to listen at <em>url</em>, and store it in <em>listenerp</em>.
+The listener is not started.</p>
+<p>Use these functions when the dialer or listener needs additional configuration before it starts, such as transport options,
+TLS configuration, or a listener socket activation file descriptor.</p>
+<h3 id="errors-1"><a class="header" href="#errors-1">Errors</a></h3>
+<p>These functions can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+</ul>
+<h2 id="starting"><a class="header" href="#starting">Starting</a></h2>
+<pre><code class="language-c">int nng_dialer_start(nng_dialer dialer, int flags);
+void nng_dialer_start_aio(nng_dialer dialer, int flags, nng_aio *aio);
+int nng_listener_start(nng_listener listener, int flags);
+</code></pre>
+<p>The <a name="a014"></a><code>nng_dialer_start</code> function starts <em>dialer</em>.
+It follows the same synchronous and <code>NNG_FLAG_NONBLOCK</code> behavior described for <a href="../api/endpoint.html#creating-and-starting"><code>nng_dial</code></a>.</p>
+<p>The <a name="a015"></a><code>nng_dialer_start_aio</code> function starts <em>dialer</em> asynchronously using <em>aio</em>.
+It must be called with <code>NNG_FLAG_NONBLOCK</code> in <em>flags</em>.
+When the first dial attempt completes, the operation result is reported through <em>aio</em>.
+Only the first dialing result is reported this way.</p>
+<p>The <a name="a016"></a><code>nng_listener_start</code> function starts <em>listener</em>, causing it to bind to its address and accept connections.
+The <em>flags</em> argument is ignored and reserved for future use.</p>
+<p>Once a dialer or listener has started, it is generally not possible to change its configuration.</p>
+<h3 id="errors-2"><a class="header" href="#errors-2">Errors</a></h3>
+<p><code>nng_dialer_start</code> can return, and <code>nng_dialer_start_aio</code> can report through its AIO, these errors:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="../api/errors.html#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial connection.</li>
+<li><a href="../api/errors.html#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial connection.</li>
+<li><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The flags are invalid.</li>
+<li><a href="../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a>: The dialer handle is invalid.</li>
+<li><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="../api/errors.html#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a>: Authentication or authorization failed.</li>
+<li><a href="../api/errors.html#NNG_EPROTO"><code>NNG_EPROTO</code></a>: A protocol error occurred.</li>
+<li><a href="../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The dialer is already started.</li>
+<li><a href="../api/errors.html#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a>: The remote address is not reachable.</li>
+</ul>
+<p><code>nng_listener_start</code> can fail with:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_EADDRINUSE"><code>NNG_EADDRINUSE</code></a>: The listener address is already in use.</li>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The listener is closed.</li>
+<li><a href="../api/errors.html#NNG_EPERM"><code>NNG_EPERM</code></a>: Permission was denied when binding to the address.</li>
+<li><a href="../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The listener is already started.</li>
+</ul>
+<h2 id="closing"><a class="header" href="#closing">Closing</a></h2>
+<pre><code class="language-c">int nng_dialer_close(nng_dialer dialer);
+int nng_listener_close(nng_listener listener);
+</code></pre>
+<p>The <a name="a017"></a><code>nng_dialer_close</code> function closes <em>dialer</em>.
+The <a name="a018"></a><code>nng_listener_close</code> function closes <em>listener</em>.</p>
+<p>Closing a dialer or listener also closes any pipes it created.
+Once this function returns, the dialer or listener and its resources are deallocated.
+Further attempts to use the handle will fail with <a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
+<p>Dialers and listeners are also closed when their associated socket is closed.</p>
+<h3 id="errors-3"><a class="header" href="#errors-3">Errors</a></h3>
+<p>These functions can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
+</ul>
+<h2 id="identity"><a class="header" href="#identity">Identity</a></h2>
+<pre><code class="language-c">int nng_dialer_id(nng_dialer dialer);
+int nng_listener_id(nng_listener listener);
+</code></pre>
+<p>The <a name="a019"></a><code>nng_dialer_id</code> and <a name="a020"></a><code>nng_listener_id</code> functions return a positive identifier if the supplied handle is valid.
+Otherwise they return <code>-1</code>.</p>
+<p>A dialer or listener is considered valid if it was ever created by one of the create or create-and-start functions.
+Handles allocated on the stack or statically should be initialized with <a href="../api/endpoint.html#initialization"><code>NNG_DIALER_INITIALIZER</code></a> or
+<a href="../api/endpoint.html#initialization"><code>NNG_LISTENER_INITIALIZER</code></a> before use.</p>
+<h2 id="associated-urls"><a class="header" href="#associated-urls">Associated URLs</a></h2>
+<pre><code class="language-c">int nng_dialer_get_url(nng_dialer dialer, const nng_url **urlp);
+int nng_listener_get_url(nng_listener listener, const nng_url **urlp);
+</code></pre>
+<p>The <a name="a021"></a><code>nng_dialer_get_url</code> and <a name="a022"></a><code>nng_listener_get_url</code> functions return the URL associated with <em>dialer</em> or <em>listener</em>.
+The URL pointer is stored in <em>urlp</em>.</p>
+<p>The returned URL belongs to the dialer or listener.
+It must not be modified or freed by the caller, and it is invalid after the dialer or listener is closed.</p>
+<h3 id="errors-4"><a class="header" href="#errors-4">Errors</a></h3>
+<p>These functions can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
+</ul>
+<h2 id="options"><a class="header" href="#options">Options</a></h2>
+<pre><code class="language-c">int nng_dialer_get_bool(nng_dialer dialer, const char *opt, bool *valp);
+int nng_dialer_get_int(nng_dialer dialer, const char *opt, int *valp);
+int nng_dialer_get_ms(nng_dialer dialer, const char *opt, nng_duration *valp);
+int nng_dialer_get_size(nng_dialer dialer, const char *opt, size_t *valp);
+int nng_dialer_get_addr(nng_dialer dialer, const char *opt, nng_sockaddr *valp);
+int nng_dialer_get_string(nng_dialer dialer, const char *opt, const char **valp);
+int nng_dialer_get_uint64(nng_dialer dialer, const char *opt, uint64_t *valp);
+
+int nng_listener_get_bool(nng_listener listener, const char *opt, bool *valp);
+int nng_listener_get_int(nng_listener listener, const char *opt, int *valp);
+int nng_listener_get_ms(nng_listener listener, const char *opt, nng_duration *valp);
+int nng_listener_get_size(nng_listener listener, const char *opt, size_t *valp);
+int nng_listener_get_string(nng_listener listener, const char *opt, const char **valp);
+int nng_listener_get_uint64(nng_listener listener, const char *opt, uint64_t *valp);
+
+int nng_dialer_set_bool(nng_dialer dialer, const char *opt, bool val);
+int nng_dialer_set_int(nng_dialer dialer, const char *opt, int val);
+int nng_dialer_set_ms(nng_dialer dialer, const char *opt, nng_duration val);
+int nng_dialer_set_size(nng_dialer dialer, const char *opt, size_t val);
+int nng_dialer_set_addr(nng_dialer dialer, const char *opt, const nng_sockaddr *val);
+int nng_dialer_set_string(nng_dialer dialer, const char *opt, const char *val);
+int nng_dialer_set_uint64(nng_dialer dialer, const char *opt, uint64_t val);
+
+int nng_listener_set_bool(nng_listener listener, const char *opt, bool val);
+int nng_listener_set_int(nng_listener listener, const char *opt, int val);
+int nng_listener_set_ms(nng_listener listener, const char *opt, nng_duration val);
+int nng_listener_set_size(nng_listener listener, const char *opt, size_t val);
+int nng_listener_set_string(nng_listener listener, const char *opt, const char *val);
+int nng_listener_set_uint64(nng_listener listener, const char *opt, uint64_t val);
+</code></pre>
+<p>The <a name="a023"></a><code>nng_dialer_get</code> and <a name="a024"></a><code>nng_listener_get</code> function families retrieve option values from a dialer or listener.
+The <a name="a025"></a><code>nng_dialer_set</code> and <a name="a026"></a><code>nng_listener_set</code> function families configure option values on a dialer or listener.</p>
+<p>The function suffix identifies the type used for the option:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Suffix</th><th>Type</th><th>Use</th></tr>
+</thead>
+<tbody>
+<tr><td><code>_bool</code></td><td><code>bool</code></td><td>Boolean options.</td></tr>
+<tr><td><code>_int</code></td><td><code>int</code></td><td>Integer options.</td></tr>
+<tr><td><code>_ms</code></td><td><code>nng_duration</code></td><td>Time durations, stored as milliseconds.</td></tr>
+<tr><td><code>_size</code></td><td><code>size_t</code></td><td>Buffer sizes, maximum message sizes, and similar values.</td></tr>
+<tr><td><code>_addr</code></td><td><code>nng_sockaddr</code></td><td>Socket addresses. This form is available for dialer options only.</td></tr>
+<tr><td><code>_string</code></td><td><code>const char *</code></td><td><code>NUL</code>-terminated UTF-8 or ASCII strings.</td></tr>
+<tr><td><code>_uint64</code></td><td><code>uint64_t</code></td><td>64-bit unsigned values, typically identifiers, network numbers, and similar values.</td></tr>
+</tbody>
+</table>
+</div>
+<p>Available options vary by transport and by option.
+Many common options are listed in <a href="../api/sock.html#socket-options">Socket Options</a> and transport-specific options are documented
+with each transport.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Socket option values for <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> provide initial defaults
+for dialers and listeners created afterward.
+Changing those socket options does not affect existing dialers or listeners.</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Once a dialer or listener has started, it is generally not possible to change its configuration.</p>
+</blockquote>
+<h3 id="errors-5"><a class="header" href="#errors-5">Errors</a></h3>
+<p>The option functions can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a>: The typed accessor does not match the option type.</li>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
+<li><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The value is invalid, or the destination is too small.</li>
+<li><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The option is not supported.</li>
+<li><a href="../api/errors.html#NNG_EREADONLY"><code>NNG_EREADONLY</code></a>: The option is read-only.</li>
+<li><a href="../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The dialer or listener is already started.</li>
+<li><a href="../api/errors.html#NNG_EWRITEONLY"><code>NNG_EWRITEONLY</code></a>: The option is write-only.</li>
+</ul>
+<h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
+<pre><code class="language-c">int nng_dialer_get_tls(nng_dialer dialer, nng_tls_config **cfgp);
+int nng_dialer_set_tls(nng_dialer dialer, nng_tls_config *cfg);
+int nng_listener_get_tls(nng_listener listener, nng_tls_config **cfgp);
+int nng_listener_set_tls(nng_listener listener, nng_tls_config *cfg);
+</code></pre>
+<p>These functions configure or retrieve TLS configuration objects for dialers and listeners whose transports support TLS.
+They are documented in <a href="../api/tls.html#using-configuration-objects">Using Configuration Objects</a>.</p>
+<h2 id="windows-security-descriptors"><a class="header" href="#windows-security-descriptors">Windows Security Descriptors</a></h2>
+<pre><code class="language-c">int nng_listener_set_security_descriptor(nng_listener listener, void *desc);
+</code></pre>
+<p>The <a name="a027"></a><code>nng_listener_set_security_descriptor</code> function configures the Windows security descriptor for <em>listener</em>.
+This is used by transports that expose Windows named objects, such as the <a href="../tran/ipc.html">IPC transport</a>.
+It must be called before the listener is started.</p>
+<h3 id="errors-6"><a class="header" href="#errors-6">Errors</a></h3>
+<p>This function can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The listener is closed.</li>
+<li><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The descriptor is invalid.</li>
+<li><a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport or platform does not support security descriptors.</li>
+<li><a href="../api/errors.html#NNG_ESTATE"><code>NNG_ESTATE</code></a>: The listener is already started.</li>
+</ul>
+<h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
+<h3 id="connecting-with-convenience-functions"><a class="header" href="#connecting-with-convenience-functions">Connecting With Convenience Functions</a></h3>
+<pre><code class="language-c">nng_socket s;
+nng_dialer d = NNG_DIALER_INITIALIZER;
+
+nng_req0_open(&amp;s);
+nng_dial(s, "tcp://127.0.0.1:8080", &amp;d, 0);
+</code></pre>
+<h3 id="configuring-before-starting"><a class="header" href="#configuring-before-starting">Configuring Before Starting</a></h3>
+<pre><code class="language-c">nng_socket s;
+nng_listener l = NNG_LISTENER_INITIALIZER;
+
+nng_rep0_open(&amp;s);
+nng_listener_create(&amp;l, s, "tcp://127.0.0.1:8080");
+nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 1024 * 1024);
+nng_listener_start(l, 0);
+</code></pre>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../api/sock.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../api/device.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../api/sock.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../api/device.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

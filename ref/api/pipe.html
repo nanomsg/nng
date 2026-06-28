@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,7 +194,7 @@ accurate type checks in functions passing values of this type.</p>
 However it is possible to access a pipe when more information about the
 source of a message is needed, or when more control is required over message delivery.</p>
 </blockquote>
-<p>Pipe objects are created by <a href="../TODO.html">dialers</a> and and <a href="../TODO.html">listeners</a>.</p>
+<p>Pipe objects are created by <a href="../api/endpoint.html">dialers</a> and and <a href="../api/endpoint.html">listeners</a>.</p>
 <h2 id="initialization"><a class="header" href="#initialization">Initialization</a></h2>
 <p>A pipe may be initialized using the macro <a name="a004"></a><code>NNG_PIPE_INITIALIZER</code>
 before it is opened, to prevent confusion with valid open pipes.</p>
@@ -232,10 +232,10 @@ nng_socket nng_pipe_socket(nng_pipe p);
 <p><a name="a007"></a>
 <a name="a008"></a>
 <a name="a009"></a>
-These functions return the <a href="../api/sock.html">socket</a>, <a href="../TODO.html">dialer</a>, or <a href="../TODO.html">listener</a> that created or owns the pipe.</p>
+These functions return the <a href="../api/sock.html">socket</a>, <a href="../api/endpoint.html">dialer</a>, or <a href="../api/endpoint.html">listener</a> that created or owns the pipe.</p>
 <p>If the pipe was does not have an associated dialer or listener, then the associated will
-return [<code>NNG_DIALER_INITIALIZER</code>] or [<code>NNG_LISTENER_INITIALIZER</code>], as appropriate, and
-either [<code>nng_dialer_id</code>] or [<code>nng_listener_id</code>] for the returned object will return -1.</p>
+return <a href="../api/endpoint.html#initialization"><code>NNG_DIALER_INITIALIZER</code></a> or <a href="../api/endpoint.html#initialization"><code>NNG_LISTENER_INITIALIZER</code></a>, as appropriate, and
+either <a href="../api/endpoint.html#identity"><code>nng_dialer_id</code></a> or <a href="../api/endpoint.html#identity"><code>nng_listener_id</code></a> for the returned object will return -1.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The socket, or the endpoint, returned by these functions may be in the process of closing,

@@ -35,10 +35,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f5500b13.js"></script>
+        <script src="toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -202,7 +202,9 @@ connection, <a href="api/pipe.html#a003">1</a><br />
 context, <a href="api/ctx.html#a001">1</a><br />
 CPU-bound, <a href="api/thread.html#a003">1</a><br />
 device, <a href="api/device.html#a001">1</a><br />
+dialer, <a href="api/endpoint.html#a001">1</a><br />
 duration, <a href="api/time.html#a003">1</a><br />
+endpoints, <a href="api/endpoint.html#a005">1</a><br />
 error message, <a href="api/errors.html#a002">1</a><br />
 event loop, <a href="api/sock.html#a042">1</a><br />
 flow control, <a href="proto/index.html#a006">1</a><br />
@@ -226,6 +228,7 @@ IPv4, <a href="tran/tls.html#a004">1</a>, <a href="tran/udp.html#a003">2</a><br 
 IPv6, <a href="tran/tls.html#a005">1</a>, <a href="tran/udp.html#a004">2</a><br />
 leader election, <a href="proto/surveyor.html#a005">1</a><br />
 <code>listen</code>, <a href="api/stream.html#a020">1</a><br />
+listener, <a href="api/endpoint.html#a002">1</a><br />
 load-balancing, <a href="proto/pull.html#a004">1</a>, <a href="proto/push.html#a004">2</a>, <a href="proto/req.html#a005">3</a><br />
 Log handlers, <a href="api/logging.html#a007">1</a><br />
 memory, <a href="api/memory.html#a001">1</a><br />
@@ -279,8 +282,20 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br />
 <code>nng_cv_wake1</code>, <a href="api/synch.html#a015">1</a><br />
 <code>nng_device</code>, <a href="api/device.html#a004">1</a>, <a href="api/device.html#a006">2</a>, <a href="api/device.html#a008">3</a><br />
 <code>nng_device_aio</code>, <a href="api/device.html#a005">1</a>, <a href="api/device.html#a007">2</a>, <a href="api/device.html#a009">3</a><br />
+<code>nng_dial</code>, <a href="api/endpoint.html#a006">1</a><br />
+<code>nng_dialer</code>, <a href="api/endpoint.html#a003">1</a><br />
+<code>nng_dialer_close</code>, <a href="api/endpoint.html#a017">1</a><br />
+<code>nng_dialer_create</code>, <a href="api/endpoint.html#a010">1</a><br />
+<code>nng_dialer_create_url</code>, <a href="api/endpoint.html#a011">1</a><br />
+<code>nng_dialer_get</code>, <a href="api/endpoint.html#a023">1</a><br />
 <code>nng_dialer_get_tls</code>, <a href="api/tls.html#a025">1</a><br />
+<code>nng_dialer_get_url</code>, <a href="api/endpoint.html#a021">1</a><br />
+<code>nng_dialer_id</code>, <a href="api/endpoint.html#a019">1</a><br />
+<code>nng_dialer_set</code>, <a href="api/endpoint.html#a025">1</a><br />
 <code>nng_dialer_set_tls</code>, <a href="api/tls.html#a026">1</a><br />
+<code>nng_dialer_start</code>, <a href="api/endpoint.html#a014">1</a><br />
+<code>nng_dialer_start_aio</code>, <a href="api/endpoint.html#a015">1</a><br />
+<code>nng_dial_url</code>, <a href="api/endpoint.html#a007">1</a><br />
 <code>nng_duration</code>, <a href="api/time.html#a002">1</a><br />
 <code>NNG_DURATION_DEFAULT</code>, <a href="api/time.html#a005">1</a><br />
 <code>NNG_DURATION_INFINITE</code>, <a href="api/time.html#a004">1</a><br />
@@ -349,8 +364,20 @@ named pipes, <a href="tran/ipc.html#a004">1</a><br />
 <code>nng_id_visit</code>, <a href="api/id_map.html#a008">1</a><br />
 <code>nng_init</code>, <a href="api/init.html#a001">1</a><br />
 <code>nng_iov</code>, <a href="api/aio.html#a020">1</a>, <a href="api/aio.html#a022">2</a><br />
+<code>nng_listen</code>, <a href="api/endpoint.html#a008">1</a><br />
+<code>nng_listener</code>, <a href="api/endpoint.html#a004">1</a><br />
+<code>nng_listener_close</code>, <a href="api/endpoint.html#a018">1</a><br />
+<code>nng_listener_create</code>, <a href="api/endpoint.html#a012">1</a><br />
+<code>nng_listener_create_url</code>, <a href="api/endpoint.html#a013">1</a><br />
+<code>nng_listener_get</code>, <a href="api/endpoint.html#a024">1</a><br />
 <code>nng_listener_get_tls</code>, <a href="api/tls.html#a027">1</a><br />
+<code>nng_listener_get_url</code>, <a href="api/endpoint.html#a022">1</a><br />
+<code>nng_listener_id</code>, <a href="api/endpoint.html#a020">1</a><br />
+<code>nng_listener_set</code>, <a href="api/endpoint.html#a026">1</a><br />
+<code>nng_listener_set_security_descriptor</code>, <a href="api/endpoint.html#a027">1</a><br />
 <code>nng_listener_set_tls</code>, <a href="api/tls.html#a028">1</a><br />
+<code>nng_listener_start</code>, <a href="api/endpoint.html#a016">1</a><br />
+<code>nng_listen_url</code>, <a href="api/endpoint.html#a009">1</a><br />
 <code>nng_log</code>, <a href="api/logging.html#a001">1</a><br />
 <code>nng_log_auth</code>, <a href="api/logging.html#a002">1</a><br />
 <code>nng_logger</code>, <a href="api/logging.html#a009">1</a><br />

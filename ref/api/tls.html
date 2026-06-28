@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -318,7 +318,7 @@ nng_err nng_listener_set_tls(nng_listener listener, nng_tls_config *cfg);
 <a name="a027"></a>
 <a name="a028"></a>
 The <code>nng_dialer_set_tls</code> and <code>nng_listener_set_tls</code> functions configure TLS for Scalability Protocol
-<a href="../TODO.html">dialer</a> and <a href="../TODO.html">listener</a> objects whose transports support TLS.
+<a href="../api/endpoint.html">dialer</a> and <a href="../api/endpoint.html">listener</a> objects whose transports support TLS.
 These functions must be called before the dialer or listener is started.
 They take their own hold on the configuration object, so the caller may release its reference after a successful call.</p>
 <p>The <code>nng_dialer_get_tls</code> and <code>nng_listener_get_tls</code> functions retrieve the associated configuration object.
@@ -331,7 +331,7 @@ HTTP clients and servers also use TLS configuration objects for HTTPS, including
 secure <a href="../tran/websocket.html">WebSocket transport</a> endpoints; see <a href="../api/http.html#client-tls"><code>nng_http_client_set_tls</code></a> and
 related HTTP APIs.</p>
 <h2 id="examples"><a class="header" href="#examples">Examples</a></h2>
-<p>The following examples use Scalability Protocol <a href="../TODO.html">dialer</a> and <a href="../TODO.html">listener</a> objects.
+<p>The following examples use Scalability Protocol <a href="../api/endpoint.html">dialer</a> and <a href="../api/endpoint.html">listener</a> objects.
 For raw <a href="../api/stream.html">streams</a>, use the same configuration steps, but attach the configuration with
 <a href="../api/stream.html#tls-configuration"><code>nng_stream_dialer_set_tls</code></a> or <a href="../api/stream.html#tls-configuration"><code>nng_stream_listener_set_tls</code></a>.</p>
 <p>The examples use certificate files for clarity.

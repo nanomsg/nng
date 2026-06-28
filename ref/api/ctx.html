@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -254,7 +254,7 @@ while <a href="../proto/sub.html">SUB</a> sockets can only receive data and neve
 <p>The <code>nng_ctx_sendmsg</code> function sends the <em>msg</em> over the context <em>ctx</em>.</p>
 <p>If this function returns zero, then the socket will dispose of <em>msg</em> when the transmission is complete.
 If the function returns a non-zero status, then the call retains the responsibility for disposing of <em>msg</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+<p>The <em>flags</em> can contain the value <a href="../api/sock.html#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 cannot accept more data for sending. In such a case, it will return <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <h3 id="nng_ctx_send"><a class="header" href="#nng_ctx_send">nng_ctx_send</a></h3>
 <p>The <code>nng_ctx_send</code> function sends a message asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
@@ -285,7 +285,7 @@ Additionally, some protocols may not support receiving at all or may require oth
 </blockquote>
 <h3 id="nng_recvmsg"><a class="header" href="#nng_recvmsg">nng_recvmsg</a></h3>
 <p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="../api/msg.html#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
-<p>The <em>flags</em> can contain the value <a href="../TODO.html"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
+<p>The <em>flags</em> can contain the value <a href="../api/sock.html#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return <a href="../api/errors.html#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
 <h3 id="nng_socket_recv"><a class="header" href="#nng_socket_recv">nng_socket_recv</a></h3>
 <p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
@@ -363,7 +363,7 @@ echo(void *arg)
 <h3 id="example-2-starting-the-echo-service"><a class="header" href="#example-2-starting-the-echo-service">Example 2: Starting the Echo Service</a></h3>
 <p>Given the above fragment, the following example shows setting up the service.
 It assumes that the <a href="../api/sock.html">socket</a> has already been
-created and any transports set up as well with functions such as <a href="../TODO.html"><code>nng_dial</code></a> or <a href="../TODO.html"><code>nng_listen</code></a>.</p>
+created and any transports set up as well with functions such as <a href="../api/endpoint.html#creating-and-starting"><code>nng_dial</code></a> or <a href="../api/endpoint.html#creating-and-starting"><code>nng_listen</code></a>.</p>
 <pre><code class="language-c">
 #define CONCURRENCY 1024
 

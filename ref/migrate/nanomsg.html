@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -205,9 +205,9 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
 <tr><td><code>nn_close</code></td><td><a href="../api/sock.html#closing-a-socket"><code>nng_socket_close</code> </a></td><td></td></tr>
-<tr><td><code>nn_bind</code></td><td><a href="../TODO.html"><code>nng_listen</code></a>, <a href="../TODO.html"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_connect</code></td><td><a href="../TODO.html"><code>nng_dial</code></a>, <a href="../TODO.html"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
-<tr><td><code>nn_shutdown</code></td><td><a href="../TODO.html"><code>nng_listener_close</code></a>, <a href="../TODO.html"><code>nng_dialer_close</code></a></td><td></td></tr>
+<tr><td><code>nn_bind</code></td><td><a href="../api/endpoint.html#creating-and-starting"><code>nng_listen</code></a>, <a href="../api/endpoint.html#creating-before-starting"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_connect</code></td><td><a href="../api/endpoint.html#creating-and-starting"><code>nng_dial</code></a>, <a href="../api/endpoint.html#creating-before-starting"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_shutdown</code></td><td><a href="../api/endpoint.html#closing"><code>nng_listener_close</code></a>, <a href="../api/endpoint.html#closing"><code>nng_dialer_close</code></a></td><td></td></tr>
 <tr><td><code>nn_allocmsg</code></td><td><a href="../api/msg.html#create-a-message"><code>nng_msg_alloc</code></a></td><td>There are significant semantic differences.</td></tr>
 <tr><td><code>nn_freemsg</code></td><td><a href="../api/msg.html#destroy-a-message"><code>nng_msg_free</code></a></td><td></td></tr>
 <tr><td><code>nn_reallocmsg</code></td><td><a href="../api/msg.html#message-size-and-capacity"><code>nng_msg_realloc</code></a></td><td></td></tr>

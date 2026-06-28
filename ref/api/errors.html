@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -221,7 +221,7 @@ as in diagnostic messages or log entries.</p>
 <tr><td><code>NNG_ECLOSED</code><a name="NNG_ECLOSED"></a></td><td>7</td><td>Object closed. Typically the <a href="../api/sock.html">socket</a> is closed.</td></tr>
 <tr><td><code>NNG_EAGAIN</code><a name="NNG_EAGAIN"></a></td><td>8</td><td>Try again. Typcally for a non-blocking operation that might succeed later.</td></tr>
 <tr><td><code>NNG_ENOTSUP</code><a name="NNG_ENOTSUP"></a></td><td>9</td><td>Not supported. Perhaps the protocol or transport is not supported, or the operation is not not supported with the transport or protocol.</td></tr>
-<tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="../TODO.html">listeners</a>.</td></tr>
+<tr><td><code>NNG_EADDRINUSE</code><a name="NNG_EADDRINUSE"></a></td><td>10</td><td>Address in use. The network address is already used by another process. Most often this is seen for <a href="../api/endpoint.html">listeners</a>.</td></tr>
 <tr><td><code>NNG_ESTATE</code><a name="NNG_ESTATE"></a></td><td>11</td><td>Incorrect state. The operation cannot be performed in the current state, such as trying to send a response when no request has yet been received.</td></tr>
 <tr><td><code>NNG_ENOENT</code><a name="NNG_ENOENT"></a></td><td>12</td><td>Entry not found (no such object.) Can also indicate that a file does not exist.</td></tr>
 <tr><td><code>NNG_EPROTO</code><a name="NNG_EPROTO"></a></td><td>13</td><td>Protocol error. Typically this indicates incorrect messages over a network.</td></tr>

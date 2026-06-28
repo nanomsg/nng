@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -199,7 +199,7 @@ be selected if available on the host, otherwise IPv4 will be selected.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>IP addresses may be more reliable than host names. Certainly when using the URL
-for a <a href="../TODO.html">listener</a>, it is better to use an IP address that is known to exist on the
+for a <a href="../api/endpoint.html">listener</a>, it is better to use an IP address that is known to exist on the
 local system, or the zero address to listen to all interfaces.</p>
 </blockquote>
 <h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
@@ -222,7 +222,7 @@ where supported by the underlying platform.</p>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read-only option, returns the user ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read-only option, returns the zone ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
 <tr><td><a href="../api/stream.html#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write-only for listeners before they start, use the named socket for accepting (for use with socket activation).</td></tr>
-<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="../TODO.html">listener</a> objects only.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="../api/endpoint.html">listener</a> objects only.</td></tr>
 </tbody>
 </table>
 </div>

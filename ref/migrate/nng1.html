@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -410,7 +410,7 @@ or dialer that creates the stream instead.</p>
 <h2 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h2>
 <p>A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
-<a href="../TODO.html"><code>nng_dialer_set</code></a> or <a href="../TODO.html"><code>nng_listener_set</code></a> option. This likely means that it is necessary
+<a href="../api/endpoint.html#options"><code>nng_dialer_set</code></a> or <a href="../api/endpoint.html#options"><code>nng_listener_set</code></a> option. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.</p>
 <p>The following options are copied from the socket when creating a dialer or listener,
@@ -458,8 +458,8 @@ is removed. The empty string already performs this function, and unlike
 <code>*</code> is RFC compliant.</p>
 <h2 id="url-option-removed"><a class="header" href="#url-option-removed">URL Option Removed</a></h2>
 <p>The <code>NNG_OPT_URL</code> option has been removed.
-It is replaced by the type safe <a href="../TODO.html"><code>nng_dialer_get_url</code></a> and
-<a href="../TODO.html"><code>nng_listener_get_url</code></a> functions, which return an <a href="../api/url.html#url-structure"><code>nng_url</code></a>
+It is replaced by the type safe <a href="../api/endpoint.html#associated-urls"><code>nng_dialer_get_url</code></a> and
+<a href="../api/endpoint.html#associated-urls"><code>nng_listener_get_url</code></a> functions, which return an <a href="../api/url.html#url-structure"><code>nng_url</code></a>
 structure instead of a string.</p>
 <h2 id="url-structure-changes"><a class="header" href="#url-structure-changes">URL Structure Changes</a></h2>
 <p>The details of <a href="../api/url.html#url-structure"><code>nng_url</code></a> have changed significantly, and direct

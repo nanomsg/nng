@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7315db9f.js";
+            window.path_to_searchindex_js = "../searchindex-e3b36132.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-f5500b13.js"></script>
+        <script src="../toc-5f820576.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -179,10 +179,10 @@
 <p>The <a name="a001"></a><em>socket</em> transport supports communication between
 peers across arbitrary BSD sockets, such as those that are
 created with <a href="../api/misc.html#create-socket-pair"><code>nng_socket_pair</code></a>.</p>
-<p>This transport only supports <a href="../TODO.html">listeners</a>, using <a href="../TODO.html"><code>nng_listener_create</code></a>.</p>
+<p>This transport only supports <a href="../api/endpoint.html">listeners</a>, using <a href="../api/endpoint.html#creating-before-starting"><code>nng_listener_create</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Attempts to create <a href="../TODO.html">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.</p>
+<p>Attempts to create <a href="../api/endpoint.html">dialers</a> using this transport will result in <code>NNG_ENOTSUP</code>.</p>
 </blockquote>
 <p>The socket file descriptor is passed to the listener using
 the <a name="a002"></a><code>NNG_OPT_SOCKET_FD</code> option (as an integer).
