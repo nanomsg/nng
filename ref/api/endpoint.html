@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a876065b.js";
+            window.path_to_searchindex_js = "../searchindex-6ac4caec.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-5f820576.js"></script>
@@ -342,6 +342,13 @@ int nng_listener_get_url(nng_listener listener, const nng_url **urlp);
 The URL pointer is stored in <em>urlp</em>.</p>
 <p>The returned URL belongs to the dialer or listener.
 It must not be modified or freed by the caller, and it is invalid after the dialer or listener is closed.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Older NNG documentation referred to an <code>NNG_OPT_URL</code> option for endpoints.
+That option has been removed.
+Use <code>nng_dialer_get_url</code> and <code>nng_listener_get_url</code> instead, which return a
+typed <a href="../api/url.html#url-structure"><code>nng_url</code></a> object rather than a string.</p>
+</blockquote>
 <h3 id="errors-4"><a class="header" href="#errors-4">Errors</a></h3>
 <p>These functions can return:</p>
 <ul>
@@ -400,6 +407,30 @@ The <a name="a025"></a><code>nng_dialer_set</code> and <a name="a026"></a><code>
 <p>Available options vary by transport and by option.
 Many common options are listed in <a href="../api/sock.html#socket-options">Socket Options</a> and transport-specific options are documented
 with each transport.</p>
+<h3 id="endpoint-specific-options"><a class="header" href="#endpoint-specific-options">Endpoint-Specific Options</a></h3>
+<p>The following endpoint-specific option is defined by the core API:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>NNG_OPT_LOCADDR</code><a name="NNG_OPT_LOCADDR"></a></td><td><code>nng_sockaddr</code></td><td>Dialers only. Configures the local address to bind before initiating outgoing connections, when supported by the transport.</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>NNG_OPT_LOCADDR</code> is most useful for transports such as TCP or UDP where the
+application needs to choose the local interface or source address for outgoing
+connections.
+When used on a TCP dialer, the IP address portion is used as the source
+address, but the port is ignored and an ephemeral port is chosen by the
+system.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Support for <code>NNG_OPT_LOCADDR</code> depends on the transport.
+Some transports support it on dialers, some do not, and listeners may expose
+related local-address information differently or not at all.</p>
+</blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Socket option values for <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> provide initial defaults
