@@ -569,6 +569,7 @@
 
 <!-- Protocols -->
 
+[proto]: ../proto/index.md
 [protocol]: ../proto/index.md
 [bus]: ../proto/bus.md
 [pair]: ../proto/pair.md
@@ -583,6 +584,7 @@
 
 <!-- Transports -->
 
+[tran]: ../tran/index.md
 [socktran]: ../tran/socket.md
 [ipc]: ../tran/ipc.md
 [inproc]: ../tran/inproc.md
@@ -591,6 +593,8 @@
 [TLS transport]: ../tran/tls.md
 [WebSocket transport]: ../tran/websocket.md
 [udp]: ../tran/udp.md
+[url]: ../api/url.md
+[nngcat]: ../tools/nngcat.md
 [streams]: ../api/stream.md
 [id map]: ../api/id_map.md
 [tls-config-objects]: ../api/tls.md#using-configuration-objects

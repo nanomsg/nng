@@ -3,6 +3,7 @@
 [Copyright](./copyright.md)
 [Dedication](./dedication.md)
 [Preface](./preface.md)
+[Overview](./overview/index.md)
 
 - [API Reference](./api/index.md)
 
@@ -74,6 +75,10 @@
   - [WebSocket Transport](./tran/websocket.md)
   - [BSD Socket (Experimental)](./tran/socket.md)
   - [UDP Transport (Experimental)](./tran/udp.md)
+
+- [Tools](./tools/index.md)
+
+  - [nngcat](./tools/nngcat.md)
 
 - [Migration Guides](./migrate/index.md)
 

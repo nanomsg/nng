@@ -3,7 +3,7 @@
 {{i:Universal Resource Locator}}s, or {{i:URL}}s for short, are a standardized
 way of representing a network resource,
 defined in [RFC 1738](https://datatracker.ietf.org/doc/html/rfc1738),
-and [RFC 3968](https://datatracker.ietf.org/doc/html/rfc3986).
+and [RFC 3986](https://datatracker.ietf.org/doc/html/rfc3986).
 
 In Scalability Protocols, this concept is extended, although it includes schemes
 that are not part of the IETF standards.
@@ -19,7 +19,7 @@ const char *nng_url_hostname(const nng_url *url);
 uint32_t    nng_url_port(const nng_url *url);
 const char *nng_url_path(const nng_url *url);
 const char *nng_url_query(const nng_url *url);
-const char *nng_url_fragment(const nng_url *url):
+const char *nng_url_fragment(const nng_url *url);
 ```
 
 ### URL Fields
@@ -68,7 +68,7 @@ int nng_url_sprintf(char *buf, size_t bufsz, const nng_url *url);
 The {{i:`nng_url_sprintf`}} function formats the _url_ to the _buf_,
 which must have `bufsz` bytes of free space associated with it.
 
-This function returns the number of bytes formatted to _buf_, excludng
+This function returns the number of bytes formatted to _buf_, excluding
 the terminating zero byte, or if _bufsz_ is too small, then it returns
 the number of bytes that would have been formatted if there was sufficient
 space. The semantics are similar to the `snprintf` function from C99.
@@ -90,6 +90,36 @@ and creates a dynamically allocated `nng_url`, returning it in _urlp_.
 > [!IMPORTANT]
 > Only [`nng_url_free`] should be used to deallocate `nng_url` objects.
 
+## URL Canonicalization
+
+NNG canonicalizes URLs mostly according to
+[RFC 3986 section 6.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2),
+with a few additional rules to improve portability and reduce ambiguous input.
+
+When a URL is parsed:
+
+- The URL is split into scheme, userinfo, host, port, path, query, and fragment
+  components. Not every URL has every component.
+- The scheme, hostname, and port are converted to lower case when present.
+- Percent-encoded unreserved characters are converted to their unencoded form.
+- Percent-encoded non-ASCII characters in the path are decoded.
+- The resulting path is checked for invalid UTF-8, including surrogate pairs,
+  illegal byte sequences, and overlong encodings. If this check fails, the URL
+  is invalid.
+- Path segments consisting of `.` and `..` are resolved according to
+  [RFC 3986 section 6.2.2.3](https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.3).
+- Empty path segments are removed, so duplicate slash (`/`) separators are
+  collapsed.
+
+The non-ASCII path decoding, UTF-8 validation, and duplicate slash removal are
+NNG-specific extensions to RFC 3986 canonicalization.
+
+> [!TIP]
+> Port numbers may be service names for some transports, but numeric port
+> numbers are recommended when they are known. If service names are used, they
+> should follow C identifier naming conventions and be no longer than 32
+> characters to maximize compatibility across systems.
+
 ## Clone a URL
 
 ```c
@@ -104,8 +134,8 @@ The {{i:`nng_url_clone`}} function creates a copy of _url_, and returns it in _d
 void nng_url_free(nng_url *url);
 ```
 
-The {{i:`nng_url_free`}} function destroy an `nng_url` object created with
-either [`nng_url_parse`] or [`nng_url_free`].
+The {{i:`nng_url_free`}} function destroys an `nng_url` object created with
+either [`nng_url_parse`] or [`nng_url_clone`].
 
 This is the only correct way to destroy an [`nng_url`] object.
 
