@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6ac4caec.js";
+            window.path_to_searchindex_js = "../searchindex-43e1109a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-5f820576.js"></script>
+        <script src="../toc-e1e04f66.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -178,7 +178,7 @@
 <p><a name="a001"></a>Universal Resource Locators, or <a name="a002"></a>URLs for short, are a standardized
 way of representing a network resource,
 defined in <a href="https://datatracker.ietf.org/doc/html/rfc1738">RFC 1738</a>,
-and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3968</a>.</p>
+and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3986</a>.</p>
 <p>In Scalability Protocols, this concept is extended, although it includes schemes
 that are not part of the IETF standards.</p>
 <h2 id="url-structure"><a class="header" href="#url-structure">URL Structure</a></h2>
@@ -190,7 +190,7 @@ const char *nng_url_hostname(const nng_url *url);
 uint32_t    nng_url_port(const nng_url *url);
 const char *nng_url_path(const nng_url *url);
 const char *nng_url_query(const nng_url *url);
-const char *nng_url_fragment(const nng_url *url):
+const char *nng_url_fragment(const nng_url *url);
 </code></pre>
 <h3 id="url-fields"><a class="header" href="#url-fields">URL Fields</a></h3>
 <p>The <a name="a003"></a><code>nng_url_scheme</code> function returns the scheme,
@@ -227,7 +227,7 @@ characters.</p>
 </code></pre>
 <p>The <a name="a010"></a><code>nng_url_sprintf</code> function formats the <em>url</em> to the <em>buf</em>,
 which must have <code>bufsz</code> bytes of free space associated with it.</p>
-<p>This function returns the number of bytes formatted to <em>buf</em>, excludng
+<p>This function returns the number of bytes formatted to <em>buf</em>, excluding
 the terminating zero byte, or if <em>bufsz</em> is too small, then it returns
 the number of bytes that would have been formatted if there was sufficient
 space. The semantics are similar to the <code>snprintf</code> function from C99.</p>
@@ -246,6 +246,34 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
 <p>Only <a href="../api/url.html#destroy-a-url"><code>nng_url_free</code></a> should be used to deallocate <code>nng_url</code> objects.</p>
 </blockquote>
+<h2 id="url-canonicalization"><a class="header" href="#url-canonicalization">URL Canonicalization</a></h2>
+<p>NNG canonicalizes URLs mostly according to
+<a href="https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2">RFC 3986 section 6.2.2</a>,
+with a few additional rules to improve portability and reduce ambiguous input.</p>
+<p>When a URL is parsed:</p>
+<ul>
+<li>The URL is split into scheme, userinfo, host, port, path, query, and fragment
+components. Not every URL has every component.</li>
+<li>The scheme, hostname, and port are converted to lower case when present.</li>
+<li>Percent-encoded unreserved characters are converted to their unencoded form.</li>
+<li>Percent-encoded non-ASCII characters in the path are decoded.</li>
+<li>The resulting path is checked for invalid UTF-8, including surrogate pairs,
+illegal byte sequences, and overlong encodings. If this check fails, the URL
+is invalid.</li>
+<li>Path segments consisting of <code>.</code> and <code>..</code> are resolved according to
+<a href="https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.3">RFC 3986 section 6.2.2.3</a>.</li>
+<li>Empty path segments are removed, so duplicate slash (<code>/</code>) separators are
+collapsed.</li>
+</ul>
+<p>The non-ASCII path decoding, UTF-8 validation, and duplicate slash removal are
+NNG-specific extensions to RFC 3986 canonicalization.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Port numbers may be service names for some transports, but numeric port
+numbers are recommended when they are known. If service names are used, they
+should follow C identifier naming conventions and be no longer than 32
+characters to maximize compatibility across systems.</p>
+</blockquote>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
 <pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
 </code></pre>
@@ -253,8 +281,8 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>
 <pre><code class="language-c">void nng_url_free(nng_url *url);
 </code></pre>
-<p>The <a name="a013"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
-either <a href="../api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="../api/url.html#destroy-a-url"><code>nng_url_free</code></a>.</p>
+<p>The <a name="a013"></a><code>nng_url_free</code> function destroys an <code>nng_url</code> object created with
+either <a href="../api/url.html#parse-a-url"><code>nng_url_parse</code></a> or <a href="../api/url.html#clone-a-url"><code>nng_url_clone</code></a>.</p>
 <p>This is the only correct way to destroy an <a href="../api/url.html#url-structure"><code>nng_url</code></a> object.</p>
 <h2 id="update-a-url-port"><a class="header" href="#update-a-url-port">Update a URL Port</a></h2>
 <pre><code class="language-c">void nng_url_resolve_port(nng_url *url, uint32_t port);

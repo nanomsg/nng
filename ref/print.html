@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6ac4caec.js";
+            window.path_to_searchindex_js = "searchindex-43e1109a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-5f820576.js"></script>
+        <script src="toc-e1e04f66.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -183,7 +183,7 @@
 </g>
 </g>
 </svg>
-<p>Copyright © 2025 Staysail Systems, Inc.<br>San Marcos, California, United States of America</p>
+<p>Copyright © 2026 Staysail Systems, Inc.<br>San Marcos, California, United States of America</p>
 <blockquote>
 <p>If you find this book or NNG useful, please consider sponsoring
 the project.</p>
@@ -328,6 +328,76 @@ Ignoring such advice may lead to crashses, unexpected behavior,
 loss of revenue, or other undesirable conditions.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="overview"><a class="header" href="#overview">Overview</a></h1>
+<p>NNG provides a common messaging framework for solving communication problems
+in distributed applications. It is built around two core ideas:
+<a href="#protocols">protocols</a>, which define messaging semantics, and <a href="#transports">transports</a>,
+which define how peers communicate over an underlying mechanism such as TCP,
+IPC, TLS, WebSocket, or in-process channels.</p>
+<p>Protocols implement communication patterns such as request/reply,
+publish/subscribe, pipelines, surveys, and buses. Transports provide the
+underlying connection or message delivery mechanism. New transports can be
+added without changing applications that use the socket API, and custom
+protocols can be added for specialized applications.</p>
+<p>NNG is wire-compatible with the SP protocols described by the
+<a href="https://github.com/nanomsg/nanomsg">nanomsg</a> project, so applications can interoperate with other
+conforming implementations such as <a href="https://github.com/nanomsg/mangos">mangos</a>. Applications that need this
+interoperability must use protocols and transports supported by both peers.</p>
+<p>NNG also provides compatibility interfaces for some legacy nanomsg code, but
+new applications should use the native NNG APIs described in this reference.
+The library itself is implemented in C; bindings for other languages are
+provided by other projects.</p>
+<h2 id="conceptual-model"><a class="header" href="#conceptual-model">Conceptual Model</a></h2>
+<p>NNG presents a <a href="#sockets">socket</a> view of networking. Sockets are created with
+protocol-specific constructors, and each socket implements exactly one protocol.
+A socket may send messages, receive messages, or both, depending on the
+protocol. It also enforces protocol-specific behavior, such as subscription
+filtering for subscriber sockets or request/reply matching for request sockets.</p>
+<p>NNG sockets are message-oriented. A message is delivered whole or not at all;
+partial message delivery is not exposed to the application. NNG does not make
+general ordering or delivery guarantees beyond those supplied by a specific
+protocol. Some protocols add stronger behavior through their own retry,
+matching, or validation mechanisms.</p>
+<p>Sockets communicate through <a href="#dialers-and-listeners">dialers and listeners</a>, also called
+endpoints. Dialers initiate outbound connections to a URL, while listeners
+accept inbound connections at a URL. A socket may use dialers, listeners, both,
+or neither.</p>
+<p>Endpoints do not themselves carry application data. They create <a href="#pipes">pipes</a>,
+which are message-oriented connections between peers. For stream-oriented
+transports such as TCP and IPC, a pipe usually corresponds to a single connected
+operating-system socket. Listeners create pipes when new peer connections
+arrive; dialers create pipes by connecting to their configured remote address
+and typically reconnect after a disconnection.</p>
+<p>Most applications do not need to manage endpoints or pipes directly. The socket
+abstraction is usually sufficient unless the application needs connection
+metadata, endpoint options, pipe notifications, or a proxy-style topology.</p>
+<h2 id="raw-mode"><a class="header" href="#raw-mode">Raw Mode</a></h2>
+<p>Most applications use sockets in normal, or cooked, mode. Cooked sockets provide
+the full protocol semantics automatically. Applications that need to bypass
+those semantics, such as proxies and devices, can use <a href="#raw-mode-sockets">raw mode sockets</a>
+instead.</p>
+<p>Raw mode gives the application direct responsibility for protocol headers and
+protocol-specific processing. It is usually unnecessary unless an application is
+forwarding messages or implementing protocol behavior itself.</p>
+<h2 id="urls"><a class="header" href="#urls">URLs</a></h2>
+<p>NNG identifies service addresses with <a href="#urls-1">URLs</a>. URL schemes select the
+transport, and the rest of the URL supplies transport-specific addressing
+information. NNG follows RFC 3986 URL syntax, with additional schemes for SP
+transports and additional canonicalization rules described in the URL API
+reference.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="api-reference"><a class="header" href="#api-reference">API Reference</a></h1>
 <p>This section is a reference guide for the <em>NNG</em> programming interfaces.
 It is meant to serve as a reference, rather than as a tutorial.</p>
@@ -347,7 +417,7 @@ include the <code>nng/nng.h</code> header file like so:</p>
 <li><a href="#pipes">Pipes</a></li>
 <li><a href="#memory">Memory</a></li>
 <li><a href="#time">Time</a></li>
-<li><a href="#urls">URLs</a></li>
+<li><a href="#urls-1">URLs</a></li>
 <li><a href="#socket-addresses">Socket Addresses</a></li>
 <li><a href="#synchronization-primitives">Synchronization</a></li>
 <li><a href="api/thr.html">Threads</a></li>
@@ -740,14 +810,21 @@ int nng_sub0_open_raw(nng_socket *s);
 int nng_surveyor0_open_raw(nng_socket *s);
 </code></pre>
 <p><a name="a021"></a>
-Raw mode sockets are used in circumstances when the application needs direct access
-to the message headers to control the protocol details.</p>
+Most applications use sockets in normal, or <em>cooked</em>, mode. Cooked sockets
+provide the full semantics of the protocol. For example, <a href="#req-protocol">REQ</a> sockets
+match replies to requests and retransmit requests according to the protocol
+rules.</p>
+<p>Raw mode sockets are used in circumstances when the application needs direct
+access to the message headers to control the protocol details, or when the
+application needs to bypass the normal protocol state machine.</p>
 <p>Such sockets require greater sophistication on the part of the application to use,
 as the application must process the protocol headers specifically.
 The details of the protocol headers, and requirements, are described in the protocol
 documentation for each protocol.</p>
 <p>Raw mode sockets do not have any kind of state machine associated with them, as all of
-the protocol specific processing must be performed by the application.</p>
+the protocol specific processing must be performed by the application. Typically this
+means inspecting protocol headers on incoming messages and supplying the correct
+headers on outgoing messages.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>Most applications do not need to use raw sockets.
@@ -2072,11 +2149,11 @@ then the sleep will wake up early, with a result code of <a href="#NNG_ETIMEDOUT
 <!-- Transports -->
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="urls"><a class="header" href="#urls">URLs</a></h1>
+<h1 id="urls-1"><a class="header" href="#urls-1">URLs</a></h1>
 <p><a name="a001"></a>Universal Resource Locators, or <a name="a002"></a>URLs for short, are a standardized
 way of representing a network resource,
 defined in <a href="https://datatracker.ietf.org/doc/html/rfc1738">RFC 1738</a>,
-and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3968</a>.</p>
+and <a href="https://datatracker.ietf.org/doc/html/rfc3986">RFC 3986</a>.</p>
 <p>In Scalability Protocols, this concept is extended, although it includes schemes
 that are not part of the IETF standards.</p>
 <h2 id="url-structure"><a class="header" href="#url-structure">URL Structure</a></h2>
@@ -2088,7 +2165,7 @@ const char *nng_url_hostname(const nng_url *url);
 uint32_t    nng_url_port(const nng_url *url);
 const char *nng_url_path(const nng_url *url);
 const char *nng_url_query(const nng_url *url);
-const char *nng_url_fragment(const nng_url *url):
+const char *nng_url_fragment(const nng_url *url);
 </code></pre>
 <h3 id="url-fields"><a class="header" href="#url-fields">URL Fields</a></h3>
 <p>The <a name="a003"></a><code>nng_url_scheme</code> function returns the scheme,
@@ -2125,7 +2202,7 @@ characters.</p>
 </code></pre>
 <p>The <a name="a010"></a><code>nng_url_sprintf</code> function formats the <em>url</em> to the <em>buf</em>,
 which must have <code>bufsz</code> bytes of free space associated with it.</p>
-<p>This function returns the number of bytes formatted to <em>buf</em>, excludng
+<p>This function returns the number of bytes formatted to <em>buf</em>, excluding
 the terminating zero byte, or if <em>bufsz</em> is too small, then it returns
 the number of bytes that would have been formatted if there was sufficient
 space. The semantics are similar to the <code>snprintf</code> function from C99.</p>
@@ -2144,6 +2221,34 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
 <p>Only <a href="#destroy-a-url"><code>nng_url_free</code></a> should be used to deallocate <code>nng_url</code> objects.</p>
 </blockquote>
+<h2 id="url-canonicalization"><a class="header" href="#url-canonicalization">URL Canonicalization</a></h2>
+<p>NNG canonicalizes URLs mostly according to
+<a href="https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2">RFC 3986 section 6.2.2</a>,
+with a few additional rules to improve portability and reduce ambiguous input.</p>
+<p>When a URL is parsed:</p>
+<ul>
+<li>The URL is split into scheme, userinfo, host, port, path, query, and fragment
+components. Not every URL has every component.</li>
+<li>The scheme, hostname, and port are converted to lower case when present.</li>
+<li>Percent-encoded unreserved characters are converted to their unencoded form.</li>
+<li>Percent-encoded non-ASCII characters in the path are decoded.</li>
+<li>The resulting path is checked for invalid UTF-8, including surrogate pairs,
+illegal byte sequences, and overlong encodings. If this check fails, the URL
+is invalid.</li>
+<li>Path segments consisting of <code>.</code> and <code>..</code> are resolved according to
+<a href="https://datatracker.ietf.org/doc/html/rfc3986#section-6.2.2.3">RFC 3986 section 6.2.2.3</a>.</li>
+<li>Empty path segments are removed, so duplicate slash (<code>/</code>) separators are
+collapsed.</li>
+</ul>
+<p>The non-ASCII path decoding, UTF-8 validation, and duplicate slash removal are
+NNG-specific extensions to RFC 3986 canonicalization.</p>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Port numbers may be service names for some transports, but numeric port
+numbers are recommended when they are known. If service names are used, they
+should follow C identifier naming conventions and be no longer than 32
+characters to maximize compatibility across systems.</p>
+</blockquote>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
 <pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
 </code></pre>
@@ -2151,8 +2256,8 @@ and creates a dynamically allocated <code>nng_url</code>, returning it in <em>ur
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>
 <pre><code class="language-c">void nng_url_free(nng_url *url);
 </code></pre>
-<p>The <a name="a013"></a><code>nng_url_free</code> function destroy an <code>nng_url</code> object created with
-either <a href="#parse-a-url"><code>nng_url_parse</code></a> or <a href="#destroy-a-url"><code>nng_url_free</code></a>.</p>
+<p>The <a name="a013"></a><code>nng_url_free</code> function destroys an <code>nng_url</code> object created with
+either <a href="#parse-a-url"><code>nng_url_parse</code></a> or <a href="#clone-a-url"><code>nng_url_clone</code></a>.</p>
 <p>This is the only correct way to destroy an <a href="#url-structure"><code>nng_url</code></a> object.</p>
 <h2 id="update-a-url-port"><a class="header" href="#update-a-url-port">Update a URL Port</a></h2>
 <pre><code class="language-c">void nng_url_resolve_port(nng_url *url, uint32_t port);
@@ -6644,6 +6749,300 @@ facsimile of a connection based semantic. This requires some resource on each pe
 In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
 keep-alive mechanism is implemented.</p>
 <p>TODO: Document the tunables for this.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="tools"><a class="header" href="#tools">Tools</a></h1>
+<p>NNG includes command-line tools that are useful for testing, scripting, and
+working with Scalability Protocols outside of an application.</p>
+<ul>
+<li>[<code>nngcat</code>] provides command-line access to Scalability Protocols.</li>
+</ul>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="nngcat"><a class="header" href="#nngcat">nngcat</a></h1>
+<p><code>nngcat</code> is a command-line peer for Scalability Protocols. It is useful for
+testing services, building small shell-script integrations, demonstrating
+topologies, and inspecting messages without writing a custom program.</p>
+<p>Every <code>nngcat</code> invocation has the same basic shape:</p>
+<pre><code class="language-sh">nngcat --PROTOCOL --dial URL [send-options] [receive-options]
+nngcat --PROTOCOL --listen URL [send-options] [receive-options]
+</code></pre>
+<p>At least one protocol option and at least one peer address are required. The
+selected protocol determines whether the command sends messages, receives
+messages, or performs an exchange involving both.</p>
+<p>Use <code>nngcat --help</code> for command-line help and <code>nngcat --version</code> to print the
+version.</p>
+<h2 id="basic-examples"><a class="header" href="#basic-examples">Basic Examples</a></h2>
+<p>This starts a reply peer that always answers <code>42</code>, then sends one request to it:</p>
+<pre><code class="language-sh">addr="tcp://127.0.0.1:4567"
+nngcat --rep --listen="${addr}" --data="42" --quoted &amp;
+nngcat --req --dial="${addr}" --data="what is the answer?" --quoted
+</code></pre>
+<p>The requester prints both the request and reply:</p>
+<pre><code class="language-text">"what is the answer?"
+"42"
+</code></pre>
+<p>This publishes a message once per hour over IPC and receives it with a
+subscriber:</p>
+<pre><code class="language-sh">addr="ipc:///grandpa_clock"
+nngcat --pub --listen="${addr}" --data="cuckoo" --delay 1 --interval 3600 &amp;
+nngcat --sub --dial="${addr}" --quoted --count 1
+</code></pre>
+<p>The subscriber prints:</p>
+<pre><code class="language-text">"cuckoo"
+</code></pre>
+<h2 id="choosing-a-protocol"><a class="header" href="#choosing-a-protocol">Choosing a Protocol</a></h2>
+<p>Exactly one protocol family should be selected for a command.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Options</th><th>Protocol</th><th>Use</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--bus</code>, <code>--bus0</code></td><td><a href="#bus-protocol">BUS</a></td><td>Send and receive messages among bus peers.</td></tr>
+<tr><td><code>--req</code>, <code>--req0</code></td><td><a href="#req-protocol">REQ</a></td><td>Send requests to <a href="#rep-protocol">REP</a> peers and receive replies.</td></tr>
+<tr><td><code>--rep</code>, <code>--rep0</code></td><td><a href="#rep-protocol">REP</a></td><td>Receive requests from <a href="#req-protocol">REQ</a> peers and send replies.</td></tr>
+<tr><td><code>--pub</code>, <code>--pub0</code></td><td><a href="#pub-protocol">PUB</a></td><td>Publish messages to <a href="#sub-protocol">SUB</a> peers.</td></tr>
+<tr><td><code>--sub</code>, <code>--sub0</code></td><td><a href="#sub-protocol">SUB</a></td><td>Receive messages from <a href="#pub-protocol">PUB</a> peers, filtered by subscription.</td></tr>
+<tr><td><code>--push</code>, <code>--push0</code></td><td><a href="#push-protocol">PUSH</a></td><td>Send pipeline messages to <a href="#pull-protocol">PULL</a> peers.</td></tr>
+<tr><td><code>--pull</code>, <code>--pull0</code></td><td><a href="#pull-protocol">PULL</a></td><td>Receive pipeline messages from <a href="#push-protocol">PUSH</a> peers.</td></tr>
+<tr><td><code>--pair0</code></td><td><a href="#pair-protocol">PAIR</a> v0</td><td>Exchange messages with one PAIR v0 peer.</td></tr>
+<tr><td><code>--pair1</code></td><td><a href="#pair-protocol">PAIR</a> v1</td><td>Exchange messages with one PAIR v1 peer.</td></tr>
+<tr><td><code>--pair</code></td><td><a href="#pair-protocol">PAIR</a></td><td>Alias for <code>--pair1</code>, or <code>--pair0</code> in <code>--compat</code> mode.</td></tr>
+<tr><td><code>--surveyor</code>, <code>--surveyor0</code></td><td><a href="#surveyor-protocol">SURVEYOR</a></td><td>Send a survey and receive respondent replies.</td></tr>
+<tr><td><code>--respondent</code>, <code>--respondent0</code></td><td><a href="#respondent-protocol">RESPONDENT</a></td><td>Receive surveys and send responses.</td></tr>
+</tbody>
+</table>
+</div>
+<p><code>nngcat</code> does not support PAIR v1 polyamorous mode, although peers may use it.</p>
+<h2 id="connecting-and-listening"><a class="header" href="#connecting-and-listening">Connecting and Listening</a></h2>
+<p>Use <code>--dial</code> or <code>--connect</code> to connect to a peer:</p>
+<pre><code class="language-sh">nngcat --req --dial tcp://127.0.0.1:4567 --data "status"
+</code></pre>
+<p>Use <code>--listen</code> or <code>--bind</code> to accept connections from peers:</p>
+<pre><code class="language-sh">nngcat --rep --listen tcp://127.0.0.1:4567 --data "ok"
+</code></pre>
+<p>Unlike the legacy <code>nanocat</code> tool, <code>nngcat</code> can use more than one peer address in
+a single invocation.</p>
+<p>Shortcut options are available for common TCP and IPC addresses:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Equivalent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-x PATH</code>, <code>--connect-ipc PATH</code></td><td><code>--connect ipc://PATH</code></td></tr>
+<tr><td><code>-X PATH</code>, <code>--bind-ipc PATH</code></td><td><code>--bind ipc://PATH</code></td></tr>
+<tr><td><code>-l PORT</code>, <code>--connect-local PORT</code></td><td><code>--connect tcp://127.0.0.1:PORT</code></td></tr>
+<tr><td><code>-L PORT</code>, <code>--bind-local PORT</code></td><td><code>--bind tcp://127.0.0.1:PORT</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="sending-data"><a class="header" href="#sending-data">Sending Data</a></h2>
+<p>Protocols that send messages use <code>--data</code> or <code>--file</code> to choose the outgoing
+message body:</p>
+<pre><code class="language-sh">nngcat --push --dial tcp://127.0.0.1:9000 --data "hello"
+nngcat --push --dial tcp://127.0.0.1:9000 --file payload.bin
+</code></pre>
+<p>If <code>--file -</code> is used, the message body is read from standard input.</p>
+<p>For protocols that send unsolicited messages, such as PUB or PUSH, <code>--interval</code>
+repeats the outgoing message and <code>--delay</code> waits before sending the first
+message. A delay is often useful with PUB sockets because subscribers may need
+time to connect before the first message is sent.</p>
+<pre><code class="language-sh">nngcat --pub --listen tcp://127.0.0.1:9000 --data tick --delay 1 --interval 5
+</code></pre>
+<p>Use <code>--send-timeout</code> to give up if a send cannot complete within the requested
+number of seconds.</p>
+<h2 id="receiving-data"><a class="header" href="#receiving-data">Receiving Data</a></h2>
+<p>Protocols that receive messages can format output in several ways:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Format</th><th>Output</th></tr>
+</thead>
+<tbody>
+<tr><td><code>no</code></td><td>Suppress output.</td></tr>
+<tr><td><code>raw</code></td><td>Write received bytes directly to standard output.</td></tr>
+<tr><td><code>ascii</code></td><td>Print safe ASCII directly and replace other bytes with <code>.</code>.</td></tr>
+<tr><td><code>quoted</code></td><td>Print messages as C-style quoted strings.</td></tr>
+<tr><td><code>hex</code></td><td>Print each byte as an escaped hexadecimal value such as <code>\x2e</code>.</td></tr>
+<tr><td><code>msgpack</code></td><td>Emit MessagePack bin-format byte arrays.</td></tr>
+</tbody>
+</table>
+</div>
+<p>The format can be selected with <code>--format FORMAT</code> or one of the convenience
+aliases:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Equivalent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-A</code>, <code>--ascii</code></td><td><code>--format ascii</code></td></tr>
+<tr><td><code>-Q</code>, <code>--quoted</code></td><td><code>--format quoted</code></td></tr>
+<tr><td><code>--hex</code></td><td><code>--format hex</code></td></tr>
+<tr><td><code>--msgpack</code></td><td><code>--format msgpack</code></td></tr>
+<tr><td><code>--raw</code></td><td><code>--format raw</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>For SUB sockets, use <code>--subscribe TOPIC</code> to receive only messages whose initial
+bytes match <code>TOPIC</code>. This option may be used more than once. If no subscription
+is supplied, <code>nngcat</code> subscribes to all messages.</p>
+<p>Use <code>--receive-timeout</code> to stop waiting after the requested number of seconds,
+and <code>--recv-maxsz</code> to set the largest message size accepted by the socket. The
+default receive limit is 1 MiB. Use <code>--recv-maxsz 0</code> to remove the limit.</p>
+<h2 id="tls-1"><a class="header" href="#tls-1">TLS</a></h2>
+<p>TLS options are used only with TLS-secured addresses, such as <code>tls+tcp://</code>
+URLs. They are ignored for non-TLS transports.</p>
+<p>Use <code>--cacert FILE</code> to supply certificate authorities for peer validation. Use
+<code>--cert FILE</code> and <code>--key FILE</code> to present a local certificate and private key.
+If <code>--cert</code> is supplied without <code>--key</code>, the certificate file is expected to
+contain both the certificate and private key.</p>
+<p><code>--insecure</code> disables peer validation. This is useful for local testing with
+self-signed certificates, but it should not be used for production traffic.</p>
+<h2 id="option-syntax"><a class="header" href="#option-syntax">Option Syntax</a></h2>
+<p>Long options start with <code>--</code>. If a long option takes a value, the value can be
+supplied with an equals sign, with a colon, or as the next argument:</p>
+<pre><code class="language-sh">nngcat --subscribe=times
+nngcat --subscribe:tribune
+nngcat --subscribe herald
+</code></pre>
+<p>Short options start with <code>-</code>. If a short option takes a value, the value can be
+attached to the option or supplied as the next argument:</p>
+<pre><code class="language-sh">nngcat -L5678
+nngcat -L 5678
+</code></pre>
+<p>Long options may be abbreviated as long as the abbreviation is unambiguous. For
+example, <code>--comp</code> can be used instead of <code>--compat</code>, but <code>--re</code> is ambiguous
+because it could mean <code>--req</code>, <code>--rep</code>, or <code>--respondent</code>.</p>
+<p>POSIX-style clustering of short options is not supported. Each short option must
+be supplied as a separate argument.</p>
+<h2 id="option-reference"><a class="header" href="#option-reference">Option Reference</a></h2>
+<h3 id="generic-options"><a class="header" href="#generic-options">Generic Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-h</code>, <code>--help</code></td><td>Print usage help.</td></tr>
+<tr><td><code>-V</code>, <code>--version</code></td><td>Print the version and exit.</td></tr>
+<tr><td><code>-v</code>, <code>--verbose</code></td><td>Use verbose operation.</td></tr>
+<tr><td><code>-q</code>, <code>--silent</code></td><td>Use silent operation.</td></tr>
+<tr><td><code>--compat</code></td><td>Behave more like legacy <code>nanocat</code>: connections are asynchronous, and <code>--pair</code> selects PAIR v0 instead of PAIR v1.</td></tr>
+<tr><td><code>--subscribe TOPIC</code></td><td>Subscribe a SUB socket to <code>TOPIC</code>. May be specified multiple times.</td></tr>
+<tr><td><code>--count COUNT</code></td><td>Limit loop iterations. Send-only protocols send <code>COUNT</code> messages, receive-only protocols receive <code>COUNT</code> messages, and exchange protocols perform <code>COUNT</code> exchanges. A value of <code>0</code> means unlimited iterations.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="protocol-selection-options"><a class="header" href="#protocol-selection-options">Protocol Selection Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--bus</code>, <code>--bus0</code></td><td>Select BUS v0.</td></tr>
+<tr><td><code>--req</code>, <code>--req0</code></td><td>Select REQ v0.</td></tr>
+<tr><td><code>--rep</code>, <code>--rep0</code></td><td>Select REP v0.</td></tr>
+<tr><td><code>--pub</code>, <code>--pub0</code></td><td>Select PUB v0.</td></tr>
+<tr><td><code>--sub</code>, <code>--sub0</code></td><td>Select SUB v0.</td></tr>
+<tr><td><code>--push</code>, <code>--push0</code></td><td>Select PUSH v0.</td></tr>
+<tr><td><code>--pull</code>, <code>--pull0</code></td><td>Select PULL v0.</td></tr>
+<tr><td><code>--pair0</code></td><td>Select PAIR v0.</td></tr>
+<tr><td><code>--pair1</code></td><td>Select PAIR v1.</td></tr>
+<tr><td><code>--pair</code></td><td>Select PAIR v1, or PAIR v0 in <code>--compat</code> mode.</td></tr>
+<tr><td><code>--surveyor</code>, <code>--surveyor0</code></td><td>Select SURVEYOR v0.</td></tr>
+<tr><td><code>--respondent</code>, <code>--respondent0</code></td><td>Select RESPONDENT v0.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="peer-selection-options"><a class="header" href="#peer-selection-options">Peer Selection Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--connect URL</code>, <code>--dial URL</code></td><td>Connect to the peer at <code>URL</code>.</td></tr>
+<tr><td><code>--bind URL</code>, <code>--listen URL</code></td><td>Listen for peers at <code>URL</code>.</td></tr>
+<tr><td><code>-x PATH</code>, <code>--connect-ipc PATH</code></td><td>Connect to IPC path <code>PATH</code>.</td></tr>
+<tr><td><code>-X PATH</code>, <code>--bind-ipc PATH</code></td><td>Listen on IPC path <code>PATH</code>.</td></tr>
+<tr><td><code>-l PORT</code>, <code>--connect-local PORT</code></td><td>Connect to <code>127.0.0.1</code> TCP port <code>PORT</code>.</td></tr>
+<tr><td><code>-L PORT</code>, <code>--bind-local PORT</code></td><td>Listen on <code>127.0.0.1</code> TCP port <code>PORT</code>.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="receive-options"><a class="header" href="#receive-options">Receive Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-A</code>, <code>--ascii</code></td><td>Use ASCII-safe output.</td></tr>
+<tr><td><code>-Q</code>, <code>--quoted</code></td><td>Use C-style quoted output.</td></tr>
+<tr><td><code>--hex</code></td><td>Use escaped hexadecimal output.</td></tr>
+<tr><td><code>--msgpack</code></td><td>Emit MessagePack bin-format byte arrays.</td></tr>
+<tr><td><code>--raw</code></td><td>Write raw received bytes.</td></tr>
+<tr><td><code>--format FORMAT</code></td><td>Select <code>no</code>, <code>raw</code>, <code>ascii</code>, <code>quoted</code>, <code>hex</code>, or <code>msgpack</code> output.</td></tr>
+<tr><td><code>--receive-timeout SEC</code></td><td>Stop receiving after <code>SEC</code> seconds without a message.</td></tr>
+<tr><td><code>--recv-maxsz COUNT</code></td><td>Set maximum received message size in bytes. The default is 1048576; <code>0</code> removes the limit.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="transmit-options"><a class="header" href="#transmit-options">Transmit Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-D DATA</code>, <code>--data DATA</code></td><td>Use <code>DATA</code> as the outgoing message body.</td></tr>
+<tr><td><code>-F FILE</code>, <code>--file FILE</code></td><td>Use <code>FILE</code> as the outgoing message body. Use <code>-</code> for standard input.</td></tr>
+<tr><td><code>-i SEC</code>, <code>--interval SEC</code></td><td>Repeat unsolicited sends every <code>SEC</code> seconds.</td></tr>
+<tr><td><code>-d SEC</code>, <code>--delay SEC</code></td><td>Wait <code>SEC</code> seconds before the first outgoing message.</td></tr>
+<tr><td><code>--send-timeout SEC</code></td><td>Give up sending after <code>SEC</code> seconds.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="tls-options"><a class="header" href="#tls-options">TLS Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-k</code>, <code>--insecure</code></td><td>Skip peer certificate validation.</td></tr>
+<tr><td><code>-E FILE</code>, <code>--cert FILE</code></td><td>Load this peer’s certificate from <code>FILE</code>.</td></tr>
+<tr><td><code>--key FILE</code></td><td>Load this peer’s private key from <code>FILE</code>.</td></tr>
+<tr><td><code>--cacert FILE</code></td><td>Load CA certificates from <code>FILE</code> for peer validation.</td></tr>
+</tbody>
+</table>
+</div>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from

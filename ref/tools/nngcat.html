@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>TCP Transport - NNG Reference Manual (DRAFT)</title>
+        <title>nngcat - NNG Reference Manual (DRAFT)</title>
 
 
         <!-- Custom HTML head -->
@@ -174,92 +174,268 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="tcp-transport"><a class="header" href="#tcp-transport">TCP Transport</a></h1>
-<h2 id="description"><a class="header" href="#description">DESCRIPTION</a></h2>
-<p>The <a name="a001"></a><em>tcp</em> transport<a name="a002"></a> provides communication support between
-sockets within different processes using the TCP stream protocol over
-IP or IPv6.</p>
-<h3 id="uri-formats"><a class="header" href="#uri-formats">URI Formats</a></h3>
-<p>This transport uses URIs using the scheme <a name="a003"></a><code>tcp://</code>, followed by an
-<a name="a004"></a>IP address or <a name="a005"></a>hostname, and port number, formatted as follows.</p>
-<p>For host names and IPv4 literal addresses, the hostname or IP address is followed by
-a colon, and then a TCP port number. For example, <code>tcp://myservice.net:123</code> would
-refer to a server available at <code>myservice.net</code> on TCP port 123.
-To contact port 80 on the local host, either <code>tcp://127.0.0.1:80</code> or
-<code>tcp://localhost:80</code> can be used.</p>
-<p>For IPv6 literal addresses, the IPv6 address must be enclosed in square brackets,
-then the colon and finally the TCP port. For example, <code>tcp://[::1]:7890</code> would
-refer to a service running on the IPv6 loopback (<code>::1</code>) on TCP port 7890.</p>
-<h4 id="forcing-ipv4-or-ipv6"><a class="header" href="#forcing-ipv4-or-ipv6">Forcing IPv4 or IPv6</a></h4>
-<p>To force the selection of either IPv4 or IPv6, the scheme may be specified as either
-<code>tcp4://</code> or <code>tcp6://</code> instead of just <code>tcp://</code>. This should only be needed when
-a hostname that might resolve either way is supplied instead of an explicit IP address.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p><code>tcp4://</code> and <code>tcp6://</code> are specific to NNG and may not be understood by
-other Scalability Protocol implementations.</p>
-<p>Additionally, <code>tcp6://</code> may still permit IPv4 peers via IPv4-mapped IPv6
-addresses on some platforms, especially when listening on wildcard
-addresses.</p>
-</blockquote>
-<h4 id="listening-to-all-addresses"><a class="header" href="#listening-to-all-addresses">Listening to All Addresses</a></h4>
-<p>When listening, a zero IP address can be supplied by either eliding the address altogether,
-or by specifying <code>0.0.0.0</code> (IPv4) or <code>::</code> (IPv6) explicitly. If left empty, IPv6 will
-be selected if available on the host, otherwise IPv4 will be selected.</p>
-<p>For example, the following URIs are equivalent ways to listen on TCP port
-9999 on all IPv4 interfaces:</p>
-<ol>
-<li><code>tcp://0.0.0.0:9999</code></li>
-<li><code>tcp://:9999</code></li>
-</ol>
-<blockquote class="blockquote-tag blockquote-tag-tip">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>IP addresses may be more reliable than host names. Certainly when using the URL
-for a <a href="../api/endpoint.html">listener</a>, it is better to use an IP address that is known to exist on the
-local system, or the zero address to listen to all interfaces.</p>
-</blockquote>
-<blockquote class="blockquote-tag blockquote-tag-tip">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>Prefer numeric IP addresses or hostnames known to resolve only to the
-intended address family. This avoids surprises when a name can resolve to
-both IPv4 and IPv6.</p>
-</blockquote>
-<h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
-<p>When using an <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a>,
-the concrete type is either <a href="../api/sockaddr.html#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="../api/sockaddr.html#ipv6-addresses"><code>nng_sockaddr_in6</code></a>, depending on whether
-IPv4 or IPv6 is in use.</p>
-<h3 id="other-tcp-relevant-options"><a class="header" href="#other-tcp-relevant-options">Other TCP-Relevant Options</a></h3>
-<p>TCP dialers and listeners may also expose inherited options such as the local
-address and configured URL, depending on the object and context. See the common
-option documentation in the broader API reference for those shared semantics.</p>
-<h3 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h3>
-<p>The following transport options are supported by this transport,
-where supported by the underlying platform.
-Options that change connection behavior should be set before the <a href="../api/endpoint.html">dialer</a> or
-<a href="../api/endpoint.html">listener</a> is started.</p>
+                        <h1 id="nngcat"><a class="header" href="#nngcat">nngcat</a></h1>
+<p><code>nngcat</code> is a command-line peer for Scalability Protocols. It is useful for
+testing services, building small shell-script integrations, demonstrating
+topologies, and inspecting messages without writing a custom program.</p>
+<p>Every <code>nngcat</code> invocation has the same basic shape:</p>
+<pre><code class="language-sh">nngcat --PROTOCOL --dial URL [send-options] [receive-options]
+nngcat --PROTOCOL --listen URL [send-options] [receive-options]
+</code></pre>
+<p>At least one protocol option and at least one peer address are required. The
+selected protocol determines whether the command sends messages, receives
+messages, or performs an exchange involving both.</p>
+<p>Use <code>nngcat --help</code> for command-line help and <code>nngcat --version</code> to print the
+version.</p>
+<h2 id="basic-examples"><a class="header" href="#basic-examples">Basic Examples</a></h2>
+<p>This starts a reply peer that always answers <code>42</code>, then sends one request to it:</p>
+<pre><code class="language-sh">addr="tcp://127.0.0.1:4567"
+nngcat --rep --listen="${addr}" --data="42" --quoted &amp;
+nngcat --req --dial="${addr}" --data="what is the answer?" --quoted
+</code></pre>
+<p>The requester prints both the request and reply:</p>
+<pre><code class="language-text">"what is the answer?"
+"42"
+</code></pre>
+<p>This publishes a message once per hour over IPC and receives it with a
+subscriber:</p>
+<pre><code class="language-sh">addr="ipc:///grandpa_clock"
+nngcat --pub --listen="${addr}" --data="cuckoo" --delay 1 --interval 3600 &amp;
+nngcat --sub --dial="${addr}" --quoted --count 1
+</code></pre>
+<p>The subscriber prints:</p>
+<pre><code class="language-text">"cuckoo"
+</code></pre>
+<h2 id="choosing-a-protocol"><a class="header" href="#choosing-a-protocol">Choosing a Protocol</a></h2>
+<p>Exactly one protocol family should be selected for a command.</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Option</th><th>Type</th><th>Description</th></tr>
+<tr><th>Options</th><th>Protocol</th><th>Use</th></tr>
 </thead>
 <tbody>
-<tr><td><code>NNG_OPT_TCP_NODELAY</code></td><td><code>bool</code></td><td>Disable or enable use of <a name="a006"></a>Nagle’s algorithm for TCP connections. When <code>true</code> (the default), data is sent promptly rather than waiting to coalesce into larger writes. On low-bandwidth links, enabling Nagle’s algorithm by setting this to <code>false</code> can reduce overhead at the cost of latency.</td></tr>
-<tr><td><code>NNG_OPT_TCP_KEEPALIVE</code></td><td><code>bool</code></td><td>Enable or disable TCP keep-alive. This is <code>false</code> by default. When enabled, the system periodically probes otherwise idle connections to detect dead peers and keep stateful middleboxes from expiring the connection.</td></tr>
-<tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read-only option, returns the group ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
-<tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read-only option, returns the process ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
-<tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read-only option, returns the user ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
-<tr><td><code>NNG_OPT_PEER_ZONEID</code></td><td><code>int</code></td><td>Read-only option, returns the zone ID of the process at the other end of the socket, if platform supports it and the peer is on the same system.</td></tr>
-<tr><td><a href="../api/stream.html#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a></td><td><code>int</code></td><td>Write-only for listeners before they start. Supplies an already-created listening file descriptor or <code>SOCKET</code>, which is useful for socket activation and similar supervisor-managed startup flows.</td></tr>
-<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for <a href="../api/endpoint.html">listener</a> objects only. This is especially useful after binding to port zero to discover the ephemeral port actually selected by the system.</td></tr>
+<tr><td><code>--bus</code>, <code>--bus0</code></td><td><a href="../proto/bus.html">BUS</a></td><td>Send and receive messages among bus peers.</td></tr>
+<tr><td><code>--req</code>, <code>--req0</code></td><td><a href="../proto/req.html">REQ</a></td><td>Send requests to <a href="../proto/rep.html">REP</a> peers and receive replies.</td></tr>
+<tr><td><code>--rep</code>, <code>--rep0</code></td><td><a href="../proto/rep.html">REP</a></td><td>Receive requests from <a href="../proto/req.html">REQ</a> peers and send replies.</td></tr>
+<tr><td><code>--pub</code>, <code>--pub0</code></td><td><a href="../proto/pub.html">PUB</a></td><td>Publish messages to <a href="../proto/sub.html">SUB</a> peers.</td></tr>
+<tr><td><code>--sub</code>, <code>--sub0</code></td><td><a href="../proto/sub.html">SUB</a></td><td>Receive messages from <a href="../proto/pub.html">PUB</a> peers, filtered by subscription.</td></tr>
+<tr><td><code>--push</code>, <code>--push0</code></td><td><a href="../proto/push.html">PUSH</a></td><td>Send pipeline messages to <a href="../proto/pull.html">PULL</a> peers.</td></tr>
+<tr><td><code>--pull</code>, <code>--pull0</code></td><td><a href="../proto/pull.html">PULL</a></td><td>Receive pipeline messages from <a href="../proto/push.html">PUSH</a> peers.</td></tr>
+<tr><td><code>--pair0</code></td><td><a href="../proto/pair.html">PAIR</a> v0</td><td>Exchange messages with one PAIR v0 peer.</td></tr>
+<tr><td><code>--pair1</code></td><td><a href="../proto/pair.html">PAIR</a> v1</td><td>Exchange messages with one PAIR v1 peer.</td></tr>
+<tr><td><code>--pair</code></td><td><a href="../proto/pair.html">PAIR</a></td><td>Alias for <code>--pair1</code>, or <code>--pair0</code> in <code>--compat</code> mode.</td></tr>
+<tr><td><code>--surveyor</code>, <code>--surveyor0</code></td><td><a href="../proto/surveyor.html">SURVEYOR</a></td><td>Send a survey and receive respondent replies.</td></tr>
+<tr><td><code>--respondent</code>, <code>--respondent0</code></td><td><a href="../proto/respondent.html">RESPONDENT</a></td><td>Receive surveys and send responses.</td></tr>
 </tbody>
 </table>
 </div>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>For <code>NNG_OPT_TCP_NODELAY</code> and <code>NNG_OPT_TCP_KEEPALIVE</code>, setting the option on
-a dialer or listener affects connections created afterwards. It does not
-retroactively reconfigure existing live connections.</p>
-</blockquote>
+<p><code>nngcat</code> does not support PAIR v1 polyamorous mode, although peers may use it.</p>
+<h2 id="connecting-and-listening"><a class="header" href="#connecting-and-listening">Connecting and Listening</a></h2>
+<p>Use <code>--dial</code> or <code>--connect</code> to connect to a peer:</p>
+<pre><code class="language-sh">nngcat --req --dial tcp://127.0.0.1:4567 --data "status"
+</code></pre>
+<p>Use <code>--listen</code> or <code>--bind</code> to accept connections from peers:</p>
+<pre><code class="language-sh">nngcat --rep --listen tcp://127.0.0.1:4567 --data "ok"
+</code></pre>
+<p>Unlike the legacy <code>nanocat</code> tool, <code>nngcat</code> can use more than one peer address in
+a single invocation.</p>
+<p>Shortcut options are available for common TCP and IPC addresses:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Equivalent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-x PATH</code>, <code>--connect-ipc PATH</code></td><td><code>--connect ipc://PATH</code></td></tr>
+<tr><td><code>-X PATH</code>, <code>--bind-ipc PATH</code></td><td><code>--bind ipc://PATH</code></td></tr>
+<tr><td><code>-l PORT</code>, <code>--connect-local PORT</code></td><td><code>--connect tcp://127.0.0.1:PORT</code></td></tr>
+<tr><td><code>-L PORT</code>, <code>--bind-local PORT</code></td><td><code>--bind tcp://127.0.0.1:PORT</code></td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="sending-data"><a class="header" href="#sending-data">Sending Data</a></h2>
+<p>Protocols that send messages use <code>--data</code> or <code>--file</code> to choose the outgoing
+message body:</p>
+<pre><code class="language-sh">nngcat --push --dial tcp://127.0.0.1:9000 --data "hello"
+nngcat --push --dial tcp://127.0.0.1:9000 --file payload.bin
+</code></pre>
+<p>If <code>--file -</code> is used, the message body is read from standard input.</p>
+<p>For protocols that send unsolicited messages, such as PUB or PUSH, <code>--interval</code>
+repeats the outgoing message and <code>--delay</code> waits before sending the first
+message. A delay is often useful with PUB sockets because subscribers may need
+time to connect before the first message is sent.</p>
+<pre><code class="language-sh">nngcat --pub --listen tcp://127.0.0.1:9000 --data tick --delay 1 --interval 5
+</code></pre>
+<p>Use <code>--send-timeout</code> to give up if a send cannot complete within the requested
+number of seconds.</p>
+<h2 id="receiving-data"><a class="header" href="#receiving-data">Receiving Data</a></h2>
+<p>Protocols that receive messages can format output in several ways:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Format</th><th>Output</th></tr>
+</thead>
+<tbody>
+<tr><td><code>no</code></td><td>Suppress output.</td></tr>
+<tr><td><code>raw</code></td><td>Write received bytes directly to standard output.</td></tr>
+<tr><td><code>ascii</code></td><td>Print safe ASCII directly and replace other bytes with <code>.</code>.</td></tr>
+<tr><td><code>quoted</code></td><td>Print messages as C-style quoted strings.</td></tr>
+<tr><td><code>hex</code></td><td>Print each byte as an escaped hexadecimal value such as <code>\x2e</code>.</td></tr>
+<tr><td><code>msgpack</code></td><td>Emit MessagePack bin-format byte arrays.</td></tr>
+</tbody>
+</table>
+</div>
+<p>The format can be selected with <code>--format FORMAT</code> or one of the convenience
+aliases:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Equivalent</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-A</code>, <code>--ascii</code></td><td><code>--format ascii</code></td></tr>
+<tr><td><code>-Q</code>, <code>--quoted</code></td><td><code>--format quoted</code></td></tr>
+<tr><td><code>--hex</code></td><td><code>--format hex</code></td></tr>
+<tr><td><code>--msgpack</code></td><td><code>--format msgpack</code></td></tr>
+<tr><td><code>--raw</code></td><td><code>--format raw</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>For SUB sockets, use <code>--subscribe TOPIC</code> to receive only messages whose initial
+bytes match <code>TOPIC</code>. This option may be used more than once. If no subscription
+is supplied, <code>nngcat</code> subscribes to all messages.</p>
+<p>Use <code>--receive-timeout</code> to stop waiting after the requested number of seconds,
+and <code>--recv-maxsz</code> to set the largest message size accepted by the socket. The
+default receive limit is 1 MiB. Use <code>--recv-maxsz 0</code> to remove the limit.</p>
+<h2 id="tls"><a class="header" href="#tls">TLS</a></h2>
+<p>TLS options are used only with TLS-secured addresses, such as <code>tls+tcp://</code>
+URLs. They are ignored for non-TLS transports.</p>
+<p>Use <code>--cacert FILE</code> to supply certificate authorities for peer validation. Use
+<code>--cert FILE</code> and <code>--key FILE</code> to present a local certificate and private key.
+If <code>--cert</code> is supplied without <code>--key</code>, the certificate file is expected to
+contain both the certificate and private key.</p>
+<p><code>--insecure</code> disables peer validation. This is useful for local testing with
+self-signed certificates, but it should not be used for production traffic.</p>
+<h2 id="option-syntax"><a class="header" href="#option-syntax">Option Syntax</a></h2>
+<p>Long options start with <code>--</code>. If a long option takes a value, the value can be
+supplied with an equals sign, with a colon, or as the next argument:</p>
+<pre><code class="language-sh">nngcat --subscribe=times
+nngcat --subscribe:tribune
+nngcat --subscribe herald
+</code></pre>
+<p>Short options start with <code>-</code>. If a short option takes a value, the value can be
+attached to the option or supplied as the next argument:</p>
+<pre><code class="language-sh">nngcat -L5678
+nngcat -L 5678
+</code></pre>
+<p>Long options may be abbreviated as long as the abbreviation is unambiguous. For
+example, <code>--comp</code> can be used instead of <code>--compat</code>, but <code>--re</code> is ambiguous
+because it could mean <code>--req</code>, <code>--rep</code>, or <code>--respondent</code>.</p>
+<p>POSIX-style clustering of short options is not supported. Each short option must
+be supplied as a separate argument.</p>
+<h2 id="option-reference"><a class="header" href="#option-reference">Option Reference</a></h2>
+<h3 id="generic-options"><a class="header" href="#generic-options">Generic Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-h</code>, <code>--help</code></td><td>Print usage help.</td></tr>
+<tr><td><code>-V</code>, <code>--version</code></td><td>Print the version and exit.</td></tr>
+<tr><td><code>-v</code>, <code>--verbose</code></td><td>Use verbose operation.</td></tr>
+<tr><td><code>-q</code>, <code>--silent</code></td><td>Use silent operation.</td></tr>
+<tr><td><code>--compat</code></td><td>Behave more like legacy <code>nanocat</code>: connections are asynchronous, and <code>--pair</code> selects PAIR v0 instead of PAIR v1.</td></tr>
+<tr><td><code>--subscribe TOPIC</code></td><td>Subscribe a SUB socket to <code>TOPIC</code>. May be specified multiple times.</td></tr>
+<tr><td><code>--count COUNT</code></td><td>Limit loop iterations. Send-only protocols send <code>COUNT</code> messages, receive-only protocols receive <code>COUNT</code> messages, and exchange protocols perform <code>COUNT</code> exchanges. A value of <code>0</code> means unlimited iterations.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="protocol-selection-options"><a class="header" href="#protocol-selection-options">Protocol Selection Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--bus</code>, <code>--bus0</code></td><td>Select BUS v0.</td></tr>
+<tr><td><code>--req</code>, <code>--req0</code></td><td>Select REQ v0.</td></tr>
+<tr><td><code>--rep</code>, <code>--rep0</code></td><td>Select REP v0.</td></tr>
+<tr><td><code>--pub</code>, <code>--pub0</code></td><td>Select PUB v0.</td></tr>
+<tr><td><code>--sub</code>, <code>--sub0</code></td><td>Select SUB v0.</td></tr>
+<tr><td><code>--push</code>, <code>--push0</code></td><td>Select PUSH v0.</td></tr>
+<tr><td><code>--pull</code>, <code>--pull0</code></td><td>Select PULL v0.</td></tr>
+<tr><td><code>--pair0</code></td><td>Select PAIR v0.</td></tr>
+<tr><td><code>--pair1</code></td><td>Select PAIR v1.</td></tr>
+<tr><td><code>--pair</code></td><td>Select PAIR v1, or PAIR v0 in <code>--compat</code> mode.</td></tr>
+<tr><td><code>--surveyor</code>, <code>--surveyor0</code></td><td>Select SURVEYOR v0.</td></tr>
+<tr><td><code>--respondent</code>, <code>--respondent0</code></td><td>Select RESPONDENT v0.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="peer-selection-options"><a class="header" href="#peer-selection-options">Peer Selection Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>--connect URL</code>, <code>--dial URL</code></td><td>Connect to the peer at <code>URL</code>.</td></tr>
+<tr><td><code>--bind URL</code>, <code>--listen URL</code></td><td>Listen for peers at <code>URL</code>.</td></tr>
+<tr><td><code>-x PATH</code>, <code>--connect-ipc PATH</code></td><td>Connect to IPC path <code>PATH</code>.</td></tr>
+<tr><td><code>-X PATH</code>, <code>--bind-ipc PATH</code></td><td>Listen on IPC path <code>PATH</code>.</td></tr>
+<tr><td><code>-l PORT</code>, <code>--connect-local PORT</code></td><td>Connect to <code>127.0.0.1</code> TCP port <code>PORT</code>.</td></tr>
+<tr><td><code>-L PORT</code>, <code>--bind-local PORT</code></td><td>Listen on <code>127.0.0.1</code> TCP port <code>PORT</code>.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="receive-options"><a class="header" href="#receive-options">Receive Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-A</code>, <code>--ascii</code></td><td>Use ASCII-safe output.</td></tr>
+<tr><td><code>-Q</code>, <code>--quoted</code></td><td>Use C-style quoted output.</td></tr>
+<tr><td><code>--hex</code></td><td>Use escaped hexadecimal output.</td></tr>
+<tr><td><code>--msgpack</code></td><td>Emit MessagePack bin-format byte arrays.</td></tr>
+<tr><td><code>--raw</code></td><td>Write raw received bytes.</td></tr>
+<tr><td><code>--format FORMAT</code></td><td>Select <code>no</code>, <code>raw</code>, <code>ascii</code>, <code>quoted</code>, <code>hex</code>, or <code>msgpack</code> output.</td></tr>
+<tr><td><code>--receive-timeout SEC</code></td><td>Stop receiving after <code>SEC</code> seconds without a message.</td></tr>
+<tr><td><code>--recv-maxsz COUNT</code></td><td>Set maximum received message size in bytes. The default is 1048576; <code>0</code> removes the limit.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="transmit-options"><a class="header" href="#transmit-options">Transmit Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-D DATA</code>, <code>--data DATA</code></td><td>Use <code>DATA</code> as the outgoing message body.</td></tr>
+<tr><td><code>-F FILE</code>, <code>--file FILE</code></td><td>Use <code>FILE</code> as the outgoing message body. Use <code>-</code> for standard input.</td></tr>
+<tr><td><code>-i SEC</code>, <code>--interval SEC</code></td><td>Repeat unsolicited sends every <code>SEC</code> seconds.</td></tr>
+<tr><td><code>-d SEC</code>, <code>--delay SEC</code></td><td>Wait <code>SEC</code> seconds before the first outgoing message.</td></tr>
+<tr><td><code>--send-timeout SEC</code></td><td>Give up sending after <code>SEC</code> seconds.</td></tr>
+</tbody>
+</table>
+</div>
+<h3 id="tls-options"><a class="header" href="#tls-options">TLS Options</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>-k</code>, <code>--insecure</code></td><td>Skip peer certificate validation.</td></tr>
+<tr><td><code>-E FILE</code>, <code>--cert FILE</code></td><td>Load this peer’s certificate from <code>FILE</code>.</td></tr>
+<tr><td><code>--key FILE</code></td><td>Load this peer’s private key from <code>FILE</code>.</td></tr>
+<tr><td><code>--cacert FILE</code></td><td>Load CA certificates from <code>FILE</code> for peer validation.</td></tr>
+</tbody>
+</table>
+</div>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -277,11 +453,11 @@ retroactively reconfigure existing live connections.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../tran/ipc.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../tools/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../tran/tls.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../migrate/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -291,11 +467,11 @@ retroactively reconfigure existing live connections.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../tran/ipc.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../tools/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../tran/tls.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../migrate/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
