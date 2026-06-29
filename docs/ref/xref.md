@@ -592,6 +592,7 @@
 [tcp]: ../tran/tcp.md
 [TLS]: ../api/tls.md
 [TLS transport]: ../tran/tls.md
+[DTLS transport]: ../tran/dtls.md
 [WebSocket transport]: ../tran/websocket.md
 [udp]: ../tran/udp.md
 [url]: ../api/url.md

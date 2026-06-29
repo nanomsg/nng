@@ -6,6 +6,7 @@ This section documents transports for Scalability Protocols implemented by NNG.
 - [Inter-Process Transport](ipc.md)
 - [TCP](tcp.md)
 - [TLS](tls.md)
+- [DTLS](dtls.md)
 - [WebSocket](websocket.md)
 - [BSD Socket](socket.md)
 - [UDP](udp.md)
