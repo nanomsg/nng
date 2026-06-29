@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Logging - NNG Reference Manual (DRAFT)</title>
+        <title>DTLS Transport (Experimental) - NNG Reference Manual (DRAFT)</title>
 
 
         <!-- Custom HTML head -->
@@ -174,154 +174,133 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="logging"><a class="header" href="#logging">Logging</a></h1>
-<p>This chapter describes the support for message logs.
-Both applications and <em>NNG</em> itself can emit logs, which can be useful
-for application field support and debugging. Additionally applications
-can customize the handling of this logging as needed.</p>
-<p>Note that logging is disabled by default unless an application
-configures a suitable logger with <a href="#log-handlers"><code>nng_log_set_logger</code></a>.</p>
-<h2 id="submitting-logs"><a class="header" href="#submitting-logs">Submitting Logs</a></h2>
-<pre><code class="language-c">void nng_log_err(const char *msgid, const char *msg, ...);
-void nng_log_warn(const char *msgid, const char *msg, ...);
-void nng_log_notice(const char *msgid, const char *msg, ...);
-void nng_log_info(const char *msgid, const char *msg, ...);
-void nng_log_debug(const char *msgid, const char *msg, ...);
-</code></pre>
-<p>These <a name="a001"></a> functions inject a a message into the
-logging system, where it will be processed and potentially go to
-system logs, standard output, or processed further.</p>
-<p>The <em>msgid</em> is a short prefix that should uniquely identify the message,
-possibly also with some kind of category. It is recommended that
-strings between 8 and 16 characters be used. As this may, but will not necessarily
-be displayed to the user, the content of the message should not appear
-solely in this field. A <code>NULL</code> value is permitted here, but that may
-make filtering the message or other automatic processing more difficult.</p>
-<p>The <em>msg</em> is a <code>printf</code>-style format string, which is used to format the
-message content. The following arguments are consumed in the
-same manner as <code>printf</code>.</p>
+                        <h1 id="dtls-transport-experimental"><a class="header" href="#dtls-transport-experimental">DTLS Transport (Experimental)</a></h1>
+<h2 id="description"><a class="header" href="#description">DESCRIPTION</a></h2>
+<p>The <a name="a001"></a><em>dtls</em> transport<a name="a002"></a> provides encrypted and authenticated
+communication between peers using <a name="a003"></a>DTLS over <a name="a004"></a>UDP.
+Both <a name="a005"></a>IPv4 and <a name="a006"></a>IPv6 are supported when the underlying platform
+supports them.</p>
+<p>DTLS provides TLS-like security for datagram transports. This transport is
+message-oriented and preserves NNG message boundaries, but it is still based on
+UDP and does not provide TCP-style reliable delivery. Applications should avoid
+large messages and should tolerate message loss caused by the network.</p>
+<p>TLS configuration objects and certificate APIs are documented in <a href="../api/tls.html">TLS</a>.
+DTLS <a href="../api/endpoint.html">dialers</a> and <a href="../api/endpoint.html">listeners</a> must be configured with
+<a href="../api/tls.html#using-configuration-objects"><code>nng_dialer_set_tls</code></a> or <a href="../api/tls.html#using-configuration-objects"><code>nng_listener_set_tls</code></a> before they are started.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>This transport is <em>experimental</em>.
+It requires TLS support and the <code>NNG_TRANSPORT_DTLS</code> build option.
+It supports unicast UDP endpoints only; multicast and broadcast are not
+supported.</p>
+</blockquote>
+<h3 id="uri-formats"><a class="header" href="#uri-formats">URI Formats</a></h3>
+<p>This transport uses URIs using the scheme <a name="a007"></a><code>dtls://</code>, followed by an
+<a name="a008"></a>IP address or <a name="a009"></a>hostname, and a UDP port number.
+For example, <code>dtls://127.0.0.1:4433</code> and <code>dtls://localhost:4433</code>
+both refer to port 4433 on the local host.</p>
+<p>For IPv6 literal addresses, the IPv6 address must be enclosed in square brackets,
+then the colon and finally the UDP port.
+For example, <code>dtls://[::1]:4433</code> refers to port 4433 on the IPv6 loopback
+address.</p>
+<h4 id="forcing-ipv4-or-ipv6"><a class="header" href="#forcing-ipv4-or-ipv6">Forcing IPv4 or IPv6</a></h4>
+<p>To force either IPv4 or IPv6, the scheme may be specified as <code>dtls4://</code> or
+<code>dtls6://</code>.
+This should only be needed when a hostname might resolve to either address family.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Specifying <code>dtls6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when listening on wildcard addresses.
+The details vary across operating systems.
+The <code>dtls4://</code> and <code>dtls6://</code> schemes are specific to NNG.</p>
+</blockquote>
+<h4 id="listening-to-all-addresses"><a class="header" href="#listening-to-all-addresses">Listening to All Addresses</a></h4>
+<p>When listening, a zero IP address can be supplied by either eliding the address
+altogether, or by specifying <code>0.0.0.0</code> (IPv4) or <code>::</code> (IPv6) explicitly.
+If left empty, IPv6 will be selected if available on the host, otherwise IPv4
+will be selected.</p>
+<p>For example, the following URIs are equivalent for listening on UDP port 9999:</p>
+<ul>
+<li><code>dtls://0.0.0.0:9999</code></li>
+<li><code>dtls://:9999</code></li>
+</ul>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>Applications should take care to limit the use of higher severity levels, as message logs
-are potentially expensive, increase stress for end users and administrators, and further may
-mask real problems if incorrectly over used.</p>
-<p>Warnings and error messages should be concise and actionable, and notices should only
-really be those things that are worthy of attention.</p>
-<p>Informational and debug messages used during development should be removed when no longer
-needed, as these messages can overwhelm logging subsystems and can reduce the
-signal-to-noise value for the message logs, impairing the diagnostic value of the logs.</p>
+<p>Certificate validation generally works best when clients use host names rather
+than IP addresses.
+Configure the expected server name with <a href="../api/tls.html#certificates-and-keys"><code>nng_tls_config_server_name</code></a> when the
+certificate identity differs from the URL host, or when an IP address is used.</p>
 </blockquote>
-<h2 id="auth-logs"><a class="header" href="#auth-logs">Auth Logs</a></h2>
-<pre><code class="language-c">void nng_log_auth(nng_log_level level, const char *msgid, const char *msg, ...);
-</code></pre>
-<p>The <a name="a002"></a><code>nng_log_auth</code> function formats and injects a security related log message.
-(“Auth” can indicate either “authentication” or “authorization”.)
-The <em>level</em> is a <a href="#log-levels">log level</a>.
-The <em>msgid</em>, <em>msg</em>, and any remaining arguments are processed in a fashion
-similar to the other <a href="#submitting-logs">logging functions</a>, except that the
-logs may be are logged using the <code>NNG_LOG_AUTH</code> <a href="#log-facilities">facility</a>, and thus may be
-redirected or receive other special treatment.</p>
-<h2 id="log-levels"><a class="header" href="#log-levels">Log Levels</a></h2>
-<pre><code class="language-c">typedef enum nng_log_level nng_log_level;
-
-void nng_log_set_level(nng_log_level level);
-nng_log_level nng_log_get_level(void);
-</code></pre>
-<p>The <a name="a003"></a><code>nng_log_level</code> type represents a severity for logged messages.
-These levels correspond to those found in the UNIX syslog subsystem,
-although applications should not depend upon the values being identical.</p>
-<p>The <a name="a004"></a><code>nng_log_set_level</code> function sets the log level.
-Messages with a severity that is numerically greater than this (less-severe)
-will be discarded.</p>
-<p>The <a name="a005"></a><code>nng_log_get_level</code> function returns the log level most recently
-set by <code>nng_log_set_level</code> or the default
-if that function has not been called.</p>
-<p>The log levels are defined as follows:</p>
-<pre><code class="language-c">typedef enum nng_log_level {
-    NNG_LOG_NONE   = 0, // used for filters only, NNG suppresses these
-    NNG_LOG_ERR    = 3,
-    NNG_LOG_WARN   = 4,
-    NNG_LOG_NOTICE = 5,
-    NNG_LOG_INFO   = 6,
-    NNG_LOG_DEBUG  = 7
-} nng_log_level;
-</code></pre>
-<p>The value <code>NNG_LOG_NONE</code> may be useful to suppress message logs altogether.</p>
-<p>The default level is typically <code>NNG_LOG_NOTICE</code>, but applications should
-select a value rather than relying upon the default.</p>
-<h2 id="log-facilities"><a class="header" href="#log-facilities">Log Facilities</a></h2>
-<pre><code class="language-c">typedef enum nng_log_facility
-
-void nng_log_set_facility(nng_log_facility facility);
-</code></pre>
-<p>Logging facilities are used to indicate the source of a log message,
-and may be useful in routing and processing these logs.
-Traditionally these are used with the UNIX <code>syslog</code> system, and
-the values here represent some (but not all) of the values found there.</p>
-<p>The following values are defined:</p>
-<pre><code class="language-c">typedef enum nng_log_facility {
-    NNG_LOG_USER   = 1,
-    NNG_LOG_DAEMON = 3,
-    NNG_LOG_AUTH   = 10,
-    NNG_LOG_LOCAL0 = 16,
-    NNG_LOG_LOCAL1 = 17,
-    NNG_LOG_LOCAL2 = 18,
-    NNG_LOG_LOCAL3 = 19,
-    NNG_LOG_LOCAL4 = 20,
-    NNG_LOG_LOCAL5 = 21,
-    NNG_LOG_LOCAL6 = 22,
-    NNG_LOG_LOCAL7 = 23,
-} nng_log_facility;
-</code></pre>
-<p>The <a name="a006"></a><code>nng_log_set_facility</code> function can be used to
-set the facility that the application will use when emitting log
-messages. This should be called as part of initialization of the
-application, if logging is to be used.</p>
-<p>The default facility is typically <code>NNG_LOG_USER</code>, but applications should
-select a value rather than relying upon the default.</p>
-<h2 id="log-handlers"><a class="header" href="#log-handlers">Log Handlers</a></h2>
-<pre><code class="language-c">typedef void (*nng_logger)(nng_log_level level, nng_log_facility facility,
-    const char *msgid, const char *msg);
-
-void nng_null_logger(nng_log_level, nng_log_facility, const char *, const char *);
-void nng_stderr_logger(nng_log_level, nng_log_facility, const char *, const char *);
-void nng_system_logger(nng_log_level, nng_log_facility, const char *, const char *);
-
-void nng_log_set_logger(nng_logger logger);
-</code></pre>
-<p><a name="a007"></a>Log handlers are responsible for actually processing the logged messages.</p>
-<p>The <a name="a008"></a><code>nng_log_set_logger</code> function installs the named <em>logger</em>, of type <a name="a009"></a><code>nng_logger</code>,
-as the log handler. The function <em>logger</em> will be called when any message is meant to
-be processed. (Messages are first filtered by <a href="#log-levels">severity</a>, then formatted,
-before calling the logger.)</p>
-<p>Any previously installed logger is replaced by <em>logger</em>.</p>
-<p>The <a name="a010"></a><code>nng_null_logger</code> function is an implementation of <code>nng_logger</code> that simply discards the content.
-This is the default logger, so logging is disabled by default.</p>
-<p>The <a name="a011"></a><code>nng_stderr_logger</code> function is an implementation that logs messages to the standard error stream.
-It will attempt to colorize messages by the severity, if the standard error is a terminal device.
-This can be suppressed by setting either the <code>NO_COLOR</code> or <code>NNG_LOG_NO_COLOR</code> environment variables.</p>
-<p>The <a name="a012"></a><code>nng_system_logger</code> attempts to use an appropriate system facility to log messages.
-For POSIX systems, this means using <code>syslog</code> to process the messages.
-For other systems the defauilt behavior may be the same as <code>nng_stderr_logger</code>.</p>
-<h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
-<p>The Syslog Protocol upon which this is based is documented in the following two IETF
-RFCS,</p>
-<ul>
-<li>R. Gerhards, <a href="https://datatracker.ietf.org/doc/html/rfc5424">RFC 5424</a>, <em>The Syslog Protocol</em>,
-March 2009</li>
-<li>C. Lonvick, <a href="https://datatracker.ietf.org/doc/html/rfc3164">RFC 3164</a>, <em>The BSD syslog Protocol</em>,
-August 2001</li>
-</ul>
+<h3 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h3>
+<p>DTLS endpoints use <a href="../api/tls.html#configuration-objects"><code>nng_tls_config</code></a> objects in the same way as the <a href="../tran/tls.html">TLS transport</a>.
+Listeners normally use a server-mode configuration with a local certificate and
+private key.
+Dialers normally use a client-mode configuration with certificate authority
+material and the expected server name.
+Pre-shared key configurations may also be used when supported by the selected TLS
+engine.</p>
+<p>The TLS configuration must be set before the dialer or listener is started.
+After a DTLS endpoint has started, attempts to change its TLS configuration or
+its receive maximum will fail with <a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
+<p>Peer certificates can be obtained from connected pipes with <a href="../api/tls.html#peer-certificates"><code>nng_pipe_peer_cert</code></a>,
+subject to the TLS engine’s certificate support and the authentication mode.</p>
+<h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
+<p>When using an <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> structure,
+the concrete type is either <a href="../api/sockaddr.html#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="../api/sockaddr.html#ipv6-addresses"><code>nng_sockaddr_in6</code></a>,
+depending on whether IPv4 or IPv6 is in use.</p>
+<h3 id="transport-options"><a class="header" href="#transport-options">Transport Options</a></h3>
+<p>The following transport options are supported by this transport,
+where supported by the underlying platform.
+Options that change connection behavior must be set before the dialer or
+listener is started.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="../api/endpoint.html">listener</a> objects only.</td></tr>
+</tbody>
+</table>
+</div>
+<p>The DTLS transport does not support TCP-specific options such as
+<code>NNG_OPT_TCP_NODELAY</code> or <code>NNG_OPT_TCP_KEEPALIVE</code>.</p>
+<h3 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h3>
+<p>This transport maps each NNG message to a DTLS record carried over UDP.
+The transport maximum is smaller than the 16 KiB DTLS record size to leave room
+for DTLS and transport headers.
+The receive maximum can be configured with <a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a>, but it cannot
+exceed the DTLS transport maximum.</p>
+<p>Applications are encouraged to use much smaller messages whenever possible.
+Large UDP datagrams are more likely to be fragmented at the IP layer, and a lost
+fragment causes the entire message to be lost.</p>
+<h3 id="keep-alive"><a class="header" href="#keep-alive">Keep Alive</a></h3>
+<p>DTLS maintains a logical connection for each peer and uses periodic transport
+control messages to refresh that state.
+Peers that are inactive for too long are closed and their resources are reclaimed.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../api/thread.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../tran/tls.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../api/stats.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../tran/websocket.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -331,11 +310,11 @@ August 2001</li>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../api/thread.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../tran/tls.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../api/stats.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../tran/websocket.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

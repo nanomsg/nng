@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9a44847f.js";
+            window.path_to_searchindex_js = "../searchindex-e8cf5d80.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-e1e04f66.js"></script>
+        <script src="../toc-42984344.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -177,8 +177,8 @@
                         <h1 id="tls"><a class="header" href="#tls">TLS</a></h1>
 <p>NNG provides <a name="a001"></a>TLS (<a name="a002"></a>Transport Layer Security) support for transports and
 stream-based services that need encrypted and authenticated communication.
-TLS is used by the <a href="../tran/tls.html">TLS transport</a>, secure <a href="../tran/websocket.html">WebSocket transport</a>, HTTP clients and servers,
-and raw <a href="../api/stream.html">streams</a> implementations that support it.</p>
+TLS is used by the <a href="../tran/tls.html">TLS transport</a>, <a href="../tran/dtls.html">DTLS transport</a>, secure <a href="../tran/websocket.html">WebSocket transport</a>,
+HTTP clients and servers, and raw <a href="../api/stream.html">streams</a> implementations that support it.</p>
 <p>TLS support depends on a TLS engine being available when NNG is built.
 If TLS support is not enabled, the TLS functions may be present as stubs and will return
 <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> where appropriate.

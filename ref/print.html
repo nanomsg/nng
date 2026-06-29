@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9a44847f.js";
+            window.path_to_searchindex_js = "searchindex-e8cf5d80.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-e1e04f66.js"></script>
+        <script src="toc-42984344.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -3834,8 +3834,8 @@ both configuring a different TLS configuration object, as well as mutating the e
 <h1 id="tls"><a class="header" href="#tls">TLS</a></h1>
 <p>NNG provides <a name="a001"></a>TLS (<a name="a002"></a>Transport Layer Security) support for transports and
 stream-based services that need encrypted and authenticated communication.
-TLS is used by the <a href="#tls-transport">TLS transport</a>, secure <a href="#websocket-transport">WebSocket transport</a>, HTTP clients and servers,
-and raw <a href="#streams">streams</a> implementations that support it.</p>
+TLS is used by the <a href="#tls-transport">TLS transport</a>, <a href="#dtls-transport-experimental">DTLS transport</a>, secure <a href="#websocket-transport">WebSocket transport</a>,
+HTTP clients and servers, and raw <a href="#streams">streams</a> implementations that support it.</p>
 <p>TLS support depends on a TLS engine being available when NNG is built.
 If TLS support is not enabled, the TLS functions may be present as stubs and will return
 <a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> where appropriate.
@@ -6105,6 +6105,7 @@ pre-releases of <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a>, but
 <li><a href="#ipc-transport">Inter-Process Transport</a></li>
 <li><a href="#tcp-transport">TCP</a></li>
 <li><a href="#tls-transport">TLS</a></li>
+<li><a href="#dtls-transport-experimental">DTLS</a></li>
 <li><a href="#websocket-transport">WebSocket</a></li>
 <li><a href="#socket-transport-experimental">BSD Socket</a></li>
 <li><a href="#udp-transport-experimental">UDP</a></li>
@@ -6440,8 +6441,126 @@ For richer peer certificate information, use <a href="#peer-certificates"><code>
 <!-- Transports -->
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="websocket-transport"><a class="header" href="#websocket-transport">WebSocket Transport</a></h1>
+<h1 id="dtls-transport-experimental"><a class="header" href="#dtls-transport-experimental">DTLS Transport (Experimental)</a></h1>
 <h2 id="description-4"><a class="header" href="#description-4">DESCRIPTION</a></h2>
+<p>The <a name="a001"></a><em>dtls</em> transport<a name="a002"></a> provides encrypted and authenticated
+communication between peers using <a name="a003"></a>DTLS over <a name="a004"></a>UDP.
+Both <a name="a005"></a>IPv4 and <a name="a006"></a>IPv6 are supported when the underlying platform
+supports them.</p>
+<p>DTLS provides TLS-like security for datagram transports. This transport is
+message-oriented and preserves NNG message boundaries, but it is still based on
+UDP and does not provide TCP-style reliable delivery. Applications should avoid
+large messages and should tolerate message loss caused by the network.</p>
+<p>TLS configuration objects and certificate APIs are documented in <a href="#tls">TLS</a>.
+DTLS <a href="#dialers-and-listeners">dialers</a> and <a href="#dialers-and-listeners">listeners</a> must be configured with
+<a href="#using-configuration-objects"><code>nng_dialer_set_tls</code></a> or <a href="#using-configuration-objects"><code>nng_listener_set_tls</code></a> before they are started.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>This transport is <em>experimental</em>.
+It requires TLS support and the <code>NNG_TRANSPORT_DTLS</code> build option.
+It supports unicast UDP endpoints only; multicast and broadcast are not
+supported.</p>
+</blockquote>
+<h3 id="uri-formats-3"><a class="header" href="#uri-formats-3">URI Formats</a></h3>
+<p>This transport uses URIs using the scheme <a name="a007"></a><code>dtls://</code>, followed by an
+<a name="a008"></a>IP address or <a name="a009"></a>hostname, and a UDP port number.
+For example, <code>dtls://127.0.0.1:4433</code> and <code>dtls://localhost:4433</code>
+both refer to port 4433 on the local host.</p>
+<p>For IPv6 literal addresses, the IPv6 address must be enclosed in square brackets,
+then the colon and finally the UDP port.
+For example, <code>dtls://[::1]:4433</code> refers to port 4433 on the IPv6 loopback
+address.</p>
+<h4 id="forcing-ipv4-or-ipv6-2"><a class="header" href="#forcing-ipv4-or-ipv6-2">Forcing IPv4 or IPv6</a></h4>
+<p>To force either IPv4 or IPv6, the scheme may be specified as <code>dtls4://</code> or
+<code>dtls6://</code>.
+This should only be needed when a hostname might resolve to either address family.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Specifying <code>dtls6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when listening on wildcard addresses.
+The details vary across operating systems.
+The <code>dtls4://</code> and <code>dtls6://</code> schemes are specific to NNG.</p>
+</blockquote>
+<h4 id="listening-to-all-addresses-2"><a class="header" href="#listening-to-all-addresses-2">Listening to All Addresses</a></h4>
+<p>When listening, a zero IP address can be supplied by either eliding the address
+altogether, or by specifying <code>0.0.0.0</code> (IPv4) or <code>::</code> (IPv6) explicitly.
+If left empty, IPv6 will be selected if available on the host, otherwise IPv4
+will be selected.</p>
+<p>For example, the following URIs are equivalent for listening on UDP port 9999:</p>
+<ul>
+<li><code>dtls://0.0.0.0:9999</code></li>
+<li><code>dtls://:9999</code></li>
+</ul>
+<blockquote class="blockquote-tag blockquote-tag-tip">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
+<p>Certificate validation generally works best when clients use host names rather
+than IP addresses.
+Configure the expected server name with <a href="#certificates-and-keys"><code>nng_tls_config_server_name</code></a> when the
+certificate identity differs from the URL host, or when an IP address is used.</p>
+</blockquote>
+<h3 id="tls-configuration-2"><a class="header" href="#tls-configuration-2">TLS Configuration</a></h3>
+<p>DTLS endpoints use <a href="#configuration-objects"><code>nng_tls_config</code></a> objects in the same way as the <a href="#tls-transport">TLS transport</a>.
+Listeners normally use a server-mode configuration with a local certificate and
+private key.
+Dialers normally use a client-mode configuration with certificate authority
+material and the expected server name.
+Pre-shared key configurations may also be used when supported by the selected TLS
+engine.</p>
+<p>The TLS configuration must be set before the dialer or listener is started.
+After a DTLS endpoint has started, attempts to change its TLS configuration or
+its receive maximum will fail with <a href="#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
+<p>Peer certificates can be obtained from connected pipes with <a href="#peer-certificates"><code>nng_pipe_peer_cert</code></a>,
+subject to the TLS engine’s certificate support and the authentication mode.</p>
+<h3 id="socket-address-4"><a class="header" href="#socket-address-4">Socket Address</a></h3>
+<p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a> structure,
+the concrete type is either <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a>,
+depending on whether IPv4 or IPv6 is in use.</p>
+<h3 id="transport-options-4"><a class="header" href="#transport-options-4">Transport Options</a></h3>
+<p>The following transport options are supported by this transport,
+where supported by the underlying platform.
+Options that change connection behavior must be set before the dialer or
+listener is started.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Option</th><th>Type</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.</td></tr>
+<tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
+</tbody>
+</table>
+</div>
+<p>The DTLS transport does not support TCP-specific options such as
+<code>NNG_OPT_TCP_NODELAY</code> or <code>NNG_OPT_TCP_KEEPALIVE</code>.</p>
+<h3 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h3>
+<p>This transport maps each NNG message to a DTLS record carried over UDP.
+The transport maximum is smaller than the 16 KiB DTLS record size to leave room
+for DTLS and transport headers.
+The receive maximum can be configured with <a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a>, but it cannot
+exceed the DTLS transport maximum.</p>
+<p>Applications are encouraged to use much smaller messages whenever possible.
+Large UDP datagrams are more likely to be fragmented at the IP layer, and a lost
+fragment causes the entire message to be lost.</p>
+<h3 id="keep-alive"><a class="header" href="#keep-alive">Keep Alive</a></h3>
+<p>DTLS maintains a logical connection for each peer and uses periodic transport
+control messages to refresh that state.
+Peers that are inactive for too long are closed and their resources are reclaimed.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="websocket-transport"><a class="header" href="#websocket-transport">WebSocket Transport</a></h1>
+<h2 id="description-5"><a class="header" href="#description-5">DESCRIPTION</a></h2>
 <p>The <a name="a001"></a><em>WebSocket</em> transport<a name="a002"></a> provides communication
 between peers across a TCP/IP network using
 <a href="https://www.rfc-editor.org/rfc/rfc6455">WebSockets</a>.
@@ -6454,7 +6573,7 @@ The protocol details for Scalability Protocol sockets are documented in the
 TLS configuration objects and certificate APIs are documented in <a href="#tls">TLS</a>, and
 the underlying TCP behavior is similar to the <a href="#tcp-transport">TCP</a> and <a href="#tls-transport">TLS transport</a> transports.
 WebSocket handshakes use NNG’s <a href="#http-support">HTTP Support</a>.</p>
-<h3 id="uri-formats-3"><a class="header" href="#uri-formats-3">URI Formats</a></h3>
+<h3 id="uri-formats-4"><a class="header" href="#uri-formats-4">URI Formats</a></h3>
 <p>This transport uses URIs using the scheme <a name="a003"></a><code>ws://</code>, followed by an
 <a name="a004"></a>IP address or <a name="a005"></a>hostname, an optional TCP port number, and an
 optional path.
@@ -6466,7 +6585,7 @@ The path is significant: different listeners can share the same host and port
 when they use different WebSocket paths.</p>
 <p>Secure WebSocket endpoints use the <a name="a006"></a><code>wss://</code> scheme and default to TCP port 443.
 The URI format is otherwise the same as <code>ws://</code>.</p>
-<h4 id="forcing-ipv4-or-ipv6-2"><a class="header" href="#forcing-ipv4-or-ipv6-2">Forcing IPv4 or IPv6</a></h4>
+<h4 id="forcing-ipv4-or-ipv6-3"><a class="header" href="#forcing-ipv4-or-ipv6-3">Forcing IPv4 or IPv6</a></h4>
 <p>To force either IPv4 or IPv6, the scheme may be specified as <code>ws4://</code> or
 <code>ws6://</code> instead of <code>ws://</code>.
 The secure forms are <code>wss4://</code> and <code>wss6://</code>.
@@ -6482,7 +6601,7 @@ The <code>ws4://</code>, <code>ws6://</code>, <code>wss4://</code>, and <code>ws
 <p>For IPv6 literal addresses, the IPv6 address must be enclosed in square brackets.
 For example, <code>ws://[::1]:8080/app/pubsub</code> refers to port 8080 on the IPv6
 loopback address with the path <code>/app/pubsub</code>.</p>
-<h4 id="listening-to-all-addresses-2"><a class="header" href="#listening-to-all-addresses-2">Listening to All Addresses</a></h4>
+<h4 id="listening-to-all-addresses-3"><a class="header" href="#listening-to-all-addresses-3">Listening to All Addresses</a></h4>
 <p>When listening, a zero IP address can be supplied by either eliding the address
 altogether, or by specifying <code>0.0.0.0</code> (IPv4) or <code>::</code> (IPv6) explicitly.
 If left empty, IPv6 will be selected if available on the host, otherwise IPv4
@@ -6503,7 +6622,7 @@ clients use host names rather than IP addresses.</p>
 <p>The URL host name, when present, is also used in the HTTP <code>Host</code> header
 during the WebSocket handshake.</p>
 </blockquote>
-<h3 id="socket-address-4"><a class="header" href="#socket-address-4">Socket Address</a></h3>
+<h3 id="socket-address-5"><a class="header" href="#socket-address-5">Socket Address</a></h3>
 <p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a>,
 the concrete type is either <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> or <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a>,
 depending on whether IPv4 or IPv6 is in use.</p>
@@ -6551,7 +6670,7 @@ which require binary protocol data.</p>
 Applications that need strict RFC 6455 conformance must validate text data
 themselves and close the connection when invalid data is received.</p>
 </blockquote>
-<h3 id="tls-configuration-2"><a class="header" href="#tls-configuration-2">TLS Configuration</a></h3>
+<h3 id="tls-configuration-3"><a class="header" href="#tls-configuration-3">TLS Configuration</a></h3>
 <p>The <code>wss://</code>, <code>wss4://</code>, and <code>wss6://</code> schemes use TLS.
 TLS support must be enabled in the NNG build.</p>
 <p>For Scalability Protocol sockets, configure TLS with <a href="#using-configuration-objects"><code>nng_dialer_set_tls</code></a> or
@@ -6619,7 +6738,7 @@ For richer peer certificate information, use <a href="#peer-certificates"><code>
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="socket-transport-experimental"><a class="header" href="#socket-transport-experimental">Socket Transport (Experimental)</a></h1>
-<h2 id="description-5"><a class="header" href="#description-5">Description</a></h2>
+<h2 id="description-6"><a class="header" href="#description-6">Description</a></h2>
 <p>The <a name="a001"></a><em>socket</em> transport supports communication between
 peers across arbitrary BSD sockets, such as those that are
 created with <a href="#create-socket-pair"><code>nng_socket_pair</code></a>.</p>
@@ -6640,10 +6759,10 @@ for the <em><a href="#tcp-transport">tcp</a></em> transport, but this is an impl
 </blockquote>
 <h2 id="url-format-1"><a class="header" href="#url-format-1">URL Format</a></h2>
 <p>This transport uses the URL <a name="a003"></a><code>socket://</code>, without further qualification.</p>
-<h2 id="socket-address-5"><a class="header" href="#socket-address-5">Socket Address</a></h2>
+<h2 id="socket-address-6"><a class="header" href="#socket-address-6">Socket Address</a></h2>
 <p>The socket address will be of family <a name="a004"></a><code>NNG_AF_UNSPEC</code>.
 There are no further socket details available.</p>
-<h2 id="transport-options-4"><a class="header" href="#transport-options-4">Transport Options</a></h2>
+<h2 id="transport-options-5"><a class="header" href="#transport-options-5">Transport Options</a></h2>
 <p>The following transport options are supported by this transport.</p>
 <div class="table-wrapper">
 <table>
@@ -6687,7 +6806,7 @@ These behave in exactly the same fashion as for the <em><a href="#ipc-transport"
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="udp-transport-experimental"><a class="header" href="#udp-transport-experimental">UDP Transport (Experimental)</a></h1>
-<h2 id="description-6"><a class="header" href="#description-6">Description</a></h2>
+<h2 id="description-7"><a class="header" href="#description-7">Description</a></h2>
 <p>The <a name="a001"></a><em>udp</em> transport supports communication between peers using <a name="a002"></a>UDP.</p>
 <p>UDP is a very light-weight connection-less, unreliable, unordered delivery mechanism.</p>
 <p>Both <a name="a003"></a>IPv4 and <a name="a004"></a>IPv6 are supported when the underlying platform also supports it.</p>
@@ -6734,12 +6853,12 @@ and could be used to listen to port 9999 on the host:</p>
 <li><code>udp://0.0.0.0:9999</code></li>
 <li><code>udp://:9999</code></li>
 </ol>
-<h2 id="socket-address-6"><a class="header" href="#socket-address-6">Socket Address</a></h2>
+<h2 id="socket-address-7"><a class="header" href="#socket-address-7">Socket Address</a></h2>
 <p>When using an <a href="#socket-addresses"><code>nng_sockaddr</code></a> structure,
 the actual structure is either of type
 <a href="#ipv4-addresses"><code>nng_sockaddr_in</code></a> (for IPv4) or
 <a href="#ipv6-addresses"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
-<h2 id="transport-options-5"><a class="header" href="#transport-options-5">Transport Options</a></h2>
+<h2 id="transport-options-6"><a class="header" href="#transport-options-6">Transport Options</a></h2>
 <p>The following transport options are supported by this transport,
 where supported by the underlying platform.</p>
 <div class="table-wrapper">
@@ -6754,7 +6873,7 @@ where supported by the underlying platform.</p>
 </tbody>
 </table>
 </div>
-<h2 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h2>
+<h2 id="maximum-message-size-1"><a class="header" href="#maximum-message-size-1">Maximum Message Size</a></h2>
 <p>This transport maps each SP message to a single UDP packet.
 In order to allow room for network headers, we thus limit the maximum
 message size to 65000 bytes, minus the overhead for any SP protocol headers.</p>
@@ -6773,7 +6892,7 @@ as a safe maximum to employ for SP payload data across all transports.</p>
 <p>The maximum message size is negotiated as part of establishing a peering relationship,
 and oversize messages will be dropped by the sender before going to the network.</p>
 <p>The maximum message size to receive can be configured with the <a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> option.</p>
-<h2 id="keep-alive"><a class="header" href="#keep-alive">Keep Alive</a></h2>
+<h2 id="keep-alive-1"><a class="header" href="#keep-alive-1">Keep Alive</a></h2>
 <p>This transports maintains a logical “connection” with each peer, to provide a rough
 facsimile of a connection based semantic. This requires some resource on each peer.
 In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
@@ -7216,7 +7335,7 @@ can be simply removed from your application:</p>
 </ul>
 <p>Additionally, the header files containing these functions have been removed, such as
 <code>nng/transport/ipc/ipc.h</code>. Simply remove <code>#include</code> references to those files.</p>
-<h2 id="tls-configuration-3"><a class="header" href="#tls-configuration-3">TLS Configuration</a></h2>
+<h2 id="tls-configuration-4"><a class="header" href="#tls-configuration-4">TLS Configuration</a></h2>
 <p>The support for configuring TLS via <code>NNG_OPT_TLS_CONFIG</code>, <code>NNG_TLS_AUTH_MODE</code>, <code>NNG_OPT_TLS_CA_FILE</code>,
 <code>NNG_OPT_TLS_SERVER_NAME</code>, and similar has been removed.</p>
 <p>Instead configuration must be performed by allocating
@@ -7327,7 +7446,7 @@ Use the new <a href="#stream-addresses"><code>nng_stream_peer_addr</code></a> or
 (It turns out that this was not very useful.) All functions <code>nng_stream_set_xxx</code> are removed.
 For tuning the <code>NNG_OPT_TCP_NODELAY</code> or similar properties, set the option on the listener
 or dialer that creates the stream instead.</p>
-<h2 id="transport-options-6"><a class="header" href="#transport-options-6">Transport Options</a></h2>
+<h2 id="transport-options-7"><a class="header" href="#transport-options-7">Transport Options</a></h2>
 <p>A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
 <a href="#options"><code>nng_dialer_set</code></a> or <a href="#options"><code>nng_listener_set</code></a> option. This likely means that it is necessary
@@ -7642,6 +7761,10 @@ context, <a href="#a001">1</a><br />
 CPU-bound, <a href="#a003">1</a><br />
 device, <a href="#a001">1</a><br />
 dialer, <a href="#a001">1</a><br />
+<em>dtls</em>, <a href="#a002">1</a><br />
+DTLS, <a href="#a003">1</a><br />
+<em>dtls</em> transport, <a href="#a001">1</a><br />
+<code>dtls://</code>, <a href="#a007">1</a><br />
 duration, <a href="#a003">1</a><br />
 endpoints, <a href="#a005">1</a><br />
 error message, <a href="#a002">1</a><br />
@@ -7652,19 +7775,19 @@ gather, <a href="#a026">1</a><br />
 <code>getopt</code>, <a href="#a003">1</a><br />
 half-duplex, <a href="#a004">1</a><br />
 header, <a href="#a003">1</a><br />
-hostname, <a href="#a005">1</a>, <a href="#a008">2</a>, <a href="#a005">3</a><br />
+hostname, <a href="#a005">1</a>, <a href="#a008">2</a>, <a href="#a009">3</a>, <a href="#a005">4</a><br />
 idempotent, <a href="#a004">1</a><br />
 <code>INADDR_ANY</code>, <a href="#a007">1</a><br />
 <em>inproc</em>, <a href="#a002">1</a><br />
 <em>inproc</em> transport, <a href="#a001">1</a><br />
 <code>inproc://</code>, <a href="#a004">1</a><br />
 intra-process, <a href="#a003">1</a><br />
-IP address, <a href="#a004">1</a>, <a href="#a007">2</a>, <a href="#a004">3</a><br />
+IP address, <a href="#a004">1</a>, <a href="#a007">2</a>, <a href="#a008">3</a>, <a href="#a004">4</a><br />
 <em>ipc</em>, <a href="#a002">1</a><br />
 <em>ipc</em> transport, <a href="#a001">1</a><br />
 <code>ipc://</code>, <a href="#a005">1</a><br />
-IPv4, <a href="#a004">1</a>, <a href="#a003">2</a><br />
-IPv6, <a href="#a005">1</a>, <a href="#a004">2</a><br />
+IPv4, <a href="#a004">1</a>, <a href="#a005">2</a>, <a href="#a003">3</a><br />
+IPv6, <a href="#a005">1</a>, <a href="#a006">2</a>, <a href="#a004">3</a><br />
 leader election, <a href="#a005">1</a><br />
 <code>listen</code>, <a href="#a020">1</a><br />
 listener, <a href="#a002">1</a><br />
@@ -8150,7 +8273,7 @@ TLS configuration, <a href="#a009">1</a><br />
 <em>tls</em> transport, <a href="#a001">1</a><br />
 <code>tls+tcp://</code>, <a href="#a006">1</a><br />
 Transport Layer Security, <a href="#a002">1</a><br />
-UDP, <a href="#a002">1</a><br />
+UDP, <a href="#a004">1</a>, <a href="#a002">2</a><br />
 <em>udp</em> transport, <a href="#a001">1</a><br />
 <code>udp://</code>, <a href="#a005">1</a><br />
 Universal Resource Locator, <a href="#a001">1</a><br />
