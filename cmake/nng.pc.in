@@ -1,0 +1,15 @@
+# This template is used to generate nng.pc using CMake's
+# `configure_file(... @ONLY)` using CMake variables.
+prefix=@CMAKE_INSTALL_PREFIX@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: @CPACK_PACKAGE_NAME@
+Version: @CPACK_PACKAGE_VERSION@
+Description: @CPACK_PACKAGE_DESCRIPTION_SUMMARY@
+URL: https://@CPACK_PACKAGE_VENDOR@
+Cflags: -I"${includedir}"
+Libs: -L"${libdir}" -lnng
+# -pthread is only relevant when statically linking, if linking to a shared
+# lib the dependencies needed for pthread are already resolved.
+Libs.private: -pthread
