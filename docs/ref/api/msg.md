@@ -243,7 +243,7 @@ except that they operate the message header rather than the message body.
 
 ```c
 nng_pipe nng_msg_get_pipe(nng_msg *msg);
-void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
+void nng_msg_set_pipe(nng_msg *msg, nng_pipe p);
 ```
 
 The {{i:`nng_msg_set_pipe`}} function sets the [pipe] associated with _msg_ to _p_.
