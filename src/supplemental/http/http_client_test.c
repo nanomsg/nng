@@ -426,11 +426,75 @@ test_http_client_chunked(void)
 	NUTS_TRUE(srv.requests == 1);
 }
 
+static void
+test_http_client_chunked_size_overflow(void)
+{
+	static const char *response =
+	    "HTTP/1.1 200 OK\r\n"
+	    "Transfer-Encoding: chunked\r\n"
+	    "\r\n"
+	    "10000000000000000\r\n"
+	    "\r\n";
+	struct scripted_server srv;
+	nng_aio               *aio = NULL;
+	nng_http_client       *cli = NULL;
+	nng_http              *conn = NULL;
+	nng_url               *url = NULL;
+
+	scripted_server_start(&srv, &response, NULL, 1);
+	srv.ignore_send_errors = true;
+	client_connect(srv.url, &url, &aio, &cli, &conn);
+
+	NUTS_PASS(nng_http_set_uri(conn, "/chunked-overflow", NULL));
+	nng_http_transact(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EMSGSIZE);
+
+	client_free(url, aio, cli, conn);
+	scripted_server_stop(&srv);
+	NUTS_PASS(srv.rv);
+	NUTS_TRUE(srv.requests == 1);
+}
+
+static void
+test_http_client_chunked_alloc_overflow(void)
+{
+	static const char *response =
+	    "HTTP/1.1 200 OK\r\n"
+	    "Transfer-Encoding: chunked\r\n"
+	    "\r\n"
+	    "ffffffffffffffff\r\n"
+	    "\r\n";
+	struct scripted_server srv;
+	nng_aio               *aio = NULL;
+	nng_http_client       *cli = NULL;
+	nng_http              *conn = NULL;
+	nng_url               *url = NULL;
+
+	scripted_server_start(&srv, &response, NULL, 1);
+	srv.ignore_send_errors = true;
+	client_connect(srv.url, &url, &aio, &cli, &conn);
+
+	NUTS_PASS(nng_http_set_uri(conn, "/chunked-alloc-overflow", NULL));
+	nng_http_transact(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EMSGSIZE);
+
+	client_free(url, aio, cli, conn);
+	scripted_server_stop(&srv);
+	NUTS_PASS(srv.rv);
+	NUTS_TRUE(srv.requests == 1);
+}
+
 NUTS_TESTS = {
 	{ "http client request response", test_http_client_request_response },
 	{ "http client transact", test_http_client_transact },
 	{ "http client reuse", test_http_client_reuse },
 	{ "http client timeout", test_http_client_timeout },
 	{ "http client chunked", test_http_client_chunked },
+	{ "http client chunked size overflow",
+	    test_http_client_chunked_size_overflow },
+	{ "http client chunked alloc overflow",
+	    test_http_client_chunked_alloc_overflow },
 	{ NULL, NULL },
 };
