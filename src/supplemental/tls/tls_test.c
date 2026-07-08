@@ -318,6 +318,73 @@ test_tls_null_server_name(void)
 	nng_free(buf2, size);
 }
 
+#ifdef NNG_TLS_ENGINE_MBEDTLS
+#define NUTS_MBEDTLS_LONG_HOST_NAME_LEN 256
+
+void
+test_tls_long_server_name(void)
+{
+	nng_stream_listener *l;
+	nng_stream_dialer   *d;
+	nng_aio             *aio1, *aio2;
+	nng_stream          *s1;
+	nng_tls_config      *c1;
+	nng_tls_config      *c2;
+	char                 addr[32];
+	char                 name[NUTS_MBEDTLS_LONG_HOST_NAME_LEN + 1];
+	int                  port;
+
+	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
+
+	memset(name, 'a', sizeof(name) - 1);
+	name[sizeof(name) - 1] = '\0';
+
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	nng_aio_set_timeout(aio1, 5000);
+	nng_aio_set_timeout(aio2, 5000);
+
+	NUTS_PASS(nng_stream_listener_alloc(&l, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_tls_config_alloc(&c1, NNG_TLS_MODE_SERVER));
+	NUTS_PASS(nng_tls_config_own_cert(
+	    c1, nuts_server_crt, nuts_server_key, NULL));
+	NUTS_PASS(nng_stream_listener_set_tls(l, c1));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	NUTS_PASS(nng_stream_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port > 0);
+	NUTS_TRUE(port < 65536);
+
+	snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%d", port);
+	NUTS_PASS(nng_stream_dialer_alloc(&d, addr));
+	NUTS_PASS(nng_tls_config_alloc(&c2, NNG_TLS_MODE_CLIENT));
+	NUTS_PASS(nng_tls_config_auth_mode(c2, NNG_TLS_AUTH_MODE_NONE));
+	NUTS_PASS(nng_tls_config_server_name(c2, name));
+	NUTS_PASS(nng_stream_dialer_set_tls(d, c2));
+
+	nng_stream_listener_accept(l, aio1);
+	nng_stream_dialer_dial(d, aio2);
+
+	nng_aio_wait(aio2);
+	NUTS_FAIL(nng_aio_result(aio2), NNG_ECRYPTO);
+
+	nng_aio_wait(aio1);
+	if (nng_aio_result(aio1) == 0) {
+		NUTS_TRUE((s1 = nng_aio_get_output(aio1, 0)) != NULL);
+		nng_stream_stop(s1);
+		nng_stream_free(s1);
+	}
+
+	nng_stream_dialer_stop(d);
+	nng_stream_listener_stop(l);
+	nng_stream_dialer_free(d);
+	nng_stream_listener_free(l);
+	nng_tls_config_free(c1);
+	nng_tls_config_free(c2);
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
+}
+#endif
+
 void
 test_tls_no_auth(void)
 {
@@ -731,6 +798,9 @@ TEST_LIST = {
 	{ "tls large message", test_tls_large_message },
 	{ "tls ecdsa", test_tls_ecdsa },
 	{ "tls null server name", test_tls_null_server_name },
+#ifdef NNG_TLS_ENGINE_MBEDTLS
+	{ "tls long server name", test_tls_long_server_name },
+#endif
 	{ "tls no auth", test_tls_no_auth },
 #ifndef NNG_TLS_ENGINE_WOLFSSL // wolfSSL doesn't validate certas until use
 	{ "tls garbled cert", test_tls_garbled_cert },
