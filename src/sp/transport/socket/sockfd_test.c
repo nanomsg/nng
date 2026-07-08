@@ -25,6 +25,8 @@
 #ifdef NNG_PLATFORM_WINDOWS
 #include <io.h>
 #define close(fd) _close(fd)
+#define read(fd, buf, len) _read(fd, buf, (unsigned) (len))
+#define write(fd, buf, len) _write(fd, buf, (unsigned) (len))
 #endif
 
 // FDC tests.
@@ -328,6 +330,39 @@ test_sockfd_close_pending(void)
 }
 
 void
+test_sfd_reserved_length_bits(void)
+{
+#ifdef NNG_HAVE_SOCKETPAIR
+	int          fds[2];
+	nng_socket   s0;
+	nng_listener l0;
+	uint8_t      nego[8];
+	uint8_t      peer[8] = { 0, 'S', 'P', 0, 0, NUTS_PROTO(1, 1), 0, 0 };
+	uint8_t      len[8]  = { 0x10, 0, 0, 0, 0, 0, 0, 0 };
+	char         buf[1];
+	size_t       sz = sizeof(buf);
+
+	NUTS_PASS(nng_socket_pair(fds));
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_listener_create(&l0, s0, "socket://"));
+	NUTS_PASS(nng_listener_start(l0, 0));
+	NUTS_PASS(nng_listener_set_int(l0, NNG_OPT_SOCKET_FD, fds[0]));
+
+	NUTS_ASSERT(read(fds[1], nego, sizeof(nego)) == (int) sizeof(nego));
+	NUTS_ASSERT(write(fds[1], peer, sizeof(peer)) == (int) sizeof(peer));
+	nng_msleep(100);
+	NUTS_ASSERT(write(fds[1], len, sizeof(len)) == (int) sizeof(len));
+
+	NUTS_FAIL(nng_recv(s0, buf, &sz, 0), NNG_ETIMEDOUT);
+	NUTS_CLOSE(s0);
+	close(fds[1]);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
+}
+
+void
 test_sockfd_close_peer(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
@@ -571,6 +606,7 @@ NUTS_TESTS = {
 	{ "socket exchange", test_sfd_exchange },
 	{ "socket exchange late", test_sfd_exchange_late },
 	{ "socket recv max", test_sfd_recv_max },
+	{ "socket reserved length bits", test_sfd_reserved_length_bits },
 	{ "socket exchange large", test_sfd_large },
 	{ "socket close pending", test_sockfd_close_pending },
 	{ "socket close peer", test_sockfd_close_peer },

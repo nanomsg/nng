@@ -1548,7 +1548,8 @@ udp_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	udp_ep *ep = arg;
 	size_t  val;
 	nng_err rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, 65000, t)) == NNG_OK) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAX_RECVMAXSZ, t)) ==
+	    NNG_OK) {
 		if ((val == 0) || (val > 65000)) {
 			val = 65000;
 		}

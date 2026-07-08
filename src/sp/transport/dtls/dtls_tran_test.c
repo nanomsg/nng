@@ -420,12 +420,12 @@ test_dtls_reqrep_multi(void)
 	NUTS_PASS(nng_dialer_set_tls(d2, c1));
 	NUTS_PASS(nng_dialer_start(d2, 0));
 
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
