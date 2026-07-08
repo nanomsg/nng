@@ -1534,7 +1534,7 @@ dtls_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	dtls_ep *ep = arg;
 	size_t   val;
 	nng_err  rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNG_DTLS_RECVMAX, t)) == 0) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAX_RECVMAXSZ, t)) == 0) {
 		if ((val == 0) || (val > NNG_DTLS_RECVMAX)) {
 			val = NNG_DTLS_RECVMAX;
 		}

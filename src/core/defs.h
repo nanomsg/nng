@@ -78,6 +78,29 @@ typedef void (*nni_cb)(void *);
 #define NNI_TIME_ZERO ((nni_time) 0)
 #define NNI_SECOND (1000)
 
+// Receive size defaults and wire limits.
+#ifndef NNG_RECVMAXSZ_DEFAULT
+#define NNG_RECVMAXSZ_DEFAULT (1U << 30)
+#endif
+
+#define NNI_RECVMAXSZ_DEFAULT ((size_t) NNG_RECVMAXSZ_DEFAULT)
+
+// Stream transports reserve the upper 4 bits of the 64-bit message size.
+#define NNI_MAX_STREAM_MSGSZ UINT64_C(0x0fffffffffffffff)
+
+#if SIZE_MAX < UINT64_C(0x0fffffffffffffff)
+#define NNI_MAX_RECVMAXSZ SIZE_MAX
+#else
+#define NNI_MAX_RECVMAXSZ ((size_t) NNI_MAX_STREAM_MSGSZ)
+#endif
+
+static inline bool
+nni_msg_size_valid(uint64_t size)
+{
+	return ((size <= NNI_MAX_STREAM_MSGSZ) &&
+	    (size <= (uint64_t) SIZE_MAX));
+}
+
 // Structure allocation conveniences.
 #define NNI_ALLOC_STRUCT(s) nni_zalloc(sizeof(*s))
 #define NNI_FREE_STRUCT(s) nni_free((s), sizeof(*s))

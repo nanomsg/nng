@@ -9,6 +9,7 @@
 //
 
 #include "../testing/nuts.h"
+#include "defs.h"
 
 void
 test_recv_timeout(void)
@@ -517,19 +518,28 @@ test_size_options(void)
 	for (int i = 0; (opt = cases[i]) != NULL; i++) {
 		TEST_CASE(opt);
 
+		NUTS_PASS(nng_socket_get_size(s1, opt, &val));
+		NUTS_TRUE(val == NNI_RECVMAXSZ_DEFAULT);
+
 		// Can set a valid duration
 		NUTS_PASS(nng_socket_set_size(s1, opt, 1234));
 		NUTS_PASS(nng_socket_get_size(s1, opt, &val));
 		NUTS_TRUE(val == 1234);
 
-		// We limit the limit to 4GB. Clear it if you want to
-		// ship more than 4GB at a time.
+		// We allow larger limits on 64-bit platforms, but reserve
+		// the top four bits of the 64-bit size field.
 #if defined(_WIN64) || defined(_LP64)
-		val = 0x10000u;
-		val <<= 30u;
+		val = 1u;
+		val <<= 32u;
+		NUTS_PASS(nng_socket_set_size(s1, opt, val));
+		NUTS_PASS(nng_socket_get_size(s1, opt, &val));
+		NUTS_TRUE(val == ((size_t) 1u << 32u));
+
+		val = 1u;
+		val <<= 60u;
 		NUTS_FAIL(nng_socket_set_size(s1, opt, val), NNG_EINVAL);
 		NUTS_PASS(nng_socket_get_size(s1, opt, &val));
-		NUTS_TRUE(val == 1234);
+		NUTS_TRUE(val == ((size_t) 1u << 32u));
 #endif
 	}
 	NUTS_CLOSE(s1);

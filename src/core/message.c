@@ -98,6 +98,7 @@ static int
 nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 {
 	uint8_t *newbuf;
+	size_t   allocsz;
 
 	// We assume that if the pointer is a valid pointer, and inside
 	// the backing store, then the entire data length fits.  In this
@@ -111,6 +112,9 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	// No shrinking (violets)
 	if (newsz < ch->ch_len) {
 		newsz = ch->ch_len;
+	}
+	if (headwanted > (SIZE_MAX - newsz)) {
+		return (NNG_ENOMEM);
 	}
 
 	if ((ch->ch_ptr >= ch->ch_buf) && (ch->ch_ptr != NULL) &&
@@ -131,7 +135,11 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 			newsz = ch->ch_cap - headroom;
 		}
 
-		if ((newbuf = nni_zalloc(newsz + headwanted)) == NULL) {
+		if (headwanted > (SIZE_MAX - newsz)) {
+			return (NNG_ENOMEM);
+		}
+		allocsz = newsz + headwanted;
+		if ((newbuf = nni_zalloc(allocsz)) == NULL) {
 			return (NNG_ENOMEM);
 		}
 		// Copy all the data, but not header or trailer.
@@ -141,19 +149,20 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 		nni_free(ch->ch_buf, ch->ch_cap);
 		ch->ch_buf = newbuf;
 		ch->ch_ptr = newbuf + headwanted;
-		ch->ch_cap = newsz + headwanted;
+		ch->ch_cap = allocsz;
 		return (0);
 	}
 
 	// We either don't have a data pointer yet, or it doesn't reference
 	// the backing store.  In this case, we just check against the
 	// allocated capacity and grow, or don't grow.
-	if ((newsz + headwanted) >= ch->ch_cap) {
-		if ((newbuf = nni_zalloc(newsz + headwanted)) == NULL) {
+	allocsz = newsz + headwanted;
+	if (allocsz >= ch->ch_cap) {
+		if ((newbuf = nni_zalloc(allocsz)) == NULL) {
 			return (NNG_ENOMEM);
 		}
 		nni_free(ch->ch_buf, ch->ch_cap);
-		ch->ch_cap = newsz + headwanted;
+		ch->ch_cap = allocsz;
 		ch->ch_buf = newbuf;
 	}
 
@@ -235,6 +244,9 @@ nni_chunk_append(nni_chunk *ch, const void *data, size_t len)
 	if (len == 0) {
 		return (0);
 	}
+	if (len > (SIZE_MAX - ch->ch_len)) {
+		return (NNG_ENOMEM);
+	}
 	if ((rv = nni_chunk_grow(ch, len + ch->ch_len, 0)) != 0) {
 		return (rv);
 	}
@@ -263,12 +275,17 @@ nni_chunk_room(nni_chunk *ch)
 static int
 nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 {
-	int  rv;
-	bool grow = false;
+	int    rv;
+	bool   grow = false;
+	size_t needed;
 
 	if (ch->ch_ptr == NULL) {
 		ch->ch_ptr = ch->ch_buf;
 	}
+	if (len > (SIZE_MAX - ch->ch_len)) {
+		return (NNG_ENOMEM);
+	}
+	needed = ch->ch_len + len;
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
@@ -276,8 +293,8 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 		if (len <= (size_t) (ch->ch_ptr - ch->ch_buf)) {
 			// There is already enough room at the beginning.
 			ch->ch_ptr -= len;
-		} else if ((ch->ch_len + len + sizeof(uint64_t)) <=
-		    ch->ch_cap) {
+		} else if ((needed <= (SIZE_MAX - sizeof(uint64_t))) &&
+		    ((needed + sizeof(uint64_t)) <= ch->ch_cap)) {
 			// We have some room.  Split it between the head and
 			// tail. This is an attempt to reduce the likelihood of
 			// repeated shifts.  We round it up to preserve
@@ -285,7 +302,7 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 			//
 			// We've ensured we have an extra
 			// pad for alignment in the check above.
-			size_t shift = ((ch->ch_cap - (ch->ch_len + len)) / 2);
+			size_t shift = ((ch->ch_cap - needed) / 2);
 			shift        = (shift + (sizeof(uint64_t) - 1)) &
 			    ~(sizeof(uint64_t) - 1);
 			memmove(ch->ch_buf + shift, ch->ch_ptr, ch->ch_len);
