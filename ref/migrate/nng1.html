@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e8cf5d80.js";
+            window.path_to_searchindex_js = "../searchindex-8fb40063.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -426,6 +426,19 @@ directly:</p>
 <p>The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
 before bringing them into the socket itself.</p>
+<p>The default value for <a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> changed from unlimited to 1 GiB.
+Applications that need to receive larger messages must opt in by setting this
+option explicitly, or by configuring <code>NNG_RECVMAXSZ_DEFAULT</code> at build time.
+Setting the option to zero restores unlimited behavior.
+On 64-bit platforms, values above 4 GiB can be configured up to the 60-bit
+message size limit, but they are not compatible with 32-bit peers.</p>
+<blockquote class="blockquote-tag blockquote-tag-caution">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Caution</p>
+<p>Applications should set <a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> to the smallest practical value
+for their message format, especially when accepting traffic from remote peers.
+Larger values increase exposure to denial-of-service attacks from peers that
+claim very large message sizes.</p>
+</blockquote>
 <p>The <code>NNG_OPT_TCP_BOUND_PORT</code> port is renamed to just [<code>NNG_OPT_BOUND_PORT</code>],
 and is available for listeners using transports based on either TCP or UDP.</p>
 <p>The <code>nng_pipe_get_addr</code> function has been removed, and replaced with the new
