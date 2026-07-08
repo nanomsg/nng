@@ -1,10 +1,7 @@
-This contains the nng documentation for API users.
+This contains the documentation for API users.
 
-Historically, the documentation was written in asciidoc in the form of man pages.
-It is automatically formatted for display on the website.
+The main reference material is made available in mdbook format and online.
+The source of that is in the ref/ subdirectory.
 
-The man pages are in the "man" directory.  The reason those are separate
-is that they get special treatment.  Other documentation is located here.
-
-HOWEVER, we are converting the documentation to mdbook -- see ref/ as the top-level
-of the new tree for that.
+You can run mdbook in this directory (the book.toml is here) to serve it
+locally.
