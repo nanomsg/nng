@@ -306,7 +306,11 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 		return (tls_mk_err(rv));
 	}
 
-	mbedtls_ssl_set_hostname(&ec->ctx, cfg->server_name);
+	if ((rv = mbedtls_ssl_set_hostname(&ec->ctx, cfg->server_name)) != 0) {
+		tls_log_warn(
+		    "NNG-TLS-CONN-FAIL", "Failed to configure server hostname", rv);
+		return (tls_mk_err(rv));
+	}
 
 	if (cfg->mode == NNG_TLS_MODE_SERVER) {
 		nng_str_sockaddr(sa, buf, sizeof(buf));
