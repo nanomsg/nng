@@ -33,7 +33,35 @@ test_http_req_canonify_uri(void)
 	nni_http_req_free(req);
 }
 
+static void
+test_http_chunk_size_overflow(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "10000000000000000\r\n";
+	size_t           len    = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &len),
+	    NNG_EMSGSIZE);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_alloc_overflow(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "ffffffffffffffff\r\n";
+	size_t           len    = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &len),
+	    NNG_EMSGSIZE);
+	nni_http_chunks_free(chunks);
+}
+
 NUTS_TESTS = {
 	{ "http request URI canonicalization", test_http_req_canonify_uri },
+	{ "http chunk size overflow", test_http_chunk_size_overflow },
+	{ "http chunk allocation overflow", test_http_chunk_alloc_overflow },
 	{ NULL, NULL },
 };
