@@ -1073,7 +1073,7 @@ tls_engine_init(void)
 #endif
 	// Uncomment the following to have noisy debug from mbedTLS.
 	// This may be useful when trying to debug failures.
-	mbedtls_debug_set_threshold(1);
+	// mbedtls_debug_set_threshold(1);
 
 	mbedtls_ssl_cookie_init(&mbed_ssl_cookie_ctx);
 #if MBEDTLS_VERSION_MAJOR < 4
