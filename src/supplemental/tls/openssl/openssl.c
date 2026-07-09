@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -842,13 +842,12 @@ static nng_err
 ossl_cert_parse_der(
     nng_tls_engine_cert **crtp, const uint8_t *der, size_t size)
 {
-	X509                *x;
 	nng_tls_engine_cert *cert;
 
 	if ((cert = nni_zalloc(sizeof(*cert))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((cert->crt = d2i_X509(&x, &der, size)) == NULL) {
+	if ((cert->crt = d2i_X509(NULL, &der, size)) == NULL) {
 		nni_free(cert, sizeof(*cert));
 		return (NNG_ENOMEM);
 	}
@@ -861,7 +860,7 @@ ossl_cert_parse_pem(nng_tls_engine_cert **crtp, const char *pem, size_t size)
 {
 	nng_tls_engine_cert *cert;
 
-	if ((cert = nni_zalloc(sizeof(*crtp))) == NULL) {
+	if ((cert = nni_zalloc(sizeof(*cert))) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	BIO  *certb = BIO_new_mem_buf(pem, size);
