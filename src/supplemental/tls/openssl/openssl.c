@@ -842,13 +842,12 @@ static nng_err
 ossl_cert_parse_der(
     nng_tls_engine_cert **crtp, const uint8_t *der, size_t size)
 {
-	X509                *x;
 	nng_tls_engine_cert *cert;
 
 	if ((cert = nni_zalloc(sizeof(*cert))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((cert->crt = d2i_X509(&x, &der, size)) == NULL) {
+	if ((cert->crt = d2i_X509(NULL, &der, size)) == NULL) {
 		nni_free(cert, sizeof(*cert));
 		return (NNG_ENOMEM);
 	}
