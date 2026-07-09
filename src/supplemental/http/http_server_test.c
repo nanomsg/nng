@@ -716,6 +716,33 @@ test_server_post_handler(void)
 }
 
 static void
+test_server_transfer_encoding(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+	char               txdata[5];
+	void              *data;
+	size_t             size;
+
+	NUTS_PASS(nng_http_handler_alloc(&h, "/post", httpecho));
+	nng_http_handler_set_method(h, "POST");
+
+	server_setup(&st, h);
+
+	snprintf(txdata, sizeof(txdata), "1234");
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/post", NULL));
+	nng_http_set_body(st.conn, txdata, strlen(txdata));
+	nng_http_set_method(st.conn, "POST");
+	NUTS_PASS(nng_http_set_header(st.conn, "Transfer-Encoding", "chunked"));
+	NUTS_PASS(httpdo(&st, &data, &size));
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_NOT_IMPLEMENTED);
+	nng_free(data, size);
+
+	server_free(&st);
+}
+
+static void
 test_server_addrs_handler(void)
 {
 	struct server_test st;
@@ -1247,6 +1274,7 @@ NUTS_TESTS = {
 	{ "server header too long", test_server_header_too_long },
 	{ "server invalid utf", test_server_invalid_utf8 },
 	{ "server post handler", test_server_post_handler },
+	{ "server transfer encoding", test_server_transfer_encoding },
 	{ "server get redirect", test_server_get_redirect },
 	{ "server tree redirect", test_server_tree_redirect },
 	{ "server post redirect", test_server_post_redirect },
