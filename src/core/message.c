@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -615,6 +615,7 @@ nni_msg_header_trim_u32(nni_msg *m)
 {
 	uint32_t val;
 	uint8_t *dst;
+	NNI_ASSERT(m->m_header_len >= sizeof(val));
 	dst = (void *) m->m_header_buf;
 	NNI_GET32(dst, val);
 	m->m_header_len -= sizeof(val);
