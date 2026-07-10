@@ -673,7 +673,7 @@ dtls_pipe_recv_tls_cb(void *arg)
 			goto bad;
 		}
 		NNI_GET16LE(&hdr->us_params[0], rcvmax);
-		NNI_GET16LE(&hdr->us_params[0], refresh);
+		NNI_GET16LE(&hdr->us_params[1], refresh);
 
 		if ((refresh > 0) && ((refresh * NNI_SECOND) < p->refresh)) {
 			p->refresh = refresh * NNI_SECOND;
