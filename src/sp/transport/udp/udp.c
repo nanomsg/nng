@@ -50,6 +50,10 @@ typedef enum udp_disc_reason {
 #define NNG_UDP_COPYMAX 1024
 #endif
 
+#ifndef NNG_UDP_MAX_PEERS
+#define NNG_UDP_MAX_PEERS 1024
+#endif
+
 #ifndef NNG_UDP_REFRESH
 #define NNG_UDP_REFRESH (5 * NNI_SECOND)
 #endif
@@ -163,6 +167,8 @@ struct udp_ep {
 	udp_sp_msg   *rx_msg;  // contains the received message header
 	uint16_t      rcvmax;  // max payload, trimmed to uint16_t
 	uint16_t      copymax;
+	size_t        max_peers;
+	size_t        peer_count;
 	udp_txring    tx_ring;
 	nni_time      next_wake;
 	nni_aio_completions complq;
@@ -178,6 +184,8 @@ struct udp_ep {
 	nni_stat_item st_snd_nobuf;
 	nni_stat_item st_peer_inactive;
 	nni_stat_item st_copy_max;
+	nni_stat_item st_peer_max;
+	nni_stat_item st_peer_reject;
 };
 
 static void udp_ep_start(udp_ep *);
@@ -323,6 +331,8 @@ udp_remove_pipe(udp_pipe *p)
 		return;
 	}
 	p->id = 0;
+	NNI_ASSERT(ep->peer_count != 0);
+	ep->peer_count--;
 	for (;;) {
 		udp_pipe *srch;
 		if ((srch = nni_id_get(&ep->pipes, id)) == NULL) {
@@ -354,7 +364,11 @@ udp_add_pipe(udp_ep *ep, udp_pipe *p)
 			id = 1;
 		}
 	}
-	return (nni_id_set(&ep->pipes, id, p));
+	nng_err rv;
+	if ((rv = nni_id_set(&ep->pipes, id, p)) == NNG_OK) {
+		ep->peer_count++;
+	}
+	return (rv);
 }
 
 static void
@@ -710,6 +724,11 @@ udp_recv_creq(udp_ep *ep, udp_sp_msg *creq, nng_sockaddr *sa)
 
 		udp_pipe_schedule(p);
 		udp_send_cack(ep, p);
+		return;
+	}
+	if ((ep->max_peers != 0) && (ep->peer_count >= ep->max_peers)) {
+		nni_stat_inc(&ep->st_peer_reject, 1);
+		udp_send_disc_full(ep, sa, DISC_NOBUF);
 		return;
 	}
 
@@ -1216,6 +1235,7 @@ udp_ep_init(
 	ep->refresh          = NNG_UDP_REFRESH; // five seconds by default
 	ep->rcvmax           = NNG_UDP_RECVMAX;
 	ep->copymax          = NNG_UDP_COPYMAX;
+	ep->max_peers        = NNG_UDP_MAX_PEERS;
 	if ((rv = nni_msg_alloc(&ep->rx_payload, ep->rcvmax) != 0)) {
 		NNI_FREE_STRUCTS(ep->tx_ring.descs, NNG_UDP_TXQUEUE_LEN);
 		return (rv);
@@ -1249,6 +1269,11 @@ udp_ep_init(
 	NNI_STAT_LOCK(peer_inactive_info, "peer_inactive",
 	    "connections closed due to inactive peer", NNG_STAT_COUNTER,
 	    NNG_UNIT_EVENTS);
+	NNI_STAT_LOCK(peer_max_info, "peer_max", "maximum admitted peers",
+	    NNG_STAT_LEVEL, NNG_UNIT_MESSAGES);
+	NNI_STAT_LOCK(peer_reject_info, "peer_reject",
+	    "connection requests rejected at the peer limit", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
 
 	nni_stat_init_lock(&ep->st_rcv_max, &rcv_max_info, &ep->mtx);
 	nni_stat_init_lock(&ep->st_copy_max, &copy_max_info, &ep->mtx);
@@ -1261,6 +1286,9 @@ udp_ep_init(
 	nni_stat_init_lock(&ep->st_snd_nobuf, &snd_nobuf_info, &ep->mtx);
 	nni_stat_init_lock(
 	    &ep->st_peer_inactive, &peer_inactive_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_peer_max, &peer_max_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_peer_reject, &peer_reject_info, &ep->mtx);
+	nni_stat_set_value(&ep->st_peer_max, ep->max_peers);
 
 	if (l) {
 		NNI_ASSERT(d == NULL);
@@ -1273,6 +1301,8 @@ udp_ep_init(
 		nni_listener_add_stat(l, &ep->st_rcv_nobuf);
 		nni_listener_add_stat(l, &ep->st_snd_toobig);
 		nni_listener_add_stat(l, &ep->st_snd_nobuf);
+		nni_listener_add_stat(l, &ep->st_peer_max);
+		nni_listener_add_stat(l, &ep->st_peer_reject);
 	}
 	if (d) {
 		NNI_ASSERT(l == NULL);
@@ -1285,6 +1315,8 @@ udp_ep_init(
 		nni_dialer_add_stat(d, &ep->st_rcv_nobuf);
 		nni_dialer_add_stat(d, &ep->st_snd_toobig);
 		nni_dialer_add_stat(d, &ep->st_snd_nobuf);
+		nni_dialer_add_stat(d, &ep->st_peer_max);
+		nni_dialer_add_stat(d, &ep->st_peer_reject);
 	}
 
 	// schedule our timer callback - forever for now
@@ -1596,6 +1628,39 @@ udp_ep_set_copymax(void *arg, const void *v, size_t sz, nni_opt_type t)
 	return (rv);
 }
 
+static nng_err
+udp_ep_get_max_peers(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	udp_ep *ep = arg;
+	nng_err rv;
+
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->max_peers, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nng_err
+udp_ep_set_max_peers(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	udp_ep *ep = arg;
+	size_t  val;
+	nng_err rv;
+
+	if ((rv = nni_copyin_size(&val, v, sz, 0, UINT32_MAX, t)) != NNG_OK) {
+		return (rv);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_EBUSY);
+	}
+	ep->max_peers = val;
+	nni_mtx_unlock(&ep->mtx);
+	nni_stat_set_value(&ep->st_peer_max, val);
+	return (NNG_OK);
+}
+
 // this just looks for pipes waiting for an aio, and aios waiting for
 // a connection, and matches them together.
 static void
@@ -1699,6 +1764,11 @@ static const nni_option udp_ep_opts[] = {
 	    .o_name = NNG_OPT_UDP_COPY_MAX,
 	    .o_get  = udp_ep_get_copymax,
 	    .o_set  = udp_ep_set_copymax,
+	},
+	{
+	    .o_name = NNG_OPT_UDP_MAX_PEERS,
+	    .o_get  = udp_ep_get_max_peers,
+	    .o_set  = udp_ep_set_max_peers,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,

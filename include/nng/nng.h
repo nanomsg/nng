@@ -857,6 +857,11 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // to replace a full message buffer.
 #define NNG_OPT_UDP_COPY_MAX "udp:copy-max"
 
+// Maximum number of peers admitted by a UDP-based listener.  A value of zero
+// disables the limit.  This option is also supported by DTLS listeners, where
+// it limits unauthenticated handshakes.
+#define NNG_OPT_UDP_MAX_PEERS "udp:max-peers"
+
 // IPC options.  These will largely vary depending on the platform,
 // as POSIX systems have very different options than Windows.
 

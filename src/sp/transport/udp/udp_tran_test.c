@@ -486,6 +486,53 @@ test_udp_pipe(void)
 }
 
 void
+test_udp_max_peers(void)
+{
+	nng_socket      server;
+	nng_socket      client1;
+	nng_socket      client2;
+	nng_listener    listener;
+	nng_dialer      dialer;
+	const nng_stat *stats;
+	const nng_stat *lstats;
+	const nng_stat *reject;
+	size_t          max_peers;
+	char           *addr;
+
+	NUTS_ADDR(addr, "udp4");
+	NUTS_PASS(nng_pub0_open(&server));
+	NUTS_PASS(nng_listener_create(&listener, server, addr));
+	NUTS_PASS(nng_listener_get_size(
+	    listener, NNG_OPT_UDP_MAX_PEERS, &max_peers));
+	NUTS_TRUE(max_peers == 1024);
+	NUTS_PASS(nng_listener_set_size(listener, NNG_OPT_UDP_MAX_PEERS, 1));
+	NUTS_PASS(nng_listener_start(listener, 0));
+	NUTS_FAIL(
+	    nng_listener_set_size(listener, NNG_OPT_UDP_MAX_PEERS, 2), NNG_EBUSY);
+
+	NUTS_PASS(nng_sub0_open(&client1));
+	NUTS_PASS(nng_sub0_socket_subscribe(client1, "", 0));
+	NUTS_PASS(nng_dial(client1, addr, NULL, 0));
+	nng_msleep(100);
+
+	NUTS_PASS(nng_sub0_open(&client2));
+	NUTS_PASS(nng_sub0_socket_subscribe(client2, "", 0));
+	NUTS_PASS(nng_dialer_create(&dialer, client2, addr));
+	NUTS_PASS(nng_dialer_start(dialer, 0));
+	nng_msleep(100);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE((lstats = nng_stat_find_listener(stats, listener)) != NULL);
+	NUTS_TRUE((reject = nng_stat_find(lstats, "peer_reject")) != NULL);
+	NUTS_TRUE(nng_stat_value(reject) > 0);
+	nng_stats_free(stats);
+
+	NUTS_CLOSE(client2);
+	NUTS_CLOSE(client1);
+	NUTS_CLOSE(server);
+}
+
+void
 test_udp_reconnect_dialer(void)
 {
 	nng_socket   s0;
@@ -605,6 +652,7 @@ NUTS_TESTS = {
 	{ "udp multi small burst", test_udp_multi_small_burst },
 	{ "udp crush", test_udp_crush },
 	{ "udp pipe", test_udp_pipe },
+	{ "udp max peers", test_udp_max_peers },
 	{ "udp reconnect dialer", test_udp_reconnect_dialer },
 	{ "udp stats", test_udp_stats },
 	{ NULL, NULL },
