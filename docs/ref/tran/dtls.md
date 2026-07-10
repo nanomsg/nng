@@ -97,10 +97,19 @@ listener is started.
 | Option                                                | Type     | Description                                                                                                                     |
 | ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | [`NNG_OPT_RECVMAXSZ`]                                 | `size_t` | Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.          |
+| [`NNG_OPT_UDP_MAX_PEERS`]                              | `size_t` | Maximum number of unauthenticated inbound DTLS handshakes. The default is 1024; set to 0 to disable the limit.                   |
 | `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a> | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                             |
 
 The DTLS transport does not support TCP-specific options such as
 `NNG_OPT_TCP_NODELAY` or `NNG_OPT_TCP_KEEPALIVE`.
+
+## Peer Admission
+
+DTLS only adds a pipe to the socket after TLS has validated an inbound peer.
+Before that point, each source address consumes handshake state. Listeners
+therefore admit at most 1024 unauthenticated peers by default. Configure
+[`NNG_OPT_UDP_MAX_PEERS`] before starting the listener to select another limit.
+A value of 0 disables this protection.
 
 ### Maximum Message Size
 

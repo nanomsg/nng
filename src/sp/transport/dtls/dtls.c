@@ -77,6 +77,10 @@ typedef enum dtls_disc_reason {
 #define NNG_DTLS_CONNRETRY (NNI_SECOND / 5)
 #endif
 
+#ifndef NNG_DTLS_MAX_PEERS
+#define NNG_DTLS_MAX_PEERS 1024
+#endif
+
 // 64-bit protocol header
 typedef struct dtls_sp_hdr {
 	uint8_t  us_ver;
@@ -99,6 +103,7 @@ struct dtls_pipe {
 	uint16_t      peer;
 	uint16_t      proto;
 	bool          matched; // true if have matched and given this to SP
+	bool          pending; // true until TLS validates this inbound peer
 	bool          closed;  // true if we are closed (no more send or recv!)
 	bool          dialer;  // true if we are dialer
 	nng_duration  refresh; // seconds, for the protocol
@@ -170,6 +175,8 @@ struct dtls_ep {
 	nni_list        connpipes; // pipes waiting to be connected
 	nng_duration    refresh; // refresh interval for connections in seconds
 	uint16_t        rcvmax;  // max payload, trimmed to uint16_t
+	size_t          max_peers;
+	size_t          pending_peers;
 	nni_resolv_item resolv;
 
 	nng_tls_config *tlscfg;
@@ -188,6 +195,8 @@ struct dtls_ep {
 	nni_stat_item st_snd_nobuf;
 	nni_stat_item st_peer_inactive;
 	nni_stat_item st_copy_max;
+	nni_stat_item st_peer_max;
+	nni_stat_item st_peer_reject;
 };
 
 static void dtls_ep_start(dtls_ep *);
@@ -600,6 +609,11 @@ dtls_pipe_recv_tls_cb(void *arg)
 	}
 
 	// We had a "good" receive (TLS passed at least) from the peer.
+	if (p->pending) {
+		NNI_ASSERT(ep->pending_peers != 0);
+		p->pending = false;
+		ep->pending_peers--;
+	}
 
 	if (nni_aio_count(aio) < sizeof(*hdr)) {
 		// Runt frame.
@@ -755,6 +769,8 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	p->peer_addr = *sa;
 	p->id        = nng_sockaddr_hash(sa);
 	p->refresh   = ep->refresh;
+	p->expire    = nni_clock() + DTLS_PIPE_TIMEOUT(p);
+	p->pending   = !ep->dialer;
 	p->send_max  = NNG_DTLS_RECVMAX;
 	p->recv_max  = ep->rcvmax;
 	*pp          = p;
@@ -896,6 +912,10 @@ dtls_remove_pipe(dtls_pipe *p)
 			id = 1;
 		}
 	}
+	if (p->pending) {
+		NNI_ASSERT(ep->pending_peers != 0);
+		ep->pending_peers--;
+	}
 	if (!matched) {
 		nni_pipe_rele(p->npipe);
 	}
@@ -913,7 +933,11 @@ dtls_add_pipe(dtls_ep *ep, dtls_pipe *p)
 		}
 	}
 	p->id = id;
-	return (nni_id_set(&ep->pipes, id, p));
+	nng_err rv;
+	if ((rv = nni_id_set(&ep->pipes, id, p)) == NNG_OK && p->pending) {
+		ep->pending_peers++;
+	}
+	return (rv);
 }
 
 static void
@@ -964,6 +988,11 @@ dtls_rx_cb(void *arg)
 	}
 
 	if ((p = dtls_find_pipe(ep, &ep->rx_sa)) == NULL) {
+		if ((ep->max_peers != 0) &&
+		    (ep->pending_peers >= ep->max_peers)) {
+			nni_stat_inc(&ep->st_peer_reject, 1);
+			goto fail;
+		}
 		if (dtls_pipe_alloc(ep, &p, &ep->rx_sa) != NNG_OK) {
 			goto fail;
 		}
@@ -1233,6 +1262,7 @@ dtls_ep_init(
 	ep->url              = url;
 	ep->refresh          = NNG_DTLS_REFRESH; // one minute by default
 	ep->rcvmax           = NNG_DTLS_RECVMAX;
+	ep->max_peers        = NNG_DTLS_MAX_PEERS;
 
 	// receive buffer plus some extra for UDP and TLS headers
 	if ((ep->rx_buf = nni_alloc(DTLS_MAX_RECORD)) == NULL) {
@@ -1260,6 +1290,11 @@ dtls_ep_init(
 	NNI_STAT_LOCK(peer_inactive_info, "peer_inactive",
 	    "connections closed due to inactive peer", NNG_STAT_COUNTER,
 	    NNG_UNIT_EVENTS);
+	NNI_STAT_LOCK(peer_max_info, "peer_max",
+	    "maximum unauthenticated peers", NNG_STAT_LEVEL, NNG_UNIT_MESSAGES);
+	NNI_STAT_LOCK(peer_reject_info, "peer_reject",
+	    "handshakes rejected at the peer limit", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
 
 	nni_stat_init_lock(&ep->st_rcv_max, &rcv_max_info, &ep->mtx);
 	nni_stat_init_lock(&ep->st_rcv_toobig, &rcv_toobig_info, &ep->mtx);
@@ -1269,6 +1304,9 @@ dtls_ep_init(
 	nni_stat_init_lock(&ep->st_snd_nobuf, &snd_nobuf_info, &ep->mtx);
 	nni_stat_init_lock(
 	    &ep->st_peer_inactive, &peer_inactive_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_peer_max, &peer_max_info, &ep->mtx);
+	nni_stat_init_lock(&ep->st_peer_reject, &peer_reject_info, &ep->mtx);
+	nni_stat_set_value(&ep->st_peer_max, ep->max_peers);
 
 	if (l) {
 		NNI_ASSERT(d == NULL);
@@ -1279,6 +1317,8 @@ dtls_ep_init(
 		nni_listener_add_stat(l, &ep->st_rcv_nobuf);
 		nni_listener_add_stat(l, &ep->st_snd_toobig);
 		nni_listener_add_stat(l, &ep->st_snd_nobuf);
+		nni_listener_add_stat(l, &ep->st_peer_max);
+		nni_listener_add_stat(l, &ep->st_peer_reject);
 	}
 	if (d) {
 		NNI_ASSERT(l == NULL);
@@ -1288,6 +1328,8 @@ dtls_ep_init(
 		nni_dialer_add_stat(d, &ep->st_rcv_nobuf);
 		nni_dialer_add_stat(d, &ep->st_snd_toobig);
 		nni_dialer_add_stat(d, &ep->st_snd_nobuf);
+		nni_dialer_add_stat(d, &ep->st_peer_max);
+		nni_dialer_add_stat(d, &ep->st_peer_reject);
 	}
 
 	// schedule our timer callback - forever for now
@@ -1551,6 +1593,39 @@ dtls_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static nng_err
+dtls_ep_get_max_peers(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	dtls_ep *ep = arg;
+	nng_err  rv;
+
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->max_peers, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nng_err
+dtls_ep_set_max_peers(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	dtls_ep *ep = arg;
+	size_t   val;
+	nng_err  rv;
+
+	if ((rv = nni_copyin_size(&val, v, sz, 0, UINT32_MAX, t)) != NNG_OK) {
+		return (rv);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_EBUSY);
+	}
+	ep->max_peers = val;
+	nni_mtx_unlock(&ep->mtx);
+	nni_stat_set_value(&ep->st_peer_max, val);
+	return (NNG_OK);
+}
+
+static nng_err
 dtls_ep_set_tls(void *arg, nng_tls_config *cfg)
 {
 	dtls_ep *ep = arg;
@@ -1671,6 +1746,11 @@ static const nni_option dtls_ep_opts[] = {
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = dtls_ep_get_recvmaxsz,
 	    .o_set  = dtls_ep_set_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_UDP_MAX_PEERS,
+	    .o_get  = dtls_ep_get_max_peers,
+	    .o_set  = dtls_ep_set_max_peers,
 	},
 	{
 	    .o_name = NNG_OPT_BOUND_PORT,

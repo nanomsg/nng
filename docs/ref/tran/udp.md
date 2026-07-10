@@ -70,6 +70,7 @@ where supported by the underlying platform.
 | --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
 | [`NNG_OPT_RECVMAXSZ`]                                     | `size_t` | Maximum size of incoming messages, will be limited to at most 65000.                                                |
 | `NNG_OPT_UDP_COPY_MAX`<a name="NNG_OPT_UDP_COPY_MAX"></a> | `size_t` | Threshold above which received messages are "loaned" up, rather than a new message being allocated and copied into. |
+| `NNG_OPT_UDP_MAX_PEERS`<a name="NNG_OPT_UDP_MAX_PEERS"></a> | `size_t` | Maximum number of remote peers admitted by a listener. The default is 1024; set to 0 to disable the limit. |
 | `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>     | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                 |
 
 ## Maximum Message Size
@@ -97,6 +98,14 @@ The maximum message size is negotiated as part of establishing a peering relatio
 and oversize messages will be dropped by the sender before going to the network.
 
 The maximum message size to receive can be configured with the [`NNG_OPT_RECVMAXSZ`] option.
+
+## Peer Admission
+
+Each new source address causes the listener to allocate a logical UDP peer.
+To bound the resources consumed by spoofed or otherwise untrusted connection
+requests, listeners admit at most 1024 peers by default. Configure
+[`NNG_OPT_UDP_MAX_PEERS`] before starting the listener to select another
+limit. A value of 0 disables this protection.
 
 ## Keep Alive
 

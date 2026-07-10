@@ -225,6 +225,26 @@ test_dtls_no_delay_option(void)
 }
 
 void
+test_dtls_max_peers_option(void)
+{
+	nng_socket   s;
+	nng_listener l;
+	size_t       max_peers;
+	char        *addr;
+
+	NUTS_ADDR(addr, "dtls");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listener_create(&l, s, addr));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_UDP_MAX_PEERS, &max_peers));
+	NUTS_TRUE(max_peers == 1024);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_UDP_MAX_PEERS, 1));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_UDP_MAX_PEERS, &max_peers));
+	NUTS_TRUE(max_peers == 1);
+	NUTS_PASS(nng_listener_close(l));
+	NUTS_CLOSE(s);
+}
+
+void
 test_dtls_recv_max(void)
 {
 	char            msg[256];
@@ -646,6 +666,7 @@ NUTS_TESTS = {
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },
+	{ "dtls max peers option", test_dtls_max_peers_option },
 	{ "dtls recv max", test_dtls_recv_max },
 	{ "dtls recv large", test_dtls_recv_large },
 	{ "dtls exchange many", test_dtls_exchange_many },
