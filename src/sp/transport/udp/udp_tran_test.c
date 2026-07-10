@@ -497,6 +497,8 @@ test_udp_max_peers(void)
 	const nng_stat *lstats;
 	const nng_stat *reject;
 	size_t          max_peers;
+	size_t          len;
+	char            buf[16];
 	char           *addr;
 
 	NUTS_ADDR(addr, "udp4");
@@ -526,6 +528,16 @@ test_udp_max_peers(void)
 	NUTS_TRUE((reject = nng_stat_find(lstats, "peer_reject")) != NULL);
 	NUTS_TRUE(nng_stat_value(reject) > 0);
 	nng_stats_free(stats);
+
+	NUTS_PASS(nng_socket_set_ms(client1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(client2, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_send(server, "ok", 3, 0));
+	len = sizeof(buf);
+	NUTS_PASS(nng_recv(client1, buf, &len, 0));
+	NUTS_TRUE(len == 3);
+	NUTS_MATCH(buf, "ok");
+	len = sizeof(buf);
+	NUTS_FAIL(nng_recv(client2, buf, &len, 0), NNG_ETIMEDOUT);
 
 	NUTS_CLOSE(client2);
 	NUTS_CLOSE(client1);
