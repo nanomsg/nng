@@ -493,7 +493,7 @@ test_udp_max_peers(void)
 	nng_socket      client2;
 	nng_listener    listener;
 	nng_dialer      dialer;
-	const nng_stat *stats;
+	nng_stat       *stats;
 	const nng_stat *lstats;
 	const nng_stat *reject;
 	size_t          max_peers;
@@ -518,7 +518,7 @@ test_udp_max_peers(void)
 	NUTS_PASS(nng_sub0_open(&client2));
 	NUTS_PASS(nng_sub0_socket_subscribe(client2, "", 0));
 	NUTS_PASS(nng_dialer_create(&dialer, client2, addr));
-	NUTS_PASS(nng_dialer_start(dialer, 0));
+	NUTS_PASS(nng_dialer_start(dialer, NNG_FLAG_NONBLOCK));
 	nng_msleep(100);
 
 	NUTS_PASS(nng_stats_get(&stats));
