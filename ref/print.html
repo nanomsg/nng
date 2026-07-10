@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-8fb40063.js";
+            window.path_to_searchindex_js = "searchindex-aff792b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -6527,12 +6527,19 @@ listener is started.</p>
 </thead>
 <tbody>
 <tr><td><a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_MAX_PEERS</code>]</td><td><code>size_t</code></td><td>Maximum number of unauthenticated inbound DTLS handshakes. The default is 1024; set to 0 to disable the limit.</td></tr>
 <tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
 </table>
 </div>
 <p>The DTLS transport does not support TCP-specific options such as
 <code>NNG_OPT_TCP_NODELAY</code> or <code>NNG_OPT_TCP_KEEPALIVE</code>.</p>
+<h2 id="peer-admission"><a class="header" href="#peer-admission">Peer Admission</a></h2>
+<p>DTLS only adds a pipe to the socket after TLS has validated an inbound peer.
+Before that point, each source address consumes handshake state. Listeners
+therefore admit at most 1024 unauthenticated peers by default. Configure
+[<code>NNG_OPT_UDP_MAX_PEERS</code>] before starting the listener to select another limit.
+A value of 0 disables this protection.</p>
 <h3 id="maximum-message-size"><a class="header" href="#maximum-message-size">Maximum Message Size</a></h3>
 <p>This transport maps each NNG message to a DTLS record carried over UDP.
 The transport maximum is smaller than the 16 KiB DTLS record size to leave room
@@ -6869,6 +6876,7 @@ where supported by the underlying platform.</p>
 <tbody>
 <tr><td><a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
+<tr><td><code>NNG_OPT_UDP_MAX_PEERS</code><a name="NNG_OPT_UDP_MAX_PEERS"></a></td><td><code>size_t</code></td><td>Maximum number of remote peers admitted by a listener. The default is 1024; set to 0 to disable the limit.</td></tr>
 <tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
 </table>
@@ -6892,6 +6900,12 @@ as a safe maximum to employ for SP payload data across all transports.</p>
 <p>The maximum message size is negotiated as part of establishing a peering relationship,
 and oversize messages will be dropped by the sender before going to the network.</p>
 <p>The maximum message size to receive can be configured with the <a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a> option.</p>
+<h2 id="peer-admission-1"><a class="header" href="#peer-admission-1">Peer Admission</a></h2>
+<p>Each new source address causes the listener to allocate a logical UDP peer.
+To bound the resources consumed by spoofed or otherwise untrusted connection
+requests, listeners admit at most 1024 peers by default. Configure
+[<code>NNG_OPT_UDP_MAX_PEERS</code>] before starting the listener to select another
+limit. A value of 0 disables this protection.</p>
 <h2 id="keep-alive-1"><a class="header" href="#keep-alive-1">Keep Alive</a></h2>
 <p>This transports maintains a logical “connection” with each peer, to provide a rough
 facsimile of a connection based semantic. This requires some resource on each peer.
