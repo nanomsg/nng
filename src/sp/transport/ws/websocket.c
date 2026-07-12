@@ -510,6 +510,11 @@ wstran_accept_cb(void *arg)
 	if ((rv = nni_aio_result(aaio)) != 0) {
 		goto error;
 	}
+	if (l->closed) {
+		nng_stream_free(ws);
+		nni_mtx_unlock(&l->mtx);
+		return;
+	}
 
 	rv = nni_pipe_alloc_listener((void **) &p, l->nlistener);
 	if (rv != 0) {

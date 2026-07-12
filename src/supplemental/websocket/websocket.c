@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -921,6 +921,7 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 		if (!ws->recv_text) {
 			// No support for text mode at present.
 			ws_close(ws, WS_CLOSE_UNSUPP_FORMAT);
+			return;
 		}
 		// FALLTHROUGH
 	case WS_BINARY:

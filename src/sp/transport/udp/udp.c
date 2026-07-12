@@ -627,11 +627,15 @@ udp_recv_data(udp_ep *ep, udp_sp_msg *dreq, size_t len, const nng_sockaddr *sa)
 	p->expire    = now + UDP_PIPE_TIMEOUT(p);
 	p->next_wake = now + UDP_PIPE_REFRESH(p);
 
+	// We verified this above. By setting it here we ensure that we
+	// do not wind up copying or accessing past the header, which is
+	// both faster and prevents certain kinds of data smuggling.
+	len = dreq->us_length;
+
 	udp_pipe_schedule(p);
 
-	// trim the message down to its
-	nni_msg_chop(
-	    ep->rx_payload, nni_msg_len(ep->rx_payload) - dreq->us_length);
+	// trim the message down to its length.
+	nni_msg_chop(ep->rx_payload, nni_msg_len(ep->rx_payload) - len);
 
 	// We have a choice to make.  Drop this message (easiest), or
 	// drop the oldest.  We drop the oldest because generally we
