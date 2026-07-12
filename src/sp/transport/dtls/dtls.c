@@ -106,7 +106,7 @@ struct dtls_pipe {
 	bool          pending; // true until TLS validates this inbound peer
 	bool          closed;  // true if we are closed (no more send or recv!)
 	bool          dialer;  // true if we are dialer
-	nng_duration  refresh; // seconds, for the protocol
+	nng_duration  refresh; // milliseconds, for the protocol
 	nng_time      next_wake;
 	nng_time      expire; // inactivity expiration time
 	nng_time      next_refresh;
@@ -173,7 +173,7 @@ struct dtls_ep {
 	nni_sockaddr    peer_sa;    // peer address, only for dialer;
 	nni_list        connaios; // aios from accept waiting for a client peer
 	nni_list        connpipes; // pipes waiting to be connected
-	nng_duration    refresh; // refresh interval for connections in seconds
+	nng_duration    refresh; // refresh interval for connections in milliseconds
 	uint16_t        rcvmax;  // max payload, trimmed to uint16_t
 	size_t          max_peers;
 	size_t          pending_peers;
@@ -442,7 +442,8 @@ dtls_pipe_send_tls(dtls_pipe *p)
 	case OPCODE_CREQ:
 	case OPCODE_CACK:
 		NNI_PUT16LE(&hdr->us_params[0], p->recv_max);
-		NNI_PUT16LE(&hdr->us_params[1], p->refresh);
+		NNI_PUT16LE(&hdr->us_params[1],
+		    (p->refresh + NNI_SECOND - 1) / NNI_SECOND);
 		break;
 
 	case OPCODE_DISC:

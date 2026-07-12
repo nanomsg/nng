@@ -373,6 +373,88 @@ test_websocket_text_mode(void)
 	nng_stream_dialer_free(d);
 }
 
+void
+test_websocket_text_rejected(void)
+{
+	nng_stream_dialer   *d    = NULL;
+	nng_stream_listener *l    = NULL;
+	nng_aio             *daio = NULL;
+	nng_aio             *laio = NULL;
+	nng_aio             *raio = NULL;
+	nng_aio             *saio = NULL;
+	nng_stream          *c1   = NULL;
+	nng_stream          *c2   = NULL;
+	char                 uri[64];
+	char                 buf[5];
+	char                 text[] = "TEXT";
+	nng_iov              iov;
+	uint16_t             port;
+	int                  rv;
+
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&raio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&saio, NULL, NULL));
+	nng_aio_set_timeout(daio, 5000);
+	nng_aio_set_timeout(laio, 5000);
+	nng_aio_set_timeout(raio, 5000);
+	nng_aio_set_timeout(saio, 5000);
+
+	for (int i = 0; i < 256; i++) {
+		port = nuts_next_port();
+		(void) snprintf(
+		    uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
+		NUTS_PASS(nng_stream_listener_alloc(&l, uri));
+		NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
+		NUTS_PASS(nng_stream_dialer_set_bool(
+		    d, NNG_OPT_WS_SEND_TEXT, true));
+		rv = nng_stream_listener_listen(l);
+		if (rv != NNG_EADDRINUSE) {
+			break;
+		}
+		nng_stream_listener_free(l);
+		nng_stream_dialer_free(d);
+	}
+	NUTS_PASS(rv);
+
+	nng_stream_dialer_dial(d, daio);
+	nng_stream_listener_accept(l, laio);
+	nng_aio_wait(laio);
+	nng_aio_wait(daio);
+	NUTS_PASS(nng_aio_result(laio));
+	NUTS_PASS(nng_aio_result(daio));
+	c1 = nng_aio_get_output(laio, 0);
+	c2 = nng_aio_get_output(daio, 0);
+	NUTS_TRUE(c1 != NULL);
+	NUTS_TRUE(c2 != NULL);
+
+	// Text receive mode is disabled on the listener, so its pending read
+	// must be aborted after the peer sends a text frame.
+	iov.iov_buf = buf;
+	iov.iov_len = sizeof(buf);
+	NUTS_PASS(nng_aio_set_iov(raio, 1, &iov));
+	nng_stream_recv(c1, raio);
+	iov.iov_buf = text;
+	iov.iov_len = sizeof(text);
+	NUTS_PASS(nng_aio_set_iov(saio, 1, &iov));
+	nng_stream_send(c2, saio);
+	nng_aio_wait(raio);
+	nng_aio_wait(saio);
+	NUTS_FAIL(nng_aio_result(raio), NNG_ECLOSED);
+	NUTS_PASS(nng_aio_result(saio));
+
+	nng_stream_close(c1);
+	nng_stream_free(c1);
+	nng_stream_close(c2);
+	nng_stream_free(c2);
+	nng_aio_free(saio);
+	nng_aio_free(raio);
+	nng_aio_free(laio);
+	nng_aio_free(daio);
+	nng_stream_listener_free(l);
+	nng_stream_dialer_free(d);
+}
+
 typedef struct recv_state {
 	nng_stream  *c;
 	int          total;
@@ -559,5 +641,6 @@ NUTS_TESTS = {
 	{ "websocket conn properties", test_websocket_conn_props },
 	{ "websocket fragmentation", test_websocket_fragmentation },
 	{ "websocket text mode", test_websocket_text_mode },
+	{ "websocket text rejected", test_websocket_text_rejected },
 	{ NULL, NULL },
 };

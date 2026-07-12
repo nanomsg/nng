@@ -422,6 +422,22 @@ test_abstract_sockets(void)
 }
 
 void
+test_abstract_autobind(void)
+{
+#ifdef NNG_HAVE_ABSTRACT_SOCKETS
+	nng_stream_listener *l;
+
+	// An empty abstract name asks the kernel to assign one.
+	NUTS_PASS(nng_stream_listener_alloc(&l, "abstract://"));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+#else
+	NUTS_SKIP("No abstract sockets.");
+#endif
+}
+
+void
 test_abstract_too_long(void)
 {
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
@@ -629,6 +645,7 @@ TEST_LIST = {
 	{ "ipc listen duplicate", test_ipc_listen_duplicate },
 	{ "ipc listen accept cancel", test_ipc_listen_accept_cancel },
 	{ "ipc abstract sockets", test_abstract_sockets },
+	{ "ipc abstract auto-bind", test_abstract_autobind },
 	{ "ipc abstract name too long", test_abstract_too_long },
 	{ "ipc abstract embedded null", test_abstract_null },
 	{ "ipc unix alias", test_unix_alias },
