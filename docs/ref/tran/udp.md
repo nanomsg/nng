@@ -115,6 +115,7 @@ UDP dialers retry their connection request every 200 milliseconds by default
 and give up after 5 seconds. Configure [`NNG_OPT_UDP_CONN_RETRY`] and
 [`NNG_OPT_UDP_CONN_EXPIRE`] before starting a dialer to adjust these durations.
 Both options take an [`nng_duration`] and require a positive value.
+Values less than or equal to zero are rejected with `NNG_EINVAL`.
 
 ## Keep Alive
 

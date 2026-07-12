@@ -858,10 +858,11 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_UDP_COPY_MAX "udp:copy-max"
 
 // Interval between connection requests while a UDP-based dialer is waiting
-// for its peer to accept the connection.
+// for its peer to accept the connection.  The duration must be positive.
 #define NNG_OPT_UDP_CONN_RETRY "udp:conn-retry"
 
-// Time a UDP-based dialer waits for its peer to accept the connection.
+// Time a UDP-based dialer waits for its peer to accept the connection.  The
+// duration must be positive.
 #define NNG_OPT_UDP_CONN_EXPIRE "udp:conn-expire"
 
 // Maximum number of peers admitted by a UDP-based listener.  A value of zero
