@@ -2,7 +2,7 @@
 
 NNG offers support for creation of HTTP clients, and servers. NNG supports HTTP/1.1 at present, and supports
 a subset of functionality, but the support should be sufficient for simple clients, REST API servers, static content servers,
-and gateways between HTTP and and other protocols. It also provides support for WebSocket based connections.
+and gateways between HTTP and other protocols. It also provides support for WebSocket based connections.
 
 HTTP follows a request/reply model, where a client issues a request, and the server is expected to reply.
 Every request is answered with a single reply.
@@ -63,7 +63,7 @@ const char *nng_http_get_uri(nng_http *conn);
 The {{i:`nng_http_set_uri`}} function sets the {{i:URI}}, which normally appears like a path such as "/docs/index.html",
 for the next transaction on _conn_. It sets the URI to _uri_, and, if _query_ is not `NULL`, also appends the
 contents of _query_, separated by either the '?' or '&' character, depending on whether _uri_ already
-contains a query string. It may return [`NNG_ENOMEM`], or [`NNG_EMSGSIZE`] if the the result is too long,
+contains a query string. It may return [`NNG_ENOMEM`], or [`NNG_EMSGSIZE`] if the result is too long,
 or [`NNG_EINVAL`] if there is some other problem with the URI.
 
 > [!NOTE]
@@ -104,7 +104,7 @@ const char *nng_http_get_reason(nng_http_conn *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 ```
 
-The {{i:`nng_http_get_status`}} function obtains the numeric code (typipcally numbered from 100 through 599) returned
+The {{i:`nng_http_get_status`}} function obtains the numeric code (typically numbered from 100 through 599) returned
 by the server in the last exchange on _conn_. (If no exchange has been performed yet, the result is undefined.)
 The value is returned as an {{i:`nng_http_status`}}.
 
@@ -131,8 +131,8 @@ Status codes are defined by the IETF. Here are definitions that NNG provides for
 | `NNG_HTTP_STATUS_ACCEPTED`<a name="NNG_HTTP_STATUS_ACCEPTED"></a>                               | 202  | Created                         | Request accepted for future processing.               |
 | `NNG_HTTP_STATUS_NOT_AUTHORITATIVE`<a name="NNG_HTTP_STATUS_NOT_AUTHORITATIVE"></a>             | 203  | Not Authoritative               | Request successful, but modified by proxy.            |
 | `NNG_HTTP_STATUS_NO_CONTENT`<a name="NNG_HTTP_STATUS_NO_CONTENT"></a>                           | 204  | No Content                      | Request successful, no content returned.              |
-| `NNG_HTTP_STATUS_RESET_CONTENT`<a name="NNG_HTTP_STATUS_NO_CONTENT"></a>                        | 205  | Reset Content                   | Request successful, client should reload content.     |
-| `NNG_HTTP_STATUS_PARTIAL_CONTENT`<a name="NNG_HTTP_STATUS_NO_CONTENT"></a>                      | 206  | Partial Content                 | Response to a range request.                          |
+| `NNG_HTTP_STATUS_RESET_CONTENT`<a name="NNG_HTTP_STATUS_RESET_CONTENT"></a>                     | 205  | Reset Content                   | Request successful, client should reload content.     |
+| `NNG_HTTP_STATUS_PARTIAL_CONTENT`<a name="NNG_HTTP_STATUS_PARTIAL_CONTENT"></a>                 | 206  | Partial Content                 | Response to a range request.                          |
 | `NNG_HTTP_STATUS_MULTI_STATUS`<a name="NNG_HTTP_STATUS_MULTI_STATUS"></a>                       | 207  | Multi-Status                    | Used with WebDAV.                                     |
 | `NNG_HTTP_STATUS_ALREADY_REPORTED`<a name="NNG_HTTP_STATUS_ALREADY_REPORTED"></a>               | 208  | Already Reported                | Used with WebDAV.                                     |
 | `NNG_HTTP_STATUS_IM_USED`<a name="NNG_HTTP_STATUS_IM_USED"></a>                                 | 226  | IM Used                         | Used with delta encodings, rarely supported.          |
@@ -150,14 +150,14 @@ Status codes are defined by the IETF. Here are definitions that NNG provides for
 | `NNG_HTTP_STATUS_FORBIDDEN`<a name="NNG_HTTP_STATUS_FORBIDDEN"></a>                             | 403  | Forbidden                       | No permission to access resource.                     |
 | `NNG_HTTP_STATUS_NOT_FOUND`<a name="NNG_HTTP_STATUS_NOT_FOUND"></a>                             | 404  | Not Found                       | Resource does not exist.                              |
 | `NNG_HTTP_STATUS_METHOD_NOT_ALLOWED`<a name="NNG_HTTP_STATUS_METHOD_NOT_ALLOWED"></a>           | 405  | Method Not Allowed              | Resource does not support the method.                 |
-| `NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE`<a name="NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE"></a>     | 406  | Not Acceptable                  | Could not satisfy accept requirements.                |
+| `NNG_HTTP_STATUS_NOT_ACCEPTABLE`<a name="NNG_HTTP_STATUS_NOT_ACCEPTABLE"></a>                   | 406  | Not Acceptable                  | Could not satisfy accept requirements.                |
 | `NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED`<a name="NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED"></a>         | 407  | Proxy Authentication Required   | Proxy requires authentication.                        |
 | `NNG_HTTP_STATUS_REQUEST_TIMEOUT`<a name="NNG_HTTP_STATUS_REQUEST_TIMEOUT"></a>                 | 408  | Request Timeout                 | Timed out waiting for request.                        |
 | `NNG_HTTP_STATUS_CONFLICT`<a name="NNG_HTTP_STATUS_CONFLICT"></a>                               | 409  | Conflict                        | Conflicting request.                                  |
 | `NNG_HTTP_STATUS_GONE`<a name="NNG_HTTP_STATUS_GONE"></a>                                       | 410  | Gone                            | Resource no longer exists.                            |
 | `NNG_HTTP_STATUS_LENGTH_REQUIRED`<a name="NNG_HTTP_STATUS_LENGTH_REQUIRED"></a>                 | 411  | Length Required                 | Missing Content-Length.                               |
 | `NNG_HTTP_STATUS_PRECONDITION_FAILED`<a name="NNG_HTTP_STATUS_PRECONDITION_FAILED"></a>         | 412  | Precondition Failed             |                                                       |
-| `NNG_HTTP_STATUS_CONTENT_TOO_LARGE`<a name="NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE"></a>             | 413  | Content Too Large               |                                                       |
+| `NNG_HTTP_STATUS_CONTENT_TOO_LARGE`<a name="NNG_HTTP_STATUS_CONTENT_TOO_LARGE"></a>             | 413  | Content Too Large               |                                                       |
 | `NNG_HTTP_STATUS_URI_TOO_LONG`<a name="NNG_HTTP_STATUS_URI_TOO_LONG"></a>                       | 414  | URI Too Long                    |                                                       |
 | `NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE`<a name="NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE"></a>   | 415  | Unsupported Media Type          |
 | `NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE`<a name="NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE"></a>     | 416  | Range Not Satisfiable           |
@@ -175,8 +175,8 @@ Status codes are defined by the IETF. Here are definitions that NNG provides for
 | `NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR`<a name="NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a>     | 500  | Internal Server Error           |
 | `NNG_HTTP_STATUS_NOT_IMPLEMENTED`<a name="NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a>                 | 501  | Not Implemented                 | Server does not implement method.                     |
 | `NNG_HTTP_STATUS_BAD_GATEWAY`<a name="NNG_HTTP_STATUS_BAD_GATEWAY"></a>                         | 502  | Bad Gateway                     |
-| `NNG_HTTP_STATUS_SERVICE_UNAVAILALE`<a name="NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a>          | 503  | Service Unavailable             |
-| `NNG_HTTP_STATUS_GATEWAY_TIMEOUT`<a name="NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a>                 | 504  | Gateway TImeout                 |
+| `NNG_HTTP_STATUS_SERVICE_UNAVAILABLE`<a name="NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a>         | 503  | Service Unavailable             |
+| `NNG_HTTP_STATUS_GATEWAY_TIMEOUT`<a name="NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a>                 | 504  | Gateway Timeout                 |
 | `NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP`<a name="NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP"></a>     | 505  | HTTP Version Not Supported      |
 | `NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES`<a name="NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES"></a> | 506  | Variant Also Negotiates         |
 | `NNG_HTTP_STATUS_INSUFFICIENT_STORAGE`<a name="NNG_HTTP_STATUS_INSUFFICIENT_STORAGE"></a>       | 507  | Variant Also Negotiates         |
@@ -194,7 +194,7 @@ bool nng_http_next_header(nng_http *conn, const char **keyp, const char **valuep
 The {{i:`nng_http_get_header`}} returns the header value matching _key_ that was received over _conn_,
 or `NULL` if no such header exists.
 
-Thus, if _conn_ is a client connection, then this function returns the the header value
+Thus, if _conn_ is a client connection, then this function returns the header value
 sent by the server as part of a response, whereas if it is a server connection, it returns
 the header value sent by the client as part of the request.
 
@@ -235,7 +235,7 @@ The `nng_http_del_header` removes all headers with name _key_.
 > [!NOTE]
 > Some HTTP headers have special semantics, such as the "Host", "Content-Length", and "Content-Type" headers.
 > This implementation may apply those semantics, in order to conform to the specifications for HTTP, such
-> as by guaranting that only a single instance of one of these headers is present.
+> as by guaranteeing that only a single instance of one of these headers is present.
 
 ### Retrieving Body Content
 
@@ -314,7 +314,7 @@ These functions will complete as soon as any data is transferred.
 Use [`nng_aio_count`] to determine how much data was actually transferred.
 
 The {{i:`nng_http_read_all`}} and {{i:`nng_http_write_all`}} functions perform the same task, but will keep resubmitting
-operations until the the entire amount of data requested by the [`nng_iov`] is transferred.
+operations until the entire amount of data requested by the [`nng_iov`] is transferred.
 
 > [!NOTE]
 > These functions perform no special handling for chunked transfers.
@@ -366,7 +366,7 @@ See [`nng_tls_cert`] for more information about working with TLS certificates.
 > [!NOTE]
 > While it should be obvious that this function is only available when using HTTPS,
 > it also requires that peer authentication is in use, and may require that the underlying
-> TLS engine support peer certificate colleciton. (Some minimal configurations elide this
+> TLS engine support peer certificate collection. (Some minimal configurations elide this
 > to save space in embedded environments.)
 
 ## Client API
@@ -441,7 +441,7 @@ void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
 The {{i:`nng_http_client_connect`}} function makes an outgoing connection to the
 server configured for _client_, and creates an [`nng_http`] object for the connection.
 
-This is done asynchronously, and when the operation succeseds the connection may be
+This is done asynchronously, and when the operation succeeds the connection may be
 retried from the _aio_ using [`nng_aio_get_output`] with index 0.
 
 #### Example 1: Connecting to Google
@@ -812,7 +812,7 @@ URIs from being supported, but doing so will require setting the handler to matc
 > The NNG HTTP framework is optimized for URLs shorter than 200 characters.
 
 Additionally each handler has a method it is registered to handle
-(the default is "GET" andc can be changed with [`nng_http_handler_set_method`]), and
+(the default is "GET" and can be changed with [`nng_http_handler_set_method`]), and
 optionally a "Host" header it can be matched against (see [`nng_http_handler_set_host`]).
 
 In some cases, a handler may reference a logical tree rather (directory)

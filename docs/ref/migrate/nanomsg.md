@@ -71,7 +71,7 @@ NNG approach to messages. Likewise there is no `struct nn_cmsghdr` equivalent.
 
 The following options are changed.
 
-| Nanomsg Option         | NNG Eqvaivalent                 | Notes                                                   |
+| Nanomsg Option         | NNG Equivalent                 | Notes                                                   |
 | ---------------------- | ------------------------------- | ------------------------------------------------------- |
 | `NN_LINGER`            | None                            | NNG does not support tuning this.                       |
 | `NN_SNDBUF`            | [`NNG_OPT_SENDBUF`]             | NNG value is given in messages, not bytes.              |
@@ -101,7 +101,7 @@ There are some exceptions. Be aware that the numeric values are _not_ the same.
 | -------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | `EINTR`        | [`NNG_EINTR`]                                                                            |                                                                                    |
 | `ENOMEM`       | [`NNG_ENOMEM`]                                                                           |                                                                                    |
-| `EINVAL`       | [`NNG_EINVAL`], [`NNG_EADDRINVAL`], [`NNG_EBADTYPE`]                                     | NNG discrimates between different types of errors.                                 |
+| `EINVAL`       | [`NNG_EINVAL`], [`NNG_EADDRINVAL`], [`NNG_EBADTYPE`]                                     | NNG discriminates between different types of errors.                               |
 | `EBUSY`        | [`NNG_EBUSY`]                                                                            |                                                                                    |
 | `ETIMEDOUT`    | [`NNG_ETIMEDOUT`]                                                                        |                                                                                    |
 | `ECONNREFUSED` | [`NNG_ECONNREFUSED`]                                                                     |                                                                                    |

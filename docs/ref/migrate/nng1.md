@@ -1,6 +1,6 @@
 # Migrating from NNG 1.x
 
-There are some incompatibities from NNG 1.x, and applications must make certain changes for NNG 2.0.
+There are some incompatibilities from NNG 1.x, and applications must make certain changes for NNG 2.0.
 This guide should help with this migration. While we have made reasonable efforts to highlight all
 of the things that applications could run into, this list is not necessarily exhaustive, and undocumented
 interfaces may have changed without notice here.

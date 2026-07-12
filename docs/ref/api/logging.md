@@ -18,7 +18,7 @@ void nng_log_info(const char *msgid, const char *msg, ...);
 void nng_log_debug(const char *msgid, const char *msg, ...);
 ```
 
-These {{hi:`nng_log`}} functions inject a a message into the
+These {{hi:`nng_log`}} functions inject a message into the
 logging system, where it will be processed and potentially go to
 system logs, standard output, or processed further.
 
@@ -168,7 +168,7 @@ This can be suppressed by setting either the `NO_COLOR` or `NNG_LOG_NO_COLOR` en
 
 The {{i:`nng_system_logger`}} attempts to use an appropriate system facility to log messages.
 For POSIX systems, this means using `syslog` to process the messages.
-For other systems the defauilt behavior may be the same as `nng_stderr_logger`.
+For other systems the default behavior may be the same as `nng_stderr_logger`.
 
 ## See Also
 

@@ -81,7 +81,7 @@ space. The semantics are similar to the `snprintf` function from C99.
 ## Parse a URL
 
 ```c
-int nng_url_parse(nng_url **urlp, const char *str);
+nng_err nng_url_parse(nng_url **urlp, const char *str);
 ```
 
 The {{i:`nng_url_parse`}} function parses a URL string (in _str_),
@@ -123,7 +123,7 @@ NNG-specific extensions to RFC 3986 canonicalization.
 ## Clone a URL
 
 ```c
-int nng_url_clone(nng_url **dup, const nng_url *url);
+nng_err nng_url_clone(nng_url **dup, const nng_url *url);
 ```
 
 The {{i:`nng_url_clone`}} function creates a copy of _url_, and returns it in _dup_.

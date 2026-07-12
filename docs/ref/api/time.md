@@ -40,7 +40,7 @@ Normally durations are positive, but some specific negative values are reserved.
   and this value means that the previously established default should be used.
   The precise meaning is context-specific.
 
-- {{i:`NNG_DURATION_ZERO`}}: A zero length duration is used to performan an immediate
+- {{i:`NNG_DURATION_ZERO`}}: A zero length duration is used to perform an immediate
   poll.
 
 ## Get the Current Time

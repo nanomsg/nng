@@ -41,22 +41,20 @@ us advanced multiprocessing and concurrency capabilities, without either
 sacrificing portability or settling for some unhappy least common denominator.
 This core is a robust foundation for NNG and handling the
 "Scalability Protocols", but if we're being completely honest, we think this
-core has braod applicability for beyond just the Scalability Protocols.
+core has broad applicability far beyond just the Scalability Protocols.
 It will be interesting to see if others come to the same conclusion.
 
-Builting upon this robust foundation, we have engineered a substantial
-project, with capabilities far in exceess of the original nanomsg, while
-still preserving compatibility with the the network protocols that
-form the backbone of the nanomsg ecosystem,
-and even a compatible programming interface for nanomsg library users.
-In addition to compatibility with nanomsg, we find that NNG has greatly
-increased scalability, reliability, and usability (especially when developing
-concurrent applications).
+Building upon this robust foundation, we have engineered a substantial
+project, with capabilities far in excess of the original nanomsg, while
+still preserving compatibility with the network protocols that form the
+backbone of the nanomsg ecosystem, and even a compatible programming interface
+for nanomsg library users. In addition to compatibility with nanomsg, we find
+that NNG has greatly increased scalability, reliability, and usability
+(especially when developing concurrent applications).
 
 NNG also has complete HTTP server and client
 implementations, support for TLS, and a plethora of other capabilities.
-Much of this is made possible by a the aforementioned asynchronous I/O
-framework.
+Much of this is made possible by the aforementioned asynchronous I/O framework.
 
 We've tried to stay true to the core nanomsg goals about being light-weight,
 liberally licensed, and implemented in C.
@@ -93,7 +91,7 @@ These are visually distinguished as follows:
 
 > [!TIP]
 > Tips are things that the reader may find useful, such as suggestions
-> for use or tim saving hints.
+> for use or time saving hints.
 
 > [!NOTE]
 > Notes are things that the reader should be aware of, and provide
@@ -103,5 +101,5 @@ These are visually distinguished as follows:
 > [!IMPORTANT]
 > Warnings are used to denote important cautionary advice,
 > which should be carefully heeded.
-> Ignoring such advice may lead to crashses, unexpected behavior,
+> Ignoring such advice may lead to crashes, unexpected behavior,
 > loss of revenue, or other undesirable conditions.

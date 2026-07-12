@@ -23,10 +23,10 @@ by calling [`nng_mtx_unlock`].
 ### Creating a Mutex
 
 ```c
-int nng_mutx_alloc(nng_mt **mtxp);
+int nng_mtx_alloc(nng_mtx **mtxp);
 ```
 
-A mutex can be created by allocating one with {{i:`nng_mtx_lock`}}.
+A mutex can be created by allocating one with {{i:`nng_mtx_alloc`}}.
 On success, a pointer to the mutex is returned through _mtxp_.
 This function can fail due to insufficient memory or resources, in which
 case it will return [`NNG_ENOMEM`]. Otherwise it will succeed and return zero.
@@ -51,7 +51,7 @@ The {{i:`nng_mtx_lock`}} function acquires ownership of a mutex, waiting for it 
 unowned by any other threads if necessary.
 
 > [!IMPORTANT]
-> A thread must not attempt to reqacuire the same mutex while it already "owns" the mutex.
+> A thread must not attempt to reacquire the same mutex while it already "owns" the mutex.
 > If it does attempt to do so, the result will be a single party deadlock.
 
 ### Releasing a Mutex
@@ -74,7 +74,7 @@ typedef struct nng_cv nng_cv;
 ```
 
 The {{i:`nng_cv`}} structure implements a {{i:condition variable}}, associated with the
-the [mutex] _mtx_ which was supplied when it was created.
+[mutex] _mtx_ which was supplied when it was created.
 
 Condition variables provide for a way to wait on an arbitrary condition, and to be woken
 when the condition is signaled.

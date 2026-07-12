@@ -251,7 +251,7 @@ retained and it is the consuming application's responsibility to dispose of the 
 This allows an application the opportunity to reuse the message to try again, if it so desires.
 
 For receive operations, the implementation of the operation will set the message on the _aio_
-on success, and the consuming application hasa responsibility to retrieve and dispose of the
+on success, and the consuming application has a responsibility to retrieve and dispose of the
 message. Failure to do so will leak the message. If the operation does not complete successfully,
 then no message is stored on the _aio_.
 
@@ -261,9 +261,9 @@ then no message is stored on the _aio_.
 typedef struct nng_iov {
     void * iov_buf;
     size_t iov_len;
-};
+} nng_iov;
 
-int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
+int nng_aio_set_iov(nng_aio *aio, unsigned int niov, const nng_iov *iov);
 ```
 
 For some operations, the unit of data transferred is not a [message], but
@@ -335,7 +335,7 @@ typedef struct nng_iov {
 	size_t iov_len;
 } nng_iov;
 
-void nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
+int nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
 ```
 
 {{hi:`nng_iov`}}
@@ -420,7 +420,7 @@ void nng_aio_finish(nng_aio *aio, nng_err err);
 ```
 
 The {{i:`nng_aio_finish`}} function completes the operation associated with _aio_.
-The result of the the status _err_.
+The result of the status _err_.
 
 This function causes the callback associated with the _aio_ to called.
 The _aio_ may not be referenced again by the caller.

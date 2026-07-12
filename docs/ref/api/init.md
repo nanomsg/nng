@@ -17,7 +17,7 @@ typedef struct {
     int16_t num_resolver_threads;
 } nng_init_params;
 
-extern nng_err nng_init(nng_init_params *params);
+extern nng_err nng_init(const nng_init_params *params);
 ```
 
 Before using other interfaces in this library, it is necessary to initialize
@@ -29,7 +29,7 @@ This allows for libraries consuming these interfaces to safely initialize and fi
 the library without disrupting other consumers in the same process.
 
 Further, only the first call to this function may have a value of _params_ other than `NULL`.
-If _params_ is not `NULL`, and the library has already been intiazed, then `nng_init` will
+If _params_ is not `NULL`, and the library has already been initialized, then `nng_init` will
 return [`NNG_EBUSY`].
 
 In some cases it is desirable to tune certain runtime parameters for the library, which
