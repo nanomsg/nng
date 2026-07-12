@@ -77,6 +77,10 @@ typedef enum dtls_disc_reason {
 #define NNG_DTLS_CONNRETRY (NNI_SECOND / 5)
 #endif
 
+#ifndef NNG_DTLS_CONNEXPIRE
+#define NNG_DTLS_CONNEXPIRE (5 * NNI_SECOND)
+#endif
+
 #ifndef NNG_DTLS_MAX_PEERS
 #define NNG_DTLS_MAX_PEERS 1024
 #endif
@@ -174,6 +178,8 @@ struct dtls_ep {
 	nni_list        connaios; // aios from accept waiting for a client peer
 	nni_list        connpipes; // pipes waiting to be connected
 	nng_duration    refresh; // refresh interval for connections in milliseconds
+	nng_duration    conn_retry;
+	nng_duration    conn_expire;
 	uint16_t        rcvmax;  // max payload, trimmed to uint16_t
 	size_t          max_peers;
 	size_t          pending_peers;
@@ -643,6 +649,12 @@ dtls_pipe_recv_tls_cb(void *arg)
 		goto bad;
 	}
 
+	if (!p->matched) {
+		// The shorter retry interval is only for establishing the
+		// connection.  Once the peer responds, resume the normal
+		// keep-alive cadence.
+		p->refresh = ep->refresh;
+	}
 	p->expire = nni_clock() + DTLS_PIPE_TIMEOUT(p);
 
 	if (!p->matched) {
@@ -769,8 +781,9 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	p->peer      = ep->peer;
 	p->peer_addr = *sa;
 	p->id        = nng_sockaddr_hash(sa);
-	p->refresh   = ep->refresh;
-	p->expire    = nni_clock() + DTLS_PIPE_TIMEOUT(p);
+	p->refresh = ep->dialer ? ep->conn_retry : ep->refresh;
+	p->expire = nni_clock() +
+	    (ep->dialer ? ep->conn_expire : DTLS_PIPE_TIMEOUT(p));
 	p->pending   = !ep->dialer;
 	p->send_max  = NNG_DTLS_RECVMAX;
 	p->recv_max  = ep->rcvmax;
@@ -1262,6 +1275,8 @@ dtls_ep_init(
 	ep->peer             = nni_sock_peer_id(sock);
 	ep->url              = url;
 	ep->refresh          = NNG_DTLS_REFRESH; // one minute by default
+	ep->conn_retry       = NNG_DTLS_CONNRETRY;
+	ep->conn_expire      = NNG_DTLS_CONNEXPIRE;
 	ep->rcvmax           = NNG_DTLS_RECVMAX;
 	ep->max_peers        = NNG_DTLS_MAX_PEERS;
 
@@ -1594,6 +1609,76 @@ dtls_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static nng_err
+dtls_ep_get_conn_retry(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	dtls_ep *ep = arg;
+	nng_err  rv;
+
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_ms(ep->conn_retry, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nng_err
+dtls_ep_set_conn_retry(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	dtls_ep      *ep = arg;
+	nng_duration  val;
+	nng_err       rv;
+
+	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
+		return (rv);
+	}
+	if (val <= 0) {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_EBUSY);
+	}
+	ep->conn_retry = val;
+	nni_mtx_unlock(&ep->mtx);
+	return (NNG_OK);
+}
+
+static nng_err
+dtls_ep_get_conn_expire(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	dtls_ep *ep = arg;
+	nng_err  rv;
+
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_ms(ep->conn_expire, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nng_err
+dtls_ep_set_conn_expire(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	dtls_ep      *ep = arg;
+	nng_duration  val;
+	nng_err       rv;
+
+	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
+		return (rv);
+	}
+	if (val <= 0) {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_EBUSY);
+	}
+	ep->conn_expire = val;
+	nni_mtx_unlock(&ep->mtx);
+	return (NNG_OK);
+}
+
+static nng_err
 dtls_ep_get_max_peers(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	dtls_ep *ep = arg;
@@ -1747,6 +1832,16 @@ static const nni_option dtls_ep_opts[] = {
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = dtls_ep_get_recvmaxsz,
 	    .o_set  = dtls_ep_set_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_UDP_CONN_RETRY,
+	    .o_get  = dtls_ep_get_conn_retry,
+	    .o_set  = dtls_ep_set_conn_retry,
+	},
+	{
+	    .o_name = NNG_OPT_UDP_CONN_EXPIRE,
+	    .o_get  = dtls_ep_get_conn_expire,
+	    .o_set  = dtls_ep_set_conn_expire,
 	},
 	{
 	    .o_name = NNG_OPT_UDP_MAX_PEERS,

@@ -62,6 +62,10 @@ typedef enum udp_disc_reason {
 #define NNG_UDP_CONNRETRY (NNI_SECOND / 5)
 #endif
 
+#ifndef NNG_UDP_CONNEXPIRE
+#define NNG_UDP_CONNEXPIRE (5 * NNI_SECOND)
+#endif
+
 #define UDP_EP_ROLE(ep) ((ep)->dialer ? "dialer  " : "listener")
 
 // NB: Each of the following messages is exactly 20 bytes in size
@@ -164,6 +168,8 @@ struct udp_ep {
 	nni_list      connaios;   // aios from accept waiting for a client peer
 	nni_list      connpipes;  // pipes waiting to be connected
 	nng_duration  refresh; // refresh interval for connections in seconds
+	nng_duration  conn_retry;
+	nng_duration  conn_expire;
 	udp_sp_msg   *rx_msg;  // contains the received message header
 	uint16_t      rcvmax;  // max payload, trimmed to uint16_t
 	uint16_t      copymax;
@@ -261,10 +267,11 @@ udp_pipe_start(udp_pipe *p, udp_ep *ep, const nng_sockaddr *sa)
 	p->peer      = ep->peer;
 	p->peer_addr = *sa;
 	p->dialer    = ep->dialer;
-	p->refresh   = p->dialer ? NNG_UDP_CONNRETRY : ep->refresh;
+	p->refresh   = p->dialer ? ep->conn_retry : ep->refresh;
 	p->rcvmax    = ep->rcvmax;
 	p->id        = nng_sockaddr_hash(sa);
-	p->expire = now + (p->dialer ? (5 * NNI_SECOND) : UDP_PIPE_TIMEOUT(p));
+	p->expire = now +
+	    (p->dialer ? ep->conn_expire : UDP_PIPE_TIMEOUT(p));
 
 	return (udp_add_pipe(ep, p));
 }
@@ -1237,6 +1244,8 @@ udp_ep_init(
 	ep->peer             = nni_sock_peer_id(sock);
 	ep->url              = url;
 	ep->refresh          = NNG_UDP_REFRESH; // five seconds by default
+	ep->conn_retry       = NNG_UDP_CONNRETRY;
+	ep->conn_expire      = NNG_UDP_CONNEXPIRE;
 	ep->rcvmax           = NNG_UDP_RECVMAX;
 	ep->copymax          = NNG_UDP_COPYMAX;
 	ep->max_peers        = NNG_UDP_MAX_PEERS;
@@ -1633,6 +1642,76 @@ udp_ep_set_copymax(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static nng_err
+udp_ep_get_conn_retry(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	udp_ep *ep = arg;
+	nng_err rv;
+
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_ms(ep->conn_retry, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nng_err
+udp_ep_set_conn_retry(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	udp_ep       *ep = arg;
+	nng_duration  val;
+	nng_err       rv;
+
+	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
+		return (rv);
+	}
+	if (val <= 0) {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_EBUSY);
+	}
+	ep->conn_retry = val;
+	nni_mtx_unlock(&ep->mtx);
+	return (NNG_OK);
+}
+
+static nng_err
+udp_ep_get_conn_expire(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	udp_ep *ep = arg;
+	nng_err rv;
+
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_ms(ep->conn_expire, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nng_err
+udp_ep_set_conn_expire(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	udp_ep       *ep = arg;
+	nng_duration  val;
+	nng_err       rv;
+
+	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
+		return (rv);
+	}
+	if (val <= 0) {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->started) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_EBUSY);
+	}
+	ep->conn_expire = val;
+	nni_mtx_unlock(&ep->mtx);
+	return (NNG_OK);
+}
+
+static nng_err
 udp_ep_get_max_peers(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	udp_ep *ep = arg;
@@ -1768,6 +1847,16 @@ static const nni_option udp_ep_opts[] = {
 	    .o_name = NNG_OPT_UDP_COPY_MAX,
 	    .o_get  = udp_ep_get_copymax,
 	    .o_set  = udp_ep_set_copymax,
+	},
+	{
+	    .o_name = NNG_OPT_UDP_CONN_RETRY,
+	    .o_get  = udp_ep_get_conn_retry,
+	    .o_set  = udp_ep_set_conn_retry,
+	},
+	{
+	    .o_name = NNG_OPT_UDP_CONN_EXPIRE,
+	    .o_get  = udp_ep_get_conn_expire,
+	    .o_set  = udp_ep_set_conn_expire,
 	},
 	{
 	    .o_name = NNG_OPT_UDP_MAX_PEERS,

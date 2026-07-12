@@ -70,6 +70,8 @@ where supported by the underlying platform.
 | --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
 | [`NNG_OPT_RECVMAXSZ`]                                     | `size_t` | Maximum size of incoming messages, will be limited to at most 65000.                                                |
 | `NNG_OPT_UDP_COPY_MAX`<a name="NNG_OPT_UDP_COPY_MAX"></a> | `size_t` | Threshold above which received messages are "loaned" up, rather than a new message being allocated and copied into. |
+| [`NNG_OPT_UDP_CONN_RETRY`]                                 | `nng_duration` | Interval between connection requests while dialing. The default is 200 milliseconds.                                 |
+| [`NNG_OPT_UDP_CONN_EXPIRE`]                                | `nng_duration` | Time allowed to establish a connection. The default is 5 seconds.                                                   |
 | `NNG_OPT_UDP_MAX_PEERS`<a name="NNG_OPT_UDP_MAX_PEERS"></a> | `size_t` | Maximum number of remote peers admitted by a listener. The default is 1024; set to 0 to disable the limit. |
 | `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>     | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                 |
 
@@ -107,13 +109,18 @@ requests, listeners admit at most 1024 peers by default. Configure
 [`NNG_OPT_UDP_MAX_PEERS`] before starting the listener to select another
 limit. A value of 0 disables this protection.
 
+## Connection Establishment
+
+UDP dialers retry their connection request every 200 milliseconds by default
+and give up after 5 seconds. Configure [`NNG_OPT_UDP_CONN_RETRY`] and
+[`NNG_OPT_UDP_CONN_EXPIRE`] before starting a dialer to adjust these durations.
+Both options take an [`nng_duration`] and require a positive value.
+
 ## Keep Alive
 
 This transports maintains a logical "connection" with each peer, to provide a rough
 facsimile of a connection based semantic. This requires some resource on each peer.
 In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
 keep-alive mechanism is implemented.
-
-TODO: Document the tunables for this.
 
 {{#include ../xref.md}}

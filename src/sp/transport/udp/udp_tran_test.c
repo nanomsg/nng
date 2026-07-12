@@ -545,6 +545,35 @@ test_udp_max_peers(void)
 }
 
 void
+test_udp_conn_tunables(void)
+{
+	nng_socket   s;
+	nng_dialer   d;
+	nng_duration retry;
+	nng_duration expire;
+	char        *addr;
+
+	NUTS_ADDR(addr, "udp4");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, addr));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_RETRY, &retry));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_EXPIRE, &expire));
+	NUTS_TRUE(retry == 200);
+	NUTS_TRUE(expire == 5000);
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 50));
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 250));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_RETRY, &retry));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_EXPIRE, &expire));
+	NUTS_TRUE(retry == 50);
+	NUTS_TRUE(expire == 250);
+	NUTS_FAIL(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 0), NNG_EINVAL);
+	NUTS_FAIL(
+	    nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 0), NNG_EINVAL);
+	NUTS_PASS(nng_dialer_close(d));
+	NUTS_CLOSE(s);
+}
+
+void
 test_udp_reconnect_dialer(void)
 {
 	nng_socket   s0;
@@ -665,6 +694,7 @@ NUTS_TESTS = {
 	{ "udp crush", test_udp_crush },
 	{ "udp pipe", test_udp_pipe },
 	{ "udp max peers", test_udp_max_peers },
+	{ "udp connection tunables", test_udp_conn_tunables },
 	{ "udp reconnect dialer", test_udp_reconnect_dialer },
 	{ "udp stats", test_udp_stats },
 	{ NULL, NULL },
