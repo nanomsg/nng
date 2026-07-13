@@ -251,7 +251,7 @@ retained and it is the consuming application's responsibility to dispose of the 
 This allows an application the opportunity to reuse the message to try again, if it so desires.
 
 For receive operations, the implementation of the operation will set the message on the _aio_
-on success, and the consuming application hasa responsibility to retrieve and dispose of the
+on success, and the consuming application is responsible for retrieving and disposing of the
 message. Failure to do so will leak the message. If the operation does not complete successfully,
 then no message is stored on the _aio_.
 
@@ -420,10 +420,11 @@ void nng_aio_finish(nng_aio *aio, nng_err err);
 ```
 
 The {{i:`nng_aio_finish`}} function completes the operation associated with _aio_.
-The result of the the status _err_.
+The result of the operation is supplied in _err_.
 
-This function causes the callback associated with the _aio_ to called.
-The _aio_ may not be referenced again by the caller.
+Normally, this function causes the callback associated with the _aio_ to be called.
+(But see the [`nng_aio_skip_callback`] function for specific exceptional cases.)
+The _aio_ must not be referenced again by the caller.
 
 > [!TIP]
 > Set any results using [`nng_aio_set_output`] before calling this function.
