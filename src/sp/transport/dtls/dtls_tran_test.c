@@ -245,6 +245,35 @@ test_dtls_max_peers_option(void)
 }
 
 void
+test_dtls_conn_tunables(void)
+{
+	nng_socket   s;
+	nng_dialer   d;
+	nng_duration retry;
+	nng_duration expire;
+	char        *addr;
+
+	NUTS_ADDR(addr, "dtls4");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, addr));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_RETRY, &retry));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_EXPIRE, &expire));
+	NUTS_TRUE(retry == 200);
+	NUTS_TRUE(expire == 5000);
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 50));
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 250));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_RETRY, &retry));
+	NUTS_PASS(nng_dialer_get_ms(d, NNG_OPT_UDP_CONN_EXPIRE, &expire));
+	NUTS_TRUE(retry == 50);
+	NUTS_TRUE(expire == 250);
+	NUTS_FAIL(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 0), NNG_EINVAL);
+	NUTS_FAIL(
+	    nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 0), NNG_EINVAL);
+	NUTS_PASS(nng_dialer_close(d));
+	NUTS_CLOSE(s);
+}
+
+void
 test_dtls_recv_max(void)
 {
 	char            msg[256];
@@ -667,6 +696,7 @@ NUTS_TESTS = {
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },
 	{ "dtls max peers option", test_dtls_max_peers_option },
+	{ "dtls connection tunables", test_dtls_conn_tunables },
 	{ "dtls recv max", test_dtls_recv_max },
 	{ "dtls recv large", test_dtls_recv_large },
 	{ "dtls exchange many", test_dtls_exchange_many },
