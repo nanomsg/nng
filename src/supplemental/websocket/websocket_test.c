@@ -240,8 +240,8 @@ test_websocket_text_mode(void)
 	nng_stream          *c1   = NULL;
 	nng_stream          *c2   = NULL;
 	char                 uri[64];
-	char                 txb[5];
-	char                 rxb[5];
+	char                 txb[25];
+	char                 rxb[25];
 	bool                 on;
 	uint16_t             port;
 	nng_iov              iov;
@@ -327,13 +327,13 @@ test_websocket_text_mode(void)
 	NUTS_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_RECV_TEXT, &on));
 	NUTS_TRUE(on == false);
 
-	memcpy(txb, "PING", 5);
+	memcpy(txb, "123456789012345678901234", sizeof(txb));
 	iov.iov_buf = txb;
-	iov.iov_len = 5;
+	iov.iov_len = sizeof(txb);
 	nng_aio_set_iov(aio1, 1, &iov);
 	nng_stream_send(c1, aio1);
 	iov.iov_buf = rxb;
-	iov.iov_len = 5;
+	iov.iov_len = sizeof(rxb);
 	nng_aio_set_iov(aio2, 1, &iov);
 	nng_stream_recv(c2, aio2);
 
@@ -341,17 +341,17 @@ test_websocket_text_mode(void)
 	nng_aio_wait(aio2);
 	NUTS_PASS(nng_aio_result(aio1));
 	NUTS_PASS(nng_aio_result(aio2));
-	NUTS_TRUE(memcmp(rxb, txb, 5) == 0);
+	NUTS_TRUE(memcmp(rxb, txb, sizeof(txb)) == 0);
 
-	memset(rxb, 0, 5);
-	memcpy(txb, "PONG", 5);
+	memset(rxb, 0, sizeof(rxb));
+	memcpy(txb, "987654321098765432109876", sizeof(txb));
 
 	iov.iov_buf = txb;
-	iov.iov_len = 5;
+	iov.iov_len = sizeof(txb);
 	nng_aio_set_iov(aio2, 1, &iov);
 	nng_stream_send(c2, aio2);
 	iov.iov_buf = rxb;
-	iov.iov_len = 5;
+	iov.iov_len = sizeof(rxb);
 	nng_aio_set_iov(aio1, 1, &iov);
 	nng_stream_recv(c1, aio1);
 
@@ -359,7 +359,7 @@ test_websocket_text_mode(void)
 	nng_aio_wait(aio2);
 	NUTS_PASS(nng_aio_result(aio1));
 	NUTS_PASS(nng_aio_result(aio2));
-	NUTS_TRUE(memcmp(rxb, txb, 5) == 0);
+	NUTS_TRUE(memcmp(rxb, txb, sizeof(txb)) == 0);
 
 	nng_stream_close(c1);
 	nng_stream_free(c1);
