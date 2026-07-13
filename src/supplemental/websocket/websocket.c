@@ -13,6 +13,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if (defined(__clang__) || defined(__GNUC__)) && defined(__aarch64__)
+#include <arm_neon.h>
+#define NNI_WS_HAVE_NEON 1
+#elif (defined(__clang__) || defined(__GNUC__)) && defined(__SSE2__) && \
+    (defined(__x86_64__) || defined(_M_X64))
+#include <emmintrin.h>
+#define NNI_WS_HAVE_SSE2 1
+#endif
+
 #include "../../core/aio.h"
 #include "../../core/defs.h"
 #include "../../core/message.h"
@@ -318,6 +327,67 @@ ws_frame_fini(ws_frame *frame)
 }
 
 static void
+ws_apply_mask(uint8_t *buf, size_t len, const uint8_t mask[4])
+{
+	uint32_t mask32;
+
+	// Loading the mask through memcpy makes its byte order match the buffer on
+	// both little- and big-endian hosts, without requiring aligned accesses.
+	memcpy(&mask32, mask, sizeof(mask32));
+
+#if defined(NNI_WS_HAVE_NEON)
+	// NEON is mandatory in AArch64.
+	{
+		const uint32x4_t mask128 = vdupq_n_u32(mask32);
+		while (len >= sizeof(uint8x16_t)) {
+			uint8x16_t word = vld1q_u8(buf);
+			vst1q_u8(buf, veorq_u8(word, vreinterpretq_u8_u32(mask128)));
+			buf += sizeof(uint8x16_t);
+			len -= sizeof(uint8x16_t);
+		}
+	}
+#elif defined(NNI_WS_HAVE_SSE2)
+	// SSE2 is mandatory in the x86-64 architecture.
+	{
+		const __m128i mask128 = _mm_set1_epi32((int) mask32);
+		while (len >= sizeof(__m128i)) {
+			__m128i word = _mm_loadu_si128((const __m128i *) buf);
+			_mm_storeu_si128((__m128i *) buf, _mm_xor_si128(word, mask128));
+			buf += sizeof(__m128i);
+			len -= sizeof(__m128i);
+		}
+	}
+#endif
+
+#if SIZE_MAX > UINT32_MAX
+	{
+		const uint64_t mask64 = ((uint64_t) mask32 << 32u) | mask32;
+		while (len >= sizeof(mask64)) {
+			uint64_t word;
+			memcpy(&word, buf, sizeof(word));
+			word ^= mask64;
+			memcpy(buf, &word, sizeof(word));
+			buf += sizeof(word);
+			len -= sizeof(word);
+		}
+	}
+#endif
+
+	while (len >= sizeof(mask32)) {
+		uint32_t word;
+		memcpy(&word, buf, sizeof(word));
+		word ^= mask32;
+		memcpy(buf, &word, sizeof(word));
+		buf += sizeof(word);
+		len -= sizeof(word);
+	}
+
+	for (size_t i = 0; i < len; i++) {
+		buf[i] ^= mask[i];
+	}
+}
+
+static void
 ws_mask_frame(ws_frame *frame)
 {
 	uint32_t r;
@@ -327,9 +397,7 @@ ws_mask_frame(ws_frame *frame)
 	}
 	r = nni_random();
 	NNI_PUT32(frame->mask, r);
-	for (size_t i = 0; i < frame->len; i++) {
-		frame->buf[i] ^= frame->mask[i % 4];
-	}
+	ws_apply_mask(frame->buf, frame->len, frame->mask);
 	memcpy(frame->head + frame->hlen, frame->mask, 4);
 	frame->hlen += 4;
 	frame->head[1] |= 0x80; // set masked bit
@@ -343,9 +411,7 @@ ws_unmask_frame(ws_frame *frame)
 	if (!frame->masked) {
 		return;
 	}
-	for (size_t i = 0; i < frame->len; i++) {
-		frame->buf[i] ^= frame->mask[i % 4];
-	}
+	ws_apply_mask(frame->buf, frame->len, frame->mask);
 	frame->hlen -= 4;
 	frame->head[1] &= 0x7f; // clear masked bit
 	frame->masked = false;
