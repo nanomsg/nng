@@ -2059,29 +2059,30 @@ nng_aio_set_expire(nng_aio *aio, nng_time when)
 	nni_aio_set_expire(aio, when);
 }
 
-int
+nng_err
 nng_aio_set_iov(nng_aio *aio, unsigned niov, const nng_iov *iov)
 {
 	return (nni_aio_set_iov(aio, niov, iov));
 }
 
-int
+nng_err
 nng_aio_set_input(nng_aio *aio, unsigned index, void *arg)
 {
 	if (index > 3) {
 		return (NNG_EINVAL);
 	}
 	nni_aio_set_input(aio, index, arg);
-	return (0);
+	return (NNG_OK);
 }
-int
+
+nng_err
 nng_aio_set_output(nng_aio *aio, unsigned index, void *arg)
 {
 	if (index > 3) {
 		return (NNG_EINVAL);
 	}
 	nni_aio_set_output(aio, index, arg);
-	return (0);
+	return (NNG_OK);
 }
 
 void *

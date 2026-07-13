@@ -263,7 +263,7 @@ typedef struct nng_iov {
     size_t iov_len;
 };
 
-int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
+nng_err nng_aio_set_iov(nng_aio *aio, unsigned int niov, const nng_iov *iov);
 ```
 
 For some operations, the unit of data transferred is not a [message], but
@@ -290,8 +290,8 @@ A maximum of four (4) `nng_iov` members may be supplied.
 ```c
 void *nng_aio_get_input(nng_aio *aio, unsigned int index);
 void *nng_aio_get_output(nng_aio *aio, unsigned int index);
-void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
-void nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
+nng_err nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
+nng_err nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
 ```
 
 Asynchronous operations can take additional input parameters, and
@@ -335,7 +335,7 @@ typedef struct nng_iov {
 	size_t iov_len;
 } nng_iov;
 
-void nng_aio_set_iov(nng_aio *aio, unsigned nio, const nng_iov *iov);
+nng_err nng_aio_set_iov(nng_aio *aio, unsigned int niov, const nng_iov *iov);
 ```
 
 {{hi:`nng_iov`}}
