@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-aff792b3.js";
+            window.path_to_searchindex_js = "searchindex-57b98700.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -6527,6 +6527,8 @@ listener is started.</p>
 </thead>
 <tbody>
 <tr><td><a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_CONN_RETRY</code>]</td><td><code>nng_duration</code></td><td>Interval between connection requests while dialing. The default is 200 milliseconds. Only positive values are accepted; <code>&lt;= 0</code> returns <code>NNG_EINVAL</code>.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_CONN_EXPIRE</code>]</td><td><code>nng_duration</code></td><td>Time allowed to establish a connection. The default is 5 seconds. Only positive values are accepted; <code>&lt;= 0</code> returns <code>NNG_EINVAL</code>.</td></tr>
 <tr><td>[<code>NNG_OPT_UDP_MAX_PEERS</code>]</td><td><code>size_t</code></td><td>Maximum number of unauthenticated inbound DTLS handshakes. The default is 1024; set to 0 to disable the limit.</td></tr>
 <tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
@@ -6876,6 +6878,8 @@ where supported by the underlying platform.</p>
 <tbody>
 <tr><td><a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages, will be limited to at most 65000.</td></tr>
 <tr><td><code>NNG_OPT_UDP_COPY_MAX</code><a name="NNG_OPT_UDP_COPY_MAX"></a></td><td><code>size_t</code></td><td>Threshold above which received messages are “loaned” up, rather than a new message being allocated and copied into.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_CONN_RETRY</code>]</td><td><code>nng_duration</code></td><td>Interval between connection requests while dialing. The default is 200 milliseconds.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_CONN_EXPIRE</code>]</td><td><code>nng_duration</code></td><td>Time allowed to establish a connection. The default is 5 seconds.</td></tr>
 <tr><td><code>NNG_OPT_UDP_MAX_PEERS</code><a name="NNG_OPT_UDP_MAX_PEERS"></a></td><td><code>size_t</code></td><td>Maximum number of remote peers admitted by a listener. The default is 1024; set to 0 to disable the limit.</td></tr>
 <tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="#dialers-and-listeners">listener</a> objects only.</td></tr>
 </tbody>
@@ -6906,12 +6910,17 @@ To bound the resources consumed by spoofed or otherwise untrusted connection
 requests, listeners admit at most 1024 peers by default. Configure
 [<code>NNG_OPT_UDP_MAX_PEERS</code>] before starting the listener to select another
 limit. A value of 0 disables this protection.</p>
+<h2 id="connection-establishment"><a class="header" href="#connection-establishment">Connection Establishment</a></h2>
+<p>UDP dialers retry their connection request every 200 milliseconds by default
+and give up after 5 seconds. Configure [<code>NNG_OPT_UDP_CONN_RETRY</code>] and
+[<code>NNG_OPT_UDP_CONN_EXPIRE</code>] before starting a dialer to adjust these durations.
+Both options take an <a href="#duration-type"><code>nng_duration</code></a> and require a positive value.
+Values less than or equal to zero are rejected with <code>NNG_EINVAL</code>.</p>
 <h2 id="keep-alive-1"><a class="header" href="#keep-alive-1">Keep Alive</a></h2>
 <p>This transports maintains a logical “connection” with each peer, to provide a rough
 facsimile of a connection based semantic. This requires some resource on each peer.
 In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
 keep-alive mechanism is implemented.</p>
-<p>TODO: Document the tunables for this.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from

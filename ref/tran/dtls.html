@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-aff792b3.js";
+            window.path_to_searchindex_js = "../searchindex-57b98700.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -260,6 +260,8 @@ listener is started.</p>
 </thead>
 <tbody>
 <tr><td><a href="../api/sock.html#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a></td><td><code>size_t</code></td><td>Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_CONN_RETRY</code>]</td><td><code>nng_duration</code></td><td>Interval between connection requests while dialing. The default is 200 milliseconds. Only positive values are accepted; <code>&lt;= 0</code> returns <code>NNG_EINVAL</code>.</td></tr>
+<tr><td>[<code>NNG_OPT_UDP_CONN_EXPIRE</code>]</td><td><code>nng_duration</code></td><td>Time allowed to establish a connection. The default is 5 seconds. Only positive values are accepted; <code>&lt;= 0</code> returns <code>NNG_EINVAL</code>.</td></tr>
 <tr><td>[<code>NNG_OPT_UDP_MAX_PEERS</code>]</td><td><code>size_t</code></td><td>Maximum number of unauthenticated inbound DTLS handshakes. The default is 1024; set to 0 to disable the limit.</td></tr>
 <tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound UDP port number (1-65535), read-only for <a href="../api/endpoint.html">listener</a> objects only.</td></tr>
 </tbody>
