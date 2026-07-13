@@ -649,13 +649,13 @@ NNG_DECL void nng_aio_set_msg(nng_aio *, nng_msg *);
 NNG_DECL nng_msg *nng_aio_get_msg(nng_aio *);
 
 // nng_aio_set_input sets an input parameter at the given index.
-NNG_DECL int nng_aio_set_input(nng_aio *, unsigned, void *);
+NNG_DECL nng_err nng_aio_set_input(nng_aio *, unsigned, void *);
 
 // nng_aio_get_input retrieves the input parameter at the given index.
 NNG_DECL void *nng_aio_get_input(nng_aio *, unsigned);
 
 // nng_aio_set_output sets an output result at the given index.
-NNG_DECL int nng_aio_set_output(nng_aio *, unsigned, void *);
+NNG_DECL nng_err nng_aio_set_output(nng_aio *, unsigned, void *);
 
 // nng_aio_get_output retrieves the output result at the given index.
 NNG_DECL void *nng_aio_get_output(nng_aio *, unsigned);
@@ -677,7 +677,7 @@ NNG_DECL void nng_aio_set_expire(nng_aio *, nng_time);
 // itself is copied. Data members (the memory regions referenced) *may* be
 // copied as well, depending on the operation.  This operation is guaranteed
 // to succeed if n <= 4, otherwise it may fail due to NNG_ENOMEM.
-NNG_DECL int nng_aio_set_iov(nng_aio *, unsigned, const nng_iov *);
+NNG_DECL nng_err nng_aio_set_iov(nng_aio *, unsigned, const nng_iov *);
 
 // nng_aio_reset is called by the provider before doing other operations on the
 // aio.  Its purpose is to clear certain output fields, to avoid accidental
