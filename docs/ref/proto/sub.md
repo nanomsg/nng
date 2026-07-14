@@ -64,7 +64,7 @@ of socket level subscriptions.
 
 | Option                       | Type   | Description                                                                                                                                                                                                           |
 | ---------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| {{i:`NNG_OPT_SUB_PREF_NEW`}} | `bool` | If `true` (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If `false`, the older message is preserved and the newer message is discarded. |
+| {{i:`NNG_OPT_SUB_PREFNEW`}} | `bool` | If `true` (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If `false`, the older message is preserved and the newer message is discarded. |
 
 ### Protocol Versions
 

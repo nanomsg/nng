@@ -76,8 +76,8 @@ _stat_ is the root of the statistics tree.
 ```c
 const nng_stat *nng_stat_find(const nng_stat *stat, const char *name);
 const nng_stat *nng_stat_find_dialer(const nng_stat *stat, nng_dialer dialer);
-const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener);
-const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
+const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_listener listener);
+const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_socket socket);
 ```
 
 Sometimes it is easiest to search for a specific statistic, matching by name,
@@ -162,7 +162,7 @@ bool nng_stat_bool(const nng_stat *stat);
 
 These functions return the value associated with the statistic.
 
-The {{i:`nng_stat_value`}} function returns the the numeric value for the statistic _stat_
+The {{i:`nng_stat_value`}} function returns the numeric value for the statistic _stat_
 of type [`NNG_STAT_COUNTER`], [`NNG_STAT_LEVEL`], or [`NNG_STAT_ID`].
 If _stat_ is not one of these types, then it returns zero.
 

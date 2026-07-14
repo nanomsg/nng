@@ -8,7 +8,7 @@ until a reply is received or the request times out.
 
 > [!TIP]
 > This protocol is useful in setting up RPC-like services.
-> It is also "reliable", in that a the requester will keep retrying until
+> It is also "reliable", in that a requester will keep retrying until
 > a reply is received.
 
 > [!NOTE]
@@ -82,10 +82,10 @@ The following protocol-specific option is available.
   Requests are also automatically resent if the peer to whom
   the original request was sent disconnects. \
   \
-  Resending may be deferred up to the value of the `NNG_OPT_RESENDTICK` parameter. \
+  Resending may be deferred up to the value of the `NNG_OPT_REQ_RESENDTICK` parameter. \
   \
   If the value is set to [`NNG_DURATION_INFINITE`], then resends are disabled
-  altogether. This should be used when the request is not idemptoent.
+  altogether. This should be used when the request is not idempotent.
 
 - {{i:`NNG_OPT_REQ_RESENDTICK`}}: \
   ([`nng_duration`]) \

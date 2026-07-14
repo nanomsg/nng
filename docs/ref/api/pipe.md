@@ -20,7 +20,7 @@ and therefore are also automatically associated with a single socket.
 > However it is possible to access a pipe when more information about the
 > source of a message is needed, or when more control is required over message delivery.
 
-Pipe objects are created by [dialers][dialer] and and [listeners][listener].
+Pipe objects are created by [dialers][dialer] and [listeners][listener].
 
 ## Initialization
 
