@@ -992,6 +992,34 @@ nng_listener_get_url(nng_listener id, const nng_url **urlp)
 }
 
 int
+nng_dialer_hold(nng_dialer did)
+{
+	nni_dialer *d;
+	int         rv;
+
+	if ((rv = nni_dialer_find(&d, did.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_dialer_user_hold(d);
+	nni_dialer_rele(d);
+	return (rv);
+}
+
+int
+nng_dialer_release(nng_dialer did)
+{
+	nni_dialer *d;
+	int         rv;
+
+	if ((rv = nni_dialer_find(&d, did.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_dialer_user_rele(d);
+	nni_dialer_rele(d);
+	return (rv);
+}
+
+int
 nng_dialer_close(nng_dialer did)
 {
 	nni_dialer *d;

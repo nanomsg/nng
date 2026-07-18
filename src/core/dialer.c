@@ -219,6 +219,7 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 	d->d_closed   = false;
 	d->d_data     = NULL;
 	d->d_ref      = 1;
+	d->d_user_ref = 0;
 	d->d_sock     = s;
 	d->d_tran     = tran;
 	d->d_inirtime = NNI_SECOND / 100; // 10ms
@@ -353,6 +354,22 @@ nni_dialer_hold(nni_dialer *d)
 	return (rv);
 }
 
+int
+nni_dialer_user_hold(nni_dialer *d)
+{
+	int rv;
+	nni_mtx_lock(&dialers_lk);
+	if (d->d_closed) {
+		rv = NNG_ECLOSED;
+	} else {
+		d->d_ref++;
+		d->d_user_ref++;
+		rv = 0;
+	}
+	nni_mtx_unlock(&dialers_lk);
+	return (rv);
+}
+
 void
 nni_dialer_rele(nni_dialer *d)
 {
@@ -362,11 +379,37 @@ nni_dialer_rele(nni_dialer *d)
 	NNI_ASSERT(d->d_ref > 0);
 	d->d_ref--;
 	reap = ((d->d_ref == 0) && (d->d_closed));
+	if (reap) {
+		nni_id_remove(&dialers, d->d_id);
+	}
 	nni_mtx_unlock(&dialers_lk);
 
 	if (reap) {
 		nni_dialer_reap(d);
 	}
+}
+
+int
+nni_dialer_user_rele(nni_dialer *d)
+{
+	bool rele;
+	int  rv;
+
+	nni_mtx_lock(&dialers_lk);
+	if (d->d_user_ref == 0) {
+		rele = false;
+		rv   = NNG_ESTATE;
+	} else {
+		d->d_user_ref--;
+		rele = true;
+		rv   = 0;
+	}
+	nni_mtx_unlock(&dialers_lk);
+
+	if (rele) {
+		nni_dialer_rele(d);
+	}
+	return (rv);
 }
 
 void
@@ -379,7 +422,6 @@ nni_dialer_close(nni_dialer *d)
 		return;
 	}
 	d->d_closed = true;
-	nni_id_remove(&dialers, d->d_id);
 	nni_mtx_unlock(&dialers_lk);
 
 	nni_dialer_shutdown(d);
