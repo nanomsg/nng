@@ -17,7 +17,9 @@
 
 extern int      nni_dialer_find(nni_dialer **, uint32_t);
 extern int      nni_dialer_hold(nni_dialer *);
+extern int      nni_dialer_user_hold(nni_dialer *);
 extern void     nni_dialer_rele(nni_dialer *);
+extern int      nni_dialer_user_rele(nni_dialer *);
 extern uint32_t nni_dialer_id(nni_dialer *);
 extern int      nni_dialer_create(nni_dialer **, nni_sock *, const char *);
 extern int  nni_dialer_create_url(nni_dialer **, nni_sock *, const nng_url *);

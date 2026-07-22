@@ -438,6 +438,9 @@ NNG_DECL int nng_dialer_get_addr(nng_dialer, const char *, nng_sockaddr *);
 NNG_DECL int nng_dialer_get_tls(nng_dialer, nng_tls_config **);
 NNG_DECL int nng_dialer_get_url(nng_dialer id, const nng_url **urlp);
 
+NNG_DECL int nng_dialer_hold(nng_dialer id);
+NNG_DECL int nng_dialer_release(nng_dialer id);
+
 NNG_DECL int nng_listener_set_bool(nng_listener, const char *, bool);
 NNG_DECL int nng_listener_set_int(nng_listener, const char *, int);
 NNG_DECL int nng_listener_set_size(nng_listener, const char *, size_t);
