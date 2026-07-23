@@ -1220,6 +1220,7 @@ udp_ep_init(
 	nni_aio_init(&ep->timeaio, udp_timer_cb, ep);
 	nni_aio_init(&ep->resaio, udp_resolv_cb, ep);
 	nni_aio_completions_init(&ep->complq);
+	ep->next_wake = NNI_TIME_NEVER;
 
 	ep->tx_ring.descs =
 	    NNI_ALLOC_STRUCTS(ep->tx_ring.descs, NNG_UDP_TXQUEUE_LEN);
