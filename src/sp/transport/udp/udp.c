@@ -1250,6 +1250,7 @@ udp_ep_init(
 	ep->rcvmax           = NNG_UDP_RECVMAX;
 	ep->copymax          = NNG_UDP_COPYMAX;
 	ep->max_peers        = NNG_UDP_MAX_PEERS;
+	ep->next_wake        = NNI_TIME_NEVER;
 	if ((rv = nni_msg_alloc(&ep->rx_payload, ep->rcvmax) != 0)) {
 		NNI_FREE_STRUCTS(ep->tx_ring.descs, NNG_UDP_TXQUEUE_LEN);
 		return (rv);
