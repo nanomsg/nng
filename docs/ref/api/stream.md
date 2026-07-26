@@ -173,9 +173,9 @@ int rv = nng_stream_listener_alloc(&listener, "tcp://:444");
 ## Closing a Stream Factory
 
 ```c
-void nng_stream_dialer_close(nng_stream_listener *dialer);
-void nng_stream_dialer_stop(nng_stream_listener *dialer);
-void nng_stream_dialer_free(nng_stream_listener *dialer);
+void nng_stream_dialer_close(nng_stream_dialer *dialer);
+void nng_stream_dialer_stop(nng_stream_dialer *dialer);
+void nng_stream_dialer_free(nng_stream_dialer *dialer);
 void nng_stream_listener_close(nng_stream_listener *listener);
 void nng_stream_listener_stop(nng_stream_listener *listener);
 void nng_stream_listener_free(nng_stream_listener *listener);
@@ -375,8 +375,8 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 ## TLS Configuration
 
 ```c
-nng_err nng_stream_dialer_get_tls(nng_stream_listener *dialer, nng_tls_config **tlsp);
-nng_err nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *tls);
+nng_err nng_stream_dialer_get_tls(nng_stream_dialer *dialer, nng_tls_config **tlsp);
+nng_err nng_stream_dialer_set_tls(nng_stream_dialer *dialer, nng_tls_config *tls);
 nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
 nng_err nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
 ```
