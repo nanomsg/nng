@@ -34,7 +34,7 @@ use cases using [`nng_ctx_open`].
 
 Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
-Replies made using a context will be returned to the the surveyor that
+Replies made using a context will be returned to the surveyor that
 issued the survey most recently received by that context.
 The restrictions for order of operations with sockets apply equally
 well for contexts, except that each context will be treated as if it were
