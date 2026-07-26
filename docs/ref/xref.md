@@ -78,7 +78,7 @@
 [`nng_stat_bool`]: ../api/stats.md#statistic-value
 [`nng_stat_string`]: ../api/stats.md#statistic-value
 [`nng_stat_unit`]: ../api/stats.md#statistic-units
-[`nng_stat_next`]: ../api/stats.md#traversing-the-three
+[`nng_stat_next`]: ../api/stats.md#traversing-the-tree
 [`nng_stat_child`]: ../api/stats.md#traversing-the-tree
 [`nng_stat_parent`]: ../api/stats.md#traversing-the-tree
 [`nng_stat_timestamp`]: ../api/stats.md#statistic-timestamp
@@ -415,8 +415,8 @@
 [`NNG_HTTP_STATUS_FORBIDDEN`]: ../api/http.md#NNG_HTTP_STATUS_FORBIDDEN
 [`NNG_HTTP_STATUS_NOT_FOUND`]: ../api/http.md#NNG_HTTP_STATUS_NOT_FOUND
 [`NNG_HTTP_STATUS_METHOD_NOT_ALLOWED`]: ../api/http.md#NNG_HTTP_STATUS_METHOD_NOT_ALLOWED
-[`NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE`]: ../api/http.md#NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE
-[`NNG_HTTP_STATUS_METHOD_PROXY_AUTH_REQUIRED`]: ../api/http.md#NNG_HTTP_STATUS_METHOD_PROXY_AUTH_REQUIRED
+[`NNG_HTTP_STATUS_NOT_ACCEPTABLE`]: ../api/http.md#NNG_HTTP_STATUS_NOT_ACCEPTABLE
+[`NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED`]: ../api/http.md#NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED
 [`NNG_HTTP_STATUS_REQUEST_TIMEOUT`]: ../api/http.md#NNG_HTTP_STATUS_REQUEST_TIMEOUT
 [`NNG_HTTP_STATUS_CONFLICT`]: ../api/http.md#NNG_HTTP_STATUS_CONFLICT
 [`NNG_HTTP_STATUS_GONE`]: ../api/http.md#NNG_HTTP_STATUS_GONE
