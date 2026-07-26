@@ -3,7 +3,7 @@
 ## Preface for the First Edition
 
 > Note that some typographical errors originally present in the first
-> addition have been corrected here.
+> edition have been corrected here.
 
 At the time of this writing, we are wrapping up NNG for its formal
 1.0.0 release.
