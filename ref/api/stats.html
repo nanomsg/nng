@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1e5fc8f4.js";
+            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -230,8 +230,8 @@ or <code>NULL</code> if <em>stat</em> has no more siblings to the right.</p>
 <h2 id="finding-a-statistic"><a class="header" href="#finding-a-statistic">Finding a Statistic</a></h2>
 <pre><code class="language-c">const nng_stat *nng_stat_find(const nng_stat *stat, const char *name);
 const nng_stat *nng_stat_find_dialer(const nng_stat *stat, nng_dialer dialer);
-const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener);
-const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
+const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_listener listener);
+const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_socket socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
 or possibly to find the tree of statistics associated with a specific <a href="../api/sock.html">socket</a>,
@@ -307,7 +307,7 @@ const char *nng_stat_string(const nng_stat *stat);
 bool nng_stat_bool(const nng_stat *stat);
 </code></pre>
 <p>These functions return the value associated with the statistic.</p>
-<p>The <a name="a021"></a><code>nng_stat_value</code> function returns the the numeric value for the statistic <em>stat</em>
+<p>The <a name="a021"></a><code>nng_stat_value</code> function returns the numeric value for the statistic <em>stat</em>
 of type <a href="../api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a>, <a href="../api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>, or <a href="../api/stats.html#NNG_STAT_ID"><code>NNG_STAT_ID</code></a>.
 If <em>stat</em> is not one of these types, then it returns zero.</p>
 <p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of

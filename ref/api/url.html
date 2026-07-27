@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1e5fc8f4.js";
+            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -238,7 +238,7 @@ can be used to determine the amount of space to allocate for a dynamically
 sized buffer.</p>
 </blockquote>
 <h2 id="parse-a-url"><a class="header" href="#parse-a-url">Parse a URL</a></h2>
-<pre><code class="language-c">int nng_url_parse(nng_url **urlp, const char *str);
+<pre><code class="language-c">nng_err nng_url_parse(nng_url **urlp, const char *str);
 </code></pre>
 <p>The <a name="a011"></a><code>nng_url_parse</code> function parses a URL string (in <em>str</em>),
 and creates a dynamically allocated <code>nng_url</code>, returning it in <em>urlp</em>.</p>
@@ -275,7 +275,7 @@ should follow C identifier naming conventions and be no longer than 32
 characters to maximize compatibility across systems.</p>
 </blockquote>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
-<pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
+<pre><code class="language-c">nng_err nng_url_clone(nng_url **dup, const nng_url *url);
 </code></pre>
 <p>The <a name="a012"></a><code>nng_url_clone</code> function creates a copy of <em>url</em>, and returns it in <em>dup</em>.</p>
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>

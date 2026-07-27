@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1e5fc8f4.js";
+            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -190,9 +190,9 @@ allow only a single <a href="../api/thread.html">thread</a> to lock “own” th
 Any other thread trying to acquire the same mutex will wait until the owner has released the mutex
 by calling <a href="../api/synch.html#releasing-a-mutex"><code>nng_mtx_unlock</code></a>.</p>
 <h3 id="creating-a-mutex"><a class="header" href="#creating-a-mutex">Creating a Mutex</a></h3>
-<pre><code class="language-c">int nng_mutx_alloc(nng_mt **mtxp);
+<pre><code class="language-c">int nng_mtx_alloc(nng_mt **mtxp);
 </code></pre>
-<p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_lock</code>.
+<p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_alloc</code>.
 On success, a pointer to the mutex is returned through <em>mtxp</em>.
 This function can fail due to insufficient memory or resources, in which
 case it will return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succeed and return zero.</p>
@@ -209,7 +209,7 @@ by any <a href="../api/thread.html">thread</a> when calling this function.</p>
 unowned by any other threads if necessary.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
-<p>A thread must not attempt to reqacuire the same mutex while it already “owns” the mutex.
+<p>A thread must not attempt to reacquire the same mutex while it already “owns” the mutex.
 If it does attempt to do so, the result will be a single party deadlock.</p>
 </blockquote>
 <h3 id="releasing-a-mutex"><a class="header" href="#releasing-a-mutex">Releasing a Mutex</a></h3>
@@ -225,7 +225,7 @@ that acquired the mutex to begin with.</p>
 <h2 id="condition-variable"><a class="header" href="#condition-variable">Condition Variable</a></h2>
 <pre><code class="language-c">typedef struct nng_cv nng_cv;
 </code></pre>
-<p>The <a name="a008"></a><code>nng_cv</code> structure implements a <a name="a009"></a>condition variable, associated with the
+<p>The <a name="a008"></a><code>nng_cv</code> structure implements a <a name="a009"></a>condition variable, associated with
 the <a href="../api/synch.html#mutual-exclusion-lock">mutex</a> <em>mtx</em> which was supplied when it was created.</p>
 <p>Condition variables provide for a way to wait on an arbitrary condition, and to be woken
 when the condition is signaled.

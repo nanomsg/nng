@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-1e5fc8f4.js";
+            window.path_to_searchindex_js = "searchindex-be9b6f7f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -233,14 +233,11 @@ IN THE SOFTWARE.</p>
 <p><em>The sun always shines when you are home.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="preface"><a class="header" href="#preface">Preface</a></h1>
-<blockquote class="blockquote-tag blockquote-tag-important">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
-<p>This is a <em>DRAFT</em> version of this reference manual,
-and much is still in progress. There may be errors,
-and large omissions as content is still be moved from
-the previous ASCIIDOCTOR format and updated for NNG 2.0.</p>
-</blockquote>
 <h2 id="preface-for-the-first-edition"><a class="header" href="#preface-for-the-first-edition">Preface for the First Edition</a></h2>
+<blockquote>
+<p>Note that some typographical errors originally present in the first
+edition have been corrected here.</p>
+</blockquote>
 <p>At the time of this writing, we are wrapping up NNG for its formal
 1.0.0 release.
 It’s a good time for reflection on the road that we took to get here.
@@ -271,10 +268,10 @@ us advanced multiprocessing and concurrency capabilities, without either
 sacrificing portability or settling for some unhappy least common denominator.
 This core is a robust foundation for NNG and handling the
 “Scalability Protocols”, but if we’re being completely honest, we think this
-core has braod applicability for beyond just the Scalability Protocols.
+core has broad applicability far beyond just the Scalability Protocols.
 It will be interesting to see if others come to the same conclusion.</p>
-<p>Builting upon this robust foundation, we have engineered a substantial
-project, with capabilities far in exceess of the original nanomsg, while
+<p>Building upon this robust foundation, we have engineered a substantial
+project, with capabilities far in excess of the original nanomsg, while
 still preserving compatibility with the the network protocols that
 form the backbone of the nanomsg ecosystem,
 and even a compatible programming interface for nanomsg library users.
@@ -283,7 +280,7 @@ increased scalability, reliability, and usability (especially when developing
 concurrent applications).</p>
 <p>NNG also has complete HTTP server and client
 implementations, support for TLS, and a plethora of other capabilities.
-Much of this is made possible by a the aforementioned asynchronous I/O
+Much of this is made possible by the aforementioned asynchronous I/O
 framework.</p>
 <p>We’ve tried to stay true to the core nanomsg goals about being light-weight,
 liberally licensed, and implemented in C.
@@ -312,7 +309,7 @@ These are visually distinguished as follows:</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>Tips are things that the reader may find useful, such as suggestions
-for use or tim saving hints.</p>
+for use or time-saving hints.</p>
 </blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
@@ -324,7 +321,7 @@ or use of the topic.</p>
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
 <p>Warnings are used to denote important cautionary advice,
 which should be carefully heeded.
-Ignoring such advice may lead to crashses, unexpected behavior,
+Ignoring such advice may lead to crashes, unexpected behavior,
 loss of revenue, or other undesirable conditions.</p>
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2096,8 +2093,7 @@ and this value means that the previously established default should be used.
 The precise meaning is context-specific.</p>
 </li>
 <li>
-<p><a name="a006"></a><code>NNG_DURATION_ZERO</code>: A zero length duration is used to performan an immediate
-poll.</p>
+<p><a name="a006"></a><code>NNG_DURATION_ZERO</code>: A zero-length duration is used to poll immediately.</p>
 </li>
 </ul>
 <h2 id="get-the-current-time"><a class="header" href="#get-the-current-time">Get the Current Time</a></h2>
@@ -2213,7 +2209,7 @@ can be used to determine the amount of space to allocate for a dynamically
 sized buffer.</p>
 </blockquote>
 <h2 id="parse-a-url"><a class="header" href="#parse-a-url">Parse a URL</a></h2>
-<pre><code class="language-c">int nng_url_parse(nng_url **urlp, const char *str);
+<pre><code class="language-c">nng_err nng_url_parse(nng_url **urlp, const char *str);
 </code></pre>
 <p>The <a name="a011"></a><code>nng_url_parse</code> function parses a URL string (in <em>str</em>),
 and creates a dynamically allocated <code>nng_url</code>, returning it in <em>urlp</em>.</p>
@@ -2250,7 +2246,7 @@ should follow C identifier naming conventions and be no longer than 32
 characters to maximize compatibility across systems.</p>
 </blockquote>
 <h2 id="clone-a-url"><a class="header" href="#clone-a-url">Clone a URL</a></h2>
-<pre><code class="language-c">int nng_url_clone(nng_url **dup, const nng_url *url);
+<pre><code class="language-c">nng_err nng_url_clone(nng_url **dup, const nng_url *url);
 </code></pre>
 <p>The <a name="a012"></a><code>nng_url_clone</code> function creates a copy of <em>url</em>, and returns it in <em>dup</em>.</p>
 <h2 id="destroy-a-url"><a class="header" href="#destroy-a-url">Destroy a URL</a></h2>
@@ -2896,9 +2892,9 @@ allow only a single <a href="#threads">thread</a> to lock “own” the lock, ac
 Any other thread trying to acquire the same mutex will wait until the owner has released the mutex
 by calling <a href="#releasing-a-mutex"><code>nng_mtx_unlock</code></a>.</p>
 <h3 id="creating-a-mutex"><a class="header" href="#creating-a-mutex">Creating a Mutex</a></h3>
-<pre><code class="language-c">int nng_mutx_alloc(nng_mt **mtxp);
+<pre><code class="language-c">int nng_mtx_alloc(nng_mt **mtxp);
 </code></pre>
-<p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_lock</code>.
+<p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_alloc</code>.
 On success, a pointer to the mutex is returned through <em>mtxp</em>.
 This function can fail due to insufficient memory or resources, in which
 case it will return <a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>. Otherwise it will succeed and return zero.</p>
@@ -2915,7 +2911,7 @@ by any <a href="#threads">thread</a> when calling this function.</p>
 unowned by any other threads if necessary.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
-<p>A thread must not attempt to reqacuire the same mutex while it already “owns” the mutex.
+<p>A thread must not attempt to reacquire the same mutex while it already “owns” the mutex.
 If it does attempt to do so, the result will be a single party deadlock.</p>
 </blockquote>
 <h3 id="releasing-a-mutex"><a class="header" href="#releasing-a-mutex">Releasing a Mutex</a></h3>
@@ -2931,7 +2927,7 @@ that acquired the mutex to begin with.</p>
 <h2 id="condition-variable"><a class="header" href="#condition-variable">Condition Variable</a></h2>
 <pre><code class="language-c">typedef struct nng_cv nng_cv;
 </code></pre>
-<p>The <a name="a008"></a><code>nng_cv</code> structure implements a <a name="a009"></a>condition variable, associated with the
+<p>The <a name="a008"></a><code>nng_cv</code> structure implements a <a name="a009"></a>condition variable, associated with
 the <a href="#mutual-exclusion-lock">mutex</a> <em>mtx</em> which was supplied when it was created.</p>
 <p>Condition variables provide for a way to wait on an arbitrary condition, and to be woken
 when the condition is signaled.
@@ -3290,8 +3286,8 @@ or <code>NULL</code> if <em>stat</em> has no more siblings to the right.</p>
 <h2 id="finding-a-statistic"><a class="header" href="#finding-a-statistic">Finding a Statistic</a></h2>
 <pre><code class="language-c">const nng_stat *nng_stat_find(const nng_stat *stat, const char *name);
 const nng_stat *nng_stat_find_dialer(const nng_stat *stat, nng_dialer dialer);
-const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_dialer listener);
-const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_dialer socket);
+const nng_stat *nng_stat_find_listener(const nng_stat *stat, nng_listener listener);
+const nng_stat *nng_stat_find_socket(const nng_stat *stat, nng_socket socket);
 </code></pre>
 <p>Sometimes it is easiest to search for a specific statistic, matching by name,
 or possibly to find the tree of statistics associated with a specific <a href="#sockets">socket</a>,
@@ -3367,7 +3363,7 @@ const char *nng_stat_string(const nng_stat *stat);
 bool nng_stat_bool(const nng_stat *stat);
 </code></pre>
 <p>These functions return the value associated with the statistic.</p>
-<p>The <a name="a021"></a><code>nng_stat_value</code> function returns the the numeric value for the statistic <em>stat</em>
+<p>The <a name="a021"></a><code>nng_stat_value</code> function returns the numeric value for the statistic <em>stat</em>
 of type <a href="#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a>, <a href="#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>, or <a href="#NNG_STAT_ID"><code>NNG_STAT_ID</code></a>.
 If <em>stat</em> is not one of these types, then it returns zero.</p>
 <p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
@@ -3632,9 +3628,9 @@ URL specified by <em>url</em> represented as a string, or as an <a href="#url-st
 int rv = nng_stream_listener_alloc(&amp;listener, "tcp://:444");
 </code></pre>
 <h2 id="closing-a-stream-factory"><a class="header" href="#closing-a-stream-factory">Closing a Stream Factory</a></h2>
-<pre><code class="language-c">void nng_stream_dialer_close(nng_stream_listener *dialer);
-void nng_stream_dialer_stop(nng_stream_listener *dialer);
-void nng_stream_dialer_free(nng_stream_listener *dialer);
+<pre><code class="language-c">void nng_stream_dialer_close(nng_stream_dialer *dialer);
+void nng_stream_dialer_stop(nng_stream_dialer *dialer);
+void nng_stream_dialer_free(nng_stream_dialer *dialer);
 void nng_stream_listener_close(nng_stream_listener *listener);
 void nng_stream_listener_stop(nng_stream_listener *listener);
 void nng_stream_listener_free(nng_stream_listener *listener);
@@ -3801,8 +3797,8 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 // can now start doing nng_stream_listener_accept...
 </code></pre>
 <h2 id="tls-configuration-1"><a class="header" href="#tls-configuration-1">TLS Configuration</a></h2>
-<pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_listener *dialer, nng_tls_config **tlsp);
-nng_err nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *tls);
+<pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_dialer *dialer, nng_tls_config **tlsp);
+nng_err nng_stream_dialer_set_tls(nng_stream_dialer *dialer, nng_tls_config *tls);
 nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
 nng_err nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
 </code></pre>
@@ -5746,7 +5742,7 @@ until a reply is received or the request times out.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>This protocol is useful in setting up RPC-like services.
-It is also “reliable”, in that a the requester will keep retrying until
+It is also “reliable”, in that the requester will keep retrying until
 a reply is received.</p>
 </blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -5801,8 +5797,8 @@ a separate socket.</p>
 <p><a name="a006"></a><code>NNG_OPT_REQ_RESENDTIME</code>: <br>(<a href="#duration-type"><code>nng_duration</code></a>) <br>When a new request is started, a timer of this duration is also started.
 If no reply is received before this timer expires, then the request will
 be resent. <br><br>Requests are also automatically resent if the peer to whom
-the original request was sent disconnects. <br><br>Resending may be deferred up to the value of the <code>NNG_OPT_RESENDTICK</code> parameter. <br><br>If the value is set to <a href="#duration-type"><code>NNG_DURATION_INFINITE</code></a>, then resends are disabled
-altogether. This should be used when the request is not idemptoent.</p>
+the original request was sent disconnects. <br><br>Resending may be deferred up to the value of the <code>NNG_OPT_REQ_RESENDTICK</code> parameter. <br><br>If the value is set to <a href="#duration-type"><code>NNG_DURATION_INFINITE</code></a>, then resends are disabled
+altogether. This should be used when the request is not idempotent.</p>
 </li>
 <li>
 <p><a name="a007"></a><code>NNG_OPT_REQ_RESENDTICK</code>: <br>(<a href="#duration-type"><code>nng_duration</code></a>) <br>This is the granularity of the clock that is used to check for resending.
@@ -5880,7 +5876,7 @@ reply will be sent to surveyor from whom the last survey was received.</p>
 use cases using <a href="#creating-a-context"><code>nng_ctx_open</code></a>.</p>
 <p>Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
-Replies made using a context will be returned to the the surveyor that
+Replies made using a context will be returned to the surveyor that
 issued the survey most recently received by that context.
 The restrictions for order of operations with sockets apply equally
 well for contexts, except that each context will be treated as if it were
@@ -5968,7 +5964,7 @@ of socket level subscriptions.</p>
 <tr><th>Option</th><th>Type</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><a name="a010"></a><code>NNG_OPT_SUB_PREF_NEW</code></td><td><code>bool</code></td><td>If <code>true</code> (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If <code>false</code>, the older message is preserved and the newer message is discarded.</td></tr>
+<tr><td><a name="a010"></a><code>NNG_OPT_SUB_PREFNEW</code></td><td><code>bool</code></td><td>If <code>true</code> (default), when the receive queue is full, then older unreceived messages will be discarded to make room for newer messages. If <code>false</code>, the older message is preserved and the newer message is discarded.</td></tr>
 </tbody>
 </table>
 </div>
@@ -7238,7 +7234,7 @@ earlier versions <em>NNG</em> or <em>libnanomsg</em>.</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="migrating-from-nng-1x"><a class="header" href="#migrating-from-nng-1x">Migrating from NNG 1.x</a></h1>
-<p>There are some incompatibities from NNG 1.x, and applications must make certain changes for NNG 2.0.
+<p>There are some incompatibilities from NNG 1.x, and applications must make certain changes for NNG 2.0.
 This guide should help with this migration. While we have made reasonable efforts to highlight all
 of the things that applications could run into, this list is not necessarily exhaustive, and undocumented
 interfaces may have changed without notice here.</p>
@@ -7694,7 +7690,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Nanomsg Option</th><th>NNG Eqvaivalent</th><th>Notes</th></tr>
+<tr><th>Nanomsg Option</th><th>NNG Equivalent</th><th>Notes</th></tr>
 </thead>
 <tbody>
 <tr><td><code>NN_LINGER</code></td><td>None</td><td>NNG does not support tuning this.</td></tr>
@@ -7729,7 +7725,7 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 <tbody>
 <tr><td><code>EINTR</code></td><td><a href="#NNG_EINTR"><code>NNG_EINTR</code></a></td><td></td></tr>
 <tr><td><code>ENOMEM</code></td><td><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a></td><td></td></tr>
-<tr><td><code>EINVAL</code></td><td><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>, <a href="#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>, <a href="#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a></td><td>NNG discrimates between different types of errors.</td></tr>
+<tr><td><code>EINVAL</code></td><td><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>, <a href="#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>, <a href="#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a></td><td>NNG discriminates between different types of errors.</td></tr>
 <tr><td><code>EBUSY</code></td><td><a href="#NNG_EBUSY"><code>NNG_EBUSY</code></a></td><td></td></tr>
 <tr><td><code>ETIMEDOUT</code></td><td><a href="#NNG_ETIMEDOUT"><code>NNG_ETIMEDOUT</code></a></td><td></td></tr>
 <tr><td><code>ECONNREFUSED</code></td><td><a href="#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a></td><td></td></tr>
@@ -8024,15 +8020,16 @@ named pipes, <a href="#a004">1</a><br />
 <code>nng_msg_trim</code>, <a href="#a017">1</a><br />
 <code>nng_msleep</code>, <a href="#a009">1</a><br />
 <code>nng_mtx</code>, <a href="#a003">1</a><br />
+<code>nng_mtx_alloc</code>, <a href="#a004">1</a><br />
 <code>nng_mtx_free</code>, <a href="#a005">1</a><br />
-<code>nng_mtx_lock</code>, <a href="#a004">1</a>, <a href="#a006">2</a><br />
+<code>nng_mtx_lock</code>, <a href="#a006">1</a><br />
 <code>nng_mtx_unlock</code>, <a href="#a007">1</a><br />
 <code>nng_null_logger</code>, <a href="#a010">1</a><br />
 <code>NNG_OPT_LISTEN_FD</code>, <a href="#a062">1</a><br />
 <code>NNG_OPT_REQ_RESENDTICK</code>, <a href="#a007">1</a><br />
 <code>NNG_OPT_REQ_RESENDTIME</code>, <a href="#a006">1</a><br />
 <code>NNG_OPT_SOCKET_FD</code>, <a href="#a002">1</a><br />
-<code>NNG_OPT_SUB_PREF_NEW</code>, <a href="#a010">1</a><br />
+<code>NNG_OPT_SUB_PREFNEW</code>, <a href="#a010">1</a><br />
 <code>NNG_OPT_SURVEYOR_SURVEYTIME</code>, <a href="#a007">1</a><br />
 <code>nng_pair0_open</code>, <a href="#a010">1</a><br />
 <code>nng_pair0_open_raw</code>, <a href="#a023">1</a><br />

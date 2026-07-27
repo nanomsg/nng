@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1e5fc8f4.js";
+            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -300,9 +300,9 @@ URL specified by <em>url</em> represented as a string, or as an <a href="../api/
 int rv = nng_stream_listener_alloc(&amp;listener, "tcp://:444");
 </code></pre>
 <h2 id="closing-a-stream-factory"><a class="header" href="#closing-a-stream-factory">Closing a Stream Factory</a></h2>
-<pre><code class="language-c">void nng_stream_dialer_close(nng_stream_listener *dialer);
-void nng_stream_dialer_stop(nng_stream_listener *dialer);
-void nng_stream_dialer_free(nng_stream_listener *dialer);
+<pre><code class="language-c">void nng_stream_dialer_close(nng_stream_dialer *dialer);
+void nng_stream_dialer_stop(nng_stream_dialer *dialer);
+void nng_stream_dialer_free(nng_stream_dialer *dialer);
 void nng_stream_listener_close(nng_stream_listener *listener);
 void nng_stream_listener_stop(nng_stream_listener *listener);
 void nng_stream_listener_free(nng_stream_listener *listener);
@@ -469,8 +469,8 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 // can now start doing nng_stream_listener_accept...
 </code></pre>
 <h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
-<pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_listener *dialer, nng_tls_config **tlsp);
-nng_err nng_stream_dialer_set_tls(nng_stream_listener *dialer, nng_tls_config *tls);
+<pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_dialer *dialer, nng_tls_config **tlsp);
+nng_err nng_stream_dialer_set_tls(nng_stream_dialer *dialer, nng_tls_config *tls);
 nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
 nng_err nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
 </code></pre>
