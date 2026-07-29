@@ -226,7 +226,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		if ((rv = nni_posix_pfd_arm(&c->pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
-		c->dial_aio = NULL;
+		// c->dial_aio = NULL;
 		nni_aio_set_prov_data(aio, c);
 		nni_list_append(&d->connq, aio);
 		nni_mtx_unlock(&d->mtx);
