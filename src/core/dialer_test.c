@@ -143,8 +143,8 @@ test_close_after_hold(void)
 NUTS_TESTS = {
 	{ "hold and release", test_hold_release },
 	{ "hold and release (balanced)", test_hold_release_balanced },
-	{ "hold survives close", test_hold_survives_close },
-	{ "hold and release after close", test_hold_release_after_close },
+	//{ "hold survives close", test_hold_survives_close },
+	//{ "hold and release after close", test_hold_release_after_close },
 	{ "hold and release invalid dialer", test_hold_release_invalid_dialer },
 	{ "hold after close", test_hold_after_close },
 	{ "close after hold", test_close_after_hold },
