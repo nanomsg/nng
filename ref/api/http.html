@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -177,7 +177,7 @@
                         <h1 id="http-support"><a class="header" href="#http-support">HTTP Support</a></h1>
 <p>NNG offers support for creation of HTTP clients, and servers. NNG supports HTTP/1.1 at present, and supports
 a subset of functionality, but the support should be sufficient for simple clients, REST API servers, static content servers,
-and gateways between HTTP and and other protocols. It also provides support for WebSocket based connections.</p>
+and gateways between HTTP and other protocols. It also provides support for WebSocket based connections.</p>
 <p>HTTP follows a request/reply model, where a client issues a request, and the server is expected to reply.
 Every request is answered with a single reply.</p>
 <h2 id="header-file"><a class="header" href="#header-file">Header File</a></h2>
@@ -216,7 +216,7 @@ const char *nng_http_get_uri(nng_http *conn);
 <p>The <a name="a004"></a><code>nng_http_set_uri</code> function sets the <a name="a005"></a>URI, which normally appears like a path such as “/docs/index.html”,
 for the next transaction on <em>conn</em>. It sets the URI to <em>uri</em>, and, if <em>query</em> is not <code>NULL</code>, also appends the
 contents of <em>query</em>, separated by either the ‘?’ or ‘&amp;’ character, depending on whether <em>uri</em> already
-contains a query string. It may return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, or <a href="../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a> if the the result is too long,
+contains a query string. It may return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, or <a href="../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a> if the result is too long,
 or <a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if there is some other problem with the URI.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
@@ -250,7 +250,7 @@ nng_http_status nng_http_get_status(nng_http *conn);
 const char *nng_http_get_reason(nng_http_conn *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 </code></pre>
-<p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typipcally numbered from 100 through 599) returned
+<p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typically numbered from 100 through 599) returned
 by the server in the last exchange on <em>conn</em>. (If no exchange has been performed yet, the result is undefined.)
 The value is returned as an <a name="a010"></a><code>nng_http_status</code>.</p>
 <p>A descriptive message matching the status code is returned by <a name="a011"></a><code>nng_http_get_reason</code>.</p>
@@ -278,8 +278,8 @@ attach any custom error page configured on the server for display to users.</p>
 <tr><td><code>NNG_HTTP_STATUS_ACCEPTED</code><a name="NNG_HTTP_STATUS_ACCEPTED"></a></td><td>202</td><td>Created</td><td>Request accepted for future processing.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_NOT_AUTHORITATIVE</code><a name="NNG_HTTP_STATUS_NOT_AUTHORITATIVE"></a></td><td>203</td><td>Not Authoritative</td><td>Request successful, but modified by proxy.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_NO_CONTENT</code><a name="NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>204</td><td>No Content</td><td>Request successful, no content returned.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_RESET_CONTENT</code><a name="NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>205</td><td>Reset Content</td><td>Request successful, client should reload content.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_PARTIAL_CONTENT</code><a name="NNG_HTTP_STATUS_NO_CONTENT"></a></td><td>206</td><td>Partial Content</td><td>Response to a range request.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_RESET_CONTENT</code><a name="NNG_HTTP_STATUS_RESET_CONTENT"></a></td><td>205</td><td>Reset Content</td><td>Request successful, client should reload content.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_PARTIAL_CONTENT</code><a name="NNG_HTTP_STATUS_PARTIAL_CONTENT"></a></td><td>206</td><td>Partial Content</td><td>Response to a range request.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_MULTI_STATUS</code><a name="NNG_HTTP_STATUS_MULTI_STATUS"></a></td><td>207</td><td>Multi-Status</td><td>Used with WebDAV.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_ALREADY_REPORTED</code><a name="NNG_HTTP_STATUS_ALREADY_REPORTED"></a></td><td>208</td><td>Already Reported</td><td>Used with WebDAV.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_IM_USED</code><a name="NNG_HTTP_STATUS_IM_USED"></a></td><td>226</td><td>IM Used</td><td>Used with delta encodings, rarely supported.</td></tr>
@@ -297,14 +297,14 @@ attach any custom error page configured on the server for display to users.</p>
 <tr><td><code>NNG_HTTP_STATUS_FORBIDDEN</code><a name="NNG_HTTP_STATUS_FORBIDDEN"></a></td><td>403</td><td>Forbidden</td><td>No permission to access resource.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_NOT_FOUND</code><a name="NNG_HTTP_STATUS_NOT_FOUND"></a></td><td>404</td><td>Not Found</td><td>Resource does not exist.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_METHOD_NOT_ALLOWED</code><a name="NNG_HTTP_STATUS_METHOD_NOT_ALLOWED"></a></td><td>405</td><td>Method Not Allowed</td><td>Resource does not support the method.</td></tr>
-<tr><td><code>NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE</code><a name="NNG_HTTP_STATUS_METHOD_NOT_ACCEPTABLE"></a></td><td>406</td><td>Not Acceptable</td><td>Could not satisfy accept requirements.</td></tr>
+<tr><td><code>NNG_HTTP_STATUS_NOT_ACCEPTABLE</code><a name="NNG_HTTP_STATUS_NOT_ACCEPTABLE"></a></td><td>406</td><td>Not Acceptable</td><td>Could not satisfy accept requirements.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED</code><a name="NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED"></a></td><td>407</td><td>Proxy Authentication Required</td><td>Proxy requires authentication.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_REQUEST_TIMEOUT</code><a name="NNG_HTTP_STATUS_REQUEST_TIMEOUT"></a></td><td>408</td><td>Request Timeout</td><td>Timed out waiting for request.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_CONFLICT</code><a name="NNG_HTTP_STATUS_CONFLICT"></a></td><td>409</td><td>Conflict</td><td>Conflicting request.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_GONE</code><a name="NNG_HTTP_STATUS_GONE"></a></td><td>410</td><td>Gone</td><td>Resource no longer exists.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_LENGTH_REQUIRED</code><a name="NNG_HTTP_STATUS_LENGTH_REQUIRED"></a></td><td>411</td><td>Length Required</td><td>Missing Content-Length.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_PRECONDITION_FAILED</code><a name="NNG_HTTP_STATUS_PRECONDITION_FAILED"></a></td><td>412</td><td>Precondition Failed</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code><a name="NNG_HTTP_STATUS_PAYLOAD_TOO_LARGE"></a></td><td>413</td><td>Content Too Large</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_CONTENT_TOO_LARGE</code><a name="NNG_HTTP_STATUS_CONTENT_TOO_LARGE"></a></td><td>413</td><td>Content Too Large</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_URI_TOO_LONG</code><a name="NNG_HTTP_STATUS_URI_TOO_LONG"></a></td><td>414</td><td>URI Too Long</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE</code><a name="NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE"></a></td><td>415</td><td>Unsupported Media Type</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE</code><a name="NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE"></a></td><td>416</td><td>Range Not Satisfiable</td><td></td></tr>
@@ -322,8 +322,8 @@ attach any custom error page configured on the server for display to users.</p>
 <tr><td><code>NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR</code><a name="NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR"></a></td><td>500</td><td>Internal Server Error</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_NOT_IMPLEMENTED</code><a name="NNG_HTTP_STATUS_NOT_IMPLEMENTED"></a></td><td>501</td><td>Not Implemented</td><td>Server does not implement method.</td></tr>
 <tr><td><code>NNG_HTTP_STATUS_BAD_GATEWAY</code><a name="NNG_HTTP_STATUS_BAD_GATEWAY"></a></td><td>502</td><td>Bad Gateway</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_SERVICE_UNAVAILALE</code><a name="NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a></td><td>503</td><td>Service Unavailable</td><td></td></tr>
-<tr><td><code>NNG_HTTP_STATUS_GATEWAY_TIMEOUT</code><a name="NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a></td><td>504</td><td>Gateway TImeout</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_SERVICE_UNAVAILABLE</code><a name="NNG_HTTP_STATUS_SERVICE_UNAVAILABLE"></a></td><td>503</td><td>Service Unavailable</td><td></td></tr>
+<tr><td><code>NNG_HTTP_STATUS_GATEWAY_TIMEOUT</code><a name="NNG_HTTP_STATUS_GATEWAY_TIMEOUT"></a></td><td>504</td><td>Gateway Timeout</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP</code><a name="NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP"></a></td><td>505</td><td>HTTP Version Not Supported</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES</code><a name="NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES"></a></td><td>506</td><td>Variant Also Negotiates</td><td></td></tr>
 <tr><td><code>NNG_HTTP_STATUS_INSUFFICIENT_STORAGE</code><a name="NNG_HTTP_STATUS_INSUFFICIENT_STORAGE"></a></td><td>507</td><td>Variant Also Negotiates</td><td></td></tr>
@@ -339,7 +339,7 @@ bool nng_http_next_header(nng_http *conn, const char **keyp, const char **valuep
 </code></pre>
 <p>The <a name="a013"></a><code>nng_http_get_header</code> returns the header value matching <em>key</em> that was received over <em>conn</em>,
 or <code>NULL</code> if no such header exists.</p>
-<p>Thus, if <em>conn</em> is a client connection, then this function returns the the header value
+<p>Thus, if <em>conn</em> is a client connection, then this function returns the header value
 sent by the server as part of a response, whereas if it is a server connection, it returns
 the header value sent by the client as part of the request.</p>
 <p>If multiple headers are present with the same key, they may be returned as a combined value,
@@ -369,7 +369,7 @@ headers with the same name <em>key</em>, if they exist. In all other respects it
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Some HTTP headers have special semantics, such as the “Host”, “Content-Length”, and “Content-Type” headers.
 This implementation may apply those semantics, in order to conform to the specifications for HTTP, such
-as by guaranting that only a single instance of one of these headers is present.</p>
+as by guaranteeing that only a single instance of one of these headers is present.</p>
 </blockquote>
 <h3 id="retrieving-body-content"><a class="header" href="#retrieving-body-content">Retrieving Body Content</a></h3>
 <pre><code class="language-c">void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
@@ -425,7 +425,7 @@ connection <em>conn</em>, using the <a href="../api/aio.html#scatter-gather-vect
 These functions will complete as soon as any data is transferred.
 Use <a href="../api/aio.html#result-of-operation"><code>nng_aio_count</code></a> to determine how much data was actually transferred.</p>
 <p>The <a name="a025"></a><code>nng_http_read_all</code> and <a name="a026"></a><code>nng_http_write_all</code> functions perform the same task, but will keep resubmitting
-operations until the the entire amount of data requested by the <a href="../api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> is transferred.</p>
+operations until the entire amount of data requested by the <a href="../api/aio.html#scatter-gather-vectors"><code>nng_iov</code></a> is transferred.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>These functions perform no special handling for chunked transfers.</p>
@@ -466,7 +466,7 @@ See <a href="../api/tls.html#peer-certificates"><code>nng_tls_cert</code></a> fo
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>While it should be obvious that this function is only available when using HTTPS,
 it also requires that peer authentication is in use, and may require that the underlying
-TLS engine support peer certificate colleciton. (Some minimal configurations elide this
+TLS engine support peer certificate collection. (Some minimal configurations elide this
 to save space in embedded environments.)</p>
 </blockquote>
 <h2 id="client-api"><a class="header" href="#client-api">Client API</a></h2>
@@ -518,7 +518,7 @@ void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
 </code></pre>
 <p>The <a name="a035"></a><code>nng_http_client_connect</code> function makes an outgoing connection to the
 server configured for <em>client</em>, and creates an <a href="../api/http.html#connection-object"><code>nng_http</code></a> object for the connection.</p>
-<p>This is done asynchronously, and when the operation succeseds the connection may be
+<p>This is done asynchronously, and when the operation succeeds the connection may be
 retried from the <em>aio</em> using <a href="../api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> with index 0.</p>
 <h4 id="example-1-connecting-to-google"><a class="header" href="#example-1-connecting-to-google">Example 1: Connecting to Google</a></h4>
 <pre><code class="language-c">nng_aio *aio;
@@ -794,7 +794,7 @@ URIs from being supported, but doing so will require setting the handler to matc
 <p>The NNG HTTP framework is optimized for URLs shorter than 200 characters.</p>
 </blockquote>
 <p>Additionally each handler has a method it is registered to handle
-(the default is “GET” andc can be changed with <a href="../api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a>), and
+(the default is “GET” and can be changed with <a href="../api/http.html#setting-the-method"><code>nng_http_handler_set_method</code></a>), and
 optionally a “Host” header it can be matched against (see <a href="../api/http.html#filtering-by-host"><code>nng_http_handler_set_host</code></a>).</p>
 <p>In some cases, a handler may reference a logical tree rather (directory)
 rather than just a single element.

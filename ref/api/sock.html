@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -308,7 +308,7 @@ block.</p>
 <p>Closing the socket may be disruptive to transfers that are still in progress.</p>
 </blockquote>
 <h2 id="sending-messages"><a class="header" href="#sending-messages">Sending Messages</a></h2>
-<pre><code class="language-c">int nng_send(nng_socket s, void *data, size_t size, int flags);
+<pre><code class="language-c">int nng_send(nng_socket s, const void *data, size_t size, int flags);
 int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
 void nng_socket_send(nng_socket s, nng_aio *aio);
 </code></pre>
@@ -418,7 +418,7 @@ int nng_socket_get_int(nng_socket s, const char *opt, int *valp);
 int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *valp);
 int nng_socket_get_size(nng_socket s, const char *opt, size_t *valp);
 
-int nng_socket_set_bool(nng_socket s, const char *opt, int val);
+int nng_socket_set_bool(nng_socket s, const char *opt, bool val);
 int nng_socket_set_int(nng_socket s, const char *opt, int val);
 int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration val);
 int nng_socket_set_size(nng_socket s, const char *opt, size_t val);
@@ -431,7 +431,7 @@ The <code>nng_socket_set_</code> functions change the value for the socket <em>s
 are available, whether they can be read or written, and the appropriate type to use.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Socket options are are used to tune the behavior of the higher level protocol. To change the options
+<p>Socket options are used to tune the behavior of the higher level protocol. To change the options
 for an underlying transport, the option should be set on the <a href="../api/endpoint.html">dialer</a> or <a href="../api/endpoint.html">listener</a> instead of the <a href="../api/sock.html">socket</a>.</p>
 </blockquote>
 <h3 id="common-options"><a class="header" href="#common-options">Common Options</a></h3>

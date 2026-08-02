@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -378,7 +378,7 @@ then no message is stored on the <em>aio</em>.</p>
 <pre><code class="language-c">typedef struct nng_iov {
     void * iov_buf;
     size_t iov_len;
-};
+} nng_iov;
 
 nng_err nng_aio_set_iov(nng_aio *aio, unsigned int niov, const nng_iov *iov);
 </code></pre>

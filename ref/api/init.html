@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -189,7 +189,7 @@ finalize the library and deallocate any resources used by the library.</p>
     int16_t num_resolver_threads;
 } nng_init_params;
 
-extern nng_err nng_init(nng_init_params *params);
+extern nng_err nng_init(const nng_init_params *params);
 </code></pre>
 <p>Before using other interfaces in this library, it is necessary to initialize
 the library. The <a name="a001"></a><code>nng_init</code> function performs this initialization.</p>
@@ -198,7 +198,7 @@ be paired with a call to <a href="../api/init.html#finalization"><code>nng_fini<
 This allows for libraries consuming these interfaces to safely initialize and finalize
 the library without disrupting other consumers in the same process.</p>
 <p>Further, only the first call to this function may have a value of <em>params</em> other than <code>NULL</code>.
-If <em>params</em> is not <code>NULL</code>, and the library has already been intiazed, then <code>nng_init</code> will
+If <em>params</em> is not <code>NULL</code>, and the library has already been initialized, then <code>nng_init</code> will
 return <a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
 <p>In some cases it is desirable to tune certain runtime parameters for the library, which
 can be done by supplying a non-<code>NULL</code> <em>params</em> argument.</p>

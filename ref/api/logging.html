@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -188,7 +188,7 @@ void nng_log_notice(const char *msgid, const char *msg, ...);
 void nng_log_info(const char *msgid, const char *msg, ...);
 void nng_log_debug(const char *msgid, const char *msg, ...);
 </code></pre>
-<p>These <a name="a001"></a> functions inject a a message into the
+<p>These <a name="a001"></a> functions inject a message into the
 logging system, where it will be processed and potentially go to
 system logs, standard output, or processed further.</p>
 <p>The <em>msgid</em> is a short prefix that should uniquely identify the message,
@@ -302,7 +302,7 @@ It will attempt to colorize messages by the severity, if the standard error is a
 This can be suppressed by setting either the <code>NO_COLOR</code> or <code>NNG_LOG_NO_COLOR</code> environment variables.</p>
 <p>The <a name="a012"></a><code>nng_system_logger</code> attempts to use an appropriate system facility to log messages.
 For POSIX systems, this means using <code>syslog</code> to process the messages.
-For other systems the defauilt behavior may be the same as <code>nng_stderr_logger</code>.</p>
+For other systems the default behavior may be the same as <code>nng_stderr_logger</code>.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
 <p>The Syslog Protocol upon which this is based is documented in the following two IETF
 RFCS,</p>

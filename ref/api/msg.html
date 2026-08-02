@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -203,7 +203,7 @@ indicating that insufficient memory is available to allocate a new message.</p>
 </code></pre>
 <p>The <a name="a006"></a><code>nng_msg_free</code> function deallocates a message.</p>
 <h3 id="duplicate-a-message"><a class="header" href="#duplicate-a-message">Duplicate a Message</a></h3>
-<pre><code class="language-c">int nng_msg_dup(nng_msg **dup, nng_msg *msg);
+<pre><code class="language-c">int nng_msg_dup(nng_msg **dup, const nng_msg *msg);
 </code></pre>
 <p>The <a name="a007"></a><code>nng_msg_dup</code> function duplicates the message <em>msg</em>, storing a pointer
 to the new duplicate in <em>dup</em>. This function also returns zero on success, or <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>
@@ -245,12 +245,12 @@ treated as invalid, as the locations pointed to may be deallocated by these func
 </blockquote>
 <h2 id="message-body"><a class="header" href="#message-body">Message Body</a></h2>
 <pre><code class="language-c">void *nng_msg_body(nng_msg *msg);
-size_t nng_msg_len(nng_msg *msg);
+size_t nng_msg_len(const nng_msg *msg);
 </code></pre>
 <p>The body and body length of <em>msg</em> are returned by <a name="a011"></a><code>nng_msg_body</code> and
 <a name="a012"></a><code>nng_msg_len</code>, respectively.</p>
 <h3 id="clear-the-body"><a class="header" href="#clear-the-body">Clear the Body</a></h3>
-<pre><code class="language-c">void *nng_msg_clear(nng_msg *msg);
+<pre><code class="language-c">void nng_msg_clear(nng_msg *msg);
 </code></pre>
 <p>The <a name="a013"></a><code>nng_msg_clear</code> simply resets the total message body length to zero, but does
 not affect the capacity. It does not change the underlying bytes of the message.</p>
@@ -306,7 +306,7 @@ the native machine byte order. The appropriate number of bytes is consumed for e
 so two bytes for <code>_u16</code>, four bytes for <code>_u32</code>, and eight bytes for <code>_u64</code>.</p>
 <h2 id="message-header"><a class="header" href="#message-header">Message Header</a></h2>
 <pre><code class="language-c">void *nng_msg_header(nng_msg *msg);
-size_t nng_msg_header_len(nng_msg *msg);
+size_t nng_msg_header_len(const nng_msg *msg);
 </code></pre>
 <p>The header and header length of <em>msg</em> are returned by <a name="a018"></a><code>nng_msg_header</code> and
 <a name="a019"></a><code>nng_msg_header_len</code>, respectively.</p>
@@ -318,7 +318,7 @@ application payloads. Misuse of the header may prevent the application from func
 properly.</p>
 </blockquote>
 <h3 id="clear-the-header"><a class="header" href="#clear-the-header">Clear the Header</a></h3>
-<pre><code class="language-c">void *nng_msg_header_clear(nng_msg *msg);
+<pre><code class="language-c">void nng_msg_header_clear(nng_msg *msg);
 </code></pre>
 <p>The <a name="a020"></a><code>nng_msg_header_clear</code> simply resets the total message header length to zero.</p>
 <h3 id="append-or-insert-header"><a class="header" href="#append-or-insert-header">Append or Insert Header</a></h3>
@@ -352,8 +352,8 @@ and the <a name="a024"></a><code>nng_msg_header_chop</code> functions remove dat
 <p>These functions act just like the <a href="../api/msg.html#consume-from-body"><code>nng_msg_trim</code></a> and <a href="../api/msg.html#consume-from-body"><code>nng_msg_chop</code></a> functions,
 except that they operate the message header rather than the message body.</p>
 <h2 id="message-pipe"><a class="header" href="#message-pipe">Message Pipe</a></h2>
-<pre><code class="language-c">nng_pipe nng_msg_get_pipe(nng_msg *msg);
-void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
+<pre><code class="language-c">nng_pipe nng_msg_get_pipe(const nng_msg *msg);
+void nng_msg_set_pipe(nng_msg *msg, nng_pipe p);
 </code></pre>
 <p>The <a name="a025"></a><code>nng_msg_set_pipe</code> function sets the <a href="../api/pipe.html">pipe</a> associated with <em>msg</em> to <em>p</em>.
 This is most often useful when used with protocols that support directing

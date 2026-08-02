@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be9b6f7f.js";
+            window.path_to_searchindex_js = "../searchindex-d48de2bd.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -190,7 +190,7 @@ allow only a single <a href="../api/thread.html">thread</a> to lock “own” th
 Any other thread trying to acquire the same mutex will wait until the owner has released the mutex
 by calling <a href="../api/synch.html#releasing-a-mutex"><code>nng_mtx_unlock</code></a>.</p>
 <h3 id="creating-a-mutex"><a class="header" href="#creating-a-mutex">Creating a Mutex</a></h3>
-<pre><code class="language-c">int nng_mtx_alloc(nng_mt **mtxp);
+<pre><code class="language-c">int nng_mtx_alloc(nng_mtx **mtxp);
 </code></pre>
 <p>A mutex can be created by allocating one with <a name="a004"></a><code>nng_mtx_alloc</code>.
 On success, a pointer to the mutex is returned through <em>mtxp</em>.
