@@ -297,6 +297,19 @@ The latter option is a hint for transports and intended to facilitate early
 detection (and possibly avoidance of extra allocations) of oversize messages,
 before bringing them into the socket itself.
 
+The default value for [`NNG_OPT_RECVMAXSZ`] changed from unlimited to 1 GiB.
+Applications that need to receive larger messages must opt in by setting this
+option explicitly, or by configuring `NNG_RECVMAXSZ_DEFAULT` at build time.
+Setting the option to zero restores unlimited behavior.
+On 64-bit platforms, values above 4 GiB can be configured up to the 60-bit
+message size limit, but they are not compatible with 32-bit peers.
+
+> [!CAUTION]
+> Applications should set [`NNG_OPT_RECVMAXSZ`] to the smallest practical value
+> for their message format, especially when accepting traffic from remote peers.
+> Larger values increase exposure to denial-of-service attacks from peers that
+> claim very large message sizes.
+
 The `NNG_OPT_TCP_BOUND_PORT` port is renamed to just [`NNG_OPT_BOUND_PORT`],
 and is available for listeners using transports based on either TCP or UDP.
 

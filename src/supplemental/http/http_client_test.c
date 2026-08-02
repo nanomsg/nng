@@ -14,6 +14,7 @@
 #include <nng/nng.h>
 
 #include "../../testing/nuts.h"
+#include "http_api.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -426,11 +427,275 @@ test_http_client_chunked(void)
 	NUTS_TRUE(srv.requests == 1);
 }
 
+static void
+test_http_client_chunked_size_overflow(void)
+{
+	static const char *response =
+	    "HTTP/1.1 200 OK\r\n"
+	    "Transfer-Encoding: chunked\r\n"
+	    "\r\n"
+	    "10000000000000000\r\n"
+	    "\r\n";
+	struct scripted_server srv;
+	nng_aio               *aio = NULL;
+	nng_http_client       *cli = NULL;
+	nng_http              *conn = NULL;
+	nng_url               *url = NULL;
+
+	scripted_server_start(&srv, &response, NULL, 1);
+	srv.ignore_send_errors = true;
+	client_connect(srv.url, &url, &aio, &cli, &conn);
+
+	NUTS_PASS(nng_http_set_uri(conn, "/chunked-overflow", NULL));
+	nng_http_transact(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EMSGSIZE);
+
+	client_free(url, aio, cli, conn);
+	scripted_server_stop(&srv);
+	NUTS_PASS(srv.rv);
+	NUTS_TRUE(srv.requests == 1);
+}
+
+static void
+test_http_client_chunked_alloc_overflow(void)
+{
+	static const char *response =
+	    "HTTP/1.1 200 OK\r\n"
+	    "Transfer-Encoding: chunked\r\n"
+	    "\r\n"
+	    "ffffffffffffffff\r\n"
+	    "\r\n";
+	struct scripted_server srv;
+	nng_aio               *aio = NULL;
+	nng_http_client       *cli = NULL;
+	nng_http              *conn = NULL;
+	nng_url               *url = NULL;
+
+	scripted_server_start(&srv, &response, NULL, 1);
+	srv.ignore_send_errors = true;
+	client_connect(srv.url, &url, &aio, &cli, &conn);
+
+	NUTS_PASS(nng_http_set_uri(conn, "/chunked-alloc-overflow", NULL));
+	nng_http_transact(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EMSGSIZE);
+
+	client_free(url, aio, cli, conn);
+	scripted_server_stop(&srv);
+	NUTS_PASS(srv.rv);
+	NUTS_TRUE(srv.requests == 1);
+}
+
+static void
+test_http_chunk_parser_extensions(void)
+{
+	nni_http_chunks *chunks = NULL;
+	nni_http_chunk  *chunk  = NULL;
+	char             body[] =
+	    "1;foo=bar\r\n"
+	    "x\r\n"
+	    "0\r\n"
+	    "Some-Trailer: ok\r\n"
+	    "\r\n";
+	size_t n = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 8));
+	NUTS_PASS(nni_http_chunks_parse(chunks, body, strlen(body), &n));
+	NUTS_TRUE(n == strlen(body));
+	NUTS_TRUE(nni_http_chunks_size(chunks) == 1);
+	chunk = nni_http_chunks_iter(chunks, NULL);
+	NUTS_TRUE(chunk != NULL);
+	NUTS_TRUE(nni_http_chunk_size(chunk) == 1);
+	NUTS_TRUE(memcmp(nni_http_chunk_data(chunk), "x", 1) == 0);
+	NUTS_TRUE(nni_http_chunks_iter(chunks, chunk) == NULL);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_max_size(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] =
+	    "1\r\n"
+	    "a\r\n"
+	    "1\r\n"
+	    "b\r\n"
+	    "0\r\n"
+	    "\r\n";
+	size_t n = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 1));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EMSGSIZE);
+	NUTS_TRUE(n == 8);
+	NUTS_TRUE(nni_http_chunks_size(chunks) == 1);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_data_crlf(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] =
+	    "1\r\n"
+	    "aXX";
+	size_t n = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == strlen(body));
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_extension(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "1;\001\r\nx\r\n0\r\n\r\n";
+	size_t           n      = 99;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == 2);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_trailer(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "0\r\nBad:\001\r\n\r\n";
+	size_t           n      = 99;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == 7);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_uppercase_hex(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] =
+	    "A\r\n"
+	    "1234567890\r\n"
+	    "0\r\n"
+	    "\r\n";
+	size_t n = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 16));
+	NUTS_PASS(nni_http_chunks_parse(chunks, body, strlen(body), &n));
+	NUTS_TRUE(n == strlen(body));
+	NUTS_TRUE(nni_http_chunks_size(chunks) == 10);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_partial_data(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             part1[] =
+	    "3\r\n"
+	    "ab";
+	char   part2[] = "c\r\n0\r\n\r\n";
+	size_t n       = 0;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, part1, strlen(part1), &n),
+	    NNG_EAGAIN);
+	NUTS_TRUE(n == strlen(part1));
+	NUTS_PASS(nni_http_chunks_parse(chunks, part2, strlen(part2), &n));
+	NUTS_TRUE(n == strlen(part2));
+	NUTS_TRUE(nni_http_chunks_size(chunks) == 3);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_length(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "g\r\n";
+	size_t           n      = 99;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == 0);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_newline(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "1\rx";
+	size_t           n      = 99;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == 2);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_initial(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "\r\n";
+	size_t           n      = 99;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == 0);
+	nni_http_chunks_free(chunks);
+}
+
+static void
+test_http_chunk_parser_bad_trailer_cr(void)
+{
+	nni_http_chunks *chunks = NULL;
+	char             body[] = "0\r\nX\rx";
+	size_t           n      = 99;
+
+	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
+	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
+	    NNG_EPROTO);
+	NUTS_TRUE(n == 5);
+	nni_http_chunks_free(chunks);
+}
+
 NUTS_TESTS = {
 	{ "http client request response", test_http_client_request_response },
 	{ "http client transact", test_http_client_transact },
 	{ "http client reuse", test_http_client_reuse },
 	{ "http client timeout", test_http_client_timeout },
 	{ "http client chunked", test_http_client_chunked },
+	{ "http client chunked size overflow",
+	    test_http_client_chunked_size_overflow },
+	{ "http client chunked alloc overflow",
+	    test_http_client_chunked_alloc_overflow },
+	{ "http chunk parser extensions", test_http_chunk_parser_extensions },
+	{ "http chunk parser max size", test_http_chunk_parser_max_size },
+	{ "http chunk parser bad data crlf",
+	    test_http_chunk_parser_bad_data_crlf },
+	{ "http chunk parser bad extension",
+	    test_http_chunk_parser_bad_extension },
+	{ "http chunk parser bad trailer", test_http_chunk_parser_bad_trailer },
+	{ "http chunk parser uppercase hex",
+	    test_http_chunk_parser_uppercase_hex },
+	{ "http chunk parser partial data",
+	    test_http_chunk_parser_partial_data },
+	{ "http chunk parser bad length", test_http_chunk_parser_bad_length },
+	{ "http chunk parser bad newline", test_http_chunk_parser_bad_newline },
+	{ "http chunk parser bad initial", test_http_chunk_parser_bad_initial },
+	{ "http chunk parser bad trailer cr",
+	    test_http_chunk_parser_bad_trailer_cr },
 	{ NULL, NULL },
 };

@@ -8,7 +8,7 @@ until a reply is received or the request times out.
 
 > [!TIP]
 > This protocol is useful in setting up RPC-like services.
-> It is also "reliable", in that a requester will keep retrying until
+> It is also "reliable", in that the requester will keep retrying until
 > a reply is received.
 
 > [!NOTE]

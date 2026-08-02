@@ -337,6 +337,11 @@ ipc_pipe_recv_cb(void *arg)
 		// We should have gotten a message header.
 		NNI_GET64(p->rx_head + 1, len);
 
+		if (!nni_msg_size_valid(len)) {
+			rv = NNG_EMSGSIZE;
+			goto error;
+		}
+
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcv_max) && (p->rcv_max > 0)) {
@@ -890,7 +895,8 @@ ipc_ep_set_recv_max_sz(void *arg, const void *v, size_t sz, nni_type t)
 	ipc_ep *ep = arg;
 	size_t  val;
 	nng_err rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == NNG_OK) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAX_RECVMAXSZ, t)) ==
+	    NNG_OK) {
 
 		nni_mtx_lock(&ep->mtx);
 		ep->rcv_max = val;

@@ -316,7 +316,7 @@ The following options are available for many protocols, and always use the same 
 | `NNG_OPT_RECONNMAXT`<a name="NNG_OPT_RECONNMAXT"></a> | `nng_duration` | Maximum time [dialers][dialer] will delay before trying after failing to connect.                                                                                                 |
 | `NNG_OPT_RECONNMINT`<a name="NNG_OPT_RECONNMINT"></a> | `nng_duration` | Minimum time [dialers][dialer] will delay before trying after failing to connect.                                                                                                 |
 | `NNG_OPT_RECVBUF`<a name="NNG_OPT_RECVBUF"></a>       | `int`          | Maximum number of messages (0-8192) to buffer locally when receiving. Not all protocols support receive-side buffering.                                                          |
-| `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a>   | `size_t`       | Maximum message size acceptable for receiving. Zero means unlimited. Intended to prevent remote abuse. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
+| `NNG_OPT_RECVMAXSZ`<a name="NNG_OPT_RECVMAXSZ"></a>   | `size_t`       | Maximum message size acceptable for receiving. Defaults to 1 GiB unless changed at build time. Zero means unlimited. On 64-bit platforms, values above 4 GiB can be configured but are not compatible with 32-bit peers. Intended to prevent remote abuse. Can be tuned independently on [dialers][dialer] and [listeners][listener]. |
 | `NNG_OPT_RECVTIMEO`<a name="NNG_OPT_RECVTIMEO"></a>   | `nng_duration` | Default timeout (ms) for receiving messages.                                                                                                                                      |
 | `NNG_OPT_SENDBUF`<a name="NNG_OPT_SENDBUF"></a>       | `int`          | Maximum number of messages (0-8192) to buffer when sending messages.                                                                                                              |
 | `NNG_OPT_SENDTIMEO`<a name="NNG_OPT_SENDTIMEO"></a>   | `nng_duration` | Default timeout (ms) for sending messages.                                                                                                                                        |
@@ -331,7 +331,7 @@ The following options are available for many protocols, and always use the same 
 > [!NOTE]
 > `NNG_OPT_RECVMAXSZ` should be configured before creating dialers or
 > listeners, especially on hostile networks.
-> Setting it to a non-zero value helps defend against denial-of-service cases
+> Keeping it set to a non-zero value helps defend against denial-of-service cases
 > where a peer claims an extremely large message size without actually sending
 > the payload.
 

@@ -205,7 +205,8 @@ static nng_err
 sock_set_recvmaxsz(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (
-	    nni_copyin_size(&SOCK(s)->s_rcvmaxsz, buf, sz, 0, NNI_MAXSZ, t));
+	    nni_copyin_size(
+	        &SOCK(s)->s_rcvmaxsz, buf, sz, 0, NNI_MAX_RECVMAXSZ, t));
 }
 
 static nng_err
@@ -555,7 +556,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	s->s_rcvtimeo  = -1;
 	s->s_reconn    = NNI_SECOND;
 	s->s_reconnmax = 0;
-	s->s_rcvmaxsz  = 0; // unlimited by default
+	s->s_rcvmaxsz  = NNI_RECVMAXSZ_DEFAULT;
 	s->s_id        = 0;
 	s->s_ref       = 0;
 	s->s_self_id   = proto->proto_self;

@@ -343,6 +343,11 @@ sfd_tran_pipe_recv_cb(void *arg)
 		// We should have gotten a message header.
 		NNI_GET64(p->rxlen, len);
 
+		if (!nni_msg_size_valid(len)) {
+			rv = NNG_EMSGSIZE;
+			goto recv_error;
+		}
+
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
@@ -772,7 +777,8 @@ sfd_tran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	sfd_tran_ep *ep = arg;
 	size_t       val;
 	nng_err      rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == NNG_OK) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAX_RECVMAXSZ, t)) ==
+	    NNG_OK) {
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		nni_mtx_unlock(&ep->mtx);

@@ -503,6 +503,12 @@ http_sconn_rxdone(void *arg)
 		}
 	}
 
+	if (nni_http_get_header(sc->conn, "Transfer-Encoding") != NULL) {
+		sc->close = true;
+		http_sconn_error(sc, NNG_HTTP_STATUS_NOT_IMPLEMENTED);
+		return;
+	}
+
 	sc->unconsumed_body = 0;
 	if ((cls = nni_http_get_header(sc->conn, "Content-Length")) != NULL) {
 		char *end;

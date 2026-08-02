@@ -1,12 +1,9 @@
 # Preface
 
-> [!IMPORTANT]
-> This is a _DRAFT_ version of this reference manual,
-> and much is still in progress. There may be errors,
-> and large omissions as content is still be moved from
-> the previous ASCIIDOCTOR format and updated for NNG 2.0.
-
 ## Preface for the First Edition
+
+> Note that some typographical errors originally present in the first
+> edition have been corrected here.
 
 At the time of this writing, we are wrapping up NNG for its formal
 1.0.0 release.
@@ -46,15 +43,17 @@ It will be interesting to see if others come to the same conclusion.
 
 Building upon this robust foundation, we have engineered a substantial
 project, with capabilities far in excess of the original nanomsg, while
-still preserving compatibility with the network protocols that form the
-backbone of the nanomsg ecosystem, and even a compatible programming interface
-for nanomsg library users. In addition to compatibility with nanomsg, we find
-that NNG has greatly increased scalability, reliability, and usability
-(especially when developing concurrent applications).
+still preserving compatibility with the the network protocols that
+form the backbone of the nanomsg ecosystem,
+and even a compatible programming interface for nanomsg library users.
+In addition to compatibility with nanomsg, we find that NNG has greatly
+increased scalability, reliability, and usability (especially when developing
+concurrent applications).
 
 NNG also has complete HTTP server and client
 implementations, support for TLS, and a plethora of other capabilities.
-Much of this is made possible by the aforementioned asynchronous I/O framework.
+Much of this is made possible by the aforementioned asynchronous I/O
+framework.
 
 We've tried to stay true to the core nanomsg goals about being light-weight,
 liberally licensed, and implemented in C.
@@ -91,7 +90,7 @@ These are visually distinguished as follows:
 
 > [!TIP]
 > Tips are things that the reader may find useful, such as suggestions
-> for use or time saving hints.
+> for use or time-saving hints.
 
 > [!NOTE]
 > Notes are things that the reader should be aware of, and provide

@@ -424,7 +424,9 @@ ipc_listener_listen(void *arg)
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 	// If the original address was for a system assigned value,
 	// then figure out what we got.  This is analogous to TCP
-	// binding to port 0.
+	// binding to port 0.  Note for reviewers - the kernel's names for
+	// such sockets are always very well formed, the leading NULL byte,
+	// followed by 5 ascii characters.
 	if ((l->sa.s_family == NNG_AF_ABSTRACT) &&
 	    (l->sa.s_abstract.sa_len == 0)) {
 		struct sockaddr_un *su = (void *) &ss;
@@ -438,6 +440,7 @@ ipc_listener_listen(void *arg)
 			l->sa.s_abstract.sa_len = len;
 			memcpy(
 			    l->sa.s_abstract.sa_name, &su->sun_path[1], len);
+			l->sa.s_abstract.sa_name[len] = 0; // null terminate
 		}
 	}
 #endif

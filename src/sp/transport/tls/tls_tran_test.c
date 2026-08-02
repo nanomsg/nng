@@ -107,6 +107,7 @@ test_tls_bad_cert_mutual(void)
 	nng_listener    l;
 	nng_dialer      d;
 	const nng_url  *url;
+	nng_err         rv;
 
 	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	c1 = tls_server_config();
@@ -125,7 +126,11 @@ test_tls_bad_cert_mutual(void)
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
 #ifdef NNG_TLS_ENGINE_MBEDTLS
-	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ECRYPTO);
+	// The server rejects the client's certificate.  Depending on when
+	// the peer closes its TLS connection, the client observes either the
+	// TLS failure or the resulting connection shutdown.
+	rv = nng_dialer_start(d, 0);
+	NUTS_TRUE((rv == NNG_ECRYPTO) || (rv == NNG_ECONNSHUT));
 #else
 	// WolfSSL doesn't validate this here.
 	nng_dialer_start(d, 0);

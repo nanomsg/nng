@@ -466,8 +466,10 @@ wstran_listener_close(void *arg)
 	if (!l->closed) {
 		l->closed = true;
 		nni_aio_close(&l->accaio);
-		NNI_LIST_FOREACH (&l->wait_pipes, p) {
+		while ((p = nni_list_first(&l->wait_pipes)) != NULL) {
+			nni_list_remove(&l->wait_pipes, p);
 			nni_pipe_close(p->npipe);
+			nni_pipe_rele(p->npipe);
 		}
 		nng_stream_listener_close(l->listener);
 	}
@@ -507,6 +509,11 @@ wstran_accept_cb(void *arg)
 	uaio = nni_list_first(&l->aios);
 	if ((rv = nni_aio_result(aaio)) != 0) {
 		goto error;
+	}
+	if (l->closed) {
+		nng_stream_free(ws);
+		nni_mtx_unlock(&l->mtx);
+		return;
 	}
 
 	rv = nni_pipe_alloc_listener((void **) &p, l->nlistener);

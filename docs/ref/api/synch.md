@@ -73,8 +73,8 @@ acquired with [`nng_mtx_lock`].
 typedef struct nng_cv nng_cv;
 ```
 
-The {{i:`nng_cv`}} structure implements a {{i:condition variable}}, associated with the
-[mutex] _mtx_ which was supplied when it was created.
+The {{i:`nng_cv`}} structure implements a {{i:condition variable}}, associated with
+the [mutex] _mtx_ which was supplied when it was created.
 
 Condition variables provide for a way to wait on an arbitrary condition, and to be woken
 when the condition is signaled.

@@ -540,8 +540,10 @@ nuts_tran_perf(const char *scheme)
 	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	// Allow for TLS, WebSocket masking, and occasionally overloaded or
+	// emulated CI runners without making the throughput test flaky.
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_MARRY_EX(s1, s2, addr, NULL, NULL);
 	NUTS_PASS(nng_msg_alloc(&msg, 64));
 	nng_log_notice(scheme, "Exchanging 64 byte messages for 10 seconds");

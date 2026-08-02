@@ -201,6 +201,22 @@ if (NNG_UDP_CONNRETRY)
     add_definitions(-DNNG_UDP_CONNRETRY=${NNG_UDP_CONNRETRY})
 endif()
 
+set(NNG_RECVMAXSZ_DEFAULT 1073741824 CACHE STRING "Default max receive size in bytes")
+mark_as_advanced(NNG_RECVMAXSZ_DEFAULT)
+if (NNG_RECVMAXSZ_DEFAULT LESS 0)
+    message(FATAL_ERROR "NNG_RECVMAXSZ_DEFAULT cannot be negative")
+endif()
+if (CMAKE_SIZEOF_VOID_P LESS 8 AND NNG_RECVMAXSZ_DEFAULT GREATER 4294967295)
+    message(FATAL_ERROR "NNG_RECVMAXSZ_DEFAULT cannot exceed 4294967295 on 32-bit platforms")
+endif()
+if (NNG_RECVMAXSZ_DEFAULT GREATER 1152921504606846975)
+    message(FATAL_ERROR "NNG_RECVMAXSZ_DEFAULT cannot exceed 2^60-1")
+endif()
+if (NNG_RECVMAXSZ_DEFAULT GREATER 4294967295)
+    message(WARNING "NNG_RECVMAXSZ_DEFAULT above 4GiB will not be compatible with 32-bit peers")
+endif()
+add_definitions(-DNNG_RECVMAXSZ_DEFAULT=${NNG_RECVMAXSZ_DEFAULT})
+
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")

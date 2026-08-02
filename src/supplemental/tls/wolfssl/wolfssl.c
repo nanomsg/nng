@@ -540,19 +540,19 @@ wolf_config_psk(nng_tls_engine_config *cfg, const char *identity,
 static int
 wolf_config_auth_mode(nng_tls_engine_config *cfg, nng_tls_auth_mode mode)
 {
-	cfg->auth_mode = mode;
-	// XXX: REMOVE ME
-	return (0);
 	switch (mode) {
 	case NNG_TLS_AUTH_MODE_NONE:
 		wolfSSL_CTX_set_verify(cfg->ctx, SSL_VERIFY_NONE, NULL);
+		cfg->auth_mode = mode;
 		return (0);
 	case NNG_TLS_AUTH_MODE_OPTIONAL:
 		wolfSSL_CTX_set_verify(cfg->ctx, SSL_VERIFY_PEER, NULL);
+		cfg->auth_mode = mode;
 		return (0);
 	case NNG_TLS_AUTH_MODE_REQUIRED:
 		wolfSSL_CTX_set_verify(cfg->ctx,
 		    SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+		cfg->auth_mode = mode;
 		return (0);
 	}
 	return (NNG_EINVAL);

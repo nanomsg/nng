@@ -76,7 +76,7 @@ client(const char *url)
 	// Allocatate a buffer to recv
 	iov.iov_len = 100;
 	iov.iov_buf = (char *) malloc(sizeof(char) * iov.iov_len);
-	if ((rv = nng_aio_set_iov(aio, 1, &iov)) != 0) {
+	if ((rv = nng_aio_set_iov(aio, 1, &iov)) != NNG_OK) {
 		nng_fatal("call to nng_aio_alloc", rv);
 	}
 	// Connect to the socket via url provided to alloc
@@ -138,7 +138,7 @@ server(const char *url)
 	iov.iov_buf = "This is a message.";
 	iov.iov_len = strlen(iov.iov_buf);
 
-	if ((rv = nng_aio_set_iov(aio, 1, &iov)) != 0) {
+	if ((rv = nng_aio_set_iov(aio, 1, &iov)) != NNG_OK) {
 		nng_fatal("call to nng_aio_alloc", rv);
 	}
 	// Connect to the socket via url provided to alloc

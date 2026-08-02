@@ -128,7 +128,7 @@ main(int argc, char **argv)
 	iov.iov_buf = data;
 
 	// Following never fails with fewer than 5 elements.
-	nng_aio_set_iov(aio, 1, &iov);
+	(void) nng_aio_set_iov(aio, 1, &iov);
 
 	// Now attempt to receive the data.
 	nng_http_read_all(conn, aio);
