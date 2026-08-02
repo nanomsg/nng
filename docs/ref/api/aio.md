@@ -261,7 +261,7 @@ then no message is stored on the _aio_.
 typedef struct nng_iov {
     void * iov_buf;
     size_t iov_len;
-};
+} nng_iov;
 
 nng_err nng_aio_set_iov(nng_aio *aio, unsigned int niov, const nng_iov *iov);
 ```

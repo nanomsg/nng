@@ -23,7 +23,7 @@ by calling [`nng_mtx_unlock`].
 ### Creating a Mutex
 
 ```c
-int nng_mtx_alloc(nng_mt **mtxp);
+int nng_mtx_alloc(nng_mtx **mtxp);
 ```
 
 A mutex can be created by allocating one with {{i:`nng_mtx_alloc`}}.

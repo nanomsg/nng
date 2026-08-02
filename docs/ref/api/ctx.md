@@ -172,14 +172,14 @@ int nng_ctx_get_int(nng_ctx ctx, const char *opt, int *valp);
 int nng_ctx_get_ms(nng_ctx ctx, const char *opt, nng_duration *valp);
 int nng_ctx_get_size(nng_ctx ctx, const char *opt, size_t *valp);
 
-int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int val);
+int nng_ctx_set_bool(nng_ctx ctx, const char *opt, bool val);
 int nng_ctx_set_int(nng_ctx ctx, const char *opt, int val);
 int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration val);
 int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t val);
 ```
 
 Some protocols support certain options that affect the behavior of a specific context.
-For example, most protocols will let you set the defaults timeouts associated with
+For example, most protocols will let you set the default timeouts associated with
 send or receive separately for different contexts.
 
 These functions are used to retrieve or change the value of an option named _opt_ from the context _ctx_.
@@ -196,7 +196,7 @@ These examples show building blocks for a concurrent service based on contexts.
 ### Example 1: Context Echo Server
 
 The following program fragment demonstrates the use of contexts to implement
-a concurrent [REP][rep] service that simply echos messages back
+a concurrent [REP][rep] service that simply echoes messages back
 to the sender.
 
 ```c

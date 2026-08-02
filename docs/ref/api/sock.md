@@ -160,7 +160,7 @@ a result of [`NNG_ECLOSED`].
 ## Sending Messages
 
 ```c
-int nng_send(nng_socket s, void *data, size_t size, int flags);
+int nng_send(nng_socket s, const void *data, size_t size, int flags);
 int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
 void nng_socket_send(nng_socket s, nng_aio *aio);
 ```
@@ -287,7 +287,7 @@ int nng_socket_get_int(nng_socket s, const char *opt, int *valp);
 int nng_socket_get_ms(nng_socket s, const char *opt, nng_duration *valp);
 int nng_socket_get_size(nng_socket s, const char *opt, size_t *valp);
 
-int nng_socket_set_bool(nng_socket s, const char *opt, int val);
+int nng_socket_set_bool(nng_socket s, const char *opt, bool val);
 int nng_socket_set_int(nng_socket s, const char *opt, int val);
 int nng_socket_set_ms(nng_socket s, const char *opt, nng_duration val);
 int nng_socket_set_size(nng_socket s, const char *opt, size_t val);
@@ -303,7 +303,7 @@ These functions access an option as a specific type. The protocol documentation 
 are available, whether they can be read or written, and the appropriate type to use.
 
 > [!NOTE]
-> Socket options are are used to tune the behavior of the higher level protocol. To change the options
+> Socket options are used to tune the behavior of the higher level protocol. To change the options
 > for an underlying transport, the option should be set on the [dialer] or [listener] instead of the [socket].
 
 ### Common Options

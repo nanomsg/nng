@@ -44,7 +44,7 @@ The {{i:`nng_msg_free`}} function deallocates a message.
 ### Duplicate a Message
 
 ```c
-int nng_msg_dup(nng_msg **dup, nng_msg *msg);
+int nng_msg_dup(nng_msg **dup, const nng_msg *msg);
 ```
 
 The {{i:`nng_msg_dup`}} function duplicates the message _msg_, storing a pointer
@@ -96,7 +96,7 @@ Both `nng_msg_realloc` and `nng_msg_reserve` return zero on success, or may retu
 
 ```c
 void *nng_msg_body(nng_msg *msg);
-size_t nng_msg_len(nng_msg *msg);
+size_t nng_msg_len(const nng_msg *msg);
 ```
 
 The body and body length of _msg_ are returned by {{i:`nng_msg_body`}} and
@@ -105,7 +105,7 @@ The body and body length of _msg_ are returned by {{i:`nng_msg_body`}} and
 ### Clear the Body
 
 ```c
-void *nng_msg_clear(nng_msg *msg);
+void nng_msg_clear(nng_msg *msg);
 ```
 
 The {{i:`nng_msg_clear`}} simply resets the total message body length to zero, but does
@@ -178,7 +178,7 @@ so two bytes for `_u16`, four bytes for `_u32`, and eight bytes for `_u64`.
 
 ```c
 void *nng_msg_header(nng_msg *msg);
-size_t nng_msg_header_len(nng_msg *msg);
+size_t nng_msg_header_len(const nng_msg *msg);
 ```
 
 The header and header length of _msg_ are returned by {{i:`nng_msg_header`}} and
@@ -194,7 +194,7 @@ The message headers are generally intended for limited use, to store protocol he
 ### Clear the Header
 
 ```c
-void *nng_msg_header_clear(nng_msg *msg);
+void nng_msg_header_clear(nng_msg *msg);
 ```
 
 The {{i:`nng_msg_header_clear`}} simply resets the total message header length to zero.
@@ -242,8 +242,8 @@ except that they operate the message header rather than the message body.
 ## Message Pipe
 
 ```c
-nng_pipe nng_msg_get_pipe(nng_msg *msg);
-void nng_msg_get_pipe(nng_msg *msg, nng_pipe p);
+nng_pipe nng_msg_get_pipe(const nng_msg *msg);
+void nng_msg_set_pipe(nng_msg *msg, nng_pipe p);
 ```
 
 The {{i:`nng_msg_set_pipe`}} function sets the [pipe] associated with _msg_ to _p_.
