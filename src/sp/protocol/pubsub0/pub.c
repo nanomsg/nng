@@ -277,6 +277,7 @@ pub0_sock_send(void *arg, nni_aio *aio)
 
 	msg = nni_aio_get_msg(aio);
 	len = nni_msg_len(msg);
+	nni_aio_set_msg(aio, NULL);
 	nni_mtx_lock(&sock->mtx);
 #ifdef NNG_ENABLE_STATS
 	int dropped = 0;
