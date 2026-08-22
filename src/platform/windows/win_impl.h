@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -82,10 +82,6 @@ struct nni_win_io {
 	void         *ptr;
 	nni_aio      *aio;
 	nni_win_io_cb cb;
-};
-
-struct nni_plat_flock {
-	HANDLE h;
 };
 
 extern int nni_win_error(int);
