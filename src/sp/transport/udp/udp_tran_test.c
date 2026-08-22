@@ -436,7 +436,6 @@ test_udp_crush(void)
 
 	memset(buf, 0, sizeof(buf));
 	for (int i = 0; i < 1000; i++) {
-		size_t sz;
 		int    rv = nng_recv(s0, buf, &sz, 0);
 		if (rv == 0) {
 			continue;
