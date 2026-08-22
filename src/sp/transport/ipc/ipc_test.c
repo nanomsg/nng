@@ -473,7 +473,6 @@ test_abstract_null(void)
 	char       rng[20];
 
 	nng_listener l;
-	size_t       len;
 
 	snprintf(rng, sizeof(rng), "%08x%08x", nng_random(), nng_random());
 	snprintf(name, sizeof(name), "a%%00b_%s", rng);
