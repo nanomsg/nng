@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2016 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 QXSoftware <lh563566994@126.com>
 //
@@ -327,30 +327,6 @@ nni_plat_file_basename(const char *name)
 		s--;
 	}
 	return (name);
-}
-
-int
-nni_plat_file_lock(const char *path, nni_plat_flock *lk)
-{
-	HANDLE h;
-
-	// On Windows we do not have to explicitly lock the file, the
-	// dwShareMode being set to zeor effectively prevents it.
-	h = CreateFile(path, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS,
-	    FILE_ATTRIBUTE_NORMAL, NULL);
-	if (h == INVALID_HANDLE_VALUE) {
-		return (nni_win_error(GetLastError()));
-	}
-	lk->h = h;
-	return (0);
-}
-
-void
-nni_plat_file_unlock(nni_plat_flock *lk)
-{
-	HANDLE h = lk->h;
-	(void) CloseHandle(h);
-	lk->h = INVALID_HANDLE_VALUE;
 }
 
 #endif // NNG_PLATFORM_WINDOWS

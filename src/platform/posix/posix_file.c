@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -295,45 +295,6 @@ nni_plat_file_basename(const char *path)
 		return (end + 1);
 	}
 	return (path);
-}
-
-int
-nni_plat_file_lock(const char *path, nni_plat_flock *lk)
-{
-	int fd;
-	int rv;
-	if ((fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
-		return (nni_plat_errno(errno));
-	}
-#ifdef NNG_HAVE_LOCKF
-	rv = lockf(fd, F_TLOCK, 0);
-#elif defined NNG_HAVE_FLOCK
-	rv = flock(fd, LOCK_EX | LOCK_NB);
-#else
-	// We don't have locking support.  This means you live dangerously.
-	// For example, ZeroTier cannot be sure that nothing else is using
-	// the same configuration file.  If you're here, its probably an
-	// embedded scenario, and we can live with it.
-	rv = 0;
-#endif
-	if (rv < 0) {
-		rv = errno;
-		close(fd);
-		if (rv == EAGAIN) {
-			return (NNG_EBUSY);
-		}
-		return (nni_plat_errno(rv));
-	}
-	lk->fd = fd;
-	return (0);
-}
-
-void
-nni_plat_file_unlock(nni_plat_flock *lk)
-{
-	int fd = lk->fd;
-	lk->fd = -1;
-	(void) close(fd);
 }
 
 char *
