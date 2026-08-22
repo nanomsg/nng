@@ -770,6 +770,7 @@ http_req_parse_line(nni_http_req *req, void *line)
 	char *method;
 	char *uri;
 	char *version;
+	char *canon_uri;
 
 	method = line;
 	if ((uri = strchr(method, ' ')) == NULL) {
@@ -784,11 +785,16 @@ http_req_parse_line(nni_http_req *req, void *line)
 	*version = '\0';
 	version++;
 
-	if (((rv = nni_http_req_set_method(req, method)) != 0) ||
-	    ((rv = nni_http_req_set_uri(req, uri)) != 0) ||
-	    ((rv = nni_http_req_set_version(req, version)) != 0)) {
+	if ((rv = nni_url_canonify_uri(&canon_uri, uri)) != 0) {
 		return (rv);
 	}
+	if (((rv = nni_http_req_set_method(req, method)) != 0) ||
+	    ((rv = nni_http_req_set_uri(req, canon_uri)) != 0) ||
+	    ((rv = nni_http_req_set_version(req, version)) != 0)) {
+		nni_strfree(canon_uri);
+		return (rv);
+	}
+	nni_strfree(canon_uri);
 	req->parsed = true;
 	return (0);
 }
