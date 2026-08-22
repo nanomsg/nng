@@ -116,8 +116,8 @@ nni_url_decode(uint8_t *out, const char *in, size_t max_len)
 	return (len);
 }
 
-static int
-url_canonify_uri(char **outp, const char *in)
+int
+nni_url_canonify_uri(char **outp, const char *in)
 {
 	char *  out;
 	size_t  src, dst, len;
@@ -399,7 +399,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	url->u_host[len] = '\0';
 	s += len;
 
-	if ((rv = url_canonify_uri(&url->u_requri, s)) != 0) {
+	if ((rv = nni_url_canonify_uri(&url->u_requri, s)) != 0) {
 		goto error;
 	}
 
