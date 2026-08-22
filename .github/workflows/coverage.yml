@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Install mbedTLS
-        run: brew install mbedtls
+        run: brew install mbedtls@2
 
       - name: Install ninja
         run: brew install ninja
