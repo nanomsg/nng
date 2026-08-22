@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -14,17 +14,17 @@
 #ifndef _WIN32
 #include <sys/select.h>
 #include <sys/time.h>
-#define PLATFD int
+#define FD int
 #else
 #include <winsock2.h>
 // order counts
 #include <mswsock.h>
-#define PLATFD SOCKET
+#define FD SOCKET
 #endif
 
 #include <nng/nng.h>
 
-#include <nuts.h>
+#include "../testing/nuts.h"
 
 const char *addr = "inproc://bug346";
 
@@ -34,7 +34,7 @@ repthr(void *arg)
 	nng_socket   rep = *(nng_socket *) arg;
 	nng_listener l;
 	int          ifd;
-	PLATFD       fd;
+	FD           fd;
 
 	nng_listen(rep, addr, &l, NNG_FLAG_NONBLOCK);
 
@@ -89,13 +89,13 @@ reqthr(void *arg)
 	}
 }
 
-#define NCLIENTS 10
-nng_socket reqs[NCLIENTS];
-nng_socket rep;
-
 static void
 test_nonblocking(void)
 {
+	#define NCLIENTS 10
+	nng_socket reqs[NCLIENTS];
+	nng_socket rep;
+
 	nng_thread *server;
 	nng_thread *clients[NCLIENTS];
 
