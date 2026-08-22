@@ -317,7 +317,7 @@ nni_plat_file_lock(const char *path, nni_plat_flock *lk)
 	rv = 0;
 #endif
 	if (rv < 0) {
-		int rv = errno;
+		rv = errno;
 		close(fd);
 		if (rv == EAGAIN) {
 			return (NNG_EBUSY);
