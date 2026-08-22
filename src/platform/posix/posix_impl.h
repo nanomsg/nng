@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -73,10 +73,6 @@ struct nni_plat_thr {
 	pthread_t tid;
 	void (*func)(void *);
 	void *arg;
-};
-
-struct nni_plat_flock {
-	int fd;
 };
 
 #define NNG_PLATFORM_DIR_SEP "/"
