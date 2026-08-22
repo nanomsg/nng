@@ -76,7 +76,6 @@ TestMain("HTTP Client", {
 			So(nng_http_res_get_status(res) == 200);
 
 			Convey("The message contents are correct", {
-				uint8_t     digest[20];
 				void       *data;
 				const char *cstr;
 				size_t      sz;
@@ -129,7 +128,6 @@ TestMain("HTTP Client", {
 			nng_http_res *res;
 			void         *data;
 			size_t        len;
-			uint8_t       digest[20];
 
 			So(nng_http_req_alloc(&req, url) == 0);
 			So(nng_http_res_alloc(&res) == 0);
@@ -151,7 +149,6 @@ TestMain("HTTP Client", {
 			nng_http_res  *res2;
 			void          *data;
 			size_t         len;
-			uint8_t        digest[20];
 			nng_http_conn *conn = NULL;
 
 			So(nng_http_req_alloc(&req, url) == 0);
