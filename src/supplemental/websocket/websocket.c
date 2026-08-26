@@ -32,6 +32,10 @@ typedef int (*nni_ws_listen_hook)(void *, nng_http_req *, nng_http_res *);
 #define WS_DEF_MAXRXFRAME (1U << 20) // 1MB Frame size (recv)
 #define WS_DEF_MAXTXFRAME (1U << 16) // 64KB Frame size (send)
 
+#ifndef WS_DEF_MAXFRAMES
+#define WS_DEF_MAXFRAMES (1 << 12) // 4K frames in a single message
+#endif
+
 // Alias for checking the prefix of a string.
 #define startswith(s, t) (strncmp(s, t, strlen(t)) == 0)
 
@@ -62,6 +66,8 @@ struct nni_ws {
 	nni_list         recvq;
 	nni_list         txq;
 	nni_list         rxq;
+	int 		 rxq_len;
+	size_t           rxq_size;
 	ws_frame        *txframe;
 	ws_frame        *rxframe;
 	nni_aio         *txaio; // physical aios
@@ -947,17 +953,31 @@ ws_read_finish(nni_ws *ws)
 static void
 ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 {
+	bool message_done = false;
+
 	switch (frame->op) {
 	case WS_CONT:
 		if (!ws->inmsg) {
 			ws_close(ws, WS_CLOSE_PROTOCOL_ERR);
 			return;
 		}
+		if (ws->rxq_len >= WS_DEF_MAXFRAMES) {
+			ws_close(ws, WS_CLOSE_TOO_BIG);
+			return;
+		}
 		if (frame->final) {
 			ws->inmsg = false;
+			message_done = true;
 		}
 		ws->rxframe = NULL;
-		nni_list_append(&ws->rxq, frame);
+		if (frame->len == 0) {
+			// drop empty middle frames
+			ws_frame_fini(frame);
+		} else {
+			nni_list_append(&ws->rxq, frame);
+			ws->rxq_len++;
+			ws->rxq_size += frame->len;
+		}
 		break;
 	case WS_TEXT:
 		if (!ws->recv_text) {
@@ -972,8 +992,13 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 		}
 		if (!frame->final) {
 			ws->inmsg = true;
+		} else {
+			message_done = true;
 		}
 		ws->rxframe = NULL;
+		ws->rxq_size = frame->len;
+		ws->rxq_len++;
+		NNI_ASSERT(ws->rxq_len == 1);
 		nni_list_append(&ws->rxq, frame);
 		break;
 
@@ -1010,6 +1035,10 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 		return;
 	}
 
+	if (message_done) {
+		ws->rxq_len  = 0;
+		ws->rxq_size = 0;
+	}
 	ws_read_finish(ws);
 }
 
@@ -1101,12 +1130,7 @@ ws_read_cb(void *arg)
 		// length of the message has not exceeded our recvmax.
 		// (Protect against an infinite stream of small messages!)
 		if ((!ws->isstream) && (ws->recvmax > 0)) {
-			size_t    totlen = frame->len;
-			ws_frame *fr2;
-			NNI_LIST_FOREACH (&ws->rxq, fr2) {
-				totlen += fr2->len;
-			}
-			if (totlen > ws->recvmax) {
+			if (ws->rxq_size + frame->len > ws->recvmax)  {
 				ws_close(ws, WS_CLOSE_TOO_BIG);
 				nni_mtx_unlock(&ws->mtx);
 				return;
