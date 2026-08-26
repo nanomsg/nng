@@ -12,6 +12,7 @@
 #include <nng/nng.h>
 
 #include "sha1.h"
+#include "websocket.h"
 
 #include "../../testing/nuts.h"
 
@@ -455,6 +456,108 @@ test_websocket_text_rejected(void)
 	nng_stream_dialer_free(d);
 }
 
+void
+test_websocket_frame_limit(void)
+{
+	nng_stream_listener *l = NULL;
+	nng_stream_dialer   *d = NULL;
+	nng_stream          *c = NULL;
+	nng_stream          *s = NULL;
+	nng_aio             *daio = NULL;
+	nng_aio             *laio = NULL;
+	nng_aio             *raio = NULL;
+	nng_aio             *saio = NULL;
+	nng_msg             *msg;
+	char                 url[64];
+	uint16_t             port;
+	const size_t         maxframes = 1U << 12;
+	int                  rv;
+
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&raio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&saio, NULL, NULL));
+	nng_aio_set_timeout(daio, 5000);
+	nng_aio_set_timeout(laio, 5000);
+	nng_aio_set_timeout(raio, 5000);
+	nng_aio_set_timeout(saio, 5000);
+
+	for (int i = 0; i < 256; i++) {
+		port = nuts_next_port();
+		(void) snprintf(
+		    url, sizeof(url), "ws://127.0.0.1:%d/test", port);
+		NUTS_PASS(nng_stream_listener_alloc(&l, url));
+		NUTS_PASS(nng_stream_dialer_alloc(&d, url));
+		NUTS_PASS(nng_stream_listener_set_bool(
+		    l, NNI_OPT_WS_MSGMODE, true));
+		NUTS_PASS(nng_stream_dialer_set_bool(
+		    d, NNI_OPT_WS_MSGMODE, true));
+		NUTS_PASS(nng_stream_listener_set_size(
+		    l, NNG_OPT_WS_SENDMAXFRAME, 1));
+		rv = nng_stream_listener_listen(l);
+		if (rv != NNG_EADDRINUSE) {
+			break;
+		}
+		nng_stream_listener_free(l);
+		nng_stream_dialer_free(d);
+	}
+	NUTS_PASS(rv);
+
+	nng_stream_listener_accept(l, laio);
+	nng_stream_dialer_dial(d, daio);
+	nng_aio_wait(laio);
+	nng_aio_wait(daio);
+	NUTS_PASS(nng_aio_result(laio));
+	NUTS_PASS(nng_aio_result(daio));
+	s = nng_aio_get_output(laio, 0);
+	c = nng_aio_get_output(daio, 0);
+
+	// Two messages at the limit must be accepted.  Receiving the first
+	// one verifies that the accounting is reset before receiving the next.
+	for (int i = 0; i < 2; i++) {
+		NUTS_PASS(nng_msg_alloc(&msg, maxframes));
+		memset(nng_msg_body(msg), 'A' + i, maxframes);
+		nng_aio_set_msg(saio, msg);
+		nng_stream_recv(c, raio);
+		nng_stream_send(s, saio);
+		nng_aio_wait(saio);
+		nng_aio_wait(raio);
+		NUTS_PASS(nng_aio_result(saio));
+		NUTS_PASS(nng_aio_result(raio));
+		msg = nng_aio_get_msg(raio);
+		NUTS_TRUE(nng_msg_len(msg) == maxframes);
+		nng_aio_set_msg(raio, NULL);
+		nng_msg_free(msg);
+	}
+
+	// One more fragment than the limit must close the receiver.
+	NUTS_PASS(nng_msg_alloc(&msg, maxframes + 1));
+	memset(nng_msg_body(msg), 'X', maxframes + 1);
+	nng_aio_set_msg(saio, msg);
+	nng_stream_recv(c, raio);
+	nng_stream_send(s, saio);
+	nng_aio_wait(raio);
+	NUTS_FAIL(nng_aio_result(raio), NNG_ECLOSED);
+	nng_aio_wait(saio);
+	NUTS_TRUE((nng_aio_result(saio) == 0) ||
+	    (nng_aio_result(saio) == NNG_ECLOSED));
+	if ((msg = nng_aio_get_msg(saio)) != NULL) {
+		nng_aio_set_msg(saio, NULL);
+		nng_msg_free(msg);
+	}
+
+	nng_stream_close(c);
+	nng_stream_free(c);
+	nng_stream_close(s);
+	nng_stream_free(s);
+	nng_aio_free(saio);
+	nng_aio_free(raio);
+	nng_aio_free(laio);
+	nng_aio_free(daio);
+	nng_stream_listener_free(l);
+	nng_stream_dialer_free(d);
+}
+
 typedef struct recv_state {
 	nng_stream  *c;
 	int          total;
@@ -642,5 +745,6 @@ NUTS_TESTS = {
 	{ "websocket fragmentation", test_websocket_fragmentation },
 	{ "websocket text mode", test_websocket_text_mode },
 	{ "websocket text rejected", test_websocket_text_rejected },
+	{ "websocket frame limit", test_websocket_frame_limit },
 	{ NULL, NULL },
 };
