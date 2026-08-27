@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -58,7 +58,7 @@ extern "C" {
 // may not necessarily match the ABI versions.
 #define NNG_MAJOR_VERSION 1
 #define NNG_MINOR_VERSION 12
-#define NNG_PATCH_VERSION 2
+#define NNG_PATCH_VERSION 3
 // if non-empty (i.e. "pre"), this is a pre-release
 #define NNG_RELEASE_SUFFIX ""
 
