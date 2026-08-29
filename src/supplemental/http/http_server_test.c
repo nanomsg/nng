@@ -1105,6 +1105,36 @@ test_serve_directory(void)
 }
 
 void
+test_serve_directory_bad_request_target(void)
+{
+	void                  *data;
+	size_t                 size;
+	uint16_t               stat;
+	char                  *ctype;
+	nng_http_handler      *h;
+	struct server_test     st;
+	struct serve_directory sd;
+
+	setup_directory(&sd);
+	NUTS_PASS(nng_http_handler_alloc_directory(&h, "/", sd.workdir));
+	server_setup(&st, h);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/#/../../secret", NULL));
+	NUTS_PASS(httpget(&st, &data, &size, &stat, &ctype));
+	NUTS_TRUE(stat == NNG_HTTP_STATUS_BAD_REQUEST);
+	if (ctype != NULL) {
+		nng_strfree(ctype);
+	}
+	if (data != NULL) {
+		nng_free(data, size);
+	}
+
+	server_free(&st);
+
+	clean_directory(&sd);
+}
+
+void
 test_serve_directory_index(void)
 {
 	void                  *data;
@@ -1324,6 +1354,8 @@ NUTS_TESTS = {
 	{ "server error page", test_server_error_page },
 	{ "server multiple trees", test_server_multiple_trees },
 	{ "server serve directory", test_serve_directory },
+	{ "server directory bad request target",
+	    test_serve_directory_bad_request_target },
 	{ "server serve index", test_serve_directory_index },
 	{ "server plain text", test_serve_plain_text },
 	{ "server file parameters", test_serve_file_parameters },
