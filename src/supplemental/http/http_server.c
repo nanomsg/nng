@@ -1306,6 +1306,21 @@ http_handle_dir(nng_http *conn, void *arg, nng_aio *aio)
 		return;
 	}
 
+	// The request parser rejects these characters, but check again before
+	// building a filesystem path in case a request reaches this handler by
+	// another route.  A fragment is not part of an HTTP request-target, and a
+	// backslash is a directory separator on Windows.
+	if ((strchr(uri + len, '#') != NULL) ||
+	    (strchr(uri + len, '\\') != NULL)) {
+		if ((rv = nni_http_set_error(
+		         conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL, NULL)) != 0) {
+			nni_aio_finish_error(aio, rv);
+			return;
+		}
+		nni_aio_finish(aio, NNG_OK, 0);
+		return;
+	}
+
 	// simple worst case is every character in path is a separator
 	// It's never actually that bad, because we we have /<something>/.
 	pnsz = (strlen(path) + strlen(uri) + 2) * strlen(NNG_PLATFORM_DIR_SEP);
