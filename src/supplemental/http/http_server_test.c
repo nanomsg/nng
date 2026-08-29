@@ -502,6 +502,46 @@ test_server_bad_canonify(void)
 }
 
 static void
+test_server_bad_request_target(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/home.html", doc1, strlen(doc1), "text/html"));
+
+	server_setup(&st, h);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/home.html#/../../secret", NULL));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+
+	server_reset(&st);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/home\\..\\secret", NULL));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+
+	server_free(&st);
+}
+
+static void
 test_server_bad_version(void)
 {
 	struct server_test st;
@@ -1266,6 +1306,7 @@ NUTS_TESTS = {
 	{ "server 404", test_server_404 },
 	{ "server authoritiative form", test_server_no_authoritative_form },
 	{ "server bad canonify", test_server_bad_canonify },
+	{ "server bad request target", test_server_bad_request_target },
 	{ "server bad version", test_server_bad_version },
 	{ "server missing host", test_server_missing_host },
 	{ "server wrong method", test_server_wrong_method },
