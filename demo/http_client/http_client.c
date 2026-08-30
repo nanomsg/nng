@@ -84,8 +84,11 @@ main(int argc, char **argv)
 	// Get the connection, at the 0th output.
 	conn = nng_aio_get_output(aio, 0);
 
-	// Request is already set up with URL, and for GET via HTTP/1.1.
-	// The Host: header is already set up too.
+	// Set request URI
+	if ((rv = nng_http_set_uri(
+	         conn, nng_url_path(url), nng_url_query(url))) != 0) {
+		fatal(rv);
+	}
 
 	// Send the request, and wait for that to finish.
 	nng_http_write_request(conn, aio);
