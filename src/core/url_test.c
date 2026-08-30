@@ -367,6 +367,12 @@ test_url_bad_utf8(void)
 	NUTS_NULL(url);
 	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%c0%81"), NNG_EINVAL);
 	NUTS_NULL(url);
+	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%e0%80%a0"), NNG_EINVAL);
+	NUTS_NULL(url);
+	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%f0%80%90%80"), NNG_EINVAL);
+	NUTS_NULL(url);
+	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%ed%a0%80"), NNG_EINVAL);
+	NUTS_NULL(url);
 }
 
 void
@@ -379,6 +385,11 @@ test_url_good_utf8(void)
 	NUTS_MATCH(nng_url_hostname(url), "www.x.com");
 	NUTS_TRUE(nng_url_port(url) == 80);
 	NUTS_MATCH(nng_url_path(url), "/\xc2\xa2_cents");
+	nng_url_free(url);
+
+	NUTS_PASS(nng_url_parse(&url, "http://www.x.com/%ed%9f%bf%f0%90%80%80"));
+	NUTS_ASSERT(url != NULL);
+	NUTS_MATCH(nng_url_path(url), "/\xed\x9f\xbf\xf0\x90\x80\x80");
 	nng_url_free(url);
 }
 
