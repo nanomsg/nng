@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore: ["docs/**", "**.adoc", "**.md"]
+
+permissions:
+  contents: read
+
 jobs:
   build:
     strategy:
