@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b45f1039.js";
+            window.path_to_searchindex_js = "searchindex-e16c4ed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -2174,6 +2174,13 @@ a component is present, otherwise it returns <code>NULL</code>.</p>
 actually be an IP address) from the URL, if the URL corresponds to a scheme
 that uses hostnames (like “http” or “tcp”). If the URL does not (for example
 “inproc” or “ipc” URLs) then it returns <code>NULL</code>.</p>
+<p>For <code>http+unix</code> URLs, this field instead contains the percent-encoded AF_UNIX
+socket path. For example, <code>http+unix://%2Fvar%2Frun%2Fservice.sock</code> has the
+hostname <code>%2Fvar%2Frun%2Fservice.sock</code>; it is not a DNS hostname. This field
+is case-sensitive and is not lowercased during canonicalization. The URL path
+remains separate and does not select the socket. The <code>http+unix</code> scheme does
+not permit a port. Its userinfo, path, query, and fragment fields retain their
+normal URL meanings.</p>
 <p>The <a name="a006"></a><code>nng_url_port</code> function returns the TCP or UDP port number if the URL
 corresponds to a protocol based on TCP or UDP. It returns zero otherwise.
 Note that the port number might not have been explicitly specified in the URL.
@@ -2225,7 +2232,9 @@ with a few additional rules to improve portability and reduce ambiguous input.</
 <ul>
 <li>The URL is split into scheme, userinfo, host, port, path, query, and fragment
 components. Not every URL has every component.</li>
-<li>The scheme, hostname, and port are converted to lower case when present.</li>
+<li>The scheme, hostname, and port are converted to lower case when present.
+The hostname-like authority in an <code>http+unix</code> URL is an exception: it is a
+case-sensitive, percent-encoded AF_UNIX socket path and is preserved exactly.</li>
 <li>Percent-encoded unreserved characters are converted to their unencoded form.</li>
 <li>Percent-encoded non-ASCII characters in the path are decoded.</li>
 <li>The resulting path is checked for invalid UTF-8, including surrogate pairs,
@@ -4155,6 +4164,31 @@ Every request is answered with a single reply.</p>
 </code></pre>
 <p>Unlike the rest of NNG, the HTTP API in NNG requires including <code>nng/http.h</code>. It is not necessary to include
 the main <code>nng/nng.h</code> header, it will be included transitively by <code>nng/http.h</code>.</p>
+<h2 id="http-over-unix-domain-sockets"><a class="header" href="#http-over-unix-domain-sockets">HTTP over Unix-domain sockets</a></h2>
+<p>HTTP clients and servers can use a Unix-domain socket with an
+<code>http+unix://%2Fabsolute%2Fsocket-path</code> URL. The authority (the portion after
+<code>//</code> and before the next <code>/</code>) contains the percent-encoded socket path; it is
+not an HTTP hostname. For example, the AF_UNIX socket path
+<code>/var/run/service.sock</code> is written as:</p>
+<pre><code class="language-text">http+unix://%2Fvar%2Frun%2Fservice.sock
+</code></pre>
+<p>The triple-slash form <code>http+unix:///var/run/service.sock</code> cannot be used to
+create an HTTP client or server: it has an empty authority and treats
+<code>/var/run/service.sock</code> as an HTTP URL path rather than a socket path. Port
+numbers are not valid in <code>http+unix</code> URLs.</p>
+<p>NNG uses only the encoded authority to choose the socket. For an HTTP client,
+the URL path and query initialize the HTTP request target; callers can replace
+it with <a href="#http-uri"><code>nng_http_set_uri</code></a>, such as <code>/v1/status</code>. A URL fragment is retained
+by the URL API but, like HTTP over TCP, is not sent to the server. URL userinfo
+does not affect the Unix socket endpoint; applications that need authentication
+set the appropriate HTTP headers.</p>
+<p>NNG recognizes this URL on every platform, but it requires the <code>unix</code> stream
+driver. NNG provides that driver on POSIX platforms and on Windows systems with
+AF_UNIX support. On builds without it, HTTP client or server allocation returns
+<a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
+<p>Because this URL uses its hostname for the socket path, HTTP clients send
+<code>Host: localhost</code> by default. Applications that use virtual-host routing can
+replace it with <a href="#modifying-headers"><code>nng_http_set_header</code></a>.</p>
 <h2 id="connection-object"><a class="header" href="#connection-object">Connection Object</a></h2>
 <pre><code class="language-c">typedef struct nng_http nng_http;
 </code></pre>
@@ -4592,6 +4626,24 @@ nng_err nng_http_remote_address(nng_http *conn, nng_sockaddr *addr);
 <p>The <a name="a040"></a><code>nng_http_local_address</code> and <a name="a041"></a><code>nng_http_remote_address</code> functions
 can be used to determine the local and remote addresses for an HTTP connection.
 This can only be done while the connection is alive.</p>
+<h3 id="connection-options"><a class="header" href="#connection-options">Connection Options</a></h3>
+<pre><code class="language-c">nng_err nng_http_get_bool(nng_http *conn, const char *name, bool *value);
+nng_err nng_http_get_int(nng_http *conn, const char *name, int *value);
+nng_err nng_http_get_ms(nng_http *conn, const char *name, nng_duration *value);
+nng_err nng_http_get_size(nng_http *conn, const char *name, size_t *value);
+nng_err nng_http_get_uint64(nng_http *conn, const char *name, uint64_t *value);
+nng_err nng_http_get_string(nng_http *conn, const char *name, const char **value);
+</code></pre>
+<p>These functions retrieve read-only options from the stream underlying an HTTP
+connection. Like other <code>nng_http</code> connection operations, they may only be used
+while the connection is alive; <a href="#closing-the-connection"><code>nng_http_close</code></a> frees the connection. They
+return <a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> when the selected stream does not provide an option.</p>
+<p>For <code>http+unix</code> connections, handlers and clients can use these functions to
+inspect peer identity, including <a href="#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, <a href="#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>,
+<a href="#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, and <a href="#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>. Availability is platform
+dependent: UID and GID are POSIX-only, PID is available on Windows, Linux, and
+SunOS, and Zone ID is SunOS-only. The same getters can retrieve any other
+supported stream metadata, including metadata on TCP connections.</p>
 <h3 id="response-body"><a class="header" href="#response-body">Response Body</a></h3>
 <h2 id="server-api"><a class="header" href="#server-api">Server API</a></h2>
 <h3 id="server-object"><a class="header" href="#server-object">Server Object</a></h3>

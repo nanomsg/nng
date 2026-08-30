@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b45f1039.js";
+            window.path_to_searchindex_js = "../searchindex-e16c4ed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -203,6 +203,13 @@ a component is present, otherwise it returns <code>NULL</code>.</p>
 actually be an IP address) from the URL, if the URL corresponds to a scheme
 that uses hostnames (like “http” or “tcp”). If the URL does not (for example
 “inproc” or “ipc” URLs) then it returns <code>NULL</code>.</p>
+<p>For <code>http+unix</code> URLs, this field instead contains the percent-encoded AF_UNIX
+socket path. For example, <code>http+unix://%2Fvar%2Frun%2Fservice.sock</code> has the
+hostname <code>%2Fvar%2Frun%2Fservice.sock</code>; it is not a DNS hostname. This field
+is case-sensitive and is not lowercased during canonicalization. The URL path
+remains separate and does not select the socket. The <code>http+unix</code> scheme does
+not permit a port. Its userinfo, path, query, and fragment fields retain their
+normal URL meanings.</p>
 <p>The <a name="a006"></a><code>nng_url_port</code> function returns the TCP or UDP port number if the URL
 corresponds to a protocol based on TCP or UDP. It returns zero otherwise.
 Note that the port number might not have been explicitly specified in the URL.
@@ -254,7 +261,9 @@ with a few additional rules to improve portability and reduce ambiguous input.</
 <ul>
 <li>The URL is split into scheme, userinfo, host, port, path, query, and fragment
 components. Not every URL has every component.</li>
-<li>The scheme, hostname, and port are converted to lower case when present.</li>
+<li>The scheme, hostname, and port are converted to lower case when present.
+The hostname-like authority in an <code>http+unix</code> URL is an exception: it is a
+case-sensitive, percent-encoded AF_UNIX socket path and is preserved exactly.</li>
 <li>Percent-encoded unreserved characters are converted to their unencoded form.</li>
 <li>Percent-encoded non-ASCII characters in the path are decoded.</li>
 <li>The resulting path is checked for invalid UTF-8, including surrogate pairs,
