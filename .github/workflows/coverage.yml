@@ -110,6 +110,7 @@ jobs:
       - name: Test
         run: |
           OpenCppCoverage.exe `
+            --cover_children `
             --sources "${{ github.workspace }}\src" `
             --sources "${{ github.workspace }}\include" `
             --excluded_sources "${{ github.workspace }}\build" `
