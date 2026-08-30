@@ -421,6 +421,31 @@ http_handler_host_match(nni_http_handler *h, const char *host)
 	return (true);
 }
 
+static bool
+http_parse_content_length(const char *str, size_t *sizep)
+{
+	size_t size = 0;
+
+	if (*str == '\0') {
+		return (false);
+	}
+	for (; *str != '\0'; str++) {
+		size_t digit;
+
+		if ((*str < '0') || (*str > '9')) {
+			return (false);
+		}
+		digit = (size_t) (*str - '0');
+		if (size > ((SIZE_MAX - digit) / 10)) {
+			return (false);
+		}
+		size = (size * 10) + digit;
+	}
+
+	*sizep = size;
+	return (true);
+}
+
 static void
 http_sconn_rxdone(void *arg)
 {
@@ -511,10 +536,8 @@ http_sconn_rxdone(void *arg)
 
 	sc->unconsumed_body = 0;
 	if ((cls = nni_http_get_header(sc->conn, "Content-Length")) != NULL) {
-		char *end;
-		sc->unconsumed_body = strtoull(cls, &end, 10);
-		if ((end == cls) || (*end != '\0')) {
-			sc->unconsumed_body = 0;
+		if (!http_parse_content_length(cls, &sc->unconsumed_body)) {
+			sc->close = true;
 			http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
 			return;
 		}
