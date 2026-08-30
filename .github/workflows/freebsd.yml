@@ -5,6 +5,9 @@ on:
     types: [opened, synchronize, reopened]
     paths-ignore: ["docs/**", "**.adoc", "**.md"]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

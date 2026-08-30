@@ -1,7 +1,53 @@
+# .codecov.yml
+# https://docs.codecov.com/docs/codecov-yaml
+#
 ignore:
  - "tests"
  - "src/testing"
  - "perf"
  - "**/*_test.c"
 coverage:
- range: 50..95
+  range: 50..95
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 0.5%
+      linux_suite:
+        target: auto
+        threshold: 0.5%
+        flags:
+          - linux
+      macos_suite:
+        target: auto
+        threshold: 0.5%
+        flags:
+          - macos
+      windows_suite:
+        target: auto
+        threshold: 0.5%
+        flags:
+          - windows
+    patch:
+      default:
+        target: auto
+        threshold: 0.5%
+
+codecov:
+  notify:
+    after_n_builds: 3
+
+
+# Flag definitions to segment coverage charts by pipeline context
+flags:
+  linux:
+    carryforward: true     # Retains the last healthy report if a rebuild omits it
+  macos:
+    carryforward: true
+  windows:
+    carryforward: true
+
+# Cosmetic behavior for GitHub Pull Request Comments
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: default

@@ -3,6 +3,10 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths-ignore: ["docs/**", "**.adoc", "**.md"]
+
+permissions:
+  contents: read
+
 jobs:
   linux-coverage:
     name: linux
@@ -20,7 +24,7 @@ jobs:
       - name: Configure
         run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
 
-      - name: build
+      - name: Build
         run: cd build && ninja
 
       - name: Test
@@ -30,14 +34,14 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          codecov_yml_path: ./.codecov.yml
+          flags: linux
 
   darwin-coverage:
     name: darwin
     runs-on: [macos-latest]
     steps:
       - name: Check out code
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Install mbedTLS
         run: brew install mbedtls
@@ -51,7 +55,7 @@ jobs:
       - name: Configure
         run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
 
-      - name: build
+      - name: Build
         run: cd build && ninja
 
       - name: Test
@@ -64,4 +68,57 @@ jobs:
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          yml: ./.codecov.yml
+          flags: macos
+
+  windows-coverage:
+    name: windows
+    runs-on: windows-latest
+    steps:
+      # Fix history bug by ensuring deep parent graphing context
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Install OpenCppCoverage and expose it to subsequent PowerShell steps.
+      - name: Install OpenCppCoverage
+        shell: pwsh
+        run: |
+          choco install opencppcoverage --version=0.9.9.0 --yes --no-progress
+          "${env:ProgramFiles}\OpenCppCoverage" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      # Setup vcpkg for clean cross-platform dependency resolution
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: ${{ github.workspace }}/vcpkg
+          vcpkgGitCommitId: 'abb6dda5cc32914d2e64d7d72b974dc301d1fc8a'
+
+      # Install mbedtls matching the NNG configuration flags
+      - name: Install dependencies via vcpkg
+        run: vcpkg install mbedtls:x64-windows
+
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_TLS=ON -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+
+      - name: Build
+        run: cmake --build build --config Debug
+
+      - name: Test
+        run: |
+          OpenCppCoverage.exe `
+            --sources "${{ github.workspace }}\src" `
+            --sources "${{ github.workspace }}\include" `
+            --excluded_sources "${{ github.workspace }}\build" `
+            --export_type=cobertura:coverage.xml `
+            -- "C:\Program Files\CMake\bin\ctest.exe" --test-dir build -C Debug --output-on-failure
+
+      - name: Upload report
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: windows
