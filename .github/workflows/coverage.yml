@@ -94,15 +94,15 @@ jobs:
           vcpkgDirectory: ${{ github.workspace }}/vcpkg
           vcpkgGitCommitId: 'abb6dda5cc32914d2e64d7d72b974dc301d1fc8a'
 
-      # Install mbedtls matching the NNG configuration flags
+      # WolfSSL's DTLS feature exercises NNG's alternate TLS engine.
       - name: Install dependencies via vcpkg
-        run: vcpkg install mbedtls:x64-windows
+        run: vcpkg install "wolfssl[dtls]:x64-windows"
 
       - name: Configure CMake
         run: |
           mkdir build
           cd build
-          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_TLS=ON -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+          cmake -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=wolf -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
 
       - name: Build
         run: cmake --build build --config Debug
