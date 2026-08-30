@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d48de2bd.js";
+            window.path_to_searchindex_js = "searchindex-b45f1039.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -6158,11 +6158,13 @@ library within the same process.</p>
 <p>The <a name="a001"></a><em>ipc</em> transport<a name="a002"></a> provides communication support between
 sockets within different processes on the same host.
 For POSIX platforms, this is implemented using <a name="a003"></a>UNIX domain sockets.
-For Windows, this is implemented using Windows <a name="a004"></a>named pipes.
+For Windows, this is implemented using Windows <a name="a004"></a>named pipes.  Windows
+also supports the related <a name="a005"></a><code>unix://</code> scheme, which uses Windows
+<a name="a006"></a>AF_UNIX sockets.
 Other platforms may have different implementation strategies.</p>
 <h3 id="uri-formats"><a class="header" href="#uri-formats">URI Formats</a></h3>
 <h4 id="traditional-names"><a class="header" href="#traditional-names">Traditional Names</a></h4>
-<p>This transport uses URIs using the scheme <a name="a005"></a><code>ipc://</code>, followed by a path
+<p>This transport uses URIs using the scheme <a name="a007"></a><code>ipc://</code>, followed by a path
 name in the file system where the socket or named pipe should be created.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
@@ -6190,10 +6192,18 @@ This is because legacy versions of <em>nanomsg</em> cannot express URLs
 longer than 128 bytes, including the <code>ipc://</code> prefix.</p>
 </blockquote>
 <h4 id="unix-aliases"><a class="header" href="#unix-aliases">UNIX Aliases</a></h4>
-<p>The <a name="a006"></a><code>unix://</code> scheme is an alias for <code>ipc://</code> and can be used inter-changeably, but only on POSIX systems.<sup class="footnote-reference" id="fr-ipc_unix-1"><a href="#footnote-ipc_unix">1</a></sup></p>
+<p>On POSIX systems, the <a name="a008"></a><code>unix://</code> scheme is an alias for <code>ipc://</code> and can
+be used interchangeably.  On Windows, it instead selects the AF_UNIX transport;
+<code>ipc://</code> continues to select named pipes.<sup class="footnote-reference" id="fr-ipc_unix-1"><a href="#footnote-ipc_unix">1</a></sup></p>
+<p>On Windows, the <code>unix://</code> path is a UTF-8 Win32 pathname (for example,
+<code>unix://C:\Temp\nng.sock</code>) and is limited to 107 bytes plus its final <code>NUL</code>.
+Windows AF_UNIX streams support <a href="#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, but do not provide
+POSIX user or group credentials.
+AF_UNIX requires Windows build 17063 or later; on older builds, <code>unix://</code>
+operations fail because <code>WSASocket(AF_UNIX, ...)</code> returns <code>WSAEAFNOSUPPORT</code>.</p>
 <h4 id="abstract-names"><a class="header" href="#abstract-names">Abstract Names</a></h4>
-<p>On Linux, this transport also can support <a name="a007"></a>abstract sockets.
-Abstract sockets use a URI-encoded name after the <a name="a008"></a><code>abstract://</code> scheme, which allows arbitrary values to be conveyed
+<p>On Linux, this transport also can support <a name="a009"></a>abstract sockets.
+Abstract sockets use a URI-encoded name after the <a name="a010"></a><code>abstract://</code> scheme, which allows arbitrary values to be conveyed
 in the path, including embedded <code>NUL</code> bytes.
 For example, the name <code>"a\0b"</code> would be represented as <code>abstract://a%00b</code>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -6249,8 +6259,8 @@ which can be used to control access, can be set using the function
 <hr>
 <ol class="footnote-definition">
 <li id="footnote-ipc_unix">
-<p>The purpose of this scheme is to support a future transport making use of <code>AF_UNIX</code>
-on Windows systems, at which time it will be necessary to discriminate between the Named Pipes and the <code>AF_UNIX</code> based transports. <a href="#fr-ipc_unix-1">↩</a></p>
+<p>This scheme distinguishes the existing named-pipe transport from the
+AF_UNIX transport on Windows. <a href="#fr-ipc_unix-1">↩</a></p>
 </li>
 <li id="footnote-peer_random">
 <p>This property makes it important that names be chosen randomly to
@@ -7767,9 +7777,10 @@ dialer before starting to dial.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="index"><a class="header" href="#index">Index</a></h1>
 <p>ABI, <a href="#a010">1</a><br />
-abstract sockets, <a href="#a007">1</a><br />
-<code>abstract://</code>, <a href="#a008">1</a><br />
+abstract sockets, <a href="#a009">1</a><br />
+<code>abstract://</code>, <a href="#a010">1</a><br />
 <code>accept</code>, <a href="#a021">1</a><br />
+AF_UNIX, <a href="#a006">1</a><br />
 <code>AF_UNIX</code>, <a href="#a004">1</a><br />
 aio, <a href="#a002">1</a><br />
 allocations, <a href="#a002">1</a><br />
@@ -7818,7 +7829,7 @@ intra-process, <a href="#a003">1</a><br />
 IP address, <a href="#a004">1</a>, <a href="#a007">2</a>, <a href="#a008">3</a>, <a href="#a004">4</a><br />
 <em>ipc</em>, <a href="#a002">1</a><br />
 <em>ipc</em> transport, <a href="#a001">1</a><br />
-<code>ipc://</code>, <a href="#a005">1</a><br />
+<code>ipc://</code>, <a href="#a007">1</a><br />
 IPv4, <a href="#a004">1</a>, <a href="#a005">2</a>, <a href="#a003">3</a><br />
 IPv6, <a href="#a005">1</a>, <a href="#a006">2</a>, <a href="#a004">3</a><br />
 leader election, <a href="#a005">1</a><br />
@@ -8312,7 +8323,7 @@ UDP, <a href="#a004">1</a>, <a href="#a002">2</a><br />
 <code>udp://</code>, <a href="#a005">1</a><br />
 Universal Resource Locator, <a href="#a001">1</a><br />
 UNIX domain sockets, <a href="#a003">1</a><br />
-<code>unix://</code>, <a href="#a006">1</a><br />
+<code>unix://</code>, <a href="#a005">1</a>, <a href="#a008">2</a><br />
 URI, <a href="#a005">1</a><br />
 URL, <a href="#a002">1</a>, <a href="#a026">2</a><br />
 version number, <a href="#a006">1</a><br />
