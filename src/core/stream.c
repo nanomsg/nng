@@ -385,6 +385,12 @@ nng_stream_get_size(nng_stream *s, const char *n, size_t *v)
 }
 
 nng_err
+nng_stream_get_uint64(nng_stream *s, const char *n, uint64_t *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_UINT64));
+}
+
+nng_err
 nng_stream_get_string(nng_stream *s, const char *n, const char **v)
 {
 	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_STRING));

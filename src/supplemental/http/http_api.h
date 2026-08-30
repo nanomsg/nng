@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -350,6 +350,11 @@ extern void nni_http_transact(
 // nni_http_stream_scheme returns the underlying stream scheme for a given
 // upper layer scheme.
 extern const char *nni_http_stream_scheme(const char *);
+
+// nni_http_stream_url rewrites an HTTP URL as its underlying stream URL.  The
+// caller supplies storage for a decoded UNIX socket path, if applicable.
+extern nng_err nni_http_stream_url(
+    nng_url *, const nng_url *, char *, size_t);
 
 // Private method used for the server.
 extern bool nni_http_res_sent(nni_http_conn *conn);

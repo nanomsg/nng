@@ -16,6 +16,39 @@ Every request is answered with a single reply.
 Unlike the rest of NNG, the HTTP API in NNG requires including `nng/http.h`. It is not necessary to include
 the main `nng/nng.h` header, it will be included transitively by `nng/http.h`.
 
+## HTTP over Unix-domain sockets
+
+HTTP clients and servers can use a Unix-domain socket with an
+`http+unix://%2Fabsolute%2Fsocket-path` URL. The authority (the portion after
+`//` and before the next `/`) contains the percent-encoded socket path; it is
+not an HTTP hostname. For example, the AF_UNIX socket path
+`/var/run/service.sock` is written as:
+
+```text
+http+unix://%2Fvar%2Frun%2Fservice.sock
+```
+
+The triple-slash form `http+unix:///var/run/service.sock` cannot be used to
+create an HTTP client or server: it has an empty authority and treats
+`/var/run/service.sock` as an HTTP URL path rather than a socket path. Port
+numbers are not valid in `http+unix` URLs.
+
+NNG uses only the encoded authority to choose the socket. For an HTTP client,
+the URL path and query initialize the HTTP request target; callers can replace
+it with [`nng_http_set_uri`], such as `/v1/status`. A URL fragment is retained
+by the URL API but, like HTTP over TCP, is not sent to the server. URL userinfo
+does not affect the Unix socket endpoint; applications that need authentication
+set the appropriate HTTP headers.
+
+NNG recognizes this URL on every platform, but it requires the `unix` stream
+driver. NNG provides that driver on POSIX platforms and on Windows systems with
+AF_UNIX support. On builds without it, HTTP client or server allocation returns
+[`NNG_ENOTSUP`].
+
+Because this URL uses its hostname for the socket path, HTTP clients send
+`Host: localhost` by default. Applications that use virtual-host routing can
+replace it with [`nng_http_set_header`].
+
 ## Connection Object
 
 ```c
@@ -567,6 +600,29 @@ nng_err nng_http_remote_address(nng_http *conn, nng_sockaddr *addr);
 The {{i:`nng_http_local_address`}} and {{i:`nng_http_remote_address`}} functions
 can be used to determine the local and remote addresses for an HTTP connection.
 This can only be done while the connection is alive.
+
+### Connection Options
+
+```c
+nng_err nng_http_get_bool(nng_http *conn, const char *name, bool *value);
+nng_err nng_http_get_int(nng_http *conn, const char *name, int *value);
+nng_err nng_http_get_ms(nng_http *conn, const char *name, nng_duration *value);
+nng_err nng_http_get_size(nng_http *conn, const char *name, size_t *value);
+nng_err nng_http_get_uint64(nng_http *conn, const char *name, uint64_t *value);
+nng_err nng_http_get_string(nng_http *conn, const char *name, const char **value);
+```
+
+These functions retrieve read-only options from the stream underlying an HTTP
+connection. Like other `nng_http` connection operations, they may only be used
+while the connection is alive; [`nng_http_close`] frees the connection. They
+return [`NNG_ENOTSUP`] when the selected stream does not provide an option.
+
+For `http+unix` connections, handlers and clients can use these functions to
+inspect peer identity, including [`NNG_OPT_PEER_UID`], [`NNG_OPT_PEER_GID`],
+[`NNG_OPT_PEER_PID`], and [`NNG_OPT_PEER_ZONEID`]. Availability is platform
+dependent: UID and GID are POSIX-only, PID is available on Windows, Linux, and
+SunOS, and Zone ID is SunOS-only. The same getters can retrieve any other
+supported stream metadata, including metadata on TCP connections.
 
 ### Response Body
 

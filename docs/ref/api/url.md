@@ -37,6 +37,14 @@ actually be an IP address) from the URL, if the URL corresponds to a scheme
 that uses hostnames (like "http" or "tcp"). If the URL does not (for example
 "inproc" or "ipc" URLs) then it returns `NULL`.
 
+For `http+unix` URLs, this field instead contains the percent-encoded AF_UNIX
+socket path. For example, `http+unix://%2Fvar%2Frun%2Fservice.sock` has the
+hostname `%2Fvar%2Frun%2Fservice.sock`; it is not a DNS hostname. This field
+is case-sensitive and is not lowercased during canonicalization. The URL path
+remains separate and does not select the socket. The `http+unix` scheme does
+not permit a port. Its userinfo, path, query, and fragment fields retain their
+normal URL meanings.
+
 The {{i:`nng_url_port`}} function returns the TCP or UDP port number if the URL
 corresponds to a protocol based on TCP or UDP. It returns zero otherwise.
 Note that the port number might not have been explicitly specified in the URL.
@@ -101,6 +109,8 @@ When a URL is parsed:
 - The URL is split into scheme, userinfo, host, port, path, query, and fragment
   components. Not every URL has every component.
 - The scheme, hostname, and port are converted to lower case when present.
+  The hostname-like authority in an `http+unix` URL is an exception: it is a
+  case-sensitive, percent-encoded AF_UNIX socket path and is preserved exactly.
 - Percent-encoded unreserved characters are converted to their unencoded form.
 - Percent-encoded non-ASCII characters in the path are decoded.
 - The resulting path is checked for invalid UTF-8, including surrogate pairs,

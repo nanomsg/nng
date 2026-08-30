@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -27,6 +27,7 @@ struct nng_http_client {
 	bool               closed;
 	nni_aio            aio;
 	char               host[260];
+	char              *uri;
 	nng_stream_dialer *dialer;
 };
 
@@ -85,6 +86,11 @@ http_dial_cb(void *arg)
 		return;
 	}
 	nni_http_set_host(conn, c->host);
+	if ((rv = nni_http_set_uri(conn, c->uri, NULL)) != NNG_OK) {
+		nni_http_conn_fini(conn);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_aio_set_output(aio, 0, conn);
 	nni_aio_finish(aio, NNG_OK, 0);
 }
@@ -97,6 +103,7 @@ nni_http_client_fini(nni_http_client *c)
 	nni_aio_fini(&c->aio);
 	nng_stream_dialer_free(c->dialer);
 	nni_mtx_fini(&c->mtx);
+	nni_strfree(c->uri);
 	NNI_FREE_STRUCT(c);
 }
 
@@ -106,17 +113,16 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 	nng_err          rv;
 	nni_http_client *c;
 	nng_url          my_url;
-	const char      *scheme;
+	char             unix_path[NNG_MAXADDRLEN];
 
-	if ((scheme = nni_http_stream_scheme(url->u_scheme)) == NULL) {
-		return (NNG_EADDRINVAL);
+	if ((rv = nni_http_stream_url(
+	         &my_url, url, unix_path, sizeof(unix_path))) != NNG_OK) {
+		return (rv);
 	}
-	// Rewrite URLs to either TLS or TCP.
-	memcpy(&my_url, url, sizeof(my_url));
-	my_url.u_scheme = (char *) scheme;
 
-	if ((strlen(url->u_hostname) == 0) ||
-	    (strlen(url->u_hostname) > 253)) {
+	if ((strcmp(url->u_scheme, "http+unix") != 0) &&
+	    ((strlen(url->u_hostname) == 0) ||
+	        (strlen(url->u_hostname) > 253))) {
 		// We require a valid hostname.
 		return (NNG_EADDRINVAL);
 	}
@@ -128,7 +134,9 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 	nni_aio_list_init(&c->aios);
 	nni_aio_init(&c->aio, http_dial_cb, c);
 
-	if (nni_url_default_port(url->u_scheme) == url->u_port) {
+	if (strcmp(url->u_scheme, "http+unix") == 0) {
+		snprintf(c->host, sizeof(c->host), "localhost");
+	} else if (nni_url_default_port(url->u_scheme) == url->u_port) {
 		snprintf(c->host, sizeof(c->host), "%s", url->u_hostname);
 	} else if (strchr(url->u_hostname, ':') != NULL) {
 		// IPv6 address, needs [wrapping]
@@ -137,6 +145,24 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 	} else {
 		snprintf(c->host, sizeof(c->host), "%s:%d", url->u_hostname,
 		    url->u_port);
+	}
+	{
+		const char *path = url->u_path[0] == '\0' ? "/" : url->u_path;
+		const char *query = url->u_query;
+		size_t      size = strlen(path) + 1;
+
+		if (query != NULL) {
+			size += strlen(query) + 1;
+		}
+		if ((c->uri = nni_alloc(size)) == NULL) {
+			nni_http_client_fini(c);
+			return (NNG_ENOMEM);
+		}
+		if (query == NULL) {
+			snprintf(c->uri, size, "%s", path);
+		} else {
+			snprintf(c->uri, size, "%s?%s", path, query);
+		}
 	}
 	if ((rv = nng_stream_dialer_alloc_url(&c->dialer, &my_url)) != 0) {
 		nni_http_client_fini(c);

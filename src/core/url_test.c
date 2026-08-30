@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -26,6 +26,34 @@ test_url_host(void)
 	NUTS_NULL(nng_url_fragment(url));
 	NUTS_NULL(nng_url_userinfo(url));
 	nng_url_free(url);
+}
+
+void
+test_url_http_unix(void)
+{
+	nng_url *url;
+	char     buf[64];
+
+	NUTS_PASS(nng_url_parse(
+	    &url, "http+unix://user@%2Ftmp%2FMyService.sock/request?verbose=true#x"));
+	NUTS_MATCH(nng_url_scheme(url), "http+unix");
+	NUTS_MATCH(nng_url_hostname(url), "%2Ftmp%2FMyService.sock");
+	NUTS_TRUE(nng_url_port(url) == 0);
+	NUTS_MATCH(nng_url_path(url), "/request");
+	NUTS_MATCH(nng_url_query(url), "verbose=true");
+	NUTS_MATCH(nng_url_fragment(url), "x");
+	NUTS_MATCH(nng_url_userinfo(url), "user");
+	NUTS_TRUE(nng_url_sprintf(buf, sizeof(buf), url) ==
+	    strlen("http+unix://%2Ftmp%2FMyService.sock/request?verbose=true#x"));
+	NUTS_MATCH(buf,
+	    "http+unix://%2Ftmp%2FMyService.sock/request?verbose=true#x");
+	nng_url_free(url);
+
+	NUTS_FAIL(nng_url_parse(
+	              &url, "http+unix://%2Ftmp%2Fnng-http.sock:0"),
+	    NNG_EINVAL);
+	NUTS_FAIL(nng_url_parse(&url, "http+unix:///tmp/nng-http.sock"),
+	    NNG_EINVAL);
 }
 
 void
@@ -531,6 +559,7 @@ test_url_huge_parts(void)
 
 NUTS_TESTS = {
 	{ "url host", test_url_host },
+	{ "url http unix", test_url_http_unix },
 	{ "url host too long", test_url_host_too_long },
 	{ "url host port", test_url_host_port },
 	{ "url host port path", test_url_host_port_path },
