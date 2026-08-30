@@ -73,9 +73,8 @@ url_utf8_validate(void *arg)
 			if ((s[0] & 0xc0u) != 0x80) {
 				return (NNG_EINVAL); // not continuation
 			}
+			v = (v << 6u) | (s[0] & 0x3fu);
 			s++;
-			v <<= 6u;
-			v += s[0] & 0x3fu;
 		}
 		if (v < minv) {
 			return (NNG_EINVAL);
