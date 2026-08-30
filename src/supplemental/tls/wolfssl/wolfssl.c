@@ -173,11 +173,16 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 		return (NNG_ENOMEM); // most likely
 	}
 	if (cfg->server_name != NULL) {
-		if (wolfSSL_check_domain_name(ec->ssl, cfg->server_name) !=
-		    WOLFSSL_SUCCESS) {
+		int rv = wolfSSL_check_domain_name(ec->ssl, cfg->server_name);
+#ifdef NNG_WOLFSSL_HAVE_CHECK_IP
+		if (rv != WOLFSSL_SUCCESS) {
+			rv = wolfSSL_check_ip_address(ec->ssl, cfg->server_name);
+		}
+#endif
+		if (rv != WOLFSSL_SUCCESS) {
 			wolfSSL_free(ec->ssl);
 			ec->ssl = NULL;
-			return (NNG_ENOMEM);
+			return (NNG_ECRYPTO);
 		}
 	}
 	wolfSSL_SetIOReadCtx(ec->ssl, ec->tls);

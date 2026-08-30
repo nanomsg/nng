@@ -40,6 +40,7 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
     check_library_exists(${NNG_WOLFSSL_TARGET} wolfSSL_CTX_set_default_passwd_cb "" NNG_WOLFSSL_HAVE_PASSWORD)
     check_library_exists(${NNG_WOLFSSL_TARGET} wolfSSL_CTX_SetTmpDH "" NNG_WOLFSSL_HAVE_DH)
     check_library_exists(${NNG_WOLFSSL_TARGET} wolfSSL_CTX_set_psk_client_callback "" NNG_WOLFSSL_HAVE_PSK)
+    check_library_exists(${NNG_WOLFSSL_TARGET} wolfSSL_check_ip_address "" NNG_WOLFSSL_HAVE_CHECK_IP)
 
     # A CMake-built wolfSSL supplies the configuration used to build the
     # library in wolfssl/options.h.  Make it visible to NNG when present;
@@ -86,6 +87,10 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         nng_defines(NNG_WOLFSSL_HAVE_DH)
     else ()
         message(STATUS "wolfSSL configured without DH support.")
+    endif ()
+
+    if (NNG_WOLFSSL_HAVE_CHECK_IP)
+        nng_defines(NNG_WOLFSSL_HAVE_CHECK_IP)
     endif ()
 
     if (NNG_WOLFSSL_HAVE_CRL)
