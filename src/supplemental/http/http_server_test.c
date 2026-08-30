@@ -785,7 +785,9 @@ test_server_transfer_encoding(void)
 static void
 test_server_bad_content_length(void)
 {
-	const char         *values[] = { "", "123x" };
+	const char *values[] = {
+		"", "123x", "+1", "-1", "18446744073709551616"
+	};
 	struct server_test  st;
 
 	server_setup(&st, NULL);
@@ -800,11 +802,45 @@ test_server_bad_content_length(void)
 		nng_aio_wait(st.aio);
 		NUTS_PASS(nng_aio_result(st.aio));
 		NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+		NUTS_MATCH(nng_http_get_header(st.conn, "Connection"), "close");
 
 		if (i + 1 < sizeof(values) / sizeof(values[0])) {
 			server_reset(&st);
 		}
 	}
+
+	server_free(&st);
+}
+
+static void
+test_server_bad_content_length_closes(void)
+{
+	static char request[] =
+	    "GET / HTTP/1.1\r\n"
+	    "Host: 127.0.0.1\r\n"
+	    "\r\n";
+	struct server_test st;
+	nng_http_handler  *h;
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/", doc1, strlen(doc1), "text/html"));
+	server_setup(&st, h);
+
+	nng_http_set_body(st.conn, request, sizeof(request) - 1);
+	NUTS_PASS(nng_http_set_header(st.conn, "Content-Length", "123x"));
+	nng_http_write_request(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+
+	// The appended request must not be parsed after the 400 response.
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_TRUE(nng_aio_result(st.aio) != NNG_OK);
 
 	server_free(&st);
 }
@@ -1374,6 +1410,8 @@ NUTS_TESTS = {
 	{ "server post handler", test_server_post_handler },
 	{ "server transfer encoding", test_server_transfer_encoding },
 	{ "server bad content length", test_server_bad_content_length },
+	{ "server bad content length closes",
+	    test_server_bad_content_length_closes },
 	{ "server get redirect", test_server_get_redirect },
 	{ "server tree redirect", test_server_tree_redirect },
 	{ "server post redirect", test_server_post_redirect },
