@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -14,8 +14,11 @@
 #include <complex.h>
 #include <nng/http.h>
 #include <nng/nng.h>
-#ifndef _WIN32
+#ifdef NNG_PLATFORM_WINDOWS
+#include <windows.h>
+#else
 #include <arpa/inet.h> // for endianness functions
+#include <unistd.h>
 #endif
 
 #include "../../testing/nuts.h"
@@ -135,6 +138,77 @@ httpecho(nng_http *conn, void *arg, nng_aio *aio)
 	}
 	nng_http_set_status(conn, NNG_HTTP_STATUS_OK, NULL);
 	nng_aio_finish(aio, 0);
+}
+
+static void
+httpok(nng_http *conn, void *arg, nng_aio *aio)
+{
+	NNI_ARG_UNUSED(arg);
+	nng_http_set_status(conn, NNG_HTTP_STATUS_OK, NULL);
+	nng_aio_finish(aio, 0);
+}
+
+static void
+httpunixpeer(nng_http *conn, void *arg, nng_aio *aio)
+{
+	nng_err rv = NNG_OK;
+	int     id;
+
+	NNI_ARG_UNUSED(arg);
+
+#if defined(NNG_PLATFORM_WINDOWS)
+	if (((rv = nng_http_get_int(conn, NNG_OPT_PEER_PID, &id)) == NNG_OK) &&
+	    (id != (int) GetCurrentProcessId())) {
+		rv = NNG_EINVAL;
+	}
+#elif defined(NNG_PLATFORM_DARWIN) || defined(NNG_PLATFORM_LINUX)
+	if (((rv = nng_http_get_int(conn, NNG_OPT_PEER_UID, &id)) == NNG_OK) &&
+	    (id != (int) getuid())) {
+		rv = NNG_EINVAL;
+	}
+	if ((rv == NNG_OK) &&
+	    ((rv = nng_http_get_int(conn, NNG_OPT_PEER_GID, &id)) == NNG_OK) &&
+	    (id != (int) getgid())) {
+		rv = NNG_EINVAL;
+	}
+#else
+	rv = nng_http_get_int(conn, "http:no-such-option", &id);
+	if (rv == NNG_ENOTSUP) {
+		rv = NNG_OK;
+	}
+#endif
+
+	if (rv != NNG_OK) {
+		nng_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST,
+		    "Peer identity check failed");
+	} else {
+		nng_http_set_status(conn, NNG_HTTP_STATUS_OK, NULL);
+	}
+	nng_aio_finish(aio, 0);
+}
+
+static void
+http_unix_url(char *url, size_t size)
+{
+	static const char hexdigits[] = "0123456789ABCDEF";
+	char             *unix_url;
+	const char       *path;
+	size_t            len;
+	size_t            off;
+
+	NUTS_ADDR(unix_url, "unix");
+	path = unix_url + strlen("unix://");
+	len  = strlen(path);
+	NUTS_TRUE(size >= (strlen("http+unix://") + (3 * len) + 1));
+	off = strlen("http+unix://");
+	memcpy(url, "http+unix://", off);
+	for (size_t i = 0; i < len; i++) {
+		uint8_t c  = (uint8_t) path[i];
+		url[off++] = '%';
+		url[off++] = hexdigits[c >> 4u];
+		url[off++] = hexdigits[c & 0xfu];
+	}
+	url[off] = '\0';
 }
 
 static void
@@ -287,6 +361,131 @@ test_server_basic(void)
 	NUTS_TRUE(memcmp(chunk, doc1, strlen(doc1)) == 0);
 
 	server_free(&st);
+}
+
+static void
+test_server_unix(void)
+{
+#if !defined(NNG_PLATFORM_POSIX) && !defined(NNG_HAVE_UNIX_SOCKETS)
+	nng_url         *url    = NULL;
+	nng_http_client *client = NULL;
+	nng_http_server *server = NULL;
+
+	NUTS_PASS(nng_url_parse(&url, "http+unix://%2Ftmp%2Fnng-http.sock"));
+	NUTS_FAIL(nng_http_client_alloc(&client, url), NNG_ENOTSUP);
+	NUTS_FAIL(nng_http_server_hold(&server, url), NNG_ENOTSUP);
+	nng_url_free(url);
+#else
+	char               urlstr[3 * NNG_MAXADDRLEN + 16];
+	char               other_urlstr[3 * NNG_MAXADDRLEN + 16];
+	char               client_urlstr[3 * NNG_MAXADDRLEN + 64];
+	int                port;
+	int                id;
+	uint64_t           value;
+	nng_url           *url       = NULL;
+	nng_url           *other_url = NULL;
+	nng_url           *client_url = NULL;
+	nng_aio           *aio       = NULL;
+	nng_http_server   *server    = NULL;
+	nng_http_server   *same      = NULL;
+	nng_http_server   *other     = NULL;
+	nng_http_handler  *localhost = NULL;
+	nng_http_handler  *override  = NULL;
+	nng_http_handler  *identity  = NULL;
+	nng_http_client   *client    = NULL;
+	nng_http          *conn      = NULL;
+
+	http_unix_url(urlstr, sizeof(urlstr));
+	http_unix_url(other_urlstr, sizeof(other_urlstr));
+	(void) snprintf(client_urlstr, sizeof(client_urlstr),
+	    "http+unix://user@%s/localhost?source=url#not-sent",
+	    urlstr + strlen("http+unix://"));
+
+	NUTS_PASS(nng_url_parse(&url, urlstr));
+	NUTS_PASS(nng_url_parse(&other_url, other_urlstr));
+	NUTS_PASS(nng_url_parse(&client_url, client_urlstr));
+	NUTS_PASS(nng_http_server_hold(&server, url));
+	NUTS_PASS(nng_http_server_hold(&same, url));
+	NUTS_TRUE(server == same);
+	nng_http_server_release(same);
+	same = NULL;
+	NUTS_PASS(nng_http_server_hold(&other, other_url));
+	NUTS_TRUE(server != other);
+	nng_http_server_release(other);
+	other = NULL;
+
+	NUTS_PASS(nng_http_handler_alloc(&localhost, "/localhost", httpok));
+	nng_http_handler_set_host(localhost, "localhost");
+	NUTS_PASS(nng_http_server_add_handler(server, localhost));
+	NUTS_PASS(nng_http_handler_alloc(&override, "/override", httpok));
+	nng_http_handler_set_host(override, "example.test");
+	NUTS_PASS(nng_http_server_add_handler(server, override));
+	NUTS_PASS(nng_http_handler_alloc(&identity, "/identity", httpunixpeer));
+	NUTS_PASS(nng_http_server_add_handler(server, identity));
+	NUTS_PASS(nng_http_server_start(server));
+	NUTS_FAIL(nng_http_server_get_port(server, &port), NNG_ENOTSUP);
+
+	NUTS_PASS(nng_http_client_alloc(&client, client_url));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_http_client_connect(client, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	conn = nng_aio_get_output(aio, 0);
+	NUTS_MATCH(nng_http_get_uri(conn), "/localhost?source=url");
+	NUTS_FAIL(nng_http_get_uint64(conn, "http:no-such-option", &value),
+	    NNG_ENOTSUP);
+#if !defined(NNG_PLATFORM_SUNOS)
+	NUTS_FAIL(nng_http_get_int(conn, NNG_OPT_PEER_ZONEID, &id), NNG_ENOTSUP);
+#endif
+
+	nng_http_write_request(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_http_read_response(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(nng_http_get_status(conn) == NNG_HTTP_STATUS_OK);
+
+	nng_http_reset(conn);
+	NUTS_PASS(nng_http_set_uri(conn, "/override", NULL));
+	NUTS_PASS(nng_http_set_header(conn, "Host", "example.test"));
+	nng_http_write_request(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_http_read_response(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(nng_http_get_status(conn) == NNG_HTTP_STATUS_OK);
+
+	nng_http_reset(conn);
+	NUTS_PASS(nng_http_set_uri(conn, "/identity", NULL));
+	nng_http_write_request(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_http_read_response(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(nng_http_get_status(conn) == NNG_HTTP_STATUS_OK);
+
+	nng_http_close(conn);
+	nng_aio_free(aio);
+	nng_http_client_free(client);
+	nng_http_server_release(server);
+	nng_url_free(client_url);
+	nng_url_free(other_url);
+	nng_url_free(url);
+#endif
+}
+
+static void
+test_server_unix_invalid_url(void)
+{
+	nng_http_client *client = NULL;
+	nng_url         *url    = NULL;
+
+	NUTS_PASS(nng_url_parse(&url, "http+unix://relative.sock"));
+	NUTS_FAIL(nng_http_client_alloc(&client, url), NNG_EADDRINVAL);
+	nng_url_free(url);
 }
 
 static void
@@ -1393,6 +1592,8 @@ test_serve_subdir_index(void)
 
 NUTS_TESTS = {
 	{ "server basic", test_server_basic },
+	{ "server unix", test_server_unix },
+	{ "server unix invalid URL", test_server_unix_invalid_url },
 	{ "server static binary", test_server_static_bin },
 	{ "server canonify", test_server_canonify },
 	{ "server head", test_server_head },

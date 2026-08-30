@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -320,6 +320,85 @@ nng_http_local_address(nng_http *conn, nng_sockaddr *addrp)
 {
 	*addrp = *(nni_http_self_addr(conn));
 	return (NNG_OK);
+}
+
+nng_err
+nng_http_get_bool(nng_http *conn, const char *name, bool *value)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_BOOL));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(value);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_err
+nng_http_get_int(nng_http *conn, const char *name, int *value)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_INT32));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(value);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_err
+nng_http_get_ms(nng_http *conn, const char *name, nng_duration *value)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_getopt(
+	    conn, name, value, NULL, NNI_TYPE_DURATION));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(value);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_err
+nng_http_get_size(nng_http *conn, const char *name, size_t *value)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_SIZE));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(value);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_err
+nng_http_get_uint64(nng_http *conn, const char *name, uint64_t *value)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_UINT64));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(value);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+nng_err
+nng_http_get_string(nng_http *conn, const char *name, const char **value)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_STRING));
+#else
+	NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(value);
+	return (NNG_ENOTSUP);
+#endif
 }
 
 nng_err

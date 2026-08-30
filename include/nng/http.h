@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -186,6 +186,16 @@ NNG_DECL nng_err nng_http_local_address(nng_http *, nng_sockaddr *);
 // nng_http_remote_address obtains the remote socket address for the
 // connection.
 NNG_DECL nng_err nng_http_remote_address(nng_http *, nng_sockaddr *);
+
+// These functions retrieve read-only options from the underlying stream.  The
+// available options depend on the stream implementation and platform.
+NNG_DECL nng_err nng_http_get_bool(nng_http *, const char *, bool *);
+NNG_DECL nng_err nng_http_get_int(nng_http *, const char *, int *);
+NNG_DECL nng_err nng_http_get_ms(nng_http *, const char *, nng_duration *);
+NNG_DECL nng_err nng_http_get_size(nng_http *, const char *, size_t *);
+NNG_DECL nng_err nng_http_get_uint64(nng_http *, const char *, uint64_t *);
+NNG_DECL nng_err nng_http_get_string(
+    nng_http *, const char *, const char **);
 
 // These functions set (replacing any existing), or add (appending)
 // a header to either the request or response.  Clients modify the request

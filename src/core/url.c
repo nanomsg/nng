@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -250,6 +250,7 @@ static struct {
 // List of schemes that we recognize.  We don't support them all.
 static const char *nni_schemes[] = {
 	"http",
+	"http+unix",
 	"https",
 	"tcp",
 	"tcp4",
@@ -430,10 +431,12 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 		}
 	}
 
-	// Copy the host portion, but make it lower case (hostnames are
-	// case insensitive).
-	for (int i = 0; url->u_hostname[i]; i++) {
-		url->u_hostname[i] = (char) tolower(url->u_hostname[i]);
+	// Hostnames are case insensitive, but http+unix uses this field for a
+	// percent-encoded, case-sensitive UNIX socket path.
+	if (strcmp(url->u_scheme, "http+unix") != 0) {
+		for (int i = 0; url->u_hostname[i]; i++) {
+			url->u_hostname[i] = (char) tolower(url->u_hostname[i]);
+		}
 	}
 
 	if ((rv = nni_url_canonify_uri(p)) != 0) {
@@ -463,7 +466,6 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 		*p++            = '\0';
 		url->u_fragment = p;
 	}
-
 	// Now go back to the host portion, and look for a separate
 	// port We also yank off the "[" part for IPv6 addresses.
 	p = url->u_hostname;
@@ -487,8 +489,19 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 	if ((c = *p) == ':') {
 		*p++ = '\0';
 	}
-	// hostname length check
-	if (strlen(url->u_hostname) >= 256) {
+	// Hostname length check.  http+unix uses the hostname for a
+	// percent-encoded UNIX socket path, which can be up to three times the
+	// maximum socket-path length.
+	if (strlen(url->u_hostname) >=
+	    ((strcmp(url->u_scheme, "http+unix") == 0) ?
+	        (3 * NNG_MAXADDRLEN) : 256)) {
+		return (NNG_EINVAL);
+	}
+	if ((strcmp(url->u_scheme, "http+unix") == 0) &&
+	    (url->u_hostname[0] == '\0')) {
+		return (NNG_EINVAL);
+	}
+	if ((strcmp(url->u_scheme, "http+unix") == 0) && (c == ':')) {
 		return (NNG_EINVAL);
 	}
 
@@ -563,7 +576,10 @@ nng_url_sprintf(char *str, size_t size, const nng_url *url)
 	const char *hostcb  = "";
 	bool        do_port = true;
 
-	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0) ||
+	if (strcmp(scheme, "http+unix") == 0) {
+		do_port = false;
+	} else if ((strcmp(scheme, "ipc") == 0) ||
+	    (strcmp(scheme, "inproc") == 0) ||
 	    (strcmp(scheme, "unix") == 0) ||
 	    (strcmp(scheme, "abstract") == 0) ||
 	    (strcmp(scheme, "socket") == 0)) {

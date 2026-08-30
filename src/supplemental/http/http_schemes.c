@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -22,6 +22,10 @@ static struct {
 	{
 	    .upper = "http",
 	    .lower = "tcp",
+	},
+	{
+	    .upper = "http+unix",
+	    .lower = "unix",
 	},
 	{
 	    .upper = "ws",
@@ -82,4 +86,40 @@ nni_http_stream_scheme(const char *upper)
 		}
 	}
 	return (NULL);
+}
+
+nng_err
+nni_http_stream_url(
+    nng_url *stream_url, const nng_url *url, char *path, size_t pathsz)
+{
+	const char *scheme;
+	size_t      len;
+
+	if ((scheme = nni_http_stream_scheme(url->u_scheme)) == NULL) {
+		return (NNG_EADDRINVAL);
+	}
+	memcpy(stream_url, url, sizeof(*stream_url));
+	stream_url->u_scheme = (char *) scheme;
+
+	if (strcmp(url->u_scheme, "http+unix") != 0) {
+		return (NNG_OK);
+	}
+	if ((url->u_port != 0) || (url->u_hostname == NULL) ||
+	    (url->u_hostname[0] == '\0') ||
+	    (pathsz == 0) ||
+	    ((len = nni_url_decode((uint8_t *) path, url->u_hostname,
+	          pathsz - 1)) == (size_t) -1) ||
+	    (len == 0) || (memchr(path, '\0', len) != NULL)) {
+		return (NNG_EADDRINVAL);
+	}
+	path[len]              = '\0';
+	if ((path[0] != '/') &&
+	    !((len > 2) && isalpha((uint8_t) path[0]) && (path[1] == ':') &&
+	        ((path[2] == '/') || (path[2] == '\\')))) {
+		return (NNG_EADDRINVAL);
+	}
+	stream_url->u_hostname = NULL;
+	stream_url->u_path     = path;
+	stream_url->u_port     = 0;
+	return (NNG_OK);
 }
