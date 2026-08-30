@@ -16,16 +16,20 @@ coverage:
       linux_suite:
         target: auto
         threshold: 0.5%
+        if_not_found: failure
         flags:
           - linux
       macos_suite:
         target: auto
         threshold: 0.5%
+        if_not_found: failure
         flags:
           - macos
       windows_suite:
-        target: auto
-        threshold: 0.5%
+        # Reject an empty Windows report while the flag establishes its baseline.
+        target: 1%
+        threshold: 0%
+        if_not_found: failure
         flags:
           - windows
     patch:
