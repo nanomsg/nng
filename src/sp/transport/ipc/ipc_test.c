@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -7,6 +7,10 @@
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
 //
+
+#ifdef _WIN32
+#include <winsock2.h>
+#endif
 
 #include "../../../testing/nuts.h"
 
@@ -17,6 +21,12 @@
 #endif
 #ifdef NNG_PLATFORM_SUNOS
 #include <zone.h>
+#endif
+#ifdef NNG_PLATFORM_WINDOWS
+#include <windows.h>
+#endif
+#if defined(NNG_PLATFORM_WINDOWS) && defined(NNG_HAVE_UNIX_SOCKETS)
+#include <afunix.h>
 #endif
 
 void
@@ -384,8 +394,55 @@ test_ipc_listener_clean_stale(void)
 	NUTS_PASS(nng_listen(s0, addr, NULL, 0));
 	nng_msleep(50);
 	NUTS_CLOSE(s0);
+#elif defined(NNG_PLATFORM_WINDOWS) && defined(NNG_HAVE_UNIX_SOCKETS)
+	nng_socket           s0;
+	nng_stream_listener *l;
+	char                *addr;
+	char                *path;
+	SOCKADDR_UN          sa;
+	SOCKET               stale;
+
+	NUTS_ADDR(addr, "unix");
+	NUTS_OPEN(s0);
+	path = addr + strlen("unix://");
+	NUTS_TRUE(strlen(path) < sizeof(sa.sun_path));
+	memset(&sa, 0, sizeof(sa));
+	sa.sun_family = AF_UNIX;
+	memcpy(sa.sun_path, path, strlen(path) + 1);
+	(void) DeleteFileA(path);
+	NUTS_TRUE((stale = WSASocket(
+	               AF_UNIX, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) !=
+	    INVALID_SOCKET);
+	NUTS_TRUE(bind(stale, (SOCKADDR *) &sa, sizeof(sa)) == 0);
+	closesocket(stale);
+
+	NUTS_PASS(nng_stream_listener_alloc(&l, addr));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+	NUTS_CLOSE(s0);
 #else
-	NUTS_SKIP("Not POSIX.");
+	NUTS_SKIP("No UNIX socket support.");
+#endif
+}
+
+void
+test_unix_listener_duplicate(void)
+{
+#if defined(NNG_PLATFORM_WINDOWS) && defined(NNG_HAVE_UNIX_SOCKETS)
+	nng_socket s0;
+	nng_socket s1;
+	char      *addr;
+
+	NUTS_ADDR(addr, "unix");
+	NUTS_OPEN(s0);
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_listen(s0, addr, NULL, 0));
+	NUTS_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINUSE);
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
+#else
+	NUTS_SKIP("Not Windows AF_UNIX.");
 #endif
 }
 
@@ -503,25 +560,38 @@ test_abstract_null(void)
 }
 
 void
-test_unix_alias(void)
+test_unix_scheme(void)
 {
-#ifdef NNG_PLATFORM_POSIX
+#if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 	nng_socket   s1;
 	nng_socket   s2;
+#ifdef NNG_PLATFORM_POSIX
 	char         addr1[32];
 	char         addr2[32];
 	char         rng[20];
+#endif
+	char        *a1;
+	char        *a2;
 	nng_sockaddr sa1;
 	nng_sockaddr sa2;
 	nng_msg     *msg;
 	nng_pipe     p;
+#ifdef NNG_PLATFORM_WINDOWS
+	int           id;
+#endif
 
+#ifdef NNG_PLATFORM_POSIX
 	// Presumes /tmp.
-
 	(void) snprintf(
 	    rng, sizeof(rng), "%08x%08x", nng_random(), nng_random());
 	snprintf(addr1, sizeof(addr1), "ipc:///tmp/%s", rng);
 	snprintf(addr2, sizeof(addr2), "unix:///tmp/%s", rng);
+	a1 = addr1;
+	a2 = addr2;
+#else
+	NUTS_ADDR(a1, "unix");
+	a2 = a1;
+#endif
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -529,8 +599,8 @@ test_unix_alias(void)
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
 	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
-	NUTS_PASS(nng_listen(s1, addr1, NULL, 0));
-	NUTS_PASS(nng_dial(s2, addr2, NULL, 0));
+	NUTS_PASS(nng_listen(s1, a1, NULL, 0));
+	NUTS_PASS(nng_dial(s2, a2, NULL, 0));
 
 	// first send the ping
 	NUTS_SEND(s1, "ping");
@@ -544,12 +614,25 @@ test_unix_alias(void)
 	NUTS_TRUE(sa1.s_family == sa2.s_family);
 	NUTS_TRUE(sa1.s_family == NNG_AF_IPC);
 	NUTS_MATCH(sa1.s_ipc.sa_path, sa2.s_ipc.sa_path);
+#ifdef NNG_PLATFORM_WINDOWS
+	NUTS_PASS(nng_pipe_get_int(p, NNG_OPT_PEER_PID, &id));
+	NUTS_TRUE(id == (int) GetCurrentProcessId());
+#endif
 	nng_msg_free(msg);
+
+#ifdef NNG_PLATFORM_WINDOWS
+	NUTS_SEND(s2, "pong");
+	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+	p = nng_msg_get_pipe(msg);
+	NUTS_PASS(nng_pipe_get_int(p, NNG_OPT_PEER_PID, &id));
+	NUTS_TRUE(id == (int) GetCurrentProcessId());
+	nng_msg_free(msg);
+#endif
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
 #else
-	NUTS_SKIP("Not POSIX.");
+	NUTS_SKIP("No UNIX socket support.");
 #endif
 }
 
@@ -642,12 +725,13 @@ TEST_LIST = {
 	{ "ipc connect blocking accept", test_ipc_connect_blocking_accept },
 	{ "ipc listen cleanup stale", test_ipc_listener_clean_stale },
 	{ "ipc listen duplicate", test_ipc_listen_duplicate },
+	{ "unix listen duplicate", test_unix_listener_duplicate },
 	{ "ipc listen accept cancel", test_ipc_listen_accept_cancel },
 	{ "ipc abstract sockets", test_abstract_sockets },
 	{ "ipc abstract auto-bind", test_abstract_autobind },
 	{ "ipc abstract name too long", test_abstract_too_long },
 	{ "ipc abstract embedded null", test_abstract_null },
-	{ "ipc unix alias", test_unix_alias },
+	{ "ipc unix scheme", test_unix_scheme },
 	{ "ipc peer id", test_ipc_pipe_peer },
 	{ "ipc security descriptor", test_ipc_security_descriptor },
 	{ NULL, NULL },

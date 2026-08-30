@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -1104,7 +1104,7 @@ static nni_sp_tran ipc_tran = {
 	.tran_fini     = ipc_tran_fini,
 };
 
-#ifdef NNG_PLATFORM_POSIX
+#if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 static nni_sp_tran ipc_tran_unix = {
 	.tran_scheme   = "unix",
 	.tran_dialer   = &ipc_dialer_ops,
@@ -1130,7 +1130,7 @@ void
 nni_sp_ipc_register(void)
 {
 	nni_sp_tran_register(&ipc_tran);
-#ifdef NNG_PLATFORM_POSIX
+#if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 	nni_sp_tran_register(&ipc_tran_unix);
 #endif
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS

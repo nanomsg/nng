@@ -5,7 +5,9 @@
 The {{i:*ipc* transport}}{{hi:*ipc*}} provides communication support between
 sockets within different processes on the same host.
 For POSIX platforms, this is implemented using {{i:UNIX domain sockets}}.
-For Windows, this is implemented using Windows {{i:named pipes}}.
+For Windows, this is implemented using Windows {{i:named pipes}}.  Windows
+also supports the related {{i:`unix://`}} scheme, which uses Windows
+{{i:AF_UNIX}} sockets.
 Other platforms may have different implementation strategies.
 
 ### URI Formats
@@ -39,11 +41,20 @@ name in the file system where the socket or named pipe should be created.
 
 #### UNIX Aliases
 
-The {{i:`unix://`}} scheme is an alias for `ipc://` and can be used inter-changeably, but only on POSIX systems.[^ipc_unix]
+On POSIX systems, the {{i:`unix://`}} scheme is an alias for `ipc://` and can
+be used interchangeably.  On Windows, it instead selects the AF_UNIX transport;
+`ipc://` continues to select named pipes.[^ipc_unix]
+
+On Windows, the `unix://` path is a UTF-8 Win32 pathname (for example,
+`unix://C:\Temp\nng.sock`) and is limited to 107 bytes plus its final `NUL`.
+Windows AF_UNIX streams support [`NNG_OPT_PEER_PID`], but do not provide
+POSIX user or group credentials.
+AF_UNIX requires Windows build 17063 or later; on older builds, `unix://`
+operations fail because `WSASocket(AF_UNIX, ...)` returns `WSAEAFNOSUPPORT`.
 
 [^ipc_unix]:
-    The purpose of this scheme is to support a future transport making use of `AF_UNIX`
-    on Windows systems, at which time it will be necessary to discriminate between the Named Pipes and the `AF_UNIX` based transports.
+    This scheme distinguishes the existing named-pipe transport from the
+    AF_UNIX transport on Windows.
 
 #### Abstract Names
 

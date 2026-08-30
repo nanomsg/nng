@@ -1,5 +1,5 @@
 #
-# Copyright 2024 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -15,6 +15,7 @@ if (NNG_PLATFORM_WINDOWS)
     nng_check_sym(InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
     nng_check_sym(timespec_get time.h NNG_HAVE_TIMESPEC_GET)
     nng_check_sym(snprintf stdio.h NNG_HAVE_SNPRINTF)
+    nng_check_sym(AF_UNIX "winsock2.h;afunix.h" NNG_HAVE_UNIX_SOCKETS)
     if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF OR NOT NNG_HAVE_TIMESPEC_GET)
         message(FATAL_ERROR
                 "Modern Windows API support is missing. "
@@ -48,6 +49,8 @@ if (NNG_PLATFORM_WINDOWS)
             win_tcplisten.c
             win_thread.c
             win_udp.c
+            win_unix.c
+            win_unix.h
     )
 
     nng_test(win_ipc_sec_test)

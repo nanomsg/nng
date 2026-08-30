@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -36,11 +36,12 @@ struct nni_tcp_conn {
 	char            buf[512]; // to hold acceptex results
 	bool            sending;
 	bool            recving;
+	bool            peer_pid_supported;
 	nni_mtx         mtx;
 	nni_cv          cv;
 };
 
-extern int nni_win_tcp_init(nni_tcp_conn **, SOCKET);
+extern int nni_win_tcp_init(nni_tcp_conn **, SOCKET, bool);
 
 // Following functions are wrappers around Windows functions that have to be
 // looked up by pointer/GUID.
