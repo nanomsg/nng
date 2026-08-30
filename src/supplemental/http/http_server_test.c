@@ -783,6 +783,33 @@ test_server_transfer_encoding(void)
 }
 
 static void
+test_server_bad_content_length(void)
+{
+	const char         *values[] = { "", "123x" };
+	struct server_test  st;
+
+	server_setup(&st, NULL);
+
+	for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
+		NUTS_PASS(nng_http_set_header(st.conn, "Content-Length", values[i]));
+		nng_http_write_request(st.conn, st.aio);
+		nng_aio_wait(st.aio);
+		NUTS_PASS(nng_aio_result(st.aio));
+
+		nng_http_read_response(st.conn, st.aio);
+		nng_aio_wait(st.aio);
+		NUTS_PASS(nng_aio_result(st.aio));
+		NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+
+		if (i + 1 < sizeof(values) / sizeof(values[0])) {
+			server_reset(&st);
+		}
+	}
+
+	server_free(&st);
+}
+
+static void
 test_server_addrs_handler(void)
 {
 	struct server_test st;
@@ -1346,6 +1373,7 @@ NUTS_TESTS = {
 	{ "server invalid utf", test_server_invalid_utf8 },
 	{ "server post handler", test_server_post_handler },
 	{ "server transfer encoding", test_server_transfer_encoding },
+	{ "server bad content length", test_server_bad_content_length },
 	{ "server get redirect", test_server_get_redirect },
 	{ "server tree redirect", test_server_tree_redirect },
 	{ "server post redirect", test_server_post_redirect },

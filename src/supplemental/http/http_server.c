@@ -513,7 +513,7 @@ http_sconn_rxdone(void *arg)
 	if ((cls = nni_http_get_header(sc->conn, "Content-Length")) != NULL) {
 		char *end;
 		sc->unconsumed_body = strtoull(cls, &end, 10);
-		if ((end == NULL) && (*end != '\0')) {
+		if ((end == cls) || (*end != '\0')) {
 			sc->unconsumed_body = 0;
 			http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
 			return;
