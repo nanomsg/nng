@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -255,14 +255,14 @@ extern const char *nuts_ecdsa_client_crt;
 
 #define NUTS_ADDR(var, scheme)                                             \
 	do {                                                               \
-		static char nuts_addr_[64];                                \
+		static char nuts_addr_[NNG_MAXADDRLEN];                    \
 		nuts_scratch_addr(scheme, sizeof(nuts_addr_), nuts_addr_); \
 		(var) = nuts_addr_;                                        \
 	} while (0)
 
 #define NUTS_ADDR_ZERO(var, scheme)                          \
 	do {                                                 \
-		static char nuts_addr_[64];                  \
+		static char nuts_addr_[NNG_MAXADDRLEN];      \
 		nuts_scratch_addr_zero(                      \
 		    scheme, sizeof(nuts_addr_), nuts_addr_); \
 		(var) = nuts_addr_;                          \

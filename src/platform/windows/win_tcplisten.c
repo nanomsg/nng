@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -274,7 +274,7 @@ tcp_listener_doaccept(tcp_listener *l)
 			continue;
 		}
 
-		if ((rv = nni_win_tcp_init(&c, s)) != 0) {
+		if ((rv = nni_win_tcp_init(&c, s, false)) != 0) {
 			nni_aio_list_remove(aio);
 			closesocket(s);
 			nni_aio_finish_error(aio, rv);

@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -12,6 +12,10 @@
 #include "../../core/nng_impl.h"
 
 #include "win_tcp.h"
+
+#ifdef NNG_HAVE_UNIX_SOCKETS
+#include <afunix.h>
+#endif
 
 #include <stdio.h>
 
@@ -301,6 +305,32 @@ tcp_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
+static nng_err
+tcp_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+
+#ifdef NNG_HAVE_UNIX_SOCKETS
+	ULONG id;
+	DWORD nbytes;
+
+	if (!c->peer_pid_supported) {
+		return (NNG_ENOTSUP);
+	}
+	if (WSAIoctl(c->s, SIO_AF_UNIX_GETPEERPID, NULL, 0, &id,
+	        sizeof(id), &nbytes, NULL, NULL) == SOCKET_ERROR) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (nni_copyout_int((int) id, buf, szp, t));
+#else
+	NNI_ARG_UNUSED(c);
+	NNI_ARG_UNUSED(buf);
+	NNI_ARG_UNUSED(szp);
+	NNI_ARG_UNUSED(t);
+	return (NNG_ENOTSUP);
+#endif
+}
+
 static const nng_sockaddr *
 tcp_self_addr(void *arg)
 {
@@ -323,6 +353,10 @@ static const nni_option tcp_options[] = {
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
 	    .o_get  = tcp_get_keepalive,
+	},
+	{
+	    .o_name = NNG_OPT_PEER_PID,
+	    .o_get  = tcp_get_peer_pid,
 	},
 	{
 	    .o_name = NULL,
@@ -372,7 +406,7 @@ tcp_free(void *arg)
 }
 
 int
-nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
+nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s, bool peer_pid_supported)
 {
 	nni_tcp_conn *c;
 	int           rv;
@@ -390,7 +424,8 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
 	nni_cv_init(&c->cv, &c->mtx);
 	nni_aio_list_init(&c->recv_aios);
 	nni_aio_list_init(&c->send_aios);
-	c->conn_aio        = NULL;
+	c->conn_aio          = NULL;
+	c->peer_pid_supported = peer_pid_supported;
 	c->ops.s_close     = tcp_close;
 	c->ops.s_stop      = tcp_stop;
 	c->ops.s_free      = tcp_free;

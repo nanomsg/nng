@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -65,12 +65,38 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 		return;
 	}
 
-	if ((strncmp(scheme, "ipc", 3) == 0) ||
-	    (strncmp(scheme, "unix", 4) == 0)) {
+	if (strncmp(scheme, "ipc", 3) == 0) {
 #ifdef _WIN32
 		// Windows doesn't place IPC names in the filesystem.
 		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
 		    nng_random(), nng_random(), nng_random(), nng_random());
+		return;
+#else
+		char *tmpdir;
+
+		if (((tmpdir = getenv("TMPDIR")) == NULL) &&
+		    ((tmpdir = getenv("TEMP")) == NULL) &&
+		    ((tmpdir = getenv("TMP")) == NULL)) {
+			tmpdir = "/tmp";
+		}
+
+		(void) snprintf(addr, sz, "%s://%s/nuts%04x%04x%04x%04x",
+		    scheme, tmpdir, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+		return;
+#endif
+	}
+	if (strncmp(scheme, "unix", 4) == 0) {
+#ifdef _WIN32
+		char  tmpdir[NNG_MAXADDRLEN];
+		DWORD n;
+
+		if (((n = GetTempPathA(sizeof(tmpdir), tmpdir)) == 0) ||
+		    (n >= sizeof(tmpdir))) {
+			tmpdir[0] = 0;
+		}
+		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
+		    nng_random());
 		return;
 #else
 		char *tmpdir;
@@ -122,12 +148,38 @@ nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
 		return;
 	}
 
-	if ((strncmp(scheme, "ipc", 3) == 0) ||
-	    (strncmp(scheme, "unix", 4) == 0)) {
+	if (strncmp(scheme, "ipc", 3) == 0) {
 #ifdef _WIN32
 		// Windows doesn't place IPC names in the filesystem.
 		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
 		    nng_random(), nng_random(), nng_random(), nng_random());
+		return;
+#else
+		char *tmpdir;
+
+		if (((tmpdir = getenv("TMPDIR")) == NULL) &&
+		    ((tmpdir = getenv("TEMP")) == NULL) &&
+		    ((tmpdir = getenv("TMP")) == NULL)) {
+			tmpdir = "/tmp";
+		}
+
+		(void) snprintf(addr, sz, "%s://%s/nuts%04x%04x%04x%04x",
+		    scheme, tmpdir, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+		return;
+#endif
+	}
+	if (strncmp(scheme, "unix", 4) == 0) {
+#ifdef _WIN32
+		char  tmpdir[NNG_MAXADDRLEN];
+		DWORD n;
+
+		if (((n = GetTempPathA(sizeof(tmpdir), tmpdir)) == 0) ||
+		    (n >= sizeof(tmpdir))) {
+			tmpdir[0] = 0;
+		}
+		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
+		    nng_random());
 		return;
 #else
 		char *tmpdir;
