@@ -191,8 +191,6 @@ test_init_concurrent(void)
 	nng_mtx_free(m);
 
 	nng_fini();
-	// Leave the NUTS fixture's initialization for TEST_FINI to release.
-	NUTS_PASS(nng_init(NULL));
 }
 
 NUTS_TESTS = {
