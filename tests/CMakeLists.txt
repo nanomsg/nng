@@ -62,4 +62,6 @@ else ()
 endif ()
 
 # c++ tests
-add_nng_cpp_test(cplusplus_pair 5)
+# This test explicitly finalizes the library, which may take longer on a
+# loaded Windows runner while its worker threads exit.
+add_nng_cpp_test(cplusplus_pair 15)
