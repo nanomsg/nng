@@ -25,10 +25,18 @@ typedef struct {
 	SECURITY_ATTRIBUTES sec_attr;
 	nni_list            aios;
 	nni_mtx             mtx;
+	nni_reap_node       reap;
 	nni_win_io          io;
 	nni_sockaddr        sa;
 	int                 rv;
 } ipc_listener;
+
+static void ipc_listener_free(void *);
+
+static nni_reap_list ipc_listener_reap_list = {
+	.rl_offset = offsetof(ipc_listener, reap),
+	.rl_func   = (nni_cb) ipc_listener_free,
+};
 
 static void
 ipc_accept_done(ipc_listener *l, int rv)
@@ -143,7 +151,6 @@ static nng_err
 ipc_listener_set_sec_desc(void *arg, void *desc)
 {
 	ipc_listener *l = arg;
-	int           rv;
 
 	if (!IsValidSecurityDescriptor((SECURITY_DESCRIPTOR *) desc)) {
 		return (NNG_EINVAL);
@@ -274,8 +281,6 @@ ipc_listener_close(void *arg)
 {
 	ipc_listener *l = arg;
 	nni_aio      *aio;
-	int           rv;
-	DWORD         nb;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
@@ -294,43 +299,41 @@ static void
 ipc_listener_stop(void *arg)
 {
 	ipc_listener *l = arg;
+	HANDLE        f;
+	bool          accepting;
 
 	ipc_listener_close(l);
 
 	nni_mtx_lock(&l->mtx);
-	bool accepting = l->accepting;
-
-	// This craziness because CancelIoEx on ConnectNamedPipe
-	// seems to be incredibly unreliable. It does work, sometimes,
-	// but often it doesn't.  This entire named pipe business needs
-	// to be retired in favor of UNIX domain sockets anyway.
-
-	while (accepting) {
-		nni_mtx_unlock(&l->mtx);
-		if (!CancelIoEx(l->f, &l->io.olpd)) {
-			// operation not found probably
-			// We just inject a safety sleep to
-			// let it drain and give the callback
-			// a chance to fire (although it should
-			// already have done so.)
-			DisconnectNamedPipe(l->f);
-			CloseHandle(l->f);
-			nng_msleep(500);
-			return;
-		}
-		nng_msleep(100);
-		nni_mtx_lock(&l->mtx);
-		accepting = l->accepting;
-	}
+	f         = l->f;
+	accepting = l->accepting;
+	l->f      = INVALID_HANDLE_VALUE;
 	nni_mtx_unlock(&l->mtx);
-	DisconnectNamedPipe(l->f);
-	CloseHandle(l->f);
+
+	if (f != INVALID_HANDLE_VALUE) {
+		if (accepting) {
+			// The listener is not freed until its IOCP callback observes
+			// this cancellation's completion.
+			(void) CancelIoEx(f, &l->io.olpd);
+		}
+		(void) DisconnectNamedPipe(f);
+		(void) CloseHandle(f);
+	}
 }
 
 static void
 ipc_listener_free(void *arg)
 {
 	ipc_listener *l = arg;
+
+	ipc_listener_stop(l);
+	nni_mtx_lock(&l->mtx);
+	if (l->accepting) {
+		nni_mtx_unlock(&l->mtx);
+		nni_reap(&ipc_listener_reap_list, l);
+		return;
+	}
+	nni_mtx_unlock(&l->mtx);
 
 	nni_strfree(l->path);
 	nni_mtx_fini(&l->mtx);
@@ -353,6 +356,7 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	nni_win_io_init(&l->io, ipc_accept_cb, l);
 	l->started                       = false;
 	l->closed                        = false;
+	l->f                             = INVALID_HANDLE_VALUE;
 	l->sec_attr.nLength              = sizeof(l->sec_attr);
 	l->sec_attr.lpSecurityDescriptor = NULL;
 	l->sec_attr.bInheritHandle       = FALSE;

@@ -108,6 +108,9 @@ jobs:
         run: cmake --build build --config Debug
 
       - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure
+
+      - name: Collect coverage
         run: |
           OpenCppCoverage.exe `
             --cover_children `
