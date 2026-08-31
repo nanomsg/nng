@@ -84,6 +84,8 @@ test_tls_port_zero_bind(void)
 	c2 = tls_client_config_ecdsa();
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 5000));
 	NUTS_PASS(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0"));
 	NUTS_PASS(nng_listener_set_tls(l, c1));
 	NUTS_PASS(nng_listener_start(l, 0));
@@ -92,6 +94,10 @@ test_tls_port_zero_bind(void)
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
 	NUTS_PASS(nng_dialer_start(d, 0));
+	// A dialer starts asynchronously.  Exchange data before teardown so this
+	// test cannot leave a TLS handshake in progress for the next test.
+	NUTS_SEND(s2, "x");
+	NUTS_RECV(s1, "x");
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c1);
@@ -381,6 +387,9 @@ test_tls_recv_max(void)
 	NUTS_PASS(nng_listener_get_url(l, &url));
 
 	NUTS_OPEN(s1);
+	// Without this, a failed TLS handshake leaves the first send waiting for a
+	// pipe indefinitely, until CTest's much longer per-executable timeout.
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
 	NUTS_PASS(nng_dialer_create_url(&d, s1, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
