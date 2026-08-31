@@ -16,6 +16,9 @@
 
 // TLS tests.
 
+// DTLS retransmissions can outlast a scheduler pause on a loaded CI runner.
+#define DTLS_STRESS_TIMEOUT 5000
+
 static nng_tls_config *
 tls_server_config(void)
 {
@@ -407,10 +410,10 @@ test_dtls_exchange_many(void)
 	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
 
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
@@ -469,12 +472,12 @@ test_dtls_reqrep_multi(void)
 	NUTS_PASS(nng_dialer_set_tls(d2, c1));
 	NUTS_PASS(nng_dialer_start(d2, 0));
 
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
@@ -522,9 +525,9 @@ test_dtls_pub_multi(void)
 	c0 = tls_server_config();
 	c1 = tls_client_config();
 	NUTS_PASS(nng_pub0_open(&s0));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
 	NUTS_PASS(nng_listener_create(&l, s0, addr));
 	NUTS_PASS(nng_listener_set_tls(l, c0));
 	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
@@ -535,7 +538,8 @@ test_dtls_pub_multi(void)
 
 	for (int i = 0; i < NCLIENT; i++) {
 		NUTS_PASS(nng_sub0_open(&cs[i]));
-		NUTS_PASS(nng_socket_set_ms(cs[i], NNG_OPT_RECVTIMEO, 100));
+		NUTS_PASS(nng_socket_set_ms(
+		    cs[i], NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 		NUTS_PASS(nng_sub0_socket_subscribe(cs[i], "", 0));
 		NUTS_PASS(nng_dialer_create_url(&cd[i], cs[i], url));
 		NUTS_PASS(nng_dialer_set_tls(cd[i], c1));
