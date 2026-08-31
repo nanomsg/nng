@@ -639,6 +639,7 @@ ipc_ep_close(void *arg)
 	}
 	NNI_LIST_FOREACH (&ep->wait_pipes, p) {
 		nni_pipe_close(p->pipe);
+		nni_pipe_rele(p->pipe);
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
