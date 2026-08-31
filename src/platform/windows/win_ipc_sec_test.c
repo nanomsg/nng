@@ -83,10 +83,10 @@ test_ipc_security_descriptor(void)
 
 	nng_aio_wait(aio);
 	NUTS_PASS(nng_aio_result(aio));
-	HANDLE pd = (HANDLE) nng_aio_get_output(aio, 0);
+	nng_stream *pd = nng_aio_get_output(aio, 0);
 
 	NUTS_ASSERT(ph != INVALID_HANDLE_VALUE);
-	NUTS_ASSERT(pd != INVALID_HANDLE_VALUE);
+	NUTS_ASSERT(pd != NULL);
 
 	NUTS_ASSERT(
 	    GetSecurityInfo(ph, SE_KERNEL_OBJECT, DACL_SECURITY_INFORMATION,
@@ -99,7 +99,7 @@ test_ipc_security_descriptor(void)
 	NUTS_ASSERT(IsValidSid(psid));
 	NUTS_ASSERT(EqualSid(psid, &users) == TRUE);
 
-	CloseHandle(pd);
+	nng_stream_free(pd);
 	CloseHandle(ph);
 	free(sd);
 	LocalFree(acl);
