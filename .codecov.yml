@@ -41,7 +41,6 @@ codecov:
   notify:
     after_n_builds: 3
 
-
 # Flag definitions to segment coverage charts by pipeline context
 flags:
   linux:
