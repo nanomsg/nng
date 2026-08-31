@@ -69,8 +69,8 @@ main(int argc, char **argv)
 		throw nng_strerror(rv);
 	}
 
-	std::cout << "Pass." << std::endl;
 	nng_fini();
+	std::cout << "Pass." << std::endl;
 #else
 	(void) argc;
 	(void) argv;

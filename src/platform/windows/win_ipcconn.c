@@ -324,11 +324,11 @@ ipc_close(void *arg)
 
 	nni_mtx_lock(&c->mtx);
 	if (!c->closed) {
-		HANDLE f  = c->f;
+		HANDLE f = c->f;
 		c->closed = true;
 
-		c->f = INVALID_HANDLE_VALUE;
-
+		// Keep the handle until ipc_stop has observed all cancellation
+		// completions and can safely close it.
 		if (f != INVALID_HANDLE_VALUE) {
 			CancelIoEx(f, &c->send_io.olpd);
 			CancelIoEx(f, &c->recv_io.olpd);
@@ -347,9 +347,9 @@ static void
 ipc_stop(void *arg)
 {
 	ipc_conn *c = arg;
-	nni_aio  *aio;
-	HANDLE    f    = c->f;
-	int       loop = 0;
+	HANDLE    f;
+
+	ipc_close(c);
 
 	nni_mtx_lock(&c->mtx);
 	// time for callbacks to fire/drain.
@@ -367,6 +367,9 @@ ipc_stop(void *arg)
 	NNI_ASSERT(!c->recving);
 	NNI_ASSERT(nni_list_empty(&c->recv_aios));
 	NNI_ASSERT(nni_list_empty(&c->send_aios));
+	// No I/O callback can use the handle after all operations drain.
+	f    = c->f;
+	c->f = INVALID_HANDLE_VALUE;
 	nni_mtx_unlock(&c->mtx);
 
 	if (f != INVALID_HANDLE_VALUE) {
