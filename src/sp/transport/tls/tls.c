@@ -628,6 +628,7 @@ tlstran_ep_close(void *arg)
 	}
 	NNI_LIST_FOREACH (&ep->waitpipes, p) {
 		nni_pipe_close(p->npipe);
+		nni_pipe_rele(p->npipe);
 	}
 	if (ep->useraio != NULL) {
 		nni_aio_finish_error(ep->useraio, NNG_ECLOSED);

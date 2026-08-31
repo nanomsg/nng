@@ -666,6 +666,7 @@ tcptran_ep_close(void *arg)
 	}
 	NNI_LIST_FOREACH (&ep->waitpipes, p) {
 		nni_pipe_close(p->npipe);
+		nni_pipe_rele(p->npipe);
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
