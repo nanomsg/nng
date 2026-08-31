@@ -165,8 +165,8 @@ test_ipc_ping_pong(void)
 	NUTS_RECV(s1, "ping");
 	NUTS_SEND(s1, "pong");
 	NUTS_RECV(s0, "pong");
-	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s0);
 }
 
 void
@@ -192,8 +192,8 @@ test_ipc_ping_pong_many(void)
 		NUTS_SEND(s1, "pong");
 		NUTS_RECV(s0, "pong");
 	}
-	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s0);
 }
 
 void
@@ -228,8 +228,8 @@ test_ipc_huge_msg(void)
 		}
 	}
 	nng_msg_free(m);
-	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s0);
 }
 
 void
