@@ -112,6 +112,10 @@ jobs:
 
       - name: Collect coverage
         run: |
+          # OpenCppCoverage presents as a debugger.  Preserve acutest's
+          # normal per-test child-process isolation; --cover_children
+          # collects those workers too.
+          $env:ACUTEST_EXEC = "always"
           OpenCppCoverage.exe `
             --cover_children `
             --modules "${{ github.workspace }}\build" `
