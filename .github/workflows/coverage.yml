@@ -112,6 +112,9 @@ jobs:
 
       - name: Collect coverage
         run: |
+          # Enable the Windows IPC transition trace while investigating the
+          # collector-only named-pipe connection stall.
+          $env:NNG_IPC_TEST_DEBUG = "1"
           OpenCppCoverage.exe `
             --cover_children `
             --modules "${{ github.workspace }}\build" `
