@@ -69,16 +69,12 @@ ipc_dial_thr(void *arg)
 				continue;
 			}
 
-			nng_log_debug("NNG-WIN-IPC-DIAL", "dialing %s", d->path);
 			f = CreateFileA(d->path, GENERIC_READ | GENERIC_WRITE,
 			    0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED,
 			    NULL);
 
 			if (f == INVALID_HANDLE_VALUE) {
-				rv = GetLastError();
-				nng_log_debug("NNG-WIN-IPC-DIAL",
-				    "CreateFile(%s) failed: %d", d->path, rv);
-				switch (rv) {
+				switch ((rv = GetLastError())) {
 				case ERROR_PIPE_BUSY:
 					// Still in progress.  This
 					// shouldn't happen unless the
@@ -106,14 +102,11 @@ ipc_dial_thr(void *arg)
 			if (((rv = nni_win_io_register(f)) != 0) ||
 			    ((rv = nni_win_ipc_init(&c, f, &d->sa, true)) !=
 			        0)) {
-				nng_log_debug("NNG-WIN-IPC-DIAL",
-				    "connection setup for %s failed: %d", d->path, rv);
 				DisconnectNamedPipe(f);
 				CloseHandle(f);
 				nni_aio_finish_error(aio, rv);
 				continue;
 			}
-			nng_log_debug("NNG-WIN-IPC-DIAL", "connected %s", d->path);
 			nni_aio_set_output(aio, 0, c);
 			nni_aio_finish(aio, 0, 0);
 		}
@@ -169,7 +162,6 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 
 	nni_list_append(&d->aios, aio);
 	if (nni_list_first(&d->aios) == aio) {
-		nng_log_debug("NNG-WIN-IPC-DIAL", "queued dial for %s", d->path);
 		nni_list_append(&w->waiters, d);
 		nni_cv_wake(&w->cv);
 	}
@@ -276,6 +268,7 @@ nni_win_ipc_sysinit(void)
 
 	NNI_LIST_INIT(&worker->workers, ipc_dialer, node);
 	NNI_LIST_INIT(&worker->waiters, ipc_dialer, node);
+	worker->exit = 0;
 
 	nni_mtx_init(&worker->mtx);
 	nni_cv_init(&worker->cv, &worker->mtx);

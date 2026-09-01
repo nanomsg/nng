@@ -47,8 +47,6 @@ ipc_accept_done(ipc_listener *l, int rv)
 
 	aio = nni_list_first(&l->aios);
 	nni_list_remove(&l->aios, aio);
-	nng_log_debug("NNG-WIN-IPC-LISTEN", "accept completed for %s: %d",
-	    l->path, rv);
 
 	if (l->closed) {
 		rv = NNG_ECLOSED;
@@ -70,10 +68,7 @@ ipc_accept_done(ipc_listener *l, int rv)
 		// We couldn't create a replacement pipe, so we have to
 		// abort the client from our side, so that we can keep
 		// our server pipe available.
-		rv = GetLastError();
-		nng_log_debug("NNG-WIN-IPC-LISTEN",
-		    "replacement pipe for %s failed: %d", l->path, rv);
-		rv = nni_win_error(rv);
+		rv = nni_win_error(GetLastError());
 		DisconnectNamedPipe(l->f);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -81,8 +76,6 @@ ipc_accept_done(ipc_listener *l, int rv)
 
 	if (((rv = nni_win_io_register(f)) != 0) ||
 	    ((rv = nni_win_ipc_init(&c, l->f, &l->sa, false)) != 0)) {
-		nng_log_debug("NNG-WIN-IPC-LISTEN",
-		    "accepted connection setup for %s failed: %d", l->path, rv);
 		DisconnectNamedPipe(l->f);
 		DisconnectNamedPipe(f);
 		CloseHandle(f);
@@ -91,7 +84,6 @@ ipc_accept_done(ipc_listener *l, int rv)
 	}
 	// Install the replacement pipe.
 	l->f = f;
-	nng_log_debug("NNG-WIN-IPC-LISTEN", "accepted %s", l->path);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 }
@@ -110,22 +102,13 @@ ipc_accept_start(ipc_listener *l)
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 			rv = NNG_ECLOSED;
 		} else if (ConnectNamedPipe(l->f, &l->io.olpd)) {
-			nng_log_debug("NNG-WIN-IPC-LISTEN",
-			    "ConnectNamedPipe(%s) completed synchronously", l->path);
 			rv = 0;
 		} else if ((rv = GetLastError()) == ERROR_IO_PENDING) {
 			// asynchronous completion pending
-			nng_log_debug("NNG-WIN-IPC-LISTEN",
-			    "ConnectNamedPipe(%s) pending", l->path);
 			l->accepting = true;
 			return;
 		} else if (rv == ERROR_PIPE_CONNECTED) {
-			nng_log_debug("NNG-WIN-IPC-LISTEN",
-			    "ConnectNamedPipe(%s) already connected", l->path);
 			rv = 0;
-		} else {
-			nng_log_debug("NNG-WIN-IPC-LISTEN",
-			    "ConnectNamedPipe(%s) failed: %d", l->path, rv);
 		}
 		// synchronous completion
 		ipc_accept_done(l, rv);
@@ -141,8 +124,6 @@ ipc_accept_cb(nni_win_io *io, int rv, size_t cnt)
 
 	nni_mtx_lock(&l->mtx);
 	l->accepting = false;
-	nng_log_debug("NNG-WIN-IPC-LISTEN", "accept callback for %s: %d",
-	    l->path, rv);
 	if (l->closed) {
 		// We're shutting down, and the handle is probably closed.
 		// We should not have gotten anything here.
@@ -236,10 +217,7 @@ ipc_listener_listen(void *arg)
 	        PIPE_REJECT_REMOTE_CLIENTS,
 	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, &l->sec_attr);
 	if (f == INVALID_HANDLE_VALUE) {
-		rv = GetLastError();
-		nng_log_debug("NNG-WIN-IPC-LISTEN", "listen on %s failed: %d",
-		    path, rv);
-		if (rv == ERROR_ACCESS_DENIED) {
+		if ((rv = GetLastError()) == ERROR_ACCESS_DENIED) {
 			rv = NNG_EADDRINUSE;
 		} else {
 			rv = nni_win_error(rv);
@@ -258,7 +236,6 @@ ipc_listener_listen(void *arg)
 	l->f       = f;
 	l->path    = path;
 	l->started = true;
-	nng_log_debug("NNG-WIN-IPC-LISTEN", "listening on %s", l->path);
 	nni_mtx_unlock(&l->mtx);
 	return (NNG_OK);
 }
