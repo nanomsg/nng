@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+        with:
+          persist-credentials: false
 
       - name: Install mbedTLS
         run: sudo apt-get install libmbedtls-dev
