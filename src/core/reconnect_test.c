@@ -123,8 +123,15 @@ test_reconnect_back_off_zero(void)
 {
 	nng_socket s1;
 	nng_socket s2;
-	uint64_t   start;
+	nng_dialer d;
 	char      *addr;
+#ifdef NNG_ENABLE_STATS
+	nng_stat       *stats;
+	const nng_stat *dialer_stats;
+	const nng_stat *refused;
+#else
+	uint64_t start;
+#endif
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -134,22 +141,36 @@ test_reconnect_back_off_zero(void)
 	// redial every 10 ms.
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECONNMAXT, 0));
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECONNMINT, 10));
-	NUTS_PASS(nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK));
+	NUTS_PASS(nng_dial(s1, addr, &d, NNG_FLAG_NONBLOCK));
 
 	// Start up the dialer first.  It should keep retrying every 10 ms.
 
-	// Wait 500 milliseconds. This gives a chance for an exponential
-	// back-off to increase to a longer time.  It should by this point
-	// be well over 100 and probably closer to 200 ms.
+	// Wait long enough to distinguish a fixed 10 ms retry interval from
+	// exponential backoff.
 	NUTS_SLEEP(500);
 
+	// A zero maximum disables exponential backoff.  Check the number of
+	// refused connections directly rather than using the connection latency
+	// after the listener comes up: the latter also measures host scheduling
+	// and coverage-instrumentation overhead.
+#ifdef NNG_ENABLE_STATS
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_ASSERT((dialer_stats = nng_stat_find_dialer(stats, d)) != NULL);
+	NUTS_ASSERT((refused = nng_stat_find(dialer_stats, "refused")) != NULL);
+	NUTS_TRUE(nng_stat_value(refused) >= 10);
+	nng_stats_free(stats);
+#else
 	NUTS_CLOCK(start);
+#endif
+
 	NUTS_PASS(nng_listen(s2, addr, NULL, 0));
 
 	NUTS_SEND(s1, "hello");
 	NUTS_RECV(s2, "hello");
 
+#ifndef NNG_ENABLE_STATS
 	NUTS_BEFORE(start + 100);
+#endif
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
