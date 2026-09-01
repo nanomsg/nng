@@ -81,7 +81,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up UCRT64
-        id: msys2
         uses: msys2/setup-msys2@v2
         with:
           msystem: UCRT64
@@ -91,17 +90,6 @@ jobs:
             mingw-w64-ucrt-x86_64-gcc
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-wolfssl
-
-      - name: Install grcov
-        shell: pwsh
-        run: |
-          $version = '0.10.7'
-          $archive = "grcov-x86_64-pc-windows-msvc.zip"
-          $url = "https://github.com/mozilla/grcov/releases/download/v$version/$archive"
-          $destination = "${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin"
-          Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\$archive"
-          Expand-Archive -Path "$env:RUNNER_TEMP\$archive" -DestinationPath $destination -Force
-          & "$destination\grcov.exe" --version
 
       - name: Configure CMake
         run: >-
@@ -115,15 +103,8 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
-      - name: Collect coverage
-        run: >-
-          grcov build -s . --branch --ignore-not-existing
-          --keep-only 'src/*' --keep-only 'include/*'
-          --output-types lcov --output-path lcov.info
-
       - name: Upload report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./lcov.info
           flags: windows
