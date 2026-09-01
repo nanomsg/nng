@@ -14,8 +14,6 @@
 
 #include "../../../testing/nuts.h"
 
-#include <stdlib.h>
-
 #ifdef NNG_PLATFORM_POSIX
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -152,16 +150,6 @@ test_ipc_ping_pong(void)
 	nng_socket s0;
 	nng_socket s1;
 	char      *addr;
-
-	// The Windows coverage collector has exposed an intermittent named-pipe
-	// connection stall.  Keep tracing opt-in so a failing collector run records
-	// the complete platform state transition without making ordinary test logs
-	// noisy.
-#ifdef NNG_PLATFORM_WINDOWS
-	if (getenv("NNG_IPC_TEST_DEBUG") != NULL) {
-		NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
-	}
-#endif
 
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s0);
