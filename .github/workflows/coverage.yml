@@ -88,6 +88,7 @@ jobs:
           install: >-
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-gcovr
             mingw-w64-ucrt-x86_64-ninja
             mingw-w64-ucrt-x86_64-wolfssl
 
@@ -103,8 +104,16 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+      - name: Collect coverage
+        run: >-
+          gcovr --root . --object-directory build
+          --filter 'src/' --filter 'include/'
+          --lcov --output lcov.info
+
       - name: Upload report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./lcov.info
+          disable_search: true
           flags: windows
