@@ -122,11 +122,8 @@ resolv_worker(void *index)
 	struct addrinfo  hints;
 	struct addrinfo *results;
 	struct addrinfo *probe;
-	int              rv;
 	char             serv[8];
 	char             host[256];
-	nni_aio         *aio;
-	nni_resolv_item *item;
 
 	nni_thr_set_name(NULL, "nng:resolver");
 

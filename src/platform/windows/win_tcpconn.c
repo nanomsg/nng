@@ -260,7 +260,6 @@ tcp_close(void *arg)
 {
 	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
-	nni_time now;
 	if (!c->closed) {
 		SOCKET s = c->s;
 

@@ -113,7 +113,10 @@ test_tls_bad_cert_mutual(void)
 	nng_listener    l;
 	nng_dialer      d;
 	const nng_url  *url;
+
+#ifdef NNG_TLS_ENGINE_MBEDTLS
 	nng_err         rv;
+#endif
 
 	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	c1 = tls_server_config();

@@ -263,7 +263,6 @@ test_tcp_listen_activation(void)
 	// on the incoming FD.
 	nng_stream_listener *l2;
 	SOCKET               s;
-	char                *addr;
 	int                  port;
 	nng_aio             *aio1;
 	nng_aio             *aio2;
@@ -272,7 +271,6 @@ test_tcp_listen_activation(void)
 	char                 url[32];
 	SOCKADDR_IN          sin;
 
-	NUTS_ADDR_ZERO(addr, "tcp4");
 	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 

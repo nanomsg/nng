@@ -256,7 +256,6 @@ tcp_listener_doaccept(tcp_listener *l)
 	SOCKET        s;
 	nni_tcp_conn *c;
 	int           rv;
-	DWORD         cnt;
 
 	while ((aio = nni_list_first(&l->aios)) != NULL) {
 		// Windows requires us to explicitly create the socket
@@ -546,7 +545,6 @@ static nng_err
 tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 {
 	tcp_listener *l;
-	nng_err       rv;
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);

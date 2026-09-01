@@ -140,6 +140,7 @@ httpecho(nng_http *conn, void *arg, nng_aio *aio)
 	nng_aio_finish(aio, 0);
 }
 
+#if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 static void
 httpok(nng_http *conn, void *arg, nng_aio *aio)
 {
@@ -210,6 +211,7 @@ http_unix_url(char *url, size_t size)
 	}
 	url[off] = '\0';
 }
+#endif
 
 static void
 httpaddrcheck(nng_http *conn, void *arg, nng_aio *aio)

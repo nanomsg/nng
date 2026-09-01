@@ -63,6 +63,7 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
+	NNI_ARG_UNUSED(mtx);
 }
 
 void
@@ -413,8 +414,13 @@ nni_plat_init(nng_init_params *params)
 	// Let's look up the function to set thread descriptions.
 	hKernel32 = LoadLibrary(TEXT("kernel32.dll"));
 	if (hKernel32 != NULL) {
-		set_thread_desc = (pfnSetThreadDescription) GetProcAddress(
-		    hKernel32, "SetThreadDescription");
+		union {
+			FARPROC                 source;
+			pfnSetThreadDescription target;
+		} thread_desc;
+
+		thread_desc.source = GetProcAddress(hKernel32, "SetThreadDescription");
+		set_thread_desc   = thread_desc.target;
 	}
 
 	if (((rv = nni_win_io_sysinit(params)) != 0) ||
