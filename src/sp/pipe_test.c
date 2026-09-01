@@ -48,6 +48,26 @@ expect(struct testcase *t, int *vp, int v)
 	return (ok);
 }
 
+static bool
+expect_at_least(struct testcase *t, int *vp, int v)
+{
+	bool     ok;
+	nng_time when = nng_clock() + 5000; // five seconds
+
+	nng_mtx_lock(t->lk);
+	while (*vp < v) {
+		if (nng_cv_until(t->cv, when) == NNG_ETIMEDOUT) {
+			break;
+		}
+	}
+	ok = (*vp >= v);
+	if (!ok) {
+		NUTS_MSG("Expected at least %d but got %d\n", v, *vp);
+	}
+	nng_mtx_unlock(t->lk);
+	return (ok);
+}
+
 void
 notify(nng_pipe p, nng_pipe_ev act, void *arg)
 {
@@ -312,7 +332,11 @@ test_pipe_reject(void)
 	NUTS_TRUE(expect(&pull, &pull.rem, 1));
 	NUTS_TRUE(expect(&pull, &pull.err, 0));
 	NUTS_TRUE(expect(&push, &push.add_pre, 2));
-	NUTS_TRUE(expect(&push, &push.add_post, 2));
+	// The listener rejects the first connection in ADD_PRE.  Its peer can
+	// therefore observe either one or two ADD_POST events, depending on
+	// whether it starts that first pipe before receiving the close.  The
+	// replacement connection must always be established.
+	NUTS_TRUE(expect_at_least(&push, &push.add_post, 1));
 	NUTS_TRUE(expect(&push, &push.rem, 1) == 1);
 	NUTS_TRUE(expect(&push, &push.err, 0));
 
