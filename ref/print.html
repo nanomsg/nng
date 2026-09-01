@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e16c4ed4.js";
+            window.path_to_searchindex_js = "searchindex-4b0206d6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -1251,8 +1251,9 @@ or the socket is closed.</p>
 <li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
 <li><a href="#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial dial connection.</li>
 <li><a href="#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial dial connection.</li>
-<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The URL or flags are invalid.</li>
+<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The string URL is invalid.</li>
 <li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport is not supported, or does not support dialing or listening.</li>
 <li><a href="#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a>: Authentication or authorization failed.</li>
 <li><a href="#NNG_EPROTO"><code>NNG_EPROTO</code></a>: A protocol error occurred.</li>
 <li><a href="#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a>: The remote address is not reachable.</li>
@@ -1277,7 +1278,9 @@ TLS configuration, or a listener socket activation file descriptor.</p>
 <ul>
 <li><a href="#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
 <li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
+<li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The string URL is invalid.</li>
 <li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
+<li><a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport is not supported, or does not support dialing or listening.</li>
 </ul>
 <h2 id="starting"><a class="header" href="#starting">Starting</a></h2>
 <pre><code class="language-c">int nng_dialer_start(nng_dialer dialer, int flags);
