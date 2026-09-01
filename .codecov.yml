@@ -6,6 +6,12 @@ ignore:
  - "src/testing"
  - "perf"
  - "**/*_test.c"
+
+# MinGW gcov records the GitHub Actions checkout as an absolute Windows path.
+# Strip that prefix so Codecov can match the report to repository sources.
+fixes:
+ - "D:/a/nng/nng/::"
+
 coverage:
   range: 50..95
   status:
