@@ -19,6 +19,8 @@ jobs:
       NNG_UDP_PASS_RATE: 10
     steps:
       - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
       - name: Test NNG in OmniOS
         id: test
         uses: vmactions/omnios-vm@v1

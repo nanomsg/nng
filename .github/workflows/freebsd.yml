@@ -19,6 +19,8 @@ jobs:
       NNG_UDP_PASS_RATE: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Test NNG in FreeBSD
         id: test
         uses: vmactions/freebsd-vm@v1
