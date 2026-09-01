@@ -1878,24 +1878,6 @@ main(int argc, char** argv)
     /* Parse options */
     acutest_cmdline_read_(acutest_cmdline_options_, argc, argv, acutest_cmdline_callback_);
 
-    /*
-     * A test runner may need to override the debugger heuristic below without
-     * changing every test command line.  In particular, coverage collectors
-     * can debug a process while still collecting coverage from its children.
-     * Command-line options take precedence over this environment variable.
-     */
-    if(acutest_no_exec_ < 0) {
-        const char* exec = getenv("ACUTEST_EXEC");
-
-        if(exec != NULL) {
-            if(strcmp(exec, "always") == 0) {
-                acutest_no_exec_ = 0;
-            } else if(strcmp(exec, "never") == 0) {
-                acutest_no_exec_ = 1;
-            }
-        }
-    }
-
     /* Initialize the proper timer. */
     acutest_timer_init_();
 

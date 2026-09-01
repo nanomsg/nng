@@ -73,61 +73,56 @@ jobs:
   windows-coverage:
     name: windows
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
-      # Fix history bug by ensuring deep parent graphing context
       - name: Check out code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # Install OpenCppCoverage and expose it to subsequent PowerShell steps.
-      - name: Install OpenCppCoverage
+      - name: Set up UCRT64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-wolfssl
+
+      - name: Install grcov
         shell: pwsh
         run: |
-          choco install opencppcoverage --version=0.9.9.0 --yes --no-progress
-          "${env:ProgramFiles}\OpenCppCoverage" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-
-      # Setup vcpkg for clean cross-platform dependency resolution
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgDirectory: ${{ github.workspace }}/vcpkg
-          vcpkgGitCommitId: 'abb6dda5cc32914d2e64d7d72b974dc301d1fc8a'
-
-      # WolfSSL's DTLS feature exercises NNG's alternate TLS engine.
-      - name: Install dependencies via vcpkg
-        run: vcpkg install "wolfssl[dtls]:x64-windows"
+          $version = '0.10.7'
+          $archive = "grcov-x86_64-pc-windows-msvc.zip"
+          $url = "https://github.com/mozilla/grcov/releases/download/v$version/$archive"
+          $destination = "$env:RUNNER_TEMP\grcov"
+          Invoke-WebRequest -Uri $url -OutFile "$env:RUNNER_TEMP\$archive"
+          Expand-Archive -Path "$env:RUNNER_TEMP\$archive" -DestinationPath $destination
+          $destination | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Configure CMake
-        run: |
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=wolf -DCMAKE_TOOLCHAIN_FILE="${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake" ..
+        run: >-
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=wolf
+          -DWOLFSSL_ROOT_DIR=/ucrt64
 
       - name: Build
-        run: cmake --build build --config Debug
+        run: cmake --build build
 
       - name: Test
-        run: ctest --test-dir build -C Debug --output-on-failure
+        run: ctest --test-dir build --output-on-failure
 
       - name: Collect coverage
-        run: |
-          # OpenCppCoverage presents as a debugger.  Preserve acutest's
-          # normal per-test child-process isolation; --cover_children
-          # collects those workers too.
-          $env:ACUTEST_EXEC = "always"
-          OpenCppCoverage.exe `
-            --cover_children `
-            --modules "${{ github.workspace }}\build" `
-            --sources "${{ github.workspace }}\src" `
-            --sources "${{ github.workspace }}\include" `
-            --excluded_sources "${{ github.workspace }}\build" `
-            --export_type=cobertura:coverage.xml `
-            -- "C:\Program Files\CMake\bin\ctest.exe" --test-dir build -C Debug --output-on-failure
+        run: >-
+          grcov build -s . --branch --ignore-not-existing
+          --keep-only 'src/*' --keep-only 'include/*'
+          --output-types lcov --output-path lcov.info
 
       - name: Upload report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
+          files: ./lcov.info
           flags: windows
