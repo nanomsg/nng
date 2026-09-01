@@ -93,8 +93,9 @@ The create-and-start functions can return:
 - [`NNG_ECLOSED`]: The socket is closed.
 - [`NNG_ECONNREFUSED`]: The remote peer refused the initial dial connection.
 - [`NNG_ECONNRESET`]: The remote peer reset the initial dial connection.
-- [`NNG_EINVAL`]: The URL or flags are invalid.
+- [`NNG_EINVAL`]: The string URL is invalid.
 - [`NNG_ENOMEM`]: Insufficient memory is available.
+- [`NNG_ENOTSUP`]: The transport is not supported, or does not support dialing or listening.
 - [`NNG_EPEERAUTH`]: Authentication or authorization failed.
 - [`NNG_EPROTO`]: A protocol error occurred.
 - [`NNG_EUNREACHABLE`]: The remote address is not reachable.
@@ -126,7 +127,9 @@ These functions can return:
 
 - [`NNG_EADDRINVAL`]: The URL is invalid.
 - [`NNG_ECLOSED`]: The socket is closed.
+- [`NNG_EINVAL`]: The string URL is invalid.
 - [`NNG_ENOMEM`]: Insufficient memory is available.
+- [`NNG_ENOTSUP`]: The transport is not supported, or does not support dialing or listening.
 
 ## Starting
 
