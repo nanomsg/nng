@@ -319,7 +319,6 @@ static void
 ipc_close(void *arg)
 {
 	ipc_conn *c = arg;
-	nni_time  now;
 	nni_aio  *aio;
 
 	nni_mtx_lock(&c->mtx);

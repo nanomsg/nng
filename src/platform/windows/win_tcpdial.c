@@ -30,10 +30,6 @@ int
 nni_tcp_dialer_init(nni_tcp_dialer **dp)
 {
 	nni_tcp_dialer *d;
-	int             rv;
-	SOCKET          s;
-	DWORD           nbytes;
-	GUID            guid = WSAID_CONNECTEX;
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);

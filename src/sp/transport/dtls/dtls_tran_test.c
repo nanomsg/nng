@@ -39,6 +39,7 @@ tls_server_config_ecdsa(void)
 	return (c);
 }
 
+#ifdef NNG_SUPP_TLS_PSK
 static nng_tls_config *
 tls_config_psk(nng_tls_mode mode, const char *name, uint8_t *key, size_t len)
 {
@@ -47,6 +48,7 @@ tls_config_psk(nng_tls_mode mode, const char *name, uint8_t *key, size_t len)
 	NUTS_PASS(nng_tls_config_psk(c, name, key, len));
 	return (c);
 }
+#endif
 
 static nng_tls_config *
 tls_client_config(void)

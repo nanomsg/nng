@@ -49,11 +49,9 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 int
 nni_win_sockaddr2nn(nni_sockaddr *sa, const void *s, size_t sz)
 {
-	SOCKADDR_IN     *sin;
-	nng_sockaddr_in *nsin;
+	SOCKADDR_IN *sin;
 #ifdef NNG_ENABLE_IPV6
-	SOCKADDR_IN6     *sin6;
-	nng_sockaddr_in6 *nsin6;
+	SOCKADDR_IN6 *sin6;
 #endif
 
 	if ((s == NULL) || (sa == NULL)) {
