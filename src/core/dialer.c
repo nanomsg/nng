@@ -217,6 +217,7 @@ nni_dialer_init(nni_dialer *d, nni_sock *s, nni_sp_tran *tran)
 	void *dp;
 
 	d->d_closed   = false;
+	d->d_stopping = false;
 	d->d_data     = NULL;
 	d->d_ref      = 1;
 	d->d_sock     = s;

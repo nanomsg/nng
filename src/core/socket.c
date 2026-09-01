@@ -1419,6 +1419,12 @@ nni_dialer_shutdown(nni_dialer *d)
 		return;
 	}
 
+	// This is protected by s_mx.  A pipe reaped after shutdown starts must
+	// not restart the dialer's reconnect timer.
+	nni_mtx_lock(&s->s_mx);
+	d->d_stopping = true;
+	nni_mtx_unlock(&s->s_mx);
+
 	nni_dialer_stop(d);
 
 	nni_mtx_lock(&s->s_mx);
@@ -1686,7 +1692,9 @@ nni_pipe_remove(nni_pipe *p)
 	nni_list_node_remove(&p->p_ep_node);
 	if ((d != NULL) && (d->d_pipe == p)) {
 		d->d_pipe = NULL;
-		dialer_timer_start_locked(d); // Kick the timer to redial.
+		if (!d->d_stopping) {
+			dialer_timer_start_locked(d); // Kick the timer to redial.
+		}
 	}
 	nni_cv_wake(&s->s_cv);
 	nni_mtx_unlock(&s->s_mx);
