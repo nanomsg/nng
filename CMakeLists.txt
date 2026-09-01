@@ -237,7 +237,7 @@ if (NNG_ENABLE_COVERAGE)
     # is older than that, you will need to find something newer.  For
     # correct reporting, we always turn off all optimizations.
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-        set(NNG_COVERAGE_C_FLAGS "-g -O0 --coverage")
+        set(NNG_COVERAGE_C_FLAGS "-g -O0 --coverage -fprofile-update=atomic")
         set(CMAKE_SHARED_LINKER_FLAGS --coverage)
     elseif (CMAKE_C_COMPILER_ID MATCHES "Clang")
         set(NNG_COVERAGE_C_FLAGS "-g -O0 --coverage")
