@@ -108,6 +108,7 @@ jobs:
         run: >-
           gcovr --root . --object-directory build
           --filter 'src/' --filter 'include/'
+          --gcov-ignore-parse-errors negative_hits.warn_once_per_file
           --lcov --output lcov.info
 
       - name: Upload report
