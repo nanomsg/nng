@@ -6,7 +6,7 @@
 [![macOS Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/darwin.yml?branch=main&logoColor=grey&logo=apple&label=)](https://github.com/nanomsg/nng/actions)
 [![FreeBSD Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/freebsd.yml?branch=main&logoColor=grey&logo=freebsd&label=)](https://github.com/nanomsg/nng/actions)
 [![illumos Status](https://img.shields.io/github/actions/workflow/status/nanomsg/nng/omnios.yml?branch=main&logoColor=grey&logo=accuweather&label=)](https://github.com/nanomsg/nng/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/nanomsg/nng/branch/main?logo=codecov&logoColor=grey&label=)](https://codecov.io/gh/nanomsg/nng/tree/main)
+[![Coverage](https://img.shields.io/codecov/c/github/nanomsg/nng/main?logo=codecov&logoColor=grey&label=)](https://codecov.io/gh/nanomsg/nng/tree/main)
 [![Discord](https://img.shields.io/discord/639573728212156478?label=&logo=discord)](https://discord.gg/Xnac6b9)
 [![Manual](https://img.shields.io/static/v1?label=&message=docs&logo=mdbook&logoColor=silver&color=blue)](https://nng.nanomsg.org/ref)
 [![MIT License](https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue)](https://github.com/nanomsg/nng/blob/main/LICENSE.txt)
