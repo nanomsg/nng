@@ -90,7 +90,7 @@ Working directly with [`nng_msg`] structures gives more control, reduces copies,
 
 ## Error Code Changes
 
-When an operation fails with [`NNG_ESTOPPED`], it means that the associated [`nni_aio`] object has
+When an operation fails with [`NNG_ESTOPPED`], it means that the associated [`nng_aio`] object has
 been permanently stopped and must not be reused. Applications must watch for this error code, and
 not resubmit an operation that returns it. This is particularly important for callbacks that automatically
 resubmit operations. Failure to observe this rule will lead to an infinite loop
@@ -268,7 +268,7 @@ such as one ending in a suffix like `_bool` (to access a `bool` typed option).
 ## Stream Options
 
 The `nng_stream_get_addr` function is removed.
-Use the new [`nng_stream_peer_addr`] or [`nng_stream_peer_self_addr`] instead.
+Use the new [`nng_stream_peer_addr`] or [`nng_stream_self_addr`] instead.
 
 The ability to set options on streams after they have been created is no longer present.
 (It turns out that this was not very useful.) All functions `nng_stream_set_xxx` are removed.
@@ -394,8 +394,8 @@ they may be silently truncated to the limit:
 The following API calls have changed so that they are `void` returns, and cannot fail.
 They may silently truncate data.
 
-- [`nng_http_req_set_method`]
-- [`nng_http_res_set_status`]
+- [`nng_http_set_method`]
+- [`nng_http_set_status`]
 - [`nng_http_handler_collect_body`]
 - [`nng_http_handler_set_data`]
 - [`nng_http_handler_set_host`]
@@ -412,7 +412,7 @@ was configured with port 0.
 ## WebSocket API
 
 The `NNG_OPT_WSS_REQUEST_HEADERS`, `NNG_OPT_WSS_RESPONSE_HEADERS` and
-`NNG_OPT_WS_OPT_WS_REQUEST_HEADERS`, `NNG_OPT_WS_RESPONSE_HEADERS` have been removed.
+`NNG_OPT_WS_REQUEST_HEADERS`, `NNG_OPT_WS_RESPONSE_HEADERS` have been removed.
 
 The `NNG_OPT_WS_REQUEST_HEADER` and `NNG_OPT_WS_RESPONSE_HEADER` option prefixes have been
 collapsed into just `NNG_OPT_WS_HEADER`, with slightly different semantics. It still is
@@ -425,8 +425,8 @@ The undocumented hook function signature has changed to reflect changes in the H
 ## Security Descriptors (Windows Only)
 
 The `NNG_OPT_IPC_SECURITY_DESCRIPTOR` option is removed, and replaced
-with the functions [`nng_listener_get_security_descriptor`] and
-[`nng_stream_listener_get_security_descriptor`].
+with the functions [`nng_listener_set_security_descriptor`] and
+[`nng_stream_listener_set_security_descriptor`].
 
 Security descriptor support is only relevant to Windows,
 and is presently only supported for IPC when Named Pipes are used.
@@ -455,8 +455,8 @@ This can be done via using of [`nng_random`] combined with `sprintf`, as the fol
 
 ```c
 char url[256];
-snprintf(url, sizeof (url), `abstract://my-app-%08x-%08x-%08x-%08x",
-    nni_random(), nni_random(), nni_random(), nni_random());
+snprintf(url, sizeof (url), "abstract://my-app-%08x-%08x-%08x-%08x",
+    nng_random(), nng_random(), nng_random(), nng_random());
 ```
 
 {{#include ../xref.md}}
