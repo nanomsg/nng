@@ -91,7 +91,7 @@ void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
 ```
 
 These functions ({{i:`nng_ctx_sendmsg`}} and {{i:`nng_ctx_send`}}) send
-messages over the socket _s_. The differences in their behaviors are as follows.
+messages over the context _ctx_. The differences in their behaviors are as follows.
 
 > [!NOTE]
 > The semantics of what sending a message means varies from protocol to
@@ -134,7 +134,7 @@ int nng_ctx_recvmsg(nng_ctx ctx, nng_msg **msgp, int flags);
 void nng_ctx_recv(nng_ctx ctx, nng_aio *aio);
 ```
 
-These functions (, {{i:`nng_ctx_recvmsg`}} and {{i:`nng_ctx_recv`}}) receive
+These functions ({{i:`nng_ctx_recvmsg`}} and {{i:`nng_ctx_recv`}}) receive
 messages over the context _ctx_. The differences in their behaviors are as follows.
 
 > [!NOTE]
@@ -143,16 +143,16 @@ messages over the context _ctx_. The differences in their behaviors are as follo
 > Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
 > (For example, [REQ][req] sockets cannot normally receive data until they have first sent a request.)
 
-### nng_recvmsg
+### nng_ctx_recvmsg
 
 The `nng_ctx_recvmsg` function receives a message and stores a pointer to the [`nng_msg`] for that message in _msgp_.
 
 The _flags_ can contain the value [`NNG_FLAG_NONBLOCK`], indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return [`NNG_EAGAIN`].
 
-### nng_socket_recv
+### nng_ctx_recv
 
-The `nng_ctx_send` function receives a message asynchronously, using the [`nng_aio`] _aio_, over the context _ctx_.
+The `nng_ctx_recv` function receives a message asynchronously, using the [`nng_aio`] _aio_, over the context _ctx_.
 On success, the received message can be retrieved from the _aio_ using the [`nng_aio_get_msg`] function.
 
 > [!NOTE]
