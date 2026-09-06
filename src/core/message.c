@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -398,7 +398,7 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 
 	// Avoid overflows, and reserve the upper four bits
 	// for use by SP stream transports.
-	if ((uint64_t)sz > 0x0fffffffffffffffull) {
+	if (((uint64_t)sz > 0x0fffffffffffffffull) || (sz >= (SIZE_MAX - 32))) {
 		return (NNG_EMSGSIZE);
 	}
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
