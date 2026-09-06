@@ -21,6 +21,7 @@ test_http_req_canonify_uri(void)
 	char          encoded[] =
 	    "GET /%2e%2e/%2E%2e/outside.txt HTTP/1.1\r\n\r\n";
 	char fragment[] = "GET /#/../../outside.txt HTTP/1.1\r\n\r\n";
+	char query[] = "GET ?/../../outside.txt HTTP/1.1\r\n\r\n";
 	char backslash[] = "GET /..\\..\\outside.txt HTTP/1.1\r\n\r\n";
 	size_t        len;
 
@@ -36,6 +37,11 @@ test_http_req_canonify_uri(void)
 
 	NUTS_PASS(nni_http_req_alloc(&req, NULL));
 	NUTS_FAIL(nni_http_req_parse(req, fragment, strlen(fragment), &len),
+	    NNG_EPROTO);
+	nni_http_req_free(req);
+
+	NUTS_PASS(nni_http_req_alloc(&req, NULL));
+	NUTS_FAIL(nni_http_req_parse(req, query, strlen(query), &len),
 	    NNG_EPROTO);
 	nni_http_req_free(req);
 
