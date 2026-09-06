@@ -52,6 +52,25 @@ test_http_req_canonify_uri(void)
 }
 
 static void
+test_http_req_default_path(void)
+{
+	nni_http_req *req;
+	nng_url      *url;
+
+	NUTS_PASS(nng_url_parse(&url, "http://localhost"));
+	NUTS_PASS(nni_http_req_alloc(&req, url));
+	NUTS_MATCH(nni_http_req_get_uri(req), "/");
+	nni_http_req_free(req);
+	nng_url_free(url);
+
+	NUTS_PASS(nng_url_parse(&url, "http://localhost?color=red"));
+	NUTS_PASS(nni_http_req_alloc(&req, url));
+	NUTS_MATCH(nni_http_req_get_uri(req), "/?color=red");
+	nni_http_req_free(req);
+	nng_url_free(url);
+}
+
+static void
 test_http_chunk_size_overflow(void)
 {
 	nni_http_chunks *chunks = NULL;
@@ -79,6 +98,7 @@ test_http_chunk_alloc_overflow(void)
 
 NUTS_TESTS = {
 	{ "http request URI canonicalization", test_http_req_canonify_uri },
+	{ "http request default path", test_http_req_default_path },
 	{ "http chunk size overflow", test_http_chunk_size_overflow },
 	{ "http chunk allocation overflow", test_http_chunk_alloc_overflow },
 	{ NULL, NULL },
