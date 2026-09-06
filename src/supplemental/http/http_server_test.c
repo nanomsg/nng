@@ -366,6 +366,33 @@ test_server_basic(void)
 }
 
 static void
+test_server_empty_uri_query(void)
+{
+	void              *data;
+	size_t             size;
+	uint16_t           stat;
+	char              *ctype;
+	struct server_test st;
+	nng_http_handler  *h;
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/", doc1, strlen(doc1), "text/html"));
+	server_setup(&st, h);
+
+	// An empty path with a query is serialized as the valid target "/?query".
+	NUTS_PASS(nng_http_set_uri(st.conn, "", "param=1234"));
+	NUTS_PASS(httpget(&st, &data, &size, &stat, &ctype));
+	NUTS_TRUE(stat == NNG_HTTP_STATUS_OK);
+	NUTS_TRUE(size == strlen(doc1));
+	NUTS_TRUE(memcmp(data, doc1, size) == 0);
+	NUTS_MATCH(ctype, "text/html");
+	nng_strfree(ctype);
+	nng_free(data, size);
+
+	server_free(&st);
+}
+
+static void
 test_server_unix(void)
 {
 #if !defined(NNG_PLATFORM_POSIX) && !defined(NNG_HAVE_UNIX_SOCKETS)
@@ -1608,6 +1635,7 @@ test_serve_subdir_index(void)
 
 NUTS_TESTS = {
 	{ "server basic", test_server_basic },
+	{ "server empty uri query", test_server_empty_uri_query },
 	{ "server unix", test_server_unix },
 	{ "server unix invalid URL", test_server_unix_invalid_url },
 	{ "server static binary", test_server_static_bin },
