@@ -217,7 +217,10 @@ TestMain("HTTP Client", {
 		So(nng_aio_result(aio) == NNG_ETIMEDOUT);
 	});
 
-	Convey("Given a client (chunked)", {
+  // The chunked client test fails here because the test
+  // service we were relying upon is gone.  New (2.0) has
+  // a better test for this; for this 1.x  branch we'll just skip.
+	SkipConvey("Given a client (chunked)", {
 		nng_aio         *aio;
 		nng_http_client *cli;
 		nng_url         *url;
