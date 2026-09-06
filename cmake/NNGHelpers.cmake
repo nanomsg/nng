@@ -106,20 +106,10 @@ endfunction()
 
 function(nng_set_coverage_test_environment TEST_NAME)
     if (NNG_ENABLE_COVERAGE)
-        # Keep each test's GCOV data separate.  Strip the complete build
-        # directory from the embedded path so that the copied .gcno files in
-        # the coverage prefix remain beside their corresponding .gcda files.
-        get_filename_component(NNG_GCOV_BUILD_DIR "${CMAKE_BINARY_DIR}" REALPATH)
-        file(TO_CMAKE_PATH "${NNG_GCOV_BUILD_DIR}" NNG_GCOV_BUILD_DIR)
-        string(REGEX REPLACE "^[A-Za-z]:/" "" NNG_GCOV_BUILD_DIR
-                "${NNG_GCOV_BUILD_DIR}")
-        string(REGEX REPLACE "^/" "" NNG_GCOV_BUILD_DIR
-                "${NNG_GCOV_BUILD_DIR}")
-        string(REPLACE "/" ";" NNG_GCOV_BUILD_DIRS "${NNG_GCOV_BUILD_DIR}")
-        list(LENGTH NNG_GCOV_BUILD_DIRS NNG_GCOV_PREFIX_STRIP)
-
+        # Keep each test's GCOV data separate.  The coverage workflow places
+        # the matching .gcno metadata beside the relocated .gcda files.
         set_tests_properties(${TEST_NAME} PROPERTIES ENVIRONMENT
-                "GCOV_PREFIX=${CMAKE_BINARY_DIR}/coverage/${TEST_NAME};GCOV_PREFIX_STRIP=${NNG_GCOV_PREFIX_STRIP}")
+                "GCOV_PREFIX=${CMAKE_BINARY_DIR}/coverage/${TEST_NAME}")
     endif ()
 endfunction()
 

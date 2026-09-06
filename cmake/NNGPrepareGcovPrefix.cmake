@@ -1,43 +1,45 @@
 #
-# Prepare a separate GCOV data tree for every CTest test.  The tests set
-# GCOV_PREFIX themselves; this places the matching .gcno metadata beside the
-# relocated .gcda data so that gcov-compatible reporting tools can read it.
+# Place the compiler-generated .gcno metadata beside each relocated .gcda
+# file.  The test environment supplies a unique GCOV_PREFIX, so this must run
+# after CTest has generated the data files.
 #
 
 if (NOT DEFINED NNG_BUILD_DIR)
     message(FATAL_ERROR "NNG_BUILD_DIR must name the CMake build directory")
 endif ()
 
-find_program(NNG_CTEST_COMMAND ctest)
-if (NOT NNG_CTEST_COMMAND)
-    message(FATAL_ERROR "ctest was not found")
-endif ()
+file(GLOB_RECURSE NNG_GCNO_FILES RELATIVE "${NNG_BUILD_DIR}"
+        "${NNG_BUILD_DIR}/*.gcno")
+file(GLOB_RECURSE NNG_GCDA_FILES RELATIVE "${NNG_BUILD_DIR}"
+        "${NNG_BUILD_DIR}/coverage/*.gcda")
 
-execute_process(
-    COMMAND ${NNG_CTEST_COMMAND} --test-dir ${NNG_BUILD_DIR} -N
-    RESULT_VARIABLE NNG_CTEST_RESULT
-    OUTPUT_VARIABLE NNG_CTEST_OUTPUT
-)
-if (NOT NNG_CTEST_RESULT EQUAL 0)
-    message(FATAL_ERROR "Unable to list tests in ${NNG_BUILD_DIR}")
-endif ()
+foreach (NNG_GCDA_FILE ${NNG_GCDA_FILES})
+    string(REGEX REPLACE "\\.gcda$" ".gcno" NNG_GCNO_NAME
+            "${NNG_GCDA_FILE}")
+    string(LENGTH "${NNG_GCNO_NAME}" NNG_GCNO_NAME_LENGTH)
+    set(NNG_GCNO_FOUND FALSE)
 
-string(REGEX MATCHALL "Test #[0-9]+: [^\r\n]+" NNG_CTEST_ENTRIES
-        "${NNG_CTEST_OUTPUT}")
-file(GLOB_RECURSE NNG_GCNO_FILES RELATIVE ${NNG_BUILD_DIR}
-        ${NNG_BUILD_DIR}/*.gcno)
-
-foreach (NNG_CTEST_ENTRY ${NNG_CTEST_ENTRIES})
-    string(REGEX REPLACE "^Test #[0-9]+: " "" NNG_TEST_NAME
-            "${NNG_CTEST_ENTRY}")
     foreach (NNG_GCNO_FILE ${NNG_GCNO_FILES})
         if (NOT NNG_GCNO_FILE MATCHES "^coverage/")
-            get_filename_component(NNG_GCNO_DIR ${NNG_GCNO_FILE} DIRECTORY)
-            set(NNG_GCNO_DESTINATION
-                    ${NNG_BUILD_DIR}/coverage/${NNG_TEST_NAME}/${NNG_GCNO_DIR})
-            file(MAKE_DIRECTORY ${NNG_GCNO_DESTINATION})
-            file(COPY ${NNG_BUILD_DIR}/${NNG_GCNO_FILE}
-                    DESTINATION ${NNG_GCNO_DESTINATION})
+            string(LENGTH "${NNG_GCNO_FILE}" NNG_GCNO_FILE_LENGTH)
+            math(EXPR NNG_GCNO_START
+                    "${NNG_GCNO_NAME_LENGTH} - ${NNG_GCNO_FILE_LENGTH}")
+            if (NNG_GCNO_START GREATER_EQUAL 0)
+                string(SUBSTRING "${NNG_GCNO_NAME}" ${NNG_GCNO_START}
+                        ${NNG_GCNO_FILE_LENGTH} NNG_GCNO_SUFFIX)
+                if (NNG_GCNO_SUFFIX STREQUAL NNG_GCNO_FILE)
+                    get_filename_component(NNG_GCDA_DIR
+                            "${NNG_BUILD_DIR}/${NNG_GCDA_FILE}" DIRECTORY)
+                    file(COPY "${NNG_BUILD_DIR}/${NNG_GCNO_FILE}"
+                            DESTINATION "${NNG_GCDA_DIR}")
+                    set(NNG_GCNO_FOUND TRUE)
+                    break()
+                endif ()
+            endif ()
         endif ()
     endforeach ()
+
+    if (NOT NNG_GCNO_FOUND)
+        message(FATAL_ERROR "No .gcno file matches ${NNG_GCDA_FILE}")
+    endif ()
 endforeach ()
