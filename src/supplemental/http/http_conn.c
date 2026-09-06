@@ -1175,6 +1175,12 @@ nni_http_set_uri(nng_http *conn, const char *uri, const char *query)
 	size_t      needed;
 	const char *fmt;
 
+	// HTTP clients must use '/' for an empty origin-form path.  Normalize it
+	// here so that adding a query produces "/?query", never "?query".
+	if (uri[0] == '\0') {
+		uri = "/";
+	}
+
 	if (query != NULL) {
 		fmt    = strchr(uri, '?') != NULL ? "%s&%s" : "%s?%s";
 		needed = strlen(uri) + strlen(query) + 1;

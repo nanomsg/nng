@@ -464,6 +464,7 @@ http_sconn_rxdone(void *arg)
 	bool              needhost = false;
 	const char       *host;
 	const char       *cls;
+	const char       *path_end;
 
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		http_sconn_close(sc);
@@ -515,6 +516,10 @@ http_sconn_rxdone(void *arg)
 		http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
 		return;
 	}
+	path_end = strchr(uri, '?');
+	if (path_end == NULL) {
+		path_end = uri + strlen(uri);
+	}
 
 	// If the connection was 1.0, or a connection: close was
 	// requested, then mark this close on our end.
@@ -561,21 +566,16 @@ http_sconn_rxdone(void *arg)
 		}
 
 		len = strlen(h->uri);
-		if (strncmp(uri, h->uri, len) != 0) {
+		if (((size_t) (path_end - uri) < len) ||
+		    (strncmp(uri, h->uri, len) != 0)) {
 			continue;
 		}
-		switch (uri[len]) {
-		case '\0':
-		case '?':
-			break;
-		case '/':
-			if ((uri[len + 1] != '\0') && (!h->tree)) {
-				// Trailing component and not a directory.
-				continue;
-			}
-			break;
-		default:
-			continue; // Some other substring, not matched.
+		if (((uri + len) != path_end) &&
+		    ((uri[len] != '/') ||
+		        (((uri + len + 1) != path_end) && (!h->tree)))) {
+			// The URI has a nonmatching suffix or an extra path component
+			// beneath a non-tree handler.
+			continue;
 		}
 
 		if (h->method[0] == '\0') {
