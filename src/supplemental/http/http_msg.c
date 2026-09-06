@@ -617,10 +617,25 @@ nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
 	req->uri       = NULL;
 	if (url != NULL) {
 		const char *host;
+		const char *uri = url->u_requri;
 		int         rv;
-		if ((req->uri = nni_strdup(url->u_requri)) == NULL) {
+
+		// An origin-form request-target must contain an absolute path.  A
+		// URL may have an empty path, however, so supply the required root
+		// path while preserving a query-only URI.
+		if (uri[0] == '\0') {
+			uri = "/";
+		}
+		if (uri[0] == '?') {
+			rv = nni_asprintf(&req->uri, "/%s", uri);
+		} else if ((req->uri = nni_strdup(uri)) != NULL) {
+			rv = 0;
+		} else {
+			rv = NNG_ENOMEM;
+		}
+		if (rv != 0) {
 			NNI_FREE_STRUCT(req);
-			return (NNG_ENOMEM);
+			return (rv);
 		}
 
 		// Add a Host: header since we know that from the URL. Also,
