@@ -226,11 +226,14 @@ http_req_parse_line(nng_http *conn, void *line)
 	*version = '\0';
 	version++;
 
-	// A request-target cannot contain a fragment or a backslash.  Fragments
-	// are only meaningful in URI references, and a backslash can become a
-	// directory separator on Windows.  Reject them here rather than allowing
-	// a file handler to interpret them as part of a local path.
-	if ((strchr(uri, '#') != NULL) || (strchr(uri, '\\') != NULL)) {
+	// This server supports origin-form request targets only.  Reject targets
+	// that do not start with '/' before canonicalization: in particular, a
+	// leading '?' must not be treated as a root path by routing and then be
+	// mistaken for its separator by a directory handler.  Fragments are only
+	// meaningful in URI references, and a backslash can become a directory
+	// separator on Windows.
+	if ((uri[0] != '/') || (strchr(uri, '#') != NULL) ||
+	    (strchr(uri, '\\') != NULL)) {
 		nni_http_set_status(conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL);
 		return (NNG_OK);
 	}

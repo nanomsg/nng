@@ -727,6 +727,20 @@ test_server_bad_request_target(void)
 
 	server_reset(&st);
 
+	NUTS_PASS(nng_http_set_uri(st.conn, "?/../../secret", NULL));
+	nng_http_write_request(st.conn, st.aio);
+
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	nng_http_read_response(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
+
+	server_reset(&st);
+
 	NUTS_PASS(nng_http_set_uri(st.conn, "/home\\..\\secret", NULL));
 	nng_http_write_request(st.conn, st.aio);
 
