@@ -104,6 +104,15 @@ function(nng_link_libraries_if COND)
     target_link_libraries(nng_testing PRIVATE ${ARGN})
 endfunction()
 
+function(nng_set_coverage_test_environment TEST_NAME)
+    if (NNG_ENABLE_COVERAGE)
+        # Keep each test's GCOV data separate.  The coverage workflow places
+        # the matching .gcno metadata beside the relocated .gcda files.
+        set_tests_properties(${TEST_NAME} PROPERTIES ENVIRONMENT
+                "GCOV_PREFIX=${CMAKE_BINARY_DIR}/coverage/${TEST_NAME}")
+    endif ()
+endfunction()
+
 function(nng_test NAME)
     if (NNG_TESTS)
         add_executable(${NAME} ${NAME}.c ${ARGN})
@@ -114,6 +123,7 @@ function(nng_test NAME)
                 ${PROJECT_SOURCE_DIR}/include)
         add_test(NAME ${NNG_TEST_PREFIX}.${NAME} COMMAND ${NAME} -t -v)
         set_tests_properties(${NNG_TEST_PREFIX}.${NAME} PROPERTIES TIMEOUT 180)
+        nng_set_coverage_test_environment(${NNG_TEST_PREFIX}.${NAME})
     endif ()
 endfunction()
 
@@ -127,6 +137,7 @@ function(nng_test_if COND NAME)
                 ${PROJECT_SOURCE_DIR}/include)
         add_test(NAME ${NNG_TEST_PREFIX}.${NAME} COMMAND ${NAME} -t -v)
         set_tests_properties(${NNG_TEST_PREFIX}.${NAME} PROPERTIES TIMEOUT 180)
+        nng_set_coverage_test_environment(${NNG_TEST_PREFIX}.${NAME})
     endif ()
 endfunction()
 
