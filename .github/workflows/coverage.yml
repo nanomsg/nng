@@ -33,9 +33,7 @@ jobs:
         run: cd build && ninja
 
       - name: Test
-        run: >-
-          ctest --test-dir build --output-on-failure
-          && cmake -DNNG_BUILD_DIR="$PWD/build" -P cmake/NNGPrepareGcovPrefix.cmake
+        run: cd build && ctest --output-on-failure
 
       - name: Upload report
         uses: codecov/codecov-action@v4
@@ -68,9 +66,7 @@ jobs:
         run: cd build && ninja
 
       - name: Test
-        run: >-
-          ctest --test-dir build --output-on-failure
-          && cmake -DNNG_BUILD_DIR="$PWD/build" -P cmake/NNGPrepareGcovPrefix.cmake
+        run: cd build && ctest --output-on-failure
 
       - name: Preprocess
         run: cd build && lcov -c -d . -o lcov.info
