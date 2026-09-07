@@ -94,7 +94,9 @@ where supported by the underlying platform.
 
 | Option                    | Type  | Description                                                                                                        |
 | ------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------ |
-| `NNG_OPT_IPC_PERMISSIONS` | `int` | Settable on listeners before they start, this is the UNIX file mode used when creating the socket.                 |
+| `NNG_OPT_IPC_PERMISSIONS` | `int` | Settable on POSIX listeners before they start, this is the UNIX file mode used when creating the socket.           |
+| `NNG_OPT_IPC_OWNER`       | `int` | Settable on POSIX listeners before they start, this requests the UNIX user ID for the socket. Elevated permission may be required; failure is ignored. |
+| `NNG_OPT_IPC_GROUP`       | `int` | Settable on POSIX listeners before they start, this requests the UNIX group ID for the socket. Elevated permission may be required; failure is ignored. |
 | `NNG_OPT_PEER_GID`        | `int` | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
 | `NNG_OPT_PEER_PID`        | `int` | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
 | `NNG_OPT_PEER_UID`        | `int` | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
@@ -103,8 +105,15 @@ where supported by the underlying platform.
 
 ### Other Configuration Parameters
 
-On Windows systems, the security descriptor for the listener,
-which can be used to control access, can be set using the function
-[`nng_listener_set_security_descriptor`].
+On Windows, an `ipc://` named-pipe listener can use
+[`nng_listener_set_security_descriptor`] to control access.
+
+The POSIX owner and group options are applied with `chown(2)` after binding.
+Because that operation generally requires elevated privilege, failure to apply
+either value does not prevent the listener from starting.  They are ignored for
+abstract sockets, which have no file-system representation.  On Windows, use a
+security descriptor to control access to named pipes.  The Windows AF_UNIX
+(`unix://`) implementation uses its containing directory's ACL; POSIX owner,
+group, and permission options are not supported.
 
 {{#include ../xref.md}}

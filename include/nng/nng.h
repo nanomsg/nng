@@ -880,6 +880,13 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // this for security.
 #define NNG_OPT_IPC_PERMISSIONS "ipc:permissions"
 
+// Owner and group IDs.  These options are only valid for listeners on
+// POSIX platforms.  The requested ownership is applied on a best-effort
+// basis when the UNIX domain socket is created; setting either option does
+// not cause listener startup to fail if chown(2) is not permitted.
+#define NNG_OPT_IPC_OWNER "ipc:owner"
+#define NNG_OPT_IPC_GROUP "ipc:group"
+
 // IPC peer options may also be used in some cases with other socket types.
 
 // Peer UID.  This is only available on POSIX style systems.
