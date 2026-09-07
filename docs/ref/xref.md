@@ -544,6 +544,8 @@
 [`NNG_OPT_PEER_ZONEID`]: ../tran/ipc.md#NNG_OPT_PEER_ZONEID
 [`NNG_OPT_SUB_PREF_NEW`]: ../proto/sub.md#protocol-options
 [`NNG_OPT_IPC_PERMISSIONS`]: ../tran/ipc.md#NNG_OPT_IPC_PERMISSIONS
+[`NNG_OPT_IPC_OWNER`]: ../tran/ipc.md#NNG_OPT_IPC_OWNER
+[`NNG_OPT_IPC_GROUP`]: ../tran/ipc.md#NNG_OPT_IPC_GROUP
 [`NNG_OPT_TCP_KEEPALIVE`]: ../tran/tcp.md#transport-options
 [`NNG_OPT_TCP_NODELAY`]: ../tran/tcp.md#transport-options
 [`NNG_OPT_TLS_VERIFIED`]: ../tran/tls.md#NNG_OPT_TLS_VERIFIED

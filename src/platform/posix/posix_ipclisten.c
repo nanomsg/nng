@@ -38,6 +38,8 @@ typedef struct {
 	bool                closed;
 	char               *path;
 	mode_t              perms;
+	uid_t               owner;
+	gid_t               group;
 	nni_mtx             mtx;
 } ipc_listener;
 
@@ -246,6 +248,54 @@ ipc_listener_set_perms(void *arg, const void *buf, size_t sz, nni_type t)
 }
 
 static nng_err
+ipc_listener_set_owner(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	ipc_listener *l = arg;
+	int           owner;
+	nng_err       rv;
+
+	if ((rv = nni_copyin_int(&owner, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
+		return (rv);
+	}
+	if (l->sa.s_family == NNG_AF_ABSTRACT) {
+		// Abstract sockets have no file-system owner.
+		return (0);
+	}
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_EBUSY);
+	}
+	l->owner = (uid_t) owner;
+	nni_mtx_unlock(&l->mtx);
+	return (NNG_OK);
+}
+
+static nng_err
+ipc_listener_set_group(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	ipc_listener *l = arg;
+	int           group;
+	nng_err       rv;
+
+	if ((rv = nni_copyin_int(&group, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
+		return (rv);
+	}
+	if (l->sa.s_family == NNG_AF_ABSTRACT) {
+		// Abstract sockets have no file-system group.
+		return (0);
+	}
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_EBUSY);
+	}
+	l->group = (gid_t) group;
+	nni_mtx_unlock(&l->mtx);
+	return (NNG_OK);
+}
+
+static nng_err
 ipc_listener_set_listen_fd(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	ipc_listener           *l = arg;
@@ -305,6 +355,14 @@ static const nni_option ipc_listener_options[] = {
 	    .o_set  = ipc_listener_set_perms,
 	},
 	{
+	    .o_name = NNG_OPT_IPC_OWNER,
+	    .o_set  = ipc_listener_set_owner,
+	},
+	{
+	    .o_name = NNG_OPT_IPC_GROUP,
+	    .o_set  = ipc_listener_set_group,
+	},
+	{
 	    .o_name = NNG_OPT_LISTEN_FD,
 	    .o_set  = ipc_listener_set_listen_fd,
 #ifdef NNG_TEST_LIB
@@ -333,15 +391,18 @@ ipc_listener_set(
 }
 
 static int
-ipc_listener_chmod(ipc_listener *l, const char *path)
+ipc_listener_set_file_attrs(ipc_listener *l, const char *path)
 {
 	if (path == NULL) {
 		return (0);
 	}
-	if (l->perms == 0) {
-		return (0);
+	if ((l->owner != (uid_t) -1) || (l->group != (gid_t) -1)) {
+		// Changing ownership normally requires elevated privilege.  This is
+		// deliberately best effort so a listener can still be started by an
+		// unprivileged process.
+		(void) chown(path, l->owner, l->group);
 	}
-	if (chmod(path, l->perms & ~S_IFMT) != 0) {
+	if ((l->perms != 0) && (chmod(path, l->perms & ~S_IFMT) != 0)) {
 		return (-1);
 	}
 	return (0);
@@ -405,7 +466,7 @@ ipc_listener_listen(void *arg)
 		}
 	}
 
-	if ((rv != 0) || (ipc_listener_chmod(l, path) != 0) ||
+	if ((rv != 0) || (ipc_listener_set_file_attrs(l, path) != 0) ||
 	    (listen(fd, 128) != 0)) {
 		rv = nni_plat_errno(errno);
 	}
@@ -543,6 +604,8 @@ nni_ipc_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	l->closed       = false;
 	l->started      = false;
 	l->perms        = 0;
+	l->owner        = (uid_t) -1;
+	l->group        = (gid_t) -1;
 	l->sl.sl_free   = ipc_listener_free;
 	l->sl.sl_close  = ipc_listener_close;
 	l->sl.sl_stop   = ipc_listener_stop;

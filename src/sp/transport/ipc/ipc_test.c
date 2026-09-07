@@ -125,6 +125,44 @@ test_ipc_listener_perms(void)
 }
 
 void
+test_ipc_listener_owner_group(void)
+{
+	nng_socket   s;
+	nng_listener l;
+	char        *addr;
+
+#ifndef _WIN32
+	char       *path;
+	struct stat st;
+#endif
+
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listener_create(&l, s, addr));
+
+#ifdef _WIN32
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_OWNER, 0), NNG_ENOTSUP);
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_GROUP, 0), NNG_ENOTSUP);
+#else
+	path = &addr[strlen("ipc://")];
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_OWNER, -1), NNG_EINVAL);
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_GROUP, -1), NNG_EINVAL);
+	NUTS_PASS(nng_listener_set_int(l, NNG_OPT_IPC_OWNER, (int) getuid()));
+	NUTS_PASS(nng_listener_set_int(l, NNG_OPT_IPC_GROUP, (int) getgid()));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_TRUE(stat(path, &st) == 0);
+	NUTS_TRUE(st.st_uid == getuid());
+	NUTS_TRUE(st.st_gid == getgid());
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_OWNER, (int) getuid()),
+	    NNG_EBUSY);
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_GROUP, (int) getgid()),
+	    NNG_EBUSY);
+#endif
+
+	NUTS_CLOSE(s);
+}
+
+void
 test_ipc_listener_properties(void)
 {
 	nng_socket   s;
@@ -715,6 +753,7 @@ TEST_LIST = {
 	{ "ipc dialer perms", test_ipc_dialer_perms },
 	{ "ipc dialer props", test_ipc_dialer_properties },
 	{ "ipc listener perms", test_ipc_listener_perms },
+	{ "ipc listener owner group", test_ipc_listener_owner_group },
 	{ "ipc listener props", test_ipc_listener_properties },
 	{ "ipc ping pong", test_ipc_ping_pong },
 	{ "ipc ping pong many", test_ipc_ping_pong_many },
