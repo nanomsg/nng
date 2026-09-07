@@ -931,6 +931,12 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // This can be useful when a handler supports an entire directory tree.
 #define NNG_OPT_WS_REQUEST_URI "ws:request-uri"
 
+// NNG_OPT_WS_TREE is a boolean option for WebSocket listeners.  When set,
+// the listener accepts connections to paths below its configured URL path.
+// When multiple tree listeners match a path, the longest matching path is
+// selected.  This option must be set before the listener is started.
+#define NNG_OPT_WS_TREE "ws:tree"
+
 // NNG_OPT_WS_SENDMAXFRAME is used to configure the fragmentation size
 // used for frames.  This has a default value of 64k.  Large values
 // are good for throughput, but penalize latency.  They also require

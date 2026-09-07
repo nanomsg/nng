@@ -554,6 +554,7 @@
 [`NNG_OPT_WS_HEADER_KEY`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_KEY
 [`NNG_OPT_WS_HEADER_VALUE`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_VALUE
 [`NNG_OPT_WS_REQUEST_URI`]: ../tran/websocket.md#NNG_OPT_WS_REQUEST_URI
+[`NNG_OPT_WS_TREE`]: ../tran/websocket.md#NNG_OPT_WS_TREE
 [`NNG_OPT_WS_SENDMAXFRAME`]: ../tran/websocket.md#NNG_OPT_WS_SENDMAXFRAME
 [`NNG_OPT_WS_RECVMAXFRAME`]: ../tran/websocket.md#NNG_OPT_WS_RECVMAXFRAME
 [`NNG_OPT_WS_PROTOCOL`]: ../tran/websocket.md#NNG_OPT_WS_PROTOCOL
