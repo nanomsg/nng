@@ -127,6 +127,7 @@ struct nni_ws_listener {
 	nng_url            *url;
 	bool                started;
 	bool                closed;
+	bool                tree;
 	bool                isstream;
 	bool                send_text;
 	bool                recv_text;
@@ -1813,6 +1814,9 @@ ws_listener_listen(void *arg)
 		nni_mtx_unlock(&l->mtx);
 		return (NNG_ESTATE);
 	}
+	if (l->tree) {
+		nni_http_handler_set_tree(l->handler);
+	}
 
 	if ((rv = nni_http_server_add_handler(l->server, l->handler)) !=
 	    NNG_OK) {
@@ -1956,6 +1960,40 @@ ws_listener_set_msgmode(void *arg, const void *buf, size_t sz, nni_type t)
 }
 
 static nng_err
+ws_listener_set_tree(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_ws_listener *l = arg;
+	nng_err          rv;
+	bool             b;
+
+	if ((rv = nni_copyin_bool(&b, buf, sz, t)) != NNG_OK) {
+		return (rv);
+	}
+
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		rv = NNG_EBUSY;
+	} else {
+		l->tree = b;
+		rv      = NNG_OK;
+	}
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
+}
+
+static nng_err
+ws_listener_get_tree(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_ws_listener *l = arg;
+	nng_err          rv;
+
+	nni_mtx_lock(&l->mtx);
+	rv = nni_copyout_bool(l->tree, buf, szp, t);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
+}
+
+static nng_err
 ws_listener_set_recv_text(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	nni_ws_listener *l = arg;
@@ -2011,6 +2049,11 @@ static const nni_option ws_listener_options[] = {
 	{
 	    .o_name = NNI_OPT_WS_MSGMODE,
 	    .o_set  = ws_listener_set_msgmode,
+	},
+	{
+	    .o_name = NNG_OPT_WS_TREE,
+	    .o_set  = ws_listener_set_tree,
+	    .o_get  = ws_listener_get_tree,
 	},
 	{
 	    .o_name = NNG_OPT_WS_RECVMAXFRAME,

@@ -35,6 +35,47 @@ test_ws_url_path_filters(void)
 }
 
 static void
+test_ws_tree_listener(void)
+{
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_listener l;
+	nng_msg     *msg;
+	nng_pipe     p;
+	char         addr[NNG_MAXADDRLEN];
+	const char  *uri;
+	bool         tree;
+	int          port;
+
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+
+	snprintf(addr, sizeof(addr), "ws://127.0.0.1:0/orchard/fruit");
+	NUTS_PASS(nng_listener_create(&l, s1, addr));
+	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_WS_TREE, &tree));
+	NUTS_TRUE(!tree);
+	NUTS_PASS(nng_listener_set_bool(l, NNG_OPT_WS_TREE, true));
+	NUTS_PASS(nng_listener_get_bool(l, NNG_OPT_WS_TREE, &tree));
+	NUTS_TRUE(tree);
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_WS_TREE, false), NNG_EBUSY);
+
+	snprintf(addr, sizeof(addr),
+	    "ws://127.0.0.1:%d/orchard/fruit/banana?ripe=true", port);
+	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
+	NUTS_PASS(nng_send(s2, "x", 1, 0));
+	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+	p = nng_msg_get_pipe(msg);
+	NUTS_PASS(nng_pipe_get_string(p, NNG_OPT_WS_REQUEST_URI, &uri));
+	NUTS_MATCH(uri, "/orchard/fruit/banana?ripe=true");
+	nng_msg_free(msg);
+
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
+
+static void
 test_wild_card_port(void)
 {
 	nng_socket s1;
@@ -280,6 +321,7 @@ NUTS_DECLARE_TRAN_TESTS(ws6)
 
 TEST_LIST = {
 	{ "ws url path filters", test_ws_url_path_filters },
+	{ "ws tree listener", test_ws_tree_listener },
 	{ "ws wild card port", test_wild_card_port },
 	{ "ws wild card host", test_wild_card_host },
 	{ "ws empty host", test_empty_host },
