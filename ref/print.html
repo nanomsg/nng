@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4b0206d6.js";
+            window.path_to_searchindex_js = "searchindex-aa121fc2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -6775,6 +6775,7 @@ listener, stream dialer, or stream listener is started.</p>
 <tr><td><code>NNG_OPT_WS_HEADER</code><a name="NNG_OPT_WS_HEADER"></a></td><td><code>string</code></td><td>Option prefix for HTTP headers. Append the header name to set a handshake header on a dialer or listener, or to retrieve a received header from a connected pipe or stream. For example, <code>NNG_OPT_WS_HEADER "X-Trace-ID"</code> refers to the <code>X-Trace-ID</code> header.</td></tr>
 <tr><td><code>NNG_OPT_WS_PROTOCOL</code><a name="NNG_OPT_WS_PROTOCOL"></a></td><td><code>string</code></td><td>WebSocket subprotocol, corresponding to the <code>Sec-WebSocket-Protocol</code> header. Scalability Protocol sockets configure this automatically.</td></tr>
 <tr><td><code>NNG_OPT_WS_REQUEST_URI</code><a name="NNG_OPT_WS_REQUEST_URI"></a></td><td><code>string</code></td><td>Read-only request URI sent by the client, available from connected pipes and streams. This is useful for listeners that handle a subtree.</td></tr>
+<tr><td><code>NNG_OPT_WS_TREE</code><a name="NNG_OPT_WS_TREE"></a></td><td><code>bool</code></td><td>Listener-only. When true, accept requests for child paths of the listener URL; the longest matching tree listener handles a request. Set before starting the listener.</td></tr>
 <tr><td><code>NNG_OPT_WS_SENDMAXFRAME</code><a name="NNG_OPT_WS_SENDMAXFRAME"></a></td><td><code>size</code></td><td>Maximum WebSocket frame size to send before fragmenting. The default is 64 KiB. Larger values can improve throughput but may increase latency and peer buffering requirements. There is no WebSocket negotiation for this value.</td></tr>
 <tr><td><code>NNG_OPT_WS_RECVMAXFRAME</code><a name="NNG_OPT_WS_RECVMAXFRAME"></a></td><td><code>size</code></td><td>Maximum WebSocket frame size accepted from the peer. Frames larger than this are rejected. This should not normally be larger than <a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a>.</td></tr>
 <tr><td><code>NNG_OPT_WS_HEADER_RESET</code><a name="NNG_OPT_WS_HEADER_RESET"></a></td><td><code>bool</code></td><td>Read-only option for connected pipes and streams. Reading it resets HTTP header iteration to the beginning.</td></tr>
