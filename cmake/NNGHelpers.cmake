@@ -105,7 +105,7 @@ function(nng_link_libraries_if COND)
 endfunction()
 
 function(nng_set_coverage_test_environment TEST_NAME)
-    if (NNG_ENABLE_COVERAGE)
+    if (WIN32 AND NNG_ENABLE_COVERAGE)
         # Keep each test's GCOV data separate.  The coverage workflow places
         # the matching .gcno metadata beside the relocated .gcda files.
         set_tests_properties(${TEST_NAME} PROPERTIES ENVIRONMENT
