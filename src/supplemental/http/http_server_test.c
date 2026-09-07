@@ -934,6 +934,106 @@ test_server_header_too_long(void)
 }
 
 static void
+http_echo_headers(nng_http *conn, void *arg, nng_aio *aio)
+{
+	const char *names[] = { "X-First", "X-Second", "X-Third", "X-Last" };
+	nng_err     rv      = NNG_OK;
+
+	NNI_ARG_UNUSED(arg);
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(names); i++) {
+		const char *value = nng_http_get_header(conn, names[i]);
+		if (value == NULL) {
+			rv = NNG_EPROTO;
+			break;
+		}
+		if ((rv = nng_http_set_header(conn, names[i], value)) !=
+		    NNG_OK) {
+			break;
+		}
+	}
+	if (rv == NNG_OK) {
+		rv = nng_http_copy_body(conn, doc2, strlen(doc2));
+	}
+	nng_aio_finish(aio, rv);
+}
+
+static void
+test_server_many_headers(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+	const char *names[] = { "X-First", "X-Second", "X-Third", "X-Last" };
+	size_t      sizes[] = { 2000, 2030, 2100, 4096, 2000 };
+	char        value[4097];
+
+	NUTS_PASS(nng_http_handler_alloc(&h, "/", http_echo_headers));
+	server_setup(&st, h);
+
+	// Exercise both sides of the serialization buffer limit, including
+	// multiple headers after the first truncated header.  Each individual
+	// header remains small enough for the receiver's line buffer.
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(sizes); i++) {
+		void  *body;
+		size_t len;
+
+		nng_http_reset(st.conn);
+		NUTS_PASS(nng_http_set_uri(st.conn, "/", NULL));
+		memset(value, 'a' + (int) i, sizes[i]);
+		value[sizes[i]] = '\0';
+		for (size_t j = 0; j < NNI_NUM_ELEMENTS(names); j++) {
+			NUTS_PASS(
+			    nng_http_set_header(st.conn, names[j], value));
+		}
+		NUTS_PASS(httpdo(&st, &body, &len));
+		NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_OK);
+		for (size_t j = 0; j < NNI_NUM_ELEMENTS(names); j++) {
+			NUTS_MATCH(
+			    nng_http_get_header(st.conn, names[j]), value);
+		}
+		NUTS_TRUE(len == strlen(doc2));
+		NUTS_TRUE(memcmp(body, doc2, len) == 0);
+		nng_free(body, len);
+	}
+	server_free(&st);
+}
+
+static void
+test_server_pipelined_requests(void)
+{
+	struct server_test st;
+	nng_http_handler  *h;
+	char    requests[] = "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n"
+	                     "GET / HTTP/1.1\r\nHost: localhost\r\n\r\n";
+	nng_iov iov        = { requests, sizeof(requests) - 1 };
+	char    body[64];
+
+	NUTS_PASS(nng_http_handler_alloc_static(
+	    &h, "/", doc2, strlen(doc2), "text/plain"));
+	server_setup(&st, h);
+	nng_aio_set_timeout(st.aio, 5000);
+	NUTS_PASS(nng_aio_set_iov(st.aio, 1, &iov));
+	nng_http_write_all(st.conn, st.aio);
+	nng_aio_wait(st.aio);
+	NUTS_PASS(nng_aio_result(st.aio));
+
+	for (int i = 0; i < 2; i++) {
+		nng_http_reset(st.conn);
+		nng_http_read_response(st.conn, st.aio);
+		nng_aio_wait(st.aio);
+		NUTS_PASS(nng_aio_result(st.aio));
+		NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_OK);
+		iov.iov_buf = body;
+		iov.iov_len = strlen(doc2);
+		NUTS_PASS(nng_aio_set_iov(st.aio, 1, &iov));
+		nng_http_read_all(st.conn, st.aio);
+		nng_aio_wait(st.aio);
+		NUTS_PASS(nng_aio_result(st.aio));
+		NUTS_TRUE(memcmp(body, doc2, strlen(doc2)) == 0);
+	}
+	server_free(&st);
+}
+
+static void
 test_server_invalid_utf8(void)
 {
 	struct server_test st;
@@ -1651,6 +1751,8 @@ NUTS_TESTS = {
 	{ "server method too long", test_server_method_too_long },
 	{ "server uri too long", test_server_uri_too_long },
 	{ "server header too long", test_server_header_too_long },
+	{ "server many headers", test_server_many_headers },
+	{ "server pipelined requests", test_server_pipelined_requests },
 	{ "server invalid utf", test_server_invalid_utf8 },
 	{ "server post handler", test_server_post_handler },
 	{ "server transfer encoding", test_server_transfer_encoding },
