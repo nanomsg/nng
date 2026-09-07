@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -687,10 +687,13 @@ http_sprintf_headers(char *buf, size_t sz, nni_list *list)
 	NNI_LIST_FOREACH (list, h) {
 		size_t l;
 		l = snprintf(buf, sz, "%s: %s\r\n", h->name, h->value);
-		if (buf != NULL) {
+		if (l < sz) {
 			buf += l;
+			sz -= l;
+		} else {
+			buf = NULL;
+			sz  = 0;
 		}
-		sz = (sz > l) ? sz - l : 0;
 		rv += l;
 	}
 	return (rv);
@@ -742,16 +745,18 @@ http_prepare(nng_http *conn, void **data, size_t *szp)
 {
 	size_t len;
 
-	// get length needed first
-	len = http_snprintf(conn, NULL, 0);
-
-	// If it fits in the fixed buffer, use it. It should cover
-	// like 99% or more cases, as this buffer is 8KB.
-	if (len < conn->bufsz) {
-		http_snprintf(conn, (char *) conn->buf, conn->bufsz);
-		*data = conn->buf;
-		*szp  = len;
-		return (NNG_OK);
+	// Reuse the read buffer only when it is empty.  Unread request bodies
+	// or pipelined messages must survive formatting the outgoing headers.
+	if (conn->rd_get == conn->rd_put) {
+		// Avoid a separate sizing pass when the headers fit in 8KB.
+		len = http_snprintf(conn, (char *) conn->buf, conn->bufsz);
+		if (len < conn->bufsz) {
+			*data = conn->buf;
+			*szp  = len;
+			return (NNG_OK);
+		}
+	} else {
+		len = http_snprintf(conn, NULL, 0);
 	}
 
 	// we have to allocate.
