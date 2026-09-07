@@ -12,6 +12,9 @@ file(GLOB_RECURSE NNG_GCNO_FILES RELATIVE "${NNG_BUILD_DIR}"
         "${NNG_BUILD_DIR}/*.gcno")
 file(GLOB_RECURSE NNG_GCDA_FILES RELATIVE "${NNG_BUILD_DIR}"
         "${NNG_BUILD_DIR}/coverage/*.gcda")
+if (NOT NNG_GCDA_FILES)
+    message(FATAL_ERROR "No relocated .gcda files found in ${NNG_BUILD_DIR}")
+endif ()
 
 foreach (NNG_GCDA_FILE ${NNG_GCDA_FILES})
     string(REGEX REPLACE "\\.gcda$" ".gcno" NNG_GCNO_NAME

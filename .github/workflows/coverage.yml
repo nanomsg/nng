@@ -34,8 +34,8 @@ jobs:
 
       - name: Test
         run: >-
-          cd build && ctest --output-on-failure
-          && cmake -DNNG_BUILD_DIR=. -P ../cmake/NNGPrepareGcovPrefix.cmake
+          ctest --test-dir build --output-on-failure
+          && cmake -DNNG_BUILD_DIR="$PWD/build" -P cmake/NNGPrepareGcovPrefix.cmake
 
       - name: Upload report
         uses: codecov/codecov-action@v4
@@ -69,8 +69,8 @@ jobs:
 
       - name: Test
         run: >-
-          cd build && ctest --output-on-failure
-          && cmake -DNNG_BUILD_DIR=. -P ../cmake/NNGPrepareGcovPrefix.cmake
+          ctest --test-dir build --output-on-failure
+          && cmake -DNNG_BUILD_DIR="$PWD/build" -P cmake/NNGPrepareGcovPrefix.cmake
 
       - name: Preprocess
         run: cd build && lcov -c -d . -o lcov.info
@@ -117,7 +117,7 @@ jobs:
       - name: Test
         run: >-
           ctest --test-dir build --output-on-failure
-          && cmake -DNNG_BUILD_DIR=build -P cmake/NNGPrepareGcovPrefix.cmake
+          && cmake -DNNG_BUILD_DIR="$PWD/build" -P cmake/NNGPrepareGcovPrefix.cmake
 
       - name: Collect coverage
         run: >-
