@@ -37,5 +37,23 @@ if (NNG_ENABLE_NNGCAT)
         add_nngcat_test(nngcat_recvmaxsz 20)
         add_nngcat_test(nngcat_unlimited 20)
         add_nngcat_test(nngcat_stdin_pipe 20)
+        if ((NNG_TLS_ENGINE STREQUAL "mbed") OR
+            (NNG_TLS_ENGINE STREQUAL "openssl"))
+            find_program(NNG_OPENSSL_EXECUTABLE openssl)
+            if (NNG_OPENSSL_EXECUTABLE)
+                add_nngcat_test(nngcat_tls 20)
+            endif ()
+        elseif (NNG_TLS_ENGINE STREQUAL "wolf")
+            get_target_property(
+                NNG_PRIVATE_DEFINITIONS nng_private
+                INTERFACE_COMPILE_DEFINITIONS)
+            if (("NNG_SUPP_TLS_PSK" IN_LIST NNG_PRIVATE_DEFINITIONS) AND
+                ("NNG_WOLFSSL_HAVE_PASSWORD" IN_LIST NNG_PRIVATE_DEFINITIONS))
+                find_program(NNG_OPENSSL_EXECUTABLE openssl)
+                if (NNG_OPENSSL_EXECUTABLE)
+                    add_nngcat_test(nngcat_tls 20)
+                endif ()
+            endif ()
+        endif ()
     endif ()
 endif ()
