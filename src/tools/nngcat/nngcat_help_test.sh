@@ -22,6 +22,14 @@ fi
 x=$(${NNGCAT} --help 2>&1)
 if [[ ${x} =~ "Usage:" ]]
 then
+	for option in "--pass <passphrase>" "--psk <hex-key>" "--psk-identity <name>"
+	do
+		if [[ ! ${x} =~ "${option}" ]]
+		then
+			echo "Failed: missing ${option} in usage"
+			exit 1
+		fi
+	done
 	echo "pass"
 	exit 0
 fi

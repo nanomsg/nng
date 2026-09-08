@@ -39,6 +39,10 @@ void        *keyfile   = NULL;
 size_t       keylen    = 0;
 void        *certfile  = NULL;
 size_t       certlen   = 0;
+char        *passphrase = NULL;
+uint8_t     *psk        = NULL;
+size_t       psklen     = 0;
+char        *pskidentity = NULL;
 int          count     = 0;
 int          recvmaxsz = -1;
 
@@ -87,6 +91,9 @@ enum options {
 	OPT_CACERT,
 	OPT_KEYFILE,
 	OPT_CERTFILE,
+	OPT_PASS,
+	OPT_PSK,
+	OPT_PSK_IDENTITY,
 	OPT_VERSION,
 	OPT_RECVMAXSZ,
 };
@@ -180,6 +187,13 @@ static nng_arg_spec opts[] = {
 	{ .a_name = "insecure", .a_short = 'k', .a_val = OPT_INSECURE },
 	{ .a_name = "cacert", .a_val = OPT_CACERT, .a_arg = true },
 	{ .a_name = "key", .a_val = OPT_KEYFILE, .a_arg = true },
+	{ .a_name = "pass", .a_val = OPT_PASS, .a_arg = true },
+	{ .a_name = "psk", .a_val = OPT_PSK, .a_arg = true },
+	{
+	    .a_name = "psk-identity",
+	    .a_val  = OPT_PSK_IDENTITY,
+	    .a_arg  = true,
+	},
 	{
 	    .a_name  = "cert",
 	    .a_short = 'E',
@@ -250,6 +264,9 @@ help(void)
 	printf("  --cacert <file>\n");
 	printf("  --cert <file>          (or alias -E <file>)\n");
 	printf("  --key <file>\n");
+	printf("  --pass <passphrase>    decrypt TLS private key\n");
+	printf("  --psk <hex-key>        configure TLS pre-shared key\n");
+	printf("  --psk-identity <name>  configure TLS PSK identity\n");
 	printf("\n<src> may be one of:\n");
 	printf("  --file <file>          (or alias -F <file>). "
 	       "Use - for standard input.\n");
@@ -341,6 +358,43 @@ loadfile(const char *path, void **datap, size_t *lenp)
 	*lenp             = total_read;
 }
 
+static int
+hexval(char c)
+{
+	if ((c >= '0') && (c <= '9')) {
+		return (c - '0');
+	}
+	if ((c >= 'a') && (c <= 'f')) {
+		return (c - 'a' + 10);
+	}
+	if ((c >= 'A') && (c <= 'F')) {
+		return (c - 'A' + 10);
+	}
+	return (-1);
+}
+
+static void
+parsepsk(const char *arg)
+{
+	size_t len = strlen(arg);
+
+	if ((len == 0) || ((len & 1) != 0)) {
+		fatal("PSK must be a non-empty hexadecimal string.");
+	}
+	psklen = len / 2;
+	if ((psk = malloc(psklen)) == NULL) {
+		fatal("Out of memory.");
+	}
+	for (size_t i = 0; i < psklen; i++) {
+		int hi = hexval(arg[i * 2]);
+		int lo = hexval(arg[(i * 2) + 1]);
+		if ((hi < 0) || (lo < 0)) {
+			fatal("PSK must be a non-empty hexadecimal string.");
+		}
+		psk[i] = (uint8_t) ((hi << 4) | lo);
+	}
+}
+
 static void
 configtls(nng_tls_config *tls)
 {
@@ -350,10 +404,13 @@ configtls(nng_tls_config *tls)
 	}
 	if ((rv == 0) && (certfile != NULL)) {
 		keyfile = keyfile ? keyfile : certfile;
-		rv = nng_tls_config_own_cert(tls, certfile, keyfile, NULL);
+		rv = nng_tls_config_own_cert(tls, certfile, keyfile, passphrase);
 	}
 	if ((rv == 0) && (cacert != NULL)) {
 		rv = nng_tls_config_ca_chain(tls, cacert, NULL);
+	}
+	if ((rv == 0) && (psk != NULL)) {
+		rv = nng_tls_config_psk(tls, pskidentity, psk, psklen);
 	}
 	if (rv != 0) {
 		fatal("Unable to configure TLS: %s", nng_strerror(rv));
@@ -843,6 +900,24 @@ main(int ac, char **av)
 			}
 			loadfile(arg, &keyfile, &keylen);
 			break;
+		case OPT_PASS:
+			if (passphrase != NULL) {
+				fatal("Passphrase (--pass) may be specified only once.");
+			}
+			passphrase = arg;
+			break;
+		case OPT_PSK:
+			if (psk != NULL) {
+				fatal("PSK (--psk) may be specified only once.");
+			}
+			parsepsk(arg);
+			break;
+		case OPT_PSK_IDENTITY:
+			if (pskidentity != NULL) {
+				fatal("PSK identity (--psk-identity) may be specified only once.");
+			}
+			pskidentity = arg;
+			break;
 		case OPT_CERTFILE:
 			if (certfile != NULL) {
 				fatal("Cert (--cert) may be specified "
@@ -875,6 +950,9 @@ main(int ac, char **av)
 
 	if (addrs == NULL) {
 		fatal("No address specified.");
+	}
+	if ((psk == NULL) != (pskidentity == NULL)) {
+		fatal("Options --psk and --psk-identity must be specified together.");
 	}
 
 	if (compat) {

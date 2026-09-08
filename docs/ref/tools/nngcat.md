@@ -161,7 +161,15 @@ URLs. They are ignored for non-TLS transports.
 Use `--cacert FILE` to supply certificate authorities for peer validation. Use
 `--cert FILE` and `--key FILE` to present a local certificate and private key.
 If `--cert` is supplied without `--key`, the certificate file is expected to
-contain both the certificate and private key.
+contain both the certificate and private key. Use `--pass PASSPHRASE` to
+decrypt an encrypted private key. The passphrase is supplied literally (unlike
+OpenSSL's `-pass` passphrase-source option), so it may be visible to other
+local users through process inspection.
+
+Use `--psk-identity IDENTITY` and `--psk HEXKEY` to configure TLS
+pre-shared-key authentication. `HEXKEY` must be a non-empty, even-length
+hexadecimal string. Both options are required. PSK support depends on the
+configured TLS engine.
 
 `--insecure` disables peer validation. This is useful for local testing with
 self-signed certificates, but it should not be used for production traffic.
@@ -264,6 +272,9 @@ be supplied as a separate argument.
 | `-k`, `--insecure` | Skip peer certificate validation. |
 | `-E FILE`, `--cert FILE` | Load this peer's certificate from `FILE`. |
 | `--key FILE` | Load this peer's private key from `FILE`. |
+| `--pass PASSPHRASE` | Decrypt the private key using the literal `PASSPHRASE`. |
 | `--cacert FILE` | Load CA certificates from `FILE` for peer validation. |
+| `--psk-identity IDENTITY` | Set the identity for TLS pre-shared-key authentication. Must be used with `--psk`. |
+| `--psk HEXKEY` | Set a hexadecimal TLS pre-shared key. Must be used with `--psk-identity`. |
 
 {{#include ../xref.md}}
