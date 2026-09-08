@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-aa121fc2.js";
+            window.path_to_searchindex_js = "searchindex-be5d7467.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -6286,7 +6286,9 @@ where supported by the underlying platform.</p>
 <tr><th>Option</th><th>Type</th><th>Description</th></tr>
 </thead>
 <tbody>
-<tr><td><code>NNG_OPT_IPC_PERMISSIONS</code></td><td><code>int</code></td><td>Settable on listeners before they start, this is the UNIX file mode used when creating the socket.</td></tr>
+<tr><td><code>NNG_OPT_IPC_PERMISSIONS</code></td><td><code>int</code></td><td>Settable on POSIX listeners before they start, this is the UNIX file mode used when creating the socket.</td></tr>
+<tr><td><code>NNG_OPT_IPC_OWNER</code></td><td><code>int</code></td><td>Settable on POSIX listeners before they start, this requests the UNIX user ID for the socket. Elevated permission may be required; failure is ignored.</td></tr>
+<tr><td><code>NNG_OPT_IPC_GROUP</code></td><td><code>int</code></td><td>Settable on POSIX listeners before they start, this requests the UNIX group ID for the socket. Elevated permission may be required; failure is ignored.</td></tr>
 <tr><td><code>NNG_OPT_PEER_GID</code></td><td><code>int</code></td><td>Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_PID</code></td><td><code>int</code></td><td>Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it.</td></tr>
 <tr><td><code>NNG_OPT_PEER_UID</code></td><td><code>int</code></td><td>Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.</td></tr>
@@ -6296,9 +6298,15 @@ where supported by the underlying platform.</p>
 </table>
 </div>
 <h3 id="other-configuration-parameters"><a class="header" href="#other-configuration-parameters">Other Configuration Parameters</a></h3>
-<p>On Windows systems, the security descriptor for the listener,
-which can be used to control access, can be set using the function
-<a href="#windows-security-descriptors"><code>nng_listener_set_security_descriptor</code></a>.</p>
+<p>On Windows, an <code>ipc://</code> named-pipe listener can use
+<a href="#windows-security-descriptors"><code>nng_listener_set_security_descriptor</code></a> to control access.</p>
+<p>The POSIX owner and group options are applied with <code>chown(2)</code> after binding.
+Because that operation generally requires elevated privilege, failure to apply
+either value does not prevent the listener from starting.  They are ignored for
+abstract sockets, which have no file-system representation.  On Windows, use a
+security descriptor to control access to named pipes.  The Windows AF_UNIX
+(<code>unix://</code>) implementation uses its containing directory’s ACL; POSIX owner,
+group, and permission options are not supported.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
