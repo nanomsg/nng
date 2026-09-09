@@ -13,6 +13,7 @@ set -euo pipefail
 
 NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 WORK=$(mktemp -d)
 PORT=$((30000 + ($$ % 20000)))
 
@@ -36,14 +37,9 @@ fail() {
 
 echo -n "Verify TLS passphrase and PSK: "
 
-openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
-	-keyout "${WORK}/key.pem" -out "${WORK}/cert.pem" \
-	-subj /CN=127.0.0.1 >/dev/null 2>&1
-openssl pkey -in "${WORK}/key.pem" -aes-256-cbc -passout pass:secret \
-	-out "${WORK}/key-encrypted.pem" >/dev/null 2>&1
-
 ${NNGCAT} --rep0 --listen "tls+tcp://127.0.0.1:${PORT}" \
-	--cert "${WORK}/cert.pem" --key "${WORK}/key-encrypted.pem" \
+	--cert "${SCRIPT_DIR}/nngcat_tls_cert.pem" \
+	--key "${SCRIPT_DIR}/nngcat_tls_key.pem" \
 	--pass secret --data pong --quoted --count 1 >"${WORK}/cert-server.out" \
 	2>"${WORK}/cert-server.err" &
 server=$!
