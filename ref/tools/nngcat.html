@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-be5d7467.js";
+            window.path_to_searchindex_js = "../searchindex-936880d8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -313,7 +313,14 @@ URLs. They are ignored for non-TLS transports.</p>
 <p>Use <code>--cacert FILE</code> to supply certificate authorities for peer validation. Use
 <code>--cert FILE</code> and <code>--key FILE</code> to present a local certificate and private key.
 If <code>--cert</code> is supplied without <code>--key</code>, the certificate file is expected to
-contain both the certificate and private key.</p>
+contain both the certificate and private key. Use <code>--pass PASSPHRASE</code> to
+decrypt an encrypted private key. The passphrase is supplied literally (unlike
+OpenSSL’s <code>-pass</code> passphrase-source option), so it may be visible to other
+local users through process inspection.</p>
+<p>Use <code>--psk-identity IDENTITY</code> and <code>--psk HEXKEY</code> to configure TLS
+pre-shared-key authentication. <code>HEXKEY</code> must be a non-empty, even-length
+hexadecimal string. Both options are required. PSK support depends on the
+configured TLS engine.</p>
 <p><code>--insecure</code> disables peer validation. This is useful for local testing with
 self-signed certificates, but it should not be used for production traffic.</p>
 <h2 id="option-syntax"><a class="header" href="#option-syntax">Option Syntax</a></h2>
@@ -432,7 +439,10 @@ be supplied as a separate argument.</p>
 <tr><td><code>-k</code>, <code>--insecure</code></td><td>Skip peer certificate validation.</td></tr>
 <tr><td><code>-E FILE</code>, <code>--cert FILE</code></td><td>Load this peer’s certificate from <code>FILE</code>.</td></tr>
 <tr><td><code>--key FILE</code></td><td>Load this peer’s private key from <code>FILE</code>.</td></tr>
+<tr><td><code>--pass PASSPHRASE</code></td><td>Decrypt the private key using the literal <code>PASSPHRASE</code>.</td></tr>
 <tr><td><code>--cacert FILE</code></td><td>Load CA certificates from <code>FILE</code> for peer validation.</td></tr>
+<tr><td><code>--psk-identity IDENTITY</code></td><td>Set the identity for TLS pre-shared-key authentication. Must be used with <code>--psk</code>.</td></tr>
+<tr><td><code>--psk HEXKEY</code></td><td>Set a hexadecimal TLS pre-shared key. Must be used with <code>--psk-identity</code>.</td></tr>
 </tbody>
 </table>
 </div>
