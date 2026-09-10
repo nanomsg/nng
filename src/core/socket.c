@@ -1395,6 +1395,15 @@ dialer_start_pipe(nni_dialer *d, nni_pipe *p)
 	nni_stat_set_id(&p->st_root, (int) p->p_id);
 	nni_stat_set_id(&p->st_id, (int) p->p_id);
 	nni_stat_register(&p->st_root);
+	if (nni_pipe_is_closed(p)) {
+		// The pipe was closed while we were starting it, and
+		// pipe_reap may have already unregistered the stats
+		// (as a no-op, since they were not registered yet).
+		// Unregister them again here, so that we don't leave
+		// a dangling node in the stats tree when we free the
+		// pipe below.
+		nni_stat_unregister(&p->st_root);
+	}
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	if (nng_log_get_level() >= NNG_LOG_DEBUG) {
@@ -1510,6 +1519,15 @@ listener_start_pipe(nni_listener *l, nni_pipe *p)
 	nni_stat_set_id(&p->st_root, (int) p->p_id);
 	nni_stat_set_id(&p->st_id, (int) p->p_id);
 	nni_stat_register(&p->st_root);
+	if (nni_pipe_is_closed(p)) {
+		// The pipe was closed while we were starting it, and
+		// pipe_reap may have already unregistered the stats
+		// (as a no-op, since they were not registered yet).
+		// Unregister them again here, so that we don't leave
+		// a dangling node in the stats tree when we free the
+		// pipe below.
+		nni_stat_unregister(&p->st_root);
+	}
 #endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	if (nng_log_get_level() >= NNG_LOG_DEBUG) {
