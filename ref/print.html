@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-936880d8.js";
+            window.path_to_searchindex_js = "searchindex-42b244a9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-42984344.js"></script>
@@ -1667,7 +1667,7 @@ call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
 void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
 </code></pre>
 <p>These functions (<a name="a009"></a><code>nng_ctx_sendmsg</code> and <a name="a010"></a><code>nng_ctx_send</code>) send
-messages over the socket <em>s</em>. The differences in their behaviors are as follows.</p>
+messages over the context <em>ctx</em>. The differences in their behaviors are as follows.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The semantics of what sending a message means varies from protocol to
@@ -1700,7 +1700,7 @@ this function instead of <a href="#nng_ctx_sendmsg"><code>nng_ctx_sendmsg</code>
 <pre><code class="language-c">int nng_ctx_recvmsg(nng_ctx ctx, nng_msg **msgp, int flags);
 void nng_ctx_recv(nng_ctx ctx, nng_aio *aio);
 </code></pre>
-<p>These functions (, <a name="a011"></a><code>nng_ctx_recvmsg</code> and <a name="a012"></a><code>nng_ctx_recv</code>) receive
+<p>These functions (<a name="a011"></a><code>nng_ctx_recvmsg</code> and <a name="a012"></a><code>nng_ctx_recv</code>) receive
 messages over the context <em>ctx</em>. The differences in their behaviors are as follows.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
@@ -1709,12 +1709,12 @@ protocol, so examination of the protocol documentation is encouraged.
 Additionally, some protocols may not support receiving at all or may require other pre-conditions first.
 (For example, <a href="#req-protocol">REQ</a> sockets cannot normally receive data until they have first sent a request.)</p>
 </blockquote>
-<h3 id="nng_recvmsg-1"><a class="header" href="#nng_recvmsg-1">nng_recvmsg</a></h3>
+<h3 id="nng_ctx_recvmsg"><a class="header" href="#nng_ctx_recvmsg">nng_ctx_recvmsg</a></h3>
 <p>The <code>nng_ctx_recvmsg</code> function receives a message and stores a pointer to the <a href="#message-structure"><code>nng_msg</code></a> for that message in <em>msgp</em>.</p>
 <p>The <em>flags</em> can contain the value <a href="#NNG_FLAG_NONBLOCK"><code>NNG_FLAG_NONBLOCK</code></a>, indicating that the function should not wait if the socket
 has no messages available to receive. In such a case, it will return <a href="#NNG_EAGAIN"><code>NNG_EAGAIN</code></a>.</p>
-<h3 id="nng_socket_recv-1"><a class="header" href="#nng_socket_recv-1">nng_socket_recv</a></h3>
-<p>The <code>nng_ctx_send</code> function receives a message asynchronously, using the <a href="#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
+<h3 id="nng_ctx_recv"><a class="header" href="#nng_ctx_recv">nng_ctx_recv</a></h3>
+<p>The <code>nng_ctx_recv</code> function receives a message asynchronously, using the <a href="#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>, over the context <em>ctx</em>.
 On success, the received message can be retrieved from the <em>aio</em> using the <a href="#messages-1"><code>nng_aio_get_msg</code></a> function.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
