@@ -38,6 +38,10 @@ pipe_destroy(void *arg)
 {
 	nni_pipe *p = arg;
 
+#ifdef NNG_ENABLE_STATS
+	nni_stat_unregister(&p->st_root);
+#endif
+
 	p->p_proto_ops.pipe_fini(p->p_proto_data);
 	p->p_tran_ops.p_fini(p->p_tran_data);
 
@@ -63,10 +67,6 @@ pipe_reap(void *arg)
 		nni_id_remove(&pipes, p->p_id);
 	}
 	nni_mtx_unlock(&pipes_lk);
-
-#ifdef NNG_ENABLE_STATS
-	nni_stat_unregister(&p->st_root);
-#endif
 
 	p->p_proto_ops.pipe_stop(p->p_proto_data);
 	p->p_tran_ops.p_stop(p->p_tran_data);
