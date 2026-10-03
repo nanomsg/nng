@@ -1010,7 +1010,7 @@ http_server_set_err(nni_http_server *s, nng_http_status code, char *body)
 	}
 	if (epage == NULL) {
 		if ((epage = NNI_ALLOC_STRUCT(epage)) == NULL) {
-			nni_mtx_unlock(&s->mtx);
+			nni_mtx_unlock(&s->errors_mtx);
 			return (NNG_ENOMEM);
 		}
 		epage->code = code;
