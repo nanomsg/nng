@@ -45,7 +45,7 @@ sdescAuthUsers(PSID sid, PACL *aclp)
 }
 
 void
-test_ipc_security_descriptor(void)
+test_winpipe_security_descriptor(void)
 {
 	nng_stream_listener *l;
 	char                 address[64];
@@ -61,7 +61,7 @@ test_ipc_security_descriptor(void)
 	PACCESS_ALLOWED_ACE  allowed;
 	nng_aio             *aio;
 
-	nuts_scratch_addr("ipc", sizeof(address), address);
+	nuts_scratch_addr("winpipe", sizeof(address), address);
 
 	NUTS_PASS(nng_stream_listener_alloc(&l, address));
 	size = sizeof(users);
@@ -77,7 +77,7 @@ test_ipc_security_descriptor(void)
 	nng_stream_listener_accept(l, aio);
 
 	(void) snprintf(
-	    pipe, sizeof(pipe), "\\\\.\\pipe\\%s", address + strlen("ipc://"));
+	    pipe, sizeof(pipe), "\\\\.\\pipe\\%s", address + strlen("winpipe://"));
 	HANDLE ph = CreateFileA(pipe, READ_CONTROL, 0, NULL, OPEN_EXISTING,
 	    FILE_FLAG_OVERLAPPED, NULL);
 
@@ -109,7 +109,7 @@ test_ipc_security_descriptor(void)
 }
 
 void
-test_ipc_security_descriptor_busy(void)
+test_winpipe_security_descriptor_busy(void)
 {
 	// This test ensures that the descriptor can only be set before
 	// the listener is started.
@@ -120,7 +120,7 @@ test_ipc_security_descriptor_busy(void)
 	DWORD                size;
 	PACL                 acl = NULL;
 
-	nuts_scratch_addr("ipc", sizeof(address), address);
+	nuts_scratch_addr("winpipe", sizeof(address), address);
 
 	NUTS_PASS(nng_stream_listener_alloc(&l, address));
 	size = sizeof(users);
@@ -141,12 +141,12 @@ test_ipc_security_descriptor_busy(void)
 }
 
 void
-test_ipc_security_descriptor_bogus(void)
+test_winpipe_security_descriptor_bogus(void)
 {
 	nng_stream_listener *l;
 	char                 address[64];
 
-	nuts_scratch_addr("ipc", sizeof(address), address);
+	nuts_scratch_addr("winpipe", sizeof(address), address);
 
 	NUTS_PASS(nng_stream_listener_alloc(&l, address));
 
@@ -158,9 +158,10 @@ test_ipc_security_descriptor_bogus(void)
 }
 
 NUTS_TESTS = {
-	{ "ipc security descriptor", test_ipc_security_descriptor },
-	{ "ipc security descriptor busy", test_ipc_security_descriptor_busy },
-	{ "ipc security descriptor bogus",
-	    test_ipc_security_descriptor_bogus },
+	{ "winpipe security descriptor", test_winpipe_security_descriptor },
+	{ "winpipe security descriptor busy",
+	    test_winpipe_security_descriptor_busy },
+	{ "winpipe security descriptor bogus",
+	    test_winpipe_security_descriptor_bogus },
 	{ NULL, NULL },
 };

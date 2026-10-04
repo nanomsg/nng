@@ -5,9 +5,7 @@
 The {{i:*ipc* transport}}{{hi:*ipc*}} provides communication support between
 sockets within different processes on the same host.
 For POSIX platforms, this is implemented using {{i:UNIX domain sockets}}.
-For Windows, this is implemented using Windows {{i:named pipes}}.  Windows
-also supports the related {{i:`unix://`}} scheme, which uses Windows
-{{i:AF_UNIX}} sockets.
+Windows uses {{i:AF_UNIX}} sockets when they are available.
 Other platforms may have different implementation strategies.
 
 ### URI Formats
@@ -15,11 +13,9 @@ Other platforms may have different implementation strategies.
 #### Traditional Names
 
 This transport uses URIs using the scheme {{i:`ipc://`}}, followed by a path
-name in the file system where the socket or named pipe should be created.
+name in the file system where the UNIX domain socket should be created.
 
 > [!TIP]
-> On Windows, all names are prefixed by `\\.\pipe\` and do not
-> reside in the normal file system.
 > On POSIX platforms, the path is taken literally, and is relative to
 > the current directory, unless it begins with `/`, in which case it is
 > relative to the root directory.
@@ -41,20 +37,23 @@ name in the file system where the socket or named pipe should be created.
 
 #### UNIX Aliases
 
-On POSIX systems, the {{i:`unix://`}} scheme is an alias for `ipc://` and can
-be used interchangeably.  On Windows, it instead selects the AF_UNIX transport;
-`ipc://` continues to select named pipes.[^ipc_unix]
+The {{i:`unix://`}} scheme is an alias for `ipc://` and can be used
+interchangeably wherever UNIX domain sockets are supported.
 
 On Windows, the `unix://` path is a UTF-8 Win32 pathname (for example,
 `unix://C:\Temp\nng.sock`) and is limited to 107 bytes plus its final `NUL`.
 Windows AF_UNIX streams support [`NNG_OPT_PEER_PID`], but do not provide
 POSIX user or group credentials.
-AF_UNIX requires Windows build 17063 or later; on older builds, `unix://`
-operations fail because `WSASocket(AF_UNIX, ...)` returns `WSAEAFNOSUPPORT`.
+AF_UNIX requires Windows build 17063 or later; on older builds, `ipc://` and
+`unix://` operations fail because `WSASocket(AF_UNIX, ...)` returns
+`WSAEAFNOSUPPORT`.
 
-[^ipc_unix]:
-    This scheme distinguishes the existing named-pipe transport from the
-    AF_UNIX transport on Windows.
+#### Windows Named Pipes
+
+On Windows, the {{i:`winpipe://`}} scheme selects the legacy named-pipe
+transport. Names are prefixed by `\\.\pipe\` and do not reside in the normal
+file system. Use this scheme when compatibility with existing Windows
+`ipc://` named-pipe users is required.
 
 #### Abstract Names
 
@@ -105,15 +104,15 @@ where supported by the underlying platform.
 
 ### Other Configuration Parameters
 
-On Windows, an `ipc://` named-pipe listener can use
+On Windows, a `winpipe://` named-pipe listener can use
 [`nng_listener_set_security_descriptor`] to control access.
 
 The POSIX owner and group options are applied with `chown(2)` after binding.
 Because that operation generally requires elevated privilege, failure to apply
 either value does not prevent the listener from starting.  They are ignored for
 abstract sockets, which have no file-system representation.  On Windows, use a
-security descriptor to control access to named pipes.  The Windows AF_UNIX
-(`unix://`) implementation uses its containing directory's ACL; POSIX owner,
-group, and permission options are not supported.
+security descriptor to control access to `winpipe://` named pipes. The Windows
+AF_UNIX (`ipc://` or `unix://`) implementation uses its containing directory's
+ACL; POSIX owner, group, and permission options are not supported.
 
 {{#include ../xref.md}}

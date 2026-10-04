@@ -25,7 +25,11 @@ static int next_port = 20000; // port number kind of.
 char tcp4_template[]   = "tcp://127.0.0.1:%d";
 char tcp6_template[]   = "tcp://[::1]:%d";
 char inproc_template[] = "inproc://nng_reqstress_%d";
+#ifdef NNG_PLATFORM_WINDOWS
+char ipc_template[] = "winpipe://nng_reqstress_%d";
+#else
 char ipc_template[]    = "ipc:///tmp/nng_reqstress_%d";
+#endif
 char ws_template[]     = "ws://127.0.0.1:%d/nng_reqstress";
 
 char *templates[] = {

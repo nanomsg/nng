@@ -19,8 +19,8 @@
 #include "../../src/testing/nuts.h"
 
 
-void
-test_ipc_stream(void)
+static void
+test_local_stream(const char *scheme)
 {
 	nng_stream_dialer   *d = NULL;
 	nng_stream_listener *l = NULL;
@@ -37,7 +37,7 @@ test_ipc_stream(void)
 	char                 buf2[5];
 	const nng_sockaddr  *sap;
 
-	NUTS_ADDR(url, "ipc");
+	NUTS_ADDR(url, scheme);
 	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
 	NUTS_PASS(nng_aio_alloc(&maio, NULL, NULL));
@@ -91,7 +91,7 @@ test_ipc_stream(void)
 
 	sap = nng_stream_self_addr(c2);
 	NUTS_TRUE(sap->s_ipc.sa_family == NNG_AF_IPC);
-	NUTS_MATCH(sap->s_ipc.sa_path, url + strlen("ipc://"));
+	NUTS_MATCH(sap->s_ipc.sa_path, url + strlen(scheme) + 3);
 
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
@@ -109,6 +109,44 @@ test_ipc_stream(void)
 	nng_stream_free(c1);
 	nng_stream_close(c2);
 	nng_stream_free(c2);
+}
+
+void
+test_ipc_stream(void)
+{
+#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_HAVE_UNIX_SOCKETS)
+	char                *url;
+	nng_stream_listener *l = NULL;
+
+	NUTS_ADDR(url, "ipc");
+	NUTS_FAIL(nng_stream_listener_alloc(&l, url), NNG_ENOTSUP);
+#else
+	test_local_stream("ipc");
+#endif
+}
+
+void
+test_unix_stream(void)
+{
+#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_HAVE_UNIX_SOCKETS)
+	char                *url;
+	nng_stream_listener *l = NULL;
+
+	NUTS_ADDR(url, "unix");
+	NUTS_FAIL(nng_stream_listener_alloc(&l, url), NNG_ENOTSUP);
+#else
+	test_local_stream("unix");
+#endif
+}
+
+void
+test_winpipe_stream(void)
+{
+#ifdef NNG_PLATFORM_WINDOWS
+	test_local_stream("winpipe");
+#else
+	NUTS_SKIP("Not Windows");
+#endif
 }
 
 void
@@ -410,6 +448,8 @@ test_ipc_stream_iov_exceeds_int_max(void)
 
 NUTS_TESTS = {
 	{ "ipc stream", test_ipc_stream },
+	{ "unix stream", test_unix_stream },
+	{ "winpipe stream", test_winpipe_stream },
 	{ "ipc no connect", test_ipc_no_connect },
 	{ "ipc socket activation", test_ipc_listen_activation },
 	{ "ipc socket activation busy", test_ipc_listen_activation_busy },

@@ -197,6 +197,20 @@ removed as well.
 The types of [`NNG_OPT_PEER_GID`], [`NNG_OPT_PEER_PID`], [`NNG_OPT_PEER_UID`], and [`NNG_OPT_PEER_ZONEID`]
 have changed from `uint64_t` to `int`. The underlying platforms all use 32-bit quantities for these.
 
+## Windows IPC Scheme Changes
+
+On Windows, legacy NNG, nanomsg, and mangos applications use `ipc://` for
+Windows named pipes. Although nanomsg 1.3 also supports `unix://`, its
+`ipc://` scheme retains this named-pipe meaning. In NNG 2, `ipc://` uses AF_UNIX
+sockets and is equivalent to `unix://`. Consequently, a legacy application
+using `ipc://` cannot communicate with an NNG 2 application using the same URL
+on Windows.
+
+To retain the legacy named-pipe behavior, change Windows IPC URLs from
+`ipc://NAME` to `winpipe://NAME`. The `winpipe://` scheme is Windows-only and
+uses the same `\\.\pipe\NAME` named-pipe path as legacy `ipc://NAME`, so it
+can be used to interoperate with legacy applications.
+
 ## Option Functions
 
 The previously deprecated `nng_pipe_getopt_xxx` family of functions is removed.
@@ -429,9 +443,8 @@ with the functions [`nng_listener_set_security_descriptor`] and
 [`nng_stream_listener_set_security_descriptor`].
 
 Security descriptor support is only relevant to Windows,
-and is presently only supported for IPC when Named Pipes are used.
-Planned future changes to switch to UNIX domain sockets may eliminate
-support for security descriptors altogether in NNG.
+and is supported only by the `winpipe://` named-pipe transport. It is not
+available for the AF_UNIX `ipc://` or `unix://` transports.
 
 ## Command Line Argument Parser Changes
 

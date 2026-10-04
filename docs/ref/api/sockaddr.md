@@ -87,8 +87,9 @@ The `sa_family` field is always `NNG_AF_IPC`.
 
 The `sa_path` field holds a `NUL`-terminated C string corresponding to the
 path where the IPC socket is located. On systems using UNIX domain sockets,
-this is a path in the file system. On Windows systems, this is the named pipe
-path without the leading `\\.\pipe\` portion, which _NNG_ adds automatically.
+this is a path in the file system. With the Windows `winpipe://` transport,
+this is the named-pipe path without the leading `\\.\pipe\` portion, which
+_NNG_ adds automatically.
 
 > [!TIP]
 > Applications should use the `sizeof` operator instead of hard coding the

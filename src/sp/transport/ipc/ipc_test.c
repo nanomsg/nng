@@ -51,6 +51,22 @@ test_path_too_long(void)
 }
 
 void
+test_ipc_unavailable(void)
+{
+	nng_socket s;
+	char      *addr;
+
+	NUTS_OPEN(s);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_FAIL(nng_listen(s, addr, NULL, 0), NNG_ENOTSUP);
+	NUTS_FAIL(nng_dial(s, addr, NULL, NNG_FLAG_NONBLOCK), NNG_ENOTSUP);
+	NUTS_ADDR(addr, "unix");
+	NUTS_FAIL(nng_listen(s, addr, NULL, 0), NNG_ENOTSUP);
+	NUTS_FAIL(nng_dial(s, addr, NULL, NNG_FLAG_NONBLOCK), NNG_ENOTSUP);
+	NUTS_CLOSE(s);
+}
+
+void
 test_ipc_dialer_perms(void)
 {
 	nng_socket s;
@@ -603,9 +619,9 @@ test_unix_scheme(void)
 #if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 	nng_socket   s1;
 	nng_socket   s2;
+	char         addr2[NNG_MAXADDRLEN + 8];
 #ifdef NNG_PLATFORM_POSIX
 	char         addr1[32];
-	char         addr2[32];
 	char         rng[20];
 #endif
 	char        *a1;
@@ -627,8 +643,12 @@ test_unix_scheme(void)
 	a1 = addr1;
 	a2 = addr2;
 #else
-	NUTS_ADDR(a1, "unix");
-	a2 = a1;
+	NUTS_ADDR(a1, "ipc");
+	NUTS_ASSERT(strlen(a1) <=
+	    sizeof(addr2) - strlen("unix://") + strlen("ipc://"));
+	(void) snprintf(addr2, sizeof(addr2), "unix://%s",
+	    a1 + strlen("ipc://"));
+	a2 = addr2;
 #endif
 
 	NUTS_OPEN(s1);
@@ -671,6 +691,30 @@ test_unix_scheme(void)
 	NUTS_CLOSE(s2);
 #else
 	NUTS_SKIP("No UNIX socket support.");
+#endif
+}
+
+void
+test_winpipe_scheme(void)
+{
+#ifdef NNG_PLATFORM_WINDOWS
+	nng_socket s1;
+	nng_socket s2;
+	char      *addr;
+
+	NUTS_ADDR(addr, "winpipe");
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
+	NUTS_SEND(s1, "ping");
+	NUTS_RECV(s2, "ping");
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+#else
+	NUTS_SKIP("Not Windows.");
 #endif
 }
 
@@ -738,17 +782,19 @@ test_ipc_security_descriptor(void)
 	NUTS_ADDR(addr, "ipc");
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_listener_create(&l, s, addr));
-#ifdef NNG_PLATFORM_WINDOWS
-	// not a security descriptor
+#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_HAVE_UNIX_SOCKETS)
 	NUTS_FAIL(nng_listener_set_security_descriptor(l, addr), NNG_EINVAL);
 #else
-	// not appropriate
 	NUTS_FAIL(nng_listener_set_security_descriptor(l, addr), NNG_ENOTSUP);
 #endif
 	NUTS_CLOSE(s);
 }
 
 TEST_LIST = {
+#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_HAVE_UNIX_SOCKETS)
+	{ "ipc unavailable", test_ipc_unavailable },
+	{ "ipc winpipe scheme", test_winpipe_scheme },
+#else
 	{ "ipc path too long", test_path_too_long },
 	{ "ipc dialer perms", test_ipc_dialer_perms },
 	{ "ipc dialer props", test_ipc_dialer_properties },
@@ -771,7 +817,9 @@ TEST_LIST = {
 	{ "ipc abstract name too long", test_abstract_too_long },
 	{ "ipc abstract embedded null", test_abstract_null },
 	{ "ipc unix scheme", test_unix_scheme },
+	{ "ipc winpipe scheme", test_winpipe_scheme },
 	{ "ipc peer id", test_ipc_pipe_peer },
 	{ "ipc security descriptor", test_ipc_security_descriptor },
+#endif
 	{ NULL, NULL },
 };

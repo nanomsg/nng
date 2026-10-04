@@ -232,7 +232,7 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	ipc_dialer *d;
 	int         rv;
 
-	if ((strcmp(url->u_scheme, "ipc") != 0) || (url->u_path == NULL) ||
+	if ((strcmp(url->u_scheme, "winpipe") != 0) || (url->u_path == NULL) ||
 	    (strlen(url->u_path) == 0) ||
 	    (strlen(url->u_path) >= NNG_MAXADDRLEN)) {
 		return (NNG_EADDRINVAL);
