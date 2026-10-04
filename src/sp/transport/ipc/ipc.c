@@ -1105,6 +1105,17 @@ static nni_sp_tran ipc_tran = {
 	.tran_fini     = ipc_tran_fini,
 };
 
+#ifdef NNG_PLATFORM_WINDOWS
+static nni_sp_tran ipc_tran_winpipe = {
+	.tran_scheme   = "winpipe",
+	.tran_dialer   = &ipc_dialer_ops,
+	.tran_listener = &ipc_listener_ops,
+	.tran_pipe     = &ipc_tran_pipe_ops,
+	.tran_init     = ipc_tran_init,
+	.tran_fini     = ipc_tran_fini,
+};
+#endif
+
 #if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 static nni_sp_tran ipc_tran_unix = {
 	.tran_scheme   = "unix",
@@ -1131,6 +1142,9 @@ void
 nni_sp_ipc_register(void)
 {
 	nni_sp_tran_register(&ipc_tran);
+#ifdef NNG_PLATFORM_WINDOWS
+	nni_sp_tran_register(&ipc_tran_winpipe);
+#endif
 #if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
 	nni_sp_tran_register(&ipc_tran_unix);
 #endif

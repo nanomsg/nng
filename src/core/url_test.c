@@ -57,6 +57,22 @@ test_url_http_unix(void)
 }
 
 void
+test_url_winpipe(void)
+{
+	nng_url *url;
+	char     buf[64];
+
+	NUTS_PASS(nng_url_parse(&url, "winpipe://nng-test"));
+	NUTS_MATCH(nng_url_scheme(url), "winpipe");
+	NUTS_MATCH(nng_url_path(url), "nng-test");
+	NUTS_NULL(nng_url_hostname(url));
+	NUTS_TRUE(nng_url_sprintf(buf, sizeof(buf), url) ==
+	    strlen("winpipe://nng-test"));
+	NUTS_MATCH(buf, "winpipe://nng-test");
+	nng_url_free(url);
+}
+
+void
 test_url_host_too_long(void)
 {
 	nng_url *url;
@@ -560,6 +576,7 @@ test_url_huge_parts(void)
 NUTS_TESTS = {
 	{ "url host", test_url_host },
 	{ "url http unix", test_url_http_unix },
+	{ "url winpipe", test_url_winpipe },
 	{ "url host too long", test_url_host_too_long },
 	{ "url host port", test_url_host_port },
 	{ "url host port path", test_url_host_port_path },

@@ -16,6 +16,9 @@ if (NNG_PLATFORM_WINDOWS)
     nng_check_sym(timespec_get time.h NNG_HAVE_TIMESPEC_GET)
     nng_check_sym(snprintf stdio.h NNG_HAVE_SNPRINTF)
     nng_check_sym(AF_UNIX "winsock2.h;afunix.h" NNG_HAVE_UNIX_SOCKETS)
+    if (NNG_HAVE_UNIX_SOCKETS)
+        nng_defines(NNG_HAVE_UNIX_SOCKETS)
+    endif ()
     if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF OR NOT NNG_HAVE_TIMESPEC_GET)
         message(FATAL_ERROR
                 "Modern Windows API support is missing. "

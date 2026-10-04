@@ -67,9 +67,15 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 
 	if (strncmp(scheme, "ipc", 3) == 0) {
 #ifdef _WIN32
-		// Windows doesn't place IPC names in the filesystem.
-		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
-		    nng_random(), nng_random(), nng_random(), nng_random());
+		char  tmpdir[NNG_MAXADDRLEN];
+		DWORD n;
+
+		if (((n = GetTempPathA(sizeof(tmpdir), tmpdir)) == 0) ||
+		    (n >= sizeof(tmpdir))) {
+			tmpdir[0] = 0;
+		}
+		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
+		    nng_random());
 		return;
 #else
 		char *tmpdir;
@@ -83,6 +89,13 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 		(void) snprintf(addr, sz, "%s://%s/nuts%04x%04x%04x%04x",
 		    scheme, tmpdir, nng_random(), nng_random(), nng_random(),
 		    nng_random());
+		return;
+#endif
+	}
+	if (strcmp(scheme, "winpipe") == 0) {
+#ifdef _WIN32
+		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
+		    nng_random(), nng_random(), nng_random(), nng_random());
 		return;
 #endif
 	}
@@ -150,9 +163,15 @@ nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
 
 	if (strncmp(scheme, "ipc", 3) == 0) {
 #ifdef _WIN32
-		// Windows doesn't place IPC names in the filesystem.
-		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
-		    nng_random(), nng_random(), nng_random(), nng_random());
+		char  tmpdir[NNG_MAXADDRLEN];
+		DWORD n;
+
+		if (((n = GetTempPathA(sizeof(tmpdir), tmpdir)) == 0) ||
+		    (n >= sizeof(tmpdir))) {
+			tmpdir[0] = 0;
+		}
+		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
+		    nng_random());
 		return;
 #else
 		char *tmpdir;
@@ -166,6 +185,13 @@ nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
 		(void) snprintf(addr, sz, "%s://%s/nuts%04x%04x%04x%04x",
 		    scheme, tmpdir, nng_random(), nng_random(), nng_random(),
 		    nng_random());
+		return;
+#endif
+	}
+	if (strcmp(scheme, "winpipe") == 0) {
+#ifdef _WIN32
+		(void) snprintf(addr, sz, "%s://nuts%04x%04x%04x%04x", scheme,
+		    nng_random(), nng_random(), nng_random(), nng_random());
 		return;
 #endif
 	}

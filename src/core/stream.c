@@ -28,12 +28,12 @@ static struct {
 	nng_err (*listener_alloc)(nng_stream_listener **, const nng_url *);
 
 } stream_drivers[] = {
+#ifdef NNG_PLATFORM_POSIX
 	{
 	    .scheme         = "ipc",
 	    .dialer_alloc   = nni_ipc_dialer_alloc,
 	    .listener_alloc = nni_ipc_listener_alloc,
 	},
-#ifdef NNG_PLATFORM_POSIX
 	{
 	    .scheme         = "unix",
 	    .dialer_alloc   = nni_ipc_dialer_alloc,
@@ -41,9 +41,21 @@ static struct {
 	},
 #elif defined(NNG_HAVE_UNIX_SOCKETS)
 	{
+	    .scheme         = "ipc",
+	    .dialer_alloc   = nni_unix_dialer_alloc,
+	    .listener_alloc = nni_unix_listener_alloc,
+	},
+	{
 	    .scheme         = "unix",
 	    .dialer_alloc   = nni_unix_dialer_alloc,
 	    .listener_alloc = nni_unix_listener_alloc,
+	},
+#endif
+#ifdef NNG_PLATFORM_WINDOWS
+	{
+	    .scheme         = "winpipe",
+	    .dialer_alloc   = nni_ipc_dialer_alloc,
+	    .listener_alloc = nni_ipc_listener_alloc,
 	},
 #endif
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS

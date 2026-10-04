@@ -262,6 +262,7 @@ static const char *nni_schemes[] = {
 	"inproc",
 	"ipc",
 	"unix",
+	"winpipe",
 	"abstract",
 	"ws",
 	"ws4",
@@ -374,7 +375,8 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 	p = url->u_buffer + strlen("://");
 	s = p;
 
-	// For compatibility reasons, we treat ipc:// and inproc:// paths
+	// For compatibility reasons, we treat ipc://, unix://, winpipe://, and
+	// inproc:// paths
 	// specially. These names URLs have a path name (ipc) or arbitrary
 	// string (inproc) and don't include anything like a host.  Note that
 	// in the case of path names, it is incumbent upon the application to
@@ -386,6 +388,7 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 
 	if ((strcmp(url->u_scheme, "ipc") == 0) ||
 	    (strcmp(url->u_scheme, "unix") == 0) ||
+	    (strcmp(url->u_scheme, "winpipe") == 0) ||
 	    (strcmp(url->u_scheme, "abstract") == 0) ||
 	    (strcmp(url->u_scheme, "inproc") == 0) ||
 	    (strcmp(url->u_scheme, "socket") == 0)) {
@@ -581,6 +584,7 @@ nng_url_sprintf(char *str, size_t size, const nng_url *url)
 	} else if ((strcmp(scheme, "ipc") == 0) ||
 	    (strcmp(scheme, "inproc") == 0) ||
 	    (strcmp(scheme, "unix") == 0) ||
+	    (strcmp(scheme, "winpipe") == 0) ||
 	    (strcmp(scheme, "abstract") == 0) ||
 	    (strcmp(scheme, "socket") == 0)) {
 		return (snprintf(str, size, "%s://%s", scheme, url->u_path));
