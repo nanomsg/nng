@@ -1,6 +1,6 @@
 # INPROC Transport
 
-The {{i:*inproc* transport}}{{hi:*inproc*}}{{i:intra-process}} provides communication support between
+The {{i:*inproc* transport}}{{hi:*inproc*}}{{hi:intra-process}} provides communication support between
 sockets within the same process.
 This may be used as an alternative
 to slower transports when data must be moved within the same process.
