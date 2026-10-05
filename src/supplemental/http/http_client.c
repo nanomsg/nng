@@ -333,13 +333,30 @@ http_txn_cb(void *arg)
 			return;
 		}
 
-		if ((strcmp(nni_http_get_method(txn->conn), "HEAD") == 0) ||
-		    ((str = nni_http_get_header(
-		          txn->conn, "Content-Length")) == NULL) ||
-		    ((len = (uint64_t) strtoull(str, &end, 10)) == 0) ||
-		    (end == NULL) || (*end != '\0')) {
-			// If no content-length, or HEAD (which per RFC
-			// never transfers data), then we are done.
+		if (strcmp(nni_http_get_method(txn->conn), "HEAD") == 0) {
+			// HEAD requests never transfer data per RFC.
+			http_txn_finish_aios(txn, 0);
+			nni_mtx_unlock(&http_txn_lk);
+			http_txn_fini(txn);
+			return;
+		}
+
+		if ((str = nni_http_get_header(
+		          txn->conn, "Content-Length")) == NULL) {
+			// If no content-length, then we are done.
+			http_txn_finish_aios(txn, 0);
+			nni_mtx_unlock(&http_txn_lk);
+			http_txn_fini(txn);
+			return;
+		}
+
+		len = (uint64_t) strtoull(str, &end, 10);
+		if ((end == str) || (*end != '\0')) {
+			rv = NNG_EPROTO;
+			goto error;
+		}
+
+		if (len == 0) {
 			http_txn_finish_aios(txn, 0);
 			nni_mtx_unlock(&http_txn_lk);
 			http_txn_fini(txn);

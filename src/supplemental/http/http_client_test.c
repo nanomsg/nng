@@ -671,9 +671,39 @@ test_http_chunk_parser_bad_trailer_cr(void)
 	nni_http_chunks_free(chunks);
 }
 
+static void
+test_http_client_invalid_content_length(void)
+{
+	static const char *response =
+	    "HTTP/1.1 200 OK\r\n"
+	    "Content-Type: text/plain\r\n"
+	    "Content-Length: invalid_len\r\n"
+	    "Connection: close\r\n"
+	    "\r\n"
+	    "hello\r\n";
+	struct scripted_server srv;
+	nng_aio               *aio = NULL;
+	nng_http_client       *cli = NULL;
+	nng_http              *conn = NULL;
+	nng_url               *url = NULL;
+
+	scripted_server_start(&srv, &response, NULL, 1);
+	client_connect(srv.url, &url, &aio, &cli, &conn);
+
+	NUTS_PASS(nng_http_set_uri(conn, "/", NULL));
+	nng_http_transact(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EPROTO);
+
+	client_free(url, aio, cli, conn);
+	scripted_server_stop(&srv);
+}
+
 NUTS_TESTS = {
 	{ "http client request response", test_http_client_request_response },
 	{ "http client transact", test_http_client_transact },
+	{ "http client invalid content length",
+	    test_http_client_invalid_content_length },
 	{ "http client reuse", test_http_client_reuse },
 	{ "http client timeout", test_http_client_timeout },
 	{ "http client chunked", test_http_client_chunked },
