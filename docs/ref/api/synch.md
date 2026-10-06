@@ -16,7 +16,7 @@ typedef struct nng_mtx nng_mtx;
 ```
 
 Mutual exclusion locks, or {{i:mutex}} locks, represented by the {{i:`nng_mtx`}} structure,
-allow only a single [thread] to lock "own" the lock, acquired by [`nng_mtx_lock`].
+allow only a single [thread] to own the lock, acquired by [`nng_mtx_lock`].
 Any other thread trying to acquire the same mutex will wait until the owner has released the mutex
 by calling [`nng_mtx_unlock`].
 
@@ -48,7 +48,7 @@ void nng_mtx_lock(nng_mtx *mtx);
 ```
 
 The {{i:`nng_mtx_lock`}} function acquires ownership of a mutex, waiting for it to
-unowned by any other threads if necessary.
+be unowned by any other threads if necessary.
 
 > [!IMPORTANT]
 > A thread must not attempt to reacquire the same mutex while it already "owns" the mutex.
@@ -92,7 +92,7 @@ is woken.
 int nng_cv_alloc(nng_cv **cvp, nng_mtx *mtx);
 ```
 
-The {{i:`nng_cv_alloc`}} function allocates a condition variable, and associated with the mutex _mtx_,
+The {{i:`nng_cv_alloc`}} function allocates a condition variable, associates it with the mutex _mtx_,
 and returns a pointer to it in _cvp_.
 
 ### Destroy a Condition Variable

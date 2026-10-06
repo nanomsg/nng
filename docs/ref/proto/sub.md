@@ -13,7 +13,7 @@ The _SUB_ protocol is the subscriber side, and the
 > Thus, this pattern should not be used in an attempt to
 > reduce bandwidth consumption.
 
-The topics that subscribers subscribe to is compared to the leading bytes of
+Subscription topics are compared to the leading bytes of
 the message body.
 Applications should construct their messages accordingly.
 
@@ -54,7 +54,7 @@ int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
 ```
 
 The {{i:`nng_sub0_ctx_subscribe`}} and {{i:`nng_sub0_ctx_unsubscribe`}} functions
-perform manage subscriptions for the context in precisely the same way that
+manage subscriptions for the context in precisely the same way that
 [`nng_sub0_socket_subscribe`] and [`nng_sub0_socket_unsubscribe`] do.
 
 Each context maintains its own set of subscriptions, and these are also independent

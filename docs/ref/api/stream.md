@@ -116,7 +116,7 @@ nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp)
 {{hi:`nng_stream_get_ms`}}
 {{hi:`nng_stream_get_size`}}
 {{hi:`nng_stream_get_string`}}
-These functions are used to obtain value of an option named _opt_ from the stream _s_, and store it in the location
+These functions are used to obtain the value of an option named _opt_ from the stream _s_, and store it in the location
 referenced by _valp_.
 
 These functions access an option as a specific type. The transport layer will have details about which options
@@ -136,7 +136,7 @@ typedef struct nng_stream_listener nng_stream_listener;
 The {{i:`nng_stream_listener`}} object and {{i:`nng_stream_listener`}} objects can be thought of as factories that
 create [`nng_stream`] streams.
 
-The `nng_stream_listener` object a handle to a listener, which creates streams by accepting incoming connection requests.
+The `nng_stream_listener` object is a handle to a listener, which creates streams by accepting incoming connection requests.
 In a BSD socket implementation, this is the entity responsible for doing {{i:`bind`}}, {{i:`listen`}} and {{i:`accept`}}.
 Normally a listener may be used to accept multiple, possibly many, concurrent connections.
 
@@ -153,13 +153,13 @@ nng_err nng_stream_listener_alloc(nng_stream_listener **lstenerp, const char *ur
 nng_err nng_stream_listener_alloc_url(nng_stream_listener **listenerp, const nng_url *url);
 ```
 
-The {{i:`nng_stream_dialer_alloc`}} and {{i:`nng_stream_dialer_alloc_url`}} functions create a stream dialer, associated the
+The {{i:`nng_stream_dialer_alloc`}} and {{i:`nng_stream_dialer_alloc_url`}} functions create a stream dialer associated with the
 {{i:URL}} specified by _url_ represented as a string, or as an [`nng_url`] object, respectively. The dialer is returned in the location
-_dialerp_ references.
+referenced by _dialerp_.
 
-The {{i:`nng_stream_listener_alloc`}} and {{i:`nng_stream_listener_alloc_url`}} functions create a stream listener, associated the
+The {{i:`nng_stream_listener_alloc`}} and {{i:`nng_stream_listener_alloc_url`}} functions create a stream listener associated with the
 URL specified by _url_ represented as a string, or as an [`nng_url`] object, respectively. The listener is returned in the location
-_listenerp_ references.
+referenced by _listenerp_.
 
 ### Example 1: Creating a TCP Listener
 
@@ -186,11 +186,11 @@ preventing it from creating new connections.
 This will generally include closing any underlying file used for creating such connections.
 However, some requests may still be pending when this function returns, as it does not wait for the shutdown to complete.
 
-The {{i:`nng_stream_dialer_stop`}} and {{i:`nng_stream_listener_stop`}} functions performs the same action,
+The {{i:`nng_stream_dialer_stop`}} and {{i:`nng_stream_listener_stop`}} functions perform the same action,
 but also wait until all outstanding requests are serviced, and the _dialer_ or _listener_ is completely stopped.
-Because they blocks, these functions must not be called in contexts where blocking is not allowed.
+Because they block, these functions must not be called in contexts where blocking is not allowed.
 
-The {{i:`nng_stream_dialer_free`}} and {{i:`nng_stream_listener_free`}} function performs the same action as
+The {{i:`nng_stream_dialer_free`}} and {{i:`nng_stream_listener_free`}} functions perform the same action as
 `nng_stream_dialer_stop` or `nng_stream_listener_stop`, but also deallocates the _dialer_ or _listener_, and any associated resources.
 
 > [!TIP]
@@ -203,7 +203,7 @@ The {{i:`nng_stream_dialer_free`}} and {{i:`nng_stream_listener_free`}} function
 void nng_stream_dialer_dial(nng_stream_dialer *dialer, nng_aio *aio);
 ```
 
-The {{i:`nng_stream_dialer_dial`}} initiates an outgoing connection asynchronously, using the [`nng_aio`] _aio_.
+The {{i:`nng_stream_dialer_dial`}} function initiates an outgoing connection asynchronously, using the [`nng_aio`] _aio_.
 If it successfully establishes a connection, it creates an [`nng_stream`], which can be obtained as the first
 output result on _aio_ using the [`nng_aio_get_output`] function with index zero.
 
@@ -227,7 +227,7 @@ nng_aio_alloc(&aio, NULL, NULL);
 
 // make a single outbound connection
 nng_stream_dialer_dial(dialer, aio);
-nng_aio_wait(aio); // wait for the asynch operation to complete
+nng_aio_wait(aio); // wait for the asynchronous operation to complete
 if (nng_aio_result(aio) != 0) {
     // ... handle the error
 }
@@ -241,9 +241,9 @@ nng_err nng_stream_listener_listen(nng_stream_listener *listener);
 void nng_stream_listener_accept(nng_stream_listener *listener, nng_aio *aio);
 ```
 
-Accepting incoming connections is performed in two steps. The first step, {{i:`nng_stream_listener_listen`}} is to setup for
+Accepting incoming connections is performed in two steps. The first step, {{i:`nng_stream_listener_listen`}}, is to set up
 listening. For a TCP implementation of this, for example, this would perform the `bind` and the `listen` steps. This will bind
-to the address represented by the URL that was specific when the listener was created with [`nng_stream_listener_alloc`].
+to the address represented by the URL that was specified when the listener was created with [`nng_stream_listener_alloc`].
 
 In the second step, {{i:`nng_stream_listener_accept`}} accepts an incoming connection on _listener_ asynchronously, using the [`nng_aio`] _aio_.
 If an incoming connection is accepted, it will be represented as an [`nng_stream`], which can be obtained from the _aio_ as the first
@@ -269,7 +269,7 @@ if (nng_stream_listener_listen(listener)) {
 
 // now accept a single incoming connection as a stream object
 nng_stream_listener_accept(l, aio);
-nng_aio_wait(aio); // wait for the asynch operation to complete
+nng_aio_wait(aio); // wait for the asynchronous operation to complete
 if (nng_aio_result(aio) != 0) {
     // ... handle the error
 }

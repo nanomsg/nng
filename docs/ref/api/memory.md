@@ -2,7 +2,7 @@
 
 Managing {{i:memory}} and {{i:allocations}} is something that every C program has to deal with.
 In the case of _NNG_, it can be more complicated because the underlying platform
-code can provide different allocators that might not be compatible with the use
+code can provide different allocators that might not be compatible with the
 system allocator used by `malloc` and `free`.
 
 ## Allocate Memory

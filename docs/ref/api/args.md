@@ -123,7 +123,7 @@ same element of _argv_, or may appear in the next _argv_ element.
 ### Prefix Matching
 
 When using long options, the parser will match if it is equal to a prefix
-of the `a_name` member of a option specification, provided that it do so
+of the `a_name` member of an option specification, provided that it does so
 unambiguously (meaning it must not match any other option specification.)
 
 ## Example

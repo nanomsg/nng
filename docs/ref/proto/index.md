@@ -1,7 +1,7 @@
 # Protocols
 
 {{hi:protocol}}
-The Scalability Protocols are a principally a collection of common networking
+The Scalability Protocols are principally a collection of common networking
 patterns found in applications.
 
 The following patterns are included:
@@ -9,7 +9,7 @@ The following patterns are included:
 ## Request - Reply
 
 The {{i:request/reply pattern}} is made up of the [_REQ_][req] and [_REP_][rep] protocols.
-This most often used when implementing RPC-like services, where
+This is most often used when implementing RPC-like services, where
 a given request is matched by a single reply.
 
 ## Pipeline

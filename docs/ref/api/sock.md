@@ -12,7 +12,7 @@ filtering subscriptions, or automatically retrying requests.
 typedef struct nng_socket_s nng_socket;
 ```
 
-The {{i:`nng_socket`}} structure represents socket. This is a handle, and
+The {{i:`nng_socket`}} structure represents a socket. This is a handle, and
 the members of it are opaque. However, unlike a pointer, it is usually
 passed by value.
 
@@ -42,7 +42,7 @@ protocol identifier for the socket's protocol, and of the protocol peers will us
 communicating with the socket.
 
 The {{i:`nng_socket_proto_name`}} and {{i:`nng_socket_peer_name`}} functions provide the ASCII
-names of the socket's protocol, and of the protocol peers of the socket use.
+names of the socket's protocol, and of the protocol peers of the socket will use.
 The value stored in _name_ is a fixed string located in program text, and must not be freed
 or altered. It is guaranteed to remain valid while this library is present.
 
@@ -326,7 +326,7 @@ The following options are available for many protocols, and always use the same 
 > [!NOTE]
 > The `NNG_OPT_RECONNMAXT`, `NNG_OPT_RECONNMINT`, and `NNG_OPT_RECVMAXSZ` options are just the initial defaults that [dialers][dialer]
 > (and for `NNG_OPT_RECVMAXSZ` also [listeners][listener])
-> will use. After the dialer or listener is created, changes to the socket's value will have no affect on that dialer or listener.
+> will use. After the dialer or listener is created, changes to the socket's value will have no effect on that dialer or listener.
 
 > [!NOTE]
 > `NNG_OPT_RECVMAXSZ` should be configured before creating dialers or
@@ -373,7 +373,7 @@ were available in previous versions of NNG.
 > These functions are not compatible with [contexts][context].
 
 > [!NOTE]
-> The file descriptors supplied by these functions is not used for transporting message data.
+> The file descriptors supplied by these functions are not used for transporting message data.
 > The only valid use of these file descriptors is for polling for the ability to send or receive
 > messages on the socket.
 

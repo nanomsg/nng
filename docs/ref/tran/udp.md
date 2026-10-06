@@ -87,13 +87,13 @@ packet without requiring fragmentation and reassembly.
 
 For Ethernet without jumbo frames, this typically means an {{i:MTU}} of a little
 less than 1500 bytes. (Specifically, 1452, which allows 28 bytes for IPv4 and UDP,
-and 20 bytes for the this transport. Reduce by an additional 20 bytes for IPv6.)
+and 20 bytes for this transport. Reduce by an additional 20 bytes for IPv6.)
 
 Other link layers may have different MTUs, however IPv6 requires a minimum MTU of 1280,
 which after deducting 48 bytes for IPv6 and UDP headers, and 20 bytes for our transport
 header, leaves 1212 bytes for user data. If additional allowances are made for SP protocol
 headers with a default TTL of 8 (resulting in 72 additional bytes for route information),
-the final user accessible payload will be 1140 bytes. Thus this can be likely be viewed
+the final user accessible payload will be 1140 bytes. Thus this can likely be viewed
 as a safe maximum to employ for SP payload data across all transports.
 
 The maximum message size is negotiated as part of establishing a peering relationship,

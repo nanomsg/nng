@@ -16,8 +16,7 @@ The _PUB_ protocol is the publisher side, and the
 > Thus, this pattern should not be used in an attempt to reduce bandwidth
 > consumption.
 
-The topics that subscribers subscribe to is just the first part of
-the message body.
+The topic for a given message is just the first leading bytes of the message body.
 Applications should construct their messages accordingly.
 
 ## Socket Operations

@@ -167,7 +167,7 @@ of type [`NNG_STAT_COUNTER`], [`NNG_STAT_LEVEL`], or [`NNG_STAT_ID`].
 If _stat_ is not one of these types, then it returns zero.
 
 The {{i:`nng_stat_bool`}} function returns the Boolean value (either `true` or `false`) for the statistic _stat_ of
-type [`NNG_STAT_BOOLEAN`]. If the statistics is not of this type, then it returns `false`.
+type [`NNG_STAT_BOOLEAN`]. If the statistic is not of this type, then it returns `false`.
 
 The {{i:`nng_stat_string`}} function returns a pointer to a string value for the statistic _stat_,
 of type [`NNG_STAT_STRING`]. This string will remain valid until the snapshot that
@@ -197,7 +197,7 @@ uint64_t nng_stat_timestamp(const nng_stat *stat);
 ```
 
 Statistics have a timestamp indicating when the value was sampled,
-obtained via {{i:`nng_stat_timestamp`}}. The timestamp is given in
+obtained via {{i:`nng_stat_timestamp`}}. The timestamp is given
 in milliseconds since a reference time, and the reference time used
 here is the same reference time used for [`nng_clock`].
 

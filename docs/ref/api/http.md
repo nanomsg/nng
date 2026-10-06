@@ -240,7 +240,7 @@ If a header was found, then it returns `true`, and sets _keyp_ and _valuep_ to v
 the header name and value. It also updates _next_, which should be used for the next iteration.
 
 Once `nng_http_next_header` returns `false`, further calls with the same parameters will continue to do so.
-The scan can be rest by setting _next_ to `NULL`.
+The scan can be reset by setting _next_ to `NULL`.
 
 ### Modifying Headers
 
@@ -251,13 +251,13 @@ void nng_http_del_header(nng_http *conn, const char *key);
 ```
 
 The {{i:`nng_http_add_header`}}, {{i:`nng_http_set_header`}}, and {{i:`nng_http_del_header`}} functions are
-used to add a modify either the request or response headers for _conn_ prior to sending to the connected peer on _conn_.
+used to add or modify either the request or response headers for _conn_ prior to sending to the connected peer on _conn_.
 
 Thus, if the _conn_ is a client connection created by [`nng_http_client_connect`], then the request headers are modified.
 Conversely, if it is a connection created by an HTTP server and used in a callback function, then the response headers are modified.
 
 The `nng_http_add_header` function adds a header with the name _key_, and the value _val_, to the list of headers.
-In so doing, it may bring collapse multiple headers with the same name into a comma separated list, following
+In so doing, it may collapse multiple headers with the same name into a comma-separated list, following
 the syntax specified in RFC 9110. The function may return [`NNG_ENOMEM`], [`NNG_EMSGSIZE`], or [`NNG_EINVAL`].
 
 The `nng_http_set_header` function adds the header if it does not already exist, but replaces any and all previously existing
@@ -278,7 +278,7 @@ void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
 
 The {{i:`nng_http_get_data`}} obtains the most recently received request or
 response body. This will be `NULL` if the content has not been retrieved
-properly yet, or if the peer did not any content. (Some requests are defined
+properly yet, or if the peer did not send any content. (Some requests are defined
 to never have body content, such as "HEAD".)
 
 ### Storing Body Content
@@ -315,9 +315,9 @@ void nng_http_close(nng_http *conn);
 ```
 
 The {{i:`nng_http_close`}} function closes the supplied HTTP connection _conn_,
-including any disposing of any underlying file descriptors or related resources.
+including disposal of any underlying file descriptors or related resources.
 
-Once this function, no further access to the _conn_ structure may be made.
+Once this function returns, no further access to the _conn_ structure may be made.
 
 ### Reset Connection State
 
@@ -326,7 +326,7 @@ void nng_http_reset(nng_http *conn);
 ```
 
 The {{i:`nng_http_reset`}} function resets the request and response state of the
-the connection _conn_, so that it is just as if it had been freshly created with
+connection _conn_, so that it is just as if it had been freshly created with
 [`nng_http_client_connect`] or passed into a handler function for a server callback.
 
 The intended purpose of this function is to clear the object state before reusing the _conn_ for
@@ -945,7 +945,7 @@ create handlers pre-configured to act as static content servers for either a ful
 directory at _dirname_, or the single file at _filename_. These support the "GET" and "HEAD"
 methods, and the directory variant will dynamically generate `index.html` content based on
 the directory contents. These will also set the "Content-Type" if the file extension
-matches one of the built-in values already known. If the no suitable MIME type can be
+matches one of the built-in values already known. If no suitable MIME type can be
 determined, the content type is set to "application/octet-stream".
 
 ### Static Handler
@@ -1085,7 +1085,7 @@ exactly the value of the `Host` header sent by the client.
 
 The [`nng_http_local_address`] and [`nng_http_remote_address`] functions
 can be used to determine the local and remote addresses for an HTTP connection
-on the server side (in a handler) just like the can be for HTTP clients
+on the server side (in a handler), just as they can be for HTTP clients.
 This can be useful to provide different handling behaviors based on network identity.
 
 ### Handling an Entire Tree

@@ -35,7 +35,7 @@ when the operation is complete (whether successfully or not).
 This callback will be executed exactly once.
 
 The asynchronous I/O framework also supports [cancellation][`nng_aio_cancel`] of
-operations that are already in progress as well setting a maximum
+operations that are already in progress as well as setting a maximum
 [timeout][`nng_aio_set_timeout`] for them to complete.
 
 It is also possible to initiate an asynchronous operation, and [wait][`nng_aio_wait`] for it to
@@ -68,10 +68,10 @@ void nng_aio_free(nng_aio *aio);
 void nng_aio_reap(nng_aio *aio);
 ```
 
-The {{i:`nng_aio_free`}} handle destroys the handle _aio_, waiting for any operations
+The {{i:`nng_aio_free`}} function destroys the handle _aio_, waiting for any operations
 and associated callbacks to complete before doing so.
 
-The {{i:`nng_aio_reap`}} handle destroys the handle _aio_ asynchronously, using a _reaper_
+The {{i:`nng_aio_reap`}} function destroys the handle _aio_ asynchronously, using a _reaper_
 [thread] to do so. It does not wait for the object to be destroyed. Thus this function
 is safe to call from _aio_'s own callback.
 
@@ -102,7 +102,7 @@ The {{i:`nng_aio_cancel`}} function acts like `nng_aio_abort`, but uses the erro
 [`NNG_ECANCELED`]{{hi:`NNG_ECANCELED`}}.
 
 The {{i:`nng_aio_stop`}} function aborts the _aio_ operation with [`NNG_ESTOPPED`],
-and then waits the operation and any associated callback to complete.
+and then waits for the operation and any associated callback to complete.
 This function also marks _aio_ itself permanently stopped, so that any
 new operations scheduled by I/O providers using [`nng_aio_start`]
 return false. Thus this function should be used to teardown operations.
@@ -160,7 +160,7 @@ bool nng_aio_busy(nng_aio *aio);
 ```
 
 The {{i:`nng_aio_busy`}} function returns `true` if the _aio_ is currently busy performing an
-operation or is executing a completion callback. Otherwise it return `false`.
+operation or is executing a completion callback. Otherwise it returns `false`.
 This is the same test used internally by [`nng_aio_wait`].
 
 > [!IMPORTANT]
@@ -193,7 +193,7 @@ The changes made by it to the _aio_ do not persist across operations.
 
 ### Example 1: Waiting for An Operation
 
-One of easiest ways to use this function is with [`nng_aio_wait`]. (In fact, the [`nng_sendmsg`] and
+One of the easiest ways to use this function is with [`nng_aio_wait`]. (In fact, the [`nng_sendmsg`] and
 [`nng_recvmsg`] family of functions do this internally.) For example:
 
 ```c
@@ -281,7 +281,7 @@ A maximum of four (4) `nng_iov` members may be supplied.
 
 > [!TIP]
 > Most functions using `nng_iov` do not guarantee to transfer all of the data that they
-> are requested to. To be sure that correct amount of data is transferred, as well as to
+> are requested to. To be sure that the correct amount of data is transferred, as well as to
 > start an attempt to complete any partial transfer, check the amount of data transferred by
 > calling [`nng_aio_count`].
 
@@ -344,7 +344,7 @@ vectors, where data to be transferred is either gathered from multiple separate 
 scattered into separate regions of memory. For example a message may have a header located at one location
 in memory, and a payload located in another.
 
-The {{i:`nng_aio_set_iov`}} function configures the _aio_ to use _nio_ separate segments, described by
+The {{i:`nng_aio_set_iov`}} function configures the _aio_ to use _niov_ separate segments, described by
 the elements in _iov_. For each of these, the segment of size _iov_len_ located at _iov_buf_ will be used.
 
 The elements of _iov_ will be copied into _aio_, so the vector may be located
@@ -381,7 +381,7 @@ The `nng_aio_start` function also registers the cancellation function _fn_ and
 associated argument _arg_ with the operation. This allows the operation to be canceled.
 
 > [!IMPORTANT]
-> This function must not be called on an _aio_ that is already has an operation in progress.
+> This function must not be called on an _aio_ that already has an operation in progress.
 
 If _fn_ is `NULL`, then the operation cannot be canceled.
 

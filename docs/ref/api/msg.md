@@ -85,7 +85,7 @@ is at least _capacity_ bytes. Use of this function to ensure the total anticipat
 capacity is present in the message may help prevent many small allocations.
 
 Both `nng_msg_realloc` and `nng_msg_reserve` return zero on success, or may return
-[`NNG_ENOMEM`] if insufficient memory exists to preform allocation.
+[`NNG_ENOMEM`] if insufficient memory exists to perform allocation.
 
 > [!IMPORTANT]
 > Any pointers to message content obtained before a call to `nng_msg_realloc` or
@@ -131,13 +131,13 @@ message.
 
 Use of the typed versions, ending in suffixes `_u16`, `_u32`, and `_u64` allows
 for unsigned integers to be appended directly. The integers are encoded in network byte order, with
-the most significant byte appearing first. The message body will by two, four, or eight
+the most significant byte appearing first. The message body will be two, four, or eight
 bytes accordingly.
 
-Data may inserted before the rest of the message body by using the {{i:`nng_msg_insert`}} functions.
+Data may be inserted before the rest of the message body by using the {{i:`nng_msg_insert`}} functions.
 This will attempt to use "headroom" in the message to avoid a data copy.
-Otherwise they are like the `nng_msg_append` functions except that the put the data in front
-of the messages instead of at the end.
+Otherwise they are like the `nng_msg_append` functions except that they place the data in front
+of the message instead of at the end.
 
 > [!TIP]
 > Message headroom is limited, so `nng_msg_insert` is best used sparingly.
@@ -158,13 +158,13 @@ int nng_msg_trim_u32(nng_msg *msg, uint32_t *val32);
 int nng_msg_trim_u64(nng_msg *msg, uint64_t *val64);
 ```
 
-The {{i:`nng_msg_chop`}} functions remove data from the end of the body of message _msg_,
+The {{i:`nng_msg_chop`}} functions remove data from the end of the body of the message _msg_,
 reducing the message length by either _size_, or the appropriate value size.
 
-The {{i:`nng_msg_trim`}} functions remove data from the beginning of the message body of _msg_.
+The {{i:`nng_msg_trim`}} functions remove data from the beginning of the message body of _msg_,
 but are otherwise just like the `nng_msg_chop` functions.
 
-If the message is not big enough to remove requisite amount of bytes, these functions
+If the message is not big enough to remove the requisite amount of bytes, these functions
 return `NNG_EINVAL`. Otherwise they return zero.
 
 Additionally, functions with typed suffixes (`_u16`, `_u32`, `_u64`) decode the data and return it
@@ -237,7 +237,7 @@ The {{i:`nng_msg_header_trim`}} functions remove data from the beginning of the 
 and the {{i:`nng_msg_header_chop`}} functions remove data from the end of the message header.
 
 These functions act just like the [`nng_msg_trim`] and [`nng_msg_chop`] functions,
-except that they operate the message header rather than the message body.
+except that they operate on the message header rather than the message body.
 
 ## Message Pipe
 
