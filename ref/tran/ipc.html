@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0df1525f.js";
+            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -179,19 +179,15 @@
 <p>The <a name="a001"></a><em>ipc</em> transport<a name="a002"></a> provides communication support between
 sockets within different processes on the same host.
 For POSIX platforms, this is implemented using <a name="a003"></a>UNIX domain sockets.
-For Windows, this is implemented using Windows <a name="a004"></a>named pipes.  Windows
-also supports the related <a name="a005"></a><code>unix://</code> scheme, which uses Windows
-<a name="a006"></a>AF_UNIX sockets.
+Windows uses <a name="a004"></a>AF_UNIX sockets when they are available.
 Other platforms may have different implementation strategies.</p>
 <h3 id="uri-formats"><a class="header" href="#uri-formats">URI Formats</a></h3>
 <h4 id="traditional-names"><a class="header" href="#traditional-names">Traditional Names</a></h4>
-<p>This transport uses URIs using the scheme <a name="a007"></a><code>ipc://</code>, followed by a path
-name in the file system where the socket or named pipe should be created.</p>
+<p>This transport uses URIs using the scheme <a name="a005"></a><code>ipc://</code>, followed by a path
+name in the file system where the UNIX domain socket should be created.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
-<p>On Windows, all names are prefixed by <code>\\.\pipe\</code> and do not
-reside in the normal file system.
-On POSIX platforms, the path is taken literally, and is relative to
+<p>On POSIX platforms, the path is taken literally, and is relative to
 the current directory, unless it begins with <code>/</code>, in which case it is
 relative to the root directory.</p>
 </blockquote>
@@ -213,18 +209,23 @@ This is because legacy versions of <em>nanomsg</em> cannot express URLs
 longer than 128 bytes, including the <code>ipc://</code> prefix.</p>
 </blockquote>
 <h4 id="unix-aliases"><a class="header" href="#unix-aliases">UNIX Aliases</a></h4>
-<p>On POSIX systems, the <a name="a008"></a><code>unix://</code> scheme is an alias for <code>ipc://</code> and can
-be used interchangeably.  On Windows, it instead selects the AF_UNIX transport;
-<code>ipc://</code> continues to select named pipes.<sup class="footnote-reference" id="fr-ipc_unix-1"><a href="#footnote-ipc_unix">1</a></sup></p>
+<p>The <a name="a006"></a><code>unix://</code> scheme is an alias for <code>ipc://</code> and can be used
+interchangeably wherever UNIX domain sockets are supported.</p>
 <p>On Windows, the <code>unix://</code> path is a UTF-8 Win32 pathname (for example,
 <code>unix://C:\Temp\nng.sock</code>) and is limited to 107 bytes plus its final <code>NUL</code>.
 Windows AF_UNIX streams support <a href="../tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, but do not provide
 POSIX user or group credentials.
-AF_UNIX requires Windows build 17063 or later; on older builds, <code>unix://</code>
-operations fail because <code>WSASocket(AF_UNIX, ...)</code> returns <code>WSAEAFNOSUPPORT</code>.</p>
+AF_UNIX requires Windows build 17063 or later; on older builds, <code>ipc://</code> and
+<code>unix://</code> operations fail because <code>WSASocket(AF_UNIX, ...)</code> returns
+<code>WSAEAFNOSUPPORT</code>.</p>
+<h4 id="windows-named-pipes"><a class="header" href="#windows-named-pipes">Windows Named Pipes</a></h4>
+<p>On Windows, the <a name="a007"></a><code>winpipe://</code> scheme selects the legacy named-pipe
+transport. Names are prefixed by <code>\\.\pipe\</code> and do not reside in the normal
+file system. Use this scheme when compatibility with existing Windows
+<code>ipc://</code> named-pipe users is required.</p>
 <h4 id="abstract-names"><a class="header" href="#abstract-names">Abstract Names</a></h4>
-<p>On Linux, this transport also can support <a name="a009"></a>abstract sockets.
-Abstract sockets use a URI-encoded name after the <a name="a010"></a><code>abstract://</code> scheme, which allows arbitrary values to be conveyed
+<p>On Linux, this transport also can support <a name="a008"></a>abstract sockets.
+Abstract sockets use a URI-encoded name after the <a name="a009"></a><code>abstract://</code> scheme, which allows arbitrary values to be conveyed
 in the path, including embedded <code>NUL</code> bytes.
 For example, the name <code>"a\0b"</code> would be represented as <code>abstract://a%00b</code>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -238,7 +239,7 @@ can be made arbitrarily small by appending additional random values.</p>
 <p>Abstract sockets do not have any representation in the file system, and are automatically freed by
 the system when no longer in use.</p>
 <p>Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
-of the peer with <a href="../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and similar options.<sup class="footnote-reference" id="fr-peer_random-1"><a href="#footnote-peer_random">2</a></sup></p>
+of the peer with <a href="../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and similar options.<sup class="footnote-reference" id="fr-peer_random-1"><a href="#footnote-peer_random">1</a></sup></p>
 <h3 id="socket-address"><a class="header" href="#socket-address">Socket Address</a></h3>
 <p>When using an <a href="../api/sockaddr.html#socket-addresses"><code>nng_sockaddr</code></a> structure,
 the actual structure is of type <a href="../api/sockaddr.html#ipc-addresses"><code>nng_sockaddr_ipc</code></a>,
@@ -264,15 +265,15 @@ where supported by the underlying platform.</p>
 </table>
 </div>
 <h3 id="other-configuration-parameters"><a class="header" href="#other-configuration-parameters">Other Configuration Parameters</a></h3>
-<p>On Windows, an <code>ipc://</code> named-pipe listener can use
+<p>On Windows, a <code>winpipe://</code> named-pipe listener can use
 <a href="../api/endpoint.html#windows-security-descriptors"><code>nng_listener_set_security_descriptor</code></a> to control access.</p>
 <p>The POSIX owner and group options are applied with <code>chown(2)</code> after binding.
 Because that operation generally requires elevated privilege, failure to apply
 either value does not prevent the listener from starting.  They are ignored for
 abstract sockets, which have no file-system representation.  On Windows, use a
-security descriptor to control access to named pipes.  The Windows AF_UNIX
-(<code>unix://</code>) implementation uses its containing directory’s ACL; POSIX owner,
-group, and permission options are not supported.</p>
+security descriptor to control access to <code>winpipe://</code> named pipes. The Windows
+AF_UNIX (<code>ipc://</code> or <code>unix://</code>) implementation uses its containing directory’s
+ACL; POSIX owner, group, and permission options are not supported.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -287,10 +288,6 @@ group, and permission options are not supported.</p>
 <!-- Concept index -->
 <hr>
 <ol class="footnote-definition">
-<li id="footnote-ipc_unix">
-<p>This scheme distinguishes the existing named-pipe transport from the
-AF_UNIX transport on Windows. <a href="#fr-ipc_unix-1">↩</a></p>
-</li>
 <li id="footnote-peer_random">
 <p>This property makes it important that names be chosen randomly to
 prevent unauthorized access, or that checks against the peer credentials are made, or ideally, both. <a href="#fr-peer_random-1">↩</a></p>

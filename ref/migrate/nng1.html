@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0df1525f.js";
+            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -337,6 +337,17 @@ removed as well.</p>
 <h2 id="ipc-option-type-changes"><a class="header" href="#ipc-option-type-changes">IPC Option Type Changes</a></h2>
 <p>The types of <a href="../tran/ipc.html#NNG_OPT_PEER_GID"><code>NNG_OPT_PEER_GID</code></a>, <a href="../tran/ipc.html#NNG_OPT_PEER_PID"><code>NNG_OPT_PEER_PID</code></a>, <a href="../tran/ipc.html#NNG_OPT_PEER_UID"><code>NNG_OPT_PEER_UID</code></a>, and <a href="../tran/ipc.html#NNG_OPT_PEER_ZONEID"><code>NNG_OPT_PEER_ZONEID</code></a>
 have changed from <code>uint64_t</code> to <code>int</code>. The underlying platforms all use 32-bit quantities for these.</p>
+<h2 id="windows-ipc-scheme-changes"><a class="header" href="#windows-ipc-scheme-changes">Windows IPC Scheme Changes</a></h2>
+<p>On Windows, legacy NNG, nanomsg, and mangos applications use <code>ipc://</code> for
+Windows named pipes. Although nanomsg 1.3 also supports <code>unix://</code>, its
+<code>ipc://</code> scheme retains this named-pipe meaning. In NNG 2, <code>ipc://</code> uses AF_UNIX
+sockets and is equivalent to <code>unix://</code>. Consequently, a legacy application
+using <code>ipc://</code> cannot communicate with an NNG 2 application using the same URL
+on Windows.</p>
+<p>To retain the legacy named-pipe behavior, change Windows IPC URLs from
+<code>ipc://NAME</code> to <code>winpipe://NAME</code>. The <code>winpipe://</code> scheme is Windows-only and
+uses the same <code>\\.\pipe\NAME</code> named-pipe path as legacy <code>ipc://NAME</code>, so it
+can be used to interoperate with legacy applications.</p>
 <h2 id="option-functions"><a class="header" href="#option-functions">Option Functions</a></h2>
 <p>The previously deprecated <code>nng_pipe_getopt_xxx</code> family of functions is removed.
 Applications should use <code>nng_pipe_get</code> and related functions instead.</p>
@@ -532,9 +543,8 @@ reading it on a pipe, the value returned is the header sent by the remote peer.<
 with the functions <a href="../api/endpoint.html#windows-security-descriptors"><code>nng_listener_set_security_descriptor</code></a> and
 [<code>nng_stream_listener_set_security_descriptor</code>].</p>
 <p>Security descriptor support is only relevant to Windows,
-and is presently only supported for IPC when Named Pipes are used.
-Planned future changes to switch to UNIX domain sockets may eliminate
-support for security descriptors altogether in NNG.</p>
+and is supported only by the <code>winpipe://</code> named-pipe transport. It is not
+available for the AF_UNIX <code>ipc://</code> or <code>unix://</code> transports.</p>
 <h2 id="command-line-argument-parser-changes"><a class="header" href="#command-line-argument-parser-changes">Command Line Argument Parser Changes</a></h2>
 <p>The supplemental function <code>nng_opts_parse</code> and supporting definitions have moved.
 This functionality is now supplied by a header only library, available in <code>nng/args.h</code>.
