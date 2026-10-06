@@ -286,12 +286,44 @@ http_txn_finish_aios(http_txn *txn, int rv)
 	}
 }
 
+static bool
+http_client_parse_content_length(const char *str, uint64_t *sizep)
+{
+	uint64_t size = 0;
+
+	while ((*str == ' ') || (*str == '\t')) {
+		str++;
+	}
+
+	if ((*str < '0') || (*str > '9')) {
+		return (false);
+	}
+
+	for (; (*str >= '0') && (*str <= '9'); str++) {
+		uint64_t digit = (uint64_t) (*str - '0');
+		if (size > ((UINT64_MAX - digit) / 10)) {
+			return (false);
+		}
+		size = (size * 10) + digit;
+	}
+
+	while ((*str == ' ') || (*str == '\t')) {
+		str++;
+	}
+
+	if (*str != '\0') {
+		return (false);
+	}
+
+	*sizep = size;
+	return (true);
+}
+
 static void
 http_txn_cb(void *arg)
 {
 	http_txn       *txn = arg;
 	const char     *str;
-	char           *end;
 	nng_err         rv;
 	uint64_t        len;
 	nni_iov         iov;
@@ -350,8 +382,7 @@ http_txn_cb(void *arg)
 			return;
 		}
 
-		len = (uint64_t) strtoull(str, &end, 10);
-		if ((end == str) || (*end != '\0')) {
+		if (!http_client_parse_content_length(str, &len)) {
 			rv = NNG_EPROTO;
 			goto error;
 		}

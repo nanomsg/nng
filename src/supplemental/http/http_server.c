@@ -428,20 +428,28 @@ http_parse_content_length(const char *str, size_t *sizep)
 {
 	size_t size = 0;
 
-	if (*str == '\0') {
+	while ((*str == ' ') || (*str == '\t')) {
+		str++;
+	}
+
+	if ((*str < '0') || (*str > '9')) {
 		return (false);
 	}
-	for (; *str != '\0'; str++) {
-		size_t digit;
 
-		if ((*str < '0') || (*str > '9')) {
-			return (false);
-		}
-		digit = (size_t) (*str - '0');
+	for (; (*str >= '0') && (*str <= '9'); str++) {
+		size_t digit = (size_t) (*str - '0');
 		if (size > ((SIZE_MAX - digit) / 10)) {
 			return (false);
 		}
 		size = (size * 10) + digit;
+	}
+
+	while ((*str == ' ') || (*str == '\t')) {
+		str++;
+	}
+
+	if (*str != '\0') {
+		return (false);
 	}
 
 	*sizep = size;

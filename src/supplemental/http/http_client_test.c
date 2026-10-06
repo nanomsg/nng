@@ -674,18 +674,53 @@ test_http_chunk_parser_bad_trailer_cr(void)
 static void
 test_http_client_invalid_content_length(void)
 {
+	static const char *bad_responses[] = {
+		"HTTP/1.1 200 OK\r\nContent-Length: invalid_len\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: +5\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: -5\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: 5x\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: 1 2\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: 18446744073709551616\r\n\r\nhello\r\n",
+	};
+
+	for (size_t i = 0; i < sizeof(bad_responses) / sizeof(bad_responses[0]);
+	    i++) {
+		struct scripted_server srv;
+		nng_aio               *aio = NULL;
+		nng_http_client       *cli = NULL;
+		nng_http              *conn = NULL;
+		nng_url               *url = NULL;
+
+		scripted_server_start(&srv, &bad_responses[i], NULL, 1);
+		client_connect(srv.url, &url, &aio, &cli, &conn);
+
+		NUTS_PASS(nng_http_set_uri(conn, "/", NULL));
+		nng_http_transact(conn, aio);
+		nng_aio_wait(aio);
+		NUTS_FAIL(nng_aio_result(aio), NNG_EPROTO);
+
+		client_free(url, aio, cli, conn);
+		scripted_server_stop(&srv);
+	}
+}
+
+static void
+test_http_client_content_length_ows(void)
+{
 	static const char *response =
 	    "HTTP/1.1 200 OK\r\n"
 	    "Content-Type: text/plain\r\n"
-	    "Content-Length: invalid_len\r\n"
+	    "Content-Length:  \t 5 \t \r\n"
 	    "Connection: close\r\n"
 	    "\r\n"
-	    "hello\r\n";
+	    "hello";
 	struct scripted_server srv;
 	nng_aio               *aio = NULL;
 	nng_http_client       *cli = NULL;
 	nng_http              *conn = NULL;
 	nng_url               *url = NULL;
+	void                  *data;
+	size_t                 sz;
 
 	scripted_server_start(&srv, &response, NULL, 1);
 	client_connect(srv.url, &url, &aio, &cli, &conn);
@@ -693,7 +728,11 @@ test_http_client_invalid_content_length(void)
 	NUTS_PASS(nng_http_set_uri(conn, "/", NULL));
 	nng_http_transact(conn, aio);
 	nng_aio_wait(aio);
-	NUTS_FAIL(nng_aio_result(aio), NNG_EPROTO);
+	NUTS_PASS(nng_aio_result(aio));
+
+	nng_http_get_body(conn, &data, &sz);
+	NUTS_TRUE(sz == 5);
+	NUTS_TRUE(memcmp(data, "hello", 5) == 0);
 
 	client_free(url, aio, cli, conn);
 	scripted_server_stop(&srv);
@@ -704,6 +743,8 @@ NUTS_TESTS = {
 	{ "http client transact", test_http_client_transact },
 	{ "http client invalid content length",
 	    test_http_client_invalid_content_length },
+	{ "http client content length ows",
+	    test_http_client_content_length_ows },
 	{ "http client reuse", test_http_client_reuse },
 	{ "http client timeout", test_http_client_timeout },
 	{ "http client chunked", test_http_client_chunked },
