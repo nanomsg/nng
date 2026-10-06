@@ -286,12 +286,44 @@ http_txn_finish_aios(http_txn *txn, int rv)
 	}
 }
 
+static bool
+http_client_parse_content_length(const char *str, uint64_t *sizep)
+{
+	uint64_t size = 0;
+
+	while ((*str == ' ') || (*str == '\t')) {
+		str++;
+	}
+
+	if ((*str < '0') || (*str > '9')) {
+		return (false);
+	}
+
+	for (; (*str >= '0') && (*str <= '9'); str++) {
+		uint64_t digit = (uint64_t) (*str - '0');
+		if (size > ((UINT64_MAX - digit) / 10)) {
+			return (false);
+		}
+		size = (size * 10) + digit;
+	}
+
+	while ((*str == ' ') || (*str == '\t')) {
+		str++;
+	}
+
+	if (*str != '\0') {
+		return (false);
+	}
+
+	*sizep = size;
+	return (true);
+}
+
 static void
 http_txn_cb(void *arg)
 {
 	http_txn       *txn = arg;
 	const char     *str;
-	char           *end;
 	nng_err         rv;
 	uint64_t        len;
 	nni_iov         iov;
@@ -333,13 +365,29 @@ http_txn_cb(void *arg)
 			return;
 		}
 
-		if ((strcmp(nni_http_get_method(txn->conn), "HEAD") == 0) ||
-		    ((str = nni_http_get_header(
-		          txn->conn, "Content-Length")) == NULL) ||
-		    ((len = (uint64_t) strtoull(str, &end, 10)) == 0) ||
-		    (end == NULL) || (*end != '\0')) {
-			// If no content-length, or HEAD (which per RFC
-			// never transfers data), then we are done.
+		if (strcmp(nni_http_get_method(txn->conn), "HEAD") == 0) {
+			// HEAD requests never transfer data per RFC.
+			http_txn_finish_aios(txn, 0);
+			nni_mtx_unlock(&http_txn_lk);
+			http_txn_fini(txn);
+			return;
+		}
+
+		if ((str = nni_http_get_header(
+		          txn->conn, "Content-Length")) == NULL) {
+			// If no content-length, then we are done.
+			http_txn_finish_aios(txn, 0);
+			nni_mtx_unlock(&http_txn_lk);
+			http_txn_fini(txn);
+			return;
+		}
+
+		if (!http_client_parse_content_length(str, &len)) {
+			rv = NNG_EPROTO;
+			goto error;
+		}
+
+		if (len == 0) {
 			http_txn_finish_aios(txn, 0);
 			nni_mtx_unlock(&http_txn_lk);
 			http_txn_fini(txn);
