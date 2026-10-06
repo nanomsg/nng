@@ -385,8 +385,10 @@ http_txn_cb(void *arg)
 	}
 
 error:
-	http_txn_finish_aios(txn, rv);
+	// Close before completing the user aio, since the caller may free the
+	// connection as soon as the aio completes.
 	nni_http_conn_close(txn->conn);
+	http_txn_finish_aios(txn, rv);
 	nni_mtx_unlock(&http_txn_lk);
 	http_txn_fini(txn);
 }
