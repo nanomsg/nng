@@ -10,6 +10,7 @@
 #include "../testing/nuts.h"
 
 nng_init_params *nng_init_get_params(void);
+bool             nni_init_was_called(void);
 
 void
 test_init_param(void)
@@ -17,6 +18,15 @@ test_init_param(void)
 	nng_init_params *p;
 	p = nng_init_get_params();
 	NUTS_ASSERT(p != NULL);
+}
+
+void
+test_init_called(void)
+{
+	NUTS_TRUE(nni_init_was_called());
+	nng_fini();
+	NUTS_TRUE(nni_init_was_called());
+	NUTS_PASS(nng_init(NULL));
 }
 
 void
@@ -195,6 +205,7 @@ test_init_concurrent(void)
 
 NUTS_TESTS = {
 	{ "init parameter", test_init_param },
+	{ "init called", test_init_called },
 	{ "init zero resolvers", test_init_zero_resolvers },
 	{ "init one task thread", test_init_one_task_thread },
 	{ "init too many task threads", test_init_too_many_task_threads },

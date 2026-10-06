@@ -49,6 +49,7 @@ extern void nni_tls_sys_fini(void);
 #endif
 
 static nng_init_params init_params;
+static bool            init_called;
 
 unsigned int    init_count;
 nni_atomic_flag init_busy;
@@ -123,11 +124,18 @@ nng_init(const nng_init_params *params)
 
 	// following never fails
 	nni_sp_tran_sys_init();
+	init_called = true;
 
 	nng_log_notice(
 	    "NNG-INIT", "NNG library version %s initialized", nng_version());
 	nni_atomic_flag_reset(&init_busy);
 	return (rv);
+}
+
+bool
+nni_init_was_called(void)
+{
+	return (init_called);
 }
 
 // Undocumented, for test code only
