@@ -170,7 +170,7 @@ Status codes are defined by the IETF. Here are definitions that NNG provides for
 | `NNG_HTTP_STATUS_ALREADY_REPORTED`<a name="NNG_HTTP_STATUS_ALREADY_REPORTED"></a>               | 208  | Already Reported                | Used with WebDAV.                                     |
 | `NNG_HTTP_STATUS_IM_USED`<a name="NNG_HTTP_STATUS_IM_USED"></a>                                 | 226  | IM Used                         | Used with delta encodings, rarely supported.          |
 | `NNG_HTTP_STATUS_MULTIPLE_CHOICES`<a name="NNG_HTTP_STATUS_MULTIPLE_CHOICES"></a>               | 300  | Multiple Choices                | Multiple responses possible, client should choose.    |
-| `NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY`<a name="NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY"></a> | 301  | Moved Permanently               | Permanent redirection, may be saved by client.        |
+| `NNG_HTTP_STATUS_MOVED_PERMANENTLY`<a name="NNG_HTTP_STATUS_MOVED_PERMANENTLY"></a>             | 301  | Moved Permanently               | Permanent redirection, may be saved by client.        |
 | `NNG_HTTP_STATUS_FOUND`<a name="NNG_HTTP_STATUS_FOUND"></a>                                     | 302  | Found                           | Temporary redirection, client may switch to GET.      |
 | `NNG_HTTP_STATUS_SEE_OTHER`<a name="NNG_HTTP_STATUS_SEE_OTHER"></a>                             | 303  | See Other                       | Redirect, perhaps after a success POST or PUT.        |
 | `NNG_HTTP_STATUS_NOT_MODIFIED`<a name="NNG_HTTP_STATUS_NOT_MODIFIED"></a>                       | 304  | Not Modified                    | Resource not modified, client may use cached version. |
@@ -983,7 +983,7 @@ URI appended.
 
 > [!TIP]
 > Be sure to use the appropriate value for _status_.
-> Permanent redirection should use [`NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY`] (301)
+> Permanent redirection should use [`NNG_HTTP_STATUS_MOVED_PERMANENTLY`] (301)
 > and temporary redirections should use [`NNG_HTTP_STATUS_TEMPORARY_REDIRECT`] (307).
 > In REST APIs, using a redirection to supply the new location of an object
 > created with `POST` should use [`NNG_HTTP_STATUS_SEE_OTHER`] (303).

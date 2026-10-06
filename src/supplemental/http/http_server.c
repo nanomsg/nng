@@ -1577,7 +1577,7 @@ nni_http_handler_init_redirect(nni_http_handler **hpp, const char *uri,
 		return (NNG_ENOMEM);
 	}
 	if (status == 0) {
-		status = NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY;
+		status = NNG_HTTP_STATUS_MOVED_PERMANENTLY;
 	}
 	hr->code = status;
 
