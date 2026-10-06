@@ -52,7 +52,7 @@ replace it with [`nng_http_set_header`].
 ## Connection Object
 
 ```c
-typedef struct nng_http nng_http;
+typedef struct nng_http_conn nng_http;
 ```
 
 The {{i:`nng_http`}} object represents a single logical HTTP connection to the server.
@@ -102,7 +102,7 @@ or [`NNG_EINVAL`] if there is some other problem with the URI.
 > [!NOTE]
 > The _uri_ and _query_ must be already percent-encoded if necessary.
 
-The {{i:`nni_http_get_uri`}} function is used to obtain the URI that was previously set by `nng_http_set_uri`.
+The {{i:`nng_http_get_uri`}} function is used to obtain the URI that was previously set by `nng_http_set_uri`.
 If the URI is unset (such as for a freshly created connection), then it returns `NULL`. The returned value
 will have any query concatenated, for example "/api/get_user.cgi?name=garrett".
 
@@ -133,7 +133,7 @@ there is little need to use this, but there are some subtle semantic differences
 ```c
 typedef enum ... nng_http_status;
 nng_http_status nng_http_get_status(nng_http *conn);
-const char *nng_http_get_reason(nng_http_conn *conn);
+const char *nng_http_get_reason(nng_http *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 ```
 
@@ -170,7 +170,7 @@ Status codes are defined by the IETF. Here are definitions that NNG provides for
 | `NNG_HTTP_STATUS_ALREADY_REPORTED`<a name="NNG_HTTP_STATUS_ALREADY_REPORTED"></a>               | 208  | Already Reported                | Used with WebDAV.                                     |
 | `NNG_HTTP_STATUS_IM_USED`<a name="NNG_HTTP_STATUS_IM_USED"></a>                                 | 226  | IM Used                         | Used with delta encodings, rarely supported.          |
 | `NNG_HTTP_STATUS_MULTIPLE_CHOICES`<a name="NNG_HTTP_STATUS_MULTIPLE_CHOICES"></a>               | 300  | Multiple Choices                | Multiple responses possible, client should choose.    |
-| `NNG_HTTP_STATUS_MOVED_PERMANENTLY`<a name="NNG_HTTP_STATUS_MOVED_PERMANENTLY"></a>             | 301  | Moved Permanently               | Permanent redirection, may be saved by client.        |
+| `NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY`<a name="NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY"></a> | 301  | Moved Permanently               | Permanent redirection, may be saved by client.        |
 | `NNG_HTTP_STATUS_FOUND`<a name="NNG_HTTP_STATUS_FOUND"></a>                                     | 302  | Found                           | Temporary redirection, client may switch to GET.      |
 | `NNG_HTTP_STATUS_SEE_OTHER`<a name="NNG_HTTP_STATUS_SEE_OTHER"></a>                             | 303  | See Other                       | Redirect, perhaps after a success POST or PUT.        |
 | `NNG_HTTP_STATUS_NOT_MODIFIED`<a name="NNG_HTTP_STATUS_NOT_MODIFIED"></a>                       | 304  | Not Modified                    | Resource not modified, client may use cached version. |
@@ -273,10 +273,10 @@ The `nng_http_del_header` removes all headers with name _key_.
 ### Retrieving Body Content
 
 ```c
-void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
+void nng_http_get_body(nng_http *conn, void **datap, size_t *sizep);
 ```
 
-The {{i:`nng_http_get_data`}} obtains the most recently received request or
+The {{i:`nng_http_get_body`}} function obtains the most recently received request or
 response body. This will be `NULL` if the content has not been retrieved
 properly yet, or if the peer did not send any content. (Some requests are defined
 to never have body content, such as "HEAD".)
@@ -284,8 +284,8 @@ to never have body content, such as "HEAD".)
 ### Storing Body Content
 
 ```c
-void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
-void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
+void nng_http_set_body(nng_http *conn, void *data, size_t size);
+nng_err nng_http_copy_body(nng_http *conn, const void *data, size_t size);
 ```
 
 The {{i:`nng_http_set_body`}} function sets the outgoing body content to _data_,
@@ -385,7 +385,7 @@ This function is most useful when called from a handler function.
 ### Obtaining TLS Connection Details
 
 ```c
-nng_err nng_http_peer_cert(nng_http_conn *conn, nng_tls_cert **certp);
+nng_err nng_http_peer_cert(nng_http *conn, nng_tls_cert **certp);
 ```
 
 TODO: We need to document the cert API.
@@ -419,7 +419,7 @@ It is analogous to a [dialer] object used elsewhere in NNG, but it specifically 
 ### Create a Client
 
 ```c
-void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
+nng_err nng_http_client_alloc(nng_http_client **clientp, const nng_url *url);
 ```
 
 The {{i:`nng_http_client_alloc`}} allocates an HTTP client suitable for
@@ -878,7 +878,7 @@ rather than just a single element.
 ### Implementing a Handler
 
 ```c
-typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+typedef void (*nng_http_handler_func)(nng_http *conn, void *arg, nng_aio *aio);
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 ```
@@ -983,7 +983,7 @@ URI appended.
 
 > [!TIP]
 > Be sure to use the appropriate value for _status_.
-> Permanent redirection should use [`NNG_HTTP_STATUS_MOVED_PERMANENTLY`] (301)
+> Permanent redirection should use [`NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY`] (301)
 > and temporary redirections should use [`NNG_HTTP_STATUS_TEMPORARY_REDIRECT`] (307).
 > In REST APIs, using a redirection to supply the new location of an object
 > created with `POST` should use [`NNG_HTTP_STATUS_SEE_OTHER`] (303).
