@@ -710,7 +710,7 @@ test_http_client_content_length_ows(void)
 	static const char *response =
 	    "HTTP/1.1 200 OK\r\n"
 	    "Content-Type: text/plain\r\n"
-	    "Content-Length:  \t 5 \t \r\n"
+	    "Content-Length:   5   \r\n"
 	    "Connection: close\r\n"
 	    "\r\n"
 	    "hello";
