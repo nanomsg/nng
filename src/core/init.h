@@ -16,4 +16,8 @@
 // subsystems can call this to obtain a parameter value.
 nng_init_params *nni_init_get_params(void);
 
+// This is a one-way sanity check for public entry points.  It deliberately
+// remains true after nng_fini(), which does not make further use safe.
+bool nni_init_was_called(void);
+
 #endif // CORE_INIT_H

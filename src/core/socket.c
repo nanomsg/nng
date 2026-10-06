@@ -623,6 +623,8 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	nni_sock *s = NULL;
 	int       rv;
 
+	NNI_ASSERT(nni_init_was_called());
+
 	if ((rv = nni_sock_create(&s, proto)) != 0) {
 		return (rv);
 	}
