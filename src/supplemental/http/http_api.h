@@ -99,6 +99,7 @@ extern void *nni_http_conn_get_ctx(nni_http_conn *);
 extern nng_err nni_http_init(nng_http **, nng_stream *, bool);
 
 extern void nni_http_conn_close(nng_http *);
+extern void nni_http_conn_stop(nng_http *);
 extern void nni_http_conn_fini(nni_http_conn *);
 extern int  nni_http_conn_getopt(
      nng_http *, const char *, void *, size_t *, nni_type);
@@ -224,6 +225,7 @@ extern nng_err nni_http_server_error(nni_http_server *, nng_http *);
 // of the request structure.  (Some hijackers may keep the request for
 // further processing.)
 extern nng_err nni_http_hijack(nni_http_conn *);
+extern nng_err nni_http_hijack_stream(nni_http_conn *, nng_stream **);
 
 // nni_http_handler_init creates a server handler object, for the supplied
 // URI (path only) with the callback.

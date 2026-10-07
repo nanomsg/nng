@@ -94,6 +94,7 @@ struct nni_ws {
 	nni_aio          connaio; // connect aio
 	nni_aio         *useraio; // user aio, during HTTP negotiation
 	nng_http        *http;
+	nng_stream      *stream;
 	size_t           maxframe;
 	size_t           fragsize;
 	size_t           recvmax; // largest message size
@@ -565,7 +566,7 @@ ws_close_cb(void *arg)
 	// we are done, and its time to abort everything else.
 	nni_mtx_lock(&ws->mtx);
 
-	nni_http_conn_close(ws->http);
+	nng_stream_close(ws->stream);
 
 	while ((frame = nni_list_first(&ws->txq)) != NULL) {
 		nni_list_remove(&ws->txq, frame);
@@ -632,7 +633,7 @@ ws_start_write(nni_ws *ws)
 		iov[1].iov_buf = frame->buf;
 	}
 	nni_aio_set_iov(&ws->txaio, niov, iov);
-	nni_http_write_full(ws->http, &ws->txaio);
+	nng_stream_send(ws->stream, &ws->txaio);
 }
 
 static void
@@ -661,32 +662,6 @@ ws_write_cb(void *arg)
 		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
-	ws->txframe = NULL;
-
-	if (frame->op == WS_CLOSE) {
-		// If this was a close frame, we are done.
-		// No other messages may succeed..
-		ws->txframe = NULL;
-		ws_frame_fini(frame);
-		while ((frame = nni_list_first(&ws->txq)) != NULL) {
-			nni_list_remove(&ws->txq, frame);
-			if ((aio = frame->aio) != NULL) {
-				frame->aio = NULL;
-				nni_aio_list_remove(aio);
-				nni_aio_finish_error(aio, NNG_ECLOSED);
-				ws_frame_fini(frame);
-			}
-		}
-		if (ws->peer_closed) {
-			if (ws->wclose) { // could assert this?
-				ws->wclose = false;
-				nni_aio_finish(&ws->closeaio, 0, 0);
-			}
-		}
-		nni_mtx_unlock(&ws->mtx);
-		return;
-	}
-
 	aio = frame->aio;
 	if ((rv = nni_aio_result(&ws->txaio)) != 0) {
 		// if tx fails, we can't send a close frame either
@@ -698,7 +673,37 @@ ws_write_cb(void *arg)
 		}
 		ws_frame_fini(frame);
 		ws->closed = true;
-		nni_http_conn_close(ws->http);
+		nng_stream_close(ws->stream);
+		nni_mtx_unlock(&ws->mtx);
+		return;
+	}
+
+	nni_aio_iov_advance(&ws->txaio, nni_aio_count(&ws->txaio));
+	if (nni_aio_iov_count(&ws->txaio) != 0) {
+		nng_stream_send(ws->stream, &ws->txaio);
+		nni_mtx_unlock(&ws->mtx);
+		return;
+	}
+
+	ws->txframe = NULL;
+
+	if (frame->op == WS_CLOSE) {
+		// If this was a close frame, we are done.
+		// No other messages may succeed..
+		ws_frame_fini(frame);
+		while ((frame = nni_list_first(&ws->txq)) != NULL) {
+			nni_list_remove(&ws->txq, frame);
+			if ((aio = frame->aio) != NULL) {
+				frame->aio = NULL;
+				nni_aio_list_remove(aio);
+				nni_aio_finish_error(aio, NNG_ECLOSED);
+				ws_frame_fini(frame);
+			}
+		}
+		if (ws->peer_closed && ws->wclose) {
+			ws->wclose = false;
+			nni_aio_finish(&ws->closeaio, 0, 0);
+		}
 		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
@@ -856,7 +861,7 @@ ws_start_read(nni_ws *ws)
 	iov.iov_len = 2; // We want the first two bytes.
 	iov.iov_buf = frame->head;
 	nni_aio_set_iov(aio, 1, &iov);
-	nni_http_read_full(ws->http, aio);
+	nng_stream_recv(ws->stream, aio);
 }
 
 static void
@@ -1089,6 +1094,11 @@ ws_read_cb(void *arg)
 		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
+	if (nni_aio_iov_count(aio) != 0) {
+		nng_stream_recv(ws->stream, aio);
+		nni_mtx_unlock(&ws->mtx);
+		return;
+	}
 
 	if (frame->hlen == 0) {
 		frame->hlen   = 2;
@@ -1111,7 +1121,7 @@ ws_read_cb(void *arg)
 			iov.iov_buf = frame->head + 2;
 			iov.iov_len = frame->hlen - 2;
 			nni_aio_set_iov(aio, 1, &iov);
-			nni_http_read_full(ws->http, aio);
+			nng_stream_recv(ws->stream, aio);
 			nni_mtx_unlock(&ws->mtx);
 			return;
 		}
@@ -1201,7 +1211,7 @@ ws_read_cb(void *arg)
 			iov.iov_buf = frame->buf;
 			iov.iov_len = frame->len;
 			nni_aio_set_iov(aio, 1, &iov);
-			nni_http_read_full(ws->http, aio);
+			nng_stream_recv(ws->stream, aio);
 			nni_mtx_unlock(&ws->mtx);
 			return;
 		}
@@ -1297,7 +1307,9 @@ ws_fini(void *arg)
 
 	nni_mtx_unlock(&ws->mtx);
 
-	if (ws->http) {
+	if (ws->stream) {
+		nng_stream_free(ws->stream);
+	} else if (ws->http) {
 		nni_http_conn_fini(ws->http);
 	}
 
@@ -1431,6 +1443,9 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 			rv = NNG_EPROTO;
 			goto err;
 		}
+	}
+	if ((rv = nng_http_hijack_stream(ws->http, &ws->stream)) != 0) {
+		goto err;
 	}
 
 	// At this point, we are in business!
@@ -1700,9 +1715,14 @@ ws_handler(nng_http *conn, void *arg, nng_aio *aio)
 		    conn, &ws->hdrs.wsproto, "Sec-WebSocket-Protocol", proto);
 	}
 
+	if ((rv = nng_http_hijack_stream(conn, &ws->stream)) != 0) {
+		ws->http = NULL;
+		ws_reap(ws);
+		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+		goto err;
+	}
 	nni_list_append(&l->reply, ws);
 	nng_http_write_response(conn, &ws->httpaio);
-	(void) nni_http_hijack(conn);
 	nni_aio_set_output(aio, 0, NULL);
 	nni_aio_finish(aio, 0, 0);
 	nni_mtx_unlock(&l->mtx);
