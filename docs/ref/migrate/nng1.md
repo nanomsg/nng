@@ -459,10 +459,9 @@ is planned to provide coexistence between ZeroTier and the native stack's TCP/IP
 
 ## Abstract Autobinding No Longer Supported
 
-Because abstract IPC dialers do not support [`nng_dialer_bind`] or
-[`nng_stream_dialer_bind`], it is no longer possible to meaningfully use
-autobinding with abstract sockets on Linux. This is trivially worked around by
-using a large (say 128-bit) random integer as the name.
+It is no longer possible to meaningfully use autobinding with abstract sockets
+on Linux. This is trivially worked around by using a large (say 128-bit) random
+integer as the name.
 
 This can be done by using [`nng_random`] combined with `sprintf`, as the following example demonstrates:
 
