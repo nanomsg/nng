@@ -350,8 +350,8 @@ http_sconn_error(http_sconn *sc, nng_http_status err)
 	nni_http_write_res(sc->conn, &sc->txaio);
 }
 
-nng_err
-nni_http_hijack(nni_http_conn *conn)
+void
+nni_http_detach(nni_http_conn *conn)
 {
 	http_sconn *sc;
 
@@ -364,7 +364,6 @@ nni_http_hijack(nni_http_conn *conn)
 		sc->conn = NULL;
 		nni_mtx_unlock(&s->mtx);
 	}
-	return (NNG_OK);
 }
 
 static bool

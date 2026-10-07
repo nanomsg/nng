@@ -366,7 +366,6 @@
 [`nng_http_status`]: ../api/http.md#http-status
 [`nng_http_get_status`]: ../api/http.md#http-status
 [`nng_http_set_status`]: ../api/http.md#http-status
-[`nng_http_hijack`]: ../api/http.md#hijacking-connections
 [`nng_http_hijack_stream`]: ../api/http.md#hijacking-connections
 [`nng_http_get_header`]: ../api/http.md#retrieving-headers
 [`nng_http_next_header`]: ../api/http.md#retrieving-headers

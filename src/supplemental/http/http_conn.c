@@ -1699,7 +1699,7 @@ nni_http_hijack_stream(nni_http_conn *conn, nng_stream **streamp)
 	stream->stream.s_self_addr = http_stream_self_addr;
 	stream->stream.s_peer_cert = http_stream_peer_cert;
 
-	(void) nni_http_hijack(conn);
+	nni_http_detach(conn);
 	*streamp = &stream->stream;
 	return (NNG_OK);
 }

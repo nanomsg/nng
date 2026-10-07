@@ -214,17 +214,8 @@ extern nng_err nni_http_server_set_error_page(
 // of the res.  The res must have the status set first.
 extern nng_err nni_http_server_error(nni_http_server *, nng_http *);
 
-// nni_http_hijack is intended to be called by a handler that wishes to
-// take over the processing of the HTTP session -- usually to change protocols
-// (such as in the case of websocket).  The caller is responsible for obtaining
-// and disposal of the associated nni_http session.  Also, this completely
-// disassociates the http session from the server, so the server may be
-// stopped or destroyed without affecting the hijacked session.  Note also
-// that the hijacker will need to issue any HTTP reply itself.  Finally,
-// when a session is hijacked, the caller is also responsible for disposing
-// of the request structure.  (Some hijackers may keep the request for
-// further processing.)
-extern nng_err nni_http_hijack(nni_http_conn *);
+// nni_http_detach disassociates a connection from its HTTP server.
+extern void nni_http_detach(nni_http_conn *);
 extern nng_err nni_http_hijack_stream(nni_http_conn *, nng_stream **);
 
 // nni_http_handler_init creates a server handler object, for the supplied

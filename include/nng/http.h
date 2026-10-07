@@ -407,19 +407,6 @@ NNG_DECL nng_err nng_http_server_set_error_file(
 // nng_http_res_set_status.
 NNG_DECL nng_err nng_http_server_error(nng_http_server *, nng_http *);
 
-// nng_http_hijack is intended to be called by a handler that wishes to
-// take over the processing of the HTTP session -- usually to change protocols
-// (such as in the case of websocket).  The caller is responsible for the
-// final disposal of the associated nng_http.  Also, this completely
-// disassociates the http session from the server, so the server may be
-// stopped or destroyed without affecting the hijacked session.  Note also
-// that the hijacker will need to issue any HTTP reply itself.  Finally,
-// when a session is hijacked, the caller is also responsible for disposing
-// of the request structure.  (Some hijackers may keep the request for
-// further processing.)
-
-NNG_DECL nng_err nng_http_hijack(nng_http *);
-
 // nng_http_hijack_stream detaches the connection from its HTTP server, when
 // associated with one, and returns it as a byte stream.  The returned stream
 // owns the connection and preserves any data that the HTTP parser has already
