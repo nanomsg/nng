@@ -369,13 +369,6 @@ tcp_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_getopt(tcp_options, name, c, buf, szp, t));
 }
 
-static nng_err
-tcp_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	return (nni_setopt(tcp_options, name, c, buf, sz, t));
-}
-
 static void
 tcp_stop(void *arg)
 {
@@ -431,7 +424,6 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s, bool peer_pid_supported)
 	c->ops.s_send      = tcp_send;
 	c->ops.s_recv      = tcp_recv;
 	c->ops.s_get       = tcp_get;
-	c->ops.s_set       = tcp_set;
 	c->ops.s_peer_addr = tcp_peer_addr;
 	c->ops.s_self_addr = tcp_self_addr;
 

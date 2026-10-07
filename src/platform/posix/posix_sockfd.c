@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -424,13 +424,6 @@ sfd_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_getopt(sfd_options, name, c, buf, szp, t));
 }
 
-static nng_err
-sfd_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
-{
-	nni_sfd_conn *c = arg;
-	return (nni_setopt(sfd_options, name, c, buf, sz, t));
-}
-
 static const nng_sockaddr *
 sfd_addr(void *arg)
 {
@@ -461,7 +454,6 @@ nni_sfd_conn_alloc(nni_sfd_conn **cp, int fd)
 	c->stream.s_recv      = sfd_recv;
 	c->stream.s_send      = sfd_send;
 	c->stream.s_get       = sfd_get;
-	c->stream.s_set       = sfd_set;
 	c->stream.s_peer_addr = sfd_addr;
 	c->stream.s_self_addr = sfd_addr;
 

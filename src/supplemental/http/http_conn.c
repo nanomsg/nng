@@ -145,19 +145,6 @@ http_stream_get(
 	return (nni_http_conn_getopt(stream->conn, name, buf, szp, t));
 }
 
-static nng_err
-http_stream_set(
-    void *arg, const char *name, const void *buf, size_t sz, nni_type t)
-{
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(name);
-	NNI_ARG_UNUSED(buf);
-	NNI_ARG_UNUSED(sz);
-	NNI_ARG_UNUSED(t);
-
-	return (NNG_ENOTSUP);
-}
-
 static const nng_sockaddr *
 http_stream_peer_addr(void *arg)
 {
@@ -1694,7 +1681,6 @@ nni_http_hijack_stream(nni_http_conn *conn, nng_stream **streamp)
 	stream->stream.s_recv      = http_stream_recv;
 	stream->stream.s_send      = http_stream_send;
 	stream->stream.s_get       = http_stream_get;
-	stream->stream.s_set       = http_stream_set;
 	stream->stream.s_peer_addr = http_stream_peer_addr;
 	stream->stream.s_self_addr = http_stream_self_addr;
 	stream->stream.s_peer_cert = http_stream_peer_cert;

@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -420,13 +420,6 @@ static const nni_option ipc_conn_options[] = {
 };
 
 static nng_err
-ipc_set(void *arg, const char *nm, const void *val, size_t sz, nni_opt_type t)
-{
-	ipc_conn *c = arg;
-	return (nni_setopt(ipc_conn_options, nm, c, val, sz, t));
-}
-
-static nng_err
 ipc_get(void *arg, const char *nm, void *val, size_t *szp, nni_opt_type t)
 {
 	ipc_conn *c = arg;
@@ -462,7 +455,6 @@ nni_win_ipc_init(
 	c->stream.s_send      = ipc_send;
 	c->stream.s_recv      = ipc_recv;
 	c->stream.s_get       = ipc_get;
-	c->stream.s_set       = ipc_set;
 	c->stream.s_self_addr = ipc_addr;
 	c->stream.s_peer_addr = ipc_addr;
 

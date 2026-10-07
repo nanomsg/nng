@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -408,13 +408,6 @@ tcp_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 	return (nni_getopt(tcp_options, name, c, buf, szp, t));
 }
 
-static nng_err
-tcp_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
-{
-	nni_tcp_conn *c = arg;
-	return (nni_setopt(tcp_options, name, c, buf, sz, t));
-}
-
 int
 nni_posix_tcp_alloc(nni_tcp_conn **cp, nni_tcp_dialer *d, int fd)
 {
@@ -437,7 +430,6 @@ nni_posix_tcp_alloc(nni_tcp_conn **cp, nni_tcp_dialer *d, int fd)
 	c->stream.s_recv      = tcp_recv;
 	c->stream.s_send      = tcp_send;
 	c->stream.s_get       = tcp_get;
-	c->stream.s_set       = tcp_set;
 	c->stream.s_peer_addr = tcp_get_peer_addr;
 	c->stream.s_self_addr = tcp_get_self_addr;
 
