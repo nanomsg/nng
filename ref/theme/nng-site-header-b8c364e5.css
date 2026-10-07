@@ -1,0 +1,230 @@
+:root {
+  --nng-site-header-height: 52px;
+}
+
+@font-face {
+  font-family: "iconfont";
+  src: url("https://at.alicdn.com/t/font_2668178_gvizekc2vj.woff2?t=1627376597649") format("woff2");
+}
+
+.nn-header .iconfont {
+  font-family: "iconfont" !important;
+  font-size: 18px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.nn-header .icon-discord::before { content: "\e604"; }
+.nn-header .icon-doc::before { content: "\e603"; }
+.nn-header .icon-download::before { content: "\e690"; }
+.nn-header .icon-github::before { content: "\e616"; }
+
+body {
+  padding-top: var(--nng-site-header-height);
+}
+
+.nn-header {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  right: 0;
+  left: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #112d4e 0%, #171d41 100%);
+  font-family: Roboto, "Trebuchet MS", sans-serif;
+}
+
+.nn-header *,
+.nn-header *::before,
+.nn-header *::after {
+  box-sizing: border-box;
+}
+
+.nn-header-inner {
+  position: relative;
+  width: auto;
+  padding: 0 12px;
+  margin: 0 auto;
+}
+
+.nn-header .navbar {
+  display: flex;
+  align-items: stretch;
+  min-height: var(--nng-site-header-height);
+  background: transparent;
+}
+
+.nn-header .navbar-brand,
+.nn-header .navbar-menu,
+.nn-header .navbar-end {
+  display: flex;
+  align-items: stretch;
+}
+
+.nn-header .navbar-brand {
+  flex-shrink: 0;
+}
+
+.nn-header .navbar-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+}
+
+.nn-header a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.nn-header a:hover {
+  color: #3f72af;
+}
+
+.nn-header .navbar-item img.navbar-icon {
+  display: block;
+  width: 54px;
+  max-width: 100%;
+  height: 36px;
+  max-height: 100%;
+}
+
+.nn-header i.iconfont {
+  margin-right: 4px;
+}
+
+.nn-header .navbar-menu {
+  flex-grow: 1;
+  flex-shrink: 0;
+}
+
+.nn-header .navbar-start {
+  display: flex;
+  justify-content: flex-start;
+  margin-right: auto;
+}
+
+.nn-header .navbar-end {
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+.nn-header a.btn-download {
+  display: inline-block;
+  padding: 5px 12px;
+  color: #fff;
+  border-radius: 4px;
+  background: #3f72af;
+}
+
+.nn-header .navbar-burger {
+  display: none;
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0.5rem 0.75rem;
+  margin-left: auto;
+  color: #3f72af;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.nn-header .navbar-burger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  margin: 4px auto;
+  background-color: currentColor;
+}
+
+.nn-header .is-hidden-desktop {
+  display: none;
+}
+
+#mdbook-sidebar {
+  top: var(--nng-site-header-height);
+}
+
+#mdbook-menu-bar.sticky,
+#mdbook-menu-bar-hover-placeholder:hover + #mdbook-menu-bar,
+#mdbook-menu-bar:hover,
+html.sidebar-visible #mdbook-menu-bar,
+#mdbook-menu-bar-hover-placeholder {
+  top: var(--nng-site-header-height) !important;
+}
+
+:target {
+  scroll-margin-top: calc(var(--nng-site-header-height) + var(--menu-bar-height) + 0.5em);
+}
+
+@media print {
+  .nn-header {
+    display: none;
+  }
+
+  body {
+    padding-top: 0;
+  }
+}
+
+@media screen and (min-width: 769px) {
+  .nn-header-inner { width: 720px; }
+}
+
+@media screen and (min-width: 1024px) {
+  .nn-header-inner { width: 960px; }
+}
+
+@media screen and (min-width: 1216px) {
+  .nn-header-inner { width: 1152px; }
+}
+
+@media screen and (min-width: 1408px) {
+  .nn-header-inner { width: 1344px; }
+}
+
+@media screen and (max-width: 1023px) {
+  .nn-header .navbar {
+    flex-wrap: wrap;
+  }
+
+  .nn-header .navbar-burger {
+    display: block;
+  }
+
+  .nn-header .navbar-menu {
+    display: none;
+    flex-basis: 100%;
+    flex-grow: 0;
+    flex-shrink: 0;
+    padding: 0.5rem 0;
+    background: #fff;
+    box-shadow: 0 8px 16px rgb(10 10 10 / 10%);
+  }
+
+  .nn-header .navbar-menu.is-active {
+    display: block;
+  }
+
+  .nn-header .navbar-start,
+  .nn-header .navbar-end {
+    display: block;
+  }
+
+  .nn-header .navbar-item {
+    display: block;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .nn-header .navbar-menu a {
+    color: #424242;
+  }
+
+  .nn-header .is-hidden-desktop {
+    display: block;
+  }
+
+  .nn-header .is-hidden-touch {
+    display: none;
+  }
+}
