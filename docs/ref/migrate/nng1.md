@@ -182,14 +182,16 @@ NNG 1.x had an undocumented ability to specify the local address to bind
 to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
 compatibility, and is no longer offered. The correct way to specify a
-local address is by calling [`nng_dialer_bind`] before starting the dialer.
+local address is to create a dialer, call [`nng_dialer_bind`], and then start
+the dialer.
 
 ## Support for Address Options Removed
 
-The `NNG_OPT_REMADDR` and `NNG_OPT_LOCADDR` options are removed. For streams
-and pipes, use [`nng_stream_peer_addr`] and [`nng_pipe_peer_addr`]. To
-configure a local source address before dialing, use [`nng_dialer_bind`] or
-[`nng_stream_dialer_bind`].
+The `NNG_OPT_REMADDR` and `NNG_OPT_LOCADDR` options are removed. To retrieve
+the peer address from a stream or pipe, use [`nng_stream_peer_addr`] or
+[`nng_pipe_peer_addr`]. To retrieve its local address after connecting, use
+[`nng_stream_self_addr`] or [`nng_pipe_self_addr`]. To configure a local source
+address before dialing, use [`nng_dialer_bind`] or [`nng_stream_dialer_bind`].
 
 ## IPC Option Type Changes
 
