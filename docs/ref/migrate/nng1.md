@@ -115,7 +115,7 @@ The API used for providers for asynchronous I/O operations has changed slightly.
 
 - The `nng_aio_begin` function is removed. However a new [`nng_aio_reset`] function should be called
   instead, before performing any other operations on an _aio_ object. (This simply clears certain fields.)
-- The `nng_aio_defer` function is replaced, with a very [`nng_aio_start`] function. However, this function
+- The `nng_aio_defer` function is replaced with the new [`nng_aio_start`] function. However, this function
   has slightly different semantics. It will automatically call the callback if the operation cannot be
   scheduled.
 - Be aware of the new `NNG_ESTOPPED` error code, for operations on a handle that is being torn down by
@@ -125,7 +125,7 @@ The API used for providers for asynchronous I/O operations has changed slightly.
 
 Transports have not needed to be registered for a long time now,
 and the functions for doing so have been removed. These functions
-can be simply removed from your application:
+can simply be removed from your application:
 
 - `nng_inproc_register`
 - `nng_ipc_register`
@@ -138,9 +138,12 @@ can be simply removed from your application:
 Additionally, the header files containing these functions have been removed, such as
 `nng/transport/ipc/ipc.h`. Simply remove `#include` references to those files.
 
+When `NNG1_TRANSITION` is defined, most of these names remain available as
+no-op compatibility macros to ease a temporary transition.
+
 ## TLS Configuration
 
-The support for configuring TLS via `NNG_OPT_TLS_CONFIG`, `NNG_TLS_AUTH_MODE`, `NNG_OPT_TLS_CA_FILE`,
+The support for configuring TLS via `NNG_OPT_TLS_CONFIG`, `NNG_OPT_TLS_AUTH_MODE`, `NNG_OPT_TLS_CA_FILE`,
 `NNG_OPT_TLS_SERVER_NAME`, and similar has been removed.
 
 Instead configuration must be performed by allocating
@@ -294,7 +297,7 @@ or dialer that creates the stream instead.
 
 A number of transport options can no longer be set on the socket. Instead these
 options must be set on the endpoint (dialer or listener) using the appropriate
-[`nng_dialer_set`] or [`nng_listener_set`] option. This likely means that it is necessary
+typed `nng_dialer_set_*` or `nng_listener_set_*` function. This likely means that it is necessary
 to allocate and configure the endpoint before attaching it to the socket. This will
 also afford a much more fine-grained level of control over transport options.
 
