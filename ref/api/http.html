@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-79381210.js";
+            window.path_to_searchindex_js = "../searchindex-21d3ba08.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61c4e272.js"></script>
@@ -456,19 +456,20 @@ operations until the entire amount of data requested by the <a href="../api/aio.
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>These functions perform no special handling for chunked transfers.</p>
 </blockquote>
-<p>These functions are most likely to be useful after hijacking the connection with <a href="../api/http.html#hijacking-connections"><code>nng_http_hijack</code></a>.
+<p>These functions are most likely to be useful after hijacking the connection with <a href="../api/http.html#hijacking-connections"><code>nng_http_hijack_stream</code></a>.
 They can be used to transfer request or response body data as well.</p>
 <h3 id="hijacking-connections"><a class="header" href="#hijacking-connections">Hijacking Connections</a></h3>
-<pre><code class="language-c">nng_err nng_http_hijack(nng_http *conn);
+<pre><code class="language-c">nng_err nng_http_hijack_stream(nng_http *conn, nng_stream **streamp);
 </code></pre>
-<p>TODO: This API will change to convert the conn into a stream object.</p>
-<p>The <a name="a027"></a><code>nng_http_hijack</code> function hijacks the connection <em>conn</em>, causing it
-to be disassociated from the HTTP server where it was created.</p>
-<p>The purpose of this function is the creation of HTTP upgraders (such as
-WebSocket), where the underlying HTTP connection will be taken over for
-some other purpose, and should not be used any further by the server.</p>
+<p>The <a name="a027"></a><code>nng_http_hijack_stream</code> function hijacks the connection <em>conn</em>, causing it
+to be disassociated from the HTTP server where it was created, and returns it as an <a href="../api/stream.html#stream-type"><code>nng_stream</code></a>.
+It is intended for HTTP upgraders, such as WebSocket, that take over the underlying connection.</p>
 <p>This function is most useful when called from a handler function.
 (See <a href="../api/http.html#implementing-a-handler"><code>nng_http_handler_alloc</code></a>.)</p>
+<p>The stream preserves any bytes already read by the HTTP parser before receiving subsequent data from the underlying connection.
+It takes ownership of <em>conn</em>; after successful completion, <em>conn</em> must not be used or closed separately.
+Release the connection by calling <a href="../api/stream.html#closing-a-stream"><code>nng_stream_free</code></a> on the returned stream.
+It can also be used with a client connection after a protocol-upgrade response has been read.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>It is the responsibility of the caller to dispose of the underlying connection when it is no longer needed.
@@ -483,7 +484,6 @@ Most applications will never need to use this function.</p>
 <h3 id="obtaining-tls-connection-details"><a class="header" href="#obtaining-tls-connection-details">Obtaining TLS Connection Details</a></h3>
 <pre><code class="language-c">nng_err nng_http_peer_cert(nng_http *conn, nng_tls_cert **certp);
 </code></pre>
-<p>TODO: We need to document the cert API.</p>
 <p>The <a name="a028"></a><code>nng_http_peer_cert</code> function will obtain the TLS certificate object for the peer, if one is available.
 This can then be used for additional authentication or identity specific logic.</p>
 <p>The certificate must be released with <a href="../api/tls.html#peer-certificates"><code>nng_tls_cert_free</code></a> when no longer in use.

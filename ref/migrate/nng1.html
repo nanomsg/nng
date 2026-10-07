@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-79381210.js";
+            window.path_to_searchindex_js = "../searchindex-21d3ba08.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61c4e272.js"></script>
@@ -251,7 +251,7 @@ The old names are available by defining the macro <code>NNG1_TRANSITION</code> i
 <p>Just add either <code>0</code> or <code>1</code> (in the case of PAIRv1) to get the protocol desired. (Forcing the version number to
 be supplied should avoid surprises later as new versions of protocols are added.)</p>
 <h2 id="nng_flag_alloc-removed"><a class="header" href="#nng_flag_alloc-removed">NNG_FLAG_ALLOC Removed</a></h2>
-<p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="../api/sock.html#nng_send"><code>nng_send</code></a> and <a href="../TODO.html"><code>nng_recv</code></a> is removed.
+<p>The <code>NNG_FLAG_ALLOC</code> flag that allowed a zero copy semantic with <a href="../api/sock.html#nng_send"><code>nng_send</code></a> and <a href="../api/sock.html#nng_recv"><code>nng_recv</code></a> is removed.
 This was implemented mostly to aid legacy nanomsg applications, and it was both error prone and still a bit
 suboptimal in terms of performance.</p>
 <p>Modern code should use one of <a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a>, <a href="../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a>, <a href="../api/sock.html#nng_socket_send"><code>nng_socket_send</code></a>, or <a href="../api/sock.html#nng_socket_recv"><code>nng_socket_recv</code></a> to get the maximum performance benefit.
