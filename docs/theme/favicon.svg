@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="460 220 400 370" role="img" aria-label="nanomsg">
+  <circle fill="#d6e1ef" cx="530.7" cy="472.6" r="32"/>
+  <circle fill="#d6e1ef" cx="749.3" cy="334.2" r="32"/>
   <circle fill="#6d91c2" cx="530.7" cy="472.6" r="22"/>
   <circle fill="#6d91c2" cx="749.3" cy="334.2" r="22"/>
   <g transform="matrix(1.9211538461538462 0 0 1.9211538461538462 640 403.3936881433191)">
