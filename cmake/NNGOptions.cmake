@@ -134,7 +134,7 @@ CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport." ON
         "NNG_ENABLE_TLS" OFF)
 mark_as_advanced(NNG_TRANSPORT_WSS)
 
-option (NNG_TRANSPORT_FDC "Enable File Descriptor transport (EXPERIMENTAL)" ON)
+option (NNG_TRANSPORT_FDC "Enable socket transport." ON)
 mark_as_advanced(NNG_TRANSPORT_FDC)
 
 option (NNG_TRANSPORT_UDP "Enable UDP transport (EXPERIMENTAL)" ON)

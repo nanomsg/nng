@@ -983,12 +983,11 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // peers that cannot be coerced into sending binary frames.
 #define NNG_OPT_WS_RECV_TEXT "ws:recv-text"
 
-// NNG_OPT_SOCKET_FD is a write-only integer property that is used to
-// file descriptors (or FILE HANDLE objects on Windows) to a
-// socket:// based listener.  This file descriptor will be taken
-// over and used as a stream connection.  The protocol is compatible
-// with SP over TCP.  This facility is experimental, and intended to
-// allow use with descriptors created via socketpair() or similar.
+// NNG_OPT_SOCKET_FD is a write-only integer property that is used to add
+// POSIX file descriptors to a socket:// based listener. This file descriptor
+// will be taken over and used as a stream connection. The protocol is
+// compatible with SP over TCP. This facility is intended to allow use with
+// descriptors created via socketpair() or similar.
 // Note that unidirectional pipes (such as those from pipe(2) or mkfifo)
 // are not supported.
 #define NNG_OPT_SOCKET_FD "socket:fd"
