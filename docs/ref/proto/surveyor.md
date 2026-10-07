@@ -117,8 +117,8 @@ When the response finally arrives back at the initiating surveyor, it
 should have only a single element in the message, which will be the
 survey ID it originally used for the request.
 
-More detail can be found in the [sp-surveyor-01 RFC][survey_rfc] document.
+More detail can be found in the [SP Surveyor Protocol RFC][survey_rfc].
 
 {{#include ../xref.md}}
 
-[survey_rfc]: TODO.md
+[survey_rfc]: https://github.com/nanomsg/nanomsg/blob/master/rfc/sp-surveyor-01.txt
