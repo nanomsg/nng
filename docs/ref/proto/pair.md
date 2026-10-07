@@ -12,8 +12,8 @@ no peer is able to receive the message.
 
 > [!NOTE]
 > Even though this mode may appear to be reliable, because back-pressure
-> prevents discarding messages most of the time, there are topologies involving
-> where messages may be discarded.
+> prevents discarding messages most of the time, there are topologies where
+> messages may be discarded.
 > Applications that require reliable delivery semantics should consider using
 > [_REQ_][req] sockets, or implement their own acknowledgment layer on top of _PAIR_ sockets.
 
@@ -57,9 +57,8 @@ choose the remote peer to receive an outgoing message by setting the
 If no remote peer is specified by the sender, then the protocol will select
 any available connected peer.
 
-Most often the value of the outgoing pipe will be obtained from an incoming
-message using [`nng_msg_get_pipe`].
-such as when replying to an incoming message.
+Most often, the value of the outgoing pipe will be obtained from an incoming
+message using [`nng_msg_get_pipe`], such as when replying to an incoming message.
 
 > [!NOTE]
 > Directed send _only_ works with directly connected peers.

@@ -132,7 +132,7 @@ int nng_id_remove(nng_id_map *map, uint64_t id);
 
 The {{i:`nng_id_remove`}} removes the entry at index _id_ from _map_.
 
-If no such entry exist, it will return [`NNG_ENOENT`]. Otherwise it returns zero.
+If no such entry exists, it will return [`NNG_ENOENT`]. Otherwise it returns zero.
 
 ## Iterating IDs
 

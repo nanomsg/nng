@@ -932,7 +932,7 @@ nni_http_reason(nng_http_status code)
 
 		// 300 series -- redirection
 		{ NNG_HTTP_STATUS_MULTIPLE_CHOICES, "Multiple Choices" },
-		{ NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY,
+		{ NNG_HTTP_STATUS_MOVED_PERMANENTLY,
 		    "Moved Permanently" },
 		{ NNG_HTTP_STATUS_FOUND, "Found" },
 		{ NNG_HTTP_STATUS_SEE_OTHER, "See Other" },

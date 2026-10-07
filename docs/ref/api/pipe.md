@@ -76,7 +76,7 @@ nng_socket nng_pipe_socket(nng_pipe p);
 {{hi:`nng_pipe_socket`}}
 These functions return the [socket], [dialer], or [listener] that created or owns the pipe.
 
-If the pipe was does not have an associated dialer or listener, then the associated will
+If the pipe does not have an associated dialer or listener, then the associated function will
 return [`NNG_DIALER_INITIALIZER`] or [`NNG_LISTENER_INITIALIZER`], as appropriate, and
 either [`nng_dialer_id`] or [`nng_listener_id`] for the returned object will return -1.
 
@@ -114,7 +114,7 @@ nng_err nng_pipe_get_strlen(nng_pipe p, const char *opt, size_t *lenp);
 {{hi:`nng_pipe_get_string`}}
 {{hi:`nng_pipe_get_strcpy`}}
 {{hi:`nng_pipe_get_strdup`}}
-These functions are used to obtain value of an option named _opt_ from the pipe _p_, and store it in the location
+These functions are used to obtain the value of an option named _opt_ from the pipe _p_, and store it in the location
 referenced by _valp_.
 
 These functions access an option as a specific type. The transport layer will have details about which options
@@ -189,7 +189,7 @@ The following pipe events are supported:
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | {{i:`NNG_PIPE_EV_ADD_PRE`}}<a name="NNG_PIPE_EV_ADD_PRE"></a>   | This event occurs after a connection and negotiation has completed, but before the pipe is added to the socket. If the pipe is closed (using [`nng_pipe_close`]) at this point, the socket will never see the pipe, and no further events will occur for the given pipe. |
 | {{i:`NNG_PIPE_EV_ADD_POST`}}<a name="NNG_PIPE_EV_ADD_POST"></a> | This event occurs after the pipe is fully added to the socket. Prior to this time, it is not possible to communicate over the pipe with the socket.                                                                                                                      |
-| {{i:`NNG_PIPE_EV_REM_POST`}}<a name="NNG_PIPE_EV_REM_POST"></a> | This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible communicate using this pipe.                                                                                             |
+| {{i:`NNG_PIPE_EV_REM_POST`}}<a name="NNG_PIPE_EV_REM_POST"></a> | This event occurs after the pipe has been removed from the socket. The underlying transport may be closed at this point, and it is not possible to communicate using this pipe.                                                                                          |
 
 > [!WARNING]
 > The callback _cb_ function must _not_ attempt to perform any

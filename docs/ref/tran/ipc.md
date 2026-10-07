@@ -97,7 +97,7 @@ where supported by the underlying platform.
 | `NNG_OPT_IPC_OWNER`       | `int` | Settable on POSIX listeners before they start, this requests the UNIX user ID for the socket. Elevated permission may be required; failure is ignored. |
 | `NNG_OPT_IPC_GROUP`       | `int` | Settable on POSIX listeners before they start, this requests the UNIX group ID for the socket. Elevated permission may be required; failure is ignored. |
 | `NNG_OPT_PEER_GID`        | `int` | Read only option, returns the group ID of the process at the other end of the socket, if platform supports it.     |
-| `NNG_OPT_PEER_PID`        | `int` | Read only option, returns the processed ID of the process at the other end of the socket, if platform supports it. |
+| `NNG_OPT_PEER_PID`        | `int` | Read only option, returns the process ID of the process at the other end of the socket, if platform supports it.   |
 | `NNG_OPT_PEER_UID`        | `int` | Read only option, returns the user ID of the process at the other end of the socket, if platform supports it.      |
 | `NNG_OPT_PEER_ZONEID`     | `int` | Read only option, returns the zone ID of the process at the other end of the socket, if platform supports it.      |
 | [`NNG_OPT_LISTEN_FD`]     | `int` | Write only for listeners before they start, use the named socket for accepting (for use with socket activation).   |

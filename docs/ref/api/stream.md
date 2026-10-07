@@ -15,7 +15,7 @@ Scalability Protocols, in a way that is both portable and agnostic about the spe
 ## Stream Type
 
 ```c
-typedef struct nng_stream nng_stream
+typedef struct nng_stream nng_stream;
 ```
 
 The base {{i:`nng_stream`}} type represents a bidirectional, byte-oriented, reliable connection.
@@ -107,7 +107,7 @@ nng_err nng_stream_get_bool(nng_stream *s, const char *opt, bool *valp);
 nng_err nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
 nng_err nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
 nng_err nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
-nng_err nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+nng_err nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
 nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp);
 ```
 
@@ -115,8 +115,9 @@ nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp)
 {{hi:`nng_stream_get_int`}}
 {{hi:`nng_stream_get_ms`}}
 {{hi:`nng_stream_get_size`}}
+{{hi:`nng_stream_get_uint64`}}
 {{hi:`nng_stream_get_string`}}
-These functions are used to obtain value of an option named _opt_ from the stream _s_, and store it in the location
+These functions are used to obtain the value of an option named _opt_ from the stream _s_, and store it in the location
 referenced by _valp_.
 
 These functions access an option as a specific type. The transport layer will have details about which options
@@ -133,10 +134,10 @@ typedef struct nng_stream_listener nng_stream_listener;
 ```
 
 {{hi:stream factory}}
-The {{i:`nng_stream_listener`}} object and {{i:`nng_stream_listener`}} objects can be thought of as factories that
+The {{i:`nng_stream_dialer`}} and {{i:`nng_stream_listener`}} objects can be thought of as factories that
 create [`nng_stream`] streams.
 
-The `nng_stream_listener` object a handle to a listener, which creates streams by accepting incoming connection requests.
+The `nng_stream_listener` object is a handle to a listener, which creates streams by accepting incoming connection requests.
 In a BSD socket implementation, this is the entity responsible for doing {{i:`bind`}}, {{i:`listen`}} and {{i:`accept`}}.
 Normally a listener may be used to accept multiple, possibly many, concurrent connections.
 
@@ -149,24 +150,24 @@ created by opening them with {{i:`socket`}} and then calling {{i:`connect`}} on 
 ```c
 nng_err nng_stream_dialer_alloc(nng_stream_dialer **dialerp, const char *url);
 nng_err nng_stream_dialer_alloc_url(nng_stream_dialer **dialerp, const nng_url *url);
-nng_err nng_stream_listener_alloc(nng_stream_listener **lstenerp, const char *url);
+nng_err nng_stream_listener_alloc(nng_stream_listener **listenerp, const char *url);
 nng_err nng_stream_listener_alloc_url(nng_stream_listener **listenerp, const nng_url *url);
 ```
 
-The {{i:`nng_stream_dialer_alloc`}} and {{i:`nng_stream_dialer_alloc_url`}} functions create a stream dialer, associated the
+The {{i:`nng_stream_dialer_alloc`}} and {{i:`nng_stream_dialer_alloc_url`}} functions create a stream dialer associated with the
 {{i:URL}} specified by _url_ represented as a string, or as an [`nng_url`] object, respectively. The dialer is returned in the location
-_dialerp_ references.
+referenced by _dialerp_.
 
-The {{i:`nng_stream_listener_alloc`}} and {{i:`nng_stream_listener_alloc_url`}} functions create a stream listener, associated the
+The {{i:`nng_stream_listener_alloc`}} and {{i:`nng_stream_listener_alloc_url`}} functions create a stream listener associated with the
 URL specified by _url_ represented as a string, or as an [`nng_url`] object, respectively. The listener is returned in the location
-_listenerp_ references.
+referenced by _listenerp_.
 
 ### Example 1: Creating a TCP Listener
 
 This shows creating a TCP listener that listens on `INADDR_ANY`, port 444.
 
 ```c
-nng_listener listener;
+nng_stream_listener *listener;
 int rv = nng_stream_listener_alloc(&listener, "tcp://:444");
 ```
 
@@ -186,11 +187,11 @@ preventing it from creating new connections.
 This will generally include closing any underlying file used for creating such connections.
 However, some requests may still be pending when this function returns, as it does not wait for the shutdown to complete.
 
-The {{i:`nng_stream_dialer_stop`}} and {{i:`nng_stream_listener_stop`}} functions performs the same action,
+The {{i:`nng_stream_dialer_stop`}} and {{i:`nng_stream_listener_stop`}} functions perform the same action,
 but also wait until all outstanding requests are serviced, and the _dialer_ or _listener_ is completely stopped.
-Because they blocks, these functions must not be called in contexts where blocking is not allowed.
+Because they block, these functions must not be called in contexts where blocking is not allowed.
 
-The {{i:`nng_stream_dialer_free`}} and {{i:`nng_stream_listener_free`}} function performs the same action as
+The {{i:`nng_stream_dialer_free`}} and {{i:`nng_stream_listener_free`}} functions perform the same action as
 `nng_stream_dialer_stop` or `nng_stream_listener_stop`, but also deallocates the _dialer_ or _listener_, and any associated resources.
 
 > [!TIP]
@@ -203,7 +204,7 @@ The {{i:`nng_stream_dialer_free`}} and {{i:`nng_stream_listener_free`}} function
 void nng_stream_dialer_dial(nng_stream_dialer *dialer, nng_aio *aio);
 ```
 
-The {{i:`nng_stream_dialer_dial`}} initiates an outgoing connection asynchronously, using the [`nng_aio`] _aio_.
+The {{i:`nng_stream_dialer_dial`}} function initiates an outgoing connection asynchronously, using the [`nng_aio`] _aio_.
 If it successfully establishes a connection, it creates an [`nng_stream`], which can be obtained as the first
 output result on _aio_ using the [`nng_aio_get_output`] function with index zero.
 
@@ -227,7 +228,7 @@ nng_aio_alloc(&aio, NULL, NULL);
 
 // make a single outbound connection
 nng_stream_dialer_dial(dialer, aio);
-nng_aio_wait(aio); // wait for the asynch operation to complete
+nng_aio_wait(aio); // wait for the asynchronous operation to complete
 if (nng_aio_result(aio) != 0) {
     // ... handle the error
 }
@@ -241,9 +242,9 @@ nng_err nng_stream_listener_listen(nng_stream_listener *listener);
 void nng_stream_listener_accept(nng_stream_listener *listener, nng_aio *aio);
 ```
 
-Accepting incoming connections is performed in two steps. The first step, {{i:`nng_stream_listener_listen`}} is to setup for
+Accepting incoming connections is performed in two steps. The first step, {{i:`nng_stream_listener_listen`}}, is to set up
 listening. For a TCP implementation of this, for example, this would perform the `bind` and the `listen` steps. This will bind
-to the address represented by the URL that was specific when the listener was created with [`nng_stream_listener_alloc`].
+to the address represented by the URL that was specified when the listener was created with [`nng_stream_listener_alloc`].
 
 In the second step, {{i:`nng_stream_listener_accept`}} accepts an incoming connection on _listener_ asynchronously, using the [`nng_aio`] _aio_.
 If an incoming connection is accepted, it will be represented as an [`nng_stream`], which can be obtained from the _aio_ as the first
@@ -256,7 +257,7 @@ would most likely use a callback to accept the incoming stream, and start anothe
 
 ```c
 nng_aio *aio;
-nng_listener *listener;
+nng_stream_listener *listener;
 nng_stream *stream;
 
 nng_stream_listener_alloc(&listener, "tcp://:8181");
@@ -268,8 +269,8 @@ if (nng_stream_listener_listen(listener)) {
 }
 
 // now accept a single incoming connection as a stream object
-nng_stream_listener_accept(l, aio);
-nng_aio_wait(aio); // wait for the asynch operation to complete
+nng_stream_listener_accept(listener, aio);
+nng_aio_wait(aio); // wait for the asynchronous operation to complete
 if (nng_aio_result(aio) != 0) {
     // ... handle the error
 }
@@ -283,53 +284,61 @@ nng_err nng_stream_dialer_get_bool(nng_stream_dialer *dialer, const char *opt, b
 nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
+nng_err nng_stream_dialer_get_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t *valp);
 nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, const char **valp);
 
 nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
 nng_err nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
+nng_err nng_stream_listener_get_uint64(nng_stream_listener *listener, const char *opt, uint64_t *valp);
 nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, const char **valp);
 
-nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 nng_err nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
 nng_err nng_stream_dialer_set_int(nng_stream_dialer *dialer, const char *opt, int val);
 nng_err nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng_duration val);
 nng_err nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
+nng_err nng_stream_dialer_set_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t val);
 nng_err nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
+nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 
 nng_err nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
 nng_err nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
 nng_err nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
 nng_err nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
+nng_err nng_stream_listener_set_uint64(nng_stream_listener *listener, const char *opt, uint64_t val);
 nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
+nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 ```
 
 {{hi:`nng_stream_dialer_get_bool`}}
 {{hi:`nng_stream_dialer_get_int`}}
 {{hi:`nng_stream_dialer_get_ms`}}
 {{hi:`nng_stream_dialer_get_size`}}
+{{hi:`nng_stream_dialer_get_uint64`}}
 {{hi:`nng_stream_dialer_get_string`}}
 {{hi:`nng_stream_dialer_set_bool`}}
 {{hi:`nng_stream_dialer_set_int`}}
 {{hi:`nng_stream_dialer_set_ms`}}
 {{hi:`nng_stream_dialer_set_size`}}
+{{hi:`nng_stream_dialer_set_uint64`}}
 {{hi:`nng_stream_dialer_set_addr`}}
 {{hi:`nng_stream_dialer_set_string`}}
 {{hi:`nng_stream_listener_get_bool`}}
 {{hi:`nng_stream_listener_get_int`}}
 {{hi:`nng_stream_listener_get_ms`}}
 {{hi:`nng_stream_listener_get_size`}}
-{{hi:`nng_stream_listener_get_addr`}}
+{{hi:`nng_stream_listener_get_uint64`}}
 {{hi:`nng_stream_listener_get_string`}}
 {{hi:`nng_stream_listener_set_bool`}}
 {{hi:`nng_stream_listener_set_int`}}
 {{hi:`nng_stream_listener_set_ms`}}
 {{hi:`nng_stream_listener_set_size`}}
+{{hi:`nng_stream_listener_set_uint64`}}
 {{hi:`nng_stream_listener_set_addr`}}
 {{hi:`nng_stream_listener_set_string`}}
-These functions are used to retrieve or change the value of an option named _opt_ from the stream _dialer_ or _listener_.
-The `nng_stream_dialer_get_` and `nng_stream_listener_get_` function families retrieve the value, and store it in the location _valp_ references.
+These functions are used to retrieve or change the value of an option named _opt_ from the stream dialer or listener.
+The `nng_stream_dialer_get_` and `nng_stream_listener_get_` function families retrieve the value, and store it in the location referenced by _valp_.
 The `nng_stream_dialer_set_` and `nng_stream_listener_set_` function families change the value for the _dialer_ or _listener_, taking it from _val_.
 
 These functions access an option as a specific type. The transport layer will have details about which options
@@ -344,7 +353,7 @@ the string is only valid as long as the associated object remains open.
 In the case of `nng_stream_dialer_set_string` and `nng_stream_listener_set_string`, the string contents are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.
 
-In the case of `nng_stream_dialer_set_addr`, the contents of _addr_ are copied if necessary, so that the caller
+In the case of `nng_stream_dialer_set_addr` and `nng_stream_listener_set_addr`, the contents of _val_ are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.
 
 ### Example 4: Socket Activation<a name="socket-activation"></a>
@@ -371,6 +380,22 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 
 // can now start doing nng_stream_listener_accept...
 ```
+
+## Windows Security Descriptors
+
+```c
+nng_err nng_stream_listener_set_security_descriptor(
+    nng_stream_listener *listener, void *security_descriptor);
+```
+
+{{hi:`nng_stream_listener_set_security_descriptor`}}
+The {{i:`nng_stream_listener_set_security_descriptor`}} function configures the
+security descriptor used by an IPC stream listener on Windows. The
+_security_descriptor_ value must be a Windows `PSECURITY_DESCRIPTOR`.
+
+This function must be called before the listener starts. It returns
+[`NNG_ENOTSUP`] when security descriptors are unsupported by the listener,
+including on non-Windows platforms.
 
 ## TLS Configuration
 

@@ -19,7 +19,7 @@ typedef struct nng_arg_spec {
     int         a_short; // Short option (no clustering!)
     int         a_val;   // Value stored on a good parse (>0)
     bool        a_arg;   // Option takes an argument if true
-} nng_optspec;
+} nng_arg_spec;
 
 #define NNG_ARG_END     (-1)
 #define NNG_ARG_INVAL   (-2)
@@ -27,7 +27,7 @@ typedef struct nng_arg_spec {
 #define NNG_ARG_MISSING (-4)
 
 int nng_args_parse(int argc, char *const *argv,
-                   const nng_optspec *spec, int *val, char **arg, int *idx);
+    const nng_arg_spec *specs, int *val, char **optarg, int *optidx);
 ```
 
 The {{i:`nng_args_parse`}} function is intended to facilitate parsing
@@ -38,24 +38,24 @@ but it is available on all platforms, and it includes some capabilities missing 
 The function parses arguments from
 `main`
 (using _argc_ and _argv_),
-starting at the index referenced by _idx_.[^args]
-(New invocations typically set the value pointed to by _idx_ to 1.)
+starting at the index referenced by _optidx_.[^args]
+(New invocations typically set the value pointed to by _optidx_ to 1.)
 
 [^args]:
     Parsing argument strings from other sources can be done as well,
-    although usually then _idx_ will be initialized to zero.
+    although usually then _optidx_ will be initialized to zero.
 
-Options are parsed as specified by _spec_ (see [Argument Specification](#argument-specification).)
+Options are parsed as specified by _specs_ (see [Argument Specification](#argument-specification).)
 The value of the parsed option will be stored at the address indicated by
-_val_, and the value of _idx_ will be incremented to reflect the next
+_val_, and the value of _optidx_ will be incremented to reflect the next
 option to parse.
 
 > [!TIP]
 > For using this to parse command-line like strings that do not include
-> the command name itself, set the value referenced by _idx_ to zero instead of one.
+> the command name itself, set the value referenced by _optidx_ to zero instead of one.
 
 If the option had an argument, a pointer to that is returned at the address
-referenced by _arg_.
+referenced by _optarg_.
 
 This function should be called repeatedly, until it returns either -1
 (indicating the end of options is reached) or a non-zero error code is
@@ -86,7 +86,7 @@ This structure has the following members:
   The use of a slash in lieu of the dash is _not_ supported, in order to avoid confusion with path name arguments.
   This value may be set to 0 if no [short option](#short-options) is needed.
 
-- `o_val`:
+- `a_val`:
 
   This is a numeric value that is unique to this option.
   This value is assigned by the application program, and must be non-zero for a valid option.
@@ -123,7 +123,7 @@ same element of _argv_, or may appear in the next _argv_ element.
 ### Prefix Matching
 
 When using long options, the parser will match if it is equal to a prefix
-of the `a_name` member of a option specification, provided that it do so
+of the `a_name` member of an option specification, provided that it does so
 unambiguously (meaning it must not match any other option specification.)
 
 ## Example

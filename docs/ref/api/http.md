@@ -52,7 +52,7 @@ replace it with [`nng_http_set_header`].
 ## Connection Object
 
 ```c
-typedef struct nng_http nng_http;
+typedef struct nng_http_conn nng_http;
 ```
 
 The {{i:`nng_http`}} object represents a single logical HTTP connection to the server.
@@ -102,7 +102,7 @@ or [`NNG_EINVAL`] if there is some other problem with the URI.
 > [!NOTE]
 > The _uri_ and _query_ must be already percent-encoded if necessary.
 
-The {{i:`nni_http_get_uri`}} function is used to obtain the URI that was previously set by `nng_http_set_uri`.
+The {{i:`nng_http_get_uri`}} function is used to obtain the URI that was previously set by `nng_http_set_uri`.
 If the URI is unset (such as for a freshly created connection), then it returns `NULL`. The returned value
 will have any query concatenated, for example "/api/get_user.cgi?name=garrett".
 
@@ -133,7 +133,7 @@ there is little need to use this, but there are some subtle semantic differences
 ```c
 typedef enum ... nng_http_status;
 nng_http_status nng_http_get_status(nng_http *conn);
-const char *nng_http_get_reason(nng_http_conn *conn);
+const char *nng_http_get_reason(nng_http *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 ```
 
@@ -240,7 +240,7 @@ If a header was found, then it returns `true`, and sets _keyp_ and _valuep_ to v
 the header name and value. It also updates _next_, which should be used for the next iteration.
 
 Once `nng_http_next_header` returns `false`, further calls with the same parameters will continue to do so.
-The scan can be rest by setting _next_ to `NULL`.
+The scan can be reset by setting _next_ to `NULL`.
 
 ### Modifying Headers
 
@@ -251,13 +251,13 @@ void nng_http_del_header(nng_http *conn, const char *key);
 ```
 
 The {{i:`nng_http_add_header`}}, {{i:`nng_http_set_header`}}, and {{i:`nng_http_del_header`}} functions are
-used to add a modify either the request or response headers for _conn_ prior to sending to the connected peer on _conn_.
+used to add or modify either the request or response headers for _conn_ prior to sending to the connected peer on _conn_.
 
 Thus, if the _conn_ is a client connection created by [`nng_http_client_connect`], then the request headers are modified.
 Conversely, if it is a connection created by an HTTP server and used in a callback function, then the response headers are modified.
 
 The `nng_http_add_header` function adds a header with the name _key_, and the value _val_, to the list of headers.
-In so doing, it may bring collapse multiple headers with the same name into a comma separated list, following
+In so doing, it may collapse multiple headers with the same name into a comma-separated list, following
 the syntax specified in RFC 9110. The function may return [`NNG_ENOMEM`], [`NNG_EMSGSIZE`], or [`NNG_EINVAL`].
 
 The `nng_http_set_header` function adds the header if it does not already exist, but replaces any and all previously existing
@@ -273,19 +273,19 @@ The `nng_http_del_header` removes all headers with name _key_.
 ### Retrieving Body Content
 
 ```c
-void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
+void nng_http_get_body(nng_http *conn, void **datap, size_t *sizep);
 ```
 
-The {{i:`nng_http_get_data`}} obtains the most recently received request or
+The {{i:`nng_http_get_body`}} function obtains the most recently received request or
 response body. This will be `NULL` if the content has not been retrieved
-properly yet, or if the peer did not any content. (Some requests are defined
+properly yet, or if the peer did not send any content. (Some requests are defined
 to never have body content, such as "HEAD".)
 
 ### Storing Body Content
 
 ```c
-void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
-void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
+void nng_http_set_body(nng_http *conn, void *data, size_t size);
+nng_err nng_http_copy_body(nng_http *conn, const void *data, size_t size);
 ```
 
 The {{i:`nng_http_set_body`}} function sets the outgoing body content to _data_,
@@ -315,9 +315,9 @@ void nng_http_close(nng_http *conn);
 ```
 
 The {{i:`nng_http_close`}} function closes the supplied HTTP connection _conn_,
-including any disposing of any underlying file descriptors or related resources.
+including disposal of any underlying file descriptors or related resources.
 
-Once this function, no further access to the _conn_ structure may be made.
+Once this function returns, no further access to the _conn_ structure may be made.
 
 ### Reset Connection State
 
@@ -326,7 +326,7 @@ void nng_http_reset(nng_http *conn);
 ```
 
 The {{i:`nng_http_reset`}} function resets the request and response state of the
-the connection _conn_, so that it is just as if it had been freshly created with
+connection _conn_, so that it is just as if it had been freshly created with
 [`nng_http_client_connect`] or passed into a handler function for a server callback.
 
 The intended purpose of this function is to clear the object state before reusing the _conn_ for
@@ -385,7 +385,7 @@ This function is most useful when called from a handler function.
 ### Obtaining TLS Connection Details
 
 ```c
-nng_err nng_http_peer_cert(nng_http_conn *conn, nng_tls_cert **certp);
+nng_err nng_http_peer_cert(nng_http *conn, nng_tls_cert **certp);
 ```
 
 TODO: We need to document the cert API.
@@ -419,7 +419,7 @@ It is analogous to a [dialer] object used elsewhere in NNG, but it specifically 
 ### Create a Client
 
 ```c
-void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
+nng_err nng_http_client_alloc(nng_http_client **clientp, const nng_url *url);
 ```
 
 The {{i:`nng_http_client_alloc`}} allocates an HTTP client suitable for
@@ -878,7 +878,7 @@ rather than just a single element.
 ### Implementing a Handler
 
 ```c
-typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+typedef void (*nng_http_handler_func)(nng_http *conn, void *arg, nng_aio *aio);
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 ```
@@ -945,7 +945,7 @@ create handlers pre-configured to act as static content servers for either a ful
 directory at _dirname_, or the single file at _filename_. These support the "GET" and "HEAD"
 methods, and the directory variant will dynamically generate `index.html` content based on
 the directory contents. These will also set the "Content-Type" if the file extension
-matches one of the built-in values already known. If the no suitable MIME type can be
+matches one of the built-in values already known. If no suitable MIME type can be
 determined, the content type is set to "application/octet-stream".
 
 ### Static Handler
@@ -1085,7 +1085,7 @@ exactly the value of the `Host` header sent by the client.
 
 The [`nng_http_local_address`] and [`nng_http_remote_address`] functions
 can be used to determine the local and remote addresses for an HTTP connection
-on the server side (in a handler) just like the can be for HTTP clients
+on the server side (in a handler), just as they can be for HTTP clients.
 This can be useful to provide different handling behaviors based on network identity.
 
 ### Handling an Entire Tree

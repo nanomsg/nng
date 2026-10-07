@@ -1,7 +1,7 @@
 # Time
 
-_NNG_ supports has support for time in the form of access to a
-system clock, and supporting timeouts for certain operations.
+_NNG_ supports obtaining a timestamp derived from the system clock,
+and using timeouts for certain operations based on the same clock.
 
 ## Time Type
 

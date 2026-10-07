@@ -36,7 +36,7 @@ same manner as `printf`.
 > [!TIP]
 > Applications should take care to limit the use of higher severity levels, as message logs
 > are potentially expensive, increase stress for end users and administrators, and further may
-> mask real problems if incorrectly over used.
+> mask real problems if incorrectly overused.
 >
 > Warnings and error messages should be concise and actionable, and notices should only
 > really be those things that are worthy of attention.
@@ -56,7 +56,7 @@ The {{i:`nng_log_auth`}} function formats and injects a security related log mes
 The _level_ is a [log level][log_level].
 The _msgid_, _msg_, and any remaining arguments are processed in a fashion
 similar to the other [logging functions][submitting_logs], except that the
-logs may be are logged using the `NNG_LOG_AUTH` [facility][log_facility], and thus may be
+logs may be logged using the `NNG_LOG_AUTH` [facility][log_facility], and thus may be
 redirected or receive other special treatment.
 
 ## Log Levels

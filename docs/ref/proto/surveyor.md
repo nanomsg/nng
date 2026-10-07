@@ -53,7 +53,7 @@ Additionally, sending a survey on a context will only cancel an outstanding
 survey on the same context.
 
 > [!NOTE]
-> Due to the best-effort nature of this protocol, if too may contexts
+> Due to the best-effort nature of this protocol, if too many contexts
 > are attempting to perform surveys simultaneously, it is possible for either
 > individual outgoing surveys or incoming responses to be lost.
 
@@ -74,7 +74,7 @@ The following protocol-specific option is available.
    ([`nng_duration`]) \
    \
    When a new survey is started, a timer of this duration is started.
-  Any responses arriving this time will be discarded.
+  Any responses not arriving during this time will be discarded.
   Attempts to receive
   after the timer expires with no other surveys started will result in
   `NNG_ESTATE`.\

@@ -19,7 +19,7 @@ ZeroTier and TLS transports.
 It would not be incorrect to say that the initial NNG effort was started
 in "anger", as we were frustrated with nanomsg's very complex internal
 state machines.
-Looking back on it now, those complex state state machines don't seem nearly
+Looking back on it now, those complex state machines don't seem nearly
 as insane as they did just a year ago.
 
 The simple, na&#239;ve, approach we would have preferred, and the one we
@@ -43,7 +43,7 @@ It will be interesting to see if others come to the same conclusion.
 
 Building upon this robust foundation, we have engineered a substantial
 project, with capabilities far in excess of the original nanomsg, while
-still preserving compatibility with the the network protocols that
+still preserving compatibility with the network protocols that
 form the backbone of the nanomsg ecosystem,
 and even a compatible programming interface for nanomsg library users.
 In addition to compatibility with nanomsg, we find that NNG has greatly
@@ -65,8 +65,8 @@ were added as core goals for the project.
 We believe that NNG represents a substantial step forward over other
 messaging frameworks, and have enjoyed creating it.
 We hope you find it useful.
-There is still a lot more we want to do, and future release of NNG
-will continue to expand it's capabilities.
+There is still a lot more we want to do, and future releases of NNG
+will continue to expand its capabilities.
 We're just getting started.
 
 **--- Garrett D'Amore**, May 30, 2018
@@ -76,7 +76,7 @@ We're just getting started.
 We would like to thank Janjaap Bos, at Capitar IT Group BV.
 Without his patronage, neither NNG nor this book would be possible.
 
-We would also like thank Martin S&#250;strik for creating the original
+We would also like to thank Martin S&#250;strik for creating the original
 nanomsg project, the foundation upon which all of this work is based.
 
 And certainly not least of all, we would like to thank the various

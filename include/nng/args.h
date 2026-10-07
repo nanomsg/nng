@@ -52,7 +52,7 @@ typedef struct nng_arg_spec nng_arg_spec;
 // Call with *optidx set to 1 to start parsing for a standard program, or with
 // 0 if parsing arguments without the executable in argv[0].
 //
-// The val will store the value of the matched "o_val", optarg will be
+// The val will store the value of the matched "a_val", optarg will be
 // set to match the option string, and optidx will be increment appropriately.
 // Returns -1 when the end of options is reached, 0 on success, or
 // NNG_EINVAL if the option parse is invalid for any reason.

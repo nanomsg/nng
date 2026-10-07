@@ -45,7 +45,7 @@ Any member of `nng_init_params` that is set to zero will be ignored, and any bui
 will be used instead for that value.
 
 > [!NOTE]
-> Applications should make sure that structure is zero initialized before calling `nng_init`.
+> Applications should make sure that the structure is zero-initialized before calling `nng_init`.
 
 The following parameters are present:
 
@@ -63,7 +63,7 @@ The following parameters are present:
   changing these values.
 
 - `num_resolver_threads` \
-  Changes the number of threads used for asynchronous DNS look ups.
+  Changes the number of threads used for asynchronous DNS lookups.
 
 ## Finalization
 
