@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
+            window.path_to_searchindex_js = "../searchindex-9507106c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -266,8 +266,8 @@ The dialer is not started.</p>
 <p>The <a name="a012"></a><code>nng_listener_create</code> and <a name="a013"></a><code>nng_listener_create_url</code> functions create a listener associated with socket <em>s</em>,
 configure it to listen at <em>url</em>, and store it in <em>listenerp</em>.
 The listener is not started.</p>
-<p>Use these functions when the dialer or listener needs additional configuration before it starts, such as transport options,
-TLS configuration, or a listener socket activation file descriptor.</p>
+<p>Use these functions when the dialer or listener needs additional configuration before it starts, such as a local bind address,
+transport options, TLS configuration, or a listener socket activation file descriptor.</p>
 <h3 id="errors-1"><a class="header" href="#errors-1">Errors</a></h3>
 <p>These functions can return:</p>
 <ul>
@@ -277,21 +277,43 @@ TLS configuration, or a listener socket activation file descriptor.</p>
 <li><a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
 <li><a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport is not supported, or does not support dialing or listening.</li>
 </ul>
+<h2 id="binding-a-dialer"><a class="header" href="#binding-a-dialer">Binding a Dialer</a></h2>
+<pre><code class="language-c">int nng_dialer_bind(nng_dialer dialer, const nng_sockaddr *addr);
+</code></pre>
+<p>The <a name="a014"></a><code>nng_dialer_bind</code> function configures the local address that <em>dialer</em>
+uses for outgoing connections. It must be called after creating the dialer and
+before calling <a href="../api/endpoint.html#starting"><code>nng_dialer_start</code></a>.</p>
+<p>This is useful when an application needs to select a source interface for a
+TCP-based connection. The address must be an IPv4 or IPv6 address with port
+zero; the system selects an ephemeral source port for each connection.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>This function is supported only by transports that can bind an outgoing
+connection. Other transports return <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
+</blockquote>
+<h3 id="errors-2"><a class="header" href="#errors-2">Errors</a></h3>
+<p>The <code>nng_dialer_bind</code> function can return:</p>
+<ul>
+<li><a href="../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The address is not a valid local address for the transport.</li>
+<li><a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The address is <code>NULL</code>.</li>
+<li><a href="../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a>: The dialer does not exist.</li>
+<li><a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport does not support binding an outgoing connection.</li>
+</ul>
 <h2 id="starting"><a class="header" href="#starting">Starting</a></h2>
 <pre><code class="language-c">int nng_dialer_start(nng_dialer dialer, int flags);
 void nng_dialer_start_aio(nng_dialer dialer, int flags, nng_aio *aio);
 int nng_listener_start(nng_listener listener, int flags);
 </code></pre>
-<p>The <a name="a014"></a><code>nng_dialer_start</code> function starts <em>dialer</em>.
+<p>The <a name="a015"></a><code>nng_dialer_start</code> function starts <em>dialer</em>.
 It follows the same synchronous and <code>NNG_FLAG_NONBLOCK</code> behavior described for <a href="../api/endpoint.html#creating-and-starting"><code>nng_dial</code></a>.</p>
-<p>The <a name="a015"></a><code>nng_dialer_start_aio</code> function starts <em>dialer</em> asynchronously using <em>aio</em>.
+<p>The <a name="a016"></a><code>nng_dialer_start_aio</code> function starts <em>dialer</em> asynchronously using <em>aio</em>.
 It must be called with <code>NNG_FLAG_NONBLOCK</code> in <em>flags</em>.
 When the first dial attempt completes, the operation result is reported through <em>aio</em>.
 Only the first dialing result is reported this way.</p>
-<p>The <a name="a016"></a><code>nng_listener_start</code> function starts <em>listener</em>, causing it to bind to its address and accept connections.
+<p>The <a name="a017"></a><code>nng_listener_start</code> function starts <em>listener</em>, causing it to bind to its address and accept connections.
 The <em>flags</em> argument is ignored and reserved for future use.</p>
 <p>Once a dialer or listener has started, it is generally not possible to change its configuration.</p>
-<h3 id="errors-2"><a class="header" href="#errors-2">Errors</a></h3>
+<h3 id="errors-3"><a class="header" href="#errors-3">Errors</a></h3>
 <p><code>nng_dialer_start</code> can return, and <code>nng_dialer_start_aio</code> can report through its AIO, these errors:</p>
 <ul>
 <li><a href="../api/errors.html#NNG_EADDRINVAL"><code>NNG_EADDRINVAL</code></a>: The URL is invalid.</li>
@@ -317,13 +339,13 @@ The <em>flags</em> argument is ignored and reserved for future use.</p>
 <pre><code class="language-c">int nng_dialer_close(nng_dialer dialer);
 int nng_listener_close(nng_listener listener);
 </code></pre>
-<p>The <a name="a017"></a><code>nng_dialer_close</code> function closes <em>dialer</em>.
-The <a name="a018"></a><code>nng_listener_close</code> function closes <em>listener</em>.</p>
+<p>The <a name="a018"></a><code>nng_dialer_close</code> function closes <em>dialer</em>.
+The <a name="a019"></a><code>nng_listener_close</code> function closes <em>listener</em>.</p>
 <p>Closing a dialer or listener also closes any pipes it created.
 Once this function returns, the dialer or listener and its resources are deallocated.
 Further attempts to use the handle will fail with <a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>.</p>
 <p>Dialers and listeners are also closed when their associated socket is closed.</p>
-<h3 id="errors-3"><a class="header" href="#errors-3">Errors</a></h3>
+<h3 id="errors-4"><a class="header" href="#errors-4">Errors</a></h3>
 <p>These functions can return:</p>
 <ul>
 <li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
@@ -332,7 +354,7 @@ Further attempts to use the handle will fail with <a href="../api/errors.html#NN
 <pre><code class="language-c">int nng_dialer_id(nng_dialer dialer);
 int nng_listener_id(nng_listener listener);
 </code></pre>
-<p>The <a name="a019"></a><code>nng_dialer_id</code> and <a name="a020"></a><code>nng_listener_id</code> functions return a positive identifier if the supplied handle is valid.
+<p>The <a name="a020"></a><code>nng_dialer_id</code> and <a name="a021"></a><code>nng_listener_id</code> functions return a positive identifier if the supplied handle is valid.
 Otherwise they return <code>-1</code>.</p>
 <p>A dialer or listener is considered valid if it was ever created by one of the create or create-and-start functions.
 Handles allocated on the stack or statically should be initialized with <a href="../api/endpoint.html#initialization"><code>NNG_DIALER_INITIALIZER</code></a> or
@@ -341,7 +363,7 @@ Handles allocated on the stack or statically should be initialized with <a href=
 <pre><code class="language-c">int nng_dialer_get_url(nng_dialer dialer, const nng_url **urlp);
 int nng_listener_get_url(nng_listener listener, const nng_url **urlp);
 </code></pre>
-<p>The <a name="a021"></a><code>nng_dialer_get_url</code> and <a name="a022"></a><code>nng_listener_get_url</code> functions return the URL associated with <em>dialer</em> or <em>listener</em>.
+<p>The <a name="a022"></a><code>nng_dialer_get_url</code> and <a name="a023"></a><code>nng_listener_get_url</code> functions return the URL associated with <em>dialer</em> or <em>listener</em>.
 The URL pointer is stored in <em>urlp</em>.</p>
 <p>The returned URL belongs to the dialer or listener.
 It must not be modified or freed by the caller, and it is invalid after the dialer or listener is closed.</p>
@@ -352,7 +374,7 @@ That option has been removed.
 Use <code>nng_dialer_get_url</code> and <code>nng_listener_get_url</code> instead, which return a
 typed <a href="../api/url.html#url-structure"><code>nng_url</code></a> object rather than a string.</p>
 </blockquote>
-<h3 id="errors-4"><a class="header" href="#errors-4">Errors</a></h3>
+<h3 id="errors-5"><a class="header" href="#errors-5">Errors</a></h3>
 <p>These functions can return:</p>
 <ul>
 <li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The handle does not refer to an open dialer or listener.</li>
@@ -362,7 +384,6 @@ typed <a href="../api/url.html#url-structure"><code>nng_url</code></a> object ra
 int nng_dialer_get_int(nng_dialer dialer, const char *opt, int *valp);
 int nng_dialer_get_ms(nng_dialer dialer, const char *opt, nng_duration *valp);
 int nng_dialer_get_size(nng_dialer dialer, const char *opt, size_t *valp);
-int nng_dialer_get_addr(nng_dialer dialer, const char *opt, nng_sockaddr *valp);
 int nng_dialer_get_string(nng_dialer dialer, const char *opt, const char **valp);
 int nng_dialer_get_uint64(nng_dialer dialer, const char *opt, uint64_t *valp);
 
@@ -377,7 +398,6 @@ int nng_dialer_set_bool(nng_dialer dialer, const char *opt, bool val);
 int nng_dialer_set_int(nng_dialer dialer, const char *opt, int val);
 int nng_dialer_set_ms(nng_dialer dialer, const char *opt, nng_duration val);
 int nng_dialer_set_size(nng_dialer dialer, const char *opt, size_t val);
-int nng_dialer_set_addr(nng_dialer dialer, const char *opt, const nng_sockaddr *val);
 int nng_dialer_set_string(nng_dialer dialer, const char *opt, const char *val);
 int nng_dialer_set_uint64(nng_dialer dialer, const char *opt, uint64_t val);
 
@@ -388,8 +408,8 @@ int nng_listener_set_size(nng_listener listener, const char *opt, size_t val);
 int nng_listener_set_string(nng_listener listener, const char *opt, const char *val);
 int nng_listener_set_uint64(nng_listener listener, const char *opt, uint64_t val);
 </code></pre>
-<p>The <a name="a023"></a><code>nng_dialer_get</code> and <a name="a024"></a><code>nng_listener_get</code> function families retrieve option values from a dialer or listener.
-The <a name="a025"></a><code>nng_dialer_set</code> and <a name="a026"></a><code>nng_listener_set</code> function families configure option values on a dialer or listener.</p>
+<p>The <a name="a024"></a><code>nng_dialer_get</code> and <a name="a025"></a><code>nng_listener_get</code> function families retrieve option values from a dialer or listener.
+The <a name="a026"></a><code>nng_dialer_set</code> and <a name="a027"></a><code>nng_listener_set</code> function families configure option values on a dialer or listener.</p>
 <p>The function suffix identifies the type used for the option:</p>
 <div class="table-wrapper">
 <table>
@@ -410,30 +430,6 @@ The <a name="a025"></a><code>nng_dialer_set</code> and <a name="a026"></a><code>
 <p>Available options vary by transport and by option.
 Many common options are listed in <a href="../api/sock.html#socket-options">Socket Options</a> and transport-specific options are documented
 with each transport.</p>
-<h3 id="endpoint-specific-options"><a class="header" href="#endpoint-specific-options">Endpoint-Specific Options</a></h3>
-<p>The following endpoint-specific option is defined by the core API:</p>
-<div class="table-wrapper">
-<table>
-<thead>
-<tr><th>Option</th><th>Type</th><th>Description</th></tr>
-</thead>
-<tbody>
-<tr><td><code>NNG_OPT_LOCADDR</code><a name="NNG_OPT_LOCADDR"></a></td><td><code>nng_sockaddr</code></td><td>Dialers only. Configures the local address to bind before initiating outgoing connections, when supported by the transport.</td></tr>
-</tbody>
-</table>
-</div>
-<p><code>NNG_OPT_LOCADDR</code> is most useful for transports such as TCP or UDP where the
-application needs to choose the local interface or source address for outgoing
-connections.
-When used on a TCP dialer, the IP address portion is used as the source
-address, but the port is ignored and an ephemeral port is chosen by the
-system.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>Support for <code>NNG_OPT_LOCADDR</code> depends on the transport.
-Some transports support it on dialers, some do not, and listeners may expose
-related local-address information differently or not at all.</p>
-</blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Socket option values for <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> provide initial defaults
@@ -444,7 +440,7 @@ Changing those socket options does not affect existing dialers or listeners.</p>
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Once a dialer or listener has started, it is generally not possible to change its configuration.</p>
 </blockquote>
-<h3 id="errors-5"><a class="header" href="#errors-5">Errors</a></h3>
+<h3 id="errors-6"><a class="header" href="#errors-6">Errors</a></h3>
 <p>The option functions can return:</p>
 <ul>
 <li><a href="../api/errors.html#NNG_EBADTYPE"><code>NNG_EBADTYPE</code></a>: The typed accessor does not match the option type.</li>
@@ -467,10 +463,10 @@ They are documented in <a href="../api/tls.html#using-configuration-objects">Usi
 <h2 id="windows-security-descriptors"><a class="header" href="#windows-security-descriptors">Windows Security Descriptors</a></h2>
 <pre><code class="language-c">int nng_listener_set_security_descriptor(nng_listener listener, void *desc);
 </code></pre>
-<p>The <a name="a027"></a><code>nng_listener_set_security_descriptor</code> function configures the Windows security descriptor for <em>listener</em>.
+<p>The <a name="a028"></a><code>nng_listener_set_security_descriptor</code> function configures the Windows security descriptor for <em>listener</em>.
 This is used by transports that expose Windows named objects, such as the <a href="../tran/ipc.html">IPC transport</a>.
 It must be called before the listener is started.</p>
-<h3 id="errors-6"><a class="header" href="#errors-6">Errors</a></h3>
+<h3 id="errors-7"><a class="header" href="#errors-7">Errors</a></h3>
 <p>This function can return:</p>
 <ul>
 <li><a href="../api/errors.html#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The listener is closed.</li>

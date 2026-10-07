@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
+            window.path_to_searchindex_js = "../searchindex-9507106c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -300,8 +300,8 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 <h2 id="local-addresses-for-dialing"><a class="header" href="#local-addresses-for-dialing">Local Addresses for Dialing</a></h2>
 <p>The ability to specify the source address in the URL, to use when
 using <code>nn_dial</code> inside the URL is not present in NNG. The correct
-way to specify the local address is using the <code>NNG_OPT_LOCADDR</code> option on the
-dialer before starting to dial.</p>
+way to specify the local address is calling <a href="../api/endpoint.html#binding-a-dialer"><code>nng_dialer_bind</code></a> before starting
+the dialer.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
