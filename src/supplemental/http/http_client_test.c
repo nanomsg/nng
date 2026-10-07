@@ -309,6 +309,57 @@ test_http_client_transact(void)
 }
 
 static void
+test_http_client_hijack_stream(void)
+{
+	static const char *response =
+	    "HTTP/1.1 101 Switching Protocols\r\n"
+	    "Connection: Upgrade\r\n"
+	    "Upgrade: test\r\n"
+	    "\r\n"
+	    "test";
+	struct scripted_server srv;
+	nng_aio               *aio = NULL;
+	nng_http_client       *cli = NULL;
+	nng_http              *conn = NULL;
+	nng_stream            *stream = NULL;
+	nng_url               *url = NULL;
+	nng_iov                iov;
+	char                   buf[4];
+
+	scripted_server_start(&srv, &response, NULL, 1);
+	client_connect(srv.url, &url, &aio, &cli, &conn);
+
+	NUTS_PASS(nng_http_set_uri(conn, "/", NULL));
+	nng_http_write_request(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+
+	nng_http_read_response(conn, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_HTTP_STATUS(conn, NNG_HTTP_STATUS_SWITCHING);
+
+	NUTS_PASS(nng_http_hijack_stream(conn, &stream));
+	conn = NULL; // stream now owns the connection
+	NUTS_TRUE(stream != NULL);
+
+	iov.iov_buf = buf;
+	iov.iov_len = sizeof(buf);
+	NUTS_PASS(nng_aio_set_iov(aio, 1, &iov));
+	nng_stream_recv(stream, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(nng_aio_count(aio) == sizeof(buf));
+	NUTS_TRUE(memcmp(buf, "test", sizeof(buf)) == 0);
+
+	nng_stream_free(stream);
+	client_free(url, aio, cli, conn);
+	scripted_server_stop(&srv);
+	NUTS_PASS(srv.rv);
+	NUTS_TRUE(srv.requests == 1);
+}
+
+static void
 test_http_client_reuse(void)
 {
 	static const char *responses[] = {
@@ -740,6 +791,7 @@ test_http_client_content_length_ows(void)
 
 NUTS_TESTS = {
 	{ "http client request response", test_http_client_request_response },
+	{ "http client hijack stream", test_http_client_hijack_stream },
 	{ "http client transact", test_http_client_transact },
 	{ "http client invalid content length",
 	    test_http_client_invalid_content_length },

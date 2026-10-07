@@ -420,6 +420,13 @@ NNG_DECL nng_err nng_http_server_error(nng_http_server *, nng_http *);
 
 NNG_DECL nng_err nng_http_hijack(nng_http *);
 
+// nng_http_hijack_stream detaches the connection from its HTTP server, when
+// associated with one, and returns it as a byte stream.  The returned stream
+// owns the connection and preserves any data that the HTTP parser has already
+// read.  On success, the
+// caller must not use or close conn; it is released by nng_stream_free.
+NNG_DECL nng_err nng_http_hijack_stream(nng_http *, nng_stream **);
+
 // nng_http_client represents a "client" object.  Clients can be used
 // to create HTTP connections.  At present, connections are not cached
 // or reused, but that could change in the future.

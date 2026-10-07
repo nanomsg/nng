@@ -359,6 +359,7 @@ They can be used to transfer request or response body data as well.
 
 ```c
 nng_err nng_http_hijack(nng_http *conn);
+nng_err nng_http_hijack_stream(nng_http *conn, nng_stream **streamp);
 ```
 
 The {{i:`nng_http_hijack`}} function hijacks the connection _conn_, causing it
@@ -370,6 +371,12 @@ some other purpose, and should not be used any further by the server.
 
 This function is most useful when called from a handler function.
 (See [`nng_http_handler_alloc`].)
+
+The {{i:`nng_http_hijack_stream`}} function additionally returns the hijacked connection as an [`nng_stream`].
+The stream preserves any bytes already read by the HTTP parser before receiving subsequent data from the underlying connection.
+It takes ownership of _conn_; after successful completion, _conn_ must not be used or closed separately.
+Release the connection by calling [`nng_stream_free`] on the returned stream.
+It can also be used with a client connection after a protocol-upgrade response has been read.
 
 > [!NOTE]
 > It is the responsibility of the caller to dispose of the underlying connection when it is no longer needed.

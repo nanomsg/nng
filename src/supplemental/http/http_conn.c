@@ -90,6 +90,98 @@ struct nng_http_conn {
 	bool              iserr;
 };
 
+typedef struct nni_http_stream {
+	nng_stream stream;
+	nng_http  *conn;
+} nni_http_stream;
+
+static void
+http_stream_close(void *arg)
+{
+	nni_http_stream *stream = arg;
+
+	nni_http_conn_close(stream->conn);
+}
+
+static void
+http_stream_stop(void *arg)
+{
+	nni_http_stream *stream = arg;
+
+	nni_http_conn_stop(stream->conn);
+}
+
+static void
+http_stream_free(void *arg)
+{
+	nni_http_stream *stream = arg;
+
+	nni_http_conn_fini(stream->conn);
+	NNI_FREE_STRUCT(stream);
+}
+
+static void
+http_stream_recv(void *arg, nng_aio *aio)
+{
+	nni_http_stream *stream = arg;
+
+	nni_http_read(stream->conn, aio);
+}
+
+static void
+http_stream_send(void *arg, nng_aio *aio)
+{
+	nni_http_stream *stream = arg;
+
+	nni_http_write(stream->conn, aio);
+}
+
+static nng_err
+http_stream_get(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	nni_http_stream *stream = arg;
+
+	return (nni_http_conn_getopt(stream->conn, name, buf, szp, t));
+}
+
+static nng_err
+http_stream_set(
+    void *arg, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	NNI_ARG_UNUSED(arg);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(buf);
+	NNI_ARG_UNUSED(sz);
+	NNI_ARG_UNUSED(t);
+
+	return (NNG_ENOTSUP);
+}
+
+static const nng_sockaddr *
+http_stream_peer_addr(void *arg)
+{
+	nni_http_stream *stream = arg;
+
+	return (nni_http_peer_addr(stream->conn));
+}
+
+static const nng_sockaddr *
+http_stream_self_addr(void *arg)
+{
+	nni_http_stream *stream = arg;
+
+	return (nni_http_self_addr(stream->conn));
+}
+
+static nng_err
+http_stream_peer_cert(void *arg, nng_tls_cert **certp)
+{
+	nni_http_stream *stream = arg;
+
+	return (nni_http_conn_peer_cert(stream->conn, certp));
+}
+
 nng_http_req *
 nni_http_conn_req(nng_http *conn)
 {
@@ -155,6 +247,17 @@ http_close(nni_http_conn *conn)
 void
 nni_http_conn_close(nni_http_conn *conn)
 {
+	nni_mtx_lock(&conn->mtx);
+	http_close(conn);
+	nni_mtx_unlock(&conn->mtx);
+}
+
+void
+nni_http_conn_stop(nni_http_conn *conn)
+{
+	nni_aio_stop(&conn->wr_aio);
+	nni_aio_stop(&conn->rd_aio);
+
 	nni_mtx_lock(&conn->mtx);
 	http_close(conn);
 	nni_mtx_unlock(&conn->mtx);
@@ -1555,11 +1658,9 @@ nni_http_conn_peer_cert(nni_http_conn *conn, nng_tls_cert **certp)
 void
 nni_http_conn_fini(nni_http_conn *conn)
 {
-	nni_aio_stop(&conn->wr_aio);
-	nni_aio_stop(&conn->rd_aio);
+	nni_http_conn_stop(conn);
 
 	nni_mtx_lock(&conn->mtx);
-	http_close(conn);
 	if (conn->sock != NULL) {
 		nng_stream_free(conn->sock);
 		conn->sock = NULL;
@@ -1572,6 +1673,35 @@ nni_http_conn_fini(nni_http_conn *conn)
 	nni_free(conn->buf, conn->bufsz);
 	nni_mtx_fini(&conn->mtx);
 	NNI_FREE_STRUCT(conn);
+}
+
+nng_err
+nni_http_hijack_stream(nni_http_conn *conn, nng_stream **streamp)
+{
+	nni_http_stream *stream;
+
+	if (streamp == NULL) {
+		return (NNG_EINVAL);
+	}
+	if ((stream = NNI_ALLOC_STRUCT(stream)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	stream->conn               = conn;
+	stream->stream.s_close     = http_stream_close;
+	stream->stream.s_stop      = http_stream_stop;
+	stream->stream.s_free      = http_stream_free;
+	stream->stream.s_recv      = http_stream_recv;
+	stream->stream.s_send      = http_stream_send;
+	stream->stream.s_get       = http_stream_get;
+	stream->stream.s_set       = http_stream_set;
+	stream->stream.s_peer_addr = http_stream_peer_addr;
+	stream->stream.s_self_addr = http_stream_self_addr;
+	stream->stream.s_peer_cert = http_stream_peer_cert;
+
+	(void) nni_http_hijack(conn);
+	*streamp = &stream->stream;
+	return (NNG_OK);
 }
 
 static nng_err
