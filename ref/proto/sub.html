@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -187,7 +187,7 @@ The subscribers maintain their own subscriptions, and filter them locally.
 Thus, this pattern should not be used in an attempt to
 reduce bandwidth consumption.</p>
 </blockquote>
-<p>The topics that subscribers subscribe to is compared to the leading bytes of
+<p>Subscription topics are compared to the leading bytes of
 the message body.
 Applications should construct their messages accordingly.</p>
 <h3 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h3>
@@ -218,7 +218,7 @@ for receiving.</p>
 int nng_sub0_ctx_unsubscribe(nng_ctx id, const void *buf, size_t sz);
 </code></pre>
 <p>The <a name="a008"></a><code>nng_sub0_ctx_subscribe</code> and <a name="a009"></a><code>nng_sub0_ctx_unsubscribe</code> functions
-perform manage subscriptions for the context in precisely the same way that
+manage subscriptions for the context in precisely the same way that
 <a href="../proto/sub.html#socket-operations"><code>nng_sub0_socket_subscribe</code></a> and <a href="../proto/sub.html#socket-operations"><code>nng_sub0_socket_unsubscribe</code></a> do.</p>
 <p>Each context maintains its own set of subscriptions, and these are also independent
 of socket level subscriptions.</p>

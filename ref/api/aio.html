@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -202,7 +202,7 @@ Instead the application registers a callback function to be executed
 when the operation is complete (whether successfully or not).
 This callback will be executed exactly once.</p>
 <p>The asynchronous I/O framework also supports <a href="../api/aio.html#cancellation">cancellation</a> of
-operations that are already in progress as well setting a maximum
+operations that are already in progress as well as setting a maximum
 <a href="../api/aio.html#set-timeout">timeout</a> for them to complete.</p>
 <p>It is also possible to initiate an asynchronous operation, and <a href="../api/aio.html#wait-for-completion">wait</a> for it to
 complete, creating a synchronous flow from an asynchronous one.</p>
@@ -227,9 +227,9 @@ success using <a href="../api/aio.html#result-of-operation"><code>nng_aio_result
 <pre><code class="language-c">void nng_aio_free(nng_aio *aio);
 void nng_aio_reap(nng_aio *aio);
 </code></pre>
-<p>The <a name="a007"></a><code>nng_aio_free</code> handle destroys the handle <em>aio</em>, waiting for any operations
+<p>The <a name="a007"></a><code>nng_aio_free</code> function destroys the handle <em>aio</em>, waiting for any operations
 and associated callbacks to complete before doing so.</p>
-<p>The <a name="a008"></a><code>nng_aio_reap</code> handle destroys the handle <em>aio</em> asynchronously, using a <em>reaper</em>
+<p>The <a name="a008"></a><code>nng_aio_reap</code> function destroys the handle <em>aio</em> asynchronously, using a <em>reaper</em>
 <a href="../api/thread.html">thread</a> to do so. It does not wait for the object to be destroyed. Thus this function
 is safe to call from <em>aio</em>’s own callback.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -254,7 +254,7 @@ then <a href="../api/aio.html#result-of-operation"><code>nng_aio_result</code></
 <p>The <a name="a010"></a><code>nng_aio_cancel</code> function acts like <code>nng_aio_abort</code>, but uses the error code
 <a href="../api/errors.html#NNG_ECANCELED"><code>NNG_ECANCELED</code></a><a name="a011"></a>.</p>
 <p>The <a name="a012"></a><code>nng_aio_stop</code> function aborts the <em>aio</em> operation with <a href="../api/errors.html#NNG_ESTOPPED"><code>NNG_ESTOPPED</code></a>,
-and then waits the operation and any associated callback to complete.
+and then waits for the operation and any associated callback to complete.
 This function also marks <em>aio</em> itself permanently stopped, so that any
 new operations scheduled by I/O providers using <a href="../api/aio.html#starting-an-operation"><code>nng_aio_start</code></a>
 return false. Thus this function should be used to teardown operations.</p>
@@ -299,7 +299,7 @@ Doing so may result in a deadlock.</p>
 <pre><code class="language-c">bool nng_aio_busy(nng_aio *aio);
 </code></pre>
 <p>The <a name="a016"></a><code>nng_aio_busy</code> function returns <code>true</code> if the <em>aio</em> is currently busy performing an
-operation or is executing a completion callback. Otherwise it return <code>false</code>.
+operation or is executing a completion callback. Otherwise it returns <code>false</code>.
 This is the same test used internally by <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
@@ -326,7 +326,7 @@ The changes made by it to the <em>aio</em> do not persist across operations.</p>
 but it does require extra complexity on the part of the caller.</p>
 </blockquote>
 <h3 id="example-1-waiting-for-an-operation"><a class="header" href="#example-1-waiting-for-an-operation">Example 1: Waiting for An Operation</a></h3>
-<p>One of easiest ways to use this function is with <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>. (In fact, the <a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a> and
+<p>One of the easiest ways to use this function is with <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>. (In fact, the <a href="../api/sock.html#nng_sendmsg"><code>nng_sendmsg</code></a> and
 <a href="../api/sock.html#nng_recvmsg"><code>nng_recvmsg</code></a> family of functions do this internally.) For example:</p>
 <pre><code class="language-c">bool skipped;
 nng_aio_skip_callback(aio, &amp;skipped);
@@ -394,7 +394,7 @@ The values pointed to by the <code>iov_buf</code> members are <em>not</em> copie
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>Most functions using <code>nng_iov</code> do not guarantee to transfer all of the data that they
-are requested to. To be sure that correct amount of data is transferred, as well as to
+are requested to. To be sure that the correct amount of data is transferred, as well as to
 start an attempt to complete any partial transfer, check the amount of data transferred by
 calling <a href="../api/aio.html#result-of-operation"><code>nng_aio_count</code></a>.</p>
 </blockquote>
@@ -446,7 +446,7 @@ Some asynchronous operations, such as those dealing with <a href="../api/stream.
 vectors, where data to be transferred is either gathered from multiple separate regions of memory, or
 scattered into separate regions of memory. For example a message may have a header located at one location
 in memory, and a payload located in another.</p>
-<p>The <a name="a027"></a><code>nng_aio_set_iov</code> function configures the <em>aio</em> to use <em>nio</em> separate segments, described by
+<p>The <a name="a027"></a><code>nng_aio_set_iov</code> function configures the <em>aio</em> to use <em>niov</em> separate segments, described by
 the elements in <em>iov</em>. For each of these, the segment of size <em>iov_len</em> located at <em>iov_buf</em> will be used.</p>
 <p>The elements of <em>iov</em> will be copied into <em>aio</em>, so the vector may be located
 on the stack or another temporary location. The locations referenced by it, <em>must</em> remain valid for
@@ -473,7 +473,7 @@ The <code>nng_aio_start</code> function also registers the cancellation function
 associated argument <em>arg</em> with the operation. This allows the operation to be canceled.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
-<p>This function must not be called on an <em>aio</em> that is already has an operation in progress.</p>
+<p>This function must not be called on an <em>aio</em> that already has an operation in progress.</p>
 </blockquote>
 <p>If <em>fn</em> is <code>NULL</code>, then the operation cannot be canceled.</p>
 <p>If <code>nng_aio_start</code> returns <code>false</code>, then the <em>aio</em> has been permanently stopped

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -541,7 +541,7 @@ reading it on a pipe, the value returned is the header sent by the remote peer.<
 <h2 id="security-descriptors-windows-only"><a class="header" href="#security-descriptors-windows-only">Security Descriptors (Windows Only)</a></h2>
 <p>The <code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code> option is removed, and replaced
 with the functions <a href="../api/endpoint.html#windows-security-descriptors"><code>nng_listener_set_security_descriptor</code></a> and
-[<code>nng_stream_listener_set_security_descriptor</code>].</p>
+<a href="../api/stream.html#windows-security-descriptors"><code>nng_stream_listener_set_security_descriptor</code></a>.</p>
 <p>Security descriptor support is only relevant to Windows,
 and is supported only by the <code>winpipe://</code> named-pipe transport. It is not
 available for the AF_UNIX <code>ipc://</code> or <code>unix://</code> transports.</p>
@@ -552,12 +552,12 @@ See <a href="../api/args.html#parse-command-line-arguments"><code>nng_args_parse
 <h2 id="zerotier-support-removed"><a class="header" href="#zerotier-support-removed">ZeroTier Support Removed</a></h2>
 <p>The Layer 2 special ZeroTier transport has been removed.
 It is possible to use NNG with ZeroTier using TCP/IP, and a future update
-is planned to provided coexistence between ZeroTier &amp; the native stack’s TCP/IP using lwIP.</p>
+is planned to provide coexistence between ZeroTier and the native stack’s TCP/IP using lwIP.</p>
 <h2 id="abstract-autobinding-no-longer-supported"><a class="header" href="#abstract-autobinding-no-longer-supported">Abstract Autobinding No Longer Supported</a></h2>
 <p>As we have removed <code>NNG_OPT_LOCADDR</code>, it is no longer possible to meaningfully
 use autobinding with abstract sockets on Linux. This is trivially worked around by using a
 large (say 128-bit) random integer as the name.</p>
-<p>This can be done via using of <a href="../api/misc.html#get-random-number"><code>nng_random</code></a> combined with <code>sprintf</code>, as the following example demonstrates:</p>
+<p>This can be done by using <a href="../api/misc.html#get-random-number"><code>nng_random</code></a> combined with <code>sprintf</code>, as the following example demonstrates:</p>
 <pre><code class="language-c">char url[256];
 snprintf(url, sizeof (url), "abstract://my-app-%08x-%08x-%08x-%08x",
     nng_random(), nng_random(), nng_random(), nng_random());

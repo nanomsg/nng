@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -236,7 +236,7 @@ If reallocation fails due to insufficient memory, then the original is left inta
 is at least <em>capacity</em> bytes. Use of this function to ensure the total anticipated
 capacity is present in the message may help prevent many small allocations.</p>
 <p>Both <code>nng_msg_realloc</code> and <code>nng_msg_reserve</code> return zero on success, or may return
-<a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if insufficient memory exists to preform allocation.</p>
+<a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a> if insufficient memory exists to perform allocation.</p>
 <blockquote class="blockquote-tag blockquote-tag-important">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"></path></svg>Important</p>
 <p>Any pointers to message content obtained before a call to <code>nng_msg_realloc</code> or
@@ -270,12 +270,12 @@ The base <code>nng_msg_append</code> function appends <em>size</em> bytes of unt
 message.</p>
 <p>Use of the typed versions, ending in suffixes <code>_u16</code>, <code>_u32</code>, and <code>_u64</code> allows
 for unsigned integers to be appended directly. The integers are encoded in network byte order, with
-the most significant byte appearing first. The message body will by two, four, or eight
+the most significant byte appearing first. The message body will be two, four, or eight
 bytes accordingly.</p>
-<p>Data may inserted before the rest of the message body by using the <a name="a015"></a><code>nng_msg_insert</code> functions.
+<p>Data may be inserted before the rest of the message body by using the <a name="a015"></a><code>nng_msg_insert</code> functions.
 This will attempt to use “headroom” in the message to avoid a data copy.
-Otherwise they are like the <code>nng_msg_append</code> functions except that the put the data in front
-of the messages instead of at the end.</p>
+Otherwise they are like the <code>nng_msg_append</code> functions except that they place the data in front
+of the message instead of at the end.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>Message headroom is limited, so <code>nng_msg_insert</code> is best used sparingly.
@@ -293,11 +293,11 @@ int nng_msg_trim_u16(nng_msg *msg, uint16_t *val16);
 int nng_msg_trim_u32(nng_msg *msg, uint32_t *val32);
 int nng_msg_trim_u64(nng_msg *msg, uint64_t *val64);
 </code></pre>
-<p>The <a name="a016"></a><code>nng_msg_chop</code> functions remove data from the end of the body of message <em>msg</em>,
+<p>The <a name="a016"></a><code>nng_msg_chop</code> functions remove data from the end of the body of the message <em>msg</em>,
 reducing the message length by either <em>size</em>, or the appropriate value size.</p>
-<p>The <a name="a017"></a><code>nng_msg_trim</code> functions remove data from the beginning of the message body of <em>msg</em>.
+<p>The <a name="a017"></a><code>nng_msg_trim</code> functions remove data from the beginning of the message body of <em>msg</em>,
 but are otherwise just like the <code>nng_msg_chop</code> functions.</p>
-<p>If the message is not big enough to remove requisite amount of bytes, these functions
+<p>If the message is not big enough to remove the requisite amount of bytes, these functions
 return <code>NNG_EINVAL</code>. Otherwise they return zero.</p>
 <p>Additionally, functions with typed suffixes (<code>_u16</code>, <code>_u32</code>, <code>_u64</code>) decode the data and return it
 through the appropriate <em>val</em> pointer.</p>
@@ -350,7 +350,7 @@ int nng_msg_header_trim_u64(nng_msg *msg, uint64_t *val64);
 <p>The <a name="a023"></a><code>nng_msg_header_trim</code> functions remove data from the beginning of the message header,
 and the <a name="a024"></a><code>nng_msg_header_chop</code> functions remove data from the end of the message header.</p>
 <p>These functions act just like the <a href="../api/msg.html#consume-from-body"><code>nng_msg_trim</code></a> and <a href="../api/msg.html#consume-from-body"><code>nng_msg_chop</code></a> functions,
-except that they operate the message header rather than the message body.</p>
+except that they operate on the message header rather than the message body.</p>
 <h2 id="message-pipe"><a class="header" href="#message-pipe">Message Pipe</a></h2>
 <pre><code class="language-c">nng_pipe nng_msg_get_pipe(const nng_msg *msg);
 void nng_msg_set_pipe(nng_msg *msg, nng_pipe p);

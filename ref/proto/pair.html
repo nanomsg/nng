@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -184,8 +184,8 @@ no peer is able to receive the message.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Even though this mode may appear to be reliable, because back-pressure
-prevents discarding messages most of the time, there are topologies involving
-where messages may be discarded.
+prevents discarding messages most of the time, there are topologies where
+messages may be discarded.
 Applications that require reliable delivery semantics should consider using
 <a href="../proto/req.html"><em>REQ</em></a> sockets, or implement their own acknowledgment layer on top of <em>PAIR</em> sockets.</p>
 </blockquote>
@@ -224,9 +224,8 @@ choose the remote peer to receive an outgoing message by setting the
 <a href="../api/pipe.html#pipes"><code>nng_pipe</code></a> to use for the outgoing message using <a href="../api/msg.html#message-pipe"><code>nng_msg_set_pipe</code></a>.</p>
 <p>If no remote peer is specified by the sender, then the protocol will select
 any available connected peer.</p>
-<p>Most often the value of the outgoing pipe will be obtained from an incoming
-message using <a href="../api/msg.html#message-pipe"><code>nng_msg_get_pipe</code></a>.
-such as when replying to an incoming message.</p>
+<p>Most often, the value of the outgoing pipe will be obtained from an incoming
+message using <a href="../api/msg.html#message-pipe"><code>nng_msg_get_pipe</code></a>, such as when replying to an incoming message.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Directed send <em>only</em> works with directly connected peers.

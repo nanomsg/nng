@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -183,7 +183,7 @@ filtering subscriptions, or automatically retrying requests.</p>
 
 typedef struct nng_socket_s nng_socket;
 </code></pre>
-<p>The <a name="a002"></a><code>nng_socket</code> structure represents socket. This is a handle, and
+<p>The <a name="a002"></a><code>nng_socket</code> structure represents a socket. This is a handle, and
 the members of it are opaque. However, unlike a pointer, it is usually
 passed by value.</p>
 <p>A socket may be initialized statically with the <code>NNG_SOCKET_INITIALIZER</code> macro,
@@ -205,7 +205,7 @@ then the return value may be <code>-1</code>.</p>
 protocol identifier for the socket’s protocol, and of the protocol peers will use when
 communicating with the socket.</p>
 <p>The <a name="a006"></a><code>nng_socket_proto_name</code> and <a name="a007"></a><code>nng_socket_peer_name</code> functions provide the ASCII
-names of the socket’s protocol, and of the protocol peers of the socket use.
+names of the socket’s protocol, and of the protocol peers of the socket will use.
 The value stored in <em>name</em> is a fixed string located in program text, and must not be freed
 or altered. It is guaranteed to remain valid while this library is present.</p>
 <p>The <a name="a008"></a><code>nng_socket_raw</code> function determines whether the socket is in
@@ -458,7 +458,7 @@ for an underlying transport, the option should be set on the <a href="../api/end
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The <code>NNG_OPT_RECONNMAXT</code>, <code>NNG_OPT_RECONNMINT</code>, and <code>NNG_OPT_RECVMAXSZ</code> options are just the initial defaults that <a href="../api/endpoint.html">dialers</a>
 (and for <code>NNG_OPT_RECVMAXSZ</code> also <a href="../api/endpoint.html">listeners</a>)
-will use. After the dialer or listener is created, changes to the socket’s value will have no affect on that dialer or listener.</p>
+will use. After the dialer or listener is created, changes to the socket’s value will have no effect on that dialer or listener.</p>
 </blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
@@ -499,7 +499,7 @@ were available in previous versions of NNG.</p>
 </blockquote>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>The file descriptors supplied by these functions is not used for transporting message data.
+<p>The file descriptors supplied by these functions are not used for transporting message data.
 The only valid use of these file descriptors is for polling for the ability to send or receive
 messages on the socket.</p>
 </blockquote>

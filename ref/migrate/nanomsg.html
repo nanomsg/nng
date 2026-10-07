@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -287,7 +287,7 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 <tr><td><code>ENOENT</code></td><td><a href="../api/errors.html#NNG_ENOENT"><code>NNG_ENOENT</code></a></td><td></td></tr>
 <tr><td><code>EPROTO</code></td><td><a href="../api/errors.html#NNG_EPROTO"><code>NNG_EPROTO</code></a></td><td></td></tr>
 <tr><td><code>EHOSTUNREACH</code></td><td><a href="../api/errors.html#NNG_EUNREACHABLE"><code>NNG_EUNREACHABLE</code></a></td><td></td></tr>
-<tr><td><code>EACCCES</code></td><td><a href="../api/errors.html#NNG_EPERM"><code>NNG_EPERM</code></a>, <a href="../api/errors.html#NNG_EWRITEONLY"><code>NNG_EWRITEONLY</code></a>, <a href="../api/errors.html#NNG_EREADONLY"><code>NNG_EREADONLY</code></a>, <a href="../api/errors.html#NNG_ECRYPTO"><code>NNG_ECRYPTO</code></a>, <a href="../api/errors.html#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a></td><td>NNG has more fine grained reasons for access failures.</td></tr>
+<tr><td><code>EACCES</code></td><td><a href="../api/errors.html#NNG_EPERM"><code>NNG_EPERM</code></a>, <a href="../api/errors.html#NNG_EWRITEONLY"><code>NNG_EWRITEONLY</code></a>, <a href="../api/errors.html#NNG_EREADONLY"><code>NNG_EREADONLY</code></a>, <a href="../api/errors.html#NNG_ECRYPTO"><code>NNG_ECRYPTO</code></a>, <a href="../api/errors.html#NNG_EPEERAUTH"><code>NNG_EPEERAUTH</code></a></td><td>NNG has more fine-grained reasons for access failures.</td></tr>
 <tr><td><code>EMSGSIZE</code></td><td><a href="../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a></td><td></td></tr>
 <tr><td><code>ECONNABORTED</code></td><td><a href="../api/errors.html#NNG_ECONNABORTED"><code>NNG_ECONNABORTED</code></a></td><td></td></tr>
 <tr><td><code>ECONNRESET</code></td><td><a href="../api/errors.html#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a></td><td></td></tr>
@@ -298,7 +298,7 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 </table>
 </div>
 <h2 id="local-addresses-for-dialing"><a class="header" href="#local-addresses-for-dialing">Local Addresses for Dialing</a></h2>
-<p>The ability to specify the source address in the URL,to use when
+<p>The ability to specify the source address in the URL, to use when
 using <code>nn_dial</code> inside the URL is not present in NNG. The correct
 way to specify the local address is using the <code>NNG_OPT_LOCADDR</code> option on the
 dialer before starting to dial.</p>

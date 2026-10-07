@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -311,7 +311,7 @@ bool nng_stat_bool(const nng_stat *stat);
 of type <a href="../api/stats.html#NNG_STAT_COUNTER"><code>NNG_STAT_COUNTER</code></a>, <a href="../api/stats.html#NNG_STAT_LEVEL"><code>NNG_STAT_LEVEL</code></a>, or <a href="../api/stats.html#NNG_STAT_ID"><code>NNG_STAT_ID</code></a>.
 If <em>stat</em> is not one of these types, then it returns zero.</p>
 <p>The <a name="a022"></a><code>nng_stat_bool</code> function returns the Boolean value (either <code>true</code> or <code>false</code>) for the statistic <em>stat</em> of
-type <a href="../api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistics is not of this type, then it returns <code>false</code>.</p>
+type <a href="../api/stats.html#NNG_STAT_BOOLEAN"><code>NNG_STAT_BOOLEAN</code></a>. If the statistic is not of this type, then it returns <code>false</code>.</p>
 <p>The <a name="a023"></a><code>nng_stat_string</code> function returns a pointer to a string value for the statistic <em>stat</em>,
 of type <a href="../api/stats.html#statistic-value"><code>NNG_STAT_STRING</code></a>. This string will remain valid until the snapshot that
 <em>stat</em> was collected with is deallocated with <a href="../api/stats.html#freeing-a-snapshot"><code>nng_stats_free</code></a>. If the statistic
@@ -333,7 +333,7 @@ The following units may be returned from <a name="a024"></a><code>nng_stat_unit<
 <pre><code class="language-c">uint64_t nng_stat_timestamp(const nng_stat *stat);
 </code></pre>
 <p>Statistics have a timestamp indicating when the value was sampled,
-obtained via <a name="a030"></a><code>nng_stat_timestamp</code>. The timestamp is given in
+obtained via <a name="a030"></a><code>nng_stat_timestamp</code>. The timestamp is given
 in milliseconds since a reference time, and the reference time used
 here is the same reference time used for <a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>

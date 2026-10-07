@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -190,8 +190,7 @@ The subscribers maintain their own subscriptions, and filter them locally.
 Thus, this pattern should not be used in an attempt to reduce bandwidth
 consumption.</p>
 </blockquote>
-<p>The topics that subscribers subscribe to is just the first part of
-the message body.
+<p>The topic for a given message is just the first leading bytes of the message body.
 Applications should construct their messages accordingly.</p>
 <h2 id="socket-operations"><a class="header" href="#socket-operations">Socket Operations</a></h2>
 <p>The <a href="../api/sock.html#opening-a-socket"><code>nng_pub0_open</code></a> function creates a publisher socket.

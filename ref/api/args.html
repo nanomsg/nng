@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -191,7 +191,7 @@ in programs that are not linked against the NNG library.</p>
     int         a_short; // Short option (no clustering!)
     int         a_val;   // Value stored on a good parse (&gt;0)
     bool        a_arg;   // Option takes an argument if true
-} nng_optspec;
+} nng_arg_spec;
 
 #define NNG_ARG_END     (-1)
 #define NNG_ARG_INVAL   (-2)
@@ -199,7 +199,7 @@ in programs that are not linked against the NNG library.</p>
 #define NNG_ARG_MISSING (-4)
 
 int nng_args_parse(int argc, char *const *argv,
-                   const nng_optspec *spec, int *val, char **arg, int *idx);
+    const nng_arg_spec *specs, int *val, char **optarg, int *optidx);
 </code></pre>
 <p>The <a name="a001"></a><code>nng_args_parse</code> function is intended to facilitate parsing
 <a name="a002"></a>command-line arguments.
@@ -208,19 +208,19 @@ but it is available on all platforms, and it includes some capabilities missing 
 <p>The function parses arguments from
 <code>main</code>
 (using <em>argc</em> and <em>argv</em>),
-starting at the index referenced by <em>idx</em>.<sup class="footnote-reference" id="fr-args-1"><a href="#footnote-args">1</a></sup>
-(New invocations typically set the value pointed to by <em>idx</em> to 1.)</p>
-<p>Options are parsed as specified by <em>spec</em> (see <a href="#argument-specification">Argument Specification</a>.)
+starting at the index referenced by <em>optidx</em>.<sup class="footnote-reference" id="fr-args-1"><a href="#footnote-args">1</a></sup>
+(New invocations typically set the value pointed to by <em>optidx</em> to 1.)</p>
+<p>Options are parsed as specified by <em>specs</em> (see <a href="#argument-specification">Argument Specification</a>.)
 The value of the parsed option will be stored at the address indicated by
-<em>val</em>, and the value of <em>idx</em> will be incremented to reflect the next
+<em>val</em>, and the value of <em>optidx</em> will be incremented to reflect the next
 option to parse.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
 <p>For using this to parse command-line like strings that do not include
-the command name itself, set the value referenced by <em>idx</em> to zero instead of one.</p>
+the command name itself, set the value referenced by <em>optidx</em> to zero instead of one.</p>
 </blockquote>
 <p>If the option had an argument, a pointer to that is returned at the address
-referenced by <em>arg</em>.</p>
+referenced by <em>optarg</em>.</p>
 <p>This function should be called repeatedly, until it returns either -1
 (indicating the end of options is reached) or a non-zero error code is
 returned.</p>
@@ -249,7 +249,7 @@ The use of a slash in lieu of the dash is <em>not</em> supported, in order to av
 This value may be set to 0 if no <a href="#short-options">short option</a> is needed.</p>
 </li>
 <li>
-<p><code>o_val</code>:</p>
+<p><code>a_val</code>:</p>
 <p>This is a numeric value that is unique to this option.
 This value is assigned by the application program, and must be non-zero for a valid option.
 If this is zero, then it indicates the end of the specifications, and the
@@ -282,7 +282,7 @@ a single <em>argv</em> element, is not supported by this function (yet).</p>
 </blockquote>
 <h3 id="prefix-matching"><a class="header" href="#prefix-matching">Prefix Matching</a></h3>
 <p>When using long options, the parser will match if it is equal to a prefix
-of the <code>a_name</code> member of a option specification, provided that it do so
+of the <code>a_name</code> member of an option specification, provided that it does so
 unambiguously (meaning it must not match any other option specification.)</p>
 <h2 id="example"><a class="header" href="#example">Example</a></h2>
 <p>The following program fragment demonstrates this function.</p>
@@ -353,7 +353,7 @@ unambiguously (meaning it must not match any other option specification.)</p>
 <ol class="footnote-definition">
 <li id="footnote-args">
 <p>Parsing argument strings from other sources can be done as well,
-although usually then <em>idx</em> will be initialized to zero. <a href="#fr-args-1">↩</a></p>
+although usually then <em>optidx</em> will be initialized to zero. <a href="#fr-args-1">↩</a></p>
 </li>
 </ol>
 

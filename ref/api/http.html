@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -211,7 +211,7 @@ AF_UNIX support. On builds without it, HTTP client or server allocation returns
 <code>Host: localhost</code> by default. Applications that use virtual-host routing can
 replace it with <a href="../api/http.html#modifying-headers"><code>nng_http_set_header</code></a>.</p>
 <h2 id="connection-object"><a class="header" href="#connection-object">Connection Object</a></h2>
-<pre><code class="language-c">typedef struct nng_http nng_http;
+<pre><code class="language-c">typedef struct nng_http_conn nng_http;
 </code></pre>
 <p>The <a name="a001"></a><code>nng_http</code> object represents a single logical HTTP connection to the server.
 For HTTP/1.1 and earlier, this will correspond to a single TCP connection, but the object
@@ -247,7 +247,7 @@ or <a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a> if there 
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>The <em>uri</em> and <em>query</em> must be already percent-encoded if necessary.</p>
 </blockquote>
-<p>The <a name="a006"></a><code>nni_http_get_uri</code> function is used to obtain the URI that was previously set by <code>nng_http_set_uri</code>.
+<p>The <a name="a006"></a><code>nng_http_get_uri</code> function is used to obtain the URI that was previously set by <code>nng_http_set_uri</code>.
 If the URI is unset (such as for a freshly created connection), then it returns <code>NULL</code>. The returned value
 will have any query concatenated, for example “/api/get_user.cgi?name=garrett”.</p>
 <h3 id="http-version"><a class="header" href="#http-version">HTTP Version</a></h3>
@@ -272,7 +272,7 @@ It might be easiest to just fail any request coming in that is not HTTP/1.1.</p>
 <h3 id="http-status"><a class="header" href="#http-status">HTTP Status</a></h3>
 <pre><code class="language-c">typedef enum ... nng_http_status;
 nng_http_status nng_http_get_status(nng_http *conn);
-const char *nng_http_get_reason(nng_http_conn *conn);
+const char *nng_http_get_reason(nng_http *conn);
 void nng_http_set_status(nng_http *conn, nng_http_status status, const char *reason);
 </code></pre>
 <p>The <a name="a009"></a><code>nng_http_get_status</code> function obtains the numeric code (typically numbered from 100 through 599) returned
@@ -374,18 +374,18 @@ that <code>nng_http_get_header</code> uses. To start, it is called with <em>next
 If a header was found, then it returns <code>true</code>, and sets <em>keyp</em> and <em>valuep</em> to values containing
 the header name and value. It also updates <em>next</em>, which should be used for the next iteration.</p>
 <p>Once <code>nng_http_next_header</code> returns <code>false</code>, further calls with the same parameters will continue to do so.
-The scan can be rest by setting <em>next</em> to <code>NULL</code>.</p>
+The scan can be reset by setting <em>next</em> to <code>NULL</code>.</p>
 <h3 id="modifying-headers"><a class="header" href="#modifying-headers">Modifying Headers</a></h3>
 <pre><code class="language-c">nng_err nng_http_add_header(nng_http *conn, const char *key, const char *val);
 nng_err nng_http_set_header(nng_http *conn, const char *key, const char *val);
 void nng_http_del_header(nng_http *conn, const char *key);
 </code></pre>
 <p>The <a name="a015"></a><code>nng_http_add_header</code>, <a name="a016"></a><code>nng_http_set_header</code>, and <a name="a017"></a><code>nng_http_del_header</code> functions are
-used to add a modify either the request or response headers for <em>conn</em> prior to sending to the connected peer on <em>conn</em>.</p>
+used to add or modify either the request or response headers for <em>conn</em> prior to sending to the connected peer on <em>conn</em>.</p>
 <p>Thus, if the <em>conn</em> is a client connection created by <a href="../api/http.html#creating-connections"><code>nng_http_client_connect</code></a>, then the request headers are modified.
 Conversely, if it is a connection created by an HTTP server and used in a callback function, then the response headers are modified.</p>
 <p>The <code>nng_http_add_header</code> function adds a header with the name <em>key</em>, and the value <em>val</em>, to the list of headers.
-In so doing, it may bring collapse multiple headers with the same name into a comma separated list, following
+In so doing, it may collapse multiple headers with the same name into a comma-separated list, following
 the syntax specified in RFC 9110. The function may return <a href="../api/errors.html#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>, <a href="../api/errors.html#NNG_EMSGSIZE"><code>NNG_EMSGSIZE</code></a>, or <a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.</p>
 <p>The <code>nng_http_set_header</code> function adds the header if it does not already exist, but replaces any and all previously existing
 headers with the same name <em>key</em>, if they exist. In all other respects it behaves similarly to <code>nng_http_add_header</code>.</p>
@@ -397,15 +397,15 @@ This implementation may apply those semantics, in order to conform to the specif
 as by guaranteeing that only a single instance of one of these headers is present.</p>
 </blockquote>
 <h3 id="retrieving-body-content"><a class="header" href="#retrieving-body-content">Retrieving Body Content</a></h3>
-<pre><code class="language-c">void nng_http_get_body(nng_http_conn *conn, void **datap, size_t *sizep);
+<pre><code class="language-c">void nng_http_get_body(nng_http *conn, void **datap, size_t *sizep);
 </code></pre>
-<p>The <a name="a018"></a><code>nng_http_get_data</code> obtains the most recently received request or
+<p>The <a name="a018"></a><code>nng_http_get_body</code> function obtains the most recently received request or
 response body. This will be <code>NULL</code> if the content has not been retrieved
-properly yet, or if the peer did not any content. (Some requests are defined
+properly yet, or if the peer did not send any content. (Some requests are defined
 to never have body content, such as “HEAD”.)</p>
 <h3 id="storing-body-content"><a class="header" href="#storing-body-content">Storing Body Content</a></h3>
-<pre><code class="language-c">void nng_http_set_body(nng_http_conn *conn, void *data, size_t size);
-void nng_http_copy_body(nng_http_conn *conn, const void *data, size_t size);
+<pre><code class="language-c">void nng_http_set_body(nng_http *conn, void *data, size_t size);
+nng_err nng_http_copy_body(nng_http *conn, const void *data, size_t size);
 </code></pre>
 <p>The <a name="a019"></a><code>nng_http_set_body</code> function sets the outgoing body content to <em>data</em>,
 which must be <em>size</em> bytes long. The caller must ensure that <em>data</em> remains
@@ -429,13 +429,13 @@ transfer-encoding.</p>
 <pre><code class="language-c">void nng_http_close(nng_http *conn);
 </code></pre>
 <p>The <a name="a021"></a><code>nng_http_close</code> function closes the supplied HTTP connection <em>conn</em>,
-including any disposing of any underlying file descriptors or related resources.</p>
-<p>Once this function, no further access to the <em>conn</em> structure may be made.</p>
+including disposal of any underlying file descriptors or related resources.</p>
+<p>Once this function returns, no further access to the <em>conn</em> structure may be made.</p>
 <h3 id="reset-connection-state"><a class="header" href="#reset-connection-state">Reset Connection State</a></h3>
 <pre><code class="language-c">void nng_http_reset(nng_http *conn);
 </code></pre>
 <p>The <a name="a022"></a><code>nng_http_reset</code> function resets the request and response state of the
-the connection <em>conn</em>, so that it is just as if it had been freshly created with
+connection <em>conn</em>, so that it is just as if it had been freshly created with
 <a href="../api/http.html#creating-connections"><code>nng_http_client_connect</code></a> or passed into a handler function for a server callback.</p>
 <p>The intended purpose of this function is to clear the object state before reusing the <em>conn</em> for
 subsequent transactions.</p>
@@ -480,7 +480,7 @@ Furthermore, the HTTP server will no longer send any responses to the hijacked c
 Most applications will never need to use this function.</p>
 </blockquote>
 <h3 id="obtaining-tls-connection-details"><a class="header" href="#obtaining-tls-connection-details">Obtaining TLS Connection Details</a></h3>
-<pre><code class="language-c">nng_err nng_http_peer_cert(nng_http_conn *conn, nng_tls_cert **certp);
+<pre><code class="language-c">nng_err nng_http_peer_cert(nng_http *conn, nng_tls_cert **certp);
 </code></pre>
 <p>TODO: We need to document the cert API.</p>
 <p>The <a name="a028"></a><code>nng_http_peer_cert</code> function will obtain the TLS certificate object for the peer, if one is available.
@@ -503,7 +503,7 @@ transactions on those connections.</p>
 <p>The <a name="a029"></a><code>nng_http_client</code> object is the client side creator for <a href="../api/http.html#connection-object"><code>nng_http</code></a> objects.
 It is analogous to a <a href="../api/endpoint.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
-<pre><code class="language-c">void nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
+<pre><code class="language-c">nng_err nng_http_client_alloc(nng_http_client **clientp, const nng_url *url);
 </code></pre>
 <p>The <a name="a030"></a><code>nng_http_client_alloc</code> allocates an HTTP client suitable for
 connecting to the server identified by <em>url</em> and stores a pointer to
@@ -843,7 +843,7 @@ optionally a “Host” header it can be matched against (see <a href="../api/ht
 rather than just a single element.
 (See <a href="../api/http.html#handling-an-entire-tree"><code>nng_http_handler_set_tree</code></a>).</p>
 <h3 id="implementing-a-handler"><a class="header" href="#implementing-a-handler">Implementing a Handler</a></h3>
-<pre><code class="language-c">typedef void (*nng_http_handler_func)(nng_http_conn *conn, void *arg, nng_aio *aio);
+<pre><code class="language-c">typedef void (*nng_http_handler_func)(nng_http *conn, void *arg, nng_aio *aio);
 
 nng_err nng_http_handler_alloc(nng_http_handler **hp, const char *path, nng_http_handler_func cb);
 </code></pre>
@@ -895,7 +895,7 @@ create handlers pre-configured to act as static content servers for either a ful
 directory at <em>dirname</em>, or the single file at <em>filename</em>. These support the “GET” and “HEAD”
 methods, and the directory variant will dynamically generate <code>index.html</code> content based on
 the directory contents. These will also set the “Content-Type” if the file extension
-matches one of the built-in values already known. If the no suitable MIME type can be
+matches one of the built-in values already known. If no suitable MIME type can be
 determined, the content type is set to “application/octet-stream”.</p>
 <h3 id="static-handler"><a class="header" href="#static-handler">Static Handler</a></h3>
 <pre><code class="language-c">nng_err nng_http_handler_alloc_static(nng_http_handler **hp, const char *path,
@@ -1009,7 +1009,7 @@ does not support a single server listening on different ports concurrently.</p>
 <h3 id="detecting-addresses"><a class="header" href="#detecting-addresses">Detecting Addresses</a></h3>
 <p>The <a href="../api/http.html#socket-addresses"><code>nng_http_local_address</code></a> and <a href="../api/http.html#socket-addresses"><code>nng_http_remote_address</code></a> functions
 can be used to determine the local and remote addresses for an HTTP connection
-on the server side (in a handler) just like the can be for HTTP clients
+on the server side (in a handler), just as they can be for HTTP clients.
 This can be useful to provide different handling behaviors based on network identity.</p>
 <h3 id="handling-an-entire-tree"><a class="header" href="#handling-an-entire-tree">Handling an Entire Tree</a></h3>
 <pre><code class="language-c">void nng_http_handler_set_tree(nng_http_handler *handler);

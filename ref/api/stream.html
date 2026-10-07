@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-502ec7fa.js";
+            window.path_to_searchindex_js = "../searchindex-844eeed4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-42984344.js"></script>
@@ -186,7 +186,7 @@ Scalability Protocols, in a way that is both portable and agnostic about the spe
 using these Streams APIs.</p>
 </blockquote>
 <h2 id="stream-type"><a class="header" href="#stream-type">Stream Type</a></h2>
-<pre><code class="language-c">typedef struct nng_stream nng_stream
+<pre><code class="language-c">typedef struct nng_stream nng_stream;
 </code></pre>
 <p>The base <a name="a002"></a><code>nng_stream</code> type represents a bidirectional, byte-oriented, reliable connection.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
@@ -255,7 +255,7 @@ See <a href="../api/tls.html#peer-certificates"><code>nng_tls_cert</code></a> fo
 nng_err nng_stream_get_int(nng_stream *s, const char *opt, int *valp);
 nng_err nng_stream_get_ms(nng_stream *s, const char *opt, nng_duration *valp);
 nng_err nng_stream_get_size(nng_stream *s, const char *opt, size_t *valp);
-nng_err nng_stream_get_addr(nng_stream *s, const char *opt, nng_sockaddr *valp);
+nng_err nng_stream_get_uint64(nng_stream *s, const char *opt, uint64_t *valp);
 nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp);
 </code></pre>
 <p><a name="a011"></a>
@@ -263,7 +263,8 @@ nng_err nng_stream_get_string(nng_stream *s, const char *opt, const char **valp)
 <a name="a013"></a>
 <a name="a014"></a>
 <a name="a015"></a>
-These functions are used to obtain value of an option named <em>opt</em> from the stream <em>s</em>, and store it in the location
+<a name="a016"></a>
+These functions are used to obtain the value of an option named <em>opt</em> from the stream <em>s</em>, and store it in the location
 referenced by <em>valp</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.</p>
@@ -273,30 +274,30 @@ stream exists. Callers should make a copy of the data if required before closing
 <pre><code class="language-c">typedef struct nng_stream_dialer nng_stream_dialer;
 typedef struct nng_stream_listener nng_stream_listener;
 </code></pre>
-<p><a name="a016"></a>
-The <a name="a017"></a><code>nng_stream_listener</code> object and <a name="a018"></a><code>nng_stream_listener</code> objects can be thought of as factories that
+<p><a name="a017"></a>
+The <a name="a018"></a><code>nng_stream_dialer</code> and <a name="a019"></a><code>nng_stream_listener</code> objects can be thought of as factories that
 create <a href="../api/stream.html#stream-type"><code>nng_stream</code></a> streams.</p>
-<p>The <code>nng_stream_listener</code> object a handle to a listener, which creates streams by accepting incoming connection requests.
-In a BSD socket implementation, this is the entity responsible for doing <a name="a019"></a><code>bind</code>, <a name="a020"></a><code>listen</code> and <a name="a021"></a><code>accept</code>.
+<p>The <code>nng_stream_listener</code> object is a handle to a listener, which creates streams by accepting incoming connection requests.
+In a BSD socket implementation, this is the entity responsible for doing <a name="a020"></a><code>bind</code>, <a name="a021"></a><code>listen</code> and <a name="a022"></a><code>accept</code>.
 Normally a listener may be used to accept multiple, possibly many, concurrent connections.</p>
 <p>The <code>nng_stream_dialer</code> object is a handle to a dialer, which creates streams by making outgoing
 connection requests. While there isn’t a specific BSD socket analogue, this can be thought of as a factory for TCP sockets
-created by opening them with <a name="a022"></a><code>socket</code> and then calling <a name="a023"></a><code>connect</code> on them.</p>
+created by opening them with <a name="a023"></a><code>socket</code> and then calling <a name="a024"></a><code>connect</code> on them.</p>
 <h2 id="creating-a-stream-factory"><a class="header" href="#creating-a-stream-factory">Creating a Stream Factory</a></h2>
 <pre><code class="language-c">nng_err nng_stream_dialer_alloc(nng_stream_dialer **dialerp, const char *url);
 nng_err nng_stream_dialer_alloc_url(nng_stream_dialer **dialerp, const nng_url *url);
-nng_err nng_stream_listener_alloc(nng_stream_listener **lstenerp, const char *url);
+nng_err nng_stream_listener_alloc(nng_stream_listener **listenerp, const char *url);
 nng_err nng_stream_listener_alloc_url(nng_stream_listener **listenerp, const nng_url *url);
 </code></pre>
-<p>The <a name="a024"></a><code>nng_stream_dialer_alloc</code> and <a name="a025"></a><code>nng_stream_dialer_alloc_url</code> functions create a stream dialer, associated the
-<a name="a026"></a>URL specified by <em>url</em> represented as a string, or as an <a href="../api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The dialer is returned in the location
-<em>dialerp</em> references.</p>
-<p>The <a name="a027"></a><code>nng_stream_listener_alloc</code> and <a name="a028"></a><code>nng_stream_listener_alloc_url</code> functions create a stream listener, associated the
+<p>The <a name="a025"></a><code>nng_stream_dialer_alloc</code> and <a name="a026"></a><code>nng_stream_dialer_alloc_url</code> functions create a stream dialer associated with the
+<a name="a027"></a>URL specified by <em>url</em> represented as a string, or as an <a href="../api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The dialer is returned in the location
+referenced by <em>dialerp</em>.</p>
+<p>The <a name="a028"></a><code>nng_stream_listener_alloc</code> and <a name="a029"></a><code>nng_stream_listener_alloc_url</code> functions create a stream listener associated with the
 URL specified by <em>url</em> represented as a string, or as an <a href="../api/url.html#url-structure"><code>nng_url</code></a> object, respectively. The listener is returned in the location
-<em>listenerp</em> references.</p>
+referenced by <em>listenerp</em>.</p>
 <h3 id="example-1-creating-a-tcp-listener"><a class="header" href="#example-1-creating-a-tcp-listener">Example 1: Creating a TCP Listener</a></h3>
 <p>This shows creating a TCP listener that listens on <code>INADDR_ANY</code>, port 444.</p>
-<pre><code class="language-c">nng_listener listener;
+<pre><code class="language-c">nng_stream_listener *listener;
 int rv = nng_stream_listener_alloc(&amp;listener, "tcp://:444");
 </code></pre>
 <h2 id="closing-a-stream-factory"><a class="header" href="#closing-a-stream-factory">Closing a Stream Factory</a></h2>
@@ -307,14 +308,14 @@ void nng_stream_listener_close(nng_stream_listener *listener);
 void nng_stream_listener_stop(nng_stream_listener *listener);
 void nng_stream_listener_free(nng_stream_listener *listener);
 </code></pre>
-<p>The <a name="a029"></a><code>nng_stream_dialer_close</code> and <a name="a030"></a><code>nng_stream_listener_close</code> functions close the stream <em>dialer</em> or <em>listener</em>,
+<p>The <a name="a030"></a><code>nng_stream_dialer_close</code> and <a name="a031"></a><code>nng_stream_listener_close</code> functions close the stream <em>dialer</em> or <em>listener</em>,
 preventing it from creating new connections.
 This will generally include closing any underlying file used for creating such connections.
 However, some requests may still be pending when this function returns, as it does not wait for the shutdown to complete.</p>
-<p>The <a name="a031"></a><code>nng_stream_dialer_stop</code> and <a name="a032"></a><code>nng_stream_listener_stop</code> functions performs the same action,
+<p>The <a name="a032"></a><code>nng_stream_dialer_stop</code> and <a name="a033"></a><code>nng_stream_listener_stop</code> functions perform the same action,
 but also wait until all outstanding requests are serviced, and the <em>dialer</em> or <em>listener</em> is completely stopped.
-Because they blocks, these functions must not be called in contexts where blocking is not allowed.</p>
-<p>The <a name="a033"></a><code>nng_stream_dialer_free</code> and <a name="a034"></a><code>nng_stream_listener_free</code> function performs the same action as
+Because they block, these functions must not be called in contexts where blocking is not allowed.</p>
+<p>The <a name="a034"></a><code>nng_stream_dialer_free</code> and <a name="a035"></a><code>nng_stream_listener_free</code> functions perform the same action as
 <code>nng_stream_dialer_stop</code> or <code>nng_stream_listener_stop</code>, but also deallocates the <em>dialer</em> or <em>listener</em>, and any associated resources.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
@@ -324,7 +325,7 @@ callbacks are running that could reference an object after it is deallocated.</p
 <h2 id="making-outgoing-connections"><a class="header" href="#making-outgoing-connections">Making Outgoing Connections</a></h2>
 <pre><code class="language-c">void nng_stream_dialer_dial(nng_stream_dialer *dialer, nng_aio *aio);
 </code></pre>
-<p>The <a name="a035"></a><code>nng_stream_dialer_dial</code> initiates an outgoing connection asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
+<p>The <a name="a036"></a><code>nng_stream_dialer_dial</code> function initiates an outgoing connection asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
 If it successfully establishes a connection, it creates an <a href="../api/stream.html#stream-type"><code>nng_stream</code></a>, which can be obtained as the first
 output result on <em>aio</em> using the <a href="../api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> function with index zero.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
@@ -345,7 +346,7 @@ nng_aio_alloc(&amp;aio, NULL, NULL);
 
 // make a single outbound connection
 nng_stream_dialer_dial(dialer, aio);
-nng_aio_wait(aio); // wait for the asynch operation to complete
+nng_aio_wait(aio); // wait for the asynchronous operation to complete
 if (nng_aio_result(aio) != 0) {
     // ... handle the error
 }
@@ -355,17 +356,17 @@ stream = nng_aio_get_output(aio, 0);
 <pre><code class="language-c">nng_err nng_stream_listener_listen(nng_stream_listener *listener);
 void nng_stream_listener_accept(nng_stream_listener *listener, nng_aio *aio);
 </code></pre>
-<p>Accepting incoming connections is performed in two steps. The first step, <a name="a036"></a><code>nng_stream_listener_listen</code> is to setup for
+<p>Accepting incoming connections is performed in two steps. The first step, <a name="a037"></a><code>nng_stream_listener_listen</code>, is to set up
 listening. For a TCP implementation of this, for example, this would perform the <code>bind</code> and the <code>listen</code> steps. This will bind
-to the address represented by the URL that was specific when the listener was created with <a href="../api/stream.html#creating-a-stream-factory"><code>nng_stream_listener_alloc</code></a>.</p>
-<p>In the second step, <a name="a037"></a><code>nng_stream_listener_accept</code> accepts an incoming connection on <em>listener</em> asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
+to the address represented by the URL that was specified when the listener was created with <a href="../api/stream.html#creating-a-stream-factory"><code>nng_stream_listener_alloc</code></a>.</p>
+<p>In the second step, <a name="a038"></a><code>nng_stream_listener_accept</code> accepts an incoming connection on <em>listener</em> asynchronously, using the <a href="../api/aio.html#asynchronous-io-handle"><code>nng_aio</code></a> <em>aio</em>.
 If an incoming connection is accepted, it will be represented as an <a href="../api/stream.html#stream-type"><code>nng_stream</code></a>, which can be obtained from the <em>aio</em> as the first
 output result using the <a href="../api/aio.html#inputs-and-outputs"><code>nng_aio_get_output</code></a> function with index zero.</p>
 <h3 id="example-3-accepting-an-inbound-stream"><a class="header" href="#example-3-accepting-an-inbound-stream">Example 3: Accepting an Inbound Stream</a></h3>
 <p>For clarity this example uses a synchronous approach using <a href="../api/aio.html#wait-for-completion"><code>nng_aio_wait</code></a>, but a typical server application
 would most likely use a callback to accept the incoming stream, and start another instance of <code>nng_stream_listener_accept</code>.</p>
 <pre><code class="language-c">nng_aio *aio;
-nng_listener *listener;
+nng_stream_listener *listener;
 nng_stream *stream;
 
 nng_stream_listener_alloc(&amp;listener, "tcp://:8181");
@@ -377,8 +378,8 @@ if (nng_stream_listener_listen(listener)) {
 }
 
 // now accept a single incoming connection as a stream object
-nng_stream_listener_accept(l, aio);
-nng_aio_wait(aio); // wait for the asynch operation to complete
+nng_stream_listener_accept(listener, aio);
+nng_aio_wait(aio); // wait for the asynchronous operation to complete
 if (nng_aio_result(aio) != 0) {
     // ... handle the error
 }
@@ -389,29 +390,33 @@ stream = nng_aio_get_output(aio, 0);
 nng_err nng_stream_dialer_get_int(nng_stream_dialer *dialer, const char *opt, int *valp);
 nng_err nng_stream_dialer_get_ms(nng_stream_dialer *dialer, const char *opt, nng_duration *valp);
 nng_err nng_stream_dialer_get_size(nng_stream_dialer *dialer, const char *opt, size_t *valp);
+nng_err nng_stream_dialer_get_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t *valp);
 nng_err nng_stream_dialer_get_string(nng_stream_dialer *dialer, const char *opt, const char **valp);
 
 nng_err nng_stream_listener_get_bool(nng_stream_listener *listener, const char *opt, bool *valp);
 nng_err nng_stream_listener_get_int(nng_stream_listener *listener, const char *opt, int *valp);
 nng_err nng_stream_listener_get_ms(nng_stream_listener *listener, const char *opt, nng_duration *valp);
 nng_err nng_stream_listener_get_size(nng_stream_listener *listener, const char *opt, size_t *valp);
+nng_err nng_stream_listener_get_uint64(nng_stream_listener *listener, const char *opt, uint64_t *valp);
 nng_err nng_stream_listener_get_string(nng_stream_listener *listener, const char *opt, const char **valp);
 
-nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 nng_err nng_stream_dialer_set_bool(nng_stream_dialer *dialer, const char *opt, bool val);
 nng_err nng_stream_dialer_set_int(nng_stream_dialer *dialer, const char *opt, int val);
 nng_err nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng_duration val);
 nng_err nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
+nng_err nng_stream_dialer_set_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t val);
 nng_err nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
+nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 
 nng_err nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
 nng_err nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
 nng_err nng_stream_listener_set_ms(nng_stream_listener *listener, const char *opt, nng_duration val);
 nng_err nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
+nng_err nng_stream_listener_set_uint64(nng_stream_listener *listener, const char *opt, uint64_t val);
 nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
+nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 </code></pre>
-<p><a name="a038"></a>
-<a name="a039"></a>
+<p><a name="a039"></a>
 <a name="a040"></a>
 <a name="a041"></a>
 <a name="a042"></a>
@@ -433,8 +438,12 @@ nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char
 <a name="a058"></a>
 <a name="a059"></a>
 <a name="a060"></a>
-These functions are used to retrieve or change the value of an option named <em>opt</em> from the stream <em>dialer</em> or <em>listener</em>.
-The <code>nng_stream_dialer_get_</code> and <code>nng_stream_listener_get_</code> function families retrieve the value, and store it in the location <em>valp</em> references.
+<a name="a061"></a>
+<a name="a062"></a>
+<a name="a063"></a>
+<a name="a064"></a>
+These functions are used to retrieve or change the value of an option named <em>opt</em> from the stream dialer or listener.
+The <code>nng_stream_dialer_get_</code> and <code>nng_stream_listener_get_</code> function families retrieve the value, and store it in the location referenced by <em>valp</em>.
 The <code>nng_stream_dialer_set_</code> and <code>nng_stream_listener_set_</code> function families change the value for the <em>dialer</em> or <em>listener</em>, taking it from <em>val</em>.</p>
 <p>These functions access an option as a specific type. The transport layer will have details about which options
 are available, and which type they may be accessed using.</p>
@@ -444,12 +453,12 @@ See the <a href="../tran/websocket.html">WebSocket transport</a> documentation f
 the string is only valid as long as the associated object remains open.</p>
 <p>In the case of <code>nng_stream_dialer_set_string</code> and <code>nng_stream_listener_set_string</code>, the string contents are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.</p>
-<p>In the case of <code>nng_stream_dialer_set_addr</code>, the contents of <em>addr</em> are copied if necessary, so that the caller
+<p>In the case of <code>nng_stream_dialer_set_addr</code> and <code>nng_stream_listener_set_addr</code>, the contents of <em>val</em> are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.</p>
 <h3 id="example-4-socket-activation"><a class="header" href="#example-4-socket-activation">Example 4: Socket Activation<a name="socket-activation"></a></a></h3>
-<p>Some <a href="../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects, depending on the underlying transport and platform, can support a technique known as “<a name="a061"></a>socket activation”,
+<p>Some <a href="../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects, depending on the underlying transport and platform, can support a technique known as “<a name="a065"></a>socket activation”,
 where the file descriptor used for listening and accepting is supplied externally, such as by a system service manager.
-In this case, the application supplies the file descriptor or <code>SOCKET</code> object using the <a name="a062"></a><code>NNG_OPT_LISTEN_FD</code> option,
+In this case, the application supplies the file descriptor or <code>SOCKET</code> object using the <a name="a066"></a><code>NNG_OPT_LISTEN_FD</code> option,
 instead of calling <a href="../api/stream.html#accepting-incoming-connections"><code>nng_stream_listener_listen</code></a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-tip">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"></path></svg>Tip</p>
@@ -468,19 +477,30 @@ nng_stream_listener_set_int(listener, NNG_OPT_LISTEN_FD, fd);
 
 // can now start doing nng_stream_listener_accept...
 </code></pre>
+<h2 id="windows-security-descriptors"><a class="header" href="#windows-security-descriptors">Windows Security Descriptors</a></h2>
+<pre><code class="language-c">nng_err nng_stream_listener_set_security_descriptor(
+    nng_stream_listener *listener, void *security_descriptor);
+</code></pre>
+<p><a name="a067"></a>
+The <a name="a068"></a><code>nng_stream_listener_set_security_descriptor</code> function configures the
+security descriptor used by an IPC stream listener on Windows. The
+<em>security_descriptor</em> value must be a Windows <code>PSECURITY_DESCRIPTOR</code>.</p>
+<p>This function must be called before the listener starts. It returns
+<a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> when security descriptors are unsupported by the listener,
+including on non-Windows platforms.</p>
 <h2 id="tls-configuration"><a class="header" href="#tls-configuration">TLS Configuration</a></h2>
 <pre><code class="language-c">nng_err nng_stream_dialer_get_tls(nng_stream_dialer *dialer, nng_tls_config **tlsp);
 nng_err nng_stream_dialer_set_tls(nng_stream_dialer *dialer, nng_tls_config *tls);
 nng_err nng_stream_listener_get_tls(nng_stream_listener *listener, nng_tls_config **tlsp);
 nng_err nng_stream_listener_set_tls(nng_stream_listener *listener, nng_tls_config *tls);
 </code></pre>
-<p>Both <a href="../api/stream.html#stream-factories"><code>nng_stream_dialer</code></a> and <a href="../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects may support configuration of <a name="a063"></a>TLS parameters.
-The <a name="a064"></a><code>nng_stream_dialer_set_tls</code> and <a name="a065"></a><code>nng_stream_listener_set_tls</code> functions support setting the
+<p>Both <a href="../api/stream.html#stream-factories"><code>nng_stream_dialer</code></a> and <a href="../api/stream.html#stream-factories"><code>nng_stream_listener</code></a> objects may support configuration of <a name="a069"></a>TLS parameters.
+The <a name="a070"></a><code>nng_stream_dialer_set_tls</code> and <a name="a071"></a><code>nng_stream_listener_set_tls</code> functions support setting the
 configuration of a <a href="../api/tls.html#configuration-objects"><code>nng_tls_config</code></a> object supplied by <em>tls</em> on <em>dialer</em> or <em>listener</em>.
 This must be performed before the <em>listener</em> starts listening with <a href="../api/stream.html#accepting-incoming-connections"><code>nng_stream_listener_listen</code></a>, or the dialer starts an outgoing connection
 as a result of <a href="../api/stream.html#making-outgoing-connections"><code>nng_stream_dialer_dial</code></a>.</p>
 <p>The configuration object that was previously established (which may be a default if one was not explicitly
-configured) can be obtained with the <a name="a066"></a><code>nng_stream_dialer_get_tls</code> and <a name="a067"></a><code>nng_stream_listener_get_tls</code>.
+configured) can be obtained with the <a name="a072"></a><code>nng_stream_dialer_get_tls</code> and <a name="a073"></a><code>nng_stream_listener_get_tls</code>.
 They will return a pointer to the <a href="../api/tls.html#configuration-objects"><code>nng_tls_config</code></a> object in question at the location referenced by <em>tlsp</em>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
