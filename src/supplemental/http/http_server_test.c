@@ -1242,6 +1242,32 @@ test_server_get_redirect(void)
 }
 
 static void
+test_server_default_redirect(void)
+{
+	const char        *dest;
+	void              *data;
+	size_t             size;
+	nng_http_handler  *h;
+	struct server_test st;
+
+	// A zero status selects the default permanent redirect status.
+	NUTS_PASS(nng_http_handler_alloc_redirect(
+	    &h, "/here", 0, "http://127.0.0.1/there"));
+	server_setup(&st, h);
+
+	NUTS_PASS(nng_http_set_uri(st.conn, "/here", NULL));
+	nng_http_set_method(st.conn, "GET");
+
+	NUTS_PASS(httpdo(&st, &data, &size));
+	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_MOVED_PERMANENTLY);
+	NUTS_TRUE((dest = nng_http_get_header(st.conn, "Location")) != NULL);
+	NUTS_MATCH(dest, "http://127.0.0.1/there");
+	nng_free(data, size);
+
+	server_free(&st);
+}
+
+static void
 test_server_tree_redirect(void)
 {
 	const char        *dest;
@@ -1760,6 +1786,7 @@ NUTS_TESTS = {
 	{ "server bad content length closes",
 	    test_server_bad_content_length_closes },
 	{ "server get redirect", test_server_get_redirect },
+	{ "server default redirect", test_server_default_redirect },
 	{ "server tree redirect", test_server_tree_redirect },
 	{ "server post redirect", test_server_post_redirect },
 	{ "server post echo tree", test_server_post_echo_tree },
