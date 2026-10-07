@@ -1,4 +1,4 @@
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -1560,23 +1560,6 @@ udp_ep_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static nng_err
-udp_ep_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	udp_ep      *ep = arg;
-	nng_err      rv;
-	nng_sockaddr sa;
-
-	if (ep->udp != NULL) {
-		(void) nng_udp_sockname(ep->udp, &sa);
-	} else {
-		sa = ep->self_sa;
-	}
-
-	rv = nni_copyout_sockaddr(&sa, v, szp, t);
-	return (rv);
-}
-
-static nng_err
 udp_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	udp_ep *ep = arg;
@@ -1863,10 +1846,6 @@ static const nni_option udp_ep_opts[] = {
 	    .o_name = NNG_OPT_UDP_MAX_PEERS,
 	    .o_get  = udp_ep_get_max_peers,
 	    .o_set  = udp_ep_set_max_peers,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = udp_ep_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_BOUND_PORT,
