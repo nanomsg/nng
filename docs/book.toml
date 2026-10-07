@@ -8,8 +8,8 @@ title = "NNG Reference Manual (DRAFT)"
 smart-punctuation = true
 fold.enable = true
 fold.level = 2
-# additional-css = ["theme/pagetoc.css"]
-# additional-js = ["theme/pagetoc.js"]
+additional-css = ["theme/nng-site-header.css"]
+additional-js = ["theme/nng-site-header.js"]
 site-url = "/ref/"
 sidebar-header-nav = true
 
