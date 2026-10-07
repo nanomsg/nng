@@ -182,15 +182,14 @@ NNG 1.x had an undocumented ability to specify the local address to bind
 to when dialing, by using the local address in front of the destination
 address separated by a semicolon. This was provided for legacy libnanomsg
 compatibility, and is no longer offered. The correct way to specify a
-local address is by setting `NNG_OPT_LOCADDR` on the dialer.
+local address is by calling [`nng_dialer_bind`] before starting the dialer.
 
 ## Support for Address Options Removed
 
-The `NNG_OPT_REMADDR` and `NNG_OPT_LOCADDR` options are removed. For streams and pipes, there are
-[`nng_stream_peer_addr`] and [`nng_pipe_peer_addr`] functions. For dialers
-and stream dialers, the application should track the relevant information
-used to configure the listener. Functions formerly used to configure these are
-removed as well.
+The `NNG_OPT_REMADDR` and `NNG_OPT_LOCADDR` options are removed. For streams
+and pipes, use [`nng_stream_peer_addr`] and [`nng_pipe_peer_addr`]. To
+configure a local source address before dialing, use [`nng_dialer_bind`] or
+[`nng_stream_dialer_bind`].
 
 ## IPC Option Type Changes
 
@@ -460,9 +459,10 @@ is planned to provide coexistence between ZeroTier and the native stack's TCP/IP
 
 ## Abstract Autobinding No Longer Supported
 
-As we have removed `NNG_OPT_LOCADDR`, it is no longer possible to meaningfully
-use autobinding with abstract sockets on Linux. This is trivially worked around by using a
-large (say 128-bit) random integer as the name.
+Because abstract IPC dialers do not support [`nng_dialer_bind`] or
+[`nng_stream_dialer_bind`], it is no longer possible to meaningfully use
+autobinding with abstract sockets on Linux. This is trivially worked around by
+using a large (say 128-bit) random integer as the name.
 
 This can be done by using [`nng_random`] combined with `sprintf`, as the following example demonstrates:
 

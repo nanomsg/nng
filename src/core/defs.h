@@ -17,6 +17,10 @@
 
 #include "../include/nng/nng.h"
 
+// The local-address transport option is an implementation detail of the
+// explicit dialer bind APIs.
+#define NNI_OPT_DIALER_BIND "local-address"
+
 // C compilers may get unhappy when named arguments are not used.  While
 // there are things like __attribute__((unused)) which are arguably
 // superior, support for such are not universal.

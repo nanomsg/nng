@@ -535,7 +535,8 @@
 [`NNG_UNIT_EVENTS`]: ../api/stats.md#statistic-units
 [`NNG_FLAG_NONBLOCK`]: ../api/sock.md#NNG_FLAG_NONBLOCK
 [`NNG_OPT_LISTEN_FD`]: ../api/stream.md#socket-activation
-[`NNG_OPT_LOCADDR`]: ../api/endpoint.md#endpoint-specific-options
+[`nng_dialer_bind`]: ../api/endpoint.md#binding-a-dialer
+[`nng_stream_dialer_bind`]: ../api/stream.md#binding-a-stream-dialer
 [`NNG_OPT_MAXTTL`]: ../api/sock.md#NNG_OPT_MAXTTL
 [`NNG_OPT_RECONNMAXT`]: ../api/sock.md#NNG_OPT_RECONNMAXT
 [`NNG_OPT_RECONNMINT`]: ../api/sock.md#NNG_OPT_RECONNMINT

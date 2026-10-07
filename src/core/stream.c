@@ -218,6 +218,16 @@ nng_stream_dialer_dial(nng_stream_dialer *d, nng_aio *aio)
 }
 
 nng_err
+nng_stream_dialer_bind(nng_stream_dialer *d, const nng_sockaddr *sa)
+{
+	if ((d == NULL) || (sa == NULL)) {
+		return (NNG_EINVAL);
+	}
+	return (nni_stream_dialer_set(
+	    d, NNI_OPT_DIALER_BIND, sa, sizeof(*sa), NNI_TYPE_SOCKADDR));
+}
+
+nng_err
 nng_stream_dialer_alloc_url(nng_stream_dialer **dp, const nng_url *url)
 {
 	for (int i = 0; stream_drivers[i].scheme != NULL; i++) {

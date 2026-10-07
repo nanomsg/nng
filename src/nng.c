@@ -729,6 +729,16 @@ dialer_set(nng_dialer id, const char *n, const void *v, size_t sz, nni_type t)
 }
 
 int
+nng_dialer_bind(nng_dialer id, const nng_sockaddr *sa)
+{
+	if (sa == NULL) {
+		return (NNG_EINVAL);
+	}
+	return (dialer_set(
+	    id, NNI_OPT_DIALER_BIND, sa, sizeof(*sa), NNI_TYPE_SOCKADDR));
+}
+
+int
 nng_dialer_set_int(nng_dialer id, const char *n, int v)
 {
 	return (dialer_set(id, n, &v, sizeof(v), NNI_TYPE_INT32));

@@ -171,6 +171,34 @@ nng_stream_listener *listener;
 int rv = nng_stream_listener_alloc(&listener, "tcp://:444");
 ```
 
+## Binding a Stream Dialer
+
+```c
+nng_err nng_stream_dialer_bind(
+    nng_stream_dialer *dialer, const nng_sockaddr *addr);
+```
+
+The {{i:`nng_stream_dialer_bind`}} function configures the local address that
+_dialer_ uses for outgoing connections. It must be called before any call to
+[`nng_stream_dialer_dial`].
+
+This is useful when an application needs to select a source interface for a
+TCP-based connection. The address must be an IPv4 or IPv6 address with port
+zero; the system selects an ephemeral source port for each connection.
+
+> [!NOTE]
+> This function is supported only by stream transports that can bind an
+> outgoing connection. Other transports return [`NNG_ENOTSUP`].
+
+### Errors
+
+The `nng_stream_dialer_bind` function can return:
+
+- [`NNG_EADDRINVAL`]: The address is not a valid local address for the transport.
+- [`NNG_ECLOSED`]: The dialer is closed.
+- [`NNG_EINVAL`]: The dialer or address is `NULL`.
+- [`NNG_ENOTSUP`]: The transport does not support binding an outgoing connection.
+
 ## Closing a Stream Factory
 
 ```c
@@ -324,6 +352,7 @@ nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *
 {{hi:`nng_stream_dialer_set_uint64`}}
 {{hi:`nng_stream_dialer_set_addr`}}
 {{hi:`nng_stream_dialer_set_string`}}
+{{hi:`nng_stream_dialer_bind`}}
 {{hi:`nng_stream_listener_get_bool`}}
 {{hi:`nng_stream_listener_get_int`}}
 {{hi:`nng_stream_listener_get_ms`}}

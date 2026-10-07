@@ -390,6 +390,10 @@ NNG_DECL int nng_listener_create_url(
 // the dialer is not already dialing.
 NNG_DECL int nng_dialer_start(nng_dialer, int);
 
+// nng_dialer_bind configures the local address used for outbound connections.
+// It must be called before starting the dialer.
+NNG_DECL int nng_dialer_bind(nng_dialer, const nng_sockaddr *);
+
 // nng_dialer_start_aio starts the endpoint dialing asynchronously.  This is
 // only possible if the dialer is not already dialing.  Unlike
 // nng_dialer_start, this accepts an AIO such that the caller can learn when
@@ -802,7 +806,6 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_SENDBUF "send-buffer"
 #define NNG_OPT_RECVTIMEO "recv-timeout"
 #define NNG_OPT_SENDTIMEO "send-timeout"
-#define NNG_OPT_LOCADDR "local-address"
 #define NNG_OPT_MAXTTL "ttl-max"
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
@@ -1201,6 +1204,8 @@ NNG_DECL void    nng_stream_dialer_free(nng_stream_dialer *);
 NNG_DECL void    nng_stream_dialer_close(nng_stream_dialer *);
 NNG_DECL void    nng_stream_dialer_stop(nng_stream_dialer *);
 NNG_DECL void    nng_stream_dialer_dial(nng_stream_dialer *, nng_aio *);
+NNG_DECL nng_err nng_stream_dialer_bind(
+    nng_stream_dialer *, const nng_sockaddr *);
 NNG_DECL nng_err nng_stream_dialer_get_bool(
     nng_stream_dialer *, const char *, bool *);
 NNG_DECL nng_err nng_stream_dialer_get_int(

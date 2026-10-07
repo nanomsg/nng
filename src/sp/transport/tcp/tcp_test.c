@@ -73,6 +73,31 @@ test_tcp_non_local_address(void)
 }
 
 void
+test_tcp_dialer_bind(void)
+{
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_dialer   d;
+	nng_listener l;
+	nng_sockaddr sa = { 0 };
+	char        *addr;
+
+	NUTS_ADDR(addr, "tcp");
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_listen(s1, addr, &l, 0));
+	NUTS_PASS(nng_dialer_create(&d, s2, addr));
+	NUTS_FAIL(nng_dialer_bind(d, NULL), NNG_EINVAL);
+	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_addr   = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_dialer_bind(d, &sa));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	NUTS_PASS(nng_dialer_close(d));
+	NUTS_CLOSE(s2);
+	NUTS_CLOSE(s1);
+}
+
+void
 test_tcp_malformed_address(void)
 {
 	nng_socket s1;
@@ -281,6 +306,7 @@ NUTS_TESTS = {
 	{ "tcp wild card bind", test_tcp_wild_card_bind },
 	{ "tcp port zero bind", test_tcp_port_zero_bind },
 	{ "tcp non-local address", test_tcp_non_local_address },
+	{ "tcp dialer bind", test_tcp_dialer_bind },
 	{ "tcp malformed address", test_tcp_malformed_address },
 	{ "tcp no delay option", test_tcp_no_delay_option },
 	{ "tcp keep alive option", test_tcp_keep_alive_option },
