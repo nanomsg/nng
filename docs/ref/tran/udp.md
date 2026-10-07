@@ -4,14 +4,13 @@
 
 The {{i:*udp* transport}} supports communication between peers using {{i:UDP}}.
 
-UDP is a very light-weight connection-less, unreliable, unordered delivery mechanism.
+UDP is a lightweight, connectionless, unreliable, unordered delivery mechanism.
 
 Both {{i:IPv4}} and {{i:IPv6}} are supported when the underlying platform also supports it.
 
-This transport adds an ordering guarantee, so that messages will always be received in
-the correct order. Messages that arrive out of order, or are duplicated, will be
-dropped. There may be gaps in the messages received, so applications should not assume
-that all messages sent will arrive.
+This transport preserves NNG message boundaries, but does not add retransmission,
+ordering, or duplicate suppression. Applications must tolerate messages being lost,
+reordered, or duplicated.
 
 > [!NOTE]
 > This transport is _experimental_.
@@ -31,7 +30,7 @@ be restricted to IPv4 using the scheme `udp4://`.
 > Specifying `udp6://` may not prevent IPv4 hosts from being used with
 > IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
 > listeners.
-> The details of this varies across operating systems.
+> The details of this vary across operating systems.
 
 > [!TIP]
 > We recommend using either numeric IP addresses, or names that are
@@ -44,15 +43,18 @@ separating the port.
 For example, the same port 8001 on the IPv6 loopback address (`::1`) would
 be specified as `udp://[::1]:8001`.
 
-The special value of 0 ({{i:`INADDR_ANY`}})
-can be used for a listener to indicate that it should listen on all
-interfaces on the host.
-A short-hand for this form is to omit the IP address entirely.
-For example, the following two URIs are equivalent,
-and could be used to listen to port 9999 on the host:
+For a listener, use the IPv4 address `0.0.0.0` or the IPv6 address `::`
+to listen on all interfaces of that family. To listen on all IPv4 interfaces
+on port 9999, use:
 
-1. `udp://0.0.0.0:9999`
-2. `udp://:9999`
+`udp4://0.0.0.0:9999`
+
+To listen on all IPv6 interfaces on the same port, use:
+
+`udp6://[::]:9999`
+
+The abbreviated form `udp://:9999` leaves the address family to the platform
+resolver and should be used only when either family is acceptable.
 
 ## Socket Address
 
@@ -73,7 +75,7 @@ where supported by the underlying platform.
 | [`NNG_OPT_UDP_CONN_RETRY`]                                 | `nng_duration` | Interval between connection requests while dialing. The default is 200 milliseconds.                                 |
 | [`NNG_OPT_UDP_CONN_EXPIRE`]                                | `nng_duration` | Time allowed to establish a connection. The default is 5 seconds.                                                   |
 | `NNG_OPT_UDP_MAX_PEERS`<a name="NNG_OPT_UDP_MAX_PEERS"></a> | `size_t` | Maximum number of remote peers admitted by a listener. The default is 1024; set to 0 to disable the limit. |
-| `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>     | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                 |
+| `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>     | `int`    | The locally bound UDP port number, read-only. A listener reports its bound port; a dialer reports its ephemeral port after opening its UDP socket. |
 
 ## Maximum Message Size
 
@@ -86,14 +88,15 @@ very much smaller messages, ideally those that will fit within a single network
 packet without requiring fragmentation and reassembly.
 
 For Ethernet without jumbo frames, this typically means an {{i:MTU}} of a little
-less than 1500 bytes. (Specifically, 1452, which allows 28 bytes for IPv4 and UDP,
-and 20 bytes for this transport. Reduce by an additional 20 bytes for IPv6.)
+less than 1500 bytes. (Specifically, 1464 bytes before SP protocol headers, which
+allows 28 bytes for IPv4 and UDP, and 8 bytes for this transport. Reduce by an
+additional 20 bytes for IPv6.)
 
 Other link layers may have different MTUs, however IPv6 requires a minimum MTU of 1280,
-which after deducting 48 bytes for IPv6 and UDP headers, and 20 bytes for our transport
-header, leaves 1212 bytes for user data. If additional allowances are made for SP protocol
+which after deducting 48 bytes for IPv6 and UDP headers, and 8 bytes for our transport
+header, leaves 1224 bytes for user data. If additional allowances are made for SP protocol
 headers with a default TTL of 8 (resulting in 72 additional bytes for route information),
-the final user accessible payload will be 1140 bytes. Thus this can likely be viewed
+the final user accessible payload will be 1152 bytes. Thus this can likely be viewed
 as a safe maximum to employ for SP payload data across all transports.
 
 The maximum message size is negotiated as part of establishing a peering relationship,
@@ -119,7 +122,7 @@ Values less than or equal to zero are rejected with `NNG_EINVAL`.
 
 ## Keep Alive
 
-This transports maintains a logical "connection" with each peer, to provide a rough
+This transport maintains a logical "connection" with each peer, to provide a rough
 facsimile of a connection based semantic. This requires some resource on each peer.
 In order to ensure that resources are reclaimed when a peer vanishes unexpectedly, a
 keep-alive mechanism is implemented.
