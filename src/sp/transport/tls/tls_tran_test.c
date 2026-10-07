@@ -69,6 +69,23 @@ tls_client_config_ecdsa(void)
 	return (c);
 }
 
+static void
+test_tls_dialer_bind(void)
+{
+	nng_socket   s;
+	nng_dialer   d;
+	nng_sockaddr sa = { 0 };
+
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, "tls+tcp://127.0.0.1:80"));
+	NUTS_FAIL(nng_dialer_bind(d, NULL), NNG_EINVAL);
+	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_port   = 0;
+	sa.s_in.sa_addr   = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_dialer_bind(d, &sa));
+	NUTS_CLOSE(s);
+}
+
 void
 test_tls_port_zero_bind(void)
 {
@@ -457,6 +474,7 @@ test_tls_psk(void)
 
 NUTS_TESTS = {
 
+	{ "tls dialer bind", test_tls_dialer_bind },
 	{ "tls port zero bind", test_tls_port_zero_bind },
 	{ "tls malformed address", test_tls_malformed_address },
 	{ "tls no delay option", test_tls_no_delay_option },

@@ -185,6 +185,12 @@ nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
 	return (nng_stream_dialer_get_tls(c->dialer, tlsp));
 }
 
+nng_err
+nni_http_client_bind(nni_http_client *c, const nng_sockaddr *sa)
+{
+	return (nng_stream_dialer_bind(c->dialer, sa));
+}
+
 int
 nni_http_client_set(nni_http_client *c, const char *name, const void *buf,
     size_t sz, nni_type t)

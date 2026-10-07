@@ -89,6 +89,7 @@ test_tcp_dialer_bind(void)
 	NUTS_PASS(nng_dialer_create(&d, s2, addr));
 	NUTS_FAIL(nng_dialer_bind(d, NULL), NNG_EINVAL);
 	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_port   = 0;
 	sa.s_in.sa_addr   = nuts_be32(0x7f000001);
 	NUTS_PASS(nng_dialer_bind(d, &sa));
 	NUTS_PASS(nng_dialer_start(d, 0));
