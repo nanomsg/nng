@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -18,8 +18,6 @@
 // Private property operations (these include the types.)
 extern nng_err nni_stream_get(
     nng_stream *, const char *, void *, size_t *, nni_type);
-extern nng_err nni_stream_set(
-    nng_stream *, const char *, const void *, size_t, nni_type);
 
 extern nng_err nni_stream_dialer_get(
     nng_stream_dialer *, const char *, void *, size_t *, nni_type);
@@ -49,7 +47,6 @@ struct nng_stream {
 	void (*s_recv)(void *, nng_aio *);
 	void (*s_send)(void *, nng_aio *);
 	nng_err (*s_get)(void *, const char *, void *, size_t *, nni_type);
-	nng_err (*s_set)(void *, const char *, const void *, size_t, nni_type);
 	const nng_sockaddr *(*s_peer_addr)(void *);
 	const nng_sockaddr *(*s_self_addr)(void *);
 	nng_err (*s_peer_cert)(void *, nng_tls_cert **);

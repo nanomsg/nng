@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -448,13 +448,6 @@ ipc_get(void *arg, const char *name, void *val, size_t *szp, nni_type t)
 	return (nni_getopt(ipc_options, name, c, val, szp, t));
 }
 
-static nng_err
-ipc_set(void *arg, const char *name, const void *val, size_t sz, nni_type t)
-{
-	ipc_conn *c = arg;
-	return (nni_setopt(ipc_options, name, c, val, sz, t));
-}
-
 nng_err
 nni_posix_ipc_alloc(
     nni_ipc_conn **cp, nni_sockaddr *sa, nni_ipc_dialer *d, int fd)
@@ -473,7 +466,6 @@ nni_posix_ipc_alloc(
 	c->stream.s_send      = ipc_send;
 	c->stream.s_recv      = ipc_recv;
 	c->stream.s_get       = ipc_get;
-	c->stream.s_set       = ipc_set;
 	c->stream.s_self_addr = ipc_sock_addr,
 	c->stream.s_peer_addr = ipc_sock_addr;
 	c->sa                 = *sa;
