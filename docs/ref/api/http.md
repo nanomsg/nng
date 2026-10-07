@@ -361,8 +361,6 @@ They can be used to transfer request or response body data as well.
 nng_err nng_http_hijack(nng_http *conn);
 ```
 
-TODO: This API will change to convert the conn into a stream object.
-
 The {{i:`nng_http_hijack`}} function hijacks the connection _conn_, causing it
 to be disassociated from the HTTP server where it was created.
 
@@ -387,8 +385,6 @@ This function is most useful when called from a handler function.
 ```c
 nng_err nng_http_peer_cert(nng_http *conn, nng_tls_cert **certp);
 ```
-
-TODO: We need to document the cert API.
 
 The {{i:`nng_http_peer_cert`}} function will obtain the TLS certificate object for the peer, if one is available.
 This can then be used for additional authentication or identity specific logic.
