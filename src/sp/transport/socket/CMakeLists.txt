@@ -7,7 +7,7 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-# File Descriptor (or Handle) based connections
+# File descriptor based connections
 nng_directory(socket)
 
 if (NNG_TRANSPORT_FDC)

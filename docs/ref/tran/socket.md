@@ -1,4 +1,4 @@
-# Socket Transport (Experimental)
+# Socket Transport
 
 ## Description
 
@@ -22,9 +22,7 @@ for the _[tcp]_ transport, but this is an implementation detail and subject to c
 [^sock_ipc]: Specifically it is not compatible with the _[ipc]_ transport.
 
 > [!NOTE]
-> This transport is _experimental_, and at present is only supported on POSIX platforms.[^socketpair_win]
-
-[^socketpair_win]: Windows lacks a suitable `socketpair` equivalent function we could use.
+> This transport is supported on POSIX platforms only.
 
 ## URL Format
 
