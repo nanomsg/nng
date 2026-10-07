@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9507106c.js";
+            window.path_to_searchindex_js = "../searchindex-79381210.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-42984344.js"></script>
+        <script src="../toc-61c4e272.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -206,7 +206,7 @@ NNG approach to messages. Likewise there is no <code>struct nn_cmsghdr</code> eq
 <tr><td><code>nn_errno</code></td><td>None</td><td>Errors are returned directly rather than through <code>errno</code>.</td></tr>
 <tr><td><code>nn_socket</code></td><td>Various</td><td>Use the appropriate protocol constructor, such as <code>nng_req0_open</code>.</td></tr>
 <tr><td><code>nn_close</code></td><td><a href="../api/sock.html#closing-a-socket"><code>nng_socket_close</code> </a></td><td></td></tr>
-<tr><td><code>nn_bind</code></td><td><a href="../api/endpoint.html#creating-and-starting"><code>nng_listen</code></a>, <a href="../api/endpoint.html#creating-before-starting"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_lister_create</code> and configuring it offers more capabilities.</td></tr>
+<tr><td><code>nn_bind</code></td><td><a href="../api/endpoint.html#creating-and-starting"><code>nng_listen</code></a>, <a href="../api/endpoint.html#creating-before-starting"><code>nng_listener_create</code></a></td><td>Allocating a listener with <code>nng_listener_create</code> and configuring it offers more capabilities.</td></tr>
 <tr><td><code>nn_connect</code></td><td><a href="../api/endpoint.html#creating-and-starting"><code>nng_dial</code></a>, <a href="../api/endpoint.html#creating-before-starting"><code>nng_dialer_create</code></a></td><td>Allocating a dialer with <code>nng_dialer_create</code> and configuring it offers more capabilities.</td></tr>
 <tr><td><code>nn_shutdown</code></td><td><a href="../api/endpoint.html#closing"><code>nng_listener_close</code></a>, <a href="../api/endpoint.html#closing"><code>nng_dialer_close</code></a></td><td></td></tr>
 <tr><td><code>nn_allocmsg</code></td><td><a href="../api/msg.html#create-a-message"><code>nng_msg_alloc</code></a></td><td>There are significant semantic differences.</td></tr>
@@ -299,10 +299,9 @@ There are some exceptions. Be aware that the numeric values are <em>not</em> the
 </table>
 </div>
 <h2 id="local-addresses-for-dialing"><a class="header" href="#local-addresses-for-dialing">Local Addresses for Dialing</a></h2>
-<p>The ability to specify the source address in the URL, to use when
-using <code>nn_dial</code> inside the URL is not present in NNG. The correct
-way to specify the local address is calling <a href="../api/endpoint.html#binding-a-dialer"><code>nng_dialer_bind</code></a> before starting
-the dialer.</p>
+<p>The ability to specify a local source address in a URL passed to <code>nn_connect</code>
+is not available in NNG. Instead, create a dialer, call
+<a href="../api/endpoint.html#binding-a-dialer"><code>nng_dialer_bind</code></a>, and then start the dialer.</p>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
