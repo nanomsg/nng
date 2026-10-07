@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -739,6 +739,74 @@ test_websocket_fragmentation(void)
 	nng_stream_listener_free(l);
 }
 
+static void
+test_websocket_send_cancel_cleanup(void)
+{
+	nng_stream_listener *listener;
+	nng_stream_dialer   *dialer;
+	nng_stream          *sender;
+	nng_stream          *peer;
+	nng_aio             *accept;
+	nng_aio             *connect;
+	nng_aio             *send;
+	nng_iov              iov;
+	char                 url[64];
+	int                  port;
+	size_t               size = 32U * 1024U * 1024U;
+	void                *buf;
+
+	NUTS_PASS(nng_stream_listener_alloc(
+	    &listener, "ws://127.0.0.1:0/cancel"));
+	NUTS_PASS(nng_stream_listener_set_size(
+	    listener, NNG_OPT_WS_SENDMAXFRAME, size));
+	NUTS_PASS(nng_stream_listener_listen(listener));
+	NUTS_PASS(nng_stream_listener_get_int(
+	    listener, NNG_OPT_BOUND_PORT, &port));
+	snprintf(url, sizeof(url), "ws://127.0.0.1:%d/cancel", port);
+	NUTS_PASS(nng_stream_dialer_alloc(&dialer, url));
+	NUTS_PASS(nng_aio_alloc(&accept, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&connect, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&send, NULL, NULL));
+	nng_aio_set_timeout(accept, 5000);
+	nng_aio_set_timeout(connect, 5000);
+	nng_aio_set_timeout(send, 5000);
+
+	nng_stream_listener_accept(listener, accept);
+	nng_stream_dialer_dial(dialer, connect);
+	nng_aio_wait(accept);
+	nng_aio_wait(connect);
+	NUTS_PASS(nng_aio_result(accept));
+	NUTS_PASS(nng_aio_result(connect));
+	sender = nng_aio_get_output(accept, 0);
+	peer   = nng_aio_get_output(connect, 0);
+
+	// The peer does not read. A frame larger than the TCP buffers stays
+	// in flight, so cancellation reaches the physical write-error path.
+	NUTS_TRUE((buf = nng_alloc(size)) != NULL);
+	memset(buf, 0, size);
+	iov.iov_buf = buf;
+	iov.iov_len = size;
+	NUTS_PASS(nng_aio_set_iov(send, 1, &iov));
+	nng_stream_send(sender, send);
+	NUTS_TRUE(nng_aio_busy(send));
+	nng_aio_cancel(send);
+	nng_aio_wait(send);
+	NUTS_FAIL(nng_aio_result(send), NNG_ECANCELED);
+
+	// The failed write must release its frame exactly once, including
+	// when the stream is subsequently stopped and freed.
+	nng_stream_stop(sender);
+	nng_stream_free(sender);
+	nng_stream_stop(peer);
+	nng_stream_free(peer);
+	nng_aio_free(send);
+	nng_aio_free(connect);
+	nng_aio_free(accept);
+	nng_stream_dialer_free(dialer);
+	nng_stream_listener_free(listener);
+	nng_free(buf, size);
+}
+
 NUTS_TESTS = {
 	{ "websocket stream wildcard", test_websocket_wildcard },
 	{ "websocket conn properties", test_websocket_conn_props },
@@ -746,5 +814,6 @@ NUTS_TESTS = {
 	{ "websocket text mode", test_websocket_text_mode },
 	{ "websocket text rejected", test_websocket_text_rejected },
 	{ "websocket frame limit", test_websocket_frame_limit },
+	{ "websocket send cancel cleanup", test_websocket_send_cancel_cleanup },
 	{ NULL, NULL },
 };

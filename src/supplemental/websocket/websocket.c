@@ -666,7 +666,8 @@ ws_write_cb(void *arg)
 	if ((rv = nni_aio_result(&ws->txaio)) != 0) {
 		// if tx fails, we can't send a close frame either
 		// we expect the caller to just close this connection
-		frame->aio = NULL;
+		ws->txframe = NULL;
+		frame->aio  = NULL;
 		if (aio != NULL) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
