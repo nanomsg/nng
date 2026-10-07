@@ -270,7 +270,6 @@ int nng_dialer_get_bool(nng_dialer dialer, const char *opt, bool *valp);
 int nng_dialer_get_int(nng_dialer dialer, const char *opt, int *valp);
 int nng_dialer_get_ms(nng_dialer dialer, const char *opt, nng_duration *valp);
 int nng_dialer_get_size(nng_dialer dialer, const char *opt, size_t *valp);
-int nng_dialer_get_addr(nng_dialer dialer, const char *opt, nng_sockaddr *valp);
 int nng_dialer_get_string(nng_dialer dialer, const char *opt, const char **valp);
 int nng_dialer_get_uint64(nng_dialer dialer, const char *opt, uint64_t *valp);
 
@@ -285,7 +284,6 @@ int nng_dialer_set_bool(nng_dialer dialer, const char *opt, bool val);
 int nng_dialer_set_int(nng_dialer dialer, const char *opt, int val);
 int nng_dialer_set_ms(nng_dialer dialer, const char *opt, nng_duration val);
 int nng_dialer_set_size(nng_dialer dialer, const char *opt, size_t val);
-int nng_dialer_set_addr(nng_dialer dialer, const char *opt, const nng_sockaddr *val);
 int nng_dialer_set_string(nng_dialer dialer, const char *opt, const char *val);
 int nng_dialer_set_uint64(nng_dialer dialer, const char *opt, uint64_t val);
 

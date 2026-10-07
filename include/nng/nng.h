@@ -428,8 +428,6 @@ NNG_DECL int nng_dialer_set_size(nng_dialer, const char *, size_t);
 NNG_DECL int nng_dialer_set_uint64(nng_dialer, const char *, uint64_t);
 NNG_DECL int nng_dialer_set_string(nng_dialer, const char *, const char *);
 NNG_DECL int nng_dialer_set_ms(nng_dialer, const char *, nng_duration);
-NNG_DECL int nng_dialer_set_addr(
-    nng_dialer, const char *, const nng_sockaddr *);
 NNG_DECL int nng_dialer_set_tls(nng_dialer, nng_tls_config *);
 
 NNG_DECL int nng_dialer_get_bool(nng_dialer, const char *, bool *);
@@ -438,7 +436,6 @@ NNG_DECL int nng_dialer_get_size(nng_dialer, const char *, size_t *);
 NNG_DECL int nng_dialer_get_uint64(nng_dialer, const char *, uint64_t *);
 NNG_DECL int nng_dialer_get_string(nng_dialer, const char *, const char **);
 NNG_DECL int nng_dialer_get_ms(nng_dialer, const char *, nng_duration *);
-NNG_DECL int nng_dialer_get_addr(nng_dialer, const char *, nng_sockaddr *);
 NNG_DECL int nng_dialer_get_tls(nng_dialer, nng_tls_config **);
 NNG_DECL int nng_dialer_get_url(nng_dialer id, const nng_url **urlp);
 
@@ -1230,8 +1227,6 @@ NNG_DECL nng_err nng_stream_dialer_set_uint64(
     nng_stream_dialer *, const char *, uint64_t);
 NNG_DECL nng_err nng_stream_dialer_set_string(
     nng_stream_dialer *, const char *, const char *);
-NNG_DECL nng_err nng_stream_dialer_set_addr(
-    nng_stream_dialer *, const char *, const nng_sockaddr *);
 
 // Note that when configuring the object, a hold is placed on the TLS
 // configuration, using a reference count.  When retrieving the object, no such
@@ -1275,8 +1270,6 @@ NNG_DECL nng_err nng_stream_listener_set_uint64(
     nng_stream_listener *, const char *, uint64_t);
 NNG_DECL nng_err nng_stream_listener_set_string(
     nng_stream_listener *, const char *, const char *);
-NNG_DECL nng_err nng_stream_listener_set_addr(
-    nng_stream_listener *, const char *, const nng_sockaddr *);
 
 NNG_DECL nng_err nng_stream_listener_get_tls(
     nng_stream_listener *, nng_tls_config **);

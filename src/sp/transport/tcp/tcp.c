@@ -1040,6 +1040,14 @@ tcptran_dialer_setopt(
 }
 
 static nng_err
+tcptran_dialer_bind(void *arg, const nng_sockaddr *sa)
+{
+	tcptran_ep *ep = arg;
+
+	return (nng_stream_dialer_bind(ep->dialer, sa));
+}
+
+static nng_err
 tcptran_listener_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -1074,6 +1082,7 @@ static nni_sp_dialer_ops tcptran_dialer_ops = {
 	.d_connect = tcptran_ep_connect,
 	.d_close   = tcptran_ep_close,
 	.d_stop    = tcptran_ep_stop,
+	.d_bind    = tcptran_dialer_bind,
 	.d_getopt  = tcptran_dialer_getopt,
 	.d_setopt  = tcptran_dialer_setopt,
 };

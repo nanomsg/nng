@@ -223,8 +223,10 @@ nng_stream_dialer_bind(nng_stream_dialer *d, const nng_sockaddr *sa)
 	if ((d == NULL) || (sa == NULL)) {
 		return (NNG_EINVAL);
 	}
-	return (nni_stream_dialer_set(
-	    d, NNI_OPT_DIALER_BIND, sa, sizeof(*sa), NNI_TYPE_SOCKADDR));
+	if (d->sd_bind == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (d->sd_bind(d, sa));
 }
 
 nng_err
@@ -553,13 +555,6 @@ nng_stream_dialer_set_string(
 }
 
 nng_err
-nng_stream_dialer_set_addr(
-    nng_stream_dialer *d, const char *n, const nng_sockaddr *v)
-{
-	return (nni_stream_dialer_set(d, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
-}
-
-nng_err
 nng_stream_dialer_set_tls(nng_stream_dialer *d, nng_tls_config *cfg)
 {
 	return (nni_stream_dialer_set_tls(d, cfg));
@@ -597,14 +592,6 @@ nng_stream_listener_set_string(
 {
 	return (nni_stream_listener_set(
 	    l, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
-}
-
-nng_err
-nng_stream_listener_set_addr(
-    nng_stream_listener *l, const char *n, const nng_sockaddr *v)
-{
-	return (
-	    nni_stream_listener_set(l, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
 }
 
 nng_err

@@ -1038,6 +1038,14 @@ tlstran_dialer_setopt(
 }
 
 static nng_err
+tlstran_dialer_bind(void *arg, const nng_sockaddr *sa)
+{
+	tlstran_ep *ep = arg;
+
+	return (nng_stream_dialer_bind(ep->dialer, sa));
+}
+
+static nng_err
 tlstran_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -1101,6 +1109,7 @@ static nni_sp_dialer_ops tlstran_dialer_ops = {
 	.d_connect = tlstran_ep_connect,
 	.d_close   = tlstran_ep_close,
 	.d_stop    = tlstran_ep_stop,
+	.d_bind    = tlstran_dialer_bind,
 	.d_getopt  = tlstran_dialer_getopt,
 	.d_setopt  = tlstran_dialer_setopt,
 	.d_get_tls = tlstran_dialer_get_tls,

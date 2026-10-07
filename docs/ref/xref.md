@@ -139,7 +139,6 @@
 [`nng_dialer_get_int`]: ../api/endpoint.md#options
 [`nng_dialer_get_ms`]: ../api/endpoint.md#options
 [`nng_dialer_get_size`]: ../api/endpoint.md#options
-[`nng_dialer_get_addr`]: ../api/endpoint.md#options
 [`nng_dialer_get_string`]: ../api/endpoint.md#options
 [`nng_dialer_get_uint64`]: ../api/endpoint.md#options
 [`nng_listener_get`]: ../api/endpoint.md#options
@@ -154,7 +153,6 @@
 [`nng_dialer_set_int`]: ../api/endpoint.md#options
 [`nng_dialer_set_ms`]: ../api/endpoint.md#options
 [`nng_dialer_set_size`]: ../api/endpoint.md#options
-[`nng_dialer_set_addr`]: ../api/endpoint.md#options
 [`nng_dialer_set_string`]: ../api/endpoint.md#options
 [`nng_dialer_set_uint64`]: ../api/endpoint.md#options
 [`nng_listener_set`]: ../api/endpoint.md#options
@@ -209,7 +207,6 @@
 [`nng_stream_dialer_set_ms`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_set_size`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_set_uint64`]: ../api/stream.md#stream-factory-options
-[`nng_stream_dialer_set_addr`]: ../api/stream.md#stream-factory-options
 [`nng_stream_dialer_set_string`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_get_bool`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_get_int`]: ../api/stream.md#stream-factory-options
@@ -222,7 +219,6 @@
 [`nng_stream_listener_set_ms`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_size`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_uint64`]: ../api/stream.md#stream-factory-options
-[`nng_stream_listener_set_addr`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_string`]: ../api/stream.md#stream-factory-options
 [`nng_stream_listener_set_security_descriptor`]: ../api/stream.md#windows-security-descriptors
 [`nng_stream_peer_addr`]: ../api/stream.md#stream-addresses

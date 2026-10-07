@@ -61,6 +61,7 @@ struct nng_stream_dialer {
 	void (*sd_close)(void *);
 	void (*sd_stop)(void *);
 	void (*sd_dial)(void *, nng_aio *);
+	nng_err (*sd_bind)(void *, const nng_sockaddr *);
 	nng_err (*sd_get)(void *, const char *, void *, size_t *, nni_type);
 	nng_err (*sd_set)(
 	    void *, const char *, const void *, size_t, nni_type);

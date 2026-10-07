@@ -649,6 +649,14 @@ wstran_dialer_setopt(
 }
 
 static nng_err
+wstran_dialer_bind(void *arg, const nng_sockaddr *sa)
+{
+	ws_dialer *d = arg;
+
+	return (nng_stream_dialer_bind(d->dialer, sa));
+}
+
+static nng_err
 wstran_dialer_get_tls(void *arg, nng_tls_config **tls)
 {
 	ws_dialer *d = arg;
@@ -711,6 +719,7 @@ static nni_sp_dialer_ops ws_dialer_ops = {
 	.d_connect = wstran_dialer_connect,
 	.d_close   = wstran_dialer_close,
 	.d_stop    = wstran_dialer_stop,
+	.d_bind    = wstran_dialer_bind,
 	.d_setopt  = wstran_dialer_setopt,
 	.d_getopt  = wstran_dialer_getopt,
 	.d_get_tls = wstran_dialer_get_tls,
