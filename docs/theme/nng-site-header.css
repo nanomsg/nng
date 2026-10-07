@@ -89,6 +89,15 @@ body {
   max-height: 100%;
 }
 
+.nn-header .nanomsg-navbar-logo {
+  display: block;
+  width: 44px;
+  height: 38px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
 .nn-header i.iconfont {
   margin-right: 4px;
 }

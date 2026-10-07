@@ -49,6 +49,20 @@
           var attribute = element.hasAttribute("href") ? "href" : "src";
           element.setAttribute(attribute, "https://nng.nanomsg.org" + element.getAttribute(attribute));
         });
+        var logo = header.querySelector(".navbar-icon");
+        if (logo) {
+          var nanomsgLogo = document.createElement("span");
+          nanomsgLogo.className = "nanomsg-navbar-logo";
+          nanomsgLogo.setAttribute("role", "img");
+          nanomsgLogo.setAttribute("aria-label", "nanomsg");
+          var favicon = document.querySelector(
+            "link[rel='icon']:not([data-codex-favicon-badge])"
+          );
+          if (favicon) {
+            nanomsgLogo.style.backgroundImage = "url(" + favicon.href + ")";
+          }
+          logo.replaceWith(nanomsgLogo);
+        }
         document.body.insertAdjacentElement("afterbegin", header);
         enableMenuToggle(header);
       })
