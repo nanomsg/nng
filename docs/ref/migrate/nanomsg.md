@@ -39,7 +39,7 @@ NNG approach to messages. Likewise there is no `struct nn_cmsghdr` equivalent.
 | `nn_errno`          | None                                         | Errors are returned directly rather than through `errno`.                                             |
 | `nn_socket`         | Various                                      | Use the appropriate protocol constructor, such as `nng_req0_open`.                                    |
 | `nn_close`          | [`nng_socket_close` ]                        |
-| `nn_bind`           | [`nng_listen`], [`nng_listener_create`]      | Allocating a listener with `nng_lister_create` and configuring it offers more capabilities.           |
+| `nn_bind`           | [`nng_listen`], [`nng_listener_create`]      | Allocating a listener with `nng_listener_create` and configuring it offers more capabilities.         |
 | `nn_connect`        | [`nng_dial`], [`nng_dialer_create`]          | Allocating a dialer with `nng_dialer_create` and configuring it offers more capabilities.             |
 | `nn_shutdown`       | [`nng_listener_close`], [`nng_dialer_close`] |
 | `nn_allocmsg`       | [`nng_msg_alloc`]                            | There are significant semantic differences.                                                           |
