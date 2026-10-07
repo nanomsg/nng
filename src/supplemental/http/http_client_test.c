@@ -325,6 +325,12 @@ test_http_client_hijack_stream(void)
 	nng_url               *url = NULL;
 	nng_iov                iov;
 	char                   buf[4];
+	nng_sockaddr           local;
+	nng_sockaddr           remote;
+	nng_tls_cert          *cert = NULL;
+	bool                   nodelay;
+	bool                   stream_nodelay;
+	size_t                 size;
 
 	scripted_server_start(&srv, &response, NULL, 1);
 	client_connect(srv.url, &url, &aio, &cli, &conn);
@@ -339,9 +345,28 @@ test_http_client_hijack_stream(void)
 	NUTS_PASS(nng_aio_result(aio));
 	NUTS_HTTP_STATUS(conn, NNG_HTTP_STATUS_SWITCHING);
 
+	NUTS_PASS(nng_http_local_address(conn, &local));
+	NUTS_PASS(nng_http_remote_address(conn, &remote));
+	NUTS_PASS(nng_http_get_bool(conn, NNG_OPT_TCP_NODELAY, &nodelay));
+
+	// Invalid output must not transfer ownership or discard buffered data.
+	NUTS_FAIL(nng_http_hijack_stream(conn, NULL), NNG_EINVAL);
 	NUTS_PASS(nng_http_hijack_stream(conn, &stream));
 	conn = NULL; // stream now owns the connection
 	NUTS_TRUE(stream != NULL);
+
+	// The facade preserves the underlying connection's addresses and options.
+	NUTS_TRUE(nng_sockaddr_equal(&local, nng_stream_self_addr(stream)));
+	NUTS_TRUE(nng_sockaddr_equal(&remote, nng_stream_peer_addr(stream)));
+	NUTS_PASS(nng_stream_get_bool(
+	    stream, NNG_OPT_TCP_NODELAY, &stream_nodelay));
+	NUTS_TRUE(stream_nodelay == nodelay);
+	NUTS_FAIL(nng_stream_get_size(stream, NNG_OPT_TCP_NODELAY, &size),
+	    NNG_EBADTYPE);
+	NUTS_FAIL(nng_stream_get_bool(stream, "no-such-option", &stream_nodelay),
+	    NNG_ENOTSUP);
+	NUTS_FAIL(nng_stream_peer_cert(stream, &cert), NNG_ENOTSUP);
+	NUTS_NULL(cert);
 
 	iov.iov_buf = buf;
 	iov.iov_len = sizeof(buf);
@@ -352,6 +377,16 @@ test_http_client_hijack_stream(void)
 	NUTS_TRUE(nng_aio_count(aio) == sizeof(buf));
 	NUTS_TRUE(memcmp(buf, "test", sizeof(buf)) == 0);
 
+	// Stop closes the connection and rejects subsequent operations.
+	nng_stream_stop(stream);
+	NUTS_FAIL(nng_stream_get_bool(stream, NNG_OPT_TCP_NODELAY, &stream_nodelay),
+	    NNG_ECLOSED);
+	NUTS_FAIL(nng_stream_peer_cert(stream, &cert), NNG_ECLOSED);
+	NUTS_PASS(nng_aio_set_iov(aio, 1, &iov));
+	nng_stream_recv(stream, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
+	nng_stream_stop(stream);
 	nng_stream_free(stream);
 	client_free(url, aio, cli, conn);
 	scripted_server_stop(&srv);
