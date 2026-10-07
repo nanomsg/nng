@@ -44,6 +44,10 @@ struct nni_sp_dialer_ops {
 	// NNG_ECONNFAILED, NNG_ETIMEDOUT, and NNG_EPROTO.
 	void (*d_connect)(void *, nni_aio *);
 
+	// d_bind configures the local address used for outgoing connections.
+	// This may be NULL if the transport does not support binding a dialer.
+	nng_err (*d_bind)(void *, const nng_sockaddr *);
+
 	// d_close stops the dialer from operating altogether.
 	// It is nonblocking.
 	void (*d_close)(void *);

@@ -306,24 +306,17 @@ tcp_dialer_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_bool(b, buf, szp, t));
 }
 
-static nng_err
-tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
+int
+nni_tcp_dialer_bind(nni_tcp_dialer *d, const nng_sockaddr *sa)
 {
-	nni_tcp_dialer     *d = arg;
-	nng_sockaddr        sa;
 	SOCKADDR_STORAGE    ss;
 	struct sockaddr_in *sin;
 	size_t              sslen;
-	nng_err             rv;
 #ifdef NNG_ENABLE_IPV6
 	struct sockaddr_in6 *sin6;
 #endif
-	NNI_ARG_UNUSED(sz);
 
-	if ((rv = nni_copyin_sockaddr(&sa, buf, t)) != NNG_OK) {
-		return (rv);
-	}
-	if ((sslen = nni_win_nn2sockaddr(&ss, &sa)) == 0) {
+	if ((sslen = nni_win_nn2sockaddr(&ss, sa)) == 0) {
 		return (NNG_EADDRINVAL);
 	}
 	// Ensure we are either IPv4 or IPv6, and port is not set.  (We
@@ -360,10 +353,6 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 }
 
 static const nni_option tcp_dialer_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_set  = tcp_dialer_set_locaddr,
-	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
 	    .o_get  = tcp_dialer_get_nodelay,

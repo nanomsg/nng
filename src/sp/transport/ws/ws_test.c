@@ -11,6 +11,23 @@
 #include "../../../testing/nuts.h"
 
 static void
+test_ws_dialer_bind(void)
+{
+	nng_socket   s;
+	nng_dialer   d;
+	nng_sockaddr sa = { 0 };
+
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, "ws://127.0.0.1:80/"));
+	NUTS_FAIL(nng_dialer_bind(d, NULL), NNG_EINVAL);
+	sa.s_in.sa_family = NNG_AF_INET;
+	sa.s_in.sa_port   = 0;
+	sa.s_in.sa_addr   = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_dialer_bind(d, &sa));
+	NUTS_CLOSE(s);
+}
+
+static void
 test_ws_url_path_filters(void)
 {
 	nng_socket   s1;
@@ -320,6 +337,7 @@ NUTS_DECLARE_TRAN_TESTS(ws)
 NUTS_DECLARE_TRAN_TESTS(ws6)
 
 TEST_LIST = {
+	{ "ws dialer bind", test_ws_dialer_bind },
 	{ "ws url path filters", test_ws_url_path_filters },
 	{ "ws tree listener", test_ws_tree_listener },
 	{ "ws wild card port", test_wild_card_port },

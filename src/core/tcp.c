@@ -203,6 +203,14 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 }
 
 static nng_err
+tcp_dialer_bind(void *arg, const nng_sockaddr *sa)
+{
+	tcp_dialer *d = arg;
+
+	return (nni_tcp_dialer_bind(d->d, sa));
+}
+
+static nng_err
 tcp_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcp_dialer *d = arg;
@@ -241,6 +249,7 @@ tcp_dialer_alloc(tcp_dialer **dp)
 	d->ops.sd_free  = tcp_dialer_free;
 	d->ops.sd_stop  = tcp_dialer_stop;
 	d->ops.sd_dial  = tcp_dialer_dial;
+	d->ops.sd_bind  = tcp_dialer_bind;
 	d->ops.sd_get   = tcp_dialer_get;
 	d->ops.sd_set   = tcp_dialer_set;
 

@@ -324,6 +324,9 @@ extern nng_err nni_http_client_set_tls(
 extern nng_err nni_http_client_get_tls(
     nni_http_client *, struct nng_tls_config **);
 
+extern nng_err nni_http_client_bind(
+    nni_http_client *, const nng_sockaddr *);
+
 extern int nni_http_client_set(
     nni_http_client *, const char *, const void *buf, size_t, nni_type);
 extern int nni_http_client_get(

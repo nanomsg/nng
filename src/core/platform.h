@@ -290,6 +290,7 @@ extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
 // Any in-progress connection will be aborted.
 extern void nni_tcp_dialer_close(nni_tcp_dialer *);
 extern void nni_tcp_dialer_stop(nni_tcp_dialer *);
+extern int  nni_tcp_dialer_bind(nni_tcp_dialer *, const nng_sockaddr *);
 
 // nni_tcp_dial attempts to create an outgoing connection,
 // asynchronously, to the address in the aio. On success, the first (and only)

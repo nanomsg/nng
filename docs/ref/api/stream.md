@@ -171,6 +171,34 @@ nng_stream_listener *listener;
 int rv = nng_stream_listener_alloc(&listener, "tcp://:444");
 ```
 
+## Binding a Stream Dialer
+
+```c
+nng_err nng_stream_dialer_bind(
+    nng_stream_dialer *dialer, const nng_sockaddr *addr);
+```
+
+The {{i:`nng_stream_dialer_bind`}} function configures the local address that
+_dialer_ uses for outgoing connections. It must be called before any call to
+[`nng_stream_dialer_dial`].
+
+This is useful when an application needs to select a source interface for a
+TCP-based connection. The address must be an IPv4 or IPv6 address with port
+zero; the system selects an ephemeral source port for each connection.
+
+> [!NOTE]
+> This function is supported only by stream transports that can bind an
+> outgoing connection. Other transports return [`NNG_ENOTSUP`].
+
+### Errors
+
+The `nng_stream_dialer_bind` function can return:
+
+- [`NNG_EADDRINVAL`]: The address is not a valid local address for the transport.
+- [`NNG_ECLOSED`]: The dialer is closed.
+- [`NNG_EINVAL`]: The dialer or address is `NULL`.
+- [`NNG_ENOTSUP`]: The transport does not support binding an outgoing connection.
+
 ## Closing a Stream Factory
 
 ```c
@@ -300,7 +328,6 @@ nng_err nng_stream_dialer_set_ms(nng_stream_dialer *dialer, const char *opt, nng
 nng_err nng_stream_dialer_set_size(nng_stream_dialer *dialer, const char *opt, size_t val);
 nng_err nng_stream_dialer_set_uint64(nng_stream_dialer *dialer, const char *opt, uint64_t val);
 nng_err nng_stream_dialer_set_string(nng_stream_dialer *dialer, const char *opt, const char *val);
-nng_err nng_stream_dialer_set_addr(nng_stream_dialer *dialer, const char *opt, const nng_sockaddr *val);
 
 nng_err nng_stream_listener_set_bool(nng_stream_listener *listener, const char *opt, bool val);
 nng_err nng_stream_listener_set_int(nng_stream_listener *listener, const char *opt, int val);
@@ -308,7 +335,6 @@ nng_err nng_stream_listener_set_ms(nng_stream_listener *listener, const char *op
 nng_err nng_stream_listener_set_size(nng_stream_listener *listener, const char *opt, size_t val);
 nng_err nng_stream_listener_set_uint64(nng_stream_listener *listener, const char *opt, uint64_t val);
 nng_err nng_stream_listener_set_string(nng_stream_listener *listener, const char *opt, const char *val);
-nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *opt, const nng_sockaddr *val);
 ```
 
 {{hi:`nng_stream_dialer_get_bool`}}
@@ -322,8 +348,8 @@ nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *
 {{hi:`nng_stream_dialer_set_ms`}}
 {{hi:`nng_stream_dialer_set_size`}}
 {{hi:`nng_stream_dialer_set_uint64`}}
-{{hi:`nng_stream_dialer_set_addr`}}
 {{hi:`nng_stream_dialer_set_string`}}
+{{hi:`nng_stream_dialer_bind`}}
 {{hi:`nng_stream_listener_get_bool`}}
 {{hi:`nng_stream_listener_get_int`}}
 {{hi:`nng_stream_listener_get_ms`}}
@@ -335,7 +361,6 @@ nng_err nng_stream_listener_set_addr(nng_stream_listener *listener, const char *
 {{hi:`nng_stream_listener_set_ms`}}
 {{hi:`nng_stream_listener_set_size`}}
 {{hi:`nng_stream_listener_set_uint64`}}
-{{hi:`nng_stream_listener_set_addr`}}
 {{hi:`nng_stream_listener_set_string`}}
 These functions are used to retrieve or change the value of an option named _opt_ from the stream dialer or listener.
 The `nng_stream_dialer_get_` and `nng_stream_listener_get_` function families retrieve the value, and store it in the location referenced by _valp_.
@@ -351,9 +376,6 @@ In the case of `nng_stream_dialer_get_string` and `nng_stream_listener_get_strin
 the string is only valid as long as the associated object remains open.
 
 In the case of `nng_stream_dialer_set_string` and `nng_stream_listener_set_string`, the string contents are copied if necessary, so that the caller
-need not retain the value referenced once the function returns.
-
-In the case of `nng_stream_dialer_set_addr` and `nng_stream_listener_set_addr`, the contents of _val_ are copied if necessary, so that the caller
 need not retain the value referenced once the function returns.
 
 ### Example 4: Socket Activation<a name="socket-activation"></a>

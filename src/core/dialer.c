@@ -514,6 +514,15 @@ nni_dialer_stop(nni_dialer *d)
 	d->d_ops.d_stop(d->d_data);
 }
 
+int
+nni_dialer_bind(nni_dialer *d, const nng_sockaddr *sa)
+{
+	if (d->d_ops.d_bind == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (d->d_ops.d_bind(d->d_data, sa));
+}
+
 nni_sock *
 nni_dialer_sock(nni_dialer *d)
 {

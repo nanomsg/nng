@@ -54,6 +54,14 @@ tls_dialer_stop(void *arg)
 	nng_stream_dialer_stop(d->d);
 }
 
+static nng_err
+tls_dialer_bind(void *arg, const nng_sockaddr *sa)
+{
+	tls_dialer *d = arg;
+
+	return (nng_stream_dialer_bind(d->d, sa));
+}
+
 // Dialer cancel is called when the user has indicated that they no longer
 // want to wait for the connection to establish.
 static void
@@ -181,6 +189,7 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->ops.sd_free    = tls_dialer_free;
 	d->ops.sd_stop    = tls_dialer_stop;
 	d->ops.sd_dial    = tls_dialer_dial;
+	d->ops.sd_bind    = tls_dialer_bind;
 	d->ops.sd_get     = tls_dialer_get;
 	d->ops.sd_set     = tls_dialer_set;
 	d->ops.sd_get_tls = tls_dialer_get_tls;

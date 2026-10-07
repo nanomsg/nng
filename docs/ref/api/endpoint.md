@@ -118,8 +118,8 @@ The {{i:`nng_listener_create`}} and {{i:`nng_listener_create_url`}} functions cr
 configure it to listen at _url_, and store it in _listenerp_.
 The listener is not started.
 
-Use these functions when the dialer or listener needs additional configuration before it starts, such as transport options,
-TLS configuration, or a listener socket activation file descriptor.
+Use these functions when the dialer or listener needs additional configuration before it starts, such as a local bind address,
+transport options, TLS configuration, or a listener socket activation file descriptor.
 
 ### Errors
 
@@ -130,6 +130,33 @@ These functions can return:
 - [`NNG_EINVAL`]: The string URL is invalid.
 - [`NNG_ENOMEM`]: Insufficient memory is available.
 - [`NNG_ENOTSUP`]: The transport is not supported, or does not support dialing or listening.
+
+## Binding a Dialer
+
+```c
+int nng_dialer_bind(nng_dialer dialer, const nng_sockaddr *addr);
+```
+
+The {{i:`nng_dialer_bind`}} function configures the local address that _dialer_
+uses for outgoing connections. It must be called after creating the dialer and
+before calling [`nng_dialer_start`].
+
+This is useful when an application needs to select a source interface for a
+TCP-based connection. The address must be an IPv4 or IPv6 address with port
+zero; the system selects an ephemeral source port for each connection.
+
+> [!NOTE]
+> This function is supported only by transports that can bind an outgoing
+> connection. Other transports return [`NNG_ENOTSUP`].
+
+### Errors
+
+The `nng_dialer_bind` function can return:
+
+- [`NNG_EADDRINVAL`]: The address is not a valid local address for the transport.
+- [`NNG_EINVAL`]: The address is `NULL`.
+- [`NNG_ENOENT`]: The dialer does not exist.
+- [`NNG_ENOTSUP`]: The transport does not support binding an outgoing connection.
 
 ## Starting
 
@@ -243,7 +270,6 @@ int nng_dialer_get_bool(nng_dialer dialer, const char *opt, bool *valp);
 int nng_dialer_get_int(nng_dialer dialer, const char *opt, int *valp);
 int nng_dialer_get_ms(nng_dialer dialer, const char *opt, nng_duration *valp);
 int nng_dialer_get_size(nng_dialer dialer, const char *opt, size_t *valp);
-int nng_dialer_get_addr(nng_dialer dialer, const char *opt, nng_sockaddr *valp);
 int nng_dialer_get_string(nng_dialer dialer, const char *opt, const char **valp);
 int nng_dialer_get_uint64(nng_dialer dialer, const char *opt, uint64_t *valp);
 
@@ -258,7 +284,6 @@ int nng_dialer_set_bool(nng_dialer dialer, const char *opt, bool val);
 int nng_dialer_set_int(nng_dialer dialer, const char *opt, int val);
 int nng_dialer_set_ms(nng_dialer dialer, const char *opt, nng_duration val);
 int nng_dialer_set_size(nng_dialer dialer, const char *opt, size_t val);
-int nng_dialer_set_addr(nng_dialer dialer, const char *opt, const nng_sockaddr *val);
 int nng_dialer_set_string(nng_dialer dialer, const char *opt, const char *val);
 int nng_dialer_set_uint64(nng_dialer dialer, const char *opt, uint64_t val);
 
@@ -288,26 +313,6 @@ The function suffix identifies the type used for the option:
 Available options vary by transport and by option.
 Many common options are listed in [Socket Options][socket-options] and transport-specific options are documented
 with each transport.
-
-### Endpoint-Specific Options
-
-The following endpoint-specific option is defined by the core API:
-
-| Option                                        | Type           | Description |
-| --------------------------------------------- | -------------- | ----------- |
-| `NNG_OPT_LOCADDR`<a name="NNG_OPT_LOCADDR"></a> | `nng_sockaddr` | Dialers only. Configures the local address to bind before initiating outgoing connections, when supported by the transport. |
-
-`NNG_OPT_LOCADDR` is most useful for transports such as TCP or UDP where the
-application needs to choose the local interface or source address for outgoing
-connections.
-When used on a TCP dialer, the IP address portion is used as the source
-address, but the port is ignored and an ephemeral port is chosen by the
-system.
-
-> [!NOTE]
-> Support for `NNG_OPT_LOCADDR` depends on the transport.
-> Some transports support it on dialers, some do not, and listeners may expose
-> related local-address information differently or not at all.
 
 > [!NOTE]
 > Socket option values for `NNG_OPT_RECONNMAXT`, `NNG_OPT_RECONNMINT`, and `NNG_OPT_RECVMAXSZ` provide initial defaults

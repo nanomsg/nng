@@ -125,7 +125,7 @@ There are some exceptions. Be aware that the numeric values are _not_ the same.
 
 The ability to specify the source address in the URL, to use when
 using `nn_dial` inside the URL is not present in NNG. The correct
-way to specify the local address is using the `NNG_OPT_LOCADDR` option on the
-dialer before starting to dial.
+way to specify the local address is calling [`nng_dialer_bind`] before starting
+the dialer.
 
 {{#include ../xref.md}}

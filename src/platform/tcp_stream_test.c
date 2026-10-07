@@ -502,37 +502,31 @@ test_tcp_stream_iov_exceeds_int_max(void)
 }
 
 void
-test_tcp_dialer_loc_addr(void)
+test_tcp_dialer_bind(void)
 {
 	nng_stream_dialer *d;
 	nng_sockaddr       sa = { 0 };
 	NUTS_PASS(nng_stream_dialer_alloc(&d, "tcp://127.0.0.1:80"));
-	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
-	    NNG_EADDRINVAL);
+	NUTS_FAIL(nng_stream_dialer_bind(d, &sa), NNG_EADDRINVAL);
 
 #ifdef NNG_HAVE_INET6
 	// cannot set a local port
 	sa.s_in6.sa_family = NNG_AF_INET6;
 	sa.s_in6.sa_port   = 8080;
-	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
-	    NNG_EADDRINVAL);
+	NUTS_FAIL(nng_stream_dialer_bind(d, &sa), NNG_EADDRINVAL);
 #endif
 
 	// cannot set it to a bogus family
 	sa.s_inproc.sa_family = NNG_AF_INPROC;
 	snprintf(sa.s_inproc.sa_name, sizeof(sa.s_inproc.sa_name), "junk");
-	NUTS_FAIL(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa),
-	    NNG_EADDRINVAL);
-
-	// bad type test
-	NUTS_FAIL(
-	    nng_stream_dialer_set_int(d, NNG_OPT_LOCADDR, 42), NNG_EBADTYPE);
+	NUTS_FAIL(nng_stream_dialer_bind(d, &sa), NNG_EADDRINVAL);
+	NUTS_FAIL(nng_stream_dialer_bind(d, NULL), NNG_EINVAL);
 
 	// but we can set it to a legal value
 	sa.s_in.sa_family = NNG_AF_INET;
 	sa.s_in.sa_port   = 0;
 	sa.s_in.sa_addr   = nuts_be32(0x7F000001);
-	NUTS_PASS(nng_stream_dialer_set_addr(d, NNG_OPT_LOCADDR, &sa));
+	NUTS_PASS(nng_stream_dialer_bind(d, &sa));
 
 	nng_stream_dialer_free(d);
 }
@@ -552,7 +546,7 @@ NUTS_TESTS = {
 	    test_tcp_listen_activation_bogus_fd },
 	{ "tcp socket activation bad arg",
 	    test_tcp_listen_activation_bad_arg },
-	{ "tcp dialer local address", test_tcp_dialer_loc_addr },
+	{ "tcp dialer bind", test_tcp_dialer_bind },
 	{ "tcp stream iov exceeds INT_MAX",
 	    test_tcp_stream_iov_exceeds_int_max },
 	{ NULL, NULL },

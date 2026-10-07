@@ -2680,6 +2680,14 @@ ws_dialer_set_tls(void *arg, nng_tls_config *cfg)
 	return (nni_http_client_set_tls(d->client, cfg));
 }
 
+static nng_err
+ws_dialer_bind(void *arg, const nng_sockaddr *sa)
+{
+	nni_ws_dialer *d = arg;
+
+	return (nni_http_client_bind(d->client, sa));
+}
+
 nng_err
 nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
@@ -2713,6 +2721,7 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->ops.sd_close   = ws_dialer_close;
 	d->ops.sd_stop    = ws_dialer_stop;
 	d->ops.sd_dial    = ws_dialer_dial;
+	d->ops.sd_bind    = ws_dialer_bind;
 	d->ops.sd_set     = ws_dialer_set;
 	d->ops.sd_get     = ws_dialer_get;
 	d->ops.sd_set_tls = ws_dialer_set_tls;

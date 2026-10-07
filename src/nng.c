@@ -729,6 +729,23 @@ dialer_set(nng_dialer id, const char *n, const void *v, size_t sz, nni_type t)
 }
 
 int
+nng_dialer_bind(nng_dialer id, const nng_sockaddr *sa)
+{
+	nni_dialer *d;
+	int         rv;
+
+	if (sa == NULL) {
+		return (NNG_EINVAL);
+	}
+	if ((rv = nni_dialer_find(&d, id.id)) != 0) {
+		return (rv);
+	}
+	rv = nni_dialer_bind(d, sa);
+	nni_dialer_rele(d);
+	return (rv);
+}
+
+int
 nng_dialer_set_int(nng_dialer id, const char *n, int v)
 {
 	return (dialer_set(id, n, &v, sizeof(v), NNI_TYPE_INT32));
@@ -757,12 +774,6 @@ nng_dialer_set_string(nng_dialer id, const char *n, const char *v)
 {
 	return (dialer_set(
 	    id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
-}
-
-int
-nng_dialer_set_addr(nng_dialer id, const char *n, const nng_sockaddr *v)
-{
-	return (dialer_set(id, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
 }
 
 static int
