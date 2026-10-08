@@ -49,6 +49,11 @@ The `nng_tls_config_hold` function increments that reference count, and
 > TLS configuration objects become read-only once they are used to create a connection or service.
 > After that point, attempts to modify the configuration will fail with [`NNG_EBUSY`].
 
+A configuration is bound to either stream TLS or datagram DTLS when it is first used to create a connection.
+It may be shared by multiple endpoints of that type, but cannot be reused for the other type;
+such attempts fail with [`NNG_EINVAL`].
+Allocate separate configurations for TLS and DTLS, just as for clients and servers.
+
 ## Authentication Mode
 
 ```c

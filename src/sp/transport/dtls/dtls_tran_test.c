@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 // Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
@@ -14,10 +14,15 @@
 
 #include "../../../testing/nuts.h"
 
+#ifndef _WIN32
+#include <arpa/inet.h>
+#endif
+
 // TLS tests.
 
 // DTLS retransmissions can outlast a scheduler pause on a loaded CI runner.
 #define DTLS_STRESS_TIMEOUT 5000
+#define DTLS_PROXY_BUFSIZE 65536
 
 static nng_tls_config *
 tls_server_config(void)
@@ -72,6 +77,241 @@ tls_client_config_ecdsa(void)
 	NUTS_PASS(nng_tls_config_ca_chain(c, nuts_ecdsa_server_crt, NULL));
 	NUTS_PASS(nng_tls_config_server_name(c, "localhost"));
 	return (c);
+}
+
+typedef struct {
+	nng_udp     *udp;
+	nng_aio     *recv;
+	nng_aio     *send;
+	uint8_t     *buf;
+	nng_sockaddr server;
+	bool         dropped;
+	bool         dropped_server;
+	bool         bad_wire;
+	unsigned     duplicates;
+	int          error;
+} dtls_proxy;
+
+static void
+dtls_proxy_run(void *arg)
+{
+	dtls_proxy  *p      = arg;
+	nng_sockaddr client = { 0 };
+	nng_sockaddr from;
+	uint8_t     *buf = p->buf;
+	nng_iov      iov;
+	int          rv;
+	for (;;) {
+		iov.iov_buf = buf;
+		iov.iov_len = DTLS_PROXY_BUFSIZE;
+		nng_aio_set_iov(p->recv, 1, &iov);
+		nng_aio_set_input(p->recv, 0, &from);
+		nng_udp_recv(p->udp, p->recv);
+		nng_aio_wait(p->recv);
+		if ((rv = nng_aio_result(p->recv)) != 0) {
+			p->error = rv == NNG_ECLOSED ? 0 : rv;
+			return;
+		}
+		iov.iov_len = nng_aio_count(p->recv);
+		// DTLS has a 13-byte record header and a 0xfeXX version. TLS
+		// records over UDP (which self-peer tests accepted) must fail.
+		if (iov.iov_len < 13 || buf[1] != 0xfe ||
+		    (buf[2] != 0xff && buf[2] != 0xfd)) {
+			p->bad_wire = true;
+		}
+		bool from_server = from.s_in.sa_port == p->server.s_in.sa_port;
+		if (from_server && !p->dropped_server) {
+			p->dropped_server = true;
+			continue;
+		}
+		if (!from_server) {
+			client = from;
+			if (!p->dropped) {
+				p->dropped = true;
+				continue; // No I/O event will wake the
+				          // client's handshake.
+			}
+		}
+		nng_sockaddr to = from_server ? client : p->server;
+		nng_aio_set_input(p->send, 0, &to);
+		// Replay application records to verify DTLS duplicate
+		// suppression.
+		unsigned copies = buf[0] == 23 ? 2 : 1;
+		if (copies == 2) {
+			p->duplicates++;
+		}
+		for (unsigned i = 0; i < copies; i++) {
+			nng_aio_set_iov(p->send, 1, &iov);
+			nng_udp_send(p->udp, p->send);
+			nng_aio_wait(p->send);
+			if ((rv = nng_aio_result(p->send)) != 0) {
+				p->error = rv == NNG_ECLOSED ? 0 : rv;
+				return;
+			}
+		}
+	}
+}
+
+void
+test_dtls_wire_loss_replay(void)
+{
+	dtls_proxy      p    = { 0 };
+	nng_sockaddr    addr = { 0 };
+	nng_socket      s1, s2, s3, s4;
+	nng_listener    l, tl;
+	nng_dialer      d, td;
+	nng_thread     *thread;
+	const nng_url  *url;
+	char            proxy_url[80];
+	nng_msg        *msg;
+	nng_tls_config *c1 = tls_server_config();
+	nng_tls_config *c2 = tls_client_config();
+	nng_tls_config *c3 = tls_server_config();
+	nng_tls_config *c4 = tls_client_config();
+
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_OPEN(s3);
+	NUTS_OPEN(s4);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 15000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 15000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 15000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 15000));
+	NUTS_PASS(nng_socket_set_ms(s3, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s4, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_listener_create(&l, s1, "dtls://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, c1));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	p.server.s_in.sa_family = NNG_AF_INET;
+	p.server.s_in.sa_addr   = htonl(0x7f000001);
+	p.server.s_in.sa_port   = htons((uint16_t) nng_url_port(url));
+	addr.s_in.sa_family     = NNG_AF_INET;
+	addr.s_in.sa_addr       = htonl(0x7f000001);
+	NUTS_PASS(nng_udp_open(&p.udp, &addr));
+	NUTS_PASS(nng_udp_sockname(p.udp, &addr));
+	NUTS_PASS(nng_aio_alloc(&p.recv, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&p.send, NULL, NULL));
+	// NNG threads have a small stack on Windows; keep the UDP buffer
+	// on the heap, with the proxy's other resources.
+	p.buf = nng_alloc(DTLS_PROXY_BUFSIZE);
+	NUTS_ASSERT(p.buf != NULL);
+	NUTS_PASS(nng_thread_create(&thread, dtls_proxy_run, &p));
+	snprintf(proxy_url, sizeof(proxy_url), "dtls://127.0.0.1:%u",
+	    (unsigned) ntohs(addr.s_in.sa_port));
+	NUTS_PASS(nng_dialer_create(&d, s2, proxy_url));
+	NUTS_PASS(nng_dialer_set_tls(d, c2));
+	NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+	NUTS_SEND(s2, "loss recovery");
+	NUTS_RECV(s1, "loss recovery");
+	NUTS_SEND(s1, "reply");
+	NUTS_RECV(s2, "reply");
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 100));
+	int replay_rv = nng_recvmsg(s1, &msg, 0);
+	if (replay_rv == 0) {
+		nng_msg_free(msg);
+	}
+	NUTS_FAIL(replay_rv, NNG_ETIMEDOUT);
+	replay_rv = nng_recvmsg(s2, &msg, 0);
+	if (replay_rv == 0) {
+		nng_msg_free(msg);
+	}
+	NUTS_FAIL(replay_rv, NNG_ETIMEDOUT);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
+
+	// Stream TLS uses separate configurations, and still works normally.
+	NUTS_PASS(nng_listener_create(&tl, s3, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(tl, c3));
+	NUTS_PASS(nng_listener_start(tl, 0));
+	NUTS_PASS(nng_listener_get_url(tl, &url));
+	NUTS_PASS(nng_dialer_create_url(&td, s4, url));
+	NUTS_PASS(nng_dialer_set_tls(td, c4));
+	NUTS_PASS(nng_dialer_start(td, 0));
+	NUTS_SEND(s4, "separate configuration");
+	NUTS_RECV(s3, "separate configuration");
+
+	// Neither direction of cross-transport reuse is permitted. Failure
+	// must leave existing users of the configuration working.
+	nng_dialer wrong;
+	NUTS_PASS(nng_dialer_create_url(&wrong, s4, url));
+	NUTS_PASS(nng_dialer_set_tls(wrong, c2));
+	NUTS_FAIL(nng_dialer_start(wrong, 0), NNG_EINVAL);
+	NUTS_PASS(nng_dialer_close(wrong));
+	NUTS_PASS(nng_dialer_create(&wrong, s2, "dtls://127.0.0.1:9"));
+	NUTS_PASS(nng_dialer_set_tls(wrong, c4));
+	NUTS_FAIL(nng_dialer_start(wrong, 0), NNG_EINVAL);
+	NUTS_PASS(nng_dialer_close(wrong));
+	NUTS_SEND(s4, "still TLS");
+	NUTS_RECV(s3, "still TLS");
+	NUTS_SEND(s2, "still DTLS");
+	NUTS_RECV(s1, "still DTLS");
+
+	nng_udp_stop(p.udp);
+	nng_thread_destroy(thread);
+	nng_free(p.buf, DTLS_PROXY_BUFSIZE);
+	NUTS_PASS(p.error);
+	NUTS_TRUE(p.dropped);
+	NUTS_TRUE(p.dropped_server);
+	NUTS_TRUE(!p.bad_wire);
+	NUTS_TRUE(p.duplicates > 0);
+	nng_aio_free(p.recv);
+	nng_aio_free(p.send);
+	nng_udp_close(p.udp);
+	NUTS_CLOSE(s4);
+	NUTS_CLOSE(s3);
+	NUTS_CLOSE(s2);
+	NUTS_CLOSE(s1);
+	nng_tls_config_free(c1);
+	nng_tls_config_free(c2);
+	nng_tls_config_free(c3);
+	nng_tls_config_free(c4);
+}
+
+void
+test_dtls_tls13_only(void)
+{
+	nng_tls_config *c = tls_client_config();
+	nng_tls_config *server;
+	nng_socket      s, peer;
+	nng_listener    l;
+	nng_dialer      d;
+	const nng_url  *url;
+	int rv = nng_tls_config_version(c, NNG_TLS_1_3, NNG_TLS_1_3);
+	if (rv == NNG_ENOTSUP) {
+		nng_tls_config_free(c);
+		// The engine cannot require TLS 1.3, so there is no such
+		// configuration to test with DTLS (e.g. mbedTLS 2.x).
+		NUTS_FAIL(rv, NNG_ENOTSUP);
+		return;
+	}
+	NUTS_PASS(rv);
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, "dtls://127.0.0.1:9"));
+	NUTS_PASS(nng_dialer_set_tls(d, c));
+	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ENOTSUP);
+	NUTS_PASS(nng_dialer_close(d));
+
+	// Failed preparation must not bind or damage the configuration.
+	// A TLS 1.3-only client can still use it for stream TLS afterward.
+	server = tls_server_config();
+	NUTS_OPEN(peer);
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(peer, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_listener_create(&l, peer, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, server));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_PASS(nng_dialer_create_url(&d, s, url));
+	NUTS_PASS(nng_dialer_set_tls(d, c));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	NUTS_SEND(s, "still TLS 1.3");
+	NUTS_RECV(peer, "still TLS 1.3");
+	NUTS_CLOSE(peer);
+	NUTS_CLOSE(s);
+	nng_tls_config_free(server);
+	nng_tls_config_free(c);
 }
 
 void
@@ -412,10 +652,14 @@ test_dtls_exchange_many(void)
 	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
 
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
@@ -474,12 +718,18 @@ test_dtls_reqrep_multi(void)
 	NUTS_PASS(nng_dialer_set_tls(d2, c1));
 	NUTS_PASS(nng_dialer_start(d2, 0));
 
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
-	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 
 	// send a bunch of messages - we're hoping that by serializing we won't
 	// overwhelm the network.
@@ -527,9 +777,11 @@ test_dtls_pub_multi(void)
 	c0 = tls_server_config();
 	c1 = tls_client_config();
 	NUTS_PASS(nng_pub0_open(&s0));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
 	NUTS_PASS(nng_listener_create(&l, s0, addr));
 	NUTS_PASS(nng_listener_set_tls(l, c0));
 	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
@@ -698,6 +950,8 @@ test_dtls_pipe_details(void)
 
 NUTS_TESTS = {
 
+	{ "dtls wire loss replay", test_dtls_wire_loss_replay },
+	{ "dtls TLS 1.3 only", test_dtls_tls13_only },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },

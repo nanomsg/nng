@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -113,6 +113,7 @@ nni_tls_close(nni_tls_conn *conn)
 {
 	if (!nni_atomic_flag_test_and_set(&conn->did_close)) {
 		nni_mtx_lock(&conn->lock);
+		conn->closed = true;
 		nni_tls_conn_ops->close((void *) (conn + 1));
 		nni_mtx_unlock(&conn->lock);
 		nni_mtx_lock(&conn->bio_lock);
@@ -230,6 +231,7 @@ nni_tls_start(nni_tls_conn *conn, const nni_tls_bio_ops *biops, void *bio,
 {
 	nng_tls_engine_config *cfg;
 	nng_tls_engine_conn   *econ;
+	nng_err                rv;
 
 	cfg  = (void *) (conn->cfg + 1);
 	econ = (void *) (conn + 1);
@@ -237,6 +239,19 @@ nni_tls_start(nni_tls_conn *conn, const nni_tls_bio_ops *biops, void *bio,
 	conn->bio_ops = *biops;
 	conn->bio     = bio;
 
+	nni_mtx_lock(&conn->cfg->lock);
+	if (conn->cfg->prepared) {
+		rv = conn->cfg->datagram == conn->msg_oriented ? NNG_OK
+		                                               : NNG_EINVAL;
+	} else if ((rv = nni_tls_cfg_ops->prepare(cfg, conn->msg_oriented)) ==
+	    NNG_OK) {
+		conn->cfg->datagram = conn->msg_oriented;
+		conn->cfg->prepared = true;
+	}
+	nni_mtx_unlock(&conn->cfg->lock);
+	if (rv != NNG_OK) {
+		return (rv);
+	}
 	return (nni_tls_conn_ops->init(econ, conn, cfg, sa));
 }
 
@@ -276,6 +291,9 @@ static nng_err
 tls_handshake(nni_tls_conn *conn)
 {
 	int rv;
+	if (conn->closed) {
+		return (NNG_ECLOSED);
+	}
 	if (conn->hs_done) {
 		return (NNG_OK);
 	}
@@ -694,11 +712,11 @@ tls_engine_recv_msg(nni_tls_conn *conn, uint8_t *buf, size_t *szp)
 		len = *szp;
 	}
 	memcpy(buf, nni_msg_body(msg), len);
-	nni_msg_trim(msg, len);
-	if (nni_msg_len(msg) == 0) {
-		nni_msg_free(msg);
-		conn->bio_recv_msg = NULL;
-	}
+	// A read consumes a complete datagram, even if the buffer is too
+	// small. Retaining its tail would turn it into a spurious second
+	// datagram.
+	nni_msg_free(msg);
+	conn->bio_recv_msg = NULL;
 	tls_bio_recv_msg_start(conn);
 	nni_mtx_unlock(&conn->bio_lock);
 	return (NNG_OK);
