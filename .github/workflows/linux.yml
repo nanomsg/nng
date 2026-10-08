@@ -19,7 +19,6 @@ jobs:
             pkg: libmbedtls-dev
             dir: build.mbed
           - engine: wolf
-            pkg: libwolfssl-dev
             dir: build.wolf
         pollq:
           - poller: auto
@@ -38,7 +37,21 @@ jobs:
         run: sudo apt-get install ninja-build
 
       - name: Install TLS engine
+        if: matrix.tls.engine == 'mbed'
         run: sudo apt-get install ${{ matrix.tls.pkg }}
+
+      # Ubuntu 24.04's wolfSSL predates the DTLS 1.2 replay protection fix.
+      - name: Build wolfSSL
+        if: matrix.tls.engine == 'wolf'
+        run: |
+          curl -fsSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.8.4-stable.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/wolfssl-5.8.4-stable" -B "$RUNNER_TEMP/wolfssl-build" \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/wolfssl-install" \
+            -DWOLFSSL_DTLS=yes -DWOLFSSL_OPENSSLEXTRA=yes -DWOLFSSL_PSK=yes -DWOLFSSL_CRL=yes \
+            -DWOLFSSL_EXAMPLES=no -DWOLFSSL_CRYPT_TESTS=no
+          cmake --build "$RUNNER_TEMP/wolfssl-build" --parallel 2
+          cmake --install "$RUNNER_TEMP/wolfssl-build"
+          echo "CMAKE_PREFIX_PATH=$RUNNER_TEMP/wolfssl-install" >> "$GITHUB_ENV"
 
       - name: Configure
         run: mkdir ${{ matrix.tls.dir }} && cd ${{ matrix.tls.dir }} && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -D NNG_ENABLE_TLS=ON -DNNG_POLLQ_POLLER=${{ matrix.pollq.poller }} -DNNG_TLS_ENGINE=${{ matrix.tls.engine }} ..
