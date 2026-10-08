@@ -546,7 +546,7 @@ udp_send_disc(udp_ep *ep, udp_pipe *p, udp_disc_reason reason)
 static void
 udp_send_disc_full(udp_ep *ep, const nng_sockaddr *sa, udp_disc_reason reason)
 {
-	udp_sp_msg disc;
+	udp_sp_msg disc = {0};
 
 	disc.us_ver       = 0x1;
 	disc.us_op_code   = OPCODE_DISC;
@@ -559,7 +559,8 @@ udp_send_disc_full(udp_ep *ep, const nng_sockaddr *sa, udp_disc_reason reason)
 static void
 udp_send_creq(udp_ep *ep, udp_pipe *p)
 {
-	udp_sp_msg creq;
+	udp_sp_msg creq = {0};
+
 	creq.us_ver     = 0x1;
 	creq.us_op_code = OPCODE_CREQ;
 	creq.us_type    = p->proto;
@@ -575,7 +576,8 @@ udp_send_creq(udp_ep *ep, udp_pipe *p)
 static void
 udp_send_cack(udp_ep *ep, udp_pipe *p)
 {
-	udp_sp_msg cack;
+	udp_sp_msg cack = {0};
+
 	cack.us_ver     = 0x01;
 	cack.us_op_code = OPCODE_CACK;
 	cack.us_type    = p->proto;
@@ -928,7 +930,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 {
 	udp_pipe  *p = arg;
 	udp_ep    *ep;
-	udp_sp_msg dreq;
+	udp_sp_msg dreq = {0};
 	nng_msg   *msg;
 	size_t     count = 0;
 
@@ -1078,6 +1080,7 @@ udp_ep_close(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	ep->closed = true;
+	cursor = 0;
 
 	// leave tx open so we can send disconnects
 	nni_aio_close(&ep->resaio);
