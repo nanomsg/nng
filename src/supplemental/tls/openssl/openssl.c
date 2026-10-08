@@ -24,6 +24,7 @@
 #include "../../../core/defs.h"
 #include "../../../core/list.h"
 #include "../../../core/strs.h"
+#include "../tls_common.h"
 #include "../tls_engine.h"
 #include "nng/nng.h"
 
@@ -37,7 +38,9 @@ static int ossl_ex_index;
 static ERR_STRING_DATA ossl_errs[64];
 
 static BIO_METHOD *ossl_tcpm; // TCP stream method
-// static BIO_METHOD *ossl_udpm; // UDP datagram method
+static BIO_METHOD *ossl_udpm; // UDP datagram method
+
+static long ossl_bio_ctrl(BIO *, int, long, void *);
 
 struct nng_tls_engine_conn {
 	void        *tls; // parent conn
@@ -45,6 +48,10 @@ struct nng_tls_engine_conn {
 	SSL         *ssl;
 	int          auth_mode;
 	nng_tls_mode mode;
+	bool         datagram;
+	bool         closed;
+	bool         timer_active;
+	nni_aio      timer;
 };
 
 struct nng_tls_engine_cert {
@@ -97,6 +104,9 @@ psk_free(psk *p)
 
 struct nng_tls_engine_config {
 	SSL_CTX     *ctx;
+	X509_STORE  *ca;
+	X509        *cert;
+	EVP_PKEY    *key;
 	nng_tls_mode mode;
 	char        *pass;
 	char        *server_name;
@@ -119,6 +129,7 @@ ossl_net_send(BIO *bio, const char *buf, size_t len, size_t *lenp)
 {
 	void   *ctx = BIO_get_data(bio);
 	nng_err rv;
+	BIO_clear_retry_flags(bio);
 
 	switch (rv = nng_tls_engine_send(ctx, (const uint8_t *) buf, &len)) {
 	case NNG_OK:
@@ -138,6 +149,7 @@ ossl_net_recv(BIO *bio, char *buf, size_t len, size_t *lenp)
 {
 	void   *ctx = BIO_get_data(bio);
 	nng_err rv;
+	BIO_clear_retry_flags(bio);
 
 	switch (rv = nng_tls_engine_recv(ctx, (uint8_t *) buf, &len)) {
 	case NNG_OK:
@@ -153,6 +165,31 @@ ossl_net_recv(BIO *bio, char *buf, size_t len, size_t *lenp)
 }
 
 static long
+ossl_dgram_ctrl(BIO *bio, int cmd, long num, void *ptr)
+{
+	// The transport supplies complete UDP payloads, with room for a full
+	// TLS record. Handshake retransmissions use our asynchronous timer,
+	// rather than a blocking socket receive timeout.
+	switch (cmd) {
+	case BIO_CTRL_DGRAM_QUERY_MTU:
+	case BIO_CTRL_DGRAM_GET_MTU:
+	case BIO_CTRL_DGRAM_GET_FALLBACK_MTU:
+		return (NNG_TLS_MAX_SEND_SIZE);
+	case BIO_CTRL_DGRAM_SET_MTU:
+		return (num);
+	case BIO_CTRL_DGRAM_GET_MTU_OVERHEAD:
+	case BIO_CTRL_DGRAM_MTU_EXCEEDED:
+	case BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP:
+	case BIO_CTRL_DGRAM_GET_SEND_TIMER_EXP:
+		return (0);
+	case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
+		return (1);
+	default:
+		return (ossl_bio_ctrl(bio, cmd, num, ptr));
+	}
+}
+
+static long
 ossl_bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
 {
 	NNI_ARG_UNUSED(bio);
@@ -164,6 +201,8 @@ ossl_bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
 		return (1);
 	case BIO_CTRL_GET_KTLS_SEND:
 	case BIO_CTRL_GET_KTLS_RECV:
+	case BIO_CTRL_PENDING:
+	case BIO_CTRL_WPENDING:
 		// not supported
 		return (0);
 
@@ -211,6 +250,12 @@ ossl_init_nng(void)
 		BIO_meth_set_write_ex(ossl_tcpm, ossl_net_send);
 		BIO_meth_set_ctrl(ossl_tcpm, ossl_bio_ctrl);
 	}
+	if (ossl_udpm == NULL) {
+		ossl_udpm = BIO_meth_new(BIO_TYPE_DGRAM, "nng_udp");
+		BIO_meth_set_read_ex(ossl_udpm, ossl_net_recv);
+		BIO_meth_set_write_ex(ossl_udpm, ossl_net_send);
+		BIO_meth_set_ctrl(ossl_udpm, ossl_dgram_ctrl);
+	}
 
 	if (ossl_ex_index == 0) {
 		ossl_ex_index = CRYPTO_get_ex_new_index(
@@ -218,9 +263,48 @@ ossl_init_nng(void)
 	}
 }
 
+// Called with the common connection lock held. An earlier wakeup is harmless:
+// OpenSSL checks its own deadline before retransmitting.
+static void
+ossl_timer_schedule(nng_tls_engine_conn *ec)
+{
+	struct timeval tv;
+	nng_duration   ms;
+	if (!ec->datagram || ec->closed || ec->timer_active ||
+	    !DTLSv1_get_timeout(ec->ssl, &tv)) {
+		return;
+	}
+	ms = (nng_duration) (tv.tv_sec * 1000 + (tv.tv_usec + 999) / 1000);
+	ec->timer_active = true;
+	nni_sleep_aio(ms, &ec->timer);
+}
+
+static void
+ossl_timer_cb(void *arg)
+{
+	nng_tls_engine_conn *ec   = arg;
+	nni_tls_conn        *conn = ec->tls;
+	int                  rv   = 0;
+	if (nni_aio_result(&ec->timer) != NNG_OK) {
+		return;
+	}
+	nni_mtx_lock(&conn->lock);
+	ec->timer_active = false;
+	if (!ec->closed) {
+		ERR_clear_error();
+		rv = DTLSv1_handle_timeout(ec->ssl);
+		ossl_timer_schedule(ec);
+	}
+	nni_mtx_unlock(&conn->lock);
+	if (rv < 0) {
+		nni_tls_close(conn);
+	}
+}
+
 static void
 ossl_conn_fini(nng_tls_engine_conn *ec)
 {
+	nni_aio_fini(&ec->timer);
 	if (ec->ssl != NULL) {
 		SSL_free(ec->ssl);
 		ec->ssl = NULL;
@@ -232,12 +316,14 @@ ossl_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
     const nng_sockaddr *sa)
 {
 	BIO *bio;
-	NNI_ARG_UNUSED(sa); // for now... revisit if we support DTLS ?
+	NNI_ARG_UNUSED(sa);
 	ec->tls       = tls;
 	ec->auth_mode = cfg->auth_mode;
 	ec->mode      = cfg->mode;
+	ec->datagram  = ((nni_tls_conn *) tls)->msg_oriented;
+	nni_aio_init(&ec->timer, ossl_timer_cb, ec);
 
-	if ((bio = BIO_new(ossl_tcpm)) == NULL) {
+	if ((bio = BIO_new(ec->datagram ? ossl_udpm : ossl_tcpm)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	BIO_set_data(bio, tls);
@@ -249,17 +335,19 @@ ossl_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 	}
 	switch (ec->mode) {
 	case NNG_TLS_MODE_CLIENT:
-		SSL_set_ssl_method(ec->ssl, TLS_client_method());
 		SSL_set_connect_state(ec->ssl);
 		break;
 	case NNG_TLS_MODE_SERVER:
-		SSL_set_ssl_method(ec->ssl, TLS_server_method());
 		SSL_set_accept_state(ec->ssl);
 		break;
 	}
 
 	SSL_set_bio(ec->ssl, bio, bio);
 	SSL_set_dh_auto(ec->ssl, true);
+	if (ec->datagram) {
+		SSL_set_options(ec->ssl, SSL_OP_NO_QUERY_MTU);
+		SSL_set_mtu(ec->ssl, NNG_TLS_MAX_SEND_SIZE);
+	}
 
 	if (cfg->server_name != NULL) {
 
@@ -278,7 +366,10 @@ ossl_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 static void
 ossl_conn_close(nng_tls_engine_conn *ec)
 {
+	ec->closed = true;
+	nni_aio_close(&ec->timer);
 	if (ec->ssl != NULL) {
+		ERR_clear_error();
 		(void) SSL_shutdown(ec->ssl);
 	}
 }
@@ -288,6 +379,9 @@ ossl_conn_recv(nng_tls_engine_conn *ec, uint8_t *buf, size_t *szp)
 {
 	int    rv;
 	size_t n = *szp;
+	// SSL_get_error inspects this thread's queue, not just this SSL.
+	// Worker threads can retain errors from a different connection.
+	ERR_clear_error();
 	if ((rv = SSL_read_ex(ec->ssl, buf, n, szp)) <= 0) {
 		rv = SSL_get_error(ec->ssl, rv);
 		switch (rv) {
@@ -320,6 +414,7 @@ ossl_conn_send(nng_tls_engine_conn *ec, const uint8_t *buf, size_t *szp)
 {
 	int rv;
 
+	ERR_clear_error();
 	if ((rv = SSL_write_ex(ec->ssl, buf, (*szp), szp)) <= 0) {
 		rv = SSL_get_error(ec->ssl, rv);
 		switch (rv) {
@@ -345,16 +440,19 @@ ossl_conn_send(nng_tls_engine_conn *ec, const uint8_t *buf, size_t *szp)
 static int
 ossl_conn_handshake(nng_tls_engine_conn *ec)
 {
-	int rv;
+	int rv, err;
 
+	ERR_clear_error();
 	rv = SSL_do_handshake(ec->ssl);
+	// No other OpenSSL calls may intervene before SSL_get_error.
+	err = rv == 1 ? SSL_ERROR_NONE : SSL_get_error(ec->ssl, rv);
+	ossl_timer_schedule(ec);
 	if (rv == 1) {
 		nng_log_debug("NNG-TLS-HS", "TLS handshake complete %s",
 		    ec->mode == NNG_TLS_MODE_CLIENT ? "client" : "server");
 		return (NNG_OK);
 	}
-	rv = SSL_get_error(ec->ssl, rv);
-	switch (rv) {
+	switch (err) {
 	case SSL_ERROR_WANT_WRITE:
 	case SSL_ERROR_WANT_READ:
 		return (NNG_EAGAIN);
@@ -464,6 +562,9 @@ ossl_config_fini(nng_tls_engine_config *cfg)
 {
 	psk *psk;
 	SSL_CTX_free(cfg->ctx);
+	X509_STORE_free(cfg->ca);
+	X509_free(cfg->cert);
+	EVP_PKEY_free(cfg->key);
 	if (cfg->server_name != NULL) {
 		nng_strfree(cfg->server_name);
 	}
@@ -480,46 +581,15 @@ ossl_config_fini(nng_tls_engine_config *cfg)
 static int
 ossl_config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 {
-	int               auth_mode;
-	int               nng_auth;
-	const SSL_METHOD *method;
-
-	cfg->mode = mode;
+	cfg->mode      = mode;
+	cfg->min_ver   = TLS1_2_VERSION;
+	cfg->max_ver   = TLS1_3_VERSION;
+	cfg->auth_mode = mode == NNG_TLS_MODE_SERVER
+	    ? NNG_TLS_AUTH_MODE_NONE
+	    : NNG_TLS_AUTH_MODE_REQUIRED;
 	NNI_LIST_INIT(&cfg->psks, psk, node);
-	if (mode == NNG_TLS_MODE_SERVER) {
-		method    = TLS_server_method();
-		auth_mode = SSL_VERIFY_NONE;
-		nng_auth  = NNG_TLS_AUTH_MODE_NONE;
-	} else {
-		method    = TLS_client_method();
-		auth_mode = SSL_VERIFY_PEER;
-		nng_auth  = NNG_TLS_AUTH_MODE_REQUIRED;
-	}
-
-	cfg->min_ver = TLS1_2_VERSION;
-	cfg->max_ver = TLS1_3_VERSION;
-
-	cfg->ctx = SSL_CTX_new(method);
-	if (cfg->ctx == NULL) {
-		return (NNG_ENOMEM);
-	}
-	SSL_CTX_set_ex_data(cfg->ctx, ossl_ex_index, cfg);
-	SSL_CTX_set_dh_auto(cfg->ctx, true);
-
-	// By default we require TLS 1.2.
-	if (!SSL_CTX_set_min_proto_version(cfg->ctx, cfg->min_ver)) {
-		tls_log_err("NNG-TLS-VERSION",
-		    "Failed setting min TLS version", ERR_get_error());
-		return (NNG_ECRYPTO);
-	}
-	if (!SSL_CTX_set_max_proto_version(cfg->ctx, cfg->max_ver)) {
-		tls_log_err("NNG-TLS-VERSION",
-		    "Failed setting max TLS version", ERR_get_error());
-		return (NNG_ECRYPTO);
-	}
-	SSL_CTX_set_verify(cfg->ctx, auth_mode, NULL);
-
-	cfg->auth_mode = nng_auth;
+	// The method is selected on first use, before creating the one
+	// context.
 	return (NNG_OK);
 }
 
@@ -621,16 +691,6 @@ ossl_config_psk(nng_tls_engine_config *cfg, const char *identity,
 	memcpy(psk->key, key, key_len);
 	psk->keylen = key_len;
 
-	if (nni_list_empty(&cfg->psks)) {
-		if (cfg->mode == NNG_TLS_MODE_SERVER) {
-			SSL_CTX_set_psk_server_callback(
-			    cfg->ctx, psk_server_cb);
-		} else { // client
-			SSL_CTX_set_psk_client_callback(
-			    cfg->ctx, psk_client_cb);
-		}
-	}
-
 	// If the identity was previously configured, replace it.
 	// The rule here is that last one wins, so we always append.
 	NNI_LIST_FOREACH (&cfg->psks, srch) {
@@ -648,17 +708,11 @@ ossl_config_psk(nng_tls_engine_config *cfg, const char *identity,
 static int
 ossl_config_auth_mode(nng_tls_engine_config *cfg, nng_tls_auth_mode mode)
 {
-	cfg->auth_mode = mode;
 	switch (mode) {
 	case NNG_TLS_AUTH_MODE_NONE:
-		SSL_CTX_set_verify(cfg->ctx, SSL_VERIFY_NONE, NULL);
-		return (NNG_OK);
 	case NNG_TLS_AUTH_MODE_OPTIONAL:
-		SSL_CTX_set_verify(cfg->ctx, SSL_VERIFY_PEER, NULL);
-		return (NNG_OK);
 	case NNG_TLS_AUTH_MODE_REQUIRED:
-		SSL_CTX_set_verify(cfg->ctx,
-		    SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
+		cfg->auth_mode = mode;
 		return (NNG_OK);
 	default:
 		return (NNG_EINVAL);
@@ -707,7 +761,8 @@ ossl_config_ca_chain(
 		}
 		BIO_free(crlb);
 	}
-	SSL_CTX_set_cert_store(cfg->ctx, cert_store);
+	X509_STORE_free(cfg->ca);
+	cfg->ca = cert_store;
 
 	return (NNG_OK);
 }
@@ -751,17 +806,17 @@ ossl_config_own_cert(nng_tls_engine_config *cfg, const char *cert,
 		return (NNG_ECRYPTO);
 	}
 
-	if (SSL_CTX_use_cert_and_key(cfg->ctx, xc, pkey, NULL, 1) <= 0) {
+	if (X509_check_private_key(xc, pkey) != 1) {
 		BIO_free(crtb);
 		BIO_free(keyb);
 		X509_free(xc);
-		tls_log_err("NNG-TLS-KEY",
-		    "Failed to configure own key and cert", ERR_get_error());
+		EVP_PKEY_free(pkey);
 		return (NNG_ECRYPTO);
 	}
-
-	X509_free(xc);
-	EVP_PKEY_free(pkey);
+	X509_free(cfg->cert);
+	EVP_PKEY_free(cfg->key);
+	cfg->cert = xc;
+	cfg->key  = pkey;
 	BIO_free(crtb);
 	BIO_free(keyb);
 	return (NNG_OK);
@@ -771,39 +826,78 @@ static int
 ossl_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
     nng_tls_version max_ver)
 {
-	int rv;
+	if (min_ver > max_ver || min_ver < NNG_TLS_1_2 ||
+	    max_ver > NNG_TLS_1_3) {
+		return (NNG_ENOTSUP);
+	}
+	cfg->min_ver =
+	    min_ver == NNG_TLS_1_2 ? TLS1_2_VERSION : TLS1_3_VERSION;
+	cfg->max_ver =
+	    max_ver == NNG_TLS_1_2 ? TLS1_2_VERSION : TLS1_3_VERSION;
+	return (NNG_OK);
+}
 
-	if ((min_ver > max_ver) || (max_ver > NNG_TLS_1_3)) {
-		return (NNG_ENOTSUP);
+static int
+ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
+{
+	SSL_CTX          *ctx;
+	const SSL_METHOD *method;
+	int               auth    = SSL_VERIFY_NONE;
+	int               min_ver = cfg->min_ver;
+	int               max_ver = cfg->max_ver;
+	if (datagram) {
+		if (min_ver > TLS1_2_VERSION) {
+			return (NNG_ENOTSUP);
+		}
+		method  = cfg->mode == NNG_TLS_MODE_SERVER
+		     ? DTLS_server_method()
+		     : DTLS_client_method();
+		min_ver = max_ver = DTLS1_2_VERSION;
+	} else {
+		method = cfg->mode == NNG_TLS_MODE_SERVER
+		    ? TLS_server_method()
+		    : TLS_client_method();
 	}
-	switch (min_ver) {
-	case NNG_TLS_1_2:
-		rv = SSL_CTX_set_min_proto_version(cfg->ctx, TLS1_2_VERSION);
-		break;
-	case NNG_TLS_1_3:
-		rv = SSL_CTX_set_min_proto_version(cfg->ctx, TLS1_3_VERSION);
-		break;
-	default:
-		return (NNG_ENOTSUP);
+	if ((ctx = SSL_CTX_new(method)) == NULL) {
+		return (NNG_ENOMEM);
 	}
-	if (!rv) {
-		return (NNG_ENOTSUP);
+	if (!SSL_CTX_set_min_proto_version(ctx, min_ver) ||
+	    !SSL_CTX_set_max_proto_version(ctx, max_ver) ||
+	    (cfg->cert != NULL &&
+	        SSL_CTX_use_cert_and_key(ctx, cfg->cert, cfg->key, NULL, 1) !=
+	            1)) {
+		SSL_CTX_free(ctx);
+		return (NNG_ECRYPTO);
 	}
-
-	switch (max_ver) {
-	case NNG_TLS_1_2:
-		rv = SSL_CTX_set_max_proto_version(cfg->ctx, TLS1_2_VERSION);
-		break;
-	case NNG_TLS_1_3:
-		rv = SSL_CTX_set_max_proto_version(cfg->ctx, TLS1_3_VERSION);
-		break;
-	default:
-		return (NNG_ENOTSUP);
+	SSL_CTX_set_ex_data(ctx, ossl_ex_index, cfg);
+	SSL_CTX_set_dh_auto(ctx, true);
+	if (cfg->ca != NULL) {
+		SSL_CTX_set1_cert_store(ctx, cfg->ca);
 	}
-
-	if (!rv) {
-		return (NNG_ENOTSUP);
+	if (cfg->auth_mode != NNG_TLS_AUTH_MODE_NONE) {
+		auth = SSL_VERIFY_PEER;
+		if (cfg->auth_mode == NNG_TLS_AUTH_MODE_REQUIRED) {
+			auth |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+		}
 	}
+	SSL_CTX_set_verify(ctx, auth, NULL);
+	if (!nni_list_empty(&cfg->psks)) {
+		if (cfg->mode == NNG_TLS_MODE_SERVER) {
+			SSL_CTX_set_psk_server_callback(ctx, psk_server_cb);
+		} else {
+			SSL_CTX_set_psk_client_callback(ctx, psk_client_cb);
+		}
+	}
+	cfg->ctx = ctx;
+	// SSL_CTX now owns its references to the parsed credentials.
+	X509_STORE_free(cfg->ca);
+	cfg->ca = NULL;
+	X509_free(cfg->cert);
+	cfg->cert = NULL;
+	EVP_PKEY_free(cfg->key);
+	cfg->key = NULL;
+	nni_strfree(cfg->pass);
+	cfg->pass = NULL;
 	return (NNG_OK);
 }
 
@@ -1076,6 +1170,7 @@ fips_mode(void)
 
 static nng_tls_engine_config_ops ossl_config_ops = {
 	.init     = ossl_config_init,
+	.prepare  = ossl_config_prepare,
 	.fini     = ossl_config_fini,
 	.size     = sizeof(nng_tls_engine_config),
 	.auth     = ossl_config_auth_mode,

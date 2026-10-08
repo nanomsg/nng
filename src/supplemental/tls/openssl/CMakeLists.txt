@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -23,6 +23,11 @@ if (NNG_TLS_ENGINE STREQUAL "openssl")
         target_include_directories(nng PRIVATE ${OPENSSL_INCLUDE_DIR})
         target_include_directories(nng_testing PRIVATE ${OPENSSL_INCLUDE_DIR})
         nng_link_libraries_public(PRIVATE ${OPENSSL_LIBRARIES})
+
+        nng_test(openssl_test)
+        if (NNG_TESTS)
+            target_include_directories(openssl_test PRIVATE ${OPENSSL_INCLUDE_DIR})
+        endif ()
 
     endif()
 

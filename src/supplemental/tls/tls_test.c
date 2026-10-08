@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,7 +9,47 @@
 
 #include "nng/nng.h"
 
+// Establish the platform header order before acutest includes windows.h.
+#include "tls_common.h"
+
 #include "../../testing/nuts.h"
+
+void
+test_tls_datagram_truncation(void)
+{
+	nni_tls_conn conn = { 0 };
+	nng_msg     *msg;
+	uint8_t      buf[8];
+	size_t       len;
+
+	// Exercise the BIO datagram boundary without a TLS handshake. Mark
+	// the BIO closed so a read cannot start underlying I/O.
+	conn.msg_oriented = true;
+	conn.bio_closed   = true;
+	nni_mtx_init(&conn.bio_lock);
+	nni_lmq_init(&conn.bio_recv_lmq, 2);
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_msg_append(msg, "first datagram", 14));
+	NUTS_PASS(nni_lmq_put(&conn.bio_recv_lmq, msg));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_msg_append(msg, "second", 6));
+	NUTS_PASS(nni_lmq_put(&conn.bio_recv_lmq, msg));
+
+	len = 3;
+	NUTS_PASS(nng_tls_engine_recv(&conn, buf, &len));
+	NUTS_TRUE(len == 3);
+	NUTS_TRUE(memcmp(buf, "fir", len) == 0);
+	len = sizeof(buf);
+	NUTS_PASS(nng_tls_engine_recv(&conn, buf, &len));
+	NUTS_TRUE(len == 6);
+	NUTS_TRUE(memcmp(buf, "second", len) == 0);
+	len = sizeof(buf);
+	NUTS_FAIL(nng_tls_engine_recv(&conn, buf, &len), NNG_EAGAIN);
+	NUTS_TRUE(conn.bio_recv_msg == NULL);
+
+	nni_lmq_fini(&conn.bio_recv_lmq);
+	nni_mtx_fini(&conn.bio_lock);
+}
 
 void
 test_tls_config_version(void)
@@ -793,6 +833,7 @@ test_tls_psk_config_busy(void)
 }
 
 TEST_LIST = {
+	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },
 	{ "tls conn refused", test_tls_conn_refused },
 	{ "tls large message", test_tls_large_message },

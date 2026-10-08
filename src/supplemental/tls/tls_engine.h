@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -113,6 +113,11 @@ typedef struct nng_tls_engine_config_ops_s {
 	// 0, else an NNG error code.
 	int (*init)(nng_tls_engine_config *, nng_tls_mode);
 
+	// prepare selects TLS (false) or DTLS (true), before any connection
+	// uses the configuration. Called once, with the configuration locked.
+	// A failed preparation must leave the configuration safe to retry.
+	int (*prepare)(nng_tls_engine_config *, bool);
+
 	// fini is used to tear down the configuration object.
 	// This will only be called on objects that have been properly
 	// initialized with nte_config_init.
@@ -220,7 +225,8 @@ typedef enum nng_tls_engine_version_e {
 	NNG_TLS_ENGINE_V2      = 2, // adds PSK support
 	NNG_TLS_ENGINE_V3      = 3, // refactored API
 	NNG_TLS_ENGINE_V4      = 4, // added cert ops
-	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V4,
+	NNG_TLS_ENGINE_V5      = 5, // select transport before first use
+	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V5,
 } nng_tls_engine_version;
 
 typedef struct nng_tls_engine_s {

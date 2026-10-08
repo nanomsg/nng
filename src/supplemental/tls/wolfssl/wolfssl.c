@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -29,11 +29,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef NNG_WOLFSSL_USE_OPTIONS_H
+#include <wolfssl/options.h>
+#endif
 #include <wolfssl/ssl.h>
 
 #include "../../../core/nng_impl.h"
 #include "nng/nng.h"
 
+#include "../tls_common.h"
 #include "../tls_engine.h"
 
 struct nng_tls_engine_conn {
@@ -41,6 +45,11 @@ struct nng_tls_engine_conn {
 	WOLFSSL_CTX *ctx;
 	WOLFSSL     *ssl;
 	int          auth_mode;
+	bool         datagram;
+	bool         closed;
+	bool         timer_active;
+	nng_time     deadline;
+	nni_aio      timer;
 };
 
 struct nng_tls_engine_cert {
@@ -94,13 +103,33 @@ psk_free(psk *p)
 	}
 }
 
+typedef struct wolf_material {
+	char         *cert;
+	char         *key;
+	char         *crl;
+	nni_list_node node;
+} wolf_material;
+
+static void
+wolf_material_free(wolf_material *m)
+{
+	if (m != NULL) {
+		nni_strfree(m->cert);
+		nni_strfree(m->key);
+		nni_strfree(m->crl);
+		NNI_FREE_STRUCT(m);
+	}
+}
+
 struct nng_tls_engine_config {
-	WOLFSSL_CTX *ctx;
-	nng_tls_mode mode;
-	char        *pass;
-	char        *server_name;
-	int          auth_mode;
-	nni_list     psks;
+	WOLFSSL_CTX    *ctx;
+	nng_tls_version min_ver;
+	nng_tls_mode    mode;
+	char           *pass;
+	char           *server_name;
+	int             auth_mode;
+	nni_list        psks;
+	nni_list        materials; // PEM data, released after first use
 };
 
 static void
@@ -158,17 +187,56 @@ wolf_net_recv(WOLFSSL *ssl, char *buf, int len, void *ctx)
 static void
 wolf_conn_fini(nng_tls_engine_conn *ec)
 {
+	nni_aio_fini(&ec->timer);
 	wolfSSL_free(ec->ssl);
+}
+
+static void
+wolf_timer_cb(void *arg)
+{
+	nng_tls_engine_conn *ec   = arg;
+	nni_tls_conn        *conn = ec->tls;
+	int                  rv   = WOLFSSL_SUCCESS;
+	if (nni_aio_result(&ec->timer) != NNG_OK) {
+		return;
+	}
+	nni_mtx_lock(&conn->lock);
+	ec->timer_active = false;
+#ifdef WOLFSSL_DTLS
+	if (!ec->closed && !conn->hs_done) {
+		nng_time now = nni_clock();
+		if (now < ec->deadline) {
+			ec->timer_active = true;
+			nni_sleep_aio(
+			    (nng_duration) (ec->deadline - now), &ec->timer);
+		} else {
+			rv = wolfSSL_dtls_got_timeout(ec->ssl);
+			if (rv == WOLFSSL_SUCCESS) {
+				nng_duration ms =
+				    wolfSSL_dtls_get_current_timeout(ec->ssl) *
+				    1000;
+				ec->deadline     = now + ms;
+				ec->timer_active = true;
+				nni_sleep_aio(ms, &ec->timer);
+			}
+		}
+	}
+#endif
+	nni_mtx_unlock(&conn->lock);
+	if (rv != WOLFSSL_SUCCESS) {
+		nni_tls_close(conn);
+	}
 }
 
 static int
 wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
     const nng_sockaddr *sa)
 {
-	NNI_ARG_UNUSED(sa); // for now... revisit if we support DTLS ?
+	NNI_ARG_UNUSED(sa);
 	ec->tls       = tls;
 	ec->auth_mode = cfg->auth_mode;
-
+	ec->datagram  = ((nni_tls_conn *) tls)->msg_oriented;
+	nni_aio_init(&ec->timer, wolf_timer_cb, ec);
 	if ((ec->ssl = wolfSSL_new(cfg->ctx)) == NULL) {
 		return (NNG_ENOMEM); // most likely
 	}
@@ -176,7 +244,8 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 		int rv = wolfSSL_check_domain_name(ec->ssl, cfg->server_name);
 #ifdef NNG_WOLFSSL_HAVE_CHECK_IP
 		if (rv != WOLFSSL_SUCCESS) {
-			rv = wolfSSL_check_ip_address(ec->ssl, cfg->server_name);
+			rv = wolfSSL_check_ip_address(
+			    ec->ssl, cfg->server_name);
 		}
 #endif
 		if (rv != WOLFSSL_SUCCESS) {
@@ -187,13 +256,22 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 	}
 	wolfSSL_SetIOReadCtx(ec->ssl, ec->tls);
 	wolfSSL_SetIOWriteCtx(ec->ssl, ec->tls);
+#ifdef WOLFSSL_DTLS
+	if (ec->datagram) {
+		wolfSSL_dtls_set_using_nonblock(ec->ssl, 1);
+	}
+#endif
 	return (0);
 }
 
 static void
 wolf_conn_close(nng_tls_engine_conn *ec)
 {
-	(void) wolfSSL_shutdown(ec->ssl);
+	ec->closed = true;
+	nni_aio_close(&ec->timer);
+	if (ec->ssl != NULL) {
+		(void) wolfSSL_shutdown(ec->ssl);
+	}
 }
 
 static int
@@ -255,6 +333,21 @@ wolf_conn_handshake(nng_tls_engine_conn *ec)
 			return (0);
 		case WOLFSSL_ERROR_WANT_WRITE:
 		case WOLFSSL_ERROR_WANT_READ:
+#ifdef WOLFSSL_DTLS
+			if (ec->datagram && !ec->closed) {
+				nng_duration ms =
+				    wolfSSL_dtls_get_current_timeout(ec->ssl) *
+				    1000;
+				if (!ec->timer_active) {
+					// Repeated WANT_READ callbacks must
+					// not keep postponing retransmission
+					// indefinitely.
+					ec->deadline     = nni_clock() + ms;
+					ec->timer_active = true;
+					nni_sleep_aio(ms, &ec->timer);
+				}
+			}
+#endif
 			return (NNG_EAGAIN);
 		default:
 			// This can fail if we do not have a certificate
@@ -341,8 +434,13 @@ wolf_conn_peer_cn(nng_tls_engine_conn *ec)
 static void
 wolf_config_fini(nng_tls_engine_config *cfg)
 {
-	psk *psk;
+	psk           *psk;
+	wolf_material *m;
 	wolfSSL_CTX_free(cfg->ctx);
+	while ((m = nni_list_first(&cfg->materials)) != NULL) {
+		nni_list_remove(&cfg->materials, m);
+		wolf_material_free(m);
+	}
 	if (cfg->server_name != NULL) {
 		nng_strfree(cfg->server_name);
 	}
@@ -359,54 +457,16 @@ wolf_config_fini(nng_tls_engine_config *cfg)
 static int
 wolf_config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 {
-	int             auth_mode;
-	int             nng_auth;
-	WOLFSSL_METHOD *method;
-	int             rv;
-
-	char buf[4096];
-	wolfSSL_get_ciphers(buf, sizeof(buf));
-
-	cfg->mode = mode;
+	cfg->mode      = mode;
+	cfg->min_ver   = NNG_TLS_1_2;
+	cfg->auth_mode = mode == NNG_TLS_MODE_SERVER
+	    ? NNG_TLS_AUTH_MODE_NONE
+	    : NNG_TLS_AUTH_MODE_REQUIRED;
 	NNI_LIST_INIT(&cfg->psks, psk, node);
-	if (mode == NNG_TLS_MODE_SERVER) {
-		method    = wolfSSLv23_server_method();
-		auth_mode = SSL_VERIFY_NONE;
-		nng_auth  = NNG_TLS_AUTH_MODE_NONE;
-	} else {
-		method    = wolfSSLv23_client_method();
-		auth_mode = SSL_VERIFY_PEER;
-		nng_auth  = NNG_TLS_AUTH_MODE_REQUIRED;
-	}
-
-	cfg->ctx = wolfSSL_CTX_new(method);
-	if (cfg->ctx == NULL) {
-		return (NNG_ENOMEM);
-	}
-
-#ifdef NNG_WOLF_HAVE_DH
-	rv = wolfSSL_CTX_SetTmpDH_buffer(cfg->ctx, (uint8_t *) dh2048,
-	    strlen(dh2048), WOLFSSL_FILETYPE_PEM);
-	if (rv != WOLFSSL_SUCCESS) {
-		tls_log_err("NNG-TLS-DH", "Failed loading DH parameter", rv);
-		return (NNG_ECRYPTO);
-	}
-#endif
-
-	// By default we require TLS 1.2.
-	rv = wolfSSL_CTX_SetMinVersion(cfg->ctx, WOLFSSL_TLSV1_2);
-	if (rv != WOLFSSL_SUCCESS) {
-		tls_log_err(
-		    "NNG-TLS-VERSION", "Failed setting min TLS version", rv);
-		return (NNG_ECRYPTO);
-	}
-	wolfSSL_CTX_set_verify(cfg->ctx, auth_mode, NULL);
-
-	wolfSSL_SetIORecv(cfg->ctx, wolf_net_recv);
-	wolfSSL_SetIOSend(cfg->ctx, wolf_net_send);
-
-	cfg->auth_mode = nng_auth;
-	return (0);
+	NNI_LIST_INIT(&cfg->materials, wolf_material, node);
+	// wolfSSL fixes the transport in the context's method. Construct the
+	// single runtime context only when the caller selects its transport.
+	return (NNG_OK);
 }
 
 static int
@@ -516,17 +576,6 @@ wolf_config_psk(nng_tls_engine_config *cfg, const char *identity,
 	memcpy(psk->key, key, key_len);
 	psk->keylen = key_len;
 
-	if (nni_list_empty(&cfg->psks)) {
-		wolfSSL_CTX_set_psk_callback_ctx(cfg->ctx, cfg);
-		if (cfg->mode == NNG_TLS_MODE_SERVER) {
-			wolfSSL_CTX_set_psk_server_callback(
-			    cfg->ctx, psk_server_cb);
-		} else { // client
-			wolfSSL_CTX_set_psk_client_callback(
-			    cfg->ctx, psk_client_cb);
-		}
-	}
-
 	// If the identity was previously configured, replace it.
 	// The rule here is that last one wins, so we always append.
 	NNI_LIST_FOREACH (&cfg->psks, srch) {
@@ -547,51 +596,23 @@ wolf_config_auth_mode(nng_tls_engine_config *cfg, nng_tls_auth_mode mode)
 {
 	switch (mode) {
 	case NNG_TLS_AUTH_MODE_NONE:
-		wolfSSL_CTX_set_verify(cfg->ctx, SSL_VERIFY_NONE, NULL);
-		cfg->auth_mode = mode;
-		return (0);
 	case NNG_TLS_AUTH_MODE_OPTIONAL:
-		wolfSSL_CTX_set_verify(cfg->ctx, SSL_VERIFY_PEER, NULL);
-		cfg->auth_mode = mode;
-		return (0);
 	case NNG_TLS_AUTH_MODE_REQUIRED:
-		wolfSSL_CTX_set_verify(cfg->ctx,
-		    SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, NULL);
 		cfg->auth_mode = mode;
-		return (0);
+		return (NNG_OK);
+	default:
+		return (NNG_EINVAL);
 	}
-	return (NNG_EINVAL);
 }
+
+static int wolf_config_material(
+    nng_tls_engine_config *, const char *, const char *, const char *);
 
 static int
 wolf_config_ca_chain(
     nng_tls_engine_config *cfg, const char *certs, const char *crl)
 {
-	size_t len;
-	int    rv;
-
-	// Certs and CRL are in PEM data, with terminating NUL byte.
-	len = strlen(certs);
-
-	rv = wolfSSL_CTX_load_verify_buffer(
-	    cfg->ctx, (void *) certs, len, SSL_FILETYPE_PEM);
-	if (rv != SSL_SUCCESS) {
-		return (NNG_ECRYPTO);
-	}
-	if (crl == NULL) {
-		return (0);
-	}
-
-#ifdef NNG_WOLFSSL_HAVE_CRL
-	len = strlen(crl);
-	rv  = wolfSSL_CTX_LoadCRLBuffer(
-            cfg->ctx, (void *) crl, len, SSL_FILETYPE_PEM);
-	if (rv != SSL_SUCCESS) {
-		return (NNG_ECRYPTO);
-	}
-#endif
-
-	return (0);
+	return (wolf_config_material(cfg, certs, NULL, crl));
 }
 
 #if NNG_WOLFSSL_HAVE_PASSWORD
@@ -616,71 +637,193 @@ wolf_get_password(char *passwd, int size, int rw, void *ctx)
 }
 #endif
 
+// Apply credentials through the same path for validation and first use.
+static int
+wolf_material_apply(
+    WOLFSSL_CTX *ctx, nng_tls_engine_config *cfg, wolf_material *m)
+{
+	if (m->key == NULL) {
+		if (wolfSSL_CTX_load_verify_buffer(ctx, (void *) m->cert,
+		        strlen(m->cert), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			return (NNG_ECRYPTO);
+		}
+#ifdef NNG_WOLFSSL_HAVE_CRL
+		if (m->crl != NULL &&
+		    wolfSSL_CTX_LoadCRLBuffer(ctx, (void *) m->crl,
+		        strlen(m->crl), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+			return (NNG_ECRYPTO);
+		}
+#endif
+		return (NNG_OK);
+	}
+#if NNG_WOLFSSL_HAVE_PASSWORD
+	wolfSSL_CTX_set_default_passwd_cb_userdata(ctx, cfg);
+	wolfSSL_CTX_set_default_passwd_cb(ctx, wolf_get_password);
+#else
+	NNI_ARG_UNUSED(cfg);
+#endif
+	if (wolfSSL_CTX_use_certificate_buffer(ctx, (void *) m->cert,
+	        strlen(m->cert), SSL_FILETYPE_PEM) != SSL_SUCCESS ||
+	    wolfSSL_CTX_use_PrivateKey_buffer(ctx, (void *) m->key,
+	        strlen(m->key), SSL_FILETYPE_PEM) != SSL_SUCCESS) {
+		return (NNG_EINVAL);
+	}
+	return (NNG_OK);
+}
+
+static int
+wolf_config_material(nng_tls_engine_config *cfg, const char *cert,
+    const char *key, const char *crl)
+{
+	wolf_material *m;
+	WOLFSSL_CTX   *ctx;
+	int            rv;
+	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((m->cert = nni_strdup(cert)) == NULL ||
+	    (key != NULL && (m->key = nni_strdup(key)) == NULL) ||
+	    (crl != NULL && (m->crl = nni_strdup(crl)) == NULL)) {
+		wolf_material_free(m);
+		return (NNG_ENOMEM);
+	}
+	// Validate now, so malformed credentials still fail at the setter.
+	// This temporary context is never retained or used for a connection.
+	ctx = wolfSSL_CTX_new(cfg->mode == NNG_TLS_MODE_SERVER
+	        ? wolfSSLv23_server_method()
+	        : wolfSSLv23_client_method());
+	if (ctx == NULL) {
+		wolf_material_free(m);
+		return (NNG_ENOMEM);
+	}
+	rv = wolf_material_apply(ctx, cfg, m);
+	wolfSSL_CTX_free(ctx);
+	if (rv != NNG_OK) {
+		wolf_material_free(m);
+		return (rv);
+	}
+	nni_list_append(&cfg->materials, m);
+	return (NNG_OK);
+}
+
 static int
 wolf_config_own_cert(nng_tls_engine_config *cfg, const char *cert,
     const char *key, const char *pass)
 {
-	int rv;
-
-#if NNG_WOLFSSL_HAVE_PASSWORD
 	char *dup = NULL;
-	if (pass != NULL) {
-		if ((dup = nng_strdup(pass)) == NULL) {
-			return (NNG_ENOMEM);
-		}
+	if (pass != NULL && (dup = nni_strdup(pass)) == NULL) {
+		return (NNG_ENOMEM);
 	}
-	if (cfg->pass != NULL) {
-		nng_strfree(cfg->pass);
-	}
+	nni_strfree(cfg->pass);
 	cfg->pass = dup;
-	wolfSSL_CTX_set_default_passwd_cb_userdata(cfg->ctx, cfg);
-	wolfSSL_CTX_set_default_passwd_cb(cfg->ctx, wolf_get_password);
-#else
-	(void) pass;
-#endif
-
-	rv = wolfSSL_CTX_use_certificate_buffer(
-	    cfg->ctx, (void *) cert, strlen(cert), SSL_FILETYPE_PEM);
-	if (rv != SSL_SUCCESS) {
-		return (NNG_EINVAL);
-	}
-	rv = wolfSSL_CTX_use_PrivateKey_buffer(
-	    cfg->ctx, (void *) key, strlen(key), SSL_FILETYPE_PEM);
-	if (rv != SSL_SUCCESS) {
-		return (NNG_EINVAL);
-	}
-	return (0);
+	return (wolf_config_material(cfg, cert, key, NULL));
 }
 
 static int
 wolf_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
     nng_tls_version max_ver)
 {
-	int rv;
-
-	if ((min_ver > max_ver) || (max_ver > NNG_TLS_1_3)) {
+	if (min_ver > max_ver || max_ver > NNG_TLS_1_3) {
 		return (NNG_ENOTSUP);
 	}
 	switch (min_ver) {
+#ifndef WOLFSSL_NO_TLS12
 	case NNG_TLS_1_2:
-		rv = wolfSSL_CTX_SetMinVersion(cfg->ctx, WOLFSSL_TLSV1_2);
 		break;
+#endif
+#ifdef WOLFSSL_TLS13
 	case NNG_TLS_1_3:
-		rv = wolfSSL_CTX_SetMinVersion(cfg->ctx, WOLFSSL_TLSV1_3);
 		break;
+#endif
 	default:
 		return (NNG_ENOTSUP);
 	}
-
 	// wolfSSL does not let us restrict the maximum version.
+	cfg->min_ver = min_ver;
+	return (NNG_OK);
+}
 
-	if (rv != WOLFSSL_SUCCESS) {
-		// This happens if the library is missing support for the
-		// version.  By default WolfSSL builds with only TLS v1.2
-		// and newer enabled.
+static int
+wolf_config_prepare(nng_tls_engine_config *cfg, bool datagram)
+{
+	WOLFSSL_CTX    *ctx;
+	WOLFSSL_METHOD *method;
+	wolf_material  *m;
+	int             rv;
+	int             auth = SSL_VERIFY_NONE;
+
+	if (datagram) {
+#if defined(WOLFSSL_DTLS) && !defined(WOLFSSL_NO_TLS12)
+		if (cfg->min_ver > NNG_TLS_1_2) {
+			return (NNG_ENOTSUP);
+		}
+		method = cfg->mode == NNG_TLS_MODE_SERVER
+		    ? wolfDTLSv1_2_server_method()
+		    : wolfDTLSv1_2_client_method();
+#else
 		return (NNG_ENOTSUP);
+#endif
+	} else {
+		method = cfg->mode == NNG_TLS_MODE_SERVER
+		    ? wolfSSLv23_server_method()
+		    : wolfSSLv23_client_method();
 	}
-	return (0);
+	if ((ctx = wolfSSL_CTX_new(method)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if (!datagram &&
+	    wolfSSL_CTX_SetMinVersion(ctx,
+	        cfg->min_ver == NNG_TLS_1_2
+	            ? WOLFSSL_TLSV1_2
+	            : WOLFSSL_TLSV1_3) != SSL_SUCCESS) {
+		rv = NNG_ENOTSUP;
+		goto fail;
+	}
+#ifdef NNG_WOLF_HAVE_DH
+	if (wolfSSL_CTX_SetTmpDH_buffer(ctx, (uint8_t *) dh2048,
+	        strlen(dh2048), WOLFSSL_FILETYPE_PEM) != SSL_SUCCESS) {
+		rv = NNG_ECRYPTO;
+		goto fail;
+	}
+#endif
+	if (cfg->auth_mode != NNG_TLS_AUTH_MODE_NONE) {
+		auth = SSL_VERIFY_PEER;
+		if (cfg->auth_mode == NNG_TLS_AUTH_MODE_REQUIRED) {
+			auth |= SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+		}
+	}
+	wolfSSL_CTX_set_verify(ctx, auth, NULL);
+	wolfSSL_SetIORecv(ctx, wolf_net_recv);
+	wolfSSL_SetIOSend(ctx, wolf_net_send);
+#ifdef NNG_SUPP_TLS_PSK
+	if (!nni_list_empty(&cfg->psks)) {
+		wolfSSL_CTX_set_psk_callback_ctx(ctx, cfg);
+		if (cfg->mode == NNG_TLS_MODE_SERVER) {
+			wolfSSL_CTX_set_psk_server_callback(
+			    ctx, psk_server_cb);
+		} else {
+			wolfSSL_CTX_set_psk_client_callback(
+			    ctx, psk_client_cb);
+		}
+	}
+#endif
+	NNI_LIST_FOREACH (&cfg->materials, m) {
+		if ((rv = wolf_material_apply(ctx, cfg, m)) != NNG_OK) {
+			goto fail;
+		}
+	}
+	cfg->ctx = ctx;
+	while ((m = nni_list_first(&cfg->materials)) != NULL) {
+		nni_list_remove(&cfg->materials, m);
+		wolf_material_free(m);
+	}
+	nni_strfree(cfg->pass);
+	cfg->pass = NULL;
+	return (NNG_OK);
+
+fail:
+	wolfSSL_CTX_free(ctx);
+	return (rv);
 }
 
 static void
@@ -971,6 +1114,7 @@ fips_mode(void)
 
 static nng_tls_engine_config_ops wolf_config_ops = {
 	.init     = wolf_config_init,
+	.prepare  = wolf_config_prepare,
 	.fini     = wolf_config_fini,
 	.size     = sizeof(nng_tls_engine_config),
 	.auth     = wolf_config_auth_mode,

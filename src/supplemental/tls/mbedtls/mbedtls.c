@@ -18,6 +18,7 @@
 
 #include "../../../core/nng_impl.h"
 
+#include "../tls_common.h"
 #include "../tls_engine.h"
 
 #include <mbedtls/version.h> // Must be first in order to pick up version
@@ -97,6 +98,10 @@ struct nng_tls_engine_conn {
 	mbedtls_ssl_context ctx;
 	nng_time            exp1;
 	nng_time            exp2;
+	bool                closed;
+	bool                timer_active;
+	nni_aio             timer;
+	char                peer_id[NNG_MAXADDRSTRLEN];
 };
 
 struct nng_tls_engine_config {
@@ -258,7 +263,35 @@ net_recv(void *tls, unsigned char *buf, size_t len)
 static void
 conn_fini(nng_tls_engine_conn *ec)
 {
+	nni_aio_fini(&ec->timer);
 	mbedtls_ssl_free(&ec->ctx);
+}
+
+static void
+conn_timer_cb(void *arg)
+{
+	nng_tls_engine_conn *ec   = arg;
+	nni_tls_conn        *conn = ec->tls;
+	bool                 run  = false;
+	if (nni_aio_result(&ec->timer) != NNG_OK) {
+		return;
+	}
+	nni_mtx_lock(&conn->lock);
+	ec->timer_active = false;
+	if (!ec->closed && ec->exp2 != 0) {
+		nng_time now = nni_clock();
+		if (now < ec->exp2) {
+			ec->timer_active = true;
+			nni_sleep_aio(
+			    (nng_duration) (ec->exp2 - now), &ec->timer);
+		} else {
+			run = true;
+		}
+	}
+	nni_mtx_unlock(&conn->lock);
+	if (run) {
+		nni_tls_run(conn);
+	}
 }
 
 static void
@@ -268,6 +301,10 @@ conn_set_timer(void *arg, unsigned int t1, unsigned int t2)
 	nng_tls_engine_conn *ec  = arg;
 	ec->exp1                 = t1 ? now + t1 : 0;
 	ec->exp2                 = t2 ? now + t2 : 0;
+	if (t2 && !ec->closed && !ec->timer_active) {
+		ec->timer_active = true;
+		nni_sleep_aio((nng_duration) t2, &ec->timer);
+	}
 }
 
 static int
@@ -278,10 +315,10 @@ conn_get_timer(void *arg)
 	if (ec->exp2 == 0) {
 		return -1;
 	}
-	if (now > ec->exp2) {
+	if (now >= ec->exp2) {
 		return 2;
 	}
-	if (now > ec->exp1) {
+	if (now >= ec->exp1) {
 		return 1;
 	}
 	return (0);
@@ -292,30 +329,33 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
     const nng_sockaddr *sa)
 {
 	int  rv;
-	char buf[NNG_MAXADDRSTRLEN];
+	bool datagram = ((nni_tls_conn *) tls)->msg_oriented;
 
 	ec->tls = tls;
+	nni_aio_init(&ec->timer, conn_timer_cb, ec);
 
 	mbedtls_ssl_init(&ec->ctx);
-	mbedtls_ssl_set_bio(&ec->ctx, tls, net_send, net_recv, NULL);
-	mbedtls_ssl_set_timer_cb(&ec->ctx, ec, conn_set_timer, conn_get_timer);
-
 	if ((rv = mbedtls_ssl_setup(&ec->ctx, &cfg->cfg_ctx)) != 0) {
 		tls_log_warn(
 		    "NNG-TLS-CONN-FAIL", "Failed to setup TLS connection", rv);
 		return (tls_mk_err(rv));
 	}
+	mbedtls_ssl_set_bio(&ec->ctx, tls, net_send, net_recv, NULL);
+	mbedtls_ssl_set_timer_cb(&ec->ctx, ec, conn_set_timer, conn_get_timer);
 
 	if ((rv = mbedtls_ssl_set_hostname(&ec->ctx, cfg->server_name)) != 0) {
-		tls_log_warn(
-		    "NNG-TLS-CONN-FAIL", "Failed to configure server hostname", rv);
+		tls_log_warn("NNG-TLS-CONN-FAIL",
+		    "Failed to configure server hostname", rv);
 		return (tls_mk_err(rv));
 	}
 
-	if (cfg->mode == NNG_TLS_MODE_SERVER) {
-		nng_str_sockaddr(sa, buf, sizeof(buf));
-		mbedtls_ssl_set_client_transport_id(
-		    &ec->ctx, (const void *) buf, strlen(buf));
+	if (datagram && cfg->mode == NNG_TLS_MODE_SERVER) {
+		nng_str_sockaddr(sa, ec->peer_id, sizeof(ec->peer_id));
+		if ((rv = mbedtls_ssl_set_client_transport_id(&ec->ctx,
+		         (const unsigned char *) ec->peer_id,
+		         strlen(ec->peer_id))) != 0) {
+			return (tls_mk_err(rv));
+		}
 	}
 
 	return (0);
@@ -324,6 +364,11 @@ conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 static void
 conn_close(nng_tls_engine_conn *ec)
 {
+	ec->closed = true;
+	nni_aio_close(&ec->timer);
+	if (ec->tls == NULL) {
+		return;
+	}
 	// This may succeed, or it may fail.  Either way we
 	// don't care. Implementations that depend on
 	// close-notify to mean anything are broken by design,
@@ -371,9 +416,22 @@ static int
 conn_handshake(nng_tls_engine_conn *ec)
 {
 	int rv;
+	if (ec->closed) {
+		return (NNG_ECLOSED);
+	}
 
 	rv = mbedtls_ssl_handshake(&ec->ctx);
 	switch (rv) {
+	case MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED:
+		// Cookie verification deliberately discards the unverified
+		// handshake.
+		if ((rv = mbedtls_ssl_session_reset(&ec->ctx)) != 0 ||
+		    (rv = mbedtls_ssl_set_client_transport_id(&ec->ctx,
+		         (const unsigned char *) ec->peer_id,
+		         strlen(ec->peer_id))) != 0) {
+			return (tls_mk_err(rv));
+		}
+		return (NNG_EAGAIN);
 	case MBEDTLS_ERR_SSL_WANT_WRITE:
 	case MBEDTLS_ERR_SSL_WANT_READ:
 		// We have underlying I/O to complete first.  We will
@@ -540,6 +598,38 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 	}
 
 	return (0);
+}
+
+static int
+config_prepare(nng_tls_engine_config *cfg, bool datagram)
+{
+	if (!datagram) {
+		return (NNG_OK);
+	}
+#ifndef MBEDTLS_SSL_PROTO_DTLS
+	return (NNG_ENOTSUP);
+#else
+#if MBEDTLS_VERSION_MAJOR < 4
+	if (cfg->min_ver > MBEDTLS_SSL_MINOR_VERSION_3) {
+		return (NNG_ENOTSUP);
+	}
+	mbedtls_ssl_conf_min_version(&cfg->cfg_ctx,
+	    MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+	mbedtls_ssl_conf_max_version(&cfg->cfg_ctx,
+	    MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+#else
+	if (cfg->min_ver > MBEDTLS_SSL_VERSION_TLS1_2) {
+		return (NNG_ENOTSUP);
+	}
+	mbedtls_ssl_conf_min_tls_version(
+	    &cfg->cfg_ctx, MBEDTLS_SSL_VERSION_TLS1_2);
+	mbedtls_ssl_conf_max_tls_version(
+	    &cfg->cfg_ctx, MBEDTLS_SSL_VERSION_TLS1_2);
+#endif
+	mbedtls_ssl_conf_transport(
+	    &cfg->cfg_ctx, MBEDTLS_SSL_TRANSPORT_DATAGRAM);
+	return (NNG_OK);
+#endif
 }
 
 static int
@@ -1106,6 +1196,7 @@ fips_mode(void)
 
 static nng_tls_engine_config_ops config_ops = {
 	.init     = config_init,
+	.prepare  = config_prepare,
 	.fini     = config_fini,
 	.size     = sizeof(nng_tls_engine_config),
 	.auth     = config_auth_mode,

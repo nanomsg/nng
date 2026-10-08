@@ -19,6 +19,8 @@ DTLS [dialers][dialer] and [listeners][listener] must be configured with
 > [!NOTE]
 > This transport is _experimental_.
 > It requires TLS support and the `NNG_TRANSPORT_DTLS` build option.
+> When using wolfSSL, version 5.8.0 or newer is required for correct replay protection.
+> Older wolfSSL versions may still be used for stream TLS with `NNG_TRANSPORT_DTLS=OFF`.
 > It supports unicast UDP endpoints only; multicast and broadcast are not
 > supported.
 
@@ -73,6 +75,13 @@ Dialers normally use a client-mode configuration with certificate authority
 material and the expected server name.
 Pre-shared key configurations may also be used when supported by the selected TLS
 engine.
+
+Use separate configuration objects for DTLS and stream TLS.
+A configuration is bound to its transport type on first use; reusing it for the other type fails with [`NNG_EINVAL`].
+
+The supported protocol version is DTLS 1.2.
+The configured TLS version range must include TLS 1.2;
+a configuration requiring TLS 1.3 fails with [`NNG_ENOTSUP`] when used for DTLS.
 
 The TLS configuration must be set before the dialer or listener is started.
 After a DTLS endpoint has started, attempts to change its TLS configuration or

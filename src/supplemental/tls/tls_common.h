@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -56,6 +56,8 @@ struct nng_tls_config {
 	nni_mtx      lock;
 	int          ref;
 	bool         busy;
+	bool         prepared;
+	bool         datagram;
 	bool         key_is_set;
 	nng_tls_mode mode;
 	size_t       size;

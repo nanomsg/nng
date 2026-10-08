@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -143,6 +143,9 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         set(CMAKE_REQUIRED_DEFINITIONS -DWOLFSSL_USE_OPTIONS_H)
     endif ()
     check_c_source_compiles("\
+        #ifndef WOLFSSL_USER_SETTINGS
+        #include <wolfssl/options.h>
+        #endif
         #include <wolfssl/ssl.h>
         #ifndef WOLFSSL_OPTIONS_H
         #error wolfssl/options.h is unavailable
@@ -153,6 +156,33 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
 
     if (NNG_WOLFSSL_USE_OPTIONS_H)
         nng_defines(WOLFSSL_USE_OPTIONS_H)
+        nng_defines(NNG_WOLFSSL_USE_OPTIONS_H)
+    endif ()
+
+    # Older releases can accept replayed DTLS 1.2 application records when
+    # built without DTLS 1.3. Keep stream TLS available with those releases.
+    if (NNG_TRANSPORT_DTLS)
+        cmake_push_check_state(RESET)
+        if (NNG_WOLFSSL_IN_TREE)
+            set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+            set(CMAKE_REQUIRED_INCLUDES ${NNG_WOLFSSL_CHECK_INCLUDES})
+            set(CMAKE_REQUIRED_DEFINITIONS ${NNG_WOLFSSL_CHECK_DEFINITIONS})
+        else ()
+            set(CMAKE_REQUIRED_LIBRARIES ${NNG_WOLFSSL_TARGET})
+        endif ()
+        check_c_source_compiles("\
+            #include <wolfssl/version.h>
+            #if LIBWOLFSSL_VERSION_HEX < 0x05008000
+            #error wolfSSL 5.8.0 or newer is required for DTLS
+            #endif
+            int main(void) { return 0; }"
+            NNG_WOLFSSL_HAVE_DTLS_VERSION)
+        cmake_pop_check_state()
+        if (NOT NNG_WOLFSSL_HAVE_DTLS_VERSION)
+            message(FATAL_ERROR
+                "DTLS requires wolfSSL 5.8.0 or newer for replay protection. "
+                "Upgrade wolfSSL or set NNG_TRANSPORT_DTLS=OFF to use stream TLS only.")
+        endif ()
     endif ()
 
     # Checking only for the library symbol is insufficient: certificate
@@ -167,9 +197,13 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         set(CMAKE_REQUIRED_LIBRARIES ${NNG_WOLFSSL_TARGET})
     endif ()
     if (NNG_WOLFSSL_USE_OPTIONS_H)
-        list(APPEND CMAKE_REQUIRED_DEFINITIONS -DWOLFSSL_USE_OPTIONS_H)
+        list(APPEND CMAKE_REQUIRED_DEFINITIONS
+            -DWOLFSSL_USE_OPTIONS_H -DNNG_WOLFSSL_USE_OPTIONS_H)
     endif ()
     check_c_source_compiles("\
+        #ifdef NNG_WOLFSSL_USE_OPTIONS_H
+        #include <wolfssl/options.h>
+        #endif
         #include <wolfssl/ssl.h>
         #if !(defined(OPENSSL_EXTRA) || defined(OPENSSL_EXTRA_X509_SMALL) || defined(KEEP_PEER_CERT) || defined(KEEP_OUR_CERT) || defined(SESSION_CERTS))
         #error wolfSSL certificate accessors are unavailable
