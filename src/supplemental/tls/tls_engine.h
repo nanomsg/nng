@@ -152,10 +152,9 @@ typedef struct nng_tls_engine_config_ops_s {
 	// our public key, our private key (which might be encrypted), and
 	// potentially a password used to decrypt the private key.
 	// All of these are C strings.  The cert may actually be a chain
-	// which will be presented to our peer.   This function may be
-	// called multiple times to register different keys with different
-	// parameters on a server.  (For example, once for RSA parameters,
-	// and again later with EC parameters.)  The certificate and the
+	// which will be presented to our peer. The common layer permits
+	// only one successful call per configuration, for clients and
+	// servers alike. Failed calls may be retried. The certificate and the
 	// private key may be presented in the same file.  The implementation
 	// is responsible for parsing out the relevant data.  If the password
 	// is NULL, then the key file should be unencrypted.  The supplied
