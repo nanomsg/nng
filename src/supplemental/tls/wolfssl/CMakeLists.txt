@@ -170,6 +170,8 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         else ()
             set(CMAKE_REQUIRED_LIBRARIES ${NNG_WOLFSSL_TARGET})
         endif ()
+        # Recheck after a dependency upgrade or downgrade in this build tree.
+        unset(NNG_WOLFSSL_HAVE_DTLS_VERSION CACHE)
         check_c_source_compiles("\
             #include <wolfssl/version.h>
             #if LIBWOLFSSL_VERSION_HEX < 0x05008000

@@ -81,6 +81,32 @@ test_tls_config_version(void)
 }
 
 void
+test_tls_config_single_identity(void)
+{
+	nng_tls_config    *cfg;
+	const nng_tls_mode modes[] = {
+		NNG_TLS_MODE_CLIENT,
+		NNG_TLS_MODE_SERVER,
+	};
+
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(modes); i++) {
+		NUTS_PASS(nng_tls_config_alloc(&cfg, modes[i]));
+		NUTS_PASS(nng_tls_config_own_cert(
+		    cfg, nuts_server_crt, nuts_server_key, NULL));
+		// No endpoint uses the configuration yet: this must be the
+		// single-identity guard, not the busy-after-first-use guard.
+		NUTS_TRUE(!cfg->busy);
+		NUTS_FAIL(nng_tls_config_own_cert(cfg, nuts_ecdsa_server_crt,
+		              nuts_ecdsa_server_key, "different password"),
+		    NNG_EBUSY);
+		NUTS_FAIL(nng_tls_config_own_cert(
+		              cfg, nuts_server_crt, nuts_server_key, NULL),
+		    NNG_EBUSY);
+		nng_tls_config_free(cfg);
+	}
+}
+
+void
 test_tls_conn_refused(void)
 {
 	nng_stream_dialer *dialer;
@@ -835,6 +861,7 @@ test_tls_psk_config_busy(void)
 TEST_LIST = {
 	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },
+	{ "tls config single identity", test_tls_config_single_identity },
 	{ "tls conn refused", test_tls_conn_refused },
 	{ "tls large message", test_tls_large_message },
 	{ "tls ecdsa", test_tls_ecdsa },
