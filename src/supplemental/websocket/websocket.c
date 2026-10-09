@@ -1527,6 +1527,25 @@ ws_init(nni_ws **wsp)
 	return (0);
 }
 
+#ifdef NNG_TEST_LIB
+nng_err
+nni_ws_test_stream_alloc(nng_stream **sp, nng_stream *transport)
+{
+	nni_ws *ws;
+	nng_err rv;
+
+	if ((rv = ws_init(&ws)) != NNG_OK) {
+		return (rv);
+	}
+	ws->stream   = transport;
+	ws->server   = true;
+	ws->isstream = true;
+	ws->ready    = true;
+	*sp          = &ws->ops;
+	return (NNG_OK);
+}
+#endif
+
 static void
 ws_listener_stop(void *arg)
 {

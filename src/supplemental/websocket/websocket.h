@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -33,5 +33,11 @@ typedef struct nni_ws_dialer   nni_ws_dialer;
 // rely upon it being around.
 extern nng_err nni_ws_listener_alloc(nng_stream_listener **, const nng_url *);
 extern nng_err nni_ws_dialer_alloc(nng_stream_dialer **, const nng_url *);
+
+#ifdef NNG_TEST_LIB
+// Wrap a controlled transport without an HTTP handshake for unit tests.
+// On success, the WebSocket owns the supplied stream.
+extern nng_err nni_ws_test_stream_alloc(nng_stream **, nng_stream *);
+#endif
 
 #endif // NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H
