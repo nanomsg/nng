@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-21d3ba08.js";
+            window.path_to_searchindex_js = "../searchindex-ce0715df.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61c4e272.js"></script>
@@ -218,6 +218,10 @@ The <code>nng_tls_config_hold</code> function increments that reference count, a
 <p>TLS configuration objects become read-only once they are used to create a connection or service.
 After that point, attempts to modify the configuration will fail with <a href="../api/errors.html#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
 </blockquote>
+<p>A configuration is bound to either stream TLS or datagram DTLS when it is first used to create a connection.
+It may be shared by multiple endpoints of that type, but cannot be reused for the other type;
+such attempts fail with <a href="../api/errors.html#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
+Allocate separate configurations for TLS and DTLS, just as for clients and servers.</p>
 <h2 id="authentication-mode"><a class="header" href="#authentication-mode">Authentication Mode</a></h2>
 <pre><code class="language-c">typedef enum nng_tls_auth_mode {
     NNG_TLS_AUTH_MODE_NONE,

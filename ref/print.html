@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-21d3ba08.js";
+            window.path_to_searchindex_js = "searchindex-ce0715df.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-61c4e272.js"></script>
@@ -3919,6 +3919,10 @@ The <code>nng_tls_config_hold</code> function increments that reference count, a
 <p>TLS configuration objects become read-only once they are used to create a connection or service.
 After that point, attempts to modify the configuration will fail with <a href="#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
 </blockquote>
+<p>A configuration is bound to either stream TLS or datagram DTLS when it is first used to create a connection.
+It may be shared by multiple endpoints of that type, but cannot be reused for the other type;
+such attempts fail with <a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>.
+Allocate separate configurations for TLS and DTLS, just as for clients and servers.</p>
 <h2 id="authentication-mode"><a class="header" href="#authentication-mode">Authentication Mode</a></h2>
 <pre><code class="language-c">typedef enum nng_tls_auth_mode {
     NNG_TLS_AUTH_MODE_NONE,
@@ -6559,6 +6563,8 @@ DTLS <a href="#dialers-and-listeners">dialers</a> and <a href="#dialers-and-list
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>This transport is <em>experimental</em>.
 It requires TLS support and the <code>NNG_TRANSPORT_DTLS</code> build option.
+When using wolfSSL, version 5.8.0 or newer is required for correct replay protection.
+Older wolfSSL versions may still be used for stream TLS with <code>NNG_TRANSPORT_DTLS=OFF</code>.
 It supports unicast UDP endpoints only; multicast and broadcast are not
 supported.</p>
 </blockquote>
@@ -6607,6 +6613,11 @@ Dialers normally use a client-mode configuration with certificate authority
 material and the expected server name.
 Pre-shared key configurations may also be used when supported by the selected TLS
 engine.</p>
+<p>Use separate configuration objects for DTLS and stream TLS.
+A configuration is bound to its transport type on first use; reusing it for the other type fails with <a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>.</p>
+<p>The supported protocol version is DTLS 1.2.
+The configured TLS version range must include TLS 1.2;
+a configuration requiring TLS 1.3 fails with <a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> when used for DTLS.</p>
 <p>The TLS configuration must be set before the dialer or listener is started.
 After a DTLS endpoint has started, attempts to change its TLS configuration or
 its receive maximum will fail with <a href="#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
