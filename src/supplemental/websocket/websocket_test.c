@@ -11,6 +11,7 @@
 
 #include <nng/nng.h>
 
+#include "../../core/aio.h"
 #include "sha1.h"
 #include "websocket.h"
 
@@ -739,72 +740,117 @@ test_websocket_fragmentation(void)
 	nng_stream_listener_free(l);
 }
 
+typedef struct {
+	nng_stream   ops;
+	nng_sockaddr addr;
+	nng_aio     *pending;
+	unsigned     sends;
+	unsigned     cancels;
+	unsigned     closes;
+	unsigned     frees;
+} test_pending_stream;
+
+static void
+test_pending_cancel(nng_aio *aio, void *arg, nng_err rv)
+{
+	test_pending_stream *stream = arg;
+
+	stream->pending = NULL;
+	stream->cancels++;
+	nni_aio_finish_error(aio, rv);
+}
+
+static void
+test_pending_send(void *arg, nng_aio *aio)
+{
+	test_pending_stream *stream = arg;
+
+	// No transport completion is possible until the test cancels it.
+	nni_aio_reset(aio);
+	if (nni_aio_start(aio, test_pending_cancel, stream)) {
+		stream->pending = aio;
+		stream->sends++;
+	}
+}
+
+static void
+test_pending_close(void *arg)
+{
+	test_pending_stream *stream = arg;
+
+	stream->closes++;
+}
+
+static void
+test_pending_free(void *arg)
+{
+	test_pending_stream *stream = arg;
+
+	stream->frees++;
+}
+
+static void
+test_pending_stop(void *arg)
+{
+	test_pending_stream *stream = arg;
+
+	nng_aio_stop(stream->pending);
+}
+
+static void
+test_pending_recv(void *arg, nng_aio *aio)
+{
+	NNI_ARG_UNUSED(arg);
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
+}
+
+static const nng_sockaddr *
+test_pending_addr(void *arg)
+{
+	test_pending_stream *stream = arg;
+
+	return (&stream->addr);
+}
+
 static void
 test_websocket_send_cancel_cleanup(void)
 {
-	nng_stream_listener *listener;
-	nng_stream_dialer   *dialer;
-	nng_stream          *sender;
-	nng_stream          *peer;
-	nng_aio             *accept;
-	nng_aio             *connect;
-	nng_aio             *send;
-	nng_iov              iov;
-	char                 url[64];
-	int                  port;
-	size_t               size = 32U * 1024U * 1024U;
-	void                *buf;
+	test_pending_stream transport = { 0 };
+	nng_stream         *sender;
+	nng_aio            *send;
+	uint8_t             buf[256] = { 0 };
+	nng_iov             iov = { .iov_buf = buf, .iov_len = sizeof(buf) };
 
-	NUTS_PASS(nng_stream_listener_alloc(
-	    &listener, "ws://127.0.0.1:0/cancel"));
-	NUTS_PASS(nng_stream_listener_set_size(
-	    listener, NNG_OPT_WS_SENDMAXFRAME, size));
-	NUTS_PASS(nng_stream_listener_listen(listener));
-	NUTS_PASS(nng_stream_listener_get_int(
-	    listener, NNG_OPT_BOUND_PORT, &port));
-	snprintf(url, sizeof(url), "ws://127.0.0.1:%d/cancel", port);
-	NUTS_PASS(nng_stream_dialer_alloc(&dialer, url));
-	NUTS_PASS(nng_aio_alloc(&accept, NULL, NULL));
-	NUTS_PASS(nng_aio_alloc(&connect, NULL, NULL));
+	transport.ops.s_send      = test_pending_send;
+	transport.ops.s_close     = test_pending_close;
+	transport.ops.s_free      = test_pending_free;
+	transport.ops.s_stop      = test_pending_stop;
+	transport.ops.s_recv      = test_pending_recv;
+	transport.ops.s_self_addr = test_pending_addr;
+	transport.ops.s_peer_addr = test_pending_addr;
+	NUTS_PASS(nni_ws_test_stream_alloc(&sender, &transport.ops));
 	NUTS_PASS(nng_aio_alloc(&send, NULL, NULL));
-	nng_aio_set_timeout(accept, 5000);
-	nng_aio_set_timeout(connect, 5000);
-	nng_aio_set_timeout(send, 5000);
-
-	nng_stream_listener_accept(listener, accept);
-	nng_stream_dialer_dial(dialer, connect);
-	nng_aio_wait(accept);
-	nng_aio_wait(connect);
-	NUTS_PASS(nng_aio_result(accept));
-	NUTS_PASS(nng_aio_result(connect));
-	sender = nng_aio_get_output(accept, 0);
-	peer   = nng_aio_get_output(connect, 0);
-
-	// The peer does not read. A frame larger than the TCP buffers stays
-	// in flight, so cancellation reaches the physical write-error path.
-	NUTS_TRUE((buf = nng_alloc(size)) != NULL);
-	memset(buf, 0, size);
-	iov.iov_buf = buf;
-	iov.iov_len = size;
 	NUTS_PASS(nng_aio_set_iov(send, 1, &iov));
 	nng_stream_send(sender, send);
+	NUTS_TRUE(transport.pending != NULL);
+	NUTS_TRUE(transport.sends == 1);
 	NUTS_TRUE(nng_aio_busy(send));
 	nng_aio_cancel(send);
 	nng_aio_wait(send);
 	NUTS_FAIL(nng_aio_result(send), NNG_ECANCELED);
+	NUTS_TRUE(transport.pending == NULL);
+	NUTS_TRUE(transport.cancels == 1);
 
-	// The failed write must release its frame exactly once, including
-	// when the stream is subsequently stopped and freed.
+	// The failed physical write must release its allocated frame exactly
+	// once, including when the WebSocket is subsequently stopped and
+	// freed.
 	nng_stream_stop(sender);
 	nng_stream_free(sender);
-	nng_stream_stop(peer);
-	nng_stream_free(peer);
+	// Keep the stack transport alive until deferred destruction finishes.
+	nni_reap_sys_drain();
+	NUTS_TRUE(transport.closes == 1);
+	NUTS_TRUE(transport.frees == 1);
 	nng_aio_free(send);
-	nng_aio_free(connect);
-	nng_aio_free(accept);
-	nng_stream_dialer_free(dialer);
-	nng_stream_listener_free(listener);
-	nng_free(buf, size);
 }
 
 NUTS_TESTS = {
@@ -814,6 +860,7 @@ NUTS_TESTS = {
 	{ "websocket text mode", test_websocket_text_mode },
 	{ "websocket text rejected", test_websocket_text_rejected },
 	{ "websocket frame limit", test_websocket_frame_limit },
-	{ "websocket send cancel cleanup", test_websocket_send_cancel_cleanup },
+	{ "websocket send cancel cleanup",
+	    test_websocket_send_cancel_cleanup },
 	{ NULL, NULL },
 };
