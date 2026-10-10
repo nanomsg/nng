@@ -128,7 +128,6 @@ struct udp_pipe {
 	bool           closed;
 	bool           dialer;
 	nng_duration   refresh; // seconds, for the protocol
-	nng_time       next_wake;
 	nng_time       next_creq;
 	nng_time       expire;
 	nni_list_node  node;
@@ -192,6 +191,9 @@ struct udp_ep {
 	nni_stat_item st_copy_max;
 	nni_stat_item st_peer_max;
 	nni_stat_item st_peer_reject;
+#ifdef NNG_TEST_LIB
+	nni_stat_item st_timer_wakes;
+#endif
 };
 
 static void udp_ep_start(udp_ep *);
@@ -378,20 +380,24 @@ udp_add_pipe(udp_ep *ep, udp_pipe *p)
 	return (rv);
 }
 
+static nni_time
+udp_pipe_next_wake(udp_pipe *p)
+{
+	// Listeners are passive: only dialers send periodic CREQs.
+	nni_time wake = p->expire;
+	if (p->dialer && p->next_creq < wake) {
+		wake = p->next_creq;
+	}
+	return (wake);
+}
+
 static void
 udp_pipe_schedule(udp_pipe *p)
 {
-	udp_ep *ep      = p->ep;
-	bool    changed = false;
-	if (p->expire < ep->next_wake) {
-		ep->next_wake = p->expire;
-		changed       = true;
-	}
-	if (p->next_wake < ep->next_wake) {
-		ep->next_wake = p->next_wake;
-		changed       = true;
-	}
-	if (changed) {
+	udp_ep  *ep   = p->ep;
+	nni_time wake = udp_pipe_next_wake(p);
+	if (wake < ep->next_wake) {
+		ep->next_wake = wake;
 		nni_aio_abort(&ep->timeaio, NNG_EINTR);
 	}
 }
@@ -567,7 +573,6 @@ udp_send_creq(udp_ep *ep, udp_pipe *p)
 	creq.us_recvmax = p->rcvmax;
 	creq.us_refresh = (p->refresh + NNI_SECOND - 1) / NNI_SECOND;
 	p->next_creq    = nni_clock() + UDP_PIPE_REFRESH(p);
-	p->next_wake    = p->next_creq;
 
 	udp_pipe_schedule(p);
 	udp_queue_tx(ep, &p->peer_addr, (void *) &creq, NULL);
@@ -633,8 +638,10 @@ udp_recv_data(udp_ep *ep, udp_sp_msg *dreq, size_t len, const nng_sockaddr *sa)
 		return;
 	}
 
-	p->expire    = now + UDP_PIPE_TIMEOUT(p);
-	p->next_wake = now + UDP_PIPE_REFRESH(p);
+	p->expire = now + UDP_PIPE_TIMEOUT(p);
+	if (p->dialer) {
+		p->next_creq = now + UDP_PIPE_REFRESH(p);
+	}
 
 	// We verified this above. By setting it here we ensure that we
 	// do not wind up copying or accessing past the header, which is
@@ -732,8 +739,7 @@ udp_recv_creq(udp_ep *ep, udp_sp_msg *creq, nng_sockaddr *sa)
 		if ((creq->us_refresh * NNI_SECOND) < p->refresh) {
 			p->refresh = creq->us_refresh * NNI_SECOND;
 		}
-		p->next_wake = now + UDP_PIPE_REFRESH(p);
-		p->expire    = now + UDP_PIPE_TIMEOUT(p);
+		p->expire = now + UDP_PIPE_TIMEOUT(p);
 
 		udp_pipe_schedule(p);
 		udp_send_cack(ep, p);
@@ -765,9 +771,9 @@ udp_recv_creq(udp_ep *ep, udp_sp_msg *creq, nng_sockaddr *sa)
 	if ((creq->us_refresh * NNI_SECOND) < p->refresh) {
 		p->refresh = (creq->us_refresh * NNI_SECOND);
 	}
-	p->peer      = creq->us_type;
-	p->sndmax    = creq->us_recvmax;
-	p->next_wake = now + UDP_PIPE_REFRESH(p);
+	p->peer   = creq->us_type;
+	p->sndmax = creq->us_recvmax;
+	p->expire = now + UDP_PIPE_TIMEOUT(p);
 
 	udp_pipe_schedule(p);
 	p->state = PIPE_CONN_MATCH;
@@ -803,7 +809,7 @@ udp_recv_cack(udp_ep *ep, udp_sp_msg *cack, const nng_sockaddr *sa)
 			p->refresh = cack->us_refresh * NNI_SECOND;
 		}
 		now          = nni_clock();
-		p->next_wake = now + UDP_PIPE_REFRESH(p);
+		p->next_creq = now + UDP_PIPE_REFRESH(p);
 		p->expire    = now + UDP_PIPE_TIMEOUT(p);
 		udp_pipe_schedule(p);
 
@@ -1159,10 +1165,13 @@ udp_timer_cb(void *arg)
 	nni_time     now     = nni_clock();
 	nng_duration refresh = ep->refresh;
 
+#ifdef NNG_TEST_LIB
+	nni_stat_inc(&ep->st_timer_wakes, 1);
+#endif
 	ep->next_wake = NNI_TIME_NEVER;
 	while (nni_id_visit(&ep->pipes, NULL, (void **) &p, &cursor)) {
 
-		if (now > p->expire) {
+		if (now >= p->expire) {
 			char     buf[128];
 			nni_aio *aio;
 			nng_log_info("NNG-UDP-INACTIVE",
@@ -1192,11 +1201,12 @@ udp_timer_cb(void *arg)
 			continue;
 		}
 
-		if (p->dialer && now > p->next_creq) {
+		if (p->dialer && now >= p->next_creq) {
 			udp_send_creq(ep, p);
 		}
-		if (p->next_wake < ep->next_wake) {
-			ep->next_wake = p->next_wake;
+		nni_time wake = udp_pipe_next_wake(p);
+		if (wake < ep->next_wake) {
+			ep->next_wake = wake;
 		}
 	}
 	refresh = ep->next_wake == NNI_TIME_NEVER
@@ -1306,6 +1316,13 @@ udp_ep_init(
 	nni_stat_init_lock(&ep->st_peer_max, &peer_max_info, &ep->mtx);
 	nni_stat_init_lock(&ep->st_peer_reject, &peer_reject_info, &ep->mtx);
 	nni_stat_set_value(&ep->st_peer_max, ep->max_peers);
+#ifdef NNG_TEST_LIB
+	// Test-only instrumentation detects timer spins without CPU
+	// thresholds.
+	NNI_STAT_LOCK(timer_wakes_info, "timer_wakes", "timer callbacks",
+	    NNG_STAT_COUNTER, NNG_UNIT_EVENTS);
+	nni_stat_init_lock(&ep->st_timer_wakes, &timer_wakes_info, &ep->mtx);
+#endif
 
 	if (l) {
 		NNI_ASSERT(d == NULL);
@@ -1320,6 +1337,9 @@ udp_ep_init(
 		nni_listener_add_stat(l, &ep->st_snd_nobuf);
 		nni_listener_add_stat(l, &ep->st_peer_max);
 		nni_listener_add_stat(l, &ep->st_peer_reject);
+#ifdef NNG_TEST_LIB
+		nni_listener_add_stat(l, &ep->st_timer_wakes);
+#endif
 	}
 	if (d) {
 		NNI_ASSERT(l == NULL);
