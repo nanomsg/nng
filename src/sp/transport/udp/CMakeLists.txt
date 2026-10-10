@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -14,4 +14,5 @@ if (NNG_TRANSPORT_UDP)
     nng_sources(udp.c)
     nng_defines(NNG_TRANSPORT_UDP)
     nng_test(udp_tran_test)
+    nng_test(udp_wire_test)
 endif()
