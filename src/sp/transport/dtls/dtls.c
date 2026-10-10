@@ -1,4 +1,4 @@
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -101,6 +101,7 @@ typedef struct dtls_sp_hdr {
 
 struct dtls_pipe {
 	dtls_ep      *ep;
+	nng_udp      *udp; // protected by lower_mtx; NULL when retired
 	nni_pipe     *npipe;
 	nng_sockaddr  peer_addr;
 	uint64_t      id; // hash of peer address
@@ -157,6 +158,7 @@ struct dtls_ep {
 	uint16_t        af; // address family
 	bool            fini;
 	bool            started;
+	bool            receiving;
 	bool            closed;
 	nng_url        *url;
 	const char     *host; // for dialers
@@ -299,13 +301,13 @@ dtls_bio_send(void *arg, nng_aio *aio)
 	nni_msg   *msg;
 
 	nni_mtx_lock(&p->lower_mtx);
-	if (!p->closed) {
+	if (p->udp != NULL) {
 		nni_aio_set_input(aio, 0, &p->peer_addr);
 		msg         = nni_aio_get_msg(aio);
 		iov.iov_buf = nni_msg_body(msg);
 		iov.iov_len = nni_msg_len(msg);
 		nng_aio_set_iov(aio, 1, &iov);
-		nng_udp_send(p->ep->udp, aio);
+		nng_udp_send(p->udp, aio);
 	} else {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
@@ -627,6 +629,10 @@ dtls_pipe_recv_tls_cb(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	p->recv_busy = false;
+	if (p->closed) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
 
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 
@@ -780,6 +786,9 @@ dtls_pipe_close(void *arg)
 		dtls_pipe_send_tls(p);
 	}
 	p->closed = true;
+	nni_mtx_lock(&p->lower_mtx);
+	p->udp = NULL;
+	nni_mtx_unlock(&p->lower_mtx);
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -819,6 +828,7 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	}
 	p->dialer    = ep->dialer;
 	p->ep        = ep;
+	p->udp       = ep->udp;
 	p->proto     = ep->proto;
 	p->peer      = ep->peer;
 	p->peer_addr = *sa;
@@ -1002,6 +1012,9 @@ static void
 dtls_start_rx(dtls_ep *ep)
 {
 	nni_iov iov;
+	if (!ep->receiving || ep->closed) {
+		return;
+	}
 
 	iov.iov_buf = ep->rx_buf;
 	iov.iov_len = ep->rx_size;
@@ -1022,6 +1035,10 @@ dtls_rx_cb(void *arg)
 	nni_msg   *msg;
 
 	nni_mtx_lock(&ep->mtx);
+	if (!ep->receiving || ep->closed) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		// something bad happened on RX... which is unexpected.
 		// sleep a little bit and hope for recovery.
@@ -1046,6 +1063,10 @@ dtls_rx_cb(void *arg)
 	}
 
 	if ((p = dtls_find_pipe(ep, &ep->rx_sa)) == NULL) {
+		// Only listeners create pipes in response to incoming traffic.
+		if (ep->dialer) {
+			goto fail;
+		}
 		if ((ep->max_peers != 0) &&
 		    (ep->pending_peers >= ep->max_peers)) {
 			nni_stat_inc(&ep->st_peer_reject, 1);
@@ -1553,13 +1574,10 @@ dtls_resolv_cb(void *arg)
 static void
 dtls_ep_connect(void *arg, nni_aio *aio)
 {
-	dtls_ep *ep = arg;
+	dtls_ep   *ep = arg;
+	dtls_pipe *p;
 
 	nni_mtx_lock(&ep->mtx);
-	if (!nni_aio_start(aio, dtls_ep_cancel, ep)) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
 	if (ep->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&ep->mtx);
@@ -1570,14 +1588,51 @@ dtls_ep_connect(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	ep->dialer = true;
-	NNI_ASSERT(nni_list_empty(&ep->connaios));
-	nni_list_append(&ep->connaios, aio);
+	// Retire the previous attempt before publishing a new connection AIO.
+	// Its late TLS callbacks must not complete the new attempt, and no
+	// old BIO may use the socket after the resolver replaces it.
+	ep->receiving = false;
+	nni_aio_abort(&ep->rx_aio, NNG_ECANCELED);
+	for (;;) {
+		uint32_t cursor = 0;
+		if (!nni_id_visit(&ep->pipes, NULL, (void **) &p, &cursor)) {
+			break;
+		}
+		nni_pipe_hold(p->npipe);
+		// Serialize closure with any BIO send already using the
+		// socket.
+		nni_mtx_lock(&p->lower_mtx);
+		p->udp    = NULL;
+		p->closed = true;
+		nni_pipe_close(p->npipe);
+		nni_mtx_unlock(&p->lower_mtx);
+		nni_list_node_remove(&p->node);
+		dtls_remove_pipe(p);
+		// Drain pending BIO sends and their cancellation callbacks
+		// before closing the old UDP socket. TLS callbacks take mtx.
+		nni_mtx_unlock(&ep->mtx);
+		nni_tls_stop(&p->tls);
+		nni_pipe_rele(p->npipe);
+		nni_mtx_lock(&ep->mtx);
+	}
+	nni_mtx_unlock(&ep->mtx);
 
-	if (ep->started) {
+	// A receive callback can be running TLS outside the endpoint lock.
+	// Drain it before reusing its buffer and AIO with the new socket.
+	nni_aio_wait(&ep->rx_aio);
+	nni_mtx_lock(&ep->mtx);
+	if (ep->closed) {
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
+	if (!nni_aio_start(aio, dtls_ep_cancel, ep)) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
+	ep->dialer = true;
+	NNI_ASSERT(nni_list_empty(&ep->connaios));
+	nni_list_append(&ep->connaios, aio);
 
 	// lookup the IP address
 	memset(&ep->resolv, 0, sizeof(ep->resolv));
@@ -1820,6 +1875,7 @@ static void
 dtls_ep_start(dtls_ep *ep)
 {
 	ep->started = true;
+	ep->receiving = true;
 	dtls_start_rx(ep);
 }
 

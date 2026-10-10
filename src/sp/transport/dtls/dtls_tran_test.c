@@ -174,15 +174,18 @@ typedef struct {
 	bool     done;
 	int      result;
 	nng_aio *aio;
+	nng_pipe pipe;
+	bool     hold_remove;
+	bool     release_remove;
 } dtls_deadline_events;
 
 static void
 dtls_deadline_event(nng_pipe pipe, nng_pipe_ev ev, void *arg)
 {
 	dtls_deadline_events *events = arg;
-	(void) pipe;
 	nng_mtx_lock(events->mtx);
 	if (ev == NNG_PIPE_EV_ADD_POST) {
+		events->pipe = pipe;
 		events->added++;
 		events->added_at = nuts_clock();
 	} else if (ev == NNG_PIPE_EV_REM_POST) {
@@ -190,6 +193,10 @@ dtls_deadline_event(nng_pipe pipe, nng_pipe_ev ev, void *arg)
 		events->removed_at = nuts_clock();
 	}
 	nng_cv_wake(events->cv);
+	while (ev == NNG_PIPE_EV_REM_POST && events->hold_remove &&
+	    !events->release_remove) {
+		nng_cv_wait(events->cv);
+	}
 	nng_mtx_unlock(events->mtx);
 }
 
@@ -362,6 +369,247 @@ test_dtls_expiry_before_retry(void)
 	dtls_deadline_fini(&events);
 	nng_udp_close(udp);
 	nng_tls_config_free(cfg);
+}
+
+static void
+test_dtls_retry(bool automatic, bool delayed_reap)
+{
+	nng_socket           server, client;
+	nng_socket           guard_server, guard_client;
+	nng_listener         l;
+	nng_dialer           d;
+	nng_udp             *udp;
+	nng_aio             *recv;
+	nng_sockaddr         addr = { 0 }, from, first;
+	dtls_deadline_events server_events, client_events;
+	dtls_deadline_events guard_events;
+	char                 url[80];
+	uint8_t              buf[2048];
+	nng_iov              iov  = { .iov_buf = buf, .iov_len = sizeof(buf) };
+	nng_tls_config      *scfg = tls_server_config();
+	nng_tls_config      *ccfg = tls_client_config();
+	addr.s_in.sa_family       = NNG_AF_INET;
+	addr.s_in.sa_addr         = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_udp_open(&udp, &addr));
+	NUTS_PASS(nng_udp_sockname(udp, &addr));
+	snprintf(url, sizeof(url), "dtls4://127.0.0.1:%u",
+	    (unsigned) nuts_be16(addr.s_in.sa_port));
+	NUTS_OPEN(server);
+	NUTS_OPEN(client);
+	dtls_deadline_init(&server_events, server);
+	dtls_deadline_init(&client_events, client);
+	NUTS_PASS(nng_aio_alloc(&recv, NULL, NULL));
+	NUTS_PASS(nng_aio_set_iov(recv, 1, &iov));
+	NUTS_PASS(nng_aio_set_input(recv, 0, &from));
+	NUTS_PASS(nng_dialer_create(&d, client, url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 1000));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMINT, 100));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMAXT, 100));
+	if (delayed_reap) {
+		nng_listener   gl;
+		nng_dialer     gd;
+		const nng_url *guard_url;
+		NUTS_OPEN(guard_server);
+		NUTS_OPEN(guard_client);
+		dtls_deadline_init(&guard_events, guard_client);
+		NUTS_PASS(nng_socket_set_ms(
+		    guard_client, NNG_OPT_RECONNMINT, 60000));
+		NUTS_PASS(nng_listener_create(
+		    &gl, guard_server, "dtls4://127.0.0.1:0"));
+		NUTS_PASS(nng_listener_set_tls(gl, scfg));
+		NUTS_PASS(nng_listener_start(gl, 0));
+		NUTS_PASS(nng_listener_get_url(gl, &guard_url));
+		NUTS_PASS(nng_dialer_create_url(&gd, guard_client, guard_url));
+		NUTS_PASS(nng_dialer_set_tls(gd, ccfg));
+		NUTS_PASS(nng_dialer_start(gd, NNG_FLAG_NONBLOCK));
+		if (!dtls_deadline_wait(
+		        &guard_events, 1, 0, false, DTLS_STRESS_TIMEOUT)) {
+			goto cleanup;
+		}
+		// Pause the reaper in an unrelated pipe's removal callback.
+		// The failed attempt must still be in the endpoint's pipe map
+		// when we retry, exercising retirement before asynchronous
+		// stop.
+		nng_mtx_lock(guard_events.mtx);
+		guard_events.hold_remove = true;
+		nng_pipe pipe            = guard_events.pipe;
+		nng_mtx_unlock(guard_events.mtx);
+		NUTS_PASS(nng_pipe_close(pipe));
+		if (!dtls_deadline_wait(
+		        &guard_events, 1, 1, false, DTLS_STRESS_TIMEOUT)) {
+			goto cleanup;
+		}
+	}
+	if (automatic) {
+		NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+	} else {
+		NUTS_PASS(nng_aio_alloc(
+		    &client_events.aio, dtls_deadline_done, &client_events));
+		nng_dialer_start_aio(d, NNG_FLAG_NONBLOCK, client_events.aio);
+		if (!dtls_deadline_wait(
+		        &client_events, 0, 0, true, DTLS_STRESS_TIMEOUT)) {
+			goto cleanup;
+		}
+		NUTS_FAIL(client_events.result, NNG_ETIMEDOUT);
+		if (delayed_reap) {
+			NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+		}
+	}
+	if (automatic || delayed_reap) {
+		// Observe a fresh ClientHello source port after the first
+		// silent negotiation expires, not merely a TLS retransmission.
+		nng_time until = nng_clock() + DTLS_STRESS_TIMEOUT;
+		bool     fresh = false;
+		bool     seen  = false;
+		do {
+			nng_time now = nng_clock();
+			if (now >= until) {
+				break;
+			}
+			nng_aio_set_timeout(
+			    recv, (nng_duration) (until - now));
+			nng_udp_recv(udp, recv);
+			nng_aio_wait(recv);
+			if (nng_aio_result(recv) != NNG_OK) {
+				break;
+			}
+			NUTS_TRUE(nng_aio_count(recv) >= 13);
+			NUTS_TRUE(buf[0] == 22);
+			if (!seen) {
+				first = from;
+				seen  = true;
+			} else {
+				fresh = !nng_sockaddr_equal(&first, &from);
+			}
+		} while (!fresh && nng_clock() < until);
+		NUTS_TRUE(fresh);
+		if (!fresh) {
+			goto cleanup;
+		}
+	}
+	if (delayed_reap) {
+		nng_mtx_lock(guard_events.mtx);
+		guard_events.release_remove = true;
+		nng_cv_wake(guard_events.cv);
+		nng_mtx_unlock(guard_events.mtx);
+	}
+	// Replace the silent destination with a real listener. The original
+	// dialer, with its original TLS configuration, must recover.
+	nng_udp_close(udp);
+	udp = NULL;
+	NUTS_PASS(nng_listener_create(&l, server, url));
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_start(l, 0));
+	if (!automatic && !delayed_reap) {
+		NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+	}
+	bool connected = dtls_deadline_wait(
+	    &client_events, 1, 0, false, DTLS_STRESS_TIMEOUT);
+	connected = dtls_deadline_wait(
+	                &server_events, 1, 0, false, DTLS_STRESS_TIMEOUT) &&
+	    connected;
+	if (connected) {
+		NUTS_PASS(nng_socket_set_ms(
+		    client, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+		NUTS_PASS(nng_socket_set_ms(
+		    server, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+		NUTS_SEND(client, "retry recovered");
+		NUTS_RECV(server, "retry recovered");
+	}
+cleanup:
+	if (delayed_reap) {
+		nng_mtx_lock(guard_events.mtx);
+		guard_events.release_remove = true;
+		nng_cv_wake(guard_events.cv);
+		nng_mtx_unlock(guard_events.mtx);
+		NUTS_CLOSE(guard_client);
+		NUTS_CLOSE(guard_server);
+		dtls_deadline_fini(&guard_events);
+	}
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	if (udp != NULL) {
+		nng_udp_close(udp);
+	}
+	nng_aio_free(recv);
+	dtls_deadline_fini(&client_events);
+	dtls_deadline_fini(&server_events);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
+}
+
+static void
+test_dtls_manual_retry(void)
+{
+	test_dtls_retry(false, false);
+}
+
+static void
+test_dtls_automatic_retry(void)
+{
+	test_dtls_retry(true, false);
+}
+
+static void
+test_dtls_retry_before_reap(void)
+{
+	test_dtls_retry(false, true);
+}
+
+static void
+test_dtls_reconnect(void)
+{
+	nng_socket           server, client;
+	nng_listener         l;
+	nng_dialer           d;
+	dtls_deadline_events server_events, client_events;
+	const nng_url       *url;
+	nng_tls_config      *scfg = tls_server_config();
+	nng_tls_config      *ccfg = tls_client_config();
+	NUTS_OPEN(server);
+	NUTS_OPEN(client);
+	dtls_deadline_init(&server_events, server);
+	dtls_deadline_init(&client_events, client);
+	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_PASS(nng_dialer_create_url(&d, client, url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMINT, 100));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMAXT, 100));
+	NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+	bool connected = dtls_deadline_wait(
+	    &server_events, 1, 0, false, DTLS_STRESS_TIMEOUT);
+	connected = dtls_deadline_wait(
+	                &client_events, 1, 0, false, DTLS_STRESS_TIMEOUT) &&
+	    connected;
+	if (connected) {
+		nng_mtx_lock(server_events.mtx);
+		nng_pipe pipe = server_events.pipe;
+		nng_mtx_unlock(server_events.mtx);
+		NUTS_PASS(nng_pipe_close(pipe));
+		connected = dtls_deadline_wait(
+		    &server_events, 2, 1, false, DTLS_STRESS_TIMEOUT);
+		connected = dtls_deadline_wait(&client_events, 2, 1, false,
+		                DTLS_STRESS_TIMEOUT) &&
+		    connected;
+		if (connected) {
+			NUTS_PASS(nng_socket_set_ms(
+			    client, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+			NUTS_PASS(nng_socket_set_ms(
+			    server, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+			NUTS_SEND(client, "reconnected");
+			NUTS_RECV(server, "reconnected");
+		}
+	}
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	dtls_deadline_fini(&client_events);
+	dtls_deadline_fini(&server_events);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
 }
 
 static void
@@ -1295,6 +1543,10 @@ NUTS_TESTS = {
 	{ "dtls wire loss replay", test_dtls_wire_loss_replay },
 	{ "dtls negotiated expiry", test_dtls_negotiated_expiry },
 	{ "dtls expiry before retry", test_dtls_expiry_before_retry },
+	{ "dtls manual retry", test_dtls_manual_retry },
+	{ "dtls automatic retry", test_dtls_automatic_retry },
+	{ "dtls retry before reap", test_dtls_retry_before_reap },
+	{ "dtls reconnect", test_dtls_reconnect },
 	{ "dtls pending expiry", test_dtls_pending_expiry },
 	{ "dtls TLS 1.3 only", test_dtls_tls13_only },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
