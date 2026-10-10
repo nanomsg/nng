@@ -229,7 +229,7 @@ sub0_sock_init(void *arg, nni_sock *ns)
 
 	sub0_ctx_init(&sock->master, sock);
 
-#if NNG_ENABLE_STATS
+#ifdef NNG_ENABLE_STATS
 	static const nni_stat_info rx_direct_info = {
 		.si_name = "rx_direct",
 		.si_desc = "messages received without queueing",
@@ -390,15 +390,15 @@ sub0_recv_cb(void *arg)
 	NNI_LIST_FOREACH (&sock->contexts, ctx) {
 		bool was_queued = false;
 
+		if (!sub0_matches(ctx, body, len)) {
+			continue;
+		}
+
 		if (nni_lmq_full(&ctx->lmq) && !ctx->prefer_new) {
 			// Cannot deliver here, as receive buffer is full.
 #ifdef NNG_ENABLE_STATS
 			dropped++;
 #endif
-			continue;
-		}
-
-		if (!sub0_matches(ctx, body, len)) {
 			continue;
 		}
 

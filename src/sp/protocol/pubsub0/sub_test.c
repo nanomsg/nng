@@ -614,6 +614,7 @@ test_sub_stats(void)
 	nng_stat       *stats;
 	const nng_stat *subs;
 	const nng_stat *st;
+	nng_aio        *aio;
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_pub0_open(&pub));
@@ -622,6 +623,7 @@ test_sub_stats(void)
 	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
 	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 200));
 	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	NUTS_PASS(nng_stats_get(&stats));
 	NUTS_TRUE(stats != NULL);
@@ -642,19 +644,31 @@ test_sub_stats(void)
 	NUTS_TRUE(stats != NULL);
 	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
 	NUTS_TRUE((st = nng_stat_find(subs, "rx_queued")) != NULL);
-	NUTS_TRUE(nng_stat_value(st) >= 2);
+	NUTS_TRUE(nng_stat_value(st) == 2);
 	NUTS_TRUE((st = nng_stat_find(subs, "rx_discard")) != NULL);
-	NUTS_TRUE(nng_stat_value(st) >= 1);
+	NUTS_TRUE(nng_stat_value(st) == 1);
 	nng_stats_free(stats);
 
 	// Drain the 2 queued messages
 	NUTS_RECV(sub, "one");
 	NUTS_RECV(sub, "two");
 
-	// Send 1 message while receiving synchronously
+	// Start a pending receive on sub before sending to ensure direct delivery
+	nng_aio_set_timeout(aio, 1000);
+	nng_socket_recv(sub, aio);
 	NUTS_SEND(pub, "four");
-	NUTS_RECV(sub, "four");
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_msg_free(nng_aio_get_msg(aio));
 
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_direct")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	nng_aio_free(aio);
 	NUTS_CLOSE(pub);
 	NUTS_CLOSE(sub);
 #endif
