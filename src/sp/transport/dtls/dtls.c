@@ -111,7 +111,6 @@ struct dtls_pipe {
 	bool          closed;  // true if we are closed (no more send or recv!)
 	bool          dialer;  // true if we are dialer
 	nng_duration  refresh; // milliseconds, for the protocol
-	nng_time      next_wake;
 	nng_time      expire; // inactivity expiration time
 	nng_time      next_refresh;
 	nni_list_node node;
@@ -164,6 +163,7 @@ struct dtls_ep {
 	nni_aio        *useraio;
 	nni_aio        *connaio;
 	nni_aio         timeaio;
+	nni_time        next_wake;
 	nni_aio         resaio;
 	bool            dialer;
 	nni_listener   *nlistener;
@@ -211,6 +211,39 @@ static void dtls_rx_cb(void *);
 
 static void dtls_ep_match(dtls_ep *ep);
 static void dtls_remove_pipe(dtls_pipe *p);
+
+static nni_time
+dtls_pipe_next_wake(dtls_pipe *p)
+{
+	// Half-open peers must expire too; only dialers send periodic CREQs.
+	nni_time wake = p->expire;
+	if (p->dialer && p->next_refresh < wake) {
+		wake = p->next_refresh;
+	}
+	return (wake);
+}
+
+static void
+dtls_pipe_schedule(dtls_pipe *p)
+{
+	dtls_ep *ep   = p->ep;
+	nni_time wake = dtls_pipe_next_wake(p);
+	if (wake < ep->next_wake) {
+		ep->next_wake = wake;
+		nni_aio_abort(&ep->timeaio, NNG_EINTR);
+	}
+}
+
+static void
+dtls_pipe_refresh(dtls_pipe *p)
+{
+	nni_time now = nni_clock();
+	p->expire    = now + DTLS_PIPE_TIMEOUT(p);
+	if (p->dialer) {
+		p->next_refresh = now + DTLS_PIPE_REFRESH(p);
+	}
+	dtls_pipe_schedule(p);
+}
 
 // BIO send/recv functions for use by the common TLS layer.
 
@@ -655,14 +688,6 @@ dtls_pipe_recv_tls_cb(void *arg)
 		// keep-alive cadence.
 		p->refresh = ep->refresh;
 	}
-	p->expire = nni_clock() + DTLS_PIPE_TIMEOUT(p);
-
-	if (!p->matched) {
-		p->matched = true;
-		nni_list_append(&p->ep->connpipes, p);
-		dtls_ep_match(p->ep);
-	}
-
 	switch (hdr->us_op_code) {
 	case OPCODE_CREQ:
 		if (p->dialer) {
@@ -703,10 +728,27 @@ dtls_pipe_recv_tls_cb(void *arg)
 		return;
 
 	case OPCODE_DATA:
+		if (!p->matched) {
+			p->send_op = OPCODE_DISC;
+			p->reason  = DISC_PROTO;
+			goto bad;
+		}
+		dtls_pipe_refresh(p);
 		p->recv_rdy = true;
 		dtls_pipe_recv_tls(p);
 		nni_mtx_unlock(&ep->mtx);
 		return;
+	default:
+		p->send_op = OPCODE_DISC;
+		p->reason  = DISC_PROTO;
+		goto bad;
+	}
+	// Apply the negotiated interval before replacing the initial deadline.
+	dtls_pipe_refresh(p);
+	if (!p->matched) {
+		p->matched = true;
+		nni_list_append(&p->ep->connpipes, p);
+		dtls_ep_match(p->ep);
 	}
 bad:
 	if (p->send_op != OPCODE_DATA) {
@@ -781,9 +823,12 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	p->peer      = ep->peer;
 	p->peer_addr = *sa;
 	p->id        = nng_sockaddr_hash(sa);
+	nni_time now = nni_clock();
 	p->refresh = ep->dialer ? ep->conn_retry : ep->refresh;
-	p->expire = nni_clock() +
-	    (ep->dialer ? ep->conn_expire : DTLS_PIPE_TIMEOUT(p));
+	// Keep a finite deadline throughout the TLS and SP negotiations.
+	p->expire =
+	    now + (ep->dialer ? ep->conn_expire : DTLS_PIPE_TIMEOUT(p));
+	p->next_refresh = now + DTLS_PIPE_REFRESH(p);
 	p->pending   = !ep->dialer;
 	p->send_max  = NNG_DTLS_RECVMAX;
 	p->recv_max  = ep->rcvmax;
@@ -811,8 +856,7 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 		break;
 	}
 
-	// wake the timer so it knows to resubmit
-	nni_aio_abort(&ep->timeaio, NNG_ETIMEDOUT);
+	dtls_pipe_schedule(p);
 
 	return (NNG_OK);
 }
@@ -1214,33 +1258,44 @@ dtls_timer_cb(void *arg)
 	nni_time     now     = nni_clock();
 	nng_duration refresh = NNG_DURATION_INFINITE;
 
+	ep->next_wake = NNI_TIME_NEVER;
 	while (nni_id_visit(&ep->pipes, NULL, (void **) &p, &cursor)) {
 
 		if (p->closed) {
 			continue;
 		}
 		NNI_ASSERT(p->refresh > 0);
-		if (p->expire > 0 && now > p->expire) {
+		if (now >= p->expire) {
 			char buf[128];
 			nng_log_info("NNG-DTLS-INACTIVE",
 			    "Pipe peer %s timed out due to inactivity",
 			    nng_str_sockaddr(&p->peer_addr, buf, sizeof(buf)));
 
 			nni_stat_inc(&ep->st_peer_inactive, 1);
+			if (p->dialer && !p->matched) {
+				nni_aio *aio = nni_list_first(&ep->connaios);
+				if (aio != NULL) {
+					nni_aio_list_remove(aio);
+					nni_aio_finish_error(
+					    aio, NNG_ETIMEDOUT);
+				}
+			}
 			nni_pipe_close(p->npipe);
 			continue;
 		}
 
-		if (p->dialer && now > p->next_refresh) {
+		if (p->dialer && now >= p->next_refresh) {
 			p->send_op      = OPCODE_CREQ;
 			p->next_refresh = now + p->refresh;
 			dtls_pipe_send_tls(p);
 		}
-		if (refresh == NNG_DURATION_INFINITE && p->refresh > 0) {
-			refresh = p->refresh;
-		} else if ((p->refresh > 0) && (p->refresh < refresh)) {
-			refresh = p->refresh;
+		nni_time wake = dtls_pipe_next_wake(p);
+		if (wake < ep->next_wake) {
+			ep->next_wake = wake;
 		}
+	}
+	if (ep->next_wake != NNI_TIME_NEVER) {
+		refresh = (nng_duration) (ep->next_wake - now);
 	}
 	nni_sleep_aio(refresh, &ep->timeaio);
 
@@ -1258,6 +1313,7 @@ dtls_ep_init(
 
 	nni_aio_init(&ep->rx_aio, dtls_rx_cb, ep);
 	nni_aio_init(&ep->timeaio, dtls_timer_cb, ep);
+	ep->next_wake = NNI_TIME_NEVER;
 	nni_aio_init(&ep->resaio, dtls_resolv_cb, ep);
 
 	if (strcmp(url->u_scheme, "dtls") == 0) {
@@ -1335,6 +1391,7 @@ dtls_ep_init(
 		nni_listener_add_stat(l, &ep->st_snd_nobuf);
 		nni_listener_add_stat(l, &ep->st_peer_max);
 		nni_listener_add_stat(l, &ep->st_peer_reject);
+		nni_listener_add_stat(l, &ep->st_peer_inactive);
 	}
 	if (d) {
 		NNI_ASSERT(l == NULL);
@@ -1346,6 +1403,7 @@ dtls_ep_init(
 		nni_dialer_add_stat(d, &ep->st_snd_nobuf);
 		nni_dialer_add_stat(d, &ep->st_peer_max);
 		nni_dialer_add_stat(d, &ep->st_peer_reject);
+		nni_dialer_add_stat(d, &ep->st_peer_inactive);
 	}
 
 	// schedule our timer callback - forever for now

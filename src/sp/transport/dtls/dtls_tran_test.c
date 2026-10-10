@@ -88,6 +88,9 @@ typedef struct {
 	bool         dropped;
 	bool         dropped_server;
 	bool         bad_wire;
+	bool         silence;
+	unsigned     client_records;
+	unsigned     server_records;
 	unsigned     duplicates;
 	int          error;
 } dtls_proxy;
@@ -120,13 +123,13 @@ dtls_proxy_run(void *arg)
 			p->bad_wire = true;
 		}
 		bool from_server = from.s_in.sa_port == p->server.s_in.sa_port;
-		if (from_server && !p->dropped_server) {
+		if (!p->silence && from_server && !p->dropped_server) {
 			p->dropped_server = true;
 			continue;
 		}
 		if (!from_server) {
 			client = from;
-			if (!p->dropped) {
+			if (!p->silence && !p->dropped) {
 				p->dropped = true;
 				continue; // No I/O event will wake the
 				          // client's handshake.
@@ -134,9 +137,18 @@ dtls_proxy_run(void *arg)
 		}
 		nng_sockaddr to = from_server ? client : p->server;
 		nng_aio_set_input(p->send, 0, &to);
+		if (p->silence && buf[0] == 23) {
+			// Allow just the initial SP CREQ/CACK, then simulate
+			// silent peers without sending a graceful disconnect.
+			unsigned *records = from_server ? &p->server_records
+			                                : &p->client_records;
+			if (++(*records) > 1) {
+				continue;
+			}
+		}
 		// Replay application records to verify DTLS duplicate
 		// suppression.
-		unsigned copies = buf[0] == 23 ? 2 : 1;
+		unsigned copies = !p->silence && buf[0] == 23 ? 2 : 1;
 		if (copies == 2) {
 			p->duplicates++;
 		}
@@ -150,6 +162,336 @@ dtls_proxy_run(void *arg)
 			}
 		}
 	}
+}
+
+typedef struct {
+	nng_mtx *mtx;
+	nng_cv  *cv;
+	unsigned added;
+	unsigned removed;
+	uint64_t added_at;
+	uint64_t removed_at;
+	bool     done;
+	int      result;
+	nng_aio *aio;
+} dtls_deadline_events;
+
+static void
+dtls_deadline_event(nng_pipe pipe, nng_pipe_ev ev, void *arg)
+{
+	dtls_deadline_events *events = arg;
+	(void) pipe;
+	nng_mtx_lock(events->mtx);
+	if (ev == NNG_PIPE_EV_ADD_POST) {
+		events->added++;
+		events->added_at = nuts_clock();
+	} else if (ev == NNG_PIPE_EV_REM_POST) {
+		events->removed++;
+		events->removed_at = nuts_clock();
+	}
+	nng_cv_wake(events->cv);
+	nng_mtx_unlock(events->mtx);
+}
+
+static void
+dtls_deadline_done(void *arg)
+{
+	dtls_deadline_events *events = arg;
+	nng_mtx_lock(events->mtx);
+	events->result = nng_aio_result(events->aio);
+	events->done   = true;
+	nng_cv_wake(events->cv);
+	nng_mtx_unlock(events->mtx);
+}
+
+static void
+dtls_deadline_init(dtls_deadline_events *events, nng_socket s)
+{
+	memset(events, 0, sizeof(*events));
+	NUTS_PASS(nng_mtx_alloc(&events->mtx));
+	NUTS_PASS(nng_cv_alloc(&events->cv, events->mtx));
+	NUTS_PASS(nng_pipe_notify(
+	    s, NNG_PIPE_EV_ADD_POST, dtls_deadline_event, events));
+	NUTS_PASS(nng_pipe_notify(
+	    s, NNG_PIPE_EV_REM_POST, dtls_deadline_event, events));
+}
+
+static void
+dtls_deadline_fini(dtls_deadline_events *events)
+{
+	// Close the socket and wait for any AIO callback before freeing
+	// events.
+	nng_aio_free(events->aio);
+	nng_cv_free(events->cv);
+	nng_mtx_free(events->mtx);
+}
+
+static bool
+dtls_deadline_wait(dtls_deadline_events *events, unsigned added,
+    unsigned removed, bool done, nng_duration timeout)
+{
+	nng_time until = nng_clock() + timeout;
+	nng_mtx_lock(events->mtx);
+	while (events->added < added || events->removed < removed ||
+	    (done && !events->done)) {
+		if (nng_cv_until(events->cv, until) != NNG_OK) {
+			break;
+		}
+	}
+	bool ready = events->added == added && events->removed == removed &&
+	    (!done || events->done);
+	NUTS_TRUE(ready);
+	nng_mtx_unlock(events->mtx);
+	return (ready);
+}
+
+static void
+test_dtls_negotiated_expiry(void)
+{
+	dtls_proxy           proxy = { .silence = true };
+	dtls_deadline_events server_events, client_events;
+	nng_socket           server, client;
+	nng_listener         l;
+	nng_dialer           d;
+	nng_thread          *thread;
+	nng_sockaddr         addr = { 0 };
+	const nng_url       *url;
+	char                 proxy_url[80];
+	nng_tls_config      *scfg = tls_server_config();
+	nng_tls_config      *ccfg = tls_client_config();
+	NUTS_OPEN(server);
+	NUTS_OPEN(client);
+	dtls_deadline_init(&server_events, server);
+	dtls_deadline_init(&client_events, client);
+	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	proxy.server.s_in.sa_family = NNG_AF_INET;
+	proxy.server.s_in.sa_addr   = nuts_be32(0x7f000001);
+	proxy.server.s_in.sa_port   = nuts_be16(nng_url_port(url));
+	addr.s_in.sa_family         = NNG_AF_INET;
+	addr.s_in.sa_addr           = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_udp_open(&proxy.udp, &addr));
+	NUTS_PASS(nng_udp_sockname(proxy.udp, &addr));
+	NUTS_PASS(nng_aio_alloc(&proxy.recv, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&proxy.send, NULL, NULL));
+	nng_aio_set_timeout(proxy.send, DTLS_STRESS_TIMEOUT);
+	proxy.buf = nng_alloc(DTLS_PROXY_BUFSIZE);
+	NUTS_ASSERT(proxy.buf != NULL);
+	NUTS_PASS(nng_thread_create(&thread, dtls_proxy_run, &proxy));
+	snprintf(proxy_url, sizeof(proxy_url), "dtls4://127.0.0.1:%u",
+	    (unsigned) nuts_be16(addr.s_in.sa_port));
+	NUTS_PASS(nng_dialer_create(&d, client, proxy_url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	// The initial CREQ proposes one second instead of the default five.
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 1000));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMINT, 60000));
+	uint64_t start = nuts_clock();
+	NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+	bool connected = dtls_deadline_wait(
+	    &server_events, 1, 0, false, DTLS_STRESS_TIMEOUT);
+	connected = dtls_deadline_wait(
+	                &client_events, 1, 0, false, DTLS_STRESS_TIMEOUT) &&
+	    connected;
+	if (connected) {
+		bool expired =
+		    dtls_deadline_wait(&server_events, 1, 1, false, 10000);
+		expired =
+		    dtls_deadline_wait(&client_events, 1, 1, false, 10000) &&
+		    expired;
+		if (expired) {
+			NUTS_TRUE(server_events.removed_at >= start + 5000);
+			NUTS_TRUE(client_events.removed_at >= start + 5000);
+			NUTS_TRUE(server_events.removed_at <
+			    server_events.added_at + 10000);
+			NUTS_TRUE(client_events.removed_at <
+			    client_events.added_at + 10000);
+		}
+	}
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	nng_udp_close(proxy.udp);
+	nng_thread_destroy(thread);
+	NUTS_TRUE(!proxy.bad_wire);
+	NUTS_PASS(proxy.error);
+	NUTS_TRUE(proxy.client_records > 1);
+	NUTS_TRUE(proxy.server_records >= 1);
+	nng_free(proxy.buf, DTLS_PROXY_BUFSIZE);
+	nng_aio_free(proxy.recv);
+	nng_aio_free(proxy.send);
+	dtls_deadline_fini(&client_events);
+	dtls_deadline_fini(&server_events);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
+}
+
+static void
+test_dtls_expiry_before_retry(void)
+{
+	nng_socket           client;
+	nng_dialer           d;
+	nng_udp             *udp;
+	nng_sockaddr         addr = { 0 };
+	dtls_deadline_events events;
+	char                 url[80];
+	nng_tls_config      *cfg = tls_client_config();
+	// Bind a silent port so ICMP errors cannot complete the attempt first.
+	addr.s_in.sa_family = NNG_AF_INET;
+	addr.s_in.sa_addr   = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_udp_open(&udp, &addr));
+	NUTS_PASS(nng_udp_sockname(udp, &addr));
+	NUTS_OPEN(client);
+	dtls_deadline_init(&events, client);
+	NUTS_PASS(nng_aio_alloc(&events.aio, dtls_deadline_done, &events));
+	snprintf(url, sizeof(url), "dtls4://127.0.0.1:%u",
+	    (unsigned) nuts_be16(addr.s_in.sa_port));
+	NUTS_PASS(nng_dialer_create(&d, client, url));
+	NUTS_PASS(nng_dialer_set_tls(d, cfg));
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 3000));
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 100));
+	uint64_t start = nuts_clock();
+	nng_dialer_start_aio(d, NNG_FLAG_NONBLOCK, events.aio);
+	if (dtls_deadline_wait(&events, 0, 0, true, 2000)) {
+		NUTS_FAIL(events.result, NNG_ETIMEDOUT);
+		NUTS_AFTER(start + 100);
+		NUTS_BEFORE(start + 2000);
+	}
+	// This also unblocks the AIO if a regression left the attempt pending.
+	NUTS_CLOSE(client);
+	dtls_deadline_fini(&events);
+	nng_udp_close(udp);
+	nng_tls_config_free(cfg);
+}
+
+static void
+test_dtls_pending_expiry(void)
+{
+	nng_socket           server, stalled, replacement;
+	nng_listener         l;
+	nng_dialer           d, retry;
+	nng_udp             *udp;
+	nng_aio             *recv, *send;
+	nng_sockaddr         addr = { 0 }, from, server_addr = { 0 };
+	dtls_deadline_events server_events, client_events;
+	const nng_url       *url;
+	char                 proxy_url[80];
+	uint8_t              buf[2048];
+	nng_iov              iov  = { .iov_buf = buf, .iov_len = sizeof(buf) };
+	nng_tls_config      *scfg = tls_server_config();
+	nng_tls_config      *ccfg = tls_client_config();
+	NUTS_OPEN(server);
+	NUTS_OPEN(stalled);
+	NUTS_OPEN(replacement);
+	dtls_deadline_init(&server_events, server);
+	dtls_deadline_init(&client_events, replacement);
+	NUTS_PASS(nng_aio_alloc(
+	    &client_events.aio, dtls_deadline_done, &client_events));
+	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_UDP_MAX_PEERS, 1));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	server_addr.s_in.sa_family = NNG_AF_INET;
+	server_addr.s_in.sa_addr   = nuts_be32(0x7f000001);
+	server_addr.s_in.sa_port   = nuts_be16(nng_url_port(url));
+	addr.s_in.sa_family        = NNG_AF_INET;
+	addr.s_in.sa_addr          = nuts_be32(0x7f000001);
+	NUTS_PASS(nng_udp_open(&udp, &addr));
+	NUTS_PASS(nng_udp_sockname(udp, &addr));
+	NUTS_PASS(nng_aio_alloc(&recv, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&send, NULL, NULL));
+	nng_aio_set_timeout(recv, DTLS_STRESS_TIMEOUT);
+	nng_aio_set_timeout(send, DTLS_STRESS_TIMEOUT);
+	snprintf(proxy_url, sizeof(proxy_url), "dtls4://127.0.0.1:%u",
+	    (unsigned) nuts_be16(addr.s_in.sa_port));
+	NUTS_PASS(nng_dialer_create(&d, stalled, proxy_url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
+	NUTS_PASS(nng_aio_set_iov(recv, 1, &iov));
+	NUTS_PASS(nng_aio_set_input(recv, 0, &from));
+	nng_udp_recv(udp, recv);
+	nng_aio_wait(recv);
+	NUTS_PASS(nng_aio_result(recv));
+	NUTS_TRUE(nng_aio_count(recv) >= 13);
+	NUTS_TRUE(buf[0] == 22); // ClientHello, not SP data
+	iov.iov_len = nng_aio_count(recv);
+	NUTS_PASS(nng_aio_set_iov(send, 1, &iov));
+	NUTS_PASS(nng_aio_set_input(send, 0, &server_addr));
+	uint64_t start = nuts_clock();
+	nng_udp_send(udp, send);
+	nng_aio_wait(send);
+	NUTS_PASS(nng_aio_result(send));
+	// The server's TLS response proves a half-open peer was allocated.
+	iov.iov_len = sizeof(buf);
+	NUTS_PASS(nng_aio_set_iov(recv, 1, &iov));
+	nng_udp_recv(udp, recv);
+	nng_aio_wait(recv);
+	NUTS_PASS(nng_aio_result(recv));
+	NUTS_TRUE(nng_sockaddr_equal(&from, &server_addr));
+	NUTS_CLOSE(stalled);
+	// Do not forward the TLS response or any further handshake traffic.
+	// The sole pending-peer slot must remain occupied until it expires.
+	NUTS_PASS(nng_dialer_create_url(&retry, replacement, url));
+	NUTS_PASS(nng_dialer_set_tls(retry, ccfg));
+	NUTS_PASS(nng_dialer_set_ms(retry, NNG_OPT_UDP_CONN_RETRY, 50));
+	NUTS_PASS(nng_dialer_set_ms(retry, NNG_OPT_UDP_CONN_EXPIRE, 100));
+	NUTS_PASS(nng_socket_set_ms(replacement, NNG_OPT_RECONNMINT, 100));
+	NUTS_PASS(nng_socket_set_ms(replacement, NNG_OPT_RECONNMAXT, 100));
+	nng_dialer_start_aio(retry, NNG_FLAG_NONBLOCK, client_events.aio);
+	bool blocked = dtls_deadline_wait(&client_events, 0, 0, true, 2000);
+	if (blocked) {
+		NUTS_FAIL(client_events.result, NNG_ETIMEDOUT);
+		NUTS_PASS(nng_dialer_close(retry));
+#ifdef NNG_ENABLE_STATS
+		// A pending peer gets the default 25-second negotiation
+		// deadline. TLS traffic alone must not keep it alive forever.
+		bool     expired = false;
+		nng_time until   = nng_clock() + 35000;
+		do {
+			nng_stat       *stats;
+			const nng_stat *listener, *inactive;
+			NUTS_PASS(nng_stats_get(&stats));
+			NUTS_ASSERT((listener = nng_stat_find_listener(
+			                 stats, l)) != NULL);
+			NUTS_ASSERT((inactive = nng_stat_find(
+			                 listener, "peer_inactive")) != NULL);
+			expired = nng_stat_value(inactive) != 0;
+			nng_stats_free(stats);
+			if (!expired) {
+				nng_msleep(50);
+			}
+		} while (!expired && nng_clock() < until);
+		NUTS_TRUE(expired);
+		NUTS_AFTER(start + 25000);
+#else
+		// Still verify slot recovery when statistics are disabled.
+		nng_msleep(25000);
+#endif
+		// A fresh dialer must be admitted after the half-open peer is
+		// reaped; allow time for TLS and asynchronous pipe cleanup.
+		NUTS_PASS(nng_dialer_create_url(&retry, replacement, url));
+		NUTS_PASS(nng_dialer_set_tls(retry, ccfg));
+		NUTS_PASS(
+		    nng_dialer_set_ms(retry, NNG_OPT_UDP_CONN_RETRY, 1000));
+		NUTS_PASS(
+		    nng_dialer_set_ms(retry, NNG_OPT_UDP_CONN_EXPIRE, 5000));
+		NUTS_PASS(nng_dialer_start(retry, NNG_FLAG_NONBLOCK));
+		if (dtls_deadline_wait(
+		        &server_events, 1, 0, false, DTLS_STRESS_TIMEOUT)) {
+			NUTS_TRUE(server_events.added_at >= start + 25000);
+		}
+		dtls_deadline_wait(&client_events, 1, 0, false, 2000);
+	}
+	NUTS_CLOSE(replacement);
+	NUTS_CLOSE(server);
+	dtls_deadline_fini(&client_events);
+	dtls_deadline_fini(&server_events);
+	nng_udp_close(udp);
+	nng_aio_free(recv);
+	nng_aio_free(send);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
 }
 
 void
@@ -951,6 +1293,9 @@ test_dtls_pipe_details(void)
 NUTS_TESTS = {
 
 	{ "dtls wire loss replay", test_dtls_wire_loss_replay },
+	{ "dtls negotiated expiry", test_dtls_negotiated_expiry },
+	{ "dtls expiry before retry", test_dtls_expiry_before_retry },
+	{ "dtls pending expiry", test_dtls_pending_expiry },
 	{ "dtls TLS 1.3 only", test_dtls_tls13_only },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
 	{ "dtls malformed address", test_dtls_malformed_address },
