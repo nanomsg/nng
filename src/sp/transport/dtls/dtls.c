@@ -191,6 +191,10 @@ struct dtls_ep {
 
 	size_t rx_size; // size of the rx buffer
 	void  *rx_buf;
+#ifdef NNG_TEST_LIB
+	// One-shot resolver callback gate: readiness AIO, then release AIO.
+	nni_aio **test_resolv_gate;
+#endif
 
 	nni_stat_item st_rcv_max;
 	nni_stat_item st_rcv_reorder;
@@ -1507,6 +1511,17 @@ dtls_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+#ifdef NNG_TEST_LIB
+void
+nni_dtls_test_resolv_gate(void *arg, nni_aio **gate)
+{
+	dtls_ep *ep = arg;
+	nni_mtx_lock(&ep->mtx);
+	ep->test_resolv_gate = gate;
+	nni_mtx_unlock(&ep->mtx);
+}
+#endif
+
 static void
 dtls_resolv_cb(void *arg)
 {
@@ -1516,6 +1531,16 @@ dtls_resolv_cb(void *arg)
 	nng_err    rv;
 
 	nni_mtx_lock(&ep->mtx);
+#ifdef NNG_TEST_LIB
+	if (ep->test_resolv_gate != NULL) {
+		nni_aio **gate       = ep->test_resolv_gate;
+		ep->test_resolv_gate = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish(gate[0], NNG_OK, 0);
+		nni_aio_wait(gate[1]);
+		nni_mtx_lock(&ep->mtx);
+	}
+#endif
 	if ((aio = nni_list_first(&ep->connaios)) == NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		return;
@@ -1620,6 +1645,9 @@ dtls_ep_connect(void *arg, nni_aio *aio)
 	// A receive callback can be running TLS outside the endpoint lock.
 	// Drain it before reusing its buffer and AIO with the new socket.
 	nni_aio_wait(&ep->rx_aio);
+	// Canceling an attempt does not drain its resolver callback. It
+	// must finish before a new connection AIO is visible to the callback.
+	nni_aio_wait(&ep->resaio);
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
