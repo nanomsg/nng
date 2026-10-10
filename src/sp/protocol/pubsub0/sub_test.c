@@ -605,6 +605,61 @@ test_sub_closed_socket(void)
 	NUTS_FAIL(nng_sub0_ctx_unsubscribe(c, NULL, 0), NNG_ECLOSED);
 }
 
+static void
+test_sub_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket      sub;
+	nng_socket      pub;
+	nng_stat       *stats;
+	const nng_stat *subs;
+	const nng_stat *st;
+
+	NUTS_PASS(nng_sub0_open(&sub));
+	NUTS_PASS(nng_pub0_open(&pub));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, NULL, 0));
+	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 2));
+	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
+	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 200));
+	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_buf_size")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 2);
+	nng_stats_free(stats);
+
+	NUTS_MARRY(pub, sub);
+
+	// Send 3 messages without reading -> 2 queued, 1 dropped (prefer_new is false)
+	NUTS_SEND(pub, "one");
+	NUTS_SEND(pub, "two");
+	NUTS_SEND(pub, "three");
+	NUTS_SLEEP(100);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_queued")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) >= 2);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_discard")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) >= 1);
+	nng_stats_free(stats);
+
+	// Drain the 2 queued messages
+	NUTS_RECV(sub, "one");
+	NUTS_RECV(sub, "two");
+
+	// Send 1 message while receiving synchronously
+	NUTS_SEND(pub, "four");
+	NUTS_RECV(sub, "four");
+
+	NUTS_CLOSE(pub);
+	NUTS_CLOSE(sub);
+#endif
+}
+
 TEST_LIST = {
 	{ "sub identity", test_sub_identity },
 	{ "sub cannot send", test_sub_cannot_send },
@@ -630,5 +685,6 @@ TEST_LIST = {
 	{ "sub cooked", test_sub_cooked },
 	{ "sub wrong protocol", test_sub_wrong_protocol },
 	{ "sub closed socket", test_sub_closed_socket },
+	{ "sub stats", test_sub_stats },
 	{ NULL, NULL },
 };
