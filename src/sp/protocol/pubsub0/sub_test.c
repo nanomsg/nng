@@ -618,6 +618,16 @@ test_sub_stats(void)
 
 	NUTS_PASS(nng_sub0_open(&sub));
 	NUTS_PASS(nng_pub0_open(&pub));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 0);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_nomatch")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 0);
+	nng_stats_free(stats);
+
 	NUTS_PASS(nng_sub0_socket_subscribe(sub, NULL, 0));
 	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 2));
 	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
@@ -628,6 +638,8 @@ test_sub_stats(void)
 	NUTS_PASS(nng_stats_get(&stats));
 	NUTS_TRUE(stats != NULL);
 	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
 	NUTS_TRUE((st = nng_stat_find(subs, "rx_buf_size")) != NULL);
 	NUTS_TRUE(nng_stat_value(st) == 2);
 	nng_stats_free(stats);
@@ -665,6 +677,48 @@ test_sub_stats(void)
 	NUTS_TRUE(stats != NULL);
 	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
 	NUTS_TRUE((st = nng_stat_find(subs, "rx_direct")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	// Test rx_nomatch and unsubscribe
+	NUTS_PASS(nng_sub0_socket_unsubscribe(sub, NULL, 0));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "prefix/", 7));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	NUTS_SEND(pub, "unmatched_data");
+	NUTS_SLEEP(100);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_nomatch")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	// Test multi-context subscription tracking
+	nng_ctx ctx;
+	NUTS_PASS(nng_ctx_open(&ctx, sub));
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "ctx_topic", 9));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 2);
+	nng_stats_free(stats);
+
+	nng_ctx_close(ctx);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
 	NUTS_TRUE(nng_stat_value(st) == 1);
 	nng_stats_free(stats);
 

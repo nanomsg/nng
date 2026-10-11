@@ -78,7 +78,10 @@ struct sub0_sock {
 	nni_stat_item stat_rx_direct;
 	nni_stat_item stat_rx_discard;
 	nni_stat_item stat_rx_queued;
+	nni_stat_item stat_rx_nomatch;
 	nni_stat_item stat_rx_bufsz;
+	nni_stat_item stat_subs;
+	size_t        num_subs;
 #endif
 };
 
@@ -169,6 +172,12 @@ sub0_ctx_fini(void *arg)
 	nni_mtx_lock(&sock->lk);
 	nni_list_remove(&sock->contexts, ctx);
 	sock->num_contexts--;
+#ifdef NNG_ENABLE_STATS
+	NNI_LIST_FOREACH (&ctx->topics, topic) {
+		sock->num_subs--;
+	}
+	nni_stat_set_value(&sock->stat_subs, sock->num_subs);
+#endif
 	nni_mtx_unlock(&sock->lk);
 
 	while ((topic = nni_list_first(&ctx->topics)) != 0) {
@@ -230,6 +239,7 @@ sub0_sock_init(void *arg, nni_sock *ns)
 	sub0_ctx_init(&sock->master, sock);
 
 #ifdef NNG_ENABLE_STATS
+	sock->num_subs = 0;
 	static const nni_stat_info rx_direct_info = {
 		.si_name = "rx_direct",
 		.si_desc = "messages received without queueing",
@@ -248,21 +258,37 @@ sub0_sock_init(void *arg, nni_sock *ns)
 		.si_type = NNG_STAT_COUNTER,
 		.si_unit = NNG_UNIT_MESSAGES,
 	};
+	static const nni_stat_info rx_nomatch_info = {
+		.si_name = "rx_nomatch",
+		.si_desc = "messages dropped (no matching subscription)",
+		.si_type = NNG_STAT_COUNTER,
+		.si_unit = NNG_UNIT_MESSAGES,
+	};
 	static const nni_stat_info rx_bufsz_info = {
 		.si_name = "rx_buf_size",
 		.si_desc = "socket buffer size for queued messages",
 		.si_type = NNG_STAT_LEVEL,
 		.si_unit = NNG_UNIT_MESSAGES,
 	};
+	static const nni_stat_info subs_info = {
+		.si_name = "subscriptions",
+		.si_desc = "total number of subscriptions",
+		.si_type = NNG_STAT_LEVEL,
+		.si_unit = NNG_UNIT_NONE,
+	};
 
 	nni_stat_init(&sock->stat_rx_direct, &rx_direct_info);
 	nni_stat_init(&sock->stat_rx_discard, &rx_discard_info);
 	nni_stat_init(&sock->stat_rx_queued, &rx_queued_info);
+	nni_stat_init(&sock->stat_rx_nomatch, &rx_nomatch_info);
 	nni_stat_init(&sock->stat_rx_bufsz, &rx_bufsz_info);
+	nni_stat_init(&sock->stat_subs, &subs_info);
 	nni_sock_add_stat(ns, &sock->stat_rx_direct);
 	nni_sock_add_stat(ns, &sock->stat_rx_discard);
 	nni_sock_add_stat(ns, &sock->stat_rx_queued);
+	nni_sock_add_stat(ns, &sock->stat_rx_nomatch);
 	nni_sock_add_stat(ns, &sock->stat_rx_bufsz);
+	nni_sock_add_stat(ns, &sock->stat_subs);
 	nni_stat_set_value(&sock->stat_rx_bufsz, sock->recv_buf_len);
 #endif
 }
@@ -382,9 +408,11 @@ sub0_recv_cb(void *arg)
 
 	nni_mtx_lock(&sock->lk);
 #ifdef NNG_ENABLE_STATS
-	int dropped = 0;
-	int direct  = 0;
-	int queued  = 0;
+	int  dropped = 0;
+	int  direct  = 0;
+	int  queued  = 0;
+	int  nomatch = 0;
+	bool matched = false;
 #endif
 	// Go through all contexts.  We will try to send up.
 	NNI_LIST_FOREACH (&sock->contexts, ctx) {
@@ -393,6 +421,9 @@ sub0_recv_cb(void *arg)
 		if (!sub0_matches(ctx, body, len)) {
 			continue;
 		}
+#ifdef NNG_ENABLE_STATS
+		matched = true;
+#endif
 
 		if (nni_lmq_full(&ctx->lmq) && !ctx->prefer_new) {
 			// Cannot deliver here, as receive buffer is full.
@@ -451,9 +482,13 @@ sub0_recv_cb(void *arg)
 		}
 	}
 #ifdef NNG_ENABLE_STATS
+	if (!matched) {
+		nomatch++;
+	}
 	nni_stat_inc(&sock->stat_rx_discard, dropped);
 	nni_stat_inc(&sock->stat_rx_queued, queued);
 	nni_stat_inc(&sock->stat_rx_direct, direct);
+	nni_stat_inc(&sock->stat_rx_nomatch, nomatch);
 #endif
 	nni_mtx_unlock(&sock->lk);
 
@@ -552,6 +587,10 @@ sub0_ctx_subscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 	}
 	new_topic->len = sz;
 	nni_list_append(&ctx->topics, new_topic);
+#ifdef NNG_ENABLE_STATS
+	sock->num_subs++;
+	nni_stat_set_value(&sock->stat_subs, sock->num_subs);
+#endif
 	nni_mtx_unlock(&sock->lk);
 	return (NNG_OK);
 }
@@ -578,6 +617,10 @@ sub0_ctx_unsubscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 		return (NNG_ENOENT);
 	}
 	nni_list_remove(&ctx->topics, topic);
+#ifdef NNG_ENABLE_STATS
+	sock->num_subs--;
+	nni_stat_set_value(&sock->stat_subs, sock->num_subs);
+#endif
 
 	// Now we need to make sure that any messages that are waiting still
 	// match the subscription.  We basically just run through the queue
