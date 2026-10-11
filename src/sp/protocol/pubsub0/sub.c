@@ -72,6 +72,17 @@ struct sub0_sock {
 	size_t       recv_buf_len;
 	bool         prefer_new;
 	nni_mtx      lk;
+	nni_sock    *sock;
+
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_rx_direct;
+	nni_stat_item stat_rx_discard;
+	nni_stat_item stat_rx_queued;
+	nni_stat_item stat_rx_nomatch;
+	nni_stat_item stat_rx_bufsz;
+	nni_stat_item stat_subs;
+	size_t        num_subs;
+#endif
 };
 
 // sub0_pipe is our per-pipe protocol private structure.
@@ -161,6 +172,12 @@ sub0_ctx_fini(void *arg)
 	nni_mtx_lock(&sock->lk);
 	nni_list_remove(&sock->contexts, ctx);
 	sock->num_contexts--;
+#ifdef NNG_ENABLE_STATS
+	NNI_LIST_FOREACH (&ctx->topics, topic) {
+		sock->num_subs--;
+	}
+	nni_stat_set_value(&sock->stat_subs, sock->num_subs);
+#endif
 	nni_mtx_unlock(&sock->lk);
 
 	while ((topic = nni_list_first(&ctx->topics)) != 0) {
@@ -208,19 +225,72 @@ sub0_sock_fini(void *arg)
 }
 
 static void
-sub0_sock_init(void *arg, nni_sock *unused)
+sub0_sock_init(void *arg, nni_sock *ns)
 {
 	sub0_sock *sock = arg;
-
-	NNI_ARG_UNUSED(unused);
 
 	NNI_LIST_INIT(&sock->contexts, sub0_ctx, node);
 	nni_mtx_init(&sock->lk);
 	sock->recv_buf_len = SUB0_DEFAULT_RECV_BUF_LEN;
 	sock->prefer_new   = SUB0_DEFAULT_PREFER_NEW;
+	sock->sock         = ns;
 	nni_pollable_init(&sock->readable);
 
 	sub0_ctx_init(&sock->master, sock);
+
+#ifdef NNG_ENABLE_STATS
+	sock->num_subs = 0;
+	static const nni_stat_info rx_direct_info = {
+		.si_name = "rx_direct",
+		.si_desc = "messages received without queueing",
+		.si_type = NNG_STAT_COUNTER,
+		.si_unit = NNG_UNIT_MESSAGES,
+	};
+	static const nni_stat_info rx_discard_info = {
+		.si_name = "rx_discard",
+		.si_desc = "messages dropped (queue full)",
+		.si_type = NNG_STAT_COUNTER,
+		.si_unit = NNG_UNIT_MESSAGES,
+	};
+	static const nni_stat_info rx_queued_info = {
+		.si_name = "rx_queued",
+		.si_desc = "messages queued",
+		.si_type = NNG_STAT_COUNTER,
+		.si_unit = NNG_UNIT_MESSAGES,
+	};
+	static const nni_stat_info rx_nomatch_info = {
+		.si_name = "rx_nomatch",
+		.si_desc = "messages dropped (no matching subscription)",
+		.si_type = NNG_STAT_COUNTER,
+		.si_unit = NNG_UNIT_MESSAGES,
+	};
+	static const nni_stat_info rx_bufsz_info = {
+		.si_name = "rx_buf_size",
+		.si_desc = "socket buffer size for queued messages",
+		.si_type = NNG_STAT_LEVEL,
+		.si_unit = NNG_UNIT_MESSAGES,
+	};
+	static const nni_stat_info subs_info = {
+		.si_name = "subscriptions",
+		.si_desc = "total number of subscriptions",
+		.si_type = NNG_STAT_LEVEL,
+		.si_unit = NNG_UNIT_NONE,
+	};
+
+	nni_stat_init(&sock->stat_rx_direct, &rx_direct_info);
+	nni_stat_init(&sock->stat_rx_discard, &rx_discard_info);
+	nni_stat_init(&sock->stat_rx_queued, &rx_queued_info);
+	nni_stat_init(&sock->stat_rx_nomatch, &rx_nomatch_info);
+	nni_stat_init(&sock->stat_rx_bufsz, &rx_bufsz_info);
+	nni_stat_init(&sock->stat_subs, &subs_info);
+	nni_sock_add_stat(ns, &sock->stat_rx_direct);
+	nni_sock_add_stat(ns, &sock->stat_rx_discard);
+	nni_sock_add_stat(ns, &sock->stat_rx_queued);
+	nni_sock_add_stat(ns, &sock->stat_rx_nomatch);
+	nni_sock_add_stat(ns, &sock->stat_rx_bufsz);
+	nni_sock_add_stat(ns, &sock->stat_subs);
+	nni_stat_set_value(&sock->stat_rx_bufsz, sock->recv_buf_len);
+#endif
 }
 
 static void
@@ -337,16 +407,29 @@ sub0_recv_cb(void *arg)
 	dup_msg = NULL;
 
 	nni_mtx_lock(&sock->lk);
+#ifdef NNG_ENABLE_STATS
+	int  dropped = 0;
+	int  direct  = 0;
+	int  queued  = 0;
+	int  nomatch = 0;
+	bool matched = false;
+#endif
 	// Go through all contexts.  We will try to send up.
 	NNI_LIST_FOREACH (&sock->contexts, ctx) {
-		bool queued = false;
+		bool was_queued = false;
+
+		if (!sub0_matches(ctx, body, len)) {
+			continue;
+		}
+#ifdef NNG_ENABLE_STATS
+		matched = true;
+#endif
 
 		if (nni_lmq_full(&ctx->lmq) && !ctx->prefer_new) {
 			// Cannot deliver here, as receive buffer is full.
-			continue;
-		}
-
-		if (!sub0_matches(ctx, body, len)) {
+#ifdef NNG_ENABLE_STATS
+			dropped++;
+#endif
 			continue;
 		}
 
@@ -371,6 +454,9 @@ sub0_recv_cb(void *arg)
 
 			// Save for synchronous completion
 			nni_aio_completions_add(&finish, aio, 0, len);
+#ifdef NNG_ENABLE_STATS
+			direct++;
+#endif
 		} else if (nni_lmq_full(&ctx->lmq)) {
 			// Make space for the new message.
 			nni_msg *old;
@@ -378,16 +464,32 @@ sub0_recv_cb(void *arg)
 			nni_msg_free(old);
 
 			(void) nni_lmq_put(&ctx->lmq, dup_msg);
-			queued = true;
+			was_queued = true;
+#ifdef NNG_ENABLE_STATS
+			dropped++;
+			queued++;
+#endif
 
 		} else {
 			(void) nni_lmq_put(&ctx->lmq, dup_msg);
-			queued = true;
+			was_queued = true;
+#ifdef NNG_ENABLE_STATS
+			queued++;
+#endif
 		}
-		if (queued && ctx == &sock->master) {
+		if (was_queued && ctx == &sock->master) {
 			nni_pollable_raise(&sock->readable);
 		}
 	}
+#ifdef NNG_ENABLE_STATS
+	if (!matched) {
+		nomatch++;
+	}
+	nni_stat_inc(&sock->stat_rx_discard, dropped);
+	nni_stat_inc(&sock->stat_rx_queued, queued);
+	nni_stat_inc(&sock->stat_rx_direct, direct);
+	nni_stat_inc(&sock->stat_rx_nomatch, nomatch);
+#endif
 	nni_mtx_unlock(&sock->lk);
 
 	// NB: This is slightly less efficient in that we may have
@@ -440,6 +542,9 @@ sub0_ctx_set_recv_buf_len(void *arg, const void *buf, size_t sz, nni_type t)
 	// any new contexts. (Previously constructed contexts are unaffected.)
 	if (&sock->master == ctx) {
 		sock->recv_buf_len = (size_t) val;
+#ifdef NNG_ENABLE_STATS
+		nni_stat_set_value(&sock->stat_rx_bufsz, sock->recv_buf_len);
+#endif
 	}
 	nni_mtx_unlock(&sock->lk);
 	return (NNG_OK);
@@ -482,6 +587,10 @@ sub0_ctx_subscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 	}
 	new_topic->len = sz;
 	nni_list_append(&ctx->topics, new_topic);
+#ifdef NNG_ENABLE_STATS
+	sock->num_subs++;
+	nni_stat_set_value(&sock->stat_subs, sock->num_subs);
+#endif
 	nni_mtx_unlock(&sock->lk);
 	return (NNG_OK);
 }
@@ -508,6 +617,10 @@ sub0_ctx_unsubscribe(sub0_ctx *ctx, const void *buf, size_t sz)
 		return (NNG_ENOENT);
 	}
 	nni_list_remove(&ctx->topics, topic);
+#ifdef NNG_ENABLE_STATS
+	sock->num_subs--;
+	nni_stat_set_value(&sock->stat_subs, sock->num_subs);
+#endif
 
 	// Now we need to make sure that any messages that are waiting still
 	// match the subscription.  We basically just run through the queue
