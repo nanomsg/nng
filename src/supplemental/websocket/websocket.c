@@ -139,6 +139,9 @@ struct nni_ws_listener {
 	size_t              maxframe;
 	size_t              fragsize;
 	size_t              recvmax; // largest message size
+#ifdef NNG_TEST_LIB
+	nni_aio *test_stop_wait;
+#endif
 };
 
 // The dialer tracks user aios in two lists. The first list is for aios
@@ -1341,7 +1344,11 @@ ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 
 	nni_mtx_lock(&l->mtx);
 	nni_list_remove(&l->reply, ws);
-	if (nni_aio_result(aio) != 0) {
+	// Wake shutdown waiters on error as well as successful completion.
+	if (nni_list_empty(&l->reply)) {
+		nni_cv_wake(&l->cv);
+	}
+	if ((nni_aio_result(aio) != 0) || l->closed) {
 		nni_mtx_unlock(&l->mtx);
 		ws_reap(ws);
 		return;
@@ -1353,9 +1360,6 @@ ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 		nni_aio_finish(aio, 0, 0);
 	} else {
 		nni_list_append(&l->pend, ws);
-	}
-	if (nni_list_empty(&l->reply)) {
-		nni_cv_wake(&l->cv);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
@@ -1557,6 +1561,12 @@ ws_listener_stop(void *arg)
 
 	nni_mtx_lock(&l->mtx);
 	while (!nni_list_empty(&l->reply)) {
+#ifdef NNG_TEST_LIB
+		if (l->test_stop_wait != NULL) {
+			nni_aio_finish(l->test_stop_wait, NNG_OK, 0);
+			l->test_stop_wait = NULL;
+		}
+#endif
 		nni_cv_wait(&l->cv);
 	}
 	h          = l->handler;
@@ -1808,6 +1818,7 @@ ws_listener_close(void *arg)
 {
 	nni_ws_listener *l = arg;
 	nni_ws          *ws;
+	nni_aio         *aio;
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
 		nni_mtx_unlock(&l->mtx);
@@ -1819,14 +1830,66 @@ ws_listener_close(void *arg)
 		nni_http_server_close(l->server);
 		l->started = false;
 	}
-	NNI_LIST_FOREACH (&l->pend, ws) {
+	while ((aio = nni_list_first(&l->aios)) != NULL) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
+	while ((ws = nni_list_first(&l->pend)) != NULL) {
+		nni_list_remove(&l->pend, ws);
 		ws_close_error(ws, WS_CLOSE_GOING_AWAY);
+		ws_reap(ws);
 	}
 	NNI_LIST_FOREACH (&l->reply, ws) {
 		ws_close_error(ws, WS_CLOSE_GOING_AWAY);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
+
+#ifdef NNG_TEST_LIB
+// Queue a controlled connection without an HTTP handshake. The listener owns
+// the stream. The test explicitly completes an active reply AIO.
+nng_err
+nni_ws_test_listener_queue(nng_stream_listener *listener, nng_stream *stream,
+    bool replying, nni_aio *waiting, nni_aio **reply)
+{
+	nni_ws_listener *l = (void *) listener;
+	nni_ws          *ws;
+	nng_err          rv;
+
+	if ((rv = ws_init(&ws)) != NNG_OK) {
+		return (rv);
+	}
+	ws->stream   = stream;
+	ws->server   = true;
+	ws->isstream = true;
+	ws->listener = l;
+	ws->ready    = !replying;
+	nni_mtx_lock(&l->mtx);
+	if (replying) {
+		nni_aio_set_timeout(&ws->httpaio, NNG_DURATION_INFINITE);
+		bool started = nni_aio_start(&ws->httpaio, NULL, NULL);
+		NNI_ASSERT(started);
+		NNI_ARG_UNUSED(started);
+		*reply            = &ws->httpaio;
+		l->test_stop_wait = waiting;
+		nni_list_append(&l->reply, ws);
+	} else {
+		nni_list_append(&l->pend, ws);
+	}
+	nni_mtx_unlock(&l->mtx);
+	return (NNG_OK);
+}
+
+// Allow a failed regression to release a shutdown waiter before cleanup.
+void
+nni_ws_test_listener_wake(nng_stream_listener *listener)
+{
+	nni_ws_listener *l = (void *) listener;
+	nni_mtx_lock(&l->mtx);
+	nni_cv_wake(&l->cv);
+	nni_mtx_unlock(&l->mtx);
+}
+#endif
 
 // XXX: Consider replacing this with an option.
 void
