@@ -38,6 +38,9 @@ extern nng_err nni_ws_dialer_alloc(nng_stream_dialer **, const nng_url *);
 // Wrap a controlled transport without an HTTP handshake for unit tests.
 // On success, the WebSocket owns the supplied stream.
 extern nng_err nni_ws_test_stream_alloc(nng_stream **, nng_stream *);
+extern nng_err nni_ws_test_listener_queue(
+    nng_stream_listener *, nng_stream *, bool, nni_aio *, nni_aio **);
+extern void nni_ws_test_listener_wake(nng_stream_listener *);
 #endif
 
 #endif // NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H

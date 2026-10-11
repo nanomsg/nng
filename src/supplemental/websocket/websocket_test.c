@@ -813,6 +813,175 @@ test_pending_addr(void *arg)
 }
 
 static void
+test_pending_init(test_pending_stream *transport)
+{
+	transport->ops.s_send      = test_pending_send;
+	transport->ops.s_close     = test_pending_close;
+	transport->ops.s_free      = test_pending_free;
+	transport->ops.s_stop      = test_pending_stop;
+	transport->ops.s_recv      = test_pending_recv;
+	transport->ops.s_self_addr = test_pending_addr;
+	transport->ops.s_peer_addr = test_pending_addr;
+}
+
+static void
+test_websocket_listener_pending_cleanup(void)
+{
+	test_pending_stream  transport = { 0 };
+	nng_stream_listener *listener;
+
+	test_pending_init(&transport);
+	NUTS_PASS(nng_stream_listener_alloc(&listener, "ws://127.0.0.1:0"));
+	NUTS_PASS(nni_ws_test_listener_queue(
+	    listener, &transport.ops, false, NULL, NULL));
+	nng_stream_listener_close(listener);
+	// Closing twice must not reap twice.
+	nng_stream_listener_close(listener);
+	nng_stream_listener_free(listener);
+	nni_reap_sys_drain();
+	// Closing a stream is idempotent; physical-write failure may close it
+	// again, but listener-owned destruction must happen exactly once.
+	NUTS_TRUE(transport.closes >= 1);
+	NUTS_TRUE(transport.frees == 1);
+}
+
+typedef struct {
+	nng_stream_listener *listener;
+	nng_mtx             *mtx;
+	nng_cv              *cv;
+	bool                 waiting;
+	bool                 stopped;
+} test_listener_stop;
+
+static void
+test_listener_waiting(void *arg)
+{
+	test_listener_stop *state = arg;
+	nng_mtx_lock(state->mtx);
+	state->waiting = true;
+	nng_cv_wake(state->cv);
+	nng_mtx_unlock(state->mtx);
+}
+
+static void
+test_listener_stop_run(void *arg)
+{
+	test_listener_stop *state = arg;
+	nng_stream_listener_stop(state->listener);
+	nng_mtx_lock(state->mtx);
+	state->stopped = true;
+	nng_cv_wake(state->cv);
+	nng_mtx_unlock(state->mtx);
+}
+
+static void
+test_websocket_listener_reply_cleanup(nng_err result)
+{
+	test_pending_stream transport = { 0 };
+	test_listener_stop  state     = { 0 };
+	nng_aio            *waiting, *reply;
+	nng_thread         *thread;
+	nng_time            until;
+
+	test_pending_init(&transport);
+	NUTS_PASS(nng_mtx_alloc(&state.mtx));
+	NUTS_PASS(nng_cv_alloc(&state.cv, state.mtx));
+	NUTS_PASS(nng_aio_alloc(&waiting, test_listener_waiting, &state));
+	NUTS_PASS(
+	    nng_stream_listener_alloc(&state.listener, "ws://127.0.0.1:0"));
+	NUTS_PASS(nni_ws_test_listener_queue(
+	    state.listener, &transport.ops, true, waiting, &reply));
+	// Leave the upgrade response active while shutdown begins. The
+	// readiness callback proves stop reached its reply-queue wait.
+	NUTS_PASS(nng_thread_create(&thread, test_listener_stop_run, &state));
+	nng_mtx_lock(state.mtx);
+	until = nng_clock() + 5000;
+	while (!state.waiting && nng_cv_until(state.cv, until) == NNG_OK) { }
+	NUTS_TRUE(state.waiting);
+	NUTS_TRUE(!state.stopped);
+	nng_mtx_unlock(state.mtx);
+	nni_aio_finish(reply, result, 0);
+	// Do not access reply again: its callback can reap the WebSocket.
+	nng_mtx_lock(state.mtx);
+	until = nng_clock() + 5000;
+	while (!state.stopped && nng_cv_until(state.cv, until) == NNG_OK) { }
+	NUTS_TRUE(state.stopped);
+	nng_mtx_unlock(state.mtx);
+	// A missing callback wake must fail the test, not hang cleanup.
+	nni_ws_test_listener_wake(state.listener);
+	nng_thread_destroy(thread);
+	nng_stream_listener_free(state.listener);
+	nni_reap_sys_drain();
+	NUTS_TRUE(transport.frees == 1);
+	nng_aio_free(waiting);
+	nng_cv_free(state.cv);
+	nng_mtx_free(state.mtx);
+}
+
+static void
+test_websocket_listener_reply_success(void)
+{
+	test_websocket_listener_reply_cleanup(NNG_OK);
+}
+
+static void
+test_websocket_listener_reply_error(void)
+{
+	test_websocket_listener_reply_cleanup(NNG_ECONNRESET);
+}
+
+static void
+test_websocket_listener_close_accept(void)
+{
+	nng_stream_listener *listener;
+	nng_aio             *accept;
+
+	NUTS_PASS(nng_aio_alloc(&accept, NULL, NULL));
+	nng_aio_set_timeout(accept, 5000);
+	NUTS_PASS(nng_stream_listener_alloc(&listener, "ws://127.0.0.1:0"));
+	NUTS_PASS(nng_stream_listener_listen(listener));
+	nng_stream_listener_accept(listener, accept);
+	nng_stream_listener_close(listener);
+	nng_aio_wait(accept);
+	NUTS_FAIL(nng_aio_result(accept), NNG_ECLOSED);
+	nng_stream_listener_accept(listener, accept);
+	nng_aio_wait(accept);
+	NUTS_FAIL(nng_aio_result(accept), NNG_ECLOSED);
+	nng_stream_listener_free(listener);
+	nng_aio_free(accept);
+}
+
+static void
+test_websocket_listener_unaccepted(void)
+{
+	nng_stream_listener *listener;
+	nng_stream_dialer   *dialer;
+	nng_aio             *dial;
+	char                 url[128];
+	int                  port;
+
+	NUTS_PASS(nng_stream_listener_alloc(&listener, "ws://127.0.0.1:0"));
+	NUTS_PASS(nng_stream_listener_listen(listener));
+	NUTS_PASS(
+	    nng_stream_listener_get_int(listener, NNG_OPT_BOUND_PORT, &port));
+	(void) snprintf(url, sizeof(url), "ws://127.0.0.1:%d", port);
+	NUTS_PASS(nng_stream_dialer_alloc(&dialer, url));
+	NUTS_PASS(nng_aio_alloc(&dial, NULL, NULL));
+	nng_aio_set_timeout(dial, 5000);
+	// Complete a real HTTP upgrade without ever accepting its server end.
+	nng_stream_dialer_dial(dialer, dial);
+	nng_aio_wait(dial);
+	NUTS_PASS(nng_aio_result(dial));
+	nng_stream_listener_free(listener);
+	if (nng_aio_result(dial) == NNG_OK) {
+		nng_stream_free(nng_aio_get_output(dial, 0));
+	}
+	nng_stream_dialer_free(dialer);
+	nng_aio_free(dial);
+	nni_reap_sys_drain();
+}
+
+static void
 test_websocket_send_cancel_cleanup(void)
 {
 	test_pending_stream transport = { 0 };
@@ -821,13 +990,7 @@ test_websocket_send_cancel_cleanup(void)
 	uint8_t             buf[256] = { 0 };
 	nng_iov             iov = { .iov_buf = buf, .iov_len = sizeof(buf) };
 
-	transport.ops.s_send      = test_pending_send;
-	transport.ops.s_close     = test_pending_close;
-	transport.ops.s_free      = test_pending_free;
-	transport.ops.s_stop      = test_pending_stop;
-	transport.ops.s_recv      = test_pending_recv;
-	transport.ops.s_self_addr = test_pending_addr;
-	transport.ops.s_peer_addr = test_pending_addr;
+	test_pending_init(&transport);
 	NUTS_PASS(nni_ws_test_stream_alloc(&sender, &transport.ops));
 	NUTS_PASS(nng_aio_alloc(&send, NULL, NULL));
 	NUTS_PASS(nng_aio_set_iov(send, 1, &iov));
@@ -862,5 +1025,15 @@ NUTS_TESTS = {
 	{ "websocket frame limit", test_websocket_frame_limit },
 	{ "websocket send cancel cleanup",
 	    test_websocket_send_cancel_cleanup },
+	{ "websocket listener pending cleanup",
+	    test_websocket_listener_pending_cleanup },
+	{ "websocket listener reply after close",
+	    test_websocket_listener_reply_success },
+	{ "websocket listener failed reply wake",
+	    test_websocket_listener_reply_error },
+	{ "websocket listener close accept",
+	    test_websocket_listener_close_accept },
+	{ "websocket listener unaccepted upgrade",
+	    test_websocket_listener_unaccepted },
 	{ NULL, NULL },
 };
