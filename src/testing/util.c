@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -504,7 +504,7 @@ nuts_tran_msg_props(const char *scheme, void (*check)(nng_msg *))
 	const nng_url *url;
 
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
-	NUTS_ADDR(addr, scheme);
+	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
