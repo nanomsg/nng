@@ -959,8 +959,11 @@ test_websocket_listener_unaccepted(void)
 	nng_aio             *dial;
 	char                 url[128];
 	int                  port;
+	nni_atomic_int       freed;
 
+	nni_atomic_init(&freed);
 	NUTS_PASS(nng_stream_listener_alloc(&listener, "ws://127.0.0.1:0"));
+	nni_ws_test_listener_free_count(listener, &freed);
 	NUTS_PASS(nng_stream_listener_listen(listener));
 	NUTS_PASS(
 	    nng_stream_listener_get_int(listener, NNG_OPT_BOUND_PORT, &port));
@@ -972,7 +975,19 @@ test_websocket_listener_unaccepted(void)
 	nng_stream_dialer_dial(dialer, dial);
 	nng_aio_wait(dial);
 	NUTS_PASS(nng_aio_result(dial));
+	// The dial can complete before the server's response callback queues
+	// its WebSocket. Ensure we exercise pending-list cleanup, not merely
+	// rejection of a late response after listener closure.
+	nng_time until = nng_clock() + 5000;
+	while (!nni_ws_test_listener_has_pending(listener) &&
+	    nng_clock() < until) {
+		nng_msleep(1);
+	}
+	NUTS_TRUE(nni_ws_test_listener_has_pending(listener));
+	NUTS_TRUE(nni_atomic_get(&freed) == 0);
 	nng_stream_listener_free(listener);
+	nni_reap_sys_drain();
+	NUTS_TRUE(nni_atomic_get(&freed) == 1);
 	if (nng_aio_result(dial) == NNG_OK) {
 		nng_stream_free(nng_aio_get_output(dial, 0));
 	}

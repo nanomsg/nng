@@ -41,6 +41,9 @@ extern nng_err nni_ws_test_stream_alloc(nng_stream **, nng_stream *);
 extern nng_err nni_ws_test_listener_queue(
     nng_stream_listener *, nng_stream *, bool, nni_aio *, nni_aio **);
 extern void nni_ws_test_listener_wake(nng_stream_listener *);
+extern void nni_ws_test_listener_free_count(
+    nng_stream_listener *, nni_atomic_int *);
+extern bool nni_ws_test_listener_has_pending(nng_stream_listener *);
 #endif
 
 #endif // NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H
