@@ -114,6 +114,9 @@ struct nni_ws {
 	const char *curhdrkey;
 	const char *curhdrval;
 	void       *nexthdr;
+#ifdef NNG_TEST_LIB
+	nni_atomic_int *test_free_count;
+#endif
 };
 
 struct nni_ws_listener {
@@ -140,7 +143,8 @@ struct nni_ws_listener {
 	size_t              fragsize;
 	size_t              recvmax; // largest message size
 #ifdef NNG_TEST_LIB
-	nni_aio *test_stop_wait;
+	nni_aio        *test_stop_wait;
+	nni_atomic_int *test_free_count;
 #endif
 };
 
@@ -1323,6 +1327,11 @@ ws_fini(void *arg)
 	nni_aio_fini(&ws->httpaio);
 	nni_aio_fini(&ws->connaio);
 	nni_mtx_fini(&ws->mtx);
+#ifdef NNG_TEST_LIB
+	if (ws->test_free_count != NULL) {
+		nni_atomic_inc(ws->test_free_count);
+	}
+#endif
 	NNI_FREE_STRUCT(ws);
 }
 
@@ -1751,6 +1760,9 @@ ws_handler(nng_http *conn, void *arg, nng_aio *aio)
 		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
 		goto err;
 	}
+#ifdef NNG_TEST_LIB
+	ws->test_free_count = l->test_free_count;
+#endif
 	nni_list_append(&l->reply, ws);
 	nng_http_write_response(conn, &ws->httpaio);
 	nni_aio_set_output(aio, 0, NULL);
@@ -1846,6 +1858,27 @@ ws_listener_close(void *arg)
 }
 
 #ifdef NNG_TEST_LIB
+// Count destruction of real upgraded WebSockets belonging to this listener.
+void
+nni_ws_test_listener_free_count(
+    nng_stream_listener *listener, nni_atomic_int *count)
+{
+	nni_ws_listener *l = (void *) listener;
+	nni_mtx_lock(&l->mtx);
+	l->test_free_count = count;
+	nni_mtx_unlock(&l->mtx);
+}
+
+bool
+nni_ws_test_listener_has_pending(nng_stream_listener *listener)
+{
+	nni_ws_listener *l = (void *) listener;
+	nni_mtx_lock(&l->mtx);
+	bool pending = !nni_list_empty(&l->pend);
+	nni_mtx_unlock(&l->mtx);
+	return (pending);
+}
+
 // Queue a controlled connection without an HTTP handshake. The listener owns
 // the stream. The test explicitly completes an active reply AIO.
 nng_err
