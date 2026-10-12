@@ -120,6 +120,8 @@ extern void nni_tls_stop(nni_tls_conn *conn);
 extern void nni_tls_close(nni_tls_conn *conn);
 extern void nni_tls_recv(nni_tls_conn *conn, nni_aio *aio);
 extern void nni_tls_send(nni_tls_conn *conn, nni_aio *aio);
+// Ciphertext can remain queued after an upper-layer send completes.
+extern bool nni_tls_send_pending(nni_tls_conn *conn);
 extern bool nni_tls_verified(nni_tls_conn *conn);
 extern const char *nni_tls_peer_cn(nni_tls_conn *conn);
 extern nng_err     nni_tls_peer_cert(nni_tls_conn *conn, nng_tls_cert **certp);

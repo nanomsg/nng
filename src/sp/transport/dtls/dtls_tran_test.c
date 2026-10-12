@@ -18,6 +18,8 @@
 
 // Test-library-only hook for controlling resolver callback completion.
 extern void nni_dtls_test_resolv_gate(void *, nni_aio **);
+extern nng_err nni_dtls_test_send_gate(
+    void *, nng_pipe, nni_aio **, nni_aio *, bool *);
 
 #ifndef _WIN32
 #include <arpa/inet.h>
@@ -562,16 +564,47 @@ test_dtls_retry_before_reap(void)
 	test_dtls_retry(false, true);
 }
 
+typedef struct {
+	nng_mtx *mtx;
+	nng_cv  *cv;
+	unsigned ready;
+} dtls_close_events;
+
 static void
-test_dtls_reconnect(void)
+dtls_close_ready(void *arg)
+{
+	dtls_close_events *events = arg;
+	nng_mtx_lock(events->mtx);
+	events->ready++;
+	nng_cv_wake(events->cv);
+	nng_mtx_unlock(events->mtx);
+}
+
+static void
+dtls_close_wait(dtls_close_events *events, unsigned ready)
+{
+	nng_time until = nng_clock() + DTLS_STRESS_TIMEOUT;
+	nng_mtx_lock(events->mtx);
+	while (events->ready < ready &&
+	    nng_cv_until(events->cv, until) == NNG_OK) { }
+	NUTS_TRUE(events->ready == ready);
+	nng_mtx_unlock(events->mtx);
+}
+
+static void
+test_dtls_reconnect_case(bool delay_send, bool expire)
 {
 	nng_socket           server, client;
 	nng_listener         l;
 	nng_dialer           d;
 	dtls_deadline_events server_events, client_events;
 	const nng_url       *url;
-	nng_tls_config      *scfg = tls_server_config();
-	nng_tls_config      *ccfg = tls_client_config();
+	nni_listener        *listener     = NULL;
+	dtls_close_events    close_events = { 0 };
+	nng_aio             *gate[2]      = { NULL, NULL };
+	nng_aio             *stopping     = NULL;
+	nng_tls_config      *scfg         = tls_server_config();
+	nng_tls_config      *ccfg         = tls_client_config();
 	NUTS_OPEN(server);
 	NUTS_OPEN(client);
 	dtls_deadline_init(&server_events, server);
@@ -594,27 +627,100 @@ test_dtls_reconnect(void)
 		nng_mtx_lock(server_events.mtx);
 		nng_pipe pipe = server_events.pipe;
 		nng_mtx_unlock(server_events.mtx);
-		NUTS_PASS(nng_pipe_close(pipe));
-		connected = dtls_deadline_wait(
-		    &server_events, 2, 1, false, DTLS_STRESS_TIMEOUT);
-		connected = dtls_deadline_wait(&client_events, 2, 1, false,
-		                DTLS_STRESS_TIMEOUT) &&
-		    connected;
-		if (connected) {
+		if (delay_send) {
+			NUTS_PASS(nni_listener_find(
+			    &listener, (uint32_t) nng_listener_id(l)));
+			NUTS_PASS(nng_mtx_alloc(&close_events.mtx));
+			NUTS_PASS(
+			    nng_cv_alloc(&close_events.cv, close_events.mtx));
+			NUTS_PASS(nng_aio_alloc(
+			    &gate[0], dtls_close_ready, &close_events));
+			NUTS_PASS(nng_aio_alloc(&gate[1], NULL, NULL));
+			NUTS_PASS(nng_aio_alloc(
+			    &stopping, dtls_close_ready, &close_events));
+			NUTS_ASSERT(nni_aio_start(gate[1], NULL, NULL));
+			NUTS_PASS(nni_dtls_test_send_gate(
+			    listener->l_data, pipe, gate, stopping, NULL));
 			NUTS_PASS(nng_socket_set_ms(
-			    client, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+			    server, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
 			NUTS_PASS(nng_socket_set_ms(
-			    server, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
-			NUTS_SEND(client, "reconnected");
-			NUTS_RECV(server, "reconnected");
+			    client, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+			// The data reaches the client, but its TLS send
+			// callback remains held. Closing must queue DISC
+			// behind that send.
+			NUTS_SEND(server, "held send");
+			NUTS_RECV(client, "held send");
+			dtls_close_wait(&close_events, 1);
 		}
+		NUTS_PASS(nng_pipe_close(pipe));
+		if (delay_send) {
+			dtls_close_wait(&close_events, 2);
+			bool     closed = false;
+			nng_time until =
+			    nng_clock() + (expire ? DTLS_STRESS_TIMEOUT : 100);
+			do {
+				NUTS_PASS(
+				    nni_dtls_test_send_gate(listener->l_data,
+				        pipe, NULL, NULL, &closed));
+				if (closed) {
+					break;
+				}
+				nng_msleep(1);
+			} while (nng_clock() < until);
+			NUTS_TRUE(closed == expire);
+			connected = closed == expire;
+			nni_aio_finish(gate[1], NNG_OK, 0);
+		}
+		if (!expire && connected) {
+			connected = dtls_deadline_wait(
+			    &server_events, 2, 1, false, DTLS_STRESS_TIMEOUT);
+			connected = dtls_deadline_wait(&client_events, 2, 1,
+			                false, DTLS_STRESS_TIMEOUT) &&
+			    connected;
+			if (connected) {
+				NUTS_PASS(nng_socket_set_ms(client,
+				    NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+				NUTS_PASS(nng_socket_set_ms(server,
+				    NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+				NUTS_SEND(client, "reconnected");
+				NUTS_RECV(server, "reconnected");
+			}
+		}
+	}
+	if (listener != NULL) {
+		nni_listener_rele(listener);
 	}
 	NUTS_CLOSE(client);
 	NUTS_CLOSE(server);
+	nng_aio_free(gate[0]);
+	nng_aio_free(gate[1]);
+	nng_aio_free(stopping);
+	if (close_events.cv != NULL) {
+		nng_cv_free(close_events.cv);
+		nng_mtx_free(close_events.mtx);
+	}
 	dtls_deadline_fini(&client_events);
 	dtls_deadline_fini(&server_events);
 	nng_tls_config_free(ccfg);
 	nng_tls_config_free(scfg);
+}
+
+static void
+test_dtls_reconnect(void)
+{
+	test_dtls_reconnect_case(false, false);
+}
+
+static void
+test_dtls_close_pending_send(void)
+{
+	test_dtls_reconnect_case(true, false);
+}
+
+static void
+test_dtls_close_linger_expiry(void)
+{
+	test_dtls_reconnect_case(true, true);
 }
 
 typedef struct {
@@ -1709,6 +1815,8 @@ NUTS_TESTS = {
 	{ "dtls retry before reap", test_dtls_retry_before_reap },
 	{ "dtls canceled resolver retry", test_dtls_canceled_resolver_retry },
 	{ "dtls reconnect", test_dtls_reconnect },
+	{ "dtls close pending send", test_dtls_close_pending_send },
+	{ "dtls close linger expiry", test_dtls_close_linger_expiry },
 	{ "dtls pending expiry", test_dtls_pending_expiry },
 	{ "dtls TLS 1.3 only", test_dtls_tls13_only },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },

@@ -14,6 +14,29 @@
 
 #include "../../testing/nuts.h"
 
+static void
+test_tls_send_pending(void)
+{
+	nni_tls_conn conn = { 0 };
+	nng_msg     *msg;
+	nni_mtx_init(&conn.bio_lock);
+	nni_lmq_init(&conn.bio_send_lmq, 2);
+	NUTS_TRUE(!nni_tls_send_pending(&conn));
+	conn.bio_send_active = true;
+	NUTS_TRUE(nni_tls_send_pending(&conn));
+	conn.bio_send_active = false;
+	conn.bio_send_len    = 1;
+	NUTS_TRUE(nni_tls_send_pending(&conn));
+	conn.bio_send_len = 0;
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nni_lmq_put(&conn.bio_send_lmq, msg));
+	NUTS_TRUE(nni_tls_send_pending(&conn));
+	nni_lmq_flush(&conn.bio_send_lmq);
+	NUTS_TRUE(!nni_tls_send_pending(&conn));
+	nni_lmq_fini(&conn.bio_send_lmq);
+	nni_mtx_fini(&conn.bio_lock);
+}
+
 void
 test_tls_datagram_truncation(void)
 {
@@ -859,6 +882,7 @@ test_tls_psk_config_busy(void)
 }
 
 TEST_LIST = {
+	{ "tls pending ciphertext send", test_tls_send_pending },
 	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },
 	{ "tls config single identity", test_tls_config_single_identity },

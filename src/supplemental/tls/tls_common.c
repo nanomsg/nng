@@ -108,6 +108,17 @@ nni_tls_recv(nni_tls_conn *conn, nni_aio *aio)
 	nni_mtx_unlock(&conn->lock);
 }
 
+bool
+nni_tls_send_pending(nni_tls_conn *conn)
+{
+	bool pending;
+	nni_mtx_lock(&conn->bio_lock);
+	pending = conn->bio_send_active || conn->bio_send_len != 0 ||
+	    !nni_lmq_empty(&conn->bio_send_lmq);
+	nni_mtx_unlock(&conn->bio_lock);
+	return (pending);
+}
+
 void
 nni_tls_close(nni_tls_conn *conn)
 {
