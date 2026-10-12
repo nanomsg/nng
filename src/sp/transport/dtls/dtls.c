@@ -147,6 +147,11 @@ struct dtls_pipe {
 	// buffers between the endpoint and the pipe to avoid copying.
 	nni_list rx_q; // lower aio from the TLS layer
 
+#ifdef NNG_TEST_LIB
+	nni_aio **test_send_gate;
+	nni_aio  *test_stop_ready;
+#endif
+	// Engine connection storage follows this member; keep it last.
 	nni_tls_conn tls;
 };
 
@@ -433,7 +438,9 @@ dtls_pipe_send_tls(dtls_pipe *p)
 	nng_iov      iov;
 	dtls_sp_hdr *hdr = (void *) p->send_buf;
 
-	if (p->send_busy || p->closed) {
+	// A queued disconnect must still be sent after closure, once any
+	// preceding TLS write finishes. Never send application data then.
+	if (p->send_busy || (p->closed && p->send_op != OPCODE_DISC)) {
 		return;
 	}
 
@@ -512,14 +519,21 @@ dtls_pipe_send_tls_cb(void *arg)
 {
 	dtls_pipe *p = arg;
 
+#ifdef NNG_TEST_LIB
+	nni_mtx_lock(&p->ep->mtx);
+	nni_aio **gate    = p->test_send_gate;
+	p->test_send_gate = NULL;
+	nni_mtx_unlock(&p->ep->mtx);
+	if (gate != NULL) {
+		nni_aio_finish(gate[0], NNG_OK, 0);
+		nni_aio_wait(gate[1]);
+	}
+#endif
 	nni_mtx_lock(&p->ep->mtx);
 
 	p->send_busy = false;
-	if (p->closed) {
-		nni_mtx_unlock(&p->ep->mtx);
-		return;
-	}
 	if (nni_aio_result(&p->send_tls_aio) != NNG_OK) {
+		p->send_op = OPCODE_DATA;
 		nni_pipe_close(p->npipe);
 		nni_mtx_unlock(&p->ep->mtx);
 		return;
@@ -784,15 +798,12 @@ dtls_pipe_close(void *arg)
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
-	if (p->matched) {
+	if (!p->closed && p->matched) {
 		p->send_op = OPCODE_DISC;
 		p->reason  = DISC_CLOSED;
 		dtls_pipe_send_tls(p);
 	}
 	p->closed = true;
-	nni_mtx_lock(&p->lower_mtx);
-	p->udp = NULL;
-	nni_mtx_unlock(&p->lower_mtx);
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -805,6 +816,29 @@ dtls_pipe_stop(void *arg)
 	dtls_ep   *ep = p->ep;
 
 	dtls_pipe_close(arg);
+
+	// TLS send completion only means ciphertext was queued. Give the
+	// disconnect (including one queued behind another write) a bounded
+	// chance to reach UDP before stopping TLS and canceling its BIO sends.
+	nni_time until = nni_clock() + NNI_SECOND / 2;
+	nni_mtx_lock(&ep->mtx);
+#ifdef NNG_TEST_LIB
+	if (p->test_stop_ready != NULL) {
+		nni_aio_finish(p->test_stop_ready, NNG_OK, 0);
+		p->test_stop_ready = NULL;
+	}
+#endif
+	while (p->matched && p->udp != NULL && nni_clock() < until &&
+	    (p->send_busy || p->send_op == OPCODE_DISC ||
+	        nni_tls_send_pending(&p->tls))) {
+		nni_mtx_unlock(&ep->mtx);
+		nng_msleep(1);
+		nni_mtx_lock(&ep->mtx);
+	}
+	nni_mtx_lock(&p->lower_mtx);
+	p->udp = NULL;
+	nni_mtx_unlock(&p->lower_mtx);
+	nni_mtx_unlock(&ep->mtx);
 
 	nni_tls_stop(&p->tls);
 
@@ -958,6 +992,48 @@ dtls_find_pipe(dtls_ep *ep, const nng_sockaddr *peer_addr)
 		}
 	}
 }
+
+#ifdef NNG_TEST_LIB
+// Control the upper TLS send callback independently of UDP completion.
+nng_err
+nni_dtls_test_send_gate(
+    void *arg, nng_pipe pipe, nni_aio **gate, nni_aio *stopping, bool *closed)
+{
+	dtls_ep   *ep = arg;
+	dtls_pipe *p;
+	uint32_t   cursor = 0;
+	nng_err    rv     = NNG_ENOENT;
+
+	nni_mtx_lock(&ep->mtx);
+	while (nni_id_visit(&ep->pipes, NULL, (void **) &p, &cursor)) {
+		if (nni_pipe_id(p->npipe) != (uint32_t) nng_pipe_id(pipe)) {
+			continue;
+		}
+		if (gate != NULL) {
+			// Do not accidentally hold the initial CACK callback
+			// instead of the application write selected by the test.
+			nni_pipe_hold(p->npipe);
+			nni_mtx_unlock(&ep->mtx);
+			nni_aio_wait(&p->send_tls_aio);
+			nni_mtx_lock(&ep->mtx);
+			p->test_send_gate  = gate;
+			p->test_stop_ready = stopping;
+			nni_mtx_unlock(&ep->mtx);
+			nni_pipe_rele(p->npipe);
+			return (NNG_OK);
+		}
+		if (closed != NULL) {
+			nni_mtx_lock(&p->tls.lock);
+			*closed = p->tls.closed;
+			nni_mtx_unlock(&p->tls.lock);
+		}
+		rv = NNG_OK;
+		break;
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+#endif
 
 static void
 dtls_remove_pipe(dtls_pipe *p)
