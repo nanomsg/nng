@@ -313,6 +313,14 @@ ipc_pipe_recv_cb(void *arg)
 		goto error;
 	}
 
+	// The pipe may have been closed while this callback was pending.
+	// ipc_pipe_close stops rx_aio, so a read submitted now would never
+	// complete, and the aios waiting in recv_q would never finish.
+	if (p->closed) {
+		rv = NNG_ECLOSED;
+		goto error;
+	}
+
 	n = nni_aio_count(rx_aio);
 	nni_aio_iov_advance(rx_aio, n);
 	if (nni_aio_iov_count(rx_aio) != 0) {
