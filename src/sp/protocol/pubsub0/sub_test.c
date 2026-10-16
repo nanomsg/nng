@@ -605,6 +605,129 @@ test_sub_closed_socket(void)
 	NUTS_FAIL(nng_sub0_ctx_unsubscribe(c, NULL, 0), NNG_ECLOSED);
 }
 
+static void
+test_sub_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket      sub;
+	nng_socket      pub;
+	nng_stat       *stats;
+	const nng_stat *subs;
+	const nng_stat *st;
+	nng_aio        *aio;
+
+	NUTS_PASS(nng_sub0_open(&sub));
+	NUTS_PASS(nng_pub0_open(&pub));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 0);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_nomatch")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 0);
+	nng_stats_free(stats);
+
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, NULL, 0));
+	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 2));
+	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
+	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 200));
+	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_buf_size")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 2);
+	nng_stats_free(stats);
+
+	NUTS_MARRY(pub, sub);
+
+	// Send 3 messages without reading -> 2 queued, 1 dropped (prefer_new is false)
+	NUTS_SEND(pub, "one");
+	NUTS_SEND(pub, "two");
+	NUTS_SEND(pub, "three");
+	NUTS_SLEEP(100);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_queued")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 2);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_discard")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	// Drain the 2 queued messages
+	NUTS_RECV(sub, "one");
+	NUTS_RECV(sub, "two");
+
+	// Start a pending receive on sub before sending to ensure direct delivery
+	nng_aio_set_timeout(aio, 1000);
+	nng_socket_recv(sub, aio);
+	NUTS_SEND(pub, "four");
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_msg_free(nng_aio_get_msg(aio));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_direct")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	// Test rx_nomatch and unsubscribe
+	NUTS_PASS(nng_sub0_socket_unsubscribe(sub, NULL, 0));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "prefix/", 7));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	NUTS_SEND(pub, "unmatched_data");
+	NUTS_SLEEP(100);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "rx_nomatch")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	// Test multi-context subscription tracking
+	nng_ctx ctx;
+	NUTS_PASS(nng_ctx_open(&ctx, sub));
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "ctx_topic", 9));
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 2);
+	nng_stats_free(stats);
+
+	nng_ctx_close(ctx);
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((subs = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(subs, "subscriptions")) != NULL);
+	NUTS_TRUE(nng_stat_value(st) == 1);
+	nng_stats_free(stats);
+
+	nng_aio_free(aio);
+	NUTS_CLOSE(pub);
+	NUTS_CLOSE(sub);
+#endif
+}
+
 TEST_LIST = {
 	{ "sub identity", test_sub_identity },
 	{ "sub cannot send", test_sub_cannot_send },
@@ -630,5 +753,6 @@ TEST_LIST = {
 	{ "sub cooked", test_sub_cooked },
 	{ "sub wrong protocol", test_sub_wrong_protocol },
 	{ "sub closed socket", test_sub_closed_socket },
+	{ "sub stats", test_sub_stats },
 	{ NULL, NULL },
 };
