@@ -83,7 +83,7 @@ struct nni_ws {
 	nni_list         recvq;
 	nni_list         txq;
 	nni_list         rxq;
-	int 		 rxq_len;
+	int              rxq_len;
 	size_t           rxq_size;
 	ws_frame        *txframe;
 	ws_frame        *rxframe;
@@ -346,8 +346,9 @@ ws_apply_mask(uint8_t *buf, size_t len, const uint8_t mask[4])
 {
 	uint32_t mask32;
 
-	// Loading the mask through memcpy makes its byte order match the buffer on
-	// both little- and big-endian hosts, without requiring aligned accesses.
+	// Loading the mask through memcpy makes its byte order match the
+	// buffer on both little- and big-endian hosts, without requiring
+	// aligned accesses.
 	memcpy(&mask32, mask, sizeof(mask32));
 
 #if defined(NNI_WS_HAVE_NEON)
@@ -356,7 +357,8 @@ ws_apply_mask(uint8_t *buf, size_t len, const uint8_t mask[4])
 		const uint32x4_t mask128 = vdupq_n_u32(mask32);
 		while (len >= sizeof(uint8x16_t)) {
 			uint8x16_t word = vld1q_u8(buf);
-			vst1q_u8(buf, veorq_u8(word, vreinterpretq_u8_u32(mask128)));
+			vst1q_u8(buf,
+			    veorq_u8(word, vreinterpretq_u8_u32(mask128)));
 			buf += sizeof(uint8x16_t);
 			len -= sizeof(uint8x16_t);
 		}
@@ -367,7 +369,8 @@ ws_apply_mask(uint8_t *buf, size_t len, const uint8_t mask[4])
 		const __m128i mask128 = _mm_set1_epi32((int) mask32);
 		while (len >= sizeof(__m128i)) {
 			__m128i word = _mm_loadu_si128((const __m128i *) buf);
-			_mm_storeu_si128((__m128i *) buf, _mm_xor_si128(word, mask128));
+			_mm_storeu_si128(
+			    (__m128i *) buf, _mm_xor_si128(word, mask128));
 			buf += sizeof(__m128i);
 			len -= sizeof(__m128i);
 		}
@@ -661,7 +664,7 @@ ws_write_cb(void *arg)
 	nni_ws   *ws = arg;
 	ws_frame *frame;
 	nni_aio  *aio;
-	int       rv;
+	nng_err   rv;
 
 	nni_mtx_lock(&ws->mtx);
 
@@ -670,7 +673,7 @@ ws_write_cb(void *arg)
 		return;
 	}
 	aio = frame->aio;
-	if ((rv = nni_aio_result(&ws->txaio)) != 0) {
+	if ((rv = nni_aio_result(&ws->txaio)) != NNG_OK) {
 		// if tx fails, we can't send a close frame either
 		// we expect the caller to just close this connection
 		ws->txframe = NULL;
@@ -1004,7 +1007,7 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 			return;
 		}
 		if (frame->final) {
-			ws->inmsg = false;
+			ws->inmsg    = false;
 			message_done = true;
 		}
 		ws->rxframe = NULL;
@@ -1034,7 +1037,7 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame)
 		} else {
 			message_done = true;
 		}
-		ws->rxframe = NULL;
+		ws->rxframe  = NULL;
 		ws->rxq_size = frame->len;
 		ws->rxq_len++;
 		NNI_ASSERT(ws->rxq_len == 1);
@@ -1094,7 +1097,7 @@ ws_read_cb(void *arg)
 		return;
 	}
 
-	if (nni_aio_result(aio) != 0) {
+	if (nni_aio_result(aio) != NNG_OK) {
 		// on a read error, we assume the connection was
 		// abruptly closed, and we don't try to shut down nicely
 		ws->closed = true;
@@ -1174,7 +1177,7 @@ ws_read_cb(void *arg)
 		// length of the message has not exceeded our recvmax.
 		// (Protect against an infinite stream of small messages!)
 		if ((!ws->isstream) && (ws->recvmax > 0)) {
-			if (ws->rxq_size + frame->len > ws->recvmax)  {
+			if (ws->rxq_size + frame->len > ws->recvmax) {
 				ws_close(ws, WS_CLOSE_TOO_BIG);
 				nni_mtx_unlock(&ws->mtx);
 				return;
@@ -1357,7 +1360,7 @@ ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 	if (nni_list_empty(&l->reply)) {
 		nni_cv_wake(&l->cv);
 	}
-	if ((nni_aio_result(aio) != 0) || l->closed) {
+	if ((nni_aio_result(aio) != NNG_OK) || l->closed) {
 		nni_mtx_unlock(&l->mtx);
 		ws_reap(ws);
 		return;
@@ -1378,7 +1381,7 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 {
 	nni_ws_dialer *d;
 	nni_aio       *uaio;
-	int            rv;
+	nng_err        rv;
 	uint16_t       status;
 	char           wskey[29];
 	const char    *ptr;
@@ -1393,7 +1396,7 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 	// Note that its possible that the user canceled the request,
 	// in which case we no longer care, and just go to the error
 	// case to discard the ws.
-	if (((rv = nni_aio_result(aio)) != 0) || (uaio == NULL)) {
+	if (((rv = nni_aio_result(aio)) != NNG_OK) || (uaio == NULL)) {
 		goto err;
 	}
 
@@ -2353,14 +2356,14 @@ ws_conn_cb(void *arg)
 	nni_ws_dialer *d;
 	nni_ws        *ws;
 	nni_aio       *uaio;
-	int            rv;
+	nng_err        rv;
 	uint8_t        raw[16];
 	ws_header     *hdr;
 
 	ws = arg;
 
 	d = ws->dialer;
-	if ((rv = nni_aio_result(&ws->connaio)) != 0) {
+	if ((rv = nni_aio_result(&ws->connaio)) != NNG_OK) {
 		nni_mtx_lock(&ws->mtx);
 		if ((uaio = ws->useraio) != NULL) {
 			ws->useraio = NULL;

@@ -61,7 +61,7 @@ client(const char *url)
 	nng_stream_dialer *dialer;
 	nng_aio           *aio;
 	nng_iov            iov;
-	int                rv;
+	nng_err            rv;
 
 	// Allocate dialer and aio associated with this connection
 	if ((rv = nng_stream_dialer_alloc(&dialer, url)) != 0) {
@@ -84,7 +84,7 @@ client(const char *url)
 
 	// Wait for connection
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		nng_fatal("waiting for ng_stream_dialer_dial failed", rv);
 	}
 
@@ -92,7 +92,7 @@ client(const char *url)
 	nng_stream *c1 = (nng_stream *) nng_aio_get_output(aio, 0);
 	nng_stream_recv(c1, aio);
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		nng_fatal("waiting for nng_stream_recv failed", rv);
 	}
 
@@ -123,7 +123,7 @@ server(const char *url)
 	nng_stream_listener *listener;
 	nng_aio             *aio;
 	nng_iov              iov;
-	int                  rv;
+	nng_err              rv;
 
 	// Allocate dialer and aio associated with this connection
 	if ((rv = nng_stream_listener_alloc(&listener, url)) != 0) {
@@ -149,7 +149,7 @@ server(const char *url)
 
 	// Wait for connection
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		nng_fatal("waiting for nng_stream_listener_accept failed", rv);
 	}
 
@@ -157,7 +157,7 @@ server(const char *url)
 	nng_stream *c1 = (nng_stream *) nng_aio_get_output(aio, 0);
 	nng_stream_send(c1, aio);
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		nng_fatal("waiting for nng_stream_recv failed", rv);
 	}
 

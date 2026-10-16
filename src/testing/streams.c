@@ -52,11 +52,11 @@ static void
 stream_xfr_cb(void *arg)
 {
 	stream_xfr_t *x = arg;
-	int           rv;
+	nng_err       rv;
 	size_t        n;
 
 	rv = nng_aio_result(x->lower_aio);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		nng_aio_finish(x->upper_aio, rv);
 		return;
 	}
@@ -108,7 +108,7 @@ stream_xfr_alloc(nng_stream *s, void (*submit)(nng_stream *, nng_aio *),
 int
 nuts_stream_wait(stream_xfr_t *x)
 {
-	int rv;
+	nng_err rv;
 	if (x == NULL) {
 		return (NNG_ENOMEM);
 	}

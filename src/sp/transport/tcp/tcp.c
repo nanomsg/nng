@@ -170,14 +170,14 @@ tcptran_pipe_nego_cb(void *arg)
 	tcptran_ep   *ep  = p->ep;
 	nni_aio      *aio = &p->negoaio;
 	nni_aio      *uaio;
-	int           rv;
+	nng_err       rv;
 
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		rv = NNG_ECLOSED;
 		goto error;
 	}
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		goto error;
 	}
 
@@ -253,7 +253,7 @@ static void
 tcptran_pipe_send_cb(void *arg)
 {
 	tcptran_pipe *p = arg;
-	int           rv;
+	nng_err       rv;
 	nni_aio      *aio;
 	size_t        n;
 	nni_msg      *msg;
@@ -262,7 +262,7 @@ tcptran_pipe_send_cb(void *arg)
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->sendq);
 
-	if ((rv = nni_aio_result(txaio)) != 0) {
+	if ((rv = nni_aio_result(txaio)) != NNG_OK) {
 		nni_pipe_bump_error(p->npipe, rv);
 		// Intentionally we do not queue up another transfer.
 		// There's an excellent chance that the pipe is no longer
@@ -301,7 +301,7 @@ tcptran_pipe_recv_cb(void *arg)
 {
 	tcptran_pipe *p = arg;
 	nni_aio      *aio;
-	int           rv;
+	nng_err       rv;
 	size_t        n;
 	nni_msg      *msg;
 	nni_aio      *rxaio = &p->rxaio;
@@ -309,7 +309,7 @@ tcptran_pipe_recv_cb(void *arg)
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->recvq);
 
-	if ((rv = nni_aio_result(rxaio)) != 0) {
+	if ((rv = nni_aio_result(rxaio)) != NNG_OK) {
 		goto recv_error;
 	}
 
@@ -675,7 +675,7 @@ static void
 tcptran_timer_cb(void *arg)
 {
 	tcptran_ep *ep = arg;
-	if (nni_aio_result(&ep->timeaio) == 0) {
+	if (nni_aio_result(&ep->timeaio) == NNG_OK) {
 		nng_stream_listener_accept(ep->listener, &ep->connaio);
 	}
 }
@@ -686,12 +686,12 @@ tcptran_accept_cb(void *arg)
 	tcptran_ep   *ep  = arg;
 	nni_aio      *aio = &ep->connaio;
 	tcptran_pipe *p;
-	int           rv;
+	nng_err       rv;
 	nng_stream   *conn;
 
 	nni_mtx_lock(&ep->mtx);
 
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		goto error;
 	}
 
@@ -744,11 +744,11 @@ tcptran_dial_cb(void *arg)
 	tcptran_ep   *ep  = arg;
 	nni_aio      *aio = &ep->connaio;
 	tcptran_pipe *p;
-	int           rv;
+	nng_err       rv;
 	nng_stream   *conn;
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		goto error;
 	}
 

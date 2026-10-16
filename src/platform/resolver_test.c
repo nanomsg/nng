@@ -252,7 +252,7 @@ test_null_not_passive(void)
 	nng_aio_wait(aio);
 	// We can either get invalid address, or a loopback address.
 	// Most systems do the former, but Linux does the latter.
-	if (nng_aio_result(aio) == 0) {
+	if (nng_aio_result(aio) == NNG_OK) {
 		NUTS_TRUE(sa.s_family == NNG_AF_INET);
 		NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
 		NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));

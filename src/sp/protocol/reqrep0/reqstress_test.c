@@ -28,9 +28,9 @@ char inproc_template[] = "inproc://nng_reqstress_%d";
 #ifdef NNG_PLATFORM_WINDOWS
 char ipc_template[] = "winpipe://nng_reqstress_%d";
 #else
-char ipc_template[]    = "ipc:///tmp/nng_reqstress_%d";
+char ipc_template[] = "ipc:///tmp/nng_reqstress_%d";
 #endif
-char ws_template[]     = "ws://127.0.0.1:%d/nng_reqstress";
+char ws_template[] = "ws://127.0.0.1:%d/nng_reqstress";
 
 char *templates[] = {
 	tcp4_template,
@@ -107,9 +107,9 @@ static void
 rep_recv_cb(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->recv_aio)) != 0) {
+	if ((rv = nng_aio_result(c->recv_aio)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -123,9 +123,9 @@ static void
 rep_send_cb(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->send_aio)) != 0) {
+	if ((rv = nng_aio_result(c->send_aio)) != NNG_OK) {
 		error(c, "send", rv);
 		nng_msg_free(nng_aio_get_msg(c->send_aio));
 		nng_aio_set_msg(c->send_aio, NULL);
@@ -140,9 +140,9 @@ req_time_cb(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->time_aio)) != 0) {
+	if ((rv = nng_aio_result(c->time_aio)) != NNG_OK) {
 		error(c, "sleep", rv);
 		return;
 	}
@@ -163,9 +163,9 @@ req_recv_cb(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->recv_aio)) != 0) {
+	if ((rv = nng_aio_result(c->recv_aio)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -189,9 +189,9 @@ static void
 req_send_cb(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->send_aio)) != 0) {
+	if ((rv = nng_aio_result(c->send_aio)) != NNG_OK) {
 		error(c, "send", rv);
 		nng_msg_free(nng_aio_get_msg(c->send_aio));
 		nng_aio_set_msg(c->send_aio, NULL);

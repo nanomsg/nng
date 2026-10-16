@@ -17,7 +17,7 @@
 #include "../../../testing/nuts.h"
 
 // Test-library-only hook for controlling resolver callback completion.
-extern void nni_dtls_test_resolv_gate(void *, nni_aio **);
+extern void    nni_dtls_test_resolv_gate(void *, nni_aio **);
 extern nng_err nni_dtls_test_send_gate(
     void *, nng_pipe, nni_aio **, nni_aio *, bool *);
 
@@ -99,7 +99,7 @@ typedef struct {
 	unsigned     client_records;
 	unsigned     server_records;
 	unsigned     duplicates;
-	int          error;
+	nng_err      error;
 } dtls_proxy;
 
 static void
@@ -110,7 +110,7 @@ dtls_proxy_run(void *arg)
 	nng_sockaddr from;
 	uint8_t     *buf = p->buf;
 	nng_iov      iov;
-	int          rv;
+	nng_err      rv;
 	for (;;) {
 		iov.iov_buf = buf;
 		iov.iov_len = DTLS_PROXY_BUFSIZE;
@@ -118,8 +118,8 @@ dtls_proxy_run(void *arg)
 		nng_aio_set_input(p->recv, 0, &from);
 		nng_udp_recv(p->udp, p->recv);
 		nng_aio_wait(p->recv);
-		if ((rv = nng_aio_result(p->recv)) != 0) {
-			p->error = rv == NNG_ECLOSED ? 0 : rv;
+		if ((rv = nng_aio_result(p->recv)) != NNG_OK) {
+			p->error = rv == NNG_ECLOSED ? NNG_OK : rv;
 			return;
 		}
 		iov.iov_len = nng_aio_count(p->recv);
@@ -163,8 +163,8 @@ dtls_proxy_run(void *arg)
 			nng_aio_set_iov(p->send, 1, &iov);
 			nng_udp_send(p->udp, p->send);
 			nng_aio_wait(p->send);
-			if ((rv = nng_aio_result(p->send)) != 0) {
-				p->error = rv == NNG_ECLOSED ? 0 : rv;
+			if ((rv = nng_aio_result(p->send)) != NNG_OK) {
+				p->error = rv == NNG_ECLOSED ? NNG_OK : rv;
 				return;
 			}
 		}
@@ -179,7 +179,7 @@ typedef struct {
 	uint64_t added_at;
 	uint64_t removed_at;
 	bool     done;
-	int      result;
+	nng_err  result;
 	nng_aio *aio;
 	nng_pipe pipe;
 	bool     hold_remove;

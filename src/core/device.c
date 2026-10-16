@@ -101,19 +101,19 @@ device_cb(void *arg)
 {
 	device_path *p = arg;
 	device_data *d = p->d;
-	int          rv;
+	nng_err      rv;
 	int          next;
 
 	nni_mtx_lock(&device_mtx);
 	rv = nni_aio_result(&p->aio);
-	if (rv == 0) {
+	if (rv == NNG_OK) {
 		rv = d->rv;
-		if ((rv != 0) && (p->state == NNI_DEVICE_STATE_RECV)) {
+		if ((rv != NNG_OK) && (p->state == NNI_DEVICE_STATE_RECV)) {
 			nni_msg_free(nni_aio_get_msg(&p->aio));
 			nni_aio_set_msg(&p->aio, NULL);
 		}
 	}
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		if (p->state == NNI_DEVICE_STATE_SEND) {
 			nni_msg_free(nni_aio_get_msg(&p->aio));
 			nni_aio_set_msg(&p->aio, NULL);
@@ -278,7 +278,8 @@ nni_device(nni_aio *aio, nni_sock *s1, nni_sock *s2)
 		nni_reap(&device_reap, d);
 		return;
 	}
-	if ((rv = nni_sock_device_hold(d->paths[0].src, d->paths[0].dst)) != 0) {
+	if ((rv = nni_sock_device_hold(d->paths[0].src, d->paths[0].dst)) !=
+	    0) {
 		nni_mtx_unlock(&device_mtx);
 		nni_aio_finish_error(aio, rv);
 		nni_reap(&device_reap, d);

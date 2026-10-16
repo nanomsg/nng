@@ -257,7 +257,7 @@ nng_aio_alloc(&aio, NULL, NULL);
 // make a single outbound connection
 nng_stream_dialer_dial(dialer, aio);
 nng_aio_wait(aio); // wait for the asynchronous operation to complete
-if (nng_aio_result(aio) != 0) {
+if (nng_aio_result(aio) != NNG_OK) {
     // ... handle the error
 }
 stream = nng_aio_get_output(aio, 0);
@@ -299,7 +299,7 @@ if (nng_stream_listener_listen(listener)) {
 // now accept a single incoming connection as a stream object
 nng_stream_listener_accept(listener, aio);
 nng_aio_wait(aio); // wait for the asynchronous operation to complete
-if (nng_aio_result(aio) != 0) {
+if (nng_aio_result(aio) != NNG_OK) {
     // ... handle the error
 }
 stream = nng_aio_get_output(aio, 0);

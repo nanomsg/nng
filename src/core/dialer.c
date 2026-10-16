@@ -394,7 +394,7 @@ dialer_timer_cb(void *arg)
 {
 	nni_dialer *d = arg;
 
-	if (nni_aio_result(&d->d_tmo_aio) == 0) {
+	if (nni_aio_result(&d->d_tmo_aio) == NNG_OK) {
 		dialer_connect_start(d);
 	}
 }
@@ -405,7 +405,7 @@ dialer_connect_cb(void *arg)
 	nni_dialer *d   = arg;
 	nni_aio    *aio = &d->d_con_aio;
 	nni_aio    *user_aio;
-	int         rv;
+	nng_err     rv;
 
 	nni_mtx_lock(&d->d_mtx);
 	user_aio      = d->d_user_aio;
@@ -413,7 +413,7 @@ dialer_connect_cb(void *arg)
 	nni_mtx_unlock(&d->d_mtx);
 
 	switch ((rv = nni_aio_result(aio))) {
-	case 0:
+	case NNG_OK:
 #ifdef NNG_ENABLE_STATS
 		nni_stat_inc(&d->st_connect, 1);
 #endif
@@ -453,7 +453,7 @@ dialer_connect_start(nni_dialer *d)
 int
 nni_dialer_start(nni_dialer *d, unsigned flags)
 {
-	int      rv = 0;
+	nng_err  rv = 0;
 	nni_aio  aio;
 	nni_aio *aiop = NULL;
 

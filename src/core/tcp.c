@@ -71,7 +71,7 @@ tcp_dial_res_cb(void *arg)
 {
 	tcp_dialer *d = arg;
 	nni_aio    *aio;
-	int         rv;
+	nng_err     rv;
 
 	nni_mtx_lock(&d->mtx);
 	if (d->closed || ((aio = nni_list_first(&d->conaios)) == NULL)) {
@@ -84,7 +84,7 @@ tcp_dial_res_cb(void *arg)
 		return;
 	}
 
-	if ((rv = nni_aio_result(&d->resaio)) != 0) {
+	if ((rv = nni_aio_result(&d->resaio)) != NNG_OK) {
 		nni_list_remove(&d->conaios, aio);
 		nni_aio_finish_error(aio, rv);
 
@@ -103,12 +103,12 @@ tcp_dial_con_cb(void *arg)
 {
 	tcp_dialer *d = arg;
 	nng_aio    *aio;
-	int         rv;
+	nng_err     rv;
 
 	nni_mtx_lock(&d->mtx);
 	rv = nni_aio_result(&d->conaio);
 	if ((d->closed) || ((aio = nni_list_first(&d->conaios)) == NULL)) {
-		if (rv == 0) {
+		if (rv == NNG_OK) {
 			// Make sure we discard the underlying connection.
 			nng_stream_close(nni_aio_get_output(&d->conaio, 0));
 			nng_stream_stop(nni_aio_get_output(&d->conaio, 0));
@@ -119,7 +119,7 @@ tcp_dial_con_cb(void *arg)
 		return;
 	}
 	nni_list_remove(&d->conaios, aio);
-	if (rv != 0) {
+	if (rv != NNG_OK) {
 		nni_aio_finish_error(aio, rv);
 	} else {
 		nni_aio_set_output(aio, 0, nni_aio_get_output(&d->conaio, 0));

@@ -292,7 +292,7 @@ test_udp_send_ipc(void)
 	nng_aio     *aio1;
 	nng_iov      iov1;
 	char         msg[] = "hello";
-	int          rv;
+	nng_err      rv;
 
 	loopback = htonl(0x7f000001); // 127.0.0.1
 
@@ -440,7 +440,7 @@ void
 test_udp_send_v6_from_v4(void)
 {
 #ifdef NNG_ENABLE_IPV6
-	int           rv;
+	nng_err       rv;
 	nng_udp      *u1;
 	nng_sockaddr  sa = { 0 };
 	nng_aio      *aio1;

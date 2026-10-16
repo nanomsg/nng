@@ -445,10 +445,10 @@ test_rep_close_pipe_context_send(void)
 	NUTS_PASS(nng_pipe_close(p));
 
 	for (i = 0; i < 100; i++) {
-		int rv;
+		nng_err rv;
 		nng_aio_wait(aio[i]);
 		rv = nng_aio_result(aio[i]);
-		if (rv != 0) {
+		if (rv != NNG_OK) {
 			NUTS_FAIL(rv, NNG_ECLOSED);
 			nng_msg_free(nng_aio_get_msg(aio[i]));
 		}
@@ -501,11 +501,11 @@ test_rep_close_context_send(void)
 
 	// Note that REQ socket is not reading the results.
 	for (i = 0; i < 100; i++) {
-		int rv;
+		nng_err rv;
 		NUTS_PASS(nng_ctx_close(ctx[i]));
 		nng_aio_wait(aio[i]);
 		rv = nng_aio_result(aio[i]);
-		if (rv != 0) {
+		if (rv != NNG_OK) {
 			NUTS_FAIL(rv, NNG_ECLOSED);
 			nng_msg_free(nng_aio_get_msg(aio[i]));
 		}
@@ -543,7 +543,7 @@ struct rep_close_recv_cb_state {
 	nng_mtx *mtx;
 	nng_cv  *cv;
 	int      done;
-	int      result;
+	nng_err  result;
 	nng_msg *msg;
 };
 
@@ -692,10 +692,10 @@ test_rep_ctx_send_nonblock2(void)
 	}
 
 	for (int i = 0; i < 10; i++) {
-		int rv;
+		nng_err rv;
 		nng_aio_wait(rep_aio[i]);
 		rv = nng_aio_result(rep_aio[i]);
-		if (rv == 0) {
+		if (rv == NNG_OK) {
 			num_good++;
 		} else {
 			NUTS_FAIL(rv, NNG_ETIMEDOUT);

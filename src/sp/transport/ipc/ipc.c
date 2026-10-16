@@ -168,14 +168,14 @@ ipc_pipe_nego_cb(void *arg)
 	ipc_ep   *ep  = p->ep;
 	nni_aio  *aio = &p->neg_aio;
 	nni_aio  *user_aio;
-	int       rv;
+	nng_err   rv;
 
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		rv = NNG_ECLOSED;
 		goto error;
 	}
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		goto error;
 	}
 
@@ -249,14 +249,14 @@ static void
 ipc_pipe_send_cb(void *arg)
 {
 	ipc_pipe *p = arg;
-	int       rv;
+	nng_err   rv;
 	nni_aio  *aio;
 	size_t    n;
 	nni_msg  *msg;
 	nni_aio  *tx_aio = &p->tx_aio;
 
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_result(tx_aio)) != 0) {
+	if ((rv = nni_aio_result(tx_aio)) != NNG_OK) {
 		nni_pipe_bump_error(p->pipe, rv);
 		// Intentionally we do not queue up another transfer.
 		// There's an excellent chance that the pipe is no longer
@@ -299,14 +299,14 @@ ipc_pipe_recv_cb(void *arg)
 {
 	ipc_pipe *p = arg;
 	nni_aio  *aio;
-	int       rv;
+	nng_err   rv;
 	size_t    n;
 	nni_msg  *msg;
 	nni_aio  *rx_aio = &p->rx_aio;
 
 	nni_mtx_lock(&p->mtx);
 
-	if ((rv = nni_aio_result(rx_aio)) != 0) {
+	if ((rv = nni_aio_result(rx_aio)) != NNG_OK) {
 		// Error on receive.  This has to cause an error back
 		// to the user.  Also, if we had an allocated rx_msg, lets
 		// toss it.
@@ -673,7 +673,7 @@ ipc_ep_timer_cb(void *arg)
 	ipc_ep *ep = arg;
 
 	nni_mtx_lock(&ep->mtx);
-	if (nni_aio_result(&ep->time_aio) == 0) {
+	if (nni_aio_result(&ep->time_aio) == NNG_OK) {
 		nng_stream_listener_accept(ep->listener, &ep->conn_aio);
 	}
 	nni_mtx_unlock(&ep->mtx);
@@ -685,11 +685,11 @@ ipc_ep_accept_cb(void *arg)
 	ipc_ep     *ep  = arg;
 	nni_aio    *aio = &ep->conn_aio;
 	ipc_pipe   *p;
-	int         rv;
+	nng_err     rv;
 	nng_stream *conn;
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		goto error;
 	}
 
@@ -743,11 +743,11 @@ ipc_ep_dial_cb(void *arg)
 	nni_aio    *aio = &ep->conn_aio;
 	nni_aio    *uaio;
 	ipc_pipe   *p;
-	int         rv;
+	nng_err     rv;
 	nng_stream *conn;
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		goto error;
 	}
 

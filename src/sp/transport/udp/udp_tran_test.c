@@ -264,7 +264,7 @@ udp_recv_count_cb(void *arg)
 {
 	udp_recv_count *c = arg;
 	nng_msg        *m;
-	int             rv;
+	nng_err         rv;
 
 	rv = nng_aio_result(c->aio);
 	switch (rv) {
@@ -436,7 +436,7 @@ test_udp_crush(void)
 
 	memset(buf, 0, sizeof(buf));
 	for (int i = 0; i < 1000; i++) {
-		int    rv = nng_recv(s0, buf, &sz, 0);
+		int rv = nng_recv(s0, buf, &sz, 0);
 		if (rv == 0) {
 			continue;
 		}
@@ -508,8 +508,8 @@ test_udp_max_peers(void)
 	NUTS_TRUE(max_peers == 1024);
 	NUTS_PASS(nng_listener_set_size(listener, NNG_OPT_UDP_MAX_PEERS, 1));
 	NUTS_PASS(nng_listener_start(listener, 0));
-	NUTS_FAIL(
-	    nng_listener_set_size(listener, NNG_OPT_UDP_MAX_PEERS, 2), NNG_EBUSY);
+	NUTS_FAIL(nng_listener_set_size(listener, NNG_OPT_UDP_MAX_PEERS, 2),
+	    NNG_EBUSY);
 
 	NUTS_PASS(nng_sub0_open(&client1));
 	NUTS_PASS(nng_sub0_socket_subscribe(client1, "", 0));

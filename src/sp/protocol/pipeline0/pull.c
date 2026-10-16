@@ -147,7 +147,7 @@ pull0_recv_cb(void *arg)
 	nni_aio    *as;
 	nni_msg    *m;
 
-	if (nni_aio_result(ap) != 0) {
+	if (nni_aio_result(ap) != NNG_OK) {
 		// Failed to get a message, probably the pipe is closed.
 		nni_pipe_close(p->p);
 		return;

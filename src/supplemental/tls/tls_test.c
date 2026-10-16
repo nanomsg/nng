@@ -457,7 +457,7 @@ test_tls_long_server_name(void)
 	NUTS_FAIL(nng_aio_result(aio2), NNG_ECRYPTO);
 
 	nng_aio_wait(aio1);
-	if (nng_aio_result(aio1) == 0) {
+	if (nng_aio_result(aio1) == NNG_OK) {
 		NUTS_TRUE((s1 = nng_aio_get_output(aio1, 0)) != NULL);
 		nng_stream_stop(s1);
 		nng_stream_free(s1);

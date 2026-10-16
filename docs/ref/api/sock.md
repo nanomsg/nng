@@ -414,7 +414,7 @@ void callback(void *arg) {
     nng_msg *msg;
     nng_time now;
     struct state *state = arg;
-    if (nng_aio_result(state->aio) != 0) {
+    if (nng_aio_result(state->aio) != NNG_OK) {
         fprintf(stderr, "Error %s occurred", nng_strerror(nng_aio_result(state->aio)));
         return; // terminate the callback loop
     }
@@ -469,7 +469,7 @@ void callback(void *arg) {
     nng_msg *msg;
     nng_time now;
     struct state *state = arg;
-    if (nng_aio_result(state->aio) != 0) {
+    if (nng_aio_result(state->aio) != NNG_OK) {
         fprintf(stderr, "Error %s occurred", nng_strerror(nng_aio_result(state->aio)));
         return; // terminate the callback loop
     }

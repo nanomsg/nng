@@ -333,10 +333,10 @@ test_resp_close_pipe_context_send(void)
 	NUTS_PASS(nng_pipe_close(p));
 
 	for (i = 0; i < 10; i++) {
-		int rv;
+		nng_err rv;
 		nng_aio_wait(aio[i]);
 		rv = nng_aio_result(aio[i]);
-		if (rv != 0) {
+		if (rv != NNG_OK) {
 			NUTS_FAIL(rv, NNG_ECLOSED);
 			nng_msg_free(nng_aio_get_msg(aio[i]));
 		}
@@ -389,11 +389,11 @@ test_resp_close_context_send(void)
 
 	// Note that REQ socket is not reading the results.
 	for (i = 0; i < 10; i++) {
-		int rv;
+		nng_err rv;
 		NUTS_PASS(nng_ctx_close(ctx[i]));
 		nng_aio_wait(aio[i]);
 		rv = nng_aio_result(aio[i]);
-		if (rv != 0) {
+		if (rv != NNG_OK) {
 			NUTS_FAIL(rv, NNG_ECLOSED);
 			nng_msg_free(nng_aio_get_msg(aio[i]));
 		}

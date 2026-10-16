@@ -302,7 +302,7 @@ pair1poly_pipe_recv_cb(void *arg)
 	nni_pipe       *pipe = p->pipe;
 	size_t          len;
 
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -350,7 +350,7 @@ pair1poly_sock_get_cb(void *arg)
 	nni_msg        *msg;
 	uint32_t        id;
 
-	if (nni_aio_result(&s->aio_get) != 0) {
+	if (nni_aio_result(&s->aio_get) != NNG_OK) {
 		// Socket closing...
 		return;
 	}
@@ -386,7 +386,7 @@ pair1poly_pipe_put_cb(void *arg)
 {
 	pair1poly_pipe *p = arg;
 
-	if (nni_aio_result(&p->aio_put) != 0) {
+	if (nni_aio_result(&p->aio_put) != NNG_OK) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_put));
 		nni_aio_set_msg(&p->aio_put, NULL);
 		nni_pipe_close(p->pipe);
@@ -401,7 +401,7 @@ pair1poly_pipe_get_cb(void *arg)
 	pair1poly_pipe *p = arg;
 	nni_msg        *msg;
 
-	if (nni_aio_result(&p->aio_get) != 0) {
+	if (nni_aio_result(&p->aio_get) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -426,7 +426,7 @@ pair1poly_pipe_send_cb(void *arg)
 {
 	pair1poly_pipe *p = arg;
 
-	if (nni_aio_result(&p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != NNG_OK) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
 		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);

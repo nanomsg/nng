@@ -214,7 +214,7 @@ xrep0_sock_getq_cb(void *arg)
 	// destination pipe via a separate queue.  This prevents a single bad
 	// or slow pipe from gumming up the works for the entire socket.
 
-	if (nni_aio_result(&s->aio_getq) != 0) {
+	if (nni_aio_result(&s->aio_getq) != NNG_OK) {
 		// Closed socket?
 		return;
 	}
@@ -252,7 +252,7 @@ xrep0_pipe_getq_cb(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	if (nni_aio_result(&p->aio_getq) != 0) {
+	if (nni_aio_result(&p->aio_getq) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -268,7 +268,7 @@ xrep0_pipe_send_cb(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	if (nni_aio_result(&p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != NNG_OK) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
 		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);
@@ -287,7 +287,7 @@ xrep0_pipe_recv_cb(void *arg)
 	int         hops;
 	int         ttl;
 
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -349,7 +349,7 @@ xrep0_pipe_putq_cb(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	if (nni_aio_result(&p->aio_putq) != 0) {
+	if (nni_aio_result(&p->aio_putq) != NNG_OK) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_putq));
 		nni_aio_set_msg(&p->aio_putq, NULL);
 		nni_pipe_close(p->pipe);

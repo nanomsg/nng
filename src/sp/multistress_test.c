@@ -109,9 +109,9 @@ static void
 rep0_recd(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->recd)) != 0) {
+	if ((rv = nng_aio_result(c->recd)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -125,9 +125,9 @@ static void
 rep0_sent(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->sent)) != 0) {
+	if ((rv = nng_aio_result(c->sent)) != NNG_OK) {
 		error(c, "send", rv);
 		nng_msg_free(nng_aio_get_msg(c->sent));
 		nng_aio_set_msg(c->sent, NULL);
@@ -142,9 +142,9 @@ req0_woke(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->woke)) != 0) {
+	if ((rv = nng_aio_result(c->woke)) != NNG_OK) {
 		error(c, "sleep", rv);
 		return;
 	}
@@ -164,9 +164,9 @@ req0_recd(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->recd)) != 0) {
+	if ((rv = nng_aio_result(c->recd)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -190,9 +190,9 @@ static void
 req0_sent(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->sent)) != 0) {
+	if ((rv = nng_aio_result(c->sent)) != NNG_OK) {
 		error(c, "send", rv);
 		nng_msg_free(nng_aio_get_msg(c->sent));
 		nng_aio_set_msg(c->sent, NULL);
@@ -266,8 +266,8 @@ static void
 pair0_recd(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
-	if ((rv = nng_aio_result(c->recd)) != 0) {
+	nng_err    rv;
+	if ((rv = nng_aio_result(c->recd)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -281,9 +281,9 @@ pair0_woke(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->woke)) != 0) {
+	if ((rv = nng_aio_result(c->woke)) != NNG_OK) {
 		error(c, "sleep", rv);
 		return;
 	}
@@ -301,8 +301,8 @@ static void
 pair0_sent(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
-	if ((rv = nng_aio_result(c->sent)) != 0) {
+	nng_err    rv;
+	if ((rv = nng_aio_result(c->sent)) != NNG_OK) {
 		error(c, "send", rv);
 		nng_msg_free(nng_aio_get_msg(c->sent));
 		nng_aio_set_msg(c->sent, NULL);
@@ -366,8 +366,8 @@ static void
 bus0_recd(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
-	if ((rv = nng_aio_result(c->recd)) != 0) {
+	nng_err    rv;
+	if ((rv = nng_aio_result(c->recd)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -381,9 +381,9 @@ bus0_woke(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->woke)) != 0) {
+	if ((rv = nng_aio_result(c->woke)) != NNG_OK) {
 		error(c, "sleep", rv);
 		return;
 	}
@@ -401,8 +401,8 @@ static void
 bus0_sent(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
-	if ((rv = nng_aio_result(c->sent)) != 0) {
+	nng_err    rv;
+	if ((rv = nng_aio_result(c->sent)) != NNG_OK) {
 		nng_msg_free(nng_aio_get_msg(c->sent));
 		nng_aio_set_msg(c->sent, NULL);
 		error(c, "send", rv);
@@ -461,9 +461,9 @@ pub0_woke(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->woke)) != 0) {
+	if ((rv = nng_aio_result(c->woke)) != NNG_OK) {
 		error(c, "sleep", rv);
 		return;
 	}
@@ -481,8 +481,8 @@ void
 pub0_sent(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
-	if ((rv = nng_aio_result(c->sent)) != 0) {
+	nng_err    rv;
+	if ((rv = nng_aio_result(c->sent)) != NNG_OK) {
 		nng_msg_free(nng_aio_get_msg(c->sent));
 		nng_aio_set_msg(c->sent, NULL);
 		error(c, "send", rv);
@@ -496,9 +496,9 @@ void
 sub0_recd(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->recd)) != 0) {
+	if ((rv = nng_aio_result(c->recd)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}
@@ -600,9 +600,9 @@ void
 push0_sent(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->sent)) != 0) {
+	if ((rv = nng_aio_result(c->sent)) != NNG_OK) {
 		nng_msg_free(nng_aio_get_msg(c->sent));
 		nng_aio_set_msg(c->sent, NULL);
 		error(c, "send", rv);
@@ -618,9 +618,9 @@ push0_woke(void *arg)
 {
 	test_case *c   = arg;
 	nng_msg   *msg = NULL;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->woke)) != 0) {
+	if ((rv = nng_aio_result(c->woke)) != NNG_OK) {
 		error(c, "sleep", rv);
 		return;
 	}
@@ -638,9 +638,9 @@ void
 pull0_recd(void *arg)
 {
 	test_case *c = arg;
-	int        rv;
+	nng_err    rv;
 
-	if ((rv = nng_aio_result(c->recd)) != 0) {
+	if ((rv = nng_aio_result(c->recd)) != NNG_OK) {
 		error(c, "recv", rv);
 		return;
 	}

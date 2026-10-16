@@ -55,7 +55,7 @@ http_dial_cb(void *arg)
 	if ((aio = nni_list_first(&c->aios)) == NULL) {
 		// User abandoned request, and no residuals left.
 		nni_mtx_unlock(&c->mtx);
-		if (rv == 0) {
+		if (rv == NNG_OK) {
 			stream = nni_aio_get_output(&c->aio, 0);
 			nng_stream_free(stream);
 		}
@@ -147,9 +147,9 @@ nni_http_client_init(nni_http_client **cp, const nng_url *url)
 		    url->u_port);
 	}
 	{
-		const char *path = url->u_path[0] == '\0' ? "/" : url->u_path;
+		const char *path  = url->u_path[0] == '\0' ? "/" : url->u_path;
 		const char *query = url->u_query;
-		size_t      size = strlen(path) + 1;
+		size_t      size  = strlen(path) + 1;
 
 		if (query != NULL) {
 			size += strlen(query) + 1;
@@ -379,8 +379,8 @@ http_txn_cb(void *arg)
 			return;
 		}
 
-		if ((str = nni_http_get_header(
-		          txn->conn, "Content-Length")) == NULL) {
+		if ((str = nni_http_get_header(txn->conn, "Content-Length")) ==
+		    NULL) {
 			// If no content-length, then we are done.
 			http_txn_finish_aios(txn, 0);
 			nni_mtx_unlock(&http_txn_lk);

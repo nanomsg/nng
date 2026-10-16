@@ -461,7 +461,7 @@ http_sconn_rxdone(void *arg)
 	http_sconn       *sc  = arg;
 	nni_http_server  *s   = sc->server;
 	nni_aio          *aio = &sc->rxaio;
-	int               rv;
+	nng_err           rv;
 	nni_http_handler *h    = NULL;
 	nni_http_handler *head = NULL;
 	const char       *val;
@@ -580,8 +580,8 @@ http_sconn_rxdone(void *arg)
 		if (((uri + len) != path_end) &&
 		    ((uri[len] != '/') ||
 		        (((uri + len + 1) != path_end) && (!h->tree)))) {
-			// The URI has a nonmatching suffix or an extra path component
-			// beneath a non-tree handler.
+			// The URI has a nonmatching suffix or an extra path
+			// component beneath a non-tree handler.
 			continue;
 		}
 
@@ -679,7 +679,7 @@ http_sconn_cbdone(void *arg)
 		nni_http_handler_fini(h);
 	}
 
-	if (nni_aio_result(aio) != 0) {
+	if (nni_aio_result(aio) != NNG_OK) {
 		// Hard close, no further feedback.
 		http_sconn_close(sc);
 		return;
@@ -759,10 +759,10 @@ http_server_acccb(void *arg)
 	nni_aio         *aio = &s->accaio;
 	nng_stream      *stream;
 	http_sconn      *sc;
-	int              rv;
+	nng_err          rv;
 
 	nni_mtx_lock(&s->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		if (!s->closed) {
 			// try again?
 			nng_stream_listener_accept(s->listener, aio);
@@ -853,10 +853,11 @@ http_server_init(nni_http_server **serverp, const nng_url *url)
 	nni_aio_init(&s->accaio, http_server_acccb, s);
 
 	s->is_unix = (strcmp(url->u_scheme, "http+unix") == 0);
-	s->port = url->u_port;
+	s->port    = url->u_port;
 
-	if (s->is_unix ? ((s->path = nni_strdup(my_url.u_path)) == NULL) :
-	                 ((s->hostname = nni_strdup(url->u_hostname)) == NULL)) {
+	if (s->is_unix
+	        ? ((s->path = nni_strdup(my_url.u_path)) == NULL)
+	        : ((s->hostname = nni_strdup(url->u_hostname)) == NULL)) {
 		http_server_fini(s);
 		return (NNG_ENOMEM);
 	}
@@ -889,11 +890,11 @@ nni_http_server_init(nni_http_server **serverp, const nng_url *url)
 	nni_mtx_lock(&http_servers_lk);
 	NNI_LIST_FOREACH (&http_servers, s) {
 		nni_mtx_lock(&s->mtx);
-		if ((!s->closed) &&
-		    (s->is_unix == is_unix) &&
-		    (s->is_unix ? (strcmp(stream_url.u_path, s->path) == 0) :
-		               ((url->u_port == s->port) &&
-		                   (strcmp(url->u_hostname, s->hostname) == 0)))) {
+		if ((!s->closed) && (s->is_unix == is_unix) &&
+		    (s->is_unix ? (strcmp(stream_url.u_path, s->path) == 0)
+		                : ((url->u_port == s->port) &&
+		                      (strcmp(url->u_hostname, s->hostname) ==
+		                          0)))) {
 			*serverp = s;
 			s->refcnt++;
 			nni_mtx_unlock(&s->mtx);
@@ -1354,12 +1355,12 @@ http_handle_dir(nng_http *conn, void *arg, nng_aio *aio)
 
 	// The request parser rejects these characters, but check again before
 	// building a filesystem path in case a request reaches this handler by
-	// another route.  A fragment is not part of an HTTP request-target, and a
-	// backslash is a directory separator on Windows.
+	// another route.  A fragment is not part of an HTTP request-target,
+	// and a backslash is a directory separator on Windows.
 	if ((strchr(uri + len, '#') != NULL) ||
 	    (strchr(uri + len, '\\') != NULL)) {
-		if ((rv = nni_http_set_error(
-		         conn, NNG_HTTP_STATUS_BAD_REQUEST, NULL, NULL)) != 0) {
+		if ((rv = nni_http_set_error(conn, NNG_HTTP_STATUS_BAD_REQUEST,
+		         NULL, NULL)) != 0) {
 			nni_aio_finish_error(aio, rv);
 			return;
 		}
