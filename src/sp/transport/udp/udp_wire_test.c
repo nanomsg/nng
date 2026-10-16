@@ -291,6 +291,76 @@ test_udp_wire_data_lengths(void)
 	wire_events_fini(&events);
 }
 
+#ifdef NNG_ENABLE_STATS
+static uint64_t
+wire_listener_stat(nng_listener l, const char *name)
+{
+	nng_stat       *stats;
+	const nng_stat *listener, *stat;
+	uint64_t        value;
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_ASSERT((listener = nng_stat_find_listener(stats, l)) != NULL);
+	NUTS_ASSERT((stat = nng_stat_find(listener, name)) != NULL);
+	value = nng_stat_value(stat);
+	nng_stats_free(stats);
+	return (value);
+}
+#endif
+
+// A datagram that arrives while no protocol receive is pending is queued on
+// the pipe. A receive submitted later must be completed from that queue,
+// rather than waiting for another datagram to arrive and drain it.
+static void
+test_udp_wire_data_before_receive(void)
+{
+	nng_socket   s;
+	wire_events  events;
+	wire_peer    p;
+	nng_sockaddr server = wire_listen(&s, &events, 0);
+	const char  *msgs[] = { "a", "b", "c", "d" };
+	uint8_t      packet[WIRE_HEADER + 2];
+	char         buf[16];
+	size_t       len = sizeof(buf);
+	wire_open(&p);
+	wire_connect(&p, &server);
+	// PULL posts its first transport receive when the pipe starts, before
+	// the add event fires, so "a" completes that receive directly.
+	wire_wait(&events, 1, 0);
+	// This relies on PULL keeping one transport receive per pipe and
+	// posting the next only after the application has taken the previous
+	// message. Nothing reads yet, so "b" to "d" arrive with no receive
+	// pending. If PULL ever posts the next receive earlier, this test no
+	// longer reproduces the stall.
+	wire_header(packet, WIRE_DATA, NUTS_PROTO(5, 0), 2, 0);
+	for (unsigned i = 0; i < 4; i++) {
+		memcpy(packet + WIRE_HEADER, msgs[i], 2);
+		wire_send(&p, &server, packet, sizeof(packet));
+	}
+	// The endpoint keeps a single UDP receive in flight and loopback
+	// preserves order, so the acknowledgment of a repeated connection
+	// request arrives only after "d" was processed. The request refreshes
+	// the existing pipe and does not create another one.
+	wire_connect(&p, &server);
+#ifdef NNG_ENABLE_STATS
+	// The transport accepted all four messages and dropped none, so a
+	// timeout below means one was not delivered.
+	NUTS_TRUE(wire_listener_stat(events.listener, "rcv_copy") == 4);
+	NUTS_TRUE(wire_listener_stat(events.listener, "rcv_nomatch") == 0);
+	NUTS_TRUE(wire_listener_stat(events.listener, "rcv_nobuf") == 0);
+#endif
+	// Each read makes PULL post one transport receive, which must be
+	// completed from the queue in FIFO order.
+	for (unsigned i = 0; i < 4; i++) {
+		NUTS_RECV(s, msgs[i]);
+	}
+	// Each message is delivered exactly once.
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 100));
+	NUTS_FAIL(nng_recv(s, buf, &len, 0), NNG_ETIMEDOUT);
+	NUTS_CLOSE(s);
+	wire_close(&p);
+	wire_events_fini(&events);
+}
+
 static void
 test_udp_wire_bad_refresh_type(void)
 {
@@ -519,6 +589,7 @@ test_udp_wire_refreshed_expiry(void)
 NUTS_TESTS = {
 	{ "udp wire bad headers", test_udp_wire_bad_headers },
 	{ "udp wire data lengths", test_udp_wire_data_lengths },
+	{ "udp wire data before receive", test_udp_wire_data_before_receive },
 	{ "udp wire bad refresh and type", test_udp_wire_bad_refresh_type },
 	{ "udp wire handshake loss", test_udp_wire_handshake_loss },
 	{ "udp wire handshake timeout", test_udp_wire_handshake_timeout },
