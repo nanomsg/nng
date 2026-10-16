@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ce0715df.js";
+            window.path_to_searchindex_js = "../searchindex-d543bfb6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61c4e272.js"></script>
@@ -371,7 +371,7 @@ nng_aio_alloc(&amp;aio, NULL, NULL);
 // make a single outbound connection
 nng_stream_dialer_dial(dialer, aio);
 nng_aio_wait(aio); // wait for the asynchronous operation to complete
-if (nng_aio_result(aio) != 0) {
+if (nng_aio_result(aio) != NNG_OK) {
     // ... handle the error
 }
 stream = nng_aio_get_output(aio, 0);
@@ -404,7 +404,7 @@ if (nng_stream_listener_listen(listener)) {
 // now accept a single incoming connection as a stream object
 nng_stream_listener_accept(listener, aio);
 nng_aio_wait(aio); // wait for the asynchronous operation to complete
-if (nng_aio_result(aio) != 0) {
+if (nng_aio_result(aio) != NNG_OK) {
     // ... handle the error
 }
 stream = nng_aio_get_output(aio, 0);

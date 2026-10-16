@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ce0715df.js";
+            window.path_to_searchindex_js = "searchindex-d543bfb6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-61c4e272.js"></script>
@@ -1091,7 +1091,7 @@ void callback(void *arg) {
     nng_msg *msg;
     nng_time now;
     struct state *state = arg;
-    if (nng_aio_result(state-&gt;aio) != 0) {
+    if (nng_aio_result(state-&gt;aio) != NNG_OK) {
         fprintf(stderr, "Error %s occurred", nng_strerror(nng_aio_result(state-&gt;aio)));
         return; // terminate the callback loop
     }
@@ -1142,7 +1142,7 @@ void callback(void *arg) {
     nng_msg *msg;
     nng_time now;
     struct state *state = arg;
-    if (nng_aio_result(state-&gt;aio) != 0) {
+    if (nng_aio_result(state-&gt;aio) != NNG_OK) {
         fprintf(stderr, "Error %s occurred", nng_strerror(nng_aio_result(state-&gt;aio)));
         return; // terminate the callback loop
     }
@@ -1766,7 +1766,7 @@ echo(void *arg)
         nng_ctx_recv(ec-&gt;ctx, ec-&gt;aio);
         return;
     case RECV:
-        if (nng_aio_result(ec-&gt;aio) != 0) {
+        if (nng_aio_result(ec-&gt;aio) != NNG_OK) {
             // ... handle error
         }
         // We reuse the message on the ec-&gt;aio
@@ -1774,7 +1774,7 @@ echo(void *arg)
         nng_ctx_send(ec-&gt;ctx, ec-&gt;aio);
         return;
     case SEND:
-        if (nng_aio_result(ec-&gt;aio) != 0) {
+        if (nng_aio_result(ec-&gt;aio) != NNG_OK) {
             // ... handle error
         }
         ec-&gt;state = RECV;
@@ -3708,7 +3708,7 @@ nng_aio_alloc(&amp;aio, NULL, NULL);
 // make a single outbound connection
 nng_stream_dialer_dial(dialer, aio);
 nng_aio_wait(aio); // wait for the asynchronous operation to complete
-if (nng_aio_result(aio) != 0) {
+if (nng_aio_result(aio) != NNG_OK) {
     // ... handle the error
 }
 stream = nng_aio_get_output(aio, 0);
@@ -3741,7 +3741,7 @@ if (nng_stream_listener_listen(listener)) {
 // now accept a single incoming connection as a stream object
 nng_stream_listener_accept(listener, aio);
 nng_aio_wait(aio); // wait for the asynchronous operation to complete
-if (nng_aio_result(aio) != 0) {
+if (nng_aio_result(aio) != NNG_OK) {
     // ... handle the error
 }
 stream = nng_aio_get_output(aio, 0);
@@ -4584,7 +4584,7 @@ nng_http_client_connect(client, aio);
 // Wait for connection to establish (or attempt to fail).
 nng_aio_wait(aio);
 
-if ((rv = nng_aio_result(aio)) != 0) {
+if ((rv = nng_aio_result(aio)) != NNG_OK) {
     printf("Connection failed: %s\n", nng_strerror(rv));
 } else {
     // Connection established, get it.

@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-ce0715df.js";
+            window.path_to_searchindex_js = "../searchindex-d543bfb6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61c4e272.js"></script>
@@ -344,7 +344,7 @@ echo(void *arg)
         nng_ctx_recv(ec-&gt;ctx, ec-&gt;aio);
         return;
     case RECV:
-        if (nng_aio_result(ec-&gt;aio) != 0) {
+        if (nng_aio_result(ec-&gt;aio) != NNG_OK) {
             // ... handle error
         }
         // We reuse the message on the ec-&gt;aio
@@ -352,7 +352,7 @@ echo(void *arg)
         nng_ctx_send(ec-&gt;ctx, ec-&gt;aio);
         return;
     case SEND:
-        if (nng_aio_result(ec-&gt;aio) != 0) {
+        if (nng_aio_result(ec-&gt;aio) != NNG_OK) {
             // ... handle error
         }
         ec-&gt;state = RECV;
