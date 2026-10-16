@@ -494,7 +494,7 @@ nng_http_client_connect(client, aio);
 // Wait for connection to establish (or attempt to fail).
 nng_aio_wait(aio);
 
-if ((rv = nng_aio_result(aio)) != 0) {
+if ((rv = nng_aio_result(aio)) != NNG_OK) {
     printf("Connection failed: %s\n", nng_strerror(rv));
 } else {
     // Connection established, get it.

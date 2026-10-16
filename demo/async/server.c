@@ -67,7 +67,7 @@ server_cb(void *arg)
 {
 	struct work *work = arg;
 	nng_msg     *msg;
-	int          rv;
+	nng_err      rv;
 	uint32_t     when;
 
 	switch (work->state) {
@@ -76,7 +76,7 @@ server_cb(void *arg)
 		nng_ctx_recv(work->ctx, work->aio);
 		break;
 	case RECV:
-		if ((rv = nng_aio_result(work->aio)) != 0) {
+		if ((rv = nng_aio_result(work->aio)) != NNG_OK) {
 			fatal("nng_ctx_recv", rv);
 		}
 		msg = nng_aio_get_msg(work->aio);
@@ -98,7 +98,7 @@ server_cb(void *arg)
 		nng_ctx_send(work->ctx, work->aio);
 		break;
 	case SEND:
-		if ((rv = nng_aio_result(work->aio)) != 0) {
+		if ((rv = nng_aio_result(work->aio)) != NNG_OK) {
 			nng_msg_free(work->msg);
 			fatal("nng_ctx_send", rv);
 		}

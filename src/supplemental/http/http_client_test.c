@@ -28,17 +28,17 @@ struct scripted_server {
 	int                 *delays;
 	size_t               nresponses;
 	size_t               requests;
-	int                  rv;
+	nng_err              rv;
 	bool                 ignore_send_errors;
 	char                 url[128];
 };
 
 static int
-stream_recv_some(nng_stream *stream, nng_aio *aio, void *buf, size_t len,
-    size_t *count)
+stream_recv_some(
+    nng_stream *stream, nng_aio *aio, void *buf, size_t len, size_t *count)
 {
 	nng_iov iov;
-	int     rv;
+	nng_err rv;
 
 	iov.iov_buf = buf;
 	iov.iov_len = len;
@@ -47,7 +47,7 @@ stream_recv_some(nng_stream *stream, nng_aio *aio, void *buf, size_t len,
 	}
 	nng_stream_recv(stream, aio);
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		return (rv);
 	}
 	*count = nng_aio_count(aio);
@@ -66,8 +66,8 @@ server_read_request(nng_stream *stream, nng_aio *aio)
 		if (used >= sizeof(buf) - 1) {
 			return (NNG_EMSGSIZE);
 		}
-		rv = stream_recv_some(stream, aio, buf + used,
-		    sizeof(buf) - 1 - used, &n);
+		rv = stream_recv_some(
+		    stream, aio, buf + used, sizeof(buf) - 1 - used, &n);
 		if (rv != 0) {
 			return (rv);
 		}
@@ -92,7 +92,7 @@ server_send_all(nng_stream *stream, nng_aio *aio, const char *data)
 
 	while (off < len) {
 		nng_iov iov;
-		int     rv;
+		nng_err rv;
 
 		iov.iov_buf = (void *) (data + off);
 		iov.iov_len = len - off;
@@ -101,7 +101,7 @@ server_send_all(nng_stream *stream, nng_aio *aio, const char *data)
 		}
 		nng_stream_send(stream, aio);
 		nng_aio_wait(aio);
-		if ((rv = nng_aio_result(aio)) != 0) {
+		if ((rv = nng_aio_result(aio)) != NNG_OK) {
 			return (rv);
 		}
 		off += nng_aio_count(aio);
@@ -115,7 +115,7 @@ scripted_server_main(void *arg)
 	struct scripted_server *srv = arg;
 	nng_aio                *aio = NULL;
 	nng_stream             *stream;
-	int                     rv;
+	nng_err                 rv;
 
 	if ((rv = nng_aio_alloc(&aio, NULL, NULL)) != 0) {
 		srv->rv = rv;
@@ -124,7 +124,7 @@ scripted_server_main(void *arg)
 	nng_aio_set_timeout(aio, 5000);
 	nng_stream_listener_accept(srv->listener, aio);
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		nng_aio_free(aio);
 		srv->rv = rv;
 		return;
@@ -166,11 +166,11 @@ scripted_server_start(struct scripted_server *srv, const char **responses,
 	srv->delays     = delays;
 	srv->nresponses = nresponses;
 
-	NUTS_PASS(nng_stream_listener_alloc(
-	    &srv->listener, "tcp://127.0.0.1:0"));
-	NUTS_PASS(nng_stream_listener_listen(srv->listener));
 	NUTS_PASS(
-	    nng_stream_listener_get_int(srv->listener, NNG_OPT_BOUND_PORT, &port));
+	    nng_stream_listener_alloc(&srv->listener, "tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_stream_listener_listen(srv->listener));
+	NUTS_PASS(nng_stream_listener_get_int(
+	    srv->listener, NNG_OPT_BOUND_PORT, &port));
 	snprintf(srv->url, sizeof(srv->url), "http://127.0.0.1:%d", port);
 	NUTS_PASS(nng_thread_create(&srv->thread, scripted_server_main, srv));
 }
@@ -224,18 +224,17 @@ client_free(nng_url *url, nng_aio *aio, nng_http_client *cli, nng_http *conn)
 static void
 test_http_client_request_response(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Content-Type: application/json\r\n"
-	    "Content-Length: 14\r\n"
-	    "Connection: keep-alive\r\n"
-	    "\r\n"
-	    "{\"ok\": true}\r\n";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Content-Type: application/json\r\n"
+	                                  "Content-Length: 14\r\n"
+	                                  "Connection: keep-alive\r\n"
+	                                  "\r\n"
+	                                  "{\"ok\": true}\r\n";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 	char                   body[16];
 	nng_iov                iov;
 	const char            *ptr;
@@ -275,18 +274,17 @@ test_http_client_request_response(void)
 static void
 test_http_client_transact(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Content-Type: text/plain\r\n"
-	    "Content-Length: 11\r\n"
-	    "Connection: keep-alive\r\n"
-	    "\r\n"
-	    "hello nng\r\n";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Content-Type: text/plain\r\n"
+	                                  "Content-Length: 11\r\n"
+	                                  "Connection: keep-alive\r\n"
+	                                  "\r\n"
+	                                  "hello nng\r\n";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 	void                  *data;
 	size_t                 len;
 
@@ -311,18 +309,17 @@ test_http_client_transact(void)
 static void
 test_http_client_hijack_stream(void)
 {
-	static const char *response =
-	    "HTTP/1.1 101 Switching Protocols\r\n"
-	    "Connection: Upgrade\r\n"
-	    "Upgrade: test\r\n"
-	    "\r\n"
-	    "test";
+	static const char *response = "HTTP/1.1 101 Switching Protocols\r\n"
+	                              "Connection: Upgrade\r\n"
+	                              "Upgrade: test\r\n"
+	                              "\r\n"
+	                              "test";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
-	nng_http              *conn = NULL;
+	nng_aio               *aio    = NULL;
+	nng_http_client       *cli    = NULL;
+	nng_http              *conn   = NULL;
 	nng_stream            *stream = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url    = NULL;
 	nng_iov                iov;
 	char                   buf[4];
 	nng_sockaddr           local;
@@ -355,15 +352,17 @@ test_http_client_hijack_stream(void)
 	conn = NULL; // stream now owns the connection
 	NUTS_TRUE(stream != NULL);
 
-	// The facade preserves the underlying connection's addresses and options.
+	// The facade preserves the underlying connection's addresses and
+	// options.
 	NUTS_TRUE(nng_sockaddr_equal(&local, nng_stream_self_addr(stream)));
 	NUTS_TRUE(nng_sockaddr_equal(&remote, nng_stream_peer_addr(stream)));
-	NUTS_PASS(nng_stream_get_bool(
-	    stream, NNG_OPT_TCP_NODELAY, &stream_nodelay));
+	NUTS_PASS(
+	    nng_stream_get_bool(stream, NNG_OPT_TCP_NODELAY, &stream_nodelay));
 	NUTS_TRUE(stream_nodelay == nodelay);
 	NUTS_FAIL(nng_stream_get_size(stream, NNG_OPT_TCP_NODELAY, &size),
 	    NNG_EBADTYPE);
-	NUTS_FAIL(nng_stream_get_bool(stream, "no-such-option", &stream_nodelay),
+	NUTS_FAIL(
+	    nng_stream_get_bool(stream, "no-such-option", &stream_nodelay),
 	    NNG_ENOTSUP);
 	NUTS_FAIL(nng_stream_peer_cert(stream, &cert), NNG_ENOTSUP);
 	NUTS_NULL(cert);
@@ -379,7 +378,8 @@ test_http_client_hijack_stream(void)
 
 	// Stop closes the connection and rejects subsequent operations.
 	nng_stream_stop(stream);
-	NUTS_FAIL(nng_stream_get_bool(stream, NNG_OPT_TCP_NODELAY, &stream_nodelay),
+	NUTS_FAIL(
+	    nng_stream_get_bool(stream, NNG_OPT_TCP_NODELAY, &stream_nodelay),
 	    NNG_ECLOSED);
 	NUTS_FAIL(nng_stream_peer_cert(stream, &cert), NNG_ECLOSED);
 	NUTS_PASS(nng_aio_set_iov(aio, 1, &iov));
@@ -410,10 +410,10 @@ test_http_client_reuse(void)
 		"two\r\n",
 	};
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 	void                  *data;
 	size_t                 len;
 
@@ -448,16 +448,15 @@ test_http_client_reuse(void)
 static void
 test_http_client_timeout(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Content-Length: 6\r\n"
-	    "\r\n"
-	    "late\r\n";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Content-Length: 6\r\n"
+	                                  "\r\n"
+	                                  "late\r\n";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
-	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_aio               *aio   = NULL;
+	nng_http_client       *cli   = NULL;
+	nng_http              *conn  = NULL;
+	nng_url               *url   = NULL;
 	int                    delay = 200;
 
 	scripted_server_start(&srv, &response, &delay, 1);
@@ -478,20 +477,19 @@ test_http_client_timeout(void)
 static void
 test_http_client_chunked(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Content-Type: text/plain\r\n"
-	    "Transfer-Encoding: chunked\r\n"
-	    "Connection: keep-alive\r\n"
-	    "\r\n"
-	    "5\r\nhello\r\n"
-	    "6\r\n world\r\n"
-	    "0\r\n\r\n";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Content-Type: text/plain\r\n"
+	                                  "Transfer-Encoding: chunked\r\n"
+	                                  "Connection: keep-alive\r\n"
+	                                  "\r\n"
+	                                  "5\r\nhello\r\n"
+	                                  "6\r\n world\r\n"
+	                                  "0\r\n\r\n";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 	void                  *data;
 	size_t                 len;
 
@@ -516,17 +514,16 @@ test_http_client_chunked(void)
 static void
 test_http_client_chunked_size_overflow(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Transfer-Encoding: chunked\r\n"
-	    "\r\n"
-	    "10000000000000000\r\n"
-	    "\r\n";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Transfer-Encoding: chunked\r\n"
+	                                  "\r\n"
+	                                  "10000000000000000\r\n"
+	                                  "\r\n";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 
 	scripted_server_start(&srv, &response, NULL, 1);
 	srv.ignore_send_errors = true;
@@ -546,17 +543,16 @@ test_http_client_chunked_size_overflow(void)
 static void
 test_http_client_chunked_alloc_overflow(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Transfer-Encoding: chunked\r\n"
-	    "\r\n"
-	    "ffffffffffffffff\r\n"
-	    "\r\n";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Transfer-Encoding: chunked\r\n"
+	                                  "\r\n"
+	                                  "ffffffffffffffff\r\n"
+	                                  "\r\n";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 
 	scripted_server_start(&srv, &response, NULL, 1);
 	srv.ignore_send_errors = true;
@@ -578,13 +574,12 @@ test_http_chunk_parser_extensions(void)
 {
 	nni_http_chunks *chunks = NULL;
 	nni_http_chunk  *chunk  = NULL;
-	char             body[] =
-	    "1;foo=bar\r\n"
-	    "x\r\n"
-	    "0\r\n"
-	    "Some-Trailer: ok\r\n"
-	    "\r\n";
-	size_t n = 0;
+	char             body[] = "1;foo=bar\r\n"
+	                          "x\r\n"
+	                          "0\r\n"
+	                          "Some-Trailer: ok\r\n"
+	                          "\r\n";
+	size_t           n      = 0;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 8));
 	NUTS_PASS(nni_http_chunks_parse(chunks, body, strlen(body), &n));
@@ -602,14 +597,13 @@ static void
 test_http_chunk_parser_max_size(void)
 {
 	nni_http_chunks *chunks = NULL;
-	char             body[] =
-	    "1\r\n"
-	    "a\r\n"
-	    "1\r\n"
-	    "b\r\n"
-	    "0\r\n"
-	    "\r\n";
-	size_t n = 0;
+	char             body[] = "1\r\n"
+	                          "a\r\n"
+	                          "1\r\n"
+	                          "b\r\n"
+	                          "0\r\n"
+	                          "\r\n";
+	size_t           n      = 0;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 1));
 	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
@@ -623,14 +617,13 @@ static void
 test_http_chunk_parser_bad_data_crlf(void)
 {
 	nni_http_chunks *chunks = NULL;
-	char             body[] =
-	    "1\r\n"
-	    "aXX";
-	size_t n = 0;
+	char             body[] = "1\r\n"
+	                          "aXX";
+	size_t           n      = 0;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == strlen(body));
 	nni_http_chunks_free(chunks);
 }
@@ -643,8 +636,8 @@ test_http_chunk_parser_bad_extension(void)
 	size_t           n      = 99;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == 2);
 	nni_http_chunks_free(chunks);
 }
@@ -657,8 +650,8 @@ test_http_chunk_parser_bad_trailer(void)
 	size_t           n      = 99;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == 7);
 	nni_http_chunks_free(chunks);
 }
@@ -667,12 +660,11 @@ static void
 test_http_chunk_parser_uppercase_hex(void)
 {
 	nni_http_chunks *chunks = NULL;
-	char             body[] =
-	    "A\r\n"
-	    "1234567890\r\n"
-	    "0\r\n"
-	    "\r\n";
-	size_t n = 0;
+	char             body[] = "A\r\n"
+	                          "1234567890\r\n"
+	                          "0\r\n"
+	                          "\r\n";
+	size_t           n      = 0;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 16));
 	NUTS_PASS(nni_http_chunks_parse(chunks, body, strlen(body), &n));
@@ -684,12 +676,11 @@ test_http_chunk_parser_uppercase_hex(void)
 static void
 test_http_chunk_parser_partial_data(void)
 {
-	nni_http_chunks *chunks = NULL;
-	char             part1[] =
-	    "3\r\n"
-	    "ab";
-	char   part2[] = "c\r\n0\r\n\r\n";
-	size_t n       = 0;
+	nni_http_chunks *chunks  = NULL;
+	char             part1[] = "3\r\n"
+	                           "ab";
+	char             part2[] = "c\r\n0\r\n\r\n";
+	size_t           n       = 0;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
 	NUTS_FAIL(nni_http_chunks_parse(chunks, part1, strlen(part1), &n),
@@ -709,8 +700,8 @@ test_http_chunk_parser_bad_length(void)
 	size_t           n      = 99;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == 0);
 	nni_http_chunks_free(chunks);
 }
@@ -723,8 +714,8 @@ test_http_chunk_parser_bad_newline(void)
 	size_t           n      = 99;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == 2);
 	nni_http_chunks_free(chunks);
 }
@@ -737,8 +728,8 @@ test_http_chunk_parser_bad_initial(void)
 	size_t           n      = 99;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == 0);
 	nni_http_chunks_free(chunks);
 }
@@ -751,8 +742,8 @@ test_http_chunk_parser_bad_trailer_cr(void)
 	size_t           n      = 99;
 
 	NUTS_PASS(nni_http_chunks_init(&chunks, 0));
-	NUTS_FAIL(nni_http_chunks_parse(chunks, body, strlen(body), &n),
-	    NNG_EPROTO);
+	NUTS_FAIL(
+	    nni_http_chunks_parse(chunks, body, strlen(body), &n), NNG_EPROTO);
 	NUTS_TRUE(n == 5);
 	nni_http_chunks_free(chunks);
 }
@@ -761,21 +752,23 @@ static void
 test_http_client_invalid_content_length(void)
 {
 	static const char *bad_responses[] = {
-		"HTTP/1.1 200 OK\r\nContent-Length: invalid_len\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: "
+		"invalid_len\r\n\r\nhello\r\n",
 		"HTTP/1.1 200 OK\r\nContent-Length: +5\r\n\r\nhello\r\n",
 		"HTTP/1.1 200 OK\r\nContent-Length: -5\r\n\r\nhello\r\n",
 		"HTTP/1.1 200 OK\r\nContent-Length: 5x\r\n\r\nhello\r\n",
 		"HTTP/1.1 200 OK\r\nContent-Length: 1 2\r\n\r\nhello\r\n",
-		"HTTP/1.1 200 OK\r\nContent-Length: 18446744073709551616\r\n\r\nhello\r\n",
+		"HTTP/1.1 200 OK\r\nContent-Length: "
+		"18446744073709551616\r\n\r\nhello\r\n",
 	};
 
-	for (size_t i = 0; i < sizeof(bad_responses) / sizeof(bad_responses[0]);
-	    i++) {
+	for (size_t i = 0;
+	    i < sizeof(bad_responses) / sizeof(bad_responses[0]); i++) {
 		struct scripted_server srv;
-		nng_aio               *aio = NULL;
-		nng_http_client       *cli = NULL;
+		nng_aio               *aio  = NULL;
+		nng_http_client       *cli  = NULL;
 		nng_http              *conn = NULL;
-		nng_url               *url = NULL;
+		nng_url               *url  = NULL;
 
 		scripted_server_start(&srv, &bad_responses[i], NULL, 1);
 		client_connect(srv.url, &url, &aio, &cli, &conn);
@@ -793,18 +786,17 @@ test_http_client_invalid_content_length(void)
 static void
 test_http_client_content_length_ows(void)
 {
-	static const char *response =
-	    "HTTP/1.1 200 OK\r\n"
-	    "Content-Type: text/plain\r\n"
-	    "Content-Length:   5   \r\n"
-	    "Connection: close\r\n"
-	    "\r\n"
-	    "hello";
+	static const char     *response = "HTTP/1.1 200 OK\r\n"
+	                                  "Content-Type: text/plain\r\n"
+	                                  "Content-Length:   5   \r\n"
+	                                  "Connection: close\r\n"
+	                                  "\r\n"
+	                                  "hello";
 	struct scripted_server srv;
-	nng_aio               *aio = NULL;
-	nng_http_client       *cli = NULL;
+	nng_aio               *aio  = NULL;
+	nng_http_client       *cli  = NULL;
 	nng_http              *conn = NULL;
-	nng_url               *url = NULL;
+	nng_url               *url  = NULL;
 	void                  *data;
 	size_t                 sz;
 
@@ -845,14 +837,17 @@ NUTS_TESTS = {
 	    test_http_chunk_parser_bad_data_crlf },
 	{ "http chunk parser bad extension",
 	    test_http_chunk_parser_bad_extension },
-	{ "http chunk parser bad trailer", test_http_chunk_parser_bad_trailer },
+	{ "http chunk parser bad trailer",
+	    test_http_chunk_parser_bad_trailer },
 	{ "http chunk parser uppercase hex",
 	    test_http_chunk_parser_uppercase_hex },
 	{ "http chunk parser partial data",
 	    test_http_chunk_parser_partial_data },
 	{ "http chunk parser bad length", test_http_chunk_parser_bad_length },
-	{ "http chunk parser bad newline", test_http_chunk_parser_bad_newline },
-	{ "http chunk parser bad initial", test_http_chunk_parser_bad_initial },
+	{ "http chunk parser bad newline",
+	    test_http_chunk_parser_bad_newline },
+	{ "http chunk parser bad initial",
+	    test_http_chunk_parser_bad_initial },
 	{ "http chunk parser bad trailer cr",
 	    test_http_chunk_parser_bad_trailer_cr },
 	{ NULL, NULL },

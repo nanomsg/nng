@@ -175,7 +175,7 @@ push0_recv_cb(void *arg)
 
 	// We normally expect to receive an error.  If a pipe actually
 	// sends us data, we just discard it.
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -244,7 +244,7 @@ push0_send_cb(void *arg)
 {
 	push0_pipe *p = arg;
 
-	if (nni_aio_result(&p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != NNG_OK) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
 		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);

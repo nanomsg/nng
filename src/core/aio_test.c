@@ -304,7 +304,7 @@ typedef struct sleep_loop {
 	nng_aio     *aio;
 	int          limit;
 	int          count;
-	int          result;
+	nng_err      result;
 	bool         done;
 	nng_duration interval;
 	nng_cv      *cv;
@@ -316,7 +316,7 @@ aio_sleep_loop(void *arg)
 {
 	sleep_loop *sl = arg;
 	nng_mtx_lock(sl->mx);
-	if (nng_aio_result(sl->aio) != 0) {
+	if (nng_aio_result(sl->aio) != NNG_OK) {
 		sl->result = nng_aio_result(sl->aio);
 		sl->done   = true;
 		nng_cv_wake(sl->cv);
@@ -326,7 +326,7 @@ aio_sleep_loop(void *arg)
 	sl->count++;
 	if (sl->count >= sl->limit) {
 		sl->done   = true;
-		sl->result = 0;
+		sl->result = NNG_OK;
 		nng_cv_wake(sl->cv);
 		nng_mtx_unlock(sl->mx);
 		return;

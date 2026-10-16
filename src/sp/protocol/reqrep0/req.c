@@ -290,7 +290,7 @@ req0_send_cb(void *arg)
 	nni_aio_completions sent_list;
 
 	nni_aio_completions_init(&sent_list);
-	if (nni_aio_result(&p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != NNG_OK) {
 		// We failed to send... clean up and deal with it.
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
 		nni_aio_set_msg(&p->aio_send, NULL);
@@ -329,7 +329,7 @@ req0_recv_cb(void *arg)
 	nni_aio   *aio;
 	uint32_t   id;
 
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -409,7 +409,7 @@ req0_retry_cb(void *arg)
 	// per clock tick is all we want.
 	now = nni_clock();
 	nni_mtx_lock(&s->mtx);
-	if (s->closed || (nni_aio_result(&s->retry_aio) != 0)) {
+	if (s->closed || (nni_aio_result(&s->retry_aio) != NNG_OK)) {
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}

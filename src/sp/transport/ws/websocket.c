@@ -69,8 +69,8 @@ wstran_pipe_send_cb(void *arg)
 	p->user_txaio = NULL;
 
 	if (uaio != NULL) {
-		int rv;
-		if ((rv = nni_aio_result(taio)) != 0) {
+		nng_err rv;
+		if ((rv = nni_aio_result(taio)) != NNG_OK) {
 			nni_aio_finish_error(uaio, rv);
 		} else {
 			nni_aio_finish(uaio, 0, 0);
@@ -85,12 +85,12 @@ wstran_pipe_recv_cb(void *arg)
 	ws_pipe *p    = arg;
 	nni_aio *raio = &p->rxaio;
 	nni_aio *uaio;
-	int      rv;
+	nng_err  rv;
 
 	nni_mtx_lock(&p->mtx);
 	uaio          = p->user_rxaio;
 	p->user_rxaio = NULL;
-	if ((rv = nni_aio_result(raio)) != 0) {
+	if ((rv = nni_aio_result(raio)) != NNG_OK) {
 		if (uaio != NULL) {
 			nni_aio_finish_error(uaio, rv);
 		}
@@ -308,8 +308,7 @@ wstran_dialer_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&d->mtx);
 }
 
-static const nni_option ws_pipe_options[] = {
-	// terminate list
+static const nni_option ws_pipe_options[] = { // terminate list
 	{
 	    .o_name = NULL,
 	}
@@ -416,11 +415,11 @@ wstran_connect_cb(void *arg)
 	ws_pipe    *p;
 	nni_aio    *caio = &d->connaio;
 	nni_aio    *uaio;
-	int         rv;
+	nng_err     rv;
 	nng_stream *ws = NULL;
 
 	nni_mtx_lock(&d->mtx);
-	if (nni_aio_result(caio) == 0) {
+	if (nni_aio_result(caio) == NNG_OK) {
 		ws = nni_aio_get_output(caio, 0);
 	}
 	if ((uaio = nni_list_first(&d->aios)) == NULL) {
@@ -431,7 +430,7 @@ wstran_connect_cb(void *arg)
 	}
 	nni_aio_list_remove(uaio);
 	NNI_ASSERT(nni_list_empty(&d->aios));
-	if ((rv = nni_aio_result(caio)) != 0) {
+	if ((rv = nni_aio_result(caio)) != NNG_OK) {
 		nni_aio_finish_error(uaio, rv);
 	} else if ((rv = nni_pipe_alloc_dialer((void **) &p, d->ndialer)) !=
 	    0) {
@@ -499,7 +498,7 @@ wstran_accept_cb(void *arg)
 	ws_listener *l    = arg;
 	nni_aio     *aaio = &l->accaio;
 	nni_aio     *uaio;
-	int          rv;
+	nng_err      rv;
 	ws_pipe     *p;
 	nng_stream  *ws;
 
@@ -507,7 +506,7 @@ wstran_accept_cb(void *arg)
 
 	ws   = nni_aio_get_output(aaio, 0);
 	uaio = nni_list_first(&l->aios);
-	if ((rv = nni_aio_result(aaio)) != 0) {
+	if ((rv = nni_aio_result(aaio)) != NNG_OK) {
 		goto error;
 	}
 	if (l->closed) {

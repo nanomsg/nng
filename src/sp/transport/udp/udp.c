@@ -169,8 +169,8 @@ struct udp_ep {
 	nng_duration  refresh; // refresh interval for connections in seconds
 	nng_duration  conn_retry;
 	nng_duration  conn_expire;
-	udp_sp_msg   *rx_msg;  // contains the received message header
-	uint16_t      rcvmax;  // max payload, trimmed to uint16_t
+	udp_sp_msg   *rx_msg; // contains the received message header
+	uint16_t      rcvmax; // max payload, trimmed to uint16_t
 	uint16_t      copymax;
 	size_t        max_peers;
 	size_t        peer_count;
@@ -272,8 +272,7 @@ udp_pipe_start(udp_pipe *p, udp_ep *ep, const nng_sockaddr *sa)
 	p->refresh   = p->dialer ? ep->conn_retry : ep->refresh;
 	p->rcvmax    = ep->rcvmax;
 	p->id        = nng_sockaddr_hash(sa);
-	p->expire = now +
-	    (p->dialer ? ep->conn_expire : UDP_PIPE_TIMEOUT(p));
+	p->expire = now + (p->dialer ? ep->conn_expire : UDP_PIPE_TIMEOUT(p));
 
 	return (udp_add_pipe(ep, p));
 }
@@ -552,7 +551,7 @@ udp_send_disc(udp_ep *ep, udp_pipe *p, udp_disc_reason reason)
 static void
 udp_send_disc_full(udp_ep *ep, const nng_sockaddr *sa, udp_disc_reason reason)
 {
-	udp_sp_msg disc = {0};
+	udp_sp_msg disc = { 0 };
 
 	disc.us_ver       = 0x1;
 	disc.us_op_code   = OPCODE_DISC;
@@ -565,7 +564,7 @@ udp_send_disc_full(udp_ep *ep, const nng_sockaddr *sa, udp_disc_reason reason)
 static void
 udp_send_creq(udp_ep *ep, udp_pipe *p)
 {
-	udp_sp_msg creq = {0};
+	udp_sp_msg creq = { 0 };
 
 	creq.us_ver     = 0x1;
 	creq.us_op_code = OPCODE_CREQ;
@@ -581,7 +580,7 @@ udp_send_creq(udp_ep *ep, udp_pipe *p)
 static void
 udp_send_cack(udp_ep *ep, udp_pipe *p)
 {
-	udp_sp_msg cack = {0};
+	udp_sp_msg cack = { 0 };
 
 	cack.us_ver     = 0x01;
 	cack.us_op_code = OPCODE_CACK;
@@ -840,7 +839,7 @@ udp_rx_cb(void *arg)
 {
 	udp_ep             *ep  = arg;
 	nni_aio            *aio = &ep->rx_aio;
-	int                 rv;
+	nng_err             rv;
 	size_t              n;
 	udp_sp_msg         *hdr;
 	nng_sockaddr       *sa;
@@ -852,7 +851,7 @@ udp_rx_cb(void *arg)
 	// precaution).
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		// something bad happened on RX... which is unexpected.
 		// sleep a little bit and hope for recovery.
 		switch (nni_aio_result(aio)) {
@@ -936,7 +935,7 @@ udp_pipe_send(void *arg, nni_aio *aio)
 {
 	udp_pipe  *p = arg;
 	udp_ep    *ep;
-	udp_sp_msg dreq = {0};
+	udp_sp_msg dreq = { 0 };
 	nng_msg   *msg;
 	size_t     count = 0;
 
@@ -1086,7 +1085,7 @@ udp_ep_close(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	ep->closed = true;
-	cursor = 0;
+	cursor     = 0;
 
 	// leave tx open so we can send disconnects
 	nni_aio_close(&ep->resaio);
@@ -1143,7 +1142,7 @@ udp_timer_cb(void *arg)
 {
 	udp_ep   *ep = arg;
 	udp_pipe *p;
-	int       rv;
+	nng_err   rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nni_aio_result(&ep->timeaio);
@@ -1441,7 +1440,7 @@ udp_resolv_cb(void *arg)
 	udp_ep   *ep = arg;
 	udp_pipe *p;
 	nni_aio  *aio;
-	int       rv;
+	nng_err   rv;
 	nni_mtx_lock(&ep->mtx);
 	if ((aio = nni_list_first(&ep->connaios)) == NULL) {
 		nni_mtx_unlock(&ep->mtx);
@@ -1453,7 +1452,7 @@ udp_resolv_cb(void *arg)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_result(&ep->resaio)) != 0) {
+	if ((rv = nni_aio_result(&ep->resaio)) != NNG_OK) {
 		nni_aio_list_remove(aio);
 		nni_mtx_unlock(&ep->mtx);
 		nng_log_warn("NNG-UDP-RESOLV",
@@ -1663,9 +1662,9 @@ udp_ep_get_conn_retry(void *arg, void *v, size_t *szp, nni_opt_type t)
 static nng_err
 udp_ep_set_conn_retry(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	udp_ep       *ep = arg;
-	nng_duration  val;
-	nng_err       rv;
+	udp_ep      *ep = arg;
+	nng_duration val;
+	nng_err      rv;
 
 	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
 		return (rv);
@@ -1698,9 +1697,9 @@ udp_ep_get_conn_expire(void *arg, void *v, size_t *szp, nni_opt_type t)
 static nng_err
 udp_ep_set_conn_expire(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	udp_ep       *ep = arg;
-	nng_duration  val;
-	nng_err       rv;
+	udp_ep      *ep = arg;
+	nng_duration val;
+	nng_err      rv;
 
 	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
 		return (rv);

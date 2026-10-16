@@ -41,19 +41,19 @@ struct server_test {
 static int
 httpdo(struct server_test *st, void **datap, size_t *sizep)
 {
-	int         rv;
+	nng_err     rv;
 	size_t      clen = 0;
 	void       *data = NULL;
 	const char *ptr;
 
 	nng_http_write_request(st->conn, st->aio);
 	nng_aio_wait(st->aio);
-	if ((rv = nng_aio_result(st->aio)) != 0) {
+	if ((rv = nng_aio_result(st->aio)) != NNG_OK) {
 		return (rv);
 	}
 	nng_http_read_response(st->conn, st->aio);
 	nng_aio_wait(st->aio);
-	if ((rv = nng_aio_result(st->aio)) != 0) {
+	if ((rv = nng_aio_result(st->aio)) != NNG_OK) {
 		return (rv);
 	}
 
@@ -70,7 +70,7 @@ httpdo(struct server_test *st, void **datap, size_t *sizep)
 		nng_aio_set_iov(st->aio, 1, &iov);
 		nng_http_read_all(st->conn, st->aio);
 		nng_aio_wait(st->aio);
-		if ((rv = nng_aio_result(st->aio)) != 0) {
+		if ((rv = nng_aio_result(st->aio)) != NNG_OK) {
 			return (rv);
 		}
 	}
@@ -379,7 +379,8 @@ test_server_empty_uri_query(void)
 	    &h, "/", doc1, strlen(doc1), "text/html"));
 	server_setup(&st, h);
 
-	// An empty path with a query is serialized as the valid target "/?query".
+	// An empty path with a query is serialized as the valid target
+	// "/?query".
 	NUTS_PASS(nng_http_set_uri(st.conn, "", "param=1234"));
 	NUTS_PASS(httpget(&st, &data, &size, &stat, &ctype));
 	NUTS_TRUE(stat == NNG_HTTP_STATUS_OK);
@@ -405,24 +406,24 @@ test_server_unix(void)
 	NUTS_FAIL(nng_http_server_hold(&server, url), NNG_ENOTSUP);
 	nng_url_free(url);
 #else
-	char               urlstr[3 * NNG_MAXADDRLEN + 16];
-	char               other_urlstr[3 * NNG_MAXADDRLEN + 16];
-	char               client_urlstr[3 * NNG_MAXADDRLEN + 64];
-	int                port;
-	int                id;
-	uint64_t           value;
-	nng_url           *url       = NULL;
-	nng_url           *other_url = NULL;
-	nng_url           *client_url = NULL;
-	nng_aio           *aio       = NULL;
-	nng_http_server   *server    = NULL;
-	nng_http_server   *same      = NULL;
-	nng_http_server   *other     = NULL;
-	nng_http_handler  *localhost = NULL;
-	nng_http_handler  *override  = NULL;
-	nng_http_handler  *identity  = NULL;
-	nng_http_client   *client    = NULL;
-	nng_http          *conn      = NULL;
+	char              urlstr[3 * NNG_MAXADDRLEN + 16];
+	char              other_urlstr[3 * NNG_MAXADDRLEN + 16];
+	char              client_urlstr[3 * NNG_MAXADDRLEN + 64];
+	int               port;
+	int               id;
+	uint64_t          value;
+	nng_url          *url        = NULL;
+	nng_url          *other_url  = NULL;
+	nng_url          *client_url = NULL;
+	nng_aio          *aio        = NULL;
+	nng_http_server  *server     = NULL;
+	nng_http_server  *same       = NULL;
+	nng_http_server  *other      = NULL;
+	nng_http_handler *localhost  = NULL;
+	nng_http_handler *override   = NULL;
+	nng_http_handler *identity   = NULL;
+	nng_http_client  *client     = NULL;
+	nng_http         *conn       = NULL;
 
 	http_unix_url(urlstr, sizeof(urlstr));
 	http_unix_url(other_urlstr, sizeof(other_urlstr));
@@ -449,7 +450,8 @@ test_server_unix(void)
 	NUTS_PASS(nng_http_handler_alloc(&override, "/override", httpok));
 	nng_http_handler_set_host(override, "example.test");
 	NUTS_PASS(nng_http_server_add_handler(server, override));
-	NUTS_PASS(nng_http_handler_alloc(&identity, "/identity", httpunixpeer));
+	NUTS_PASS(
+	    nng_http_handler_alloc(&identity, "/identity", httpunixpeer));
 	NUTS_PASS(nng_http_server_add_handler(server, identity));
 	NUTS_PASS(nng_http_server_start(server));
 	NUTS_FAIL(nng_http_server_get_port(server, &port), NNG_ENOTSUP);
@@ -464,7 +466,8 @@ test_server_unix(void)
 	NUTS_FAIL(nng_http_get_uint64(conn, "http:no-such-option", &value),
 	    NNG_ENOTSUP);
 #if !defined(NNG_PLATFORM_SUNOS)
-	NUTS_FAIL(nng_http_get_int(conn, NNG_OPT_PEER_ZONEID, &id), NNG_ENOTSUP);
+	NUTS_FAIL(
+	    nng_http_get_int(conn, NNG_OPT_PEER_ZONEID, &id), NNG_ENOTSUP);
 #endif
 
 	nng_http_write_request(conn, aio);
@@ -1116,7 +1119,8 @@ test_server_transfer_encoding(void)
 	NUTS_PASS(nng_http_set_uri(st.conn, "/post", NULL));
 	nng_http_set_body(st.conn, txdata, strlen(txdata));
 	nng_http_set_method(st.conn, "POST");
-	NUTS_PASS(nng_http_set_header(st.conn, "Transfer-Encoding", "chunked"));
+	NUTS_PASS(
+	    nng_http_set_header(st.conn, "Transfer-Encoding", "chunked"));
 	NUTS_PASS(httpdo(&st, &data, &size));
 	NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_NOT_IMPLEMENTED);
 	nng_free(data, size);
@@ -1127,15 +1131,15 @@ test_server_transfer_encoding(void)
 static void
 test_server_bad_content_length(void)
 {
-	const char *values[] = {
-		"", "123x", "+1", "-1", "18446744073709551616"
-	};
-	struct server_test  st;
+	const char        *values[] = { "", "123x", "+1", "-1",
+		"18446744073709551616" };
+	struct server_test st;
 
 	server_setup(&st, NULL);
 
 	for (size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++) {
-		NUTS_PASS(nng_http_set_header(st.conn, "Content-Length", values[i]));
+		NUTS_PASS(
+		    nng_http_set_header(st.conn, "Content-Length", values[i]));
 		nng_http_write_request(st.conn, st.aio);
 		nng_aio_wait(st.aio);
 		NUTS_PASS(nng_aio_result(st.aio));
@@ -1144,7 +1148,8 @@ test_server_bad_content_length(void)
 		nng_aio_wait(st.aio);
 		NUTS_PASS(nng_aio_result(st.aio));
 		NUTS_HTTP_STATUS(st.conn, NNG_HTTP_STATUS_BAD_REQUEST);
-		NUTS_MATCH(nng_http_get_header(st.conn, "Connection"), "close");
+		NUTS_MATCH(
+		    nng_http_get_header(st.conn, "Connection"), "close");
 
 		if (i + 1 < sizeof(values) / sizeof(values[0])) {
 			server_reset(&st);
@@ -1157,10 +1162,9 @@ test_server_bad_content_length(void)
 static void
 test_server_bad_content_length_closes(void)
 {
-	static char request[] =
-	    "GET / HTTP/1.1\r\n"
-	    "Host: 127.0.0.1\r\n"
-	    "\r\n";
+	static char        request[] = "GET / HTTP/1.1\r\n"
+	                               "Host: 127.0.0.1\r\n"
+	                               "\r\n";
 	struct server_test st;
 	nng_http_handler  *h;
 

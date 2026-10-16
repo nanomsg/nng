@@ -144,11 +144,11 @@ rest_job_cb(void *arg)
 {
 	rest_job *job = arg;
 	nng_aio  *aio = job->aio;
-	int       rv;
+	nng_err   rv;
 
 	switch (job->state) {
 	case SEND_REQ:
-		if ((rv = nng_aio_result(aio)) != 0) {
+		if ((rv = nng_aio_result(aio)) != NNG_OK) {
 			rest_http_fatal(job, rv);
 			return;
 		}
@@ -159,7 +159,7 @@ rest_job_cb(void *arg)
 		nng_ctx_recv(job->ctx, aio);
 		break;
 	case RECV_REP:
-		if ((rv = nng_aio_result(aio)) != 0) {
+		if ((rv = nng_aio_result(aio)) != NNG_OK) {
 			rest_http_fatal(job, rv);
 			return;
 		}

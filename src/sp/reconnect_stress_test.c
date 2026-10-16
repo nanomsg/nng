@@ -100,9 +100,9 @@ ping_cb(void *arg)
 {
 	nng_msg     *msg;
 	struct work *w      = arg;
-	int          result = nng_aio_result(w->aio);
+	nng_err      result = nng_aio_result(w->aio);
 
-	if (result)
+	if (result != NNG_OK)
 		switch (result) {
 		case NNG_ETIMEDOUT:
 		case NNG_ESTATE:
@@ -146,9 +146,9 @@ echo_cb(void *arg)
 {
 	nng_msg     *msg;
 	struct work *w      = arg;
-	int          result = nng_aio_result(w->aio);
+	nng_err      result = nng_aio_result(w->aio);
 
-	if (result)
+	if (result != NNG_OK)
 		switch (result) {
 		case NNG_ECANCELED:
 		case NNG_ECLOSED:

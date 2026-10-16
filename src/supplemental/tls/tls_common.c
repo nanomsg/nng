@@ -449,7 +449,7 @@ tls_bio_send_cb(void *arg)
 {
 	nni_tls_conn *conn = arg;
 	nng_aio      *aio  = &conn->bio_send;
-	int           rv;
+	nng_err       rv;
 	size_t        count;
 
 	nni_mtx_lock(&conn->bio_lock);
@@ -490,11 +490,11 @@ tls_bio_recv_cb(void *arg)
 {
 	nni_tls_conn *conn = arg;
 	nni_aio      *aio  = &conn->bio_recv;
-	int           rv;
+	nng_err       rv;
 
 	nni_mtx_lock(&conn->bio_lock);
 	conn->bio_recv_pend = false;
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		tls_bio_error(conn, rv);
 		nni_mtx_unlock(&conn->bio_lock);
 		tls_conn_err(conn, rv);

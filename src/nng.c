@@ -94,7 +94,7 @@ nng_recv(nng_socket s, void *buf, size_t *szp, int flags)
 int
 nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 {
-	int       rv;
+	nng_err   rv;
 	nni_sock *sock;
 	nni_aio   aio;
 	bool      skipped;
@@ -117,7 +117,7 @@ nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 		nni_aio_wait(&aio);
 	}
 
-	if ((rv = nni_aio_result(&aio)) == 0) {
+	if ((rv = nni_aio_result(&aio)) == NNG_OK) {
 		*msgp = nng_aio_get_msg(&aio);
 
 	} else if ((rv == NNG_ETIMEDOUT) &&
@@ -149,7 +149,7 @@ nng_send(nng_socket s, const void *buf, size_t len, int flags)
 int
 nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 {
-	int       rv;
+	nng_err   rv;
 	nni_aio   aio;
 	nni_sock *sock;
 	bool      skipped;
@@ -268,7 +268,7 @@ nng_ctx_id(nng_ctx c)
 int
 nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 {
-	int      rv;
+	nng_err  rv;
 	nni_aio  aio;
 	nni_ctx *ctx;
 	bool     skipped;
@@ -291,7 +291,7 @@ nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 		nni_aio_wait(&aio);
 	}
 
-	if ((rv = nni_aio_result(&aio)) == 0) {
+	if ((rv = nni_aio_result(&aio)) == NNG_OK) {
 		*msgp = nng_aio_get_msg(&aio);
 
 	} else if ((rv == NNG_ETIMEDOUT) &&
@@ -340,7 +340,7 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 int
 nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 {
-	int      rv;
+	nng_err  rv;
 	nni_aio  aio;
 	nni_ctx *ctx;
 	bool     skipped;

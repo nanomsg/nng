@@ -399,7 +399,7 @@ surv0_pipe_send_cb(void *arg)
 	surv0_sock *sock = p->sock;
 	nni_msg    *msg;
 
-	if (nni_aio_result(&p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != NNG_OK) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
 		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);
@@ -430,7 +430,7 @@ surv0_pipe_recv_cb(void *arg)
 	uint32_t    id;
 	nni_aio    *aio;
 
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}

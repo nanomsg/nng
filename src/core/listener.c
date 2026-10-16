@@ -387,7 +387,7 @@ listener_timer_cb(void *arg)
 {
 	nni_listener *l = arg;
 
-	if (nni_aio_result(&l->l_tmo_aio) == 0) {
+	if (nni_aio_result(&l->l_tmo_aio) == NNG_OK) {
 		listener_accept_start(l);
 	}
 }
@@ -397,10 +397,10 @@ listener_accept_cb(void *arg)
 {
 	nni_listener *l   = arg;
 	nni_aio      *aio = &l->l_acc_aio;
-	int           rv;
+	nng_err       rv;
 
 	switch ((rv = nni_aio_result(aio))) {
-	case 0:
+	case NNG_OK:
 #ifdef NNG_ENABLE_STATS
 		nni_stat_inc(&l->st_accept, 1);
 #endif

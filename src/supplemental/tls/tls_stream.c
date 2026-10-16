@@ -114,10 +114,10 @@ tls_stream_conn_cb(void *arg)
 {
 	tls_stream         *ts = arg;
 	nng_stream         *bio;
-	int                 rv;
+	nng_err             rv;
 	const nng_sockaddr *sa;
 
-	if ((rv = nni_aio_result(&ts->conn_aio)) != 0) {
+	if ((rv = nni_aio_result(&ts->conn_aio)) != NNG_OK) {
 		nni_aio_finish_error(ts->user_aio, rv);
 		nni_tls_stream_free(ts);
 		return;

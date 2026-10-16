@@ -408,8 +408,8 @@ test_websocket_text_rejected(void)
 		    uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
 		NUTS_PASS(nng_stream_listener_alloc(&l, uri));
 		NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
-		NUTS_PASS(nng_stream_dialer_set_bool(
-		    d, NNG_OPT_WS_SEND_TEXT, true));
+		NUTS_PASS(
+		    nng_stream_dialer_set_bool(d, NNG_OPT_WS_SEND_TEXT, true));
 		rv = nng_stream_listener_listen(l);
 		if (rv != NNG_EADDRINUSE) {
 			break;
@@ -460,10 +460,10 @@ test_websocket_text_rejected(void)
 void
 test_websocket_frame_limit(void)
 {
-	nng_stream_listener *l = NULL;
-	nng_stream_dialer   *d = NULL;
-	nng_stream          *c = NULL;
-	nng_stream          *s = NULL;
+	nng_stream_listener *l    = NULL;
+	nng_stream_dialer   *d    = NULL;
+	nng_stream          *c    = NULL;
+	nng_stream          *s    = NULL;
 	nng_aio             *daio = NULL;
 	nng_aio             *laio = NULL;
 	nng_aio             *raio = NULL;
@@ -489,10 +489,10 @@ test_websocket_frame_limit(void)
 		    url, sizeof(url), "ws://127.0.0.1:%d/test", port);
 		NUTS_PASS(nng_stream_listener_alloc(&l, url));
 		NUTS_PASS(nng_stream_dialer_alloc(&d, url));
-		NUTS_PASS(nng_stream_listener_set_bool(
-		    l, NNI_OPT_WS_MSGMODE, true));
-		NUTS_PASS(nng_stream_dialer_set_bool(
-		    d, NNI_OPT_WS_MSGMODE, true));
+		NUTS_PASS(
+		    nng_stream_listener_set_bool(l, NNI_OPT_WS_MSGMODE, true));
+		NUTS_PASS(
+		    nng_stream_dialer_set_bool(d, NNI_OPT_WS_MSGMODE, true));
 		NUTS_PASS(nng_stream_listener_set_size(
 		    l, NNG_OPT_WS_SENDMAXFRAME, 1));
 		rv = nng_stream_listener_listen(l);
@@ -540,7 +540,7 @@ test_websocket_frame_limit(void)
 	nng_aio_wait(raio);
 	NUTS_FAIL(nng_aio_result(raio), NNG_ECLOSED);
 	nng_aio_wait(saio);
-	NUTS_TRUE((nng_aio_result(saio) == 0) ||
+	NUTS_TRUE((nng_aio_result(saio) == NNG_OK) ||
 	    (nng_aio_result(saio) == NNG_ECLOSED));
 	if ((msg = nng_aio_get_msg(saio)) != NULL) {
 		nng_aio_set_msg(saio, NULL);
@@ -566,7 +566,7 @@ typedef struct recv_state {
 	nng_mtx     *lock;
 	nng_cv      *cv;
 	nng_aio     *aio;
-	int          err;
+	nng_err      err;
 	bool         done;
 	uint8_t     *send_buf;
 	uint8_t     *buf;
@@ -578,7 +578,7 @@ frag_recv_cb(void *arg)
 {
 	recv_state *s = arg;
 
-	if ((s->err = nng_aio_result(s->aio)) == 0) {
+	if ((s->err = nng_aio_result(s->aio)) == NNG_OK) {
 		int len   = (int) nng_aio_count(s->aio);
 		int resid = s->total - s->xfr;
 
@@ -631,7 +631,7 @@ test_websocket_fragmentation(void)
 	memset(&state, 0, sizeof(state));
 	state.total = 200000; // total to send
 	state.xfr   = 0;
-	state.err   = 0;
+	state.err   = NNG_OK;
 	NUTS_TRUE((recv_buf = nng_alloc(state.total)) != NULL);
 	NUTS_TRUE((send_buf = nng_alloc(state.total)) != NULL);
 	NUTS_PASS(nng_mtx_alloc(&state.lock));

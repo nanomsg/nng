@@ -217,7 +217,7 @@ echo(void *arg)
         nng_ctx_recv(ec->ctx, ec->aio);
         return;
     case RECV:
-        if (nng_aio_result(ec->aio) != 0) {
+        if (nng_aio_result(ec->aio) != NNG_OK) {
             // ... handle error
         }
         // We reuse the message on the ec->aio
@@ -225,7 +225,7 @@ echo(void *arg)
         nng_ctx_send(ec->ctx, ec->aio);
         return;
     case SEND:
-        if (nng_aio_result(ec->aio) != 0) {
+        if (nng_aio_result(ec->aio) != NNG_OK) {
             // ... handle error
         }
         ec->state = RECV;

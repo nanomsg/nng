@@ -53,7 +53,7 @@ main(int argc, char **argv)
 	nng_url         *url;
 	nng_aio         *aio;
 	const char      *hdr;
-	int              rv;
+	nng_err          rv;
 	int              len;
 	void            *data;
 	nng_iov          iov;
@@ -77,7 +77,7 @@ main(int argc, char **argv)
 
 	// Wait for it to finish.
 	nng_aio_wait(aio);
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		fatal(rv);
 	}
 
@@ -94,7 +94,7 @@ main(int argc, char **argv)
 	nng_http_write_request(conn, aio);
 	nng_aio_wait(aio);
 
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		fatal(rv);
 	}
 
@@ -102,7 +102,7 @@ main(int argc, char **argv)
 	nng_http_read_response(conn, aio);
 	nng_aio_wait(aio);
 
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		fatal(rv);
 	}
 
@@ -139,7 +139,7 @@ main(int argc, char **argv)
 	// Wait for it to complete.
 	nng_aio_wait(aio);
 
-	if ((rv = nng_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != NNG_OK) {
 		fatal(rv);
 	}
 

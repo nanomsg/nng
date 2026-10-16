@@ -476,7 +476,7 @@ http_rd_cb(void *arg)
 
 	nni_mtx_lock(&conn->mtx);
 
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nni_aio_result(aio)) != NNG_OK) {
 		if ((uaio = conn->rd_uaio) != NULL) {
 			conn->rd_uaio = NULL;
 			nni_aio_finish_error(uaio, rv);
@@ -798,13 +798,13 @@ http_snprintf(nng_http *conn, char *buf, size_t sz)
 
 	if (conn->client) {
 		len  = snprintf(buf, sz, "%s %s %s\r\n",
-		     nni_http_get_method(conn), nni_http_get_uri(conn),
-		     nni_http_get_version(conn));
+		    nni_http_get_method(conn), nni_http_get_uri(conn),
+		    nni_http_get_version(conn));
 		hdrs = &conn->req.data.hdrs;
 	} else {
 		len  = snprintf(buf, sz, "%s %d %s\r\n",
-		     nni_http_get_version(conn), nni_http_get_status(conn),
-		     nni_http_get_reason(conn));
+		    nni_http_get_version(conn), nni_http_get_status(conn),
+		    nni_http_get_reason(conn));
 		hdrs = &conn->res.data.hdrs;
 	}
 
@@ -1022,8 +1022,7 @@ nni_http_reason(nng_http_status code)
 
 		// 300 series -- redirection
 		{ NNG_HTTP_STATUS_MULTIPLE_CHOICES, "Multiple Choices" },
-		{ NNG_HTTP_STATUS_MOVED_PERMANENTLY,
-		    "Moved Permanently" },
+		{ NNG_HTTP_STATUS_MOVED_PERMANENTLY, "Moved Permanently" },
 		{ NNG_HTTP_STATUS_FOUND, "Found" },
 		{ NNG_HTTP_STATUS_SEE_OTHER, "See Other" },
 		{ NNG_HTTP_STATUS_NOT_MODIFIED, "Not Modified" },
@@ -1270,8 +1269,8 @@ nni_http_set_uri(nng_http *conn, const char *uri, const char *query)
 	size_t      needed;
 	const char *fmt;
 
-	// HTTP clients must use '/' for an empty origin-form path.  Normalize it
-	// here so that adding a query produces "/?query", never "?query".
+	// HTTP clients must use '/' for an empty origin-form path.  Normalize
+	// it here so that adding a query produces "/?query", never "?query".
 	if (uri[0] == '\0') {
 		uri = "/";
 	}

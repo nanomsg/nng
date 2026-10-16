@@ -321,7 +321,7 @@ sub0_recv_cb(void *arg)
 	nni_msg            *dup_msg;
 	nni_aio_completions finish;
 
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}

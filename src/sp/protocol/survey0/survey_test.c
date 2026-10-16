@@ -563,7 +563,7 @@ test_surv_context_multi(void)
 	for (int i = 0; i < cnt; i++) {
 		nng_ctx_recv(c[i], aio);
 		nng_aio_wait(aio);
-		NUTS_TRUE(nng_aio_result(aio) != 0);
+		NUTS_TRUE(nng_aio_result(aio) != NNG_OK);
 	}
 	for (int i = 0; i < cnt; i++) {
 		nng_ctx_close(c[i]);

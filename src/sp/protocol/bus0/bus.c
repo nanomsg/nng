@@ -197,7 +197,7 @@ bus0_pipe_send_cb(void *arg)
 	bus0_sock *s = p->bus;
 	nni_msg   *msg;
 
-	if (nni_aio_result(&p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != NNG_OK) {
 		// closed?
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
 		nni_aio_set_msg(&p->aio_send, NULL);
@@ -223,7 +223,7 @@ bus0_pipe_recv_cb(void *arg)
 	nni_aio   *aio = NULL;
 	nni_msg   *msg;
 
-	if (nni_aio_result(&p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != NNG_OK) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
