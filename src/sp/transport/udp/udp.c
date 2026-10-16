@@ -994,6 +994,7 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 {
 	udp_pipe *p  = arg;
 	udp_ep   *ep = p->ep;
+	nng_msg  *msg;
 
 	nni_aio_reset(aio);
 	nni_mtx_lock(&ep->mtx);
@@ -1008,6 +1009,18 @@ udp_pipe_recv(void *arg, nni_aio *aio)
 	}
 
 	nni_list_append(&p->rx_aios, aio);
+
+	// Messages may have been queued while no receive was pending (e.g.
+	// PULL holds one in-flight receive). Complete from rx_mq now rather
+	// than waiting for another datagram to run the pairing loop.
+	if (!nni_lmq_empty(&p->rx_mq)) {
+		nni_aio_list_remove(aio);
+		nni_lmq_get(&p->rx_mq, &msg);
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_msg(aio, msg);
+		return;
+	}
+
 	nni_mtx_unlock(&ep->mtx);
 }
 
