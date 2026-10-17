@@ -5,6 +5,7 @@
 // file was obtained (LICENSE.txt). A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
 
+#include "../../../core/pipe.h"
 #include "../../../testing/nuts.h"
 
 // Exercise the transport over its actual wire format, rather than hiding
@@ -38,6 +39,7 @@ typedef struct {
 	nng_mtx     *mtx;
 	nng_cv      *cv;
 	nng_listener listener;
+	nng_pipe     pipe;
 	unsigned     added;
 	unsigned     removed;
 } wire_events;
@@ -143,6 +145,7 @@ wire_event(nng_pipe pipe, nng_pipe_ev ev, void *arg)
 	(void) pipe;
 	nng_mtx_lock(events->mtx);
 	if (ev == NNG_PIPE_EV_ADD_POST) {
+		events->pipe = pipe;
 		events->added++;
 	} else if (ev == NNG_PIPE_EV_REM_POST) {
 		events->removed++;
@@ -355,6 +358,76 @@ test_udp_wire_data_before_receive(void)
 	// Each message is delivered exactly once.
 	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 100));
 	NUTS_FAIL(nng_recv(s, buf, &len, 0), NNG_ETIMEDOUT);
+	NUTS_CLOSE(s);
+	wire_close(&p);
+	wire_events_fini(&events);
+}
+
+// A receive posted after the pipe is closed must complete with NNG_ECLOSED.
+static void
+test_udp_wire_closed_receive(void)
+{
+	nng_socket   s;
+	wire_events  events;
+	wire_peer    p;
+	nng_pipe     public_pipe;
+	nni_pipe    *pipe = NULL;
+	nng_aio     *aio  = NULL;
+	nng_sockaddr server = wire_listen(&s, &events, 0);
+
+	wire_open(&p);
+	wire_connect(&p, &server);
+	wire_wait(&events, 1, 0);
+
+	nng_mtx_lock(events.mtx);
+	public_pipe = events.pipe;
+	nng_mtx_unlock(events.mtx);
+	NUTS_PASS(nni_pipe_find(&pipe, public_pipe.id));
+	NUTS_PASS(nng_pipe_close(public_pipe));
+	wire_wait(&events, 1, 1);
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nni_pipe_recv(pipe, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
+	NUTS_NULL(nng_aio_get_msg(aio));
+
+	nng_aio_free(aio);
+	nni_pipe_rele(pipe);
+	NUTS_CLOSE(s);
+	wire_close(&p);
+	wire_events_fini(&events);
+}
+
+// A stopped receive that cannot complete synchronously must be rejected by
+// nni_aio_start.
+static void
+test_udp_wire_stopped_receive(void)
+{
+	nng_socket   s;
+	wire_events  events;
+	wire_peer    p;
+	nng_pipe     public_pipe;
+	nni_pipe    *pipe = NULL;
+	nng_aio     *aio  = NULL;
+	nng_sockaddr server = wire_listen(&s, &events, 0);
+
+	wire_open(&p);
+	wire_connect(&p, &server);
+	wire_wait(&events, 1, 0);
+
+	nng_mtx_lock(events.mtx);
+	public_pipe = events.pipe;
+	nng_mtx_unlock(events.mtx);
+	NUTS_PASS(nni_pipe_find(&pipe, public_pipe.id));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_aio_stop(aio);
+	nni_pipe_recv(pipe, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_NULL(nng_aio_get_msg(aio));
+
+	nng_aio_free(aio);
+	nni_pipe_rele(pipe);
 	NUTS_CLOSE(s);
 	wire_close(&p);
 	wire_events_fini(&events);
@@ -589,6 +662,8 @@ NUTS_TESTS = {
 	{ "udp wire bad headers", test_udp_wire_bad_headers },
 	{ "udp wire data lengths", test_udp_wire_data_lengths },
 	{ "udp wire data before receive", test_udp_wire_data_before_receive },
+	{ "udp wire closed receive", test_udp_wire_closed_receive },
+	{ "udp wire stopped receive", test_udp_wire_stopped_receive },
 	{ "udp wire bad refresh and type", test_udp_wire_bad_refresh_type },
 	{ "udp wire handshake loss", test_udp_wire_handshake_loss },
 	{ "udp wire handshake timeout", test_udp_wire_handshake_timeout },
