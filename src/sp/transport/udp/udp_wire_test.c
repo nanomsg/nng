@@ -131,7 +131,7 @@ wire_expect(wire_peer *p, const nng_sockaddr *from, unsigned op,
 		return (false);
 	}
 	NUTS_TRUE(p->len == WIRE_HEADER);
-	NUTS_TRUE(nng_sockaddr_equal(&p->from, from));
+	NUTS_TRUE(from == NULL || nng_sockaddr_equal(&p->from, from));
 	NUTS_TRUE(p->packet[0] == 1);
 	NUTS_TRUE(p->packet[1] == op);
 	NUTS_TRUE(wire_get16(p->packet + 4) == param);
@@ -561,6 +561,94 @@ test_udp_wire_expiry_before_retry(void)
 	wire_handshake_timeout(3000, 100);
 }
 
+// Reconnect the same dialer after a remote disconnect. Replacing the dialer
+// would hide transport state that incorrectly survives the first connection.
+static void
+test_udp_wire_reconnect(void)
+{
+	wire_peer    peer;
+	wire_events  events;
+	nng_socket   client;
+	nng_dialer   dialer;
+	nng_sockaddr client_addr;
+	char         url[80];
+	uint8_t      header[WIRE_HEADER];
+	wire_open(&peer);
+	NUTS_PASS(nng_push0_open(&client));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_SENDTIMEO, WIRE_TIMEOUT));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMINT, 10));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_RECONNMAXT, 10));
+	wire_events_init(&events, client);
+	snprintf(url, sizeof(url), "udp4://127.0.0.1:%u",
+	    (unsigned) nuts_be16(peer.addr.s_in.sa_port));
+	NUTS_PASS(nng_dialer_create(&dialer, client, url));
+	NUTS_PASS(nng_dialer_start(dialer, NNG_FLAG_NONBLOCK));
+	for (unsigned i = 0; i < 3; i++) {
+		if (!wire_expect(
+		        &peer, NULL, WIRE_CREQ, 65000, WIRE_TIMEOUT)) {
+			break;
+		}
+		client_addr = peer.from;
+		wire_header(header, WIRE_CACK, NUTS_PROTO(5, 1), 64, 1);
+		wire_send(&peer, &client_addr, header, sizeof(header));
+		wire_wait(&events, i + 1, i);
+		NUTS_SEND(client, "reconnected");
+		NUTS_PASS(wire_recv(&peer, WIRE_TIMEOUT));
+		NUTS_TRUE(peer.len == WIRE_HEADER + sizeof("reconnected"));
+		NUTS_TRUE(peer.packet[1] == WIRE_DATA);
+		NUTS_TRUE(
+		    wire_get16(peer.packet + 4) == sizeof("reconnected"));
+		NUTS_MATCH((char *) peer.packet + WIRE_HEADER, "reconnected");
+		if (i != 2) {
+			wire_header(header, WIRE_DISC, NUTS_PROTO(5, 1), 0, 0);
+			wire_send(&peer, &client_addr, header, sizeof(header));
+			wire_wait(&events, i + 1, i + 1);
+		}
+	}
+	NUTS_CLOSE(client);
+	wire_close(&peer);
+	wire_events_fini(&events);
+}
+
+static void
+test_udp_wire_retry_after_timeout(void)
+{
+	wire_peer   peer;
+	wire_events events;
+	nng_socket  client;
+	nng_dialer  dialer;
+	char        url[80];
+	uint8_t     header[WIRE_HEADER];
+	wire_open(&peer);
+	NUTS_PASS(nng_push0_open(&client));
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_SENDTIMEO, WIRE_TIMEOUT));
+	wire_events_init(&events, client);
+	snprintf(url, sizeof(url), "udp4://127.0.0.1:%u",
+	    (unsigned) nuts_be16(peer.addr.s_in.sa_port));
+	NUTS_PASS(nng_dialer_create(&dialer, client, url));
+	NUTS_PASS(nng_dialer_set_ms(dialer, NNG_OPT_UDP_CONN_EXPIRE, 500));
+	NUTS_FAIL(nng_dialer_start(dialer, 0), NNG_ETIMEDOUT);
+	// Drain the failed attempt's requests before looking for a fresh one.
+	while (wire_recv(&peer, 20) == NNG_OK) {
+		NUTS_TRUE(peer.packet[1] == WIRE_CREQ ||
+		    peer.packet[1] == WIRE_DISC);
+	}
+	NUTS_PASS(nng_dialer_start(dialer, NNG_FLAG_NONBLOCK));
+	if (wire_expect(&peer, NULL, WIRE_CREQ, 65000, WIRE_TIMEOUT)) {
+		nng_sockaddr client_addr = peer.from;
+		wire_header(header, WIRE_CACK, NUTS_PROTO(5, 1), 64, 1);
+		wire_send(&peer, &client_addr, header, sizeof(header));
+		wire_wait(&events, 1, 0);
+		NUTS_SEND(client, "retried");
+		NUTS_PASS(wire_recv(&peer, WIRE_TIMEOUT));
+		NUTS_TRUE(peer.packet[1] == WIRE_DATA);
+		NUTS_MATCH((char *) peer.packet + WIRE_HEADER, "retried");
+	}
+	NUTS_CLOSE(client);
+	wire_close(&peer);
+	wire_events_fini(&events);
+}
+
 static void
 test_udp_wire_negotiated_refresh(void)
 {
@@ -668,6 +756,8 @@ NUTS_TESTS = {
 	{ "udp wire handshake loss", test_udp_wire_handshake_loss },
 	{ "udp wire handshake timeout", test_udp_wire_handshake_timeout },
 	{ "udp wire expiry before retry", test_udp_wire_expiry_before_retry },
+	{ "udp wire reconnect", test_udp_wire_reconnect },
+	{ "udp wire retry after timeout", test_udp_wire_retry_after_timeout },
 	{ "udp wire negotiated refresh", test_udp_wire_negotiated_refresh },
 	{ "udp wire initial expiry", test_udp_wire_initial_expiry },
 	{ "udp wire refreshed expiry", test_udp_wire_refreshed_expiry },
