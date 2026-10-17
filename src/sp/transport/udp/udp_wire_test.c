@@ -336,11 +336,10 @@ test_udp_wire_data_before_receive(void)
 		memcpy(packet + WIRE_HEADER, msgs[i], 2);
 		wire_send(&p, &server, packet, sizeof(packet));
 	}
-	// The endpoint keeps a single UDP receive in flight and loopback
-	// preserves order, so the acknowledgment of a repeated connection
-	// request arrives only after "d" was processed. The request refreshes
-	// the existing pipe and does not create another one.
-	wire_connect(&p, &server);
+	// Let the endpoint process the datagrams before posting an application
+	// receive.  The receive below must complete from the already-buffered
+	// data, without another incoming datagram to drive it.
+	nng_msleep(100);
 #ifdef NNG_ENABLE_STATS
 	// The transport accepted all four messages and dropped none, so a
 	// timeout below means one was not delivered.
