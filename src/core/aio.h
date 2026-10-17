@@ -229,7 +229,9 @@ struct nng_aio {
 	bool         a_use_expire; // Use expire instead of timeout
 	bool         a_abort;      // Task was aborted
 	bool         a_init;       // Initialized this
-	bool         a_stopped;    // Debug - set when we finish stopped
+	bool         a_stopped; // Debug - start failed because AIO was stopped
+	bool         a_started; // Operation successfully started
+	bool         a_finishing; // Direct completion is preparing its task
 	nni_task     a_task;
 
 	// Read/write operations.

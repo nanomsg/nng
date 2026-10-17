@@ -110,7 +110,7 @@ nni_aio_fini(nni_aio *aio)
 		// We also wait if the aio is being expired.
 		nni_mtx_lock(&eq->eq_mtx);
 		aio->a_stop = true;
-		while (aio->a_expiring) {
+		while (aio->a_expiring || aio->a_finishing) {
 			nni_cv_wait(&eq->eq_cv);
 		}
 		nni_aio_expire_rm(aio);
@@ -199,7 +199,7 @@ nni_aio_stop(nni_aio *aio)
 
 		nni_mtx_lock(&eq->eq_mtx);
 		aio->a_stop = true;
-		while (aio->a_expiring) {
+		while (aio->a_expiring || aio->a_finishing) {
 			nni_cv_wait(&eq->eq_cv);
 		}
 		nni_aio_expire_rm(aio);
@@ -421,6 +421,7 @@ nni_aio_start(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 	NNI_ASSERT(aio->a_cancel_fn == NULL);
 	aio->a_cancel_fn  = cancel;
 	aio->a_cancel_arg = data;
+	aio->a_started    = true;
 
 	// We only schedule expiration if we have a way for the expiration
 	// handler to actively cancel it.
@@ -470,27 +471,69 @@ nni_aio_finish_impl(
 {
 	nni_aio_expire_q *eq = aio->a_expire_q;
 	bool             *skipped_cb;
+	bool              started;
+	bool              stopped;
+	bool              finishing = false;
 
 	nni_mtx_lock(&eq->eq_mtx);
 
+	started        = aio->a_started;
+	aio->a_started = false;
+	stopped        = aio->a_stop;
+	if (stopped) {
+		aio->a_count  = 0;
+		aio->a_result = NNG_ESTOPPED;
+		if (msg) {
+			nni_msg_free(msg);
+		}
+	} else {
+		aio->a_count  = count;
+		aio->a_result = rv;
+		if (msg) {
+			aio->a_msg = msg;
+		}
+	}
 	nni_aio_expire_rm(aio);
-	aio->a_result     = rv;
-	aio->a_count      = count;
 	aio->a_cancel_fn  = NULL;
 	aio->a_cancel_arg = NULL;
-	if (msg) {
-		aio->a_msg = msg;
-	}
 
 	aio->a_expire           = NNI_TIME_NEVER;
 	aio->a_sleep            = false;
 	aio->a_use_expire       = false;
 	skipped_cb              = aio->a_skipped_callback;
 	aio->a_skipped_callback = NULL;
+
+	if (!started) {
+		if (skipped_cb != NULL) {
+			// Direct completions have no task to wait for. Publish
+			// a requested skipped completion while holding the AIO
+			// lock so that stop cannot return before it is
+			// visible.
+			*skipped_cb = true;
+			skipped_cb  = NULL;
+		} else if (!stopped) {
+			// Prepare the task outside the AIO lock, preserving
+			// the task before AIO lock ordering used by
+			// nni_aio_start.  A stopper that arrives meanwhile
+			// waits for this handoff to complete.
+			aio->a_finishing = true;
+			finishing        = true;
+		}
+	}
 	nni_mtx_unlock(&eq->eq_mtx);
+
+	if (finishing) {
+		nni_task_prep(&aio->a_task);
+		nni_mtx_lock(&eq->eq_mtx);
+		aio->a_finishing = false;
+		nni_cv_wake(&eq->eq_cv);
+		nni_mtx_unlock(&eq->eq_mtx);
+	}
 
 	if (skipped_cb != NULL) {
 		*skipped_cb = true;
+	} else if (!started && stopped) {
+		return;
 	} else if (sync) {
 		nni_task_exec(&aio->a_task);
 	} else {
@@ -701,8 +744,9 @@ nni_aio_expire_loop(void *arg)
 			// drop the lock and call the cancel function, we are
 			// already doing it right here!
 			if (aio->a_sleep) {
-				aio->a_result = rv;
-				aio->a_sleep  = false;
+				aio->a_result  = rv;
+				aio->a_sleep   = false;
+				aio->a_started = false;
 				nni_task_dispatch(&aio->a_task);
 			} else if (cancel_fn != NULL) {
 				nni_mtx_unlock(mtx);
