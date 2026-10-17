@@ -240,7 +240,6 @@ bus0_pipe_recv_cb(void *arg)
 	if (!nni_list_empty(&s->recv_wait)) {
 		aio = nni_list_first(&s->recv_wait);
 		nni_aio_list_remove(aio);
-		nni_aio_set_msg(aio, msg);
 	} else if (nni_lmq_put(&s->recv_msgs, msg) == 0) {
 		nni_pollable_raise(&s->can_recv);
 	} else {
@@ -250,7 +249,7 @@ bus0_pipe_recv_cb(void *arg)
 	nni_mtx_unlock(&s->mtx);
 
 	if (aio != NULL) {
-		nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
+		nni_aio_finish_msg_sync(aio, msg);
 	}
 	bus0_pipe_recv(p);
 }
@@ -357,9 +356,8 @@ again:
 	if ((msg = nni_msg_unique(msg)) == NULL) {
 		goto again;
 	}
-	nni_aio_set_msg(aio, msg);
 	nni_mtx_unlock(&s->mtx);
-	nni_aio_finish(aio, 0, nni_msg_len(msg));
+	nni_aio_finish_msg(aio, msg);
 }
 
 static nng_err

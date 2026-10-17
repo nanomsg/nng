@@ -378,8 +378,7 @@ req0_recv_cb(void *arg)
 	if ((aio = ctx->recv_aio) != NULL) {
 		ctx->recv_aio = NULL;
 		nni_mtx_unlock(&s->mtx);
-		nni_aio_set_msg(aio, msg);
-		nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
+		nni_aio_finish_msg_sync(aio, msg);
 	} else {
 		// No AIO, so stash msg.  Receive will pick it up later.
 		ctx->rep_msg = msg;
@@ -661,12 +660,11 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	ctx->rep_msg = NULL;
 
 	// We have got a message to pass up, yay!
-	nni_aio_set_msg(aio, msg);
 	if (ctx == &s->master) {
 		nni_pollable_clear(&s->readable);
 	}
 	nni_mtx_unlock(&s->mtx);
-	nni_aio_finish(aio, 0, nni_msg_len(msg));
+	nni_aio_finish_msg(aio, msg);
 }
 
 static void

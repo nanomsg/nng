@@ -62,8 +62,10 @@ free_aio_msg(struct work *w)
 	nng_msg *msg;
 
 	msg = nng_aio_get_msg(w->aio);
-	if (msg)
+	if (msg) {
 		nng_msg_free(msg);
+		nng_aio_set_msg(w->aio, NULL);
+	}
 }
 
 void
@@ -85,7 +87,8 @@ void
 close_work(struct work *w)
 {
 	nng_socket_close(w->socket);
-	nng_aio_wait(w->aio);
+	nng_aio_stop(w->aio);
+	free_aio_msg(w);
 	nng_aio_free(w->aio);
 }
 

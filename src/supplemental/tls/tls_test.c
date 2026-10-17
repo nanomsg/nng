@@ -15,6 +15,55 @@
 #include "../../testing/nuts.h"
 
 static void
+test_tls_close_idle_bio(void)
+{
+	nng_tls_config       *cfg;
+	nni_tls_conn         *conn;
+	nng_aio              *aios[4];
+	nng_sockaddr          sa  = { 0 };
+	const nni_tls_bio_ops ops = { 0 };
+	size_t                size;
+
+	NUTS_PASS(nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT));
+	size = sizeof(*conn) + nni_tls_engine_conn_size();
+	NUTS_ASSERT((conn = nni_zalloc(size)) != NULL);
+	NUTS_PASS(nni_tls_init(conn, cfg, false));
+	sa.s_in.sa_family = NNG_AF_INET;
+	NUTS_PASS(nni_tls_start(conn, &ops, NULL, &sa));
+
+	// A lower-layer error can leave no BIO operation to cancel. Closing
+	// must still finish every upper-layer operation without a BIO
+	// callback.
+	conn->bio_closed = true;
+	conn->bio_err    = NNG_ECONNSHUT;
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(aios); i++) {
+		NUTS_PASS(nng_aio_alloc(&aios[i], NULL, NULL));
+		nni_aio_reset(aios[i]);
+		NUTS_TRUE(nni_aio_start(aios[i], NULL, NULL));
+		nni_aio_list_append(
+		    i % 2 ? &conn->recv_queue : &conn->send_queue, aios[i]);
+	}
+
+	nni_tls_close(conn);
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(aios); i++) {
+		NUTS_TRUE(!nni_aio_busy(aios[i]));
+		NUTS_TRUE(!nni_aio_list_active(aios[i]));
+		// Clean up a stranded operation even if the regression fails.
+		if (nni_aio_list_active(aios[i])) {
+			nni_aio_list_remove(aios[i]);
+			nni_aio_finish_error(aios[i], NNG_ECLOSED);
+		}
+		nng_aio_wait(aios[i]);
+		NUTS_FAIL(nng_aio_result(aios[i]), NNG_ECLOSED);
+		NUTS_TRUE(nng_aio_count(aios[i]) == 0);
+		nng_aio_free(aios[i]);
+	}
+	nni_tls_fini(conn);
+	nni_free(conn, size);
+	nng_tls_config_free(cfg);
+}
+
+static void
 test_tls_send_pending(void)
 {
 	nni_tls_conn conn = { 0 };
@@ -882,6 +931,7 @@ test_tls_psk_config_busy(void)
 }
 
 TEST_LIST = {
+	{ "tls close idle BIO", test_tls_close_idle_bio },
 	{ "tls pending ciphertext send", test_tls_send_pending },
 	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },

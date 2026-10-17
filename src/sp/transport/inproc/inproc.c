@@ -171,8 +171,7 @@ inproc_queue_run(inproc_queue *queue)
 		msg = pu;
 
 		nni_aio_list_remove(rd);
-		nni_aio_set_msg(rd, msg);
-		nni_aio_finish(rd, 0, nni_msg_len(msg));
+		nni_aio_finish_msg(rd, msg);
 	}
 }
 

@@ -383,8 +383,7 @@ tcptran_pipe_recv_cb(void *arg)
 	tcptran_pipe_recv_start(p);
 	nni_mtx_unlock(&p->mtx);
 
-	nni_aio_set_msg(aio, msg);
-	nni_aio_finish_sync(aio, 0, n);
+	nni_aio_finish_msg_sync(aio, msg);
 	return;
 
 recv_error:

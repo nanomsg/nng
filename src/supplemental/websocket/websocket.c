@@ -976,9 +976,7 @@ ws_read_finish_msg(nni_ws *ws)
 		ws_frame_fini(frame);
 	}
 
-	nni_aio_set_msg(aio, msg);
-	nni_aio_bump_count(aio, nni_msg_len(msg));
-	nni_aio_finish(aio, 0, nni_msg_len(msg));
+	nni_aio_finish_msg(aio, msg);
 }
 
 static void

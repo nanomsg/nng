@@ -8,6 +8,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "aio.h"
+
 #include "../testing/nuts.h"
 
 static void
@@ -27,6 +29,42 @@ cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	*(int *) arg = rv;
 	nng_aio_finish(aio, rv);
+}
+
+typedef struct stopped_recv {
+	nng_msg *msg;
+	void (*finish)(nni_aio *, nni_msg *);
+} stopped_recv;
+
+static void
+stopped_recv_cancel(nng_aio *aio, void *arg, nng_err rv)
+{
+	stopped_recv *recv = arg;
+
+	NUTS_FAIL(rv, NNG_ESTOPPED);
+	recv->finish(aio, recv->msg);
+	recv->msg = NULL;
+}
+
+static void
+stopped_deferred_recv_cancel(nng_aio *aio, void *arg, nng_err rv)
+{
+	NUTS_FAIL(rv, NNG_ESTOPPED);
+	NUTS_NULL(nng_aio_get_msg(aio));
+	nni_aio_completions_run(arg);
+}
+
+typedef struct finish_msg_arg {
+	nng_aio *aio;
+	nng_msg *msg;
+} finish_msg_arg;
+
+static void
+finish_msg(void *arg)
+{
+	finish_msg_arg *finish = arg;
+
+	nni_aio_finish_msg(finish->aio, finish->msg);
 }
 
 void
@@ -433,6 +471,242 @@ test_aio_busy(void)
 	NUTS_ASSERT(!nng_aio_busy(aio));
 	nng_aio_free(aio);
 }
+
+void
+test_aio_stopped_direct_recv(void)
+{
+	nng_aio *aio;
+	nng_msg *msg;
+	int      done = 0;
+	bool     skipped;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&msg, 4));
+	nng_aio_skip_callback(aio, &skipped);
+	nng_aio_stop(aio);
+	nni_aio_finish_msg(aio, msg);
+
+	NUTS_TRUE(skipped);
+	NUTS_TRUE(done == 0);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_TRUE(nng_aio_count(aio) == 0);
+	NUTS_NULL(nng_aio_get_msg(aio));
+	nng_aio_free(aio);
+}
+
+void
+test_aio_stopped_direct_send(void)
+{
+	nng_aio *aio;
+	nng_msg *msg;
+	int      done = 0;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&msg, 4));
+	nng_aio_set_msg(aio, msg);
+	nng_aio_stop(aio);
+	nng_aio_finish(aio, NNG_OK);
+
+	NUTS_TRUE(done == 0);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_TRUE(nng_aio_count(aio) == 0);
+	NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+	nng_msg_free(msg);
+	nng_aio_set_msg(aio, NULL);
+	nng_aio_free(aio);
+}
+
+static void
+stopped_started_recv(void (*finish)(nni_aio *, nni_msg *))
+{
+	nng_aio     *aio;
+	stopped_recv recv;
+	int          done = 0;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&recv.msg, 4));
+	recv.finish = finish;
+	NUTS_TRUE(nng_aio_start(aio, stopped_recv_cancel, &recv));
+	nng_aio_stop(aio);
+
+	NUTS_NULL(recv.msg);
+	NUTS_TRUE(done == 1);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_TRUE(nng_aio_count(aio) == 0);
+	NUTS_NULL(nng_aio_get_msg(aio));
+	nng_aio_free(aio);
+}
+
+void
+test_aio_stopped_started_recv(void)
+{
+	stopped_started_recv(nni_aio_finish_msg);
+}
+
+void
+test_aio_stopped_started_recv_sync(void)
+{
+	stopped_started_recv(nni_aio_finish_msg_sync);
+}
+
+void
+test_aio_deferred_recv_stop(void)
+{
+	for (int stop_first = 0; stop_first < 2; stop_first++) {
+		nng_aio            *aio;
+		nng_msg            *msg;
+		nni_aio_completions finish;
+		int                 done = 0;
+
+		nni_aio_completions_init(&finish);
+		NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+		NUTS_PASS(nng_msg_alloc(&msg, 4));
+		NUTS_TRUE(
+		    nni_aio_start(aio, stopped_deferred_recv_cancel, &finish));
+		nni_aio_completions_add_msg(&finish, aio, msg);
+		NUTS_NULL(nng_aio_get_msg(aio));
+		if (!stop_first) {
+			nni_aio_completions_run(&finish);
+		}
+		nng_aio_stop(aio);
+		NUTS_TRUE(done == 1);
+		NUTS_NULL(finish);
+		if (stop_first) {
+			NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+			NUTS_TRUE(nng_aio_count(aio) == 0);
+			NUTS_NULL(nng_aio_get_msg(aio));
+		} else {
+			NUTS_PASS(nng_aio_result(aio));
+			NUTS_TRUE(nng_aio_count(aio) == 4);
+			NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+			nng_msg_free(msg);
+			nng_aio_set_msg(aio, NULL);
+		}
+		nng_aio_free(aio);
+	}
+}
+
+void
+test_aio_stopped_buffered_recv(void)
+{
+	struct {
+		const char *name;
+		int (*sender)(nng_socket *);
+		int (*receiver)(nng_socket *);
+	} protocols[] = {
+		{ "pair0", nng_pair0_open, nng_pair0_open },
+		{ "pair1", nng_pair1_open, nng_pair1_open },
+		{ "bus", nng_bus0_open, nng_bus0_open },
+		{ "pull", nng_push0_open, nng_pull0_open },
+		{ "sub", nng_pub0_open, nng_sub0_open },
+		{ "rep", nng_req0_open, nng_rep0_open },
+		{ "respondent", nng_surveyor0_open, nng_respondent0_open },
+		{ "req", nng_rep0_open, nng_req0_open },
+		{ "surveyor", nng_respondent0_open, nng_surveyor0_open },
+	};
+
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(protocols); i++) {
+		nng_socket sender;
+		nng_socket receiver;
+		nng_aio   *aio;
+		nng_time   deadline;
+		int        fd;
+		int        done = 0;
+
+		NUTS_CASE(protocols[i].name);
+		NUTS_PASS(protocols[i].sender(&sender));
+		NUTS_PASS(protocols[i].receiver(&receiver));
+		if (protocols[i].receiver == nng_sub0_open) {
+			NUTS_PASS(nng_sub0_socket_subscribe(receiver, "", 0));
+		}
+		NUTS_PASS(nng_socket_set_int(receiver, NNG_OPT_RECVBUF, 1));
+		NUTS_PASS(nng_socket_get_recv_poll_fd(receiver, &fd));
+		NUTS_MARRY(sender, receiver);
+		if (protocols[i].receiver == nng_req0_open ||
+		    protocols[i].receiver == nng_surveyor0_open) {
+			NUTS_SEND(receiver, "request");
+			NUTS_RECV(sender, "request");
+		}
+		NUTS_SEND(sender, "queued");
+		deadline = nng_clock() + 1000;
+		while (!nuts_poll_fd(fd) && nng_clock() < deadline) {
+			nng_msleep(1);
+		}
+		NUTS_TRUE(nuts_poll_fd(fd));
+
+		NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+		nng_aio_stop(aio);
+		nng_socket_recv(receiver, aio);
+		NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+		NUTS_TRUE(nng_aio_count(aio) == 0);
+		NUTS_NULL(nng_aio_get_msg(aio));
+		NUTS_TRUE(done == 0);
+		nng_aio_free(aio);
+		NUTS_CLOSE(sender);
+		NUTS_CLOSE(receiver);
+	}
+}
+
+void
+test_aio_finish_before_stop(void)
+{
+	nng_aio *aio;
+	nng_msg *msg;
+	int      done = 0;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&msg, 4));
+	nni_aio_finish_msg(aio, msg);
+	nng_aio_stop(aio);
+
+	NUTS_TRUE(done == 1);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(nng_aio_count(aio) == 4);
+	NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+	nng_msg_free(msg);
+	nng_aio_set_msg(aio, NULL);
+	nng_aio_free(aio);
+}
+
+void
+test_aio_sleep_reset_finish_stop_race(void)
+{
+	for (int i = 0; i < 64; i++) {
+		nng_aio       *aio;
+		nng_msg       *msg;
+		finish_msg_arg finish;
+		nng_thread    *thread;
+		int            done = 0;
+
+		NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+		nng_sleep_aio(1, aio);
+		nng_aio_wait(aio);
+		NUTS_PASS(nng_aio_result(aio));
+		NUTS_TRUE(done == 1);
+
+		nng_aio_reset(aio);
+		NUTS_TRUE(!aio->a_started);
+		NUTS_PASS(nng_msg_alloc(&msg, 4));
+		finish.aio = aio;
+		finish.msg = msg;
+		NUTS_PASS(nng_thread_create(&thread, finish_msg, &finish));
+		nng_aio_stop(aio);
+		nng_thread_destroy(thread);
+
+		if (nng_aio_result(aio) == NNG_OK) {
+			NUTS_TRUE(done == 2);
+			NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+			nng_msg_free(msg);
+			nng_aio_set_msg(aio, NULL);
+		} else {
+			NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+			NUTS_TRUE(done == 1);
+			NUTS_NULL(nng_aio_get_msg(aio));
+		}
+		nng_aio_free(aio);
+	}
+}
+
 void
 test_aio_scatter_gather_too_many(void)
 {
@@ -468,6 +742,16 @@ NUTS_TESTS = {
 	{ "sleep loop", test_sleep_loop },
 	{ "sleep cancel", test_sleep_cancel },
 	{ "aio busy", test_aio_busy },
+	{ "aio stopped direct recv", test_aio_stopped_direct_recv },
+	{ "aio stopped direct send", test_aio_stopped_direct_send },
+	{ "aio stopped started recv", test_aio_stopped_started_recv },
+	{ "aio stopped started recv sync",
+	    test_aio_stopped_started_recv_sync },
+	{ "aio deferred recv stop", test_aio_deferred_recv_stop },
+	{ "aio stopped buffered recv", test_aio_stopped_buffered_recv },
+	{ "aio finish before stop", test_aio_finish_before_stop },
+	{ "aio sleep reset finish stop race",
+	    test_aio_sleep_reset_finish_stop_race },
 	{ "scatter gather too many", test_aio_scatter_gather_too_many },
 	{ NULL, NULL },
 };
