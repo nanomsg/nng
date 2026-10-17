@@ -8,8 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "../testing/nuts.h"
 #include "aio.h"
+
+#include "../testing/nuts.h"
 
 static void
 cb_done(void *p)

@@ -276,6 +276,10 @@ rep0_pipe_fini(void *arg)
 		nni_aio_set_msg(&p->aio_recv, NULL);
 		nni_msg_free(msg);
 	}
+	if ((msg = nni_aio_get_msg(&p->aio_send)) != NULL) {
+		nni_aio_set_msg(&p->aio_send, NULL);
+		nni_msg_free(msg);
+	}
 
 	nni_aio_fini(&p->aio_send);
 	nni_aio_fini(&p->aio_recv);
