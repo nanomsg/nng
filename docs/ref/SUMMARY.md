@@ -75,7 +75,7 @@
   - [DTLS Transport (Experimental)](./tran/dtls.md)
   - [WebSocket Transport](./tran/websocket.md)
   - [BSD Socket Transport](./tran/socket.md)
-  - [UDP Transport (Experimental)](./tran/udp.md)
+  - [UDP Transport](./tran/udp.md)
 
 - [Tools](./tools/index.md)
 
