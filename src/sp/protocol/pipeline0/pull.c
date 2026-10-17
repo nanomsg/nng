@@ -177,8 +177,7 @@ pull0_recv_cb(void *arg)
 	as = nni_list_first(&s->rq);
 	nni_aio_list_remove(as);
 	nni_mtx_unlock(&s->m);
-	nni_aio_set_msg(as, m);
-	nni_aio_finish_sync(as, 0, nni_msg_len(m));
+	nni_aio_finish_msg_sync(as, m);
 }
 
 static void

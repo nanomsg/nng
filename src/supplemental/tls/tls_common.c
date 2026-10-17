@@ -47,6 +47,7 @@ static void tls_bio_send_msg_start(nni_tls_conn *);
 static void tls_bio_recv_start(nni_tls_conn *);
 static void tls_bio_recv_msg_start(nni_tls_conn *);
 static void tls_bio_error(nni_tls_conn *, nng_err);
+static void tls_conn_err(nni_tls_conn *, nng_err);
 
 #define nni_tls_conn_ops (nng_tls_engine_ops.conn_ops)
 #define nni_tls_cert_ops (nng_tls_engine_ops.cert_ops)
@@ -130,6 +131,8 @@ nni_tls_close(nni_tls_conn *conn)
 		nni_mtx_lock(&conn->bio_lock);
 		tls_bio_error(conn, NNG_ECLOSED);
 		nni_mtx_unlock(&conn->bio_lock);
+		// There may be no active BIO to deliver an error callback.
+		tls_conn_err(conn, NNG_ECLOSED);
 	}
 }
 

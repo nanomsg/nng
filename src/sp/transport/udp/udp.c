@@ -700,9 +700,7 @@ udp_recv_data(udp_ep *ep, udp_sp_msg *dreq, size_t len, const nng_sockaddr *sa)
 	    (!nni_lmq_empty(&p->rx_mq))) {
 		nni_aio_list_remove(aio);
 		nni_lmq_get(&p->rx_mq, &msg);
-		nni_aio_set_msg(aio, msg);
-		nni_aio_completions_add(
-		    &ep->complq, aio, 0, nni_aio_count(aio));
+		nni_aio_completions_add_msg(&ep->complq, aio, msg);
 	}
 }
 

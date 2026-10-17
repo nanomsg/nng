@@ -391,8 +391,7 @@ tlstran_pipe_recv_cb(void *arg)
 	nni_pipe_bump_rx(p->npipe, n);
 	nni_mtx_unlock(&p->mtx);
 
-	nni_aio_set_msg(aio, msg);
-	nni_aio_finish_sync(aio, 0, n);
+	nni_aio_finish_msg_sync(aio, msg);
 	return;
 
 recv_error:

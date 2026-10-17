@@ -122,9 +122,8 @@ again:
 	if ((msg = nni_msg_unique(msg)) == NULL) {
 		goto again;
 	}
-	nni_aio_set_msg(aio, msg);
 	nni_mtx_unlock(&sock->lk);
-	nni_aio_finish(aio, 0, nni_msg_len(msg));
+	nni_aio_finish_msg(aio, msg);
 }
 
 static void
@@ -367,10 +366,9 @@ sub0_recv_cb(void *arg)
 		if (!nni_list_empty(&ctx->recv_queue)) {
 			aio = nni_list_first(&ctx->recv_queue);
 			nni_list_remove(&ctx->recv_queue, aio);
-			nni_aio_set_msg(aio, dup_msg);
 
 			// Save for synchronous completion
-			nni_aio_completions_add(&finish, aio, 0, len);
+			nni_aio_completions_add_msg(&finish, aio, dup_msg);
 		} else if (nni_lmq_full(&ctx->lmq)) {
 			// Make space for the new message.
 			nni_msg *old;

@@ -364,10 +364,9 @@ pair1_pipe_recv_cb(void *arg)
 	// we should deliver it there.
 	if ((a = nni_list_first(&s->raq)) != NULL) {
 		nni_aio_list_remove(a);
-		nni_aio_set_msg(a, msg);
 		nni_pipe_recv(pipe, &p->aio_recv);
 		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_sync(a, 0, len);
+		nni_aio_finish_msg_sync(a, msg);
 		return;
 	}
 
@@ -617,8 +616,7 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 	// Buffered read.  If there is a message waiting for us, pick
 	// it up.  We might need to post another read request as well.
 	if (nni_lmq_get(&s->rmq, &m) == 0) {
-		nni_aio_set_msg(aio, m);
-		nni_aio_finish(aio, 0, nni_msg_len(m));
+		nni_aio_finish_msg(aio, m);
 		if (s->rd_ready) {
 			s->rd_ready = false;
 			m           = nni_aio_get_msg(&p->aio_recv);
@@ -638,8 +636,7 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 		s->rd_ready = false;
 		m           = nni_aio_get_msg(&p->aio_recv);
 		nni_aio_set_msg(&p->aio_recv, NULL);
-		nni_aio_set_msg(aio, m);
-		nni_aio_finish(aio, 0, nni_msg_len(m));
+		nni_aio_finish_msg(aio, m);
 		nni_pipe_recv(p->pipe, &p->aio_recv);
 		nni_pollable_clear(&s->readable);
 		nni_mtx_unlock(&s->mtx);

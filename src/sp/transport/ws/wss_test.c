@@ -113,6 +113,10 @@ test_wss_bad_cert_mutual(void)
 	nng_dialer      d;
 	const nng_url  *url;
 
+#ifdef NNG_TLS_ENGINE_MBEDTLS
+	nng_err rv;
+#endif
+
 	c1 = wss_server_config();
 	c2 = wss_client_config();
 
@@ -131,7 +135,10 @@ test_wss_bad_cert_mutual(void)
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
 #ifdef NNG_TLS_ENGINE_MBEDTLS
-	NUTS_FAIL(nng_dialer_start(d, 0), NNG_ECRYPTO);
+	// The peer can close before the TLS alert or HTTP upgrade completes.
+	rv = nng_dialer_start(d, 0);
+	NUTS_TRUE((rv == NNG_ECRYPTO) || (rv == NNG_ECONNSHUT) ||
+	    (rv == NNG_ECLOSED));
 #else
 	// WolfSSL doesn't validate this here.
 	nng_dialer_start(d, 0);

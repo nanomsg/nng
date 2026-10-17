@@ -122,7 +122,11 @@ extern void nni_aio_finish(nni_aio *, nng_err, size_t);
 // context switch overhead during completions.
 extern void nni_aio_finish_sync(nni_aio *, nng_err, size_t);
 extern void nni_aio_finish_error(nni_aio *, nng_err);
+
+// Receive providers must pass messages to these helpers instead of setting
+// a_msg before finishing, so a stopped completion can discard the message.
 extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
+extern void nni_aio_finish_msg_sync(nni_aio *, nni_msg *);
 
 // nni_aio_abort is used to abort an operation.  Any pending I/O or
 // timeouts are canceled if possible, and the callback will be returned
@@ -203,6 +207,11 @@ extern void nni_aio_completions_run(nni_aio_completions *);
 extern void nni_aio_completions_add(
     nni_aio_completions *, nni_aio *, nng_err, size_t);
 
+// Add a receive completion, keeping the message private until finish decides
+// whether to deliver it or discard it after stop.
+extern void nni_aio_completions_add_msg(
+    nni_aio_completions *, nni_aio *, nni_msg *);
+
 extern nng_err nni_aio_sys_init(nng_init_params *);
 extern bool    nni_aio_sys_drain(void);
 extern void    nni_aio_sys_fini(void);
@@ -229,7 +238,9 @@ struct nng_aio {
 	bool         a_use_expire; // Use expire instead of timeout
 	bool         a_abort;      // Task was aborted
 	bool         a_init;       // Initialized this
-	bool         a_stopped;    // Debug - set when we finish stopped
+	bool         a_stopped; // Debug - start failed because AIO was stopped
+	bool         a_started; // Operation successfully started
+	bool         a_finishing; // Direct completion is preparing its task
 	nni_task     a_task;
 
 	// Read/write operations.
@@ -238,6 +249,7 @@ struct nng_aio {
 
 	// Message operations.
 	nni_msg *a_msg;
+	nni_msg *a_completion_msg; // Deferred receive message
 
 	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
 	// specified.  The semantics of these will vary, and depend on the
