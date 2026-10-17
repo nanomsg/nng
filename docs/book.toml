@@ -2,7 +2,7 @@
 authors = ["Garrett D'Amore"]
 language = "en"
 src = "ref"
-title = "NNG Reference Manual (DRAFT)"
+title = "NNG Reference Manual"
 
 [output.html]
 smart-punctuation = true
