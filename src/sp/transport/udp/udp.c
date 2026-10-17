@@ -9,7 +9,7 @@
 
 #include <string.h>
 
-// Experimental UDP transport.  Unicast only.
+// UDP transport.  Unicast only.
 typedef struct udp_pipe udp_pipe;
 typedef struct udp_ep   udp_ep;
 
@@ -1516,22 +1516,41 @@ udp_resolv_cb(void *arg)
 static void
 udp_ep_connect(void *arg, nni_aio *aio)
 {
-	udp_ep *ep = arg;
+	udp_ep   *ep = arg;
+	udp_pipe *p;
 
 	nni_mtx_lock(&ep->mtx);
-	if (!nni_aio_start(aio, udp_ep_cancel, ep)) {
+	if (!nni_list_empty(&ep->connaios)) {
 		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
+	nni_mtx_unlock(&ep->mtx);
+
+	// Cancellation can complete an attempt before its resolver callback
+	// returns. Drain it before exposing another attempt to that callback.
+	nni_aio_wait(&ep->resaio);
+	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if (ep->started) {
+	if (!nni_aio_start(aio, udp_ep_cancel, ep)) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
+	}
+	// A failed attempt may still be waiting for the reaper. Remove it
+	// before a new pipe uses the same peer address, and suppress its late
+	// disconnect so it cannot tear down the replacement connection.
+	for (;;) {
+		uint32_t cursor = 0;
+		if (!nni_id_visit(&ep->pipes, NULL, (void **) &p, &cursor)) {
+			break;
+		}
+		p->closed = true;
+		nni_pipe_close(p->npipe);
+		udp_remove_pipe(p);
 	}
 	NNI_ASSERT(nni_list_empty(&ep->connaios));
 	ep->dialer = true;
@@ -1783,6 +1802,9 @@ udp_ep_match(udp_ep *ep)
 static void
 udp_ep_start(udp_ep *ep)
 {
+	if (ep->started) {
+		return;
+	}
 	ep->started = true;
 	udp_start_rx(ep);
 }
