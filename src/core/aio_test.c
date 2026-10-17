@@ -9,6 +9,7 @@
 //
 
 #include "../testing/nuts.h"
+#include "aio.h"
 
 static void
 cb_done(void *p)
@@ -27,6 +28,33 @@ cancel(nng_aio *aio, void *arg, nng_err rv)
 {
 	*(int *) arg = rv;
 	nng_aio_finish(aio, rv);
+}
+
+typedef struct stopped_recv {
+	nng_msg *msg;
+} stopped_recv;
+
+static void
+stopped_recv_cancel(nng_aio *aio, void *arg, nng_err rv)
+{
+	stopped_recv *recv = arg;
+
+	NUTS_FAIL(rv, NNG_ESTOPPED);
+	nni_aio_finish_msg(aio, recv->msg);
+	recv->msg = NULL;
+}
+
+typedef struct finish_msg_arg {
+	nng_aio *aio;
+	nng_msg *msg;
+} finish_msg_arg;
+
+static void
+finish_msg(void *arg)
+{
+	finish_msg_arg *finish = arg;
+
+	nni_aio_finish_msg(finish->aio, finish->msg);
 }
 
 void
@@ -433,6 +461,131 @@ test_aio_busy(void)
 	NUTS_ASSERT(!nng_aio_busy(aio));
 	nng_aio_free(aio);
 }
+
+void
+test_aio_stopped_direct_recv(void)
+{
+	nng_aio *aio;
+	nng_msg *msg;
+	int      done = 0;
+	bool     skipped;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&msg, 4));
+	nng_aio_skip_callback(aio, &skipped);
+	nng_aio_stop(aio);
+	nni_aio_finish_msg(aio, msg);
+
+	NUTS_TRUE(skipped);
+	NUTS_TRUE(done == 0);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_TRUE(nng_aio_count(aio) == 0);
+	NUTS_NULL(nng_aio_get_msg(aio));
+	nng_aio_free(aio);
+}
+
+void
+test_aio_stopped_direct_send(void)
+{
+	nng_aio *aio;
+	nng_msg *msg;
+	int      done = 0;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&msg, 4));
+	nng_aio_set_msg(aio, msg);
+	nng_aio_stop(aio);
+	nng_aio_finish(aio, NNG_OK);
+
+	NUTS_TRUE(done == 0);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_TRUE(nng_aio_count(aio) == 0);
+	NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+	nng_msg_free(msg);
+	nng_aio_set_msg(aio, NULL);
+	nng_aio_free(aio);
+}
+
+void
+test_aio_stopped_started_recv(void)
+{
+	nng_aio     *aio;
+	stopped_recv recv;
+	int          done = 0;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&recv.msg, 4));
+	NUTS_TRUE(nng_aio_start(aio, stopped_recv_cancel, &recv));
+	nng_aio_stop(aio);
+
+	NUTS_NULL(recv.msg);
+	NUTS_TRUE(done == 1);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+	NUTS_TRUE(nng_aio_count(aio) == 0);
+	NUTS_NULL(nng_aio_get_msg(aio));
+	nng_aio_free(aio);
+}
+
+void
+test_aio_finish_before_stop(void)
+{
+	nng_aio *aio;
+	nng_msg *msg;
+	int      done = 0;
+
+	NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+	NUTS_PASS(nng_msg_alloc(&msg, 4));
+	nni_aio_finish_msg(aio, msg);
+	nng_aio_stop(aio);
+
+	NUTS_TRUE(done == 1);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(nng_aio_count(aio) == 4);
+	NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+	nng_msg_free(msg);
+	nng_aio_set_msg(aio, NULL);
+	nng_aio_free(aio);
+}
+
+void
+test_aio_sleep_reset_finish_stop_race(void)
+{
+	for (int i = 0; i < 64; i++) {
+		nng_aio       *aio;
+		nng_msg       *msg;
+		finish_msg_arg finish;
+		nng_thread    *thread;
+		int            done = 0;
+
+		NUTS_PASS(nng_aio_alloc(&aio, cb_done, &done));
+		nng_sleep_aio(1, aio);
+		nng_aio_wait(aio);
+		NUTS_PASS(nng_aio_result(aio));
+		NUTS_TRUE(done == 1);
+
+		nng_aio_reset(aio);
+		NUTS_TRUE(!aio->a_started);
+		NUTS_PASS(nng_msg_alloc(&msg, 4));
+		finish.aio = aio;
+		finish.msg = msg;
+		NUTS_PASS(nng_thread_create(&thread, finish_msg, &finish));
+		nng_aio_stop(aio);
+		nng_thread_destroy(thread);
+
+		if (nng_aio_result(aio) == NNG_OK) {
+			NUTS_TRUE(done == 2);
+			NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+			nng_msg_free(msg);
+			nng_aio_set_msg(aio, NULL);
+		} else {
+			NUTS_FAIL(nng_aio_result(aio), NNG_ESTOPPED);
+			NUTS_TRUE(done == 1);
+			NUTS_NULL(nng_aio_get_msg(aio));
+		}
+		nng_aio_free(aio);
+	}
+}
+
 void
 test_aio_scatter_gather_too_many(void)
 {
@@ -468,6 +621,12 @@ NUTS_TESTS = {
 	{ "sleep loop", test_sleep_loop },
 	{ "sleep cancel", test_sleep_cancel },
 	{ "aio busy", test_aio_busy },
+	{ "aio stopped direct recv", test_aio_stopped_direct_recv },
+	{ "aio stopped direct send", test_aio_stopped_direct_send },
+	{ "aio stopped started recv", test_aio_stopped_started_recv },
+	{ "aio finish before stop", test_aio_finish_before_stop },
+	{ "aio sleep reset finish stop race",
+	    test_aio_sleep_reset_finish_stop_race },
 	{ "scatter gather too many", test_aio_scatter_gather_too_many },
 	{ NULL, NULL },
 };
