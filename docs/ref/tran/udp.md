@@ -1,4 +1,4 @@
-# UDP Transport (Experimental)
+# UDP Transport
 
 ## Description
 
@@ -11,9 +11,6 @@ Both {{i:IPv4}} and {{i:IPv6}} are supported when the underlying platform also s
 This transport preserves NNG message boundaries, but does not add retransmission,
 ordering, or duplicate suppression. Applications must tolerate messages being lost,
 reordered, or duplicated.
-
-> [!NOTE]
-> This transport is _experimental_.
 
 ## URL Format
 

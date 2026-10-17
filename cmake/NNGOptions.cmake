@@ -137,7 +137,7 @@ mark_as_advanced(NNG_TRANSPORT_WSS)
 option (NNG_TRANSPORT_FDC "Enable socket transport." ON)
 mark_as_advanced(NNG_TRANSPORT_FDC)
 
-option (NNG_TRANSPORT_UDP "Enable UDP transport (EXPERIMENTAL)" ON)
+option (NNG_TRANSPORT_UDP "Enable UDP transport" ON)
 mark_as_advanced(NNG_TRANSPORT_UDP)
 
 CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_DTLS
