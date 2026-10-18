@@ -97,8 +97,8 @@ typedef void (*nni_cb)(void *);
 static inline bool
 nni_msg_size_valid(uint64_t size)
 {
-	return ((size <= NNI_MAX_STREAM_MSGSZ) &&
-	    (size <= (uint64_t) SIZE_MAX));
+	return (
+	    (size <= NNI_MAX_STREAM_MSGSZ) && (size <= (uint64_t) SIZE_MAX));
 }
 
 // Structure allocation conveniences.

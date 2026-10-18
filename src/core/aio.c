@@ -957,6 +957,7 @@ nni_aio_expire_q_alloc(void)
 	eq->eq_exit = false;
 
 	if (nni_thr_init(&eq->eq_thr, nni_aio_expire_loop, eq) != 0) {
+		(void) nni_aio_expire_q_stop(eq);
 		nni_aio_expire_q_free(eq);
 		return (NULL);
 	}
@@ -1007,10 +1008,14 @@ nni_aio_sys_init(nng_init_params *params)
 	params->num_expire_threads = num_thr;
 	nni_aio_expire_q_list =
 	    nni_zalloc(sizeof(nni_aio_expire_q *) * num_thr);
+	if (nni_aio_expire_q_list == NULL) {
+		return (NNG_ENOMEM);
+	}
 	nni_aio_expire_q_cnt = num_thr;
 	for (int i = 0; i < num_thr; i++) {
 		nni_aio_expire_q *eq;
 		if ((eq = nni_aio_expire_q_alloc()) == NULL) {
+			(void) nni_aio_sys_drain();
 			nni_aio_sys_fini();
 			return (NNG_ENOMEM);
 		}

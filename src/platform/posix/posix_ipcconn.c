@@ -58,7 +58,7 @@ ipc_dowrite(ipc_conn *c)
 			if (aiov[i].iov_len > 0) {
 				iovec[niov].iov_base = aiov[i].iov_buf;
 				iovec[niov].iov_len  = aiov[i].iov_len;
-				clamped = nni_aio_iov_clamp_len(
+				clamped              = nni_aio_iov_clamp_len(
 				    &iovec[niov].iov_len, &count);
 				niov++;
 			}
@@ -132,7 +132,7 @@ ipc_doread(ipc_conn *c)
 			if (aiov[i].iov_len != 0) {
 				iovec[niov].iov_base = aiov[i].iov_buf;
 				iovec[niov].iov_len  = aiov[i].iov_len;
-				clamped = nni_aio_iov_clamp_len(
+				clamped              = nni_aio_iov_clamp_len(
 				    &iovec[niov].iov_len, &count);
 				niov++;
 			}

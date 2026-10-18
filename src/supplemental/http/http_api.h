@@ -102,7 +102,7 @@ extern void nni_http_conn_close(nng_http *);
 extern void nni_http_conn_stop(nng_http *);
 extern void nni_http_conn_fini(nni_http_conn *);
 extern int  nni_http_conn_getopt(
-     nng_http *, const char *, void *, size_t *, nni_type);
+    nng_http *, const char *, void *, size_t *, nni_type);
 extern nng_err nni_http_conn_peer_cert(nng_http *, nng_tls_cert **);
 
 // Reading messages -- the caller must supply a preinitialized (but otherwise
@@ -131,7 +131,7 @@ extern nng_err     nni_http_set_header(nng_http *, const char *, const char *);
 extern void        nni_http_del_header(nng_http *, const char *);
 extern const char *nni_http_get_header(nng_http *, const char *);
 extern bool        nni_http_next_header(
-           nng_http *, const char **, const char **, void **);
+    nng_http *, const char **, const char **, void **);
 
 extern void    nni_http_get_body(nng_http *, void **, size_t *);
 extern void    nni_http_set_body(nng_http *, void *, size_t);
@@ -215,7 +215,7 @@ extern nng_err nni_http_server_set_error_page(
 extern nng_err nni_http_server_error(nni_http_server *, nng_http *);
 
 // nni_http_detach disassociates a connection from its HTTP server.
-extern void nni_http_detach(nni_http_conn *);
+extern void    nni_http_detach(nni_http_conn *);
 extern nng_err nni_http_hijack_stream(nni_http_conn *, nng_stream **);
 
 // nni_http_handler_init creates a server handler object, for the supplied
@@ -317,8 +317,7 @@ extern nng_err nni_http_client_set_tls(
 extern nng_err nni_http_client_get_tls(
     nni_http_client *, struct nng_tls_config **);
 
-extern nng_err nni_http_client_bind(
-    nni_http_client *, const nng_sockaddr *);
+extern nng_err nni_http_client_bind(nni_http_client *, const nng_sockaddr *);
 
 extern int nni_http_client_set(
     nni_http_client *, const char *, const void *buf, size_t, nni_type);
@@ -349,8 +348,7 @@ extern const char *nni_http_stream_scheme(const char *);
 
 // nni_http_stream_url rewrites an HTTP URL as its underlying stream URL.  The
 // caller supplies storage for a decoded UNIX socket path, if applicable.
-extern nng_err nni_http_stream_url(
-    nng_url *, const nng_url *, char *, size_t);
+extern nng_err nni_http_stream_url(nng_url *, const nng_url *, char *, size_t);
 
 // Private method used for the server.
 extern bool nni_http_res_sent(nni_http_conn *conn);

@@ -23,7 +23,7 @@ server(int portno)
 	SOCKET             s, new_socket;
 	struct sockaddr_in server, client;
 	int                c;
-	char *             message;
+	char              *message;
 
 	printf("Initialising Winsock...\n");
 

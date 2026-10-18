@@ -1158,6 +1158,7 @@ tls_engine_init(void)
 	if (rv != 0) {
 		tls_log_err(
 		    "NNG-TLS-INIT", "Failed initializing PSA crypto", rv);
+		mbedtls_psa_crypto_free();
 		return (tls_mk_err(rv));
 	}
 #endif
@@ -1174,6 +1175,10 @@ tls_engine_init(void)
 	if (rv != 0) {
 		tls_log_err("NNG_TLS_INIT",
 		    "Failed initializing SSL cookie system", rv);
+		mbedtls_ssl_cookie_free(&mbed_ssl_cookie_ctx);
+#ifdef MBEDTLS_PSA_CRYPTO_C
+		mbedtls_psa_crypto_free();
+#endif
 		return (tls_mk_err(rv));
 	}
 	return (NNG_OK);

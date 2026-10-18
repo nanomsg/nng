@@ -111,8 +111,9 @@ test_tls_port_zero_bind(void)
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
 	NUTS_PASS(nng_dialer_start(d, 0));
-	// A dialer starts asynchronously.  Exchange data before teardown so this
-	// test cannot leave a TLS handshake in progress for the next test.
+	// A dialer starts asynchronously.  Exchange data before teardown so
+	// this test cannot leave a TLS handshake in progress for the next
+	// test.
 	NUTS_SEND(s2, "x");
 	NUTS_RECV(s1, "x");
 	NUTS_CLOSE(s2);
@@ -132,7 +133,7 @@ test_tls_bad_cert_mutual(void)
 	const nng_url  *url;
 
 #ifdef NNG_TLS_ENGINE_MBEDTLS
-	nng_err         rv;
+	nng_err rv;
 #endif
 
 	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
@@ -407,8 +408,9 @@ test_tls_recv_max(void)
 	NUTS_PASS(nng_listener_get_url(l, &url));
 
 	NUTS_OPEN(s1);
-	// Without this, a failed TLS handshake leaves the first send waiting for a
-	// pipe indefinitely, until CTest's much longer per-executable timeout.
+	// Without this, a failed TLS handshake leaves the first send waiting
+	// for a pipe indefinitely, until CTest's much longer per-executable
+	// timeout.
 	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
 	NUTS_PASS(nng_dialer_create_url(&d, s1, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c1));

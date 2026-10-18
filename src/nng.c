@@ -1309,25 +1309,75 @@ static const struct {
 	// clang-format on
 };
 
-// Misc.
+static nni_mtx    errors_mtx = NNI_MTX_INITIALIZER;
+static nni_id_map errors_map;
+static bool       errors_ready;
+
+void
+nni_strerror_sys_init(void)
+{
+	nni_mtx_lock(&errors_mtx);
+	nni_id_map_init(&errors_map, 1, UINT32_MAX, false);
+	errors_ready = true;
+	nni_mtx_unlock(&errors_mtx);
+}
+
+void
+nni_strerror_sys_fini(void)
+{
+	uint32_t cursor = 0;
+	void    *msg;
+
+	nni_mtx_lock(&errors_mtx);
+	while (nni_id_visit(&errors_map, NULL, &msg, &cursor)) {
+		nni_strfree(msg);
+	}
+	nni_id_map_fini(&errors_map);
+	errors_ready = false;
+	nni_mtx_unlock(&errors_mtx);
+}
+
 const char *
 nng_strerror(nng_err num)
 {
+	const char *fallback;
+	char       *msg;
+	uint32_t    key = (uint32_t) num;
+
 	for (int i = 0; nni_errors[i].msg != NULL; i++) {
 		if (nni_errors[i].code == num) {
 			return (nni_errors[i].msg);
 		}
 	}
 
+	fallback = (num & NNG_ESYSERR) ? "System error"
+	    : (num & NNG_ETRANERR)     ? "Transport error"
+	                               : "Unknown error";
+	nni_mtx_lock(&errors_mtx);
+	if (!errors_ready) {
+		nni_mtx_unlock(&errors_mtx);
+		return (fallback);
+	}
+	if ((msg = nni_id_get(&errors_map, key)) != NULL) {
+		nni_mtx_unlock(&errors_mtx);
+		return (msg);
+	}
+	msg = NULL;
 	if (num & NNG_ESYSERR) {
-		return (nni_plat_strerror(num & ~NNG_ESYSERR));
+		msg = nni_plat_strerror(num & ~NNG_ESYSERR);
+	} else if (num & NNG_ETRANERR) {
+		(void) nni_asprintf(
+		    &msg, "Transport error #%d", num & ~NNG_ETRANERR);
+	} else {
+		(void) nni_asprintf(&msg, "Unknown error #%d", num);
 	}
-
-	if (num & NNG_ETRANERR) {
-		return "Transport error";
+	if ((msg == NULL) || (nni_id_set(&errors_map, key, msg) != 0)) {
+		nni_strfree(msg);
+		nni_mtx_unlock(&errors_mtx);
+		return (fallback);
 	}
-
-	return "Unknown error";
+	nni_mtx_unlock(&errors_mtx);
+	return (msg);
 }
 
 static nng_err

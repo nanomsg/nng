@@ -23,8 +23,8 @@ extern nng_err nng_init(const nng_init_params *params);
 Before using other interfaces in this library, it is necessary to initialize
 the library. The {{i:`nng_init`}} function performs this initialization.
 
-The function is idempotent, although on tear down, every call to `nng_init` must
-be paired with a call to [`nng_fini`] or no resources will be released.
+The function is idempotent, although on tear down, every successful call to
+`nng_init` must be paired with a call to [`nng_fini`] or no resources will be released.
 This allows for libraries consuming these interfaces to safely initialize and finalize
 the library without disrupting other consumers in the same process.
 
@@ -72,8 +72,9 @@ extern void nng_fini(void);
 ```
 
 When the consumer is ready to deallocate any resources allocated by the library, it should call
-the {{i:`nng_fini`}} function. Each call to `nng_fini` should be paired with an earlier call to
-[`nng_init`].
+the {{i:`nng_fini`}} function. Each call to `nng_fini` should be paired with an earlier
+successful call to [`nng_init`]. A failed initialization releases any resources acquired
+and does not require a call to `nng_fini`. Initialization can be retried.
 
 After calling `nng_fini`, the consuming application must not make any other calls to NNG functions,
 except that it may use `nng_init` to initialize the application for further use.

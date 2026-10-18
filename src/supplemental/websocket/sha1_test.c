@@ -17,7 +17,6 @@
 
 #include "sha1.h"
 
-
 // The following test vectors are from RFC 3174.
 #define TEST1 "abc"
 #define TEST2a "abcdbcdecdefdefgefghfghighijhi"

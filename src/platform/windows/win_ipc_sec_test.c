@@ -76,8 +76,8 @@ test_winpipe_security_descriptor(void)
 	NUTS_PASS(nng_stream_listener_listen(l));
 	nng_stream_listener_accept(l, aio);
 
-	(void) snprintf(
-	    pipe, sizeof(pipe), "\\\\.\\pipe\\%s", address + strlen("winpipe://"));
+	(void) snprintf(pipe, sizeof(pipe), "\\\\.\\pipe\\%s",
+	    address + strlen("winpipe://"));
 	HANDLE ph = CreateFileA(pipe, READ_CONTROL, 0, NULL, OPEN_EXISTING,
 	    FILE_FLAG_OVERLAPPED, NULL);
 

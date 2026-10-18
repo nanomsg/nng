@@ -19,7 +19,7 @@ struct dev_data {
 	nng_socket s2;
 };
 
-#define SECOND(x) ((x) *1000)
+#define SECOND(x) ((x) * 1000)
 
 static void
 check_device_busy(nng_socket s)
@@ -31,7 +31,8 @@ check_device_busy(nng_socket s)
 	const char  *name;
 
 	NUTS_FAIL(nng_socket_close(s), NNG_EBUSY);
-	NUTS_FAIL(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, SECOND(1)), NNG_EBUSY);
+	NUTS_FAIL(
+	    nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, SECOND(1)), NNG_EBUSY);
 	NUTS_FAIL(nng_socket_get_ms(s, NNG_OPT_RECVTIMEO, &tmo), NNG_EBUSY);
 	NUTS_FAIL(nng_socket_get_recv_poll_fd(s, &fd), NNG_EBUSY);
 	NUTS_FAIL(nng_socket_get_send_poll_fd(s, &fd), NNG_EBUSY);
@@ -237,7 +238,8 @@ test_device_aio(void)
 NUTS_TESTS = {
 	{ "device not cooked", test_device_not_cooked },
 	{ "device incompatible", test_device_incompatible },
-	{ "device aio failure keeps sockets", test_device_aio_failure_keeps_sockets },
+	{ "device aio failure keeps sockets",
+	    test_device_aio_failure_keeps_sockets },
 	{ "device aio duplicate busy", test_device_aio_duplicate_busy },
 	{ "device forward", test_device_forward },
 	{ "device reflect", test_device_reflect },

@@ -352,8 +352,8 @@ nng_err
 nng_http_get_ms(nng_http *conn, const char *name, nng_duration *value)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_conn_getopt(
-	    conn, name, value, NULL, NNI_TYPE_DURATION));
+	return (
+	    nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_DURATION));
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(name);
@@ -379,7 +379,8 @@ nng_err
 nng_http_get_uint64(nng_http *conn, const char *name, uint64_t *value)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_UINT64));
+	return (
+	    nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_UINT64));
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(name);
@@ -392,7 +393,8 @@ nng_err
 nng_http_get_string(nng_http *conn, const char *name, const char **value)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_STRING));
+	return (
+	    nni_http_conn_getopt(conn, name, value, NULL, NNI_TYPE_STRING));
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(name);

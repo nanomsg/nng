@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -32,13 +32,28 @@ nni_plat_printf(const char *fmt, ...)
 	va_end(ap);
 }
 
-const char *
+char *
 nni_plat_strerror(int errnum)
 {
-	if (errnum > NNG_ESYSERR) {
-		errnum -= NNG_ESYSERR;
+	char *text = NULL;
+	char *msg  = NULL;
+	DWORD len;
+
+	len = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+	        FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+	    NULL, (DWORD) errnum, 0, (LPSTR) &text, 0, NULL);
+	if (len != 0) {
+		// System messages commonly have a trailing CRLF.
+		while ((len != 0) &&
+		    ((text[len - 1] == '\r') || (text[len - 1] == '\n'))) {
+			text[--len] = '\0';
+		}
+		msg = nni_strdup(text);
+		LocalFree(text);
+	} else {
+		(void) nni_asprintf(&msg, "System error #%d", errnum);
 	}
-	return (strerror(errnum));
+	return (msg);
 }
 
 // Win32 has its own error codes, but these ones it shares with POSIX.

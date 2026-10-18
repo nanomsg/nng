@@ -150,13 +150,14 @@ test_reconnect_back_off_zero(void)
 	NUTS_SLEEP(500);
 
 	// A zero maximum disables exponential backoff.  Check the number of
-	// refused connections directly rather than using the connection latency
-	// after the listener comes up: the latter also measures host scheduling
-	// and coverage-instrumentation overhead.
+	// refused connections directly rather than using the connection
+	// latency after the listener comes up: the latter also measures host
+	// scheduling and coverage-instrumentation overhead.
 #ifdef NNG_ENABLE_STATS
 	NUTS_PASS(nng_stats_get(&stats));
 	NUTS_ASSERT((dialer_stats = nng_stat_find_dialer(stats, d)) != NULL);
-	NUTS_ASSERT((refused = nng_stat_find(dialer_stats, "refused")) != NULL);
+	NUTS_ASSERT(
+	    (refused = nng_stat_find(dialer_stats, "refused")) != NULL);
 	NUTS_TRUE(nng_stat_value(refused) >= 10);
 	nng_stats_free(stats);
 #else

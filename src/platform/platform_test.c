@@ -13,8 +13,8 @@
 struct add_arg {
 	int          cnt;
 	nng_duration delay;
-	nng_mtx *    mx;
-	nng_cv *     cv;
+	nng_mtx     *mx;
+	nng_cv      *cv;
 };
 
 void
@@ -94,7 +94,7 @@ test_mutex(void)
 void
 test_thread(void)
 {
-	nng_thread *   thr;
+	nng_thread    *thr;
 	struct add_arg aa;
 
 	NUTS_PASS(nng_mtx_alloc(&aa.mx));
@@ -113,7 +113,7 @@ test_thread(void)
 void
 test_cond_var(void)
 {
-	nng_thread *   thr;
+	nng_thread    *thr;
 	struct add_arg aa;
 
 	NUTS_PASS(nng_mtx_alloc(&aa.mx));
@@ -138,7 +138,7 @@ test_cond_var(void)
 void
 test_cond_wake(void)
 {
-	nng_thread *   thr;
+	nng_thread    *thr;
 	struct add_arg aa;
 	nng_time       now;
 

@@ -126,11 +126,11 @@ nni_plat_file_put(const char *name, const void *data, size_t len)
 int
 nni_plat_file_get(const char *name, void **datap, size_t *lenp)
 {
-	FILE *      f;
+	FILE       *f;
 	struct stat st;
 	int         rv = 0;
 	size_t      len;
-	void *      data;
+	void       *data;
 
 	if ((f = fopen(name, "rb")) == NULL) {
 		return (nni_plat_errno(errno));
@@ -214,7 +214,7 @@ nni_plat_file_walk_inner(const char *name, nni_plat_file_walker walkfn,
 		int            rv;
 		struct dirent *ent;
 		struct stat    sbuf;
-		char *         path;
+		char          *path;
 		int            walkrv;
 
 		if ((ent = readdir(dir)) == NULL) {

@@ -28,7 +28,7 @@ nni_random(void)
 	// conditions might be possible, but we have no way to tell.
 	// For now we just ignore that possibility.
 	rand_s(&val);
-	return ((uint32_t)val);
+	return ((uint32_t) val);
 }
 
 #endif // NNG_PLATFORM_WINDOWS

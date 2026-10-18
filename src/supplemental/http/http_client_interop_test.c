@@ -80,9 +80,9 @@ test_httpbin_get(void)
 {
 	const char      *base = httpbin_url();
 	char             urlstr[512];
-	nng_url         *url = NULL;
-	nng_aio         *aio = NULL;
-	nng_http_client *cli = NULL;
+	nng_url         *url  = NULL;
+	nng_aio         *aio  = NULL;
+	nng_http_client *cli  = NULL;
 	nng_http        *conn = NULL;
 	void            *data;
 	size_t           len;
@@ -108,9 +108,9 @@ test_httpbin_reuse(void)
 {
 	const char      *base = httpbin_url();
 	char             urlstr[512];
-	nng_url         *url = NULL;
-	nng_aio         *aio = NULL;
-	nng_http_client *cli = NULL;
+	nng_url         *url  = NULL;
+	nng_aio         *aio  = NULL;
+	nng_http_client *cli  = NULL;
 	nng_http        *conn = NULL;
 	void            *data;
 	size_t           len;
@@ -148,9 +148,9 @@ test_httpbin_chunked_stream(void)
 {
 	const char      *base = httpbin_url();
 	char             urlstr[512];
-	nng_url         *url = NULL;
-	nng_aio         *aio = NULL;
-	nng_http_client *cli = NULL;
+	nng_url         *url  = NULL;
+	nng_aio         *aio  = NULL;
+	nng_http_client *cli  = NULL;
 	nng_http        *conn = NULL;
 	void            *data;
 	size_t           len;

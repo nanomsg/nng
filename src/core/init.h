@@ -20,4 +20,7 @@ nng_init_params *nni_init_get_params(void);
 // remains true after nng_fini(), which does not make further use safe.
 bool nni_init_was_called(void);
 
+void nni_strerror_sys_init(void);
+void nni_strerror_sys_fini(void);
+
 #endif // CORE_INIT_H

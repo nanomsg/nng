@@ -49,8 +49,7 @@ tcp_recv_start(nni_tcp_conn *c)
 		for (niov = 0, i = 0; !clamped && i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
 				size_t len = aiov[i].iov_len;
-				clamped =
-				    nni_aio_iov_clamp_len(&len, &count);
+				clamped = nni_aio_iov_clamp_len(&len, &count);
 				iov[niov].buf = aiov[i].iov_buf;
 				iov[niov].len = (ULONG) len;
 				niov++;
@@ -60,7 +59,7 @@ tcp_recv_start(nni_tcp_conn *c)
 		c->recving = true;
 		flags      = 0;
 		rv         = WSARecv(
-                    c->s, iov, niov, &nrecv, &flags, &c->recv_io.olpd, NULL);
+		    c->s, iov, niov, &nrecv, &flags, &c->recv_io.olpd, NULL);
 
 		if ((rv == SOCKET_ERROR) &&
 		    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
@@ -170,8 +169,7 @@ tcp_send_start(nni_tcp_conn *c)
 		for (niov = 0, i = 0; !clamped && i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
 				size_t len = aiov[i].iov_len;
-				clamped =
-				    nni_aio_iov_clamp_len(&len, &count);
+				clamped = nni_aio_iov_clamp_len(&len, &count);
 				iov[niov].buf = aiov[i].iov_buf;
 				iov[niov].len = (ULONG) len;
 				niov++;
@@ -316,8 +314,8 @@ tcp_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 	if (!c->peer_pid_supported) {
 		return (NNG_ENOTSUP);
 	}
-	if (WSAIoctl(c->s, SIO_AF_UNIX_GETPEERPID, NULL, 0, &id,
-	        sizeof(id), &nbytes, NULL, NULL) == SOCKET_ERROR) {
+	if (WSAIoctl(c->s, SIO_AF_UNIX_GETPEERPID, NULL, 0, &id, sizeof(id),
+	        &nbytes, NULL, NULL) == SOCKET_ERROR) {
 		return (nni_win_error(WSAGetLastError()));
 	}
 	return (nni_copyout_int((int) id, buf, szp, t));
@@ -416,16 +414,16 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s, bool peer_pid_supported)
 	nni_cv_init(&c->cv, &c->mtx);
 	nni_aio_list_init(&c->recv_aios);
 	nni_aio_list_init(&c->send_aios);
-	c->conn_aio          = NULL;
+	c->conn_aio           = NULL;
 	c->peer_pid_supported = peer_pid_supported;
-	c->ops.s_close     = tcp_close;
-	c->ops.s_stop      = tcp_stop;
-	c->ops.s_free      = tcp_free;
-	c->ops.s_send      = tcp_send;
-	c->ops.s_recv      = tcp_recv;
-	c->ops.s_get       = tcp_get;
-	c->ops.s_peer_addr = tcp_peer_addr;
-	c->ops.s_self_addr = tcp_self_addr;
+	c->ops.s_close        = tcp_close;
+	c->ops.s_stop         = tcp_stop;
+	c->ops.s_free         = tcp_free;
+	c->ops.s_send         = tcp_send;
+	c->ops.s_recv         = tcp_recv;
+	c->ops.s_get          = tcp_get;
+	c->ops.s_peer_addr    = tcp_peer_addr;
+	c->ops.s_self_addr    = tcp_self_addr;
 
 	nni_win_io_init(&c->recv_io, tcp_recv_cb, c);
 	nni_win_io_init(&c->send_io, tcp_send_cb, c);

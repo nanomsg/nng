@@ -21,7 +21,7 @@ extern void     nni_listener_rele(nni_listener *);
 extern uint32_t nni_listener_id(nni_listener *);
 extern int      nni_listener_create(nni_listener **, nni_sock *, const char *);
 extern int      nni_listener_create_url(
-         nni_listener **, nni_sock *, const nng_url *);
+    nni_listener **, nni_sock *, const nng_url *);
 extern void      nni_listener_close(nni_listener *);
 extern int       nni_listener_start(nni_listener *, int);
 extern nni_sock *nni_listener_sock(nni_listener *);

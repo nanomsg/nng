@@ -38,7 +38,7 @@ struct nni_dialer {
 	nni_sock         *d_sock;
 	nni_pipe         *d_pipe; // active pipe (for re-dialer)
 	int               d_ref;
-	bool              d_closed; // full shutdown
+	bool              d_closed;   // full shutdown
 	bool              d_stopping; // shutdown has stopped reconnects
 	nni_atomic_flag   d_closing;
 	nni_atomic_flag   d_started;

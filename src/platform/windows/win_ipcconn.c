@@ -323,7 +323,7 @@ ipc_close(void *arg)
 
 	nni_mtx_lock(&c->mtx);
 	if (!c->closed) {
-		HANDLE f = c->f;
+		HANDLE f  = c->f;
 		c->closed = true;
 
 		// Keep the handle until ipc_stop has observed all cancellation

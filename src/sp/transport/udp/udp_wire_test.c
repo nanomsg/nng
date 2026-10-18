@@ -371,8 +371,8 @@ test_udp_wire_closed_receive(void)
 	wire_events  events;
 	wire_peer    p;
 	nng_pipe     public_pipe;
-	nni_pipe    *pipe = NULL;
-	nng_aio     *aio  = NULL;
+	nni_pipe    *pipe   = NULL;
+	nng_aio     *aio    = NULL;
 	nng_sockaddr server = wire_listen(&s, &events, 0);
 
 	wire_open(&p);
@@ -407,8 +407,8 @@ test_udp_wire_stopped_receive(void)
 	wire_events  events;
 	wire_peer    p;
 	nng_pipe     public_pipe;
-	nni_pipe    *pipe = NULL;
-	nng_aio     *aio  = NULL;
+	nni_pipe    *pipe   = NULL;
+	nng_aio     *aio    = NULL;
 	nng_sockaddr server = wire_listen(&s, &events, 0);
 
 	wire_open(&p);

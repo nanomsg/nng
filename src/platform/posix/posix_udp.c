@@ -95,8 +95,7 @@ static uint8_t bouncebuf[65536];
 static void
 nni_posix_udp_set_bufsize(int fd)
 {
-#if defined(SOL_SOCKET) && \
-    (defined(SO_RCVBUF) || defined(SO_SNDBUF))
+#if defined(SOL_SOCKET) && (defined(SO_RCVBUF) || defined(SO_SNDBUF))
 	int bufsz = NNG_UDP_SOCK_BUFSZ;
 
 #ifdef SO_RCVBUF

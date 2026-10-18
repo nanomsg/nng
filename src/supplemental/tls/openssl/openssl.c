@@ -850,8 +850,8 @@ ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 			return (NNG_ENOTSUP);
 		}
 		method  = cfg->mode == NNG_TLS_MODE_SERVER
-		     ? DTLS_server_method()
-		     : DTLS_client_method();
+		    ? DTLS_server_method()
+		    : DTLS_client_method();
 		min_ver = max_ver = DTLS1_2_VERSION;
 	} else {
 		method = cfg->mode == NNG_TLS_MODE_SERVER
