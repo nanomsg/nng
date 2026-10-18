@@ -1,0 +1,14 @@
+{
+  "versions": [
+    {
+      "id": "v2.0",
+      "label": "NNG 2.0",
+      "href": "/ref/v2.0/"
+    },
+    {
+      "id": "dev",
+      "label": "Development (unreleased)",
+      "href": "/ref/dev/"
+    }
+  ]
+}
