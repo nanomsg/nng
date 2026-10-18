@@ -10,10 +10,6 @@ interfaces may have changed without notice here.
 For applications that need to detect NNG v2 versus older code, the `NNG_MAJOR_VERSION` macro
 can be used. This will have numeric value 2 for version 2, and 1 for earlier versions.
 
-> [!NOTE]
-> NNG version 2.0 is not stabilized yet, and while it is in development there is no compatibility guarantee
-> between releases or builds of NNG 2.
-
 ## Nanomsg Compatibility
 
 Applications using the legacy `libnanomsg` API will have to be updated to native NNG interfaces.
