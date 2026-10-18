@@ -95,6 +95,18 @@ jobs:
         with:
           ref: ${{ needs.prepare.outputs.source_ref }}
 
+      # Keep version-switching UI and its manifest current when building a
+      # historical release tag.  The manual content still comes from the tag.
+      - uses: actions/checkout@v4
+        with:
+          path: publisher
+          ref: ${{ github.sha }}
+
+      - name: Install shared documentation assets
+        run: |
+          cp publisher/docs/theme/nng-site-header.css docs/theme/
+          cp publisher/docs/theme/nng-site-header.js docs/theme/
+
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v2
         with:
@@ -108,6 +120,8 @@ jobs:
         run: |
           sed -i "s|site-url = \"/ref/\"|site-url = \"/${DESTINATION}/\"|" docs/book.toml
       - run: mdbook build -d ./docs/book docs
+      - name: Add the documentation version manifest
+        run: cp publisher/docs/versions.json docs/book/versions.json
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
