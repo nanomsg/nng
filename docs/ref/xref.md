@@ -274,10 +274,12 @@
 [`nng_tls_config_version`]: ../api/tls.md#tls-versions
 [`nng_device`]: ../api/device.md
 [`nng_device_aio`]: ../api/device.md#asynchronous-devices
+[`nng_socket_set`]: ../api/sock.md#socket-options
 [`nng_socket_set_bool`]: ../api/sock.md#socket-options
 [`nng_socket_set_int`]: ../api/sock.md#socket-options
 [`nng_socket_set_ms`]: ../api/sock.md#socket-options
 [`nng_socket_set_size`]: ../api/sock.md#socket-options
+[`nng_socket_get`]: ../api/sock.md#socket-options
 [`nng_socket_get_bool`]: ../api/sock.md#socket-options
 [`nng_socket_get_int`]: ../api/sock.md#socket-options
 [`nng_socket_get_ms`]: ../api/sock.md#socket-options
@@ -604,6 +606,7 @@
 [udp]: ../tran/udp.md
 [url]: ../api/url.md
 [nngcat]: ../tools/nngcat.md
+[`nngcat`]: ../tools/nngcat.md
 [streams]: ../api/stream.md
 [id map]: ../api/id_map.md
 [tls-config-objects]: ../api/tls.md#using-configuration-objects
