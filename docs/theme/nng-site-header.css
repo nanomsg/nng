@@ -239,12 +239,18 @@ html.sidebar-visible #mdbook-menu-bar,
   scroll-margin-top: calc(var(--nng-site-header-height) + var(--menu-bar-height) + 0.5em);
 }
 
+body.toc2 :target {
+  scroll-margin-top: calc(var(--nng-site-header-height) + var(--nng-docs-menu-height) + 0.5em);
+}
+
 @media print {
-  .nn-header {
+  .nn-header,
+  .nng-docs-menu-bar {
     display: none;
   }
 
-  body {
+  body,
+  body.toc2 {
     padding-top: 0;
   }
 }
