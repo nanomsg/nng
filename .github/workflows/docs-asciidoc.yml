@@ -1,0 +1,107 @@
+name: docs-asciidoc
+
+on:
+  pull_request:
+    paths:
+      - "docs/theme/**"
+      - "docs/versions.json"
+      - "tools/pubrefman/**"
+      - ".github/workflows/docs-asciidoc.yml"
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "1.x release tag containing the manual sources"
+        required: true
+        default: "v1.12.5"
+        type: string
+      version:
+        description: "Major.minor documentation line (for example, 1.12)"
+        required: true
+        default: "1.12"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.target.outputs.deploy }}
+      destination: ${{ steps.target.outputs.destination }}
+      source_ref: ${{ steps.target.outputs.source_ref }}
+      version: ${{ steps.target.outputs.version }}
+    steps:
+      - id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_SOURCE_REF: ${{ inputs.source_ref }}
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            source_ref="v1.12.5"
+            version="1.12"
+            deploy=false
+          else
+            source_ref="$DISPATCH_SOURCE_REF"
+            version="$DISPATCH_VERSION"
+            deploy=true
+          fi
+
+          if ! [[ "$version" =~ ^1\.[0-9]+$ ]]; then
+            echo "Legacy documentation version must be 1.x; got '$version'." >&2
+            exit 1
+          fi
+
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+          echo "destination=ref/v$version" >> "$GITHUB_OUTPUT"
+          echo "source_ref=$source_ref" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    concurrency:
+      group: documentation-publication-${{ needs.prepare.outputs.deploy == 'true' && 'deploy' || github.run_id }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_ref }}
+
+      # Shared assets come from the publisher revision.  The manual content
+      # itself remains the exact historical release selected above.
+      - uses: actions/checkout@v4
+        with:
+          path: publisher
+          ref: ${{ github.sha }}
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler: none
+
+      - name: Install Asciidoctor
+        run: gem install asciidoctor -v 2.0.26 --no-document
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+
+      - name: Render legacy reference manual
+        run: |
+          go run publisher/tools/pubrefman/main.go \
+            -source-dir docs/man \
+            -output-dir legacy-book \
+            -theme-dir publisher/docs/theme \
+            -version "${{ needs.prepare.outputs.version }}"
+          cp publisher/docs/versions.json legacy-book/versions.json
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        if: ${{ needs.prepare.outputs.deploy == 'true' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./legacy-book
+          destination_dir: ./${{ needs.prepare.outputs.destination }}
+          enable_jekyll: true
