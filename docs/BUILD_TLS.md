@@ -33,9 +33,8 @@ staging directory).
 
 ## Notes about Mbed TLS
 
-MbedTLS 2.28, 3.6, and 4.0 are tested and known to work.
-Support for MbedTLS 2.28 may be dropped before NNG 2.0 finalizes,
-as it is no longer supported by the Mbed TLS project.
+MbedTLS 3.6 and 4.0 are tested and known to work.
+MbedTLS 2.x is no longer supported by the MbedTLS project.
 
 ## Notes about WolfSSL
 
