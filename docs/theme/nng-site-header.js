@@ -73,11 +73,43 @@
     return match ? match[1] : null;
   }
 
+  function addLegacyDocumentationBar() {
+    var header = document.querySelector(".nn-header");
+    var existing = document.querySelector(".nng-docs-menu-bar");
+
+    if (existing) {
+      return existing.querySelector(".nng-docs-menu-right");
+    }
+    if (!header || !document.body.classList.contains("toc2")) {
+      return null;
+    }
+
+    var bar = document.createElement("nav");
+    bar.className = "nng-docs-menu-bar";
+    bar.setAttribute("aria-label", "Documentation navigation");
+
+    var left = document.createElement("div");
+    left.className = "nng-docs-menu-left";
+
+    var title = document.createElement("div");
+    title.className = "nng-docs-menu-title";
+    title.textContent = "NNG Reference Manual";
+
+    var right = document.createElement("div");
+    right.className = "nng-docs-menu-right";
+
+    bar.appendChild(left);
+    bar.appendChild(title);
+    bar.appendChild(right);
+    header.insertAdjacentElement("afterend", bar);
+    return right;
+  }
+
   function addVersionSelector(versions) {
     var toolbar = document.querySelector("#mdbook-menu-bar .right-buttons");
-    var headerMenu = document.querySelector(".nn-header .navbar-end");
+    var legacyMenu = addLegacyDocumentationBar();
 
-    if ((!toolbar && !headerMenu) || document.querySelector(".nng-version-picker")) {
+    if ((!toolbar && !legacyMenu) || document.querySelector(".nng-version-picker")) {
       return;
     }
 
@@ -110,8 +142,8 @@
     if (toolbar) {
       toolbar.insertBefore(picker, toolbar.firstChild);
     } else {
-      picker.classList.add("navbar-item", "nng-header-version-picker");
-      headerMenu.insertBefore(picker, headerMenu.firstChild);
+      picker.classList.add("nng-legacy-version-picker");
+      legacyMenu.appendChild(picker);
     }
   }
 
