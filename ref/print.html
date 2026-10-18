@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5938f87a.js";
+            window.path_to_searchindex_js = "searchindex-33068e82.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-9ed7a891.js"></script>
+        <script src="toc-c99ee17e.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -383,6 +383,193 @@ transport, and the rest of the URL supplies transport-specific addressing
 information. NNG follows RFC 3986 URL syntax, with additional schemes for SP
 transports and additional canonicalization rules described in the URL API
 reference.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="whats-new-in-nng-20"><a class="header" href="#whats-new-in-nng-20">What’s New in NNG 2.0</a></h1>
+<p>NNG 2.0 expands the ways applications can communicate, adds more choices for
+securing connections, and reduces overhead in common I/O paths. This chapter
+highlights these improvements for readers familiar with NNG 1.x.
+Some capabilities described here also appeared in later 1.x releases, so the
+differences will depend on which 1.x release an application uses.</p>
+<p>NNG 2.0 also makes changes to the application programming interface.
+The <a href="#migrating-from-nng-1x">Migrating from NNG 1.x</a> guide describes the changes
+needed to update existing applications.</p>
+<h2 id="new-transports-and-local-connections"><a class="header" href="#new-transports-and-local-connections">New Transports and Local Connections</a></h2>
+<h3 id="udp-messaging"><a class="header" href="#udp-messaging">UDP Messaging</a></h3>
+<p>The <a href="#udp-transport">UDP transport</a> carries Scalability Protocols messages
+over UDP, with support for both IPv4 and IPv6. It preserves message boundaries
+and maintains logical peer connections, including keep-alive and peer expiry.
+Applications use <code>udp://</code> URLs, or <code>udp4://</code> and <code>udp6://</code> to select an address
+family explicitly.</p>
+<p>UDP is useful for applications that prefer to discard lost or stale data
+rather than wait for retransmission. It does not provide reliable delivery,
+ordering, or duplicate suppression, so applications must tolerate those
+conditions. Each message must fit in a single UDP datagram; small messages
+that avoid IP fragmentation are recommended.</p>
+<p>Connection retry and expiry intervals are configurable, and listeners can
+limit the number of peers they admit. The transport can also loan larger
+received buffers to the messaging layer to avoid an extra allocation and copy.</p>
+<h3 id="dtls-messaging"><a class="header" href="#dtls-messaging">DTLS Messaging</a></h3>
+<p>The new <a href="#dtls-transport-experimental">DTLS transport</a> adds encryption and authentication
+to datagram messaging using <code>dtls://</code>, <code>dtls4://</code>, and <code>dtls6://</code> URLs.
+It uses the same <a href="#configuration-objects"><code>nng_tls_config</code></a> objects as stream TLS, making certificate
+or pre-shared-key configuration familiar to applications already using TLS.
+Available authentication methods depend on the selected TLS engine.</p>
+<p>DTLS retains UDP’s delivery characteristics; encryption does not add reliable
+delivery or ordering. It is intended for small messages over unicast UDP.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>DTLS is experimental and requires TLS support and the <code>NNG_TRANSPORT_DTLS</code>
+build option. The supported version is DTLS 1.2. Stream TLS 1.3 support does
+not imply DTLS 1.3 support. See the transport reference for engine requirements
+and message size limits.</p>
+</blockquote>
+<h3 id="unix-domain-sockets-on-windows"><a class="header" href="#unix-domain-sockets-on-windows">UNIX Domain Sockets on Windows</a></h3>
+<p>The <a href="#ipc-transport">IPC transport</a> now supports Windows AF_UNIX sockets.
+Applications can use <code>ipc://</code> or its <code>unix://</code> alias for UNIX domain socket
+communication on Windows systems that provide this facility, as well as on
+POSIX systems. Windows paths use the Win32 pathname format.</p>
+<p>Windows named pipes remain available through the explicit <code>winpipe://</code>
+scheme. This matters when interoperating with older Windows NNG applications:
+NNG 1.x used <code>ipc://</code> for named pipes, while NNG 2.0 uses it for AF_UNIX sockets.
+Use <code>winpipe://</code> in the NNG 2.0 application to communicate with a legacy
+named-pipe peer.</p>
+<h3 id="existing-file-descriptors-and-socket-pairs"><a class="header" href="#existing-file-descriptors-and-socket-pairs">Existing File Descriptors and Socket Pairs</a></h3>
+<p>The <a href="#socket-transport">Socket transport</a>, sometimes called the file descriptor
+or FD transport, lets an application attach an already-connected BSD socket
+to an NNG socket. A <code>socket://</code> listener accepts connected descriptors through
+the <code>NNG_OPT_SOCKET_FD</code> option, and each supplied descriptor becomes an NNG pipe.
+The application can therefore arrange connection establishment separately
+from NNG’s messaging protocols.</p>
+<p>The <a href="#create-socket-pair"><code>nng_socket_pair</code></a> function creates a pair of connected descriptors for
+this purpose. For example, a parent and child process can communicate without
+creating a named filesystem socket or opening a TCP port. Both this function
+and the Socket transport are supported on POSIX platforms only.</p>
+<h3 id="socket-activation"><a class="header" href="#socket-activation">Socket Activation</a></h3>
+<p>Applications can use an externally created listening socket with supported
+listeners through <a href="#socket-activation"><code>NNG_OPT_LISTEN_FD</code></a>. This enables integration with service
+managers such as systemd, which can create a listening socket before starting
+the application and pass it to the service.</p>
+<p>Socket activation is available for TCP on POSIX and Windows, and for UNIX
+domain sockets on POSIX. It is also exposed through the stream API.
+See the <a href="#socket-activation">socket activation example</a> for
+details. Unlike the Socket transport, this supplies a <em>listening</em> socket,
+from which NNG accepts connections.</p>
+<h2 id="expanded-tls-support"><a class="header" href="#expanded-tls-support">Expanded TLS Support</a></h2>
+<h3 id="more-tls-engines"><a class="header" href="#more-tls-engines">More TLS Engines</a></h3>
+<p>NNG supports <a href="#tls">Mbed TLS, wolfSSL, and OpenSSL</a>, allowing
+applications to select the TLS implementation that fits their deployment.
+OpenSSL support is new in NNG 2.0 and requires OpenSSL 3.5 or newer; wolfSSL
+is also supported alongside Mbed TLS.</p>
+<p>Enable TLS with <code>NNG_ENABLE_TLS=ON</code> and select the engine with
+<code>NNG_TLS_ENGINE=mbed</code>, <code>NNG_TLS_ENGINE=wolf</code>, or <code>NNG_TLS_ENGINE=openssl</code> when
+configuring the build. The chosen engine supplies TLS for the TLS transport,
+secure WebSockets, HTTPS, and, when enabled, DTLS. Individual features depend
+on the engine and its build configuration.</p>
+<h3 id="tls-13"><a class="header" href="#tls-13">TLS 1.3</a></h3>
+<p>Applications can use TLS 1.3 when supported by the selected engine.
+The default version range allows TLS 1.2 and TLS 1.3, and
+<a href="#tls-versions"><code>nng_tls_config_version</code></a> can restrict the range, including requiring
+TLS 1.3. Support for the obsolete TLS 1.0 and TLS 1.1 versions has been removed.</p>
+<p>See <a href="#tls-versions">TLS Versions</a> for the supported capabilities.
+TLS 1.3 session resumption and zero round trip time (0-RTT) are not supported.</p>
+<h3 id="pre-shared-keys"><a class="header" href="#pre-shared-keys">Pre-Shared Keys</a></h3>
+<p><a href="#pre-shared-keys-1">TLS pre-shared keys</a> provide an alternative
+to certificate-based authentication. With <a href="#pre-shared-keys-1"><code>nng_tls_config_psk</code></a>, applications
+configure an identity and a shared secret. A server configuration can hold
+keys for multiple client identities. This can simplify deployments where
+peers already share secrets and a certificate infrastructure is unnecessary.
+PSK support depends on the TLS engine and its configuration.</p>
+<h3 id="richer-certificate-inspection"><a class="header" href="#richer-certificate-inspection">Richer Certificate Inspection</a></h3>
+<p>The new <a href="#peer-certificates"><code>nng_tls_cert</code></a> API provides access to peer certificates from NNG
+pipes, streams, and HTTP connections. Applications can inspect the subject,
+issuer, serial number, subject alternative names, and validity dates, or
+export the certificate in DER format for use with another library.
+Certificates can also be parsed from PEM or DER data.</p>
+<p>This replaces the limited certificate-name properties from NNG 1.x with a
+common certificate object. See <a href="#peer-certificates">Peer Certificates</a>
+for ownership rules and engine-dependent availability.</p>
+<h2 id="lower-io-overhead"><a class="header" href="#lower-io-overhead">Lower I/O Overhead</a></h2>
+<h3 id="synchronous-completion-with-skippable-callbacks"><a class="header" href="#synchronous-completion-with-skippable-callbacks">Synchronous Completion with Skippable Callbacks</a></h3>
+<p>The new <a href="#skipping-callbacks"><code>nng_aio_skip_callback</code></a> function lets an application opt in to
+synchronous completion of an asynchronous operation. If the operation can
+finish immediately, NNG sets a caller-supplied flag and makes the result
+available in the AIO without dispatching its callback. Otherwise, the operation
+completes through the normal asynchronous path.</p>
+<p>This avoids unnecessary callback scheduling and context switches when data
+or buffer space is already available. Applications must opt in before each
+operation and handle both completion paths. The synchronous <a href="#nng_sendmsg"><code>nng_sendmsg</code></a>
+and <a href="#nng_recvmsg"><code>nng_recvmsg</code></a> families use this mechanism internally.
+See <a href="#skipping-callbacks">Skipping Callbacks</a> for an example.</p>
+<h3 id="faster-websocket-masking"><a class="header" href="#faster-websocket-masking">Faster WebSocket Masking</a></h3>
+<p>WebSocket masking and unmasking now process data in larger chunks, with
+SIMD implementations using NEON on AArch64 and SSE2 on x86-64 where supported
+by the compiler. Portable implementations remain available for other builds.
+This reduces the CPU cost of processing masked WebSocket payloads without
+requiring application changes or changing the wire format.</p>
+<h3 id="fewer-allocations-and-less-locking"><a class="header" href="#fewer-allocations-and-less-locking">Fewer Allocations and Less Locking</a></h3>
+<p>Internal transport and I/O structures have been reorganized to combine
+allocations and embed frequently used objects. Poller and reference-counting
+paths have also been revised to reduce locking overhead. The HTTP implementation
+reuses buffers and avoids allocations for common metadata.
+These changes reduce bookkeeping in frequently executed paths; the benefit
+depends on the platform and workload.</p>
+<h2 id="http-and-websocket-improvements"><a class="header" href="#http-and-websocket-improvements">HTTP and WebSocket Improvements</a></h2>
+<h3 id="http-over-unix-domain-sockets"><a class="header" href="#http-over-unix-domain-sockets">HTTP over UNIX Domain Sockets</a></h3>
+<p>HTTP clients and servers can now communicate over UNIX domain sockets using
+<code>http+unix://</code> URLs. For example, a service at <code>/var/run/service.sock</code> can use:</p>
+<pre><code class="language-text">http+unix://%2Fvar%2Frun%2Fservice.sock
+</code></pre>
+<p>The socket path is percent-encoded in the URL authority, leaving the URL path
+available for the HTTP request target. This allows local HTTP services without
+allocating TCP ports and works on POSIX and Windows where the UNIX stream
+driver is available. See <a href="#http-over-unix-domain-sockets-1">HTTP over Unix-domain sockets</a>
+for URL construction and request details.</p>
+<h3 id="simpler-http-apis-and-more-flexible-routing"><a class="header" href="#simpler-http-apis-and-more-flexible-routing">Simpler HTTP APIs and More Flexible Routing</a></h3>
+<p>The HTTP API has been refactored around a connection object, simplifying
+request and response handling. Header iteration is available through
+<a href="#retrieving-headers"><code>nng_http_next_header</code></a>, and <a href="#hijacking-connections"><code>nng_http_hijack_stream</code></a> allows an HTTP upgrade
+handler to take over a connection as an <a href="#stream-type"><code>nng_stream</code></a>, preserving data already
+read by the HTTP parser.</p>
+<p>WebSocket listeners can now accept a subtree of URL paths using
+<code>NNG_OPT_WS_TREE</code>, with the actual request URI available through
+<code>NNG_OPT_WS_REQUEST_URI</code>. This lets one listener handle related routes.
+See the <a href="#transport-and-stream-options">WebSocket transport options</a>.</p>
+<h2 id="more-application-control"><a class="header" href="#more-application-control">More Application Control</a></h2>
+<ul>
+<li><strong>Runtime initialization and thread tuning.</strong> Explicit <a href="#initialization"><code>nng_init</code></a> and
+<a href="#finalization"><code>nng_fini</code></a> calls give applications control over the library’s lifetime.
+Initialization parameters can tune task, expiration, I/O poller, and DNS
+resolver thread counts, subject to platform support. Initialization is
+reference counted so multiple library consumers in a process can share NNG.</li>
+<li><strong>Custom memory allocation.</strong> The <code>nng_init_params</code> structure accepts
+<code>malloc_fn</code>, <code>calloc_fn</code>, and <code>free_fn</code> hooks, allowing applications to
+supply their own memory allocator when initializing NNG. Supply all three
+hooks together on the first call to <code>nng_init</code>.</li>
+<li><strong>IPC socket ownership.</strong> POSIX IPC listeners can request a socket’s owner
+and group with <code>NNG_OPT_IPC_OWNER</code> and <code>NNG_OPT_IPC_GROUP</code>, in addition to
+configuring filesystem permissions. See the <a href="#ipc-transport">IPC transport</a>
+for platform and privilege requirements.</li>
+<li><strong>More direct, typed APIs.</strong> Dedicated functions for addresses, subscriptions,
+TLS configuration, and protocol information replace many generic options.
+Most declarations are consolidated in <code>&lt;nng/nng.h&gt;</code>, reducing the number of
+headers applications need. The <a href="#migrating-from-nng-1x">migration guide</a> maps the
+old interfaces to their replacements.</li>
+<li><strong>More TLS options in nngcat.</strong> The command-line tool can use pre-shared keys
+and encrypted private keys, making it easier to test secured services.
+See <a href="#tls-1">nngcat TLS options</a>.</li>
+</ul>
 <!-- NOTE: This assumes that any page referencing this is located
      in a directory two levels down.  Meaning ./api/somefile.md or
      similar.  mdbook cannot accommodate links that are called from
@@ -3985,7 +4172,7 @@ This name is used for certificate validation and may also be sent with <a name="
 <p>Server configurations normally need a local certificate and private key.
 Client configurations normally need certificate authority material and a server name unless authentication is disabled.</p>
 </blockquote>
-<h2 id="pre-shared-keys"><a class="header" href="#pre-shared-keys">Pre-Shared Keys</a></h2>
+<h2 id="pre-shared-keys-1"><a class="header" href="#pre-shared-keys-1">Pre-Shared Keys</a></h2>
 <pre><code class="language-c">nng_err nng_tls_config_psk(nng_tls_config *cfg, const char *identity,
     const uint8_t *key, size_t key_len);
 </code></pre>
@@ -4097,7 +4284,7 @@ nng_tls_config_cert_key_file(tls, "client.pem", NULL);
 nng_dialer_set_tls(dialer, tls);
 nng_tls_config_free(tls);
 </code></pre>
-<h3 id="pre-shared-keys-1"><a class="header" href="#pre-shared-keys-1">Pre-Shared Keys</a></h3>
+<h3 id="pre-shared-keys-1-1"><a class="header" href="#pre-shared-keys-1-1">Pre-Shared Keys</a></h3>
 <p><a name="a031"></a>pre-shared key<a name="a032"></a>PSK
 Pre-shared key configurations use matching identity and key values on both sides.
 They do not use certificate chains for peer authentication.
@@ -4207,7 +4394,7 @@ Every request is answered with a single reply.</p>
 </code></pre>
 <p>Unlike the rest of NNG, the HTTP API in NNG requires including <code>nng/http.h</code>. It is not necessary to include
 the main <code>nng/nng.h</code> header, it will be included transitively by <code>nng/http.h</code>.</p>
-<h2 id="http-over-unix-domain-sockets"><a class="header" href="#http-over-unix-domain-sockets">HTTP over Unix-domain sockets</a></h2>
+<h2 id="http-over-unix-domain-sockets-1"><a class="header" href="#http-over-unix-domain-sockets-1">HTTP over Unix-domain sockets</a></h2>
 <p>HTTP clients and servers can use a Unix-domain socket with an
 <code>http+unix://%2Fabsolute%2Fsocket-path</code> URL. The authority (the portion after
 <code>//</code> and before the next <code>/</code>) contains the percent-encoded socket path; it is
