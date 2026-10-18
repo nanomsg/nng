@@ -6,29 +6,25 @@
 </g>
 </svg>
 
-Copyright &copy; 2026 Staysail Systems, Inc.\
+Copyright &copy; 2026 Staysail Systems, Inc.<br/>
 San Marcos, California, United States of America
 
 > If you find this book or NNG useful, please consider sponsoring
 > the project.
 
-> [!TIP]
-> This book is a work in progress, adapted from earlier sources
-> and updated for the current version of NNG.
+<span style="font-size: smaller">
 
-> [!NOTE]
->
-> > This document is supplied under the terms of the MIT License, a
-> > copy of which should be located in the distribution where this
-> > file was obtained (LICENSE.txt), and reproduced below.
->
-> > Third party contributions to this document were made under the
-> > same license terms, and may be covered under one of the following
-> > copyrights:
-> >
-> > - Copyright 2018 Capitar IT Group BV.
-> > - Copyright 2019 Devolutions.
-> > - Copyright 2020 Dirac Research.
+This document is supplied under the terms of the MIT License, a
+copy of which is reproduced below.
+
+
+Third party contributions to this document were made under the
+same license terms, and may be covered under one of the following
+copyrights:
+
+- Copyright 2018 Capitar IT Group BV.<br/>
+- Copyright 2019 Devolutions.<br/>
+- Copyright 2020 Dirac Research.<br/>
 
 ## The MIT License
 
@@ -49,3 +45,4 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
+</span>
