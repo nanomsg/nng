@@ -5,6 +5,7 @@
   // the published site, so use the source fragment from the deployed branch.
   var siteHeaderUrl = "https://raw.githubusercontent.com/nanomsg/nng/gh-pages/_includes/header-nng.html";
   var versionManifestUrl = "/ref/dev/versions.json";
+  var siteHeaderPromise;
 
   function enableMenuToggle(header) {
     var toggle = header.querySelector(".navbar-burger");
@@ -22,11 +23,16 @@
   }
 
   function addSiteHeader() {
-    if (document.querySelector(".nn-header")) {
-      return;
+    if (siteHeaderPromise) {
+      return siteHeaderPromise;
     }
 
-    fetch(siteHeaderUrl)
+    if (document.querySelector(".nn-header")) {
+      siteHeaderPromise = Promise.resolve(document.querySelector(".nn-header"));
+      return siteHeaderPromise;
+    }
+
+    siteHeaderPromise = fetch(siteHeaderUrl)
       .then(function (response) {
         if (!response.ok) {
           throw new Error("Unable to load the NNG site header");
@@ -52,10 +58,14 @@
         });
         document.body.insertAdjacentElement("afterbegin", header);
         enableMenuToggle(header);
+        return header;
       })
       .catch(function (error) {
         console.warn(error.message);
+        return null;
       });
+
+    return siteHeaderPromise;
   }
 
   function currentVersionId() {
@@ -65,8 +75,9 @@
 
   function addVersionSelector(versions) {
     var toolbar = document.querySelector("#mdbook-menu-bar .right-buttons");
+    var headerMenu = document.querySelector(".nn-header .navbar-end");
 
-    if (!toolbar || document.querySelector(".nng-version-picker")) {
+    if ((!toolbar && !headerMenu) || document.querySelector(".nng-version-picker")) {
       return;
     }
 
@@ -96,7 +107,12 @@
 
     picker.appendChild(label);
     picker.appendChild(select);
-    toolbar.insertBefore(picker, toolbar.firstChild);
+    if (toolbar) {
+      toolbar.insertBefore(picker, toolbar.firstChild);
+    } else {
+      picker.classList.add("navbar-item", "nng-header-version-picker");
+      headerMenu.insertBefore(picker, headerMenu.firstChild);
+    }
   }
 
   function addVersionPicker() {
@@ -111,7 +127,9 @@
         if (!manifest || !Array.isArray(manifest.versions)) {
           throw new Error("Documentation version manifest is invalid");
         }
-        addVersionSelector(manifest.versions);
+        return addSiteHeader().then(function () {
+          addVersionSelector(manifest.versions);
+        });
       })
       .catch(function (error) {
         console.warn(error.message);

@@ -115,6 +115,16 @@ body {
   border-radius: 3px;
 }
 
+.nn-header .nng-header-version-picker {
+  margin-right: 0.25rem;
+}
+
+.nn-header .nng-version-picker select {
+  color: #fff;
+  background: transparent;
+  border-color: rgb(255 255 255 / 55%);
+}
+
 @media screen and (max-width: 600px) {
   .nng-version-label {
     display: none;
@@ -201,6 +211,20 @@ html.sidebar-visible #mdbook-menu-bar,
 
 @media screen and (min-width: 769px) {
   .nn-header-inner { width: 720px; }
+}
+
+/* Asciidoctor's desktop TOC is fixed at the top of the viewport. Keep it
+ * below the fixed NNG navigation bar and reserve the bar's stacking layer. */
+@media screen and (min-width: 768px) {
+  body.toc2 {
+    padding-top: var(--nng-site-header-height);
+  }
+
+  #toc.toc2 {
+    top: var(--nng-site-header-height);
+    z-index: 999;
+    height: calc(100% - var(--nng-site-header-height));
+  }
 }
 
 @media screen and (min-width: 1024px) {
