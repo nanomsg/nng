@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=__LATEST_VERSION__">
+    <link rel="canonical" href="https://nng.nanomsg.org__LATEST_VERSION__">
+    <title>NNG Reference Manual</title>
+    <script>
+      window.location.replace("__LATEST_VERSION__" + window.location.search + window.location.hash);
+    </script>
+  </head>
+  <body>
+    <p>
+      The NNG reference manual has moved to
+      <a href="__LATEST_VERSION__">the current NNG reference manual</a>.
+    </p>
+  </body>
+</html>
