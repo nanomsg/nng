@@ -93,6 +93,38 @@ body {
   margin-right: 4px;
 }
 
+.right-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.nng-version-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-right: 0.5rem;
+}
+
+.nng-version-picker select {
+  max-width: 14rem;
+  padding: 0.2rem 0.4rem;
+  color: var(--icons);
+  font: inherit;
+  background: var(--bg);
+  border: 1px solid var(--table-border-color);
+  border-radius: 3px;
+}
+
+@media screen and (max-width: 600px) {
+  .nng-version-label {
+    display: none;
+  }
+
+  .nng-version-picker select {
+    max-width: 10rem;
+  }
+}
+
 .nn-header .navbar-menu {
   flex-grow: 1;
   flex-shrink: 0;

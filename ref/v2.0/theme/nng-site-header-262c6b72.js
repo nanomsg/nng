@@ -4,6 +4,7 @@
   // GitHub Pages omits Jekyll's underscore-prefixed include directories from
   // the published site, so use the source fragment from the deployed branch.
   var siteHeaderUrl = "https://raw.githubusercontent.com/nanomsg/nng/gh-pages/_includes/header-nng.html";
+  var versionManifestUrl = "/ref/dev/versions.json";
 
   function enableMenuToggle(header) {
     var toggle = header.querySelector(".navbar-burger");
@@ -57,9 +58,73 @@
       });
   }
 
+  function currentVersionId() {
+    var match = window.location.pathname.match(/^\/ref\/([^/]+)(?:\/|$)/);
+    return match ? match[1] : null;
+  }
+
+  function addVersionSelector(versions) {
+    var toolbar = document.querySelector("#mdbook-menu-bar .right-buttons");
+
+    if (!toolbar || document.querySelector(".nng-version-picker")) {
+      return;
+    }
+
+    var picker = document.createElement("div");
+    picker.className = "nng-version-picker";
+
+    var label = document.createElement("label");
+    label.className = "nng-version-label";
+    label.htmlFor = "nng-version-select";
+    label.textContent = "Version";
+
+    var select = document.createElement("select");
+    select.id = "nng-version-select";
+    select.setAttribute("aria-label", "Documentation version");
+
+    versions.forEach(function (version) {
+      var option = document.createElement("option");
+      option.value = version.href;
+      option.textContent = version.label;
+      option.selected = version.id === currentVersionId();
+      select.appendChild(option);
+    });
+
+    select.addEventListener("change", function () {
+      window.location.assign(select.value);
+    });
+
+    picker.appendChild(label);
+    picker.appendChild(select);
+    toolbar.insertBefore(picker, toolbar.firstChild);
+  }
+
+  function addVersionPicker() {
+    fetch(versionManifestUrl, { cache: "no-cache" })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Unable to load documentation versions");
+        }
+        return response.json();
+      })
+      .then(function (manifest) {
+        if (!manifest || !Array.isArray(manifest.versions)) {
+          throw new Error("Documentation version manifest is invalid");
+        }
+        addVersionSelector(manifest.versions);
+      })
+      .catch(function (error) {
+        console.warn(error.message);
+      });
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", addSiteHeader);
+    document.addEventListener("DOMContentLoaded", function () {
+      addSiteHeader();
+      addVersionPicker();
+    });
   } else {
     addSiteHeader();
+    addVersionPicker();
   }
 }());
