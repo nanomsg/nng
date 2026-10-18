@@ -1,0 +1,61 @@
+@media print {
+    /* 1. Define the Physical Page Geometry & Global Margins */
+    @page {
+        size: 6in 9in; /* Standard US Trade Size */
+
+        /* Default baseline margins */
+        margin-top: 0.75in;
+        margin-bottom: 0.75in;
+    }
+
+    /* 2. Mirrored Margins: Account for the Spine Gutter */
+    /* Right-side pages (Odd numbers) */
+    @page :right {
+        margin-left: 0.75in;  /* Inside Gutter: Wider to protect text near binding */
+        margin-right: 0.5in;  /* Outside Edge */
+    }
+
+    /* Left-side pages (Even numbers) */
+    @page :left {
+        margin-left: 0.5in;   /* Outside Edge */
+        margin-right: 0.75in; /* Inside Gutter: Wider to protect text near binding */
+    }
+
+    /* 3. Clean up the mdBook UI for Print */
+    #sidebar,
+    #menu-bar,
+    .theme-buttons,
+    .header-link,
+    #search-wrapper {
+        display: none !important; /* Completely hides menus, search, and navigation sidebars */
+    }
+
+    #content, #page-wrapper {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+    }
+
+    main {
+        max-width: 100% !important;
+        font-size: 11pt; /* Professional body text scaling */
+        line-height: 1.5;
+        color: #000000 !important;
+    }
+
+    /* 4. Formatting Fixes for Professional Layouts */
+    h1, h2, h3, h4 {
+        page-break-after: avoid; /* Prevents heading from sitting alone at the bottom of a page */
+        color: #000000 !important;
+    }
+
+    p, blockquote {
+        orphans: 3; /* Prevents a lonely line at the bottom of a page */
+        widows: 3;  /* Prevents a lonely line at the top of a page */
+    }
+
+    pre, code {
+        white-space: pre-wrap !important; /* Ensures long code snippets wrap rather than clipping off-page */
+        font-size: 9.5pt;
+    }
+}
