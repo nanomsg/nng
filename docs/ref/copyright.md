@@ -12,7 +12,7 @@ San Marcos, California, United States of America
 > If you find this book or NNG useful, please consider sponsoring
 > the project.
 
-<span style="font-size: smaller">
+<div style="font-size: smaller">
 
 This document is supplied under the terms of the MIT License, a
 copy of which is reproduced below.
@@ -45,4 +45,5 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
-</span>
+
+</div>
