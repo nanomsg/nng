@@ -1313,7 +1313,6 @@ static const struct {
 const char *
 nng_strerror(nng_err num)
 {
-	static char unknownerrbuf[32];
 	for (int i = 0; nni_errors[i].msg != NULL; i++) {
 		if (nni_errors[i].code == num) {
 			return (nni_errors[i].msg);
@@ -1325,15 +1324,10 @@ nng_strerror(nng_err num)
 	}
 
 	if (num & NNG_ETRANERR) {
-		static char tranerrbuf[32];
-		(void) snprintf(tranerrbuf, sizeof(tranerrbuf),
-		    "Transport error #%d", num & ~NNG_ETRANERR);
-		return (tranerrbuf);
+		return "Transport error";
 	}
 
-	(void) snprintf(
-	    unknownerrbuf, sizeof(unknownerrbuf), "Unknown error #%d", num);
-	return (unknownerrbuf);
+	return "Unknown error";
 }
 
 static nng_err
