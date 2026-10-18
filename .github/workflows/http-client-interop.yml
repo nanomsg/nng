@@ -2,7 +2,7 @@ name: http-client-interop
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-    paths-ignore: ["docs/**", "**.adoc", "**.md"]
+    paths-ignore: ["docs/**", "**.adoc", "**.md", ".github/workflows/mdbook.yml", ".github/workflows/docs-asciidoc.yml"]
 
 permissions:
   contents: read
