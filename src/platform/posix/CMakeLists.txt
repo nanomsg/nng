@@ -1,5 +1,5 @@
 #
-# Copyright 2023 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -23,6 +23,25 @@ if (NNG_PLATFORM_POSIX)
     nng_defines(_REENTRANT)
     nng_defines(_THREAD_SAFE)
     nng_defines(_POSIX_PTHREAD_SEMANTICS)
+
+    # Match the feature macros used when compiling the library. The
+    # strerror_r return type depends on both the libc and target API.
+    include(CMakePushCheckState)
+    cmake_push_check_state()
+    list(APPEND CMAKE_REQUIRED_DEFINITIONS
+        -D_GNU_SOURCE -D_REENTRANT -D_THREAD_SAFE -D_POSIX_PTHREAD_SEMANTICS)
+    check_c_source_compiles("
+        #include <string.h>
+        extern char *strerror_r(int, char *, size_t);
+        int main(void) {
+            char buf[256];
+            return strerror_r(0, buf, sizeof(buf)) == NULL;
+        }
+    " NNG_HAVE_GNU_STRERROR_R)
+    cmake_pop_check_state()
+    if (NNG_HAVE_GNU_STRERROR_R)
+        nng_defines(NNG_HAVE_GNU_STRERROR_R)
+    endif ()
 
     nng_check_func(lockf NNG_HAVE_LOCKF)
     nng_check_func(flock NNG_HAVE_FLOCK)
