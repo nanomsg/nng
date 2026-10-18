@@ -109,7 +109,7 @@ listener is started.
 | [`NNG_OPT_UDP_CONN_RETRY`]                             | `nng_duration` | Interval between connection requests while dialing. The default is 200 milliseconds. Only positive values are accepted; `<= 0` returns `NNG_EINVAL`. |
 | [`NNG_OPT_UDP_CONN_EXPIRE`]                            | `nng_duration` | Time allowed to establish a connection. The default is 5 seconds. Only positive values are accepted; `<= 0` returns `NNG_EINVAL`. |
 | [`NNG_OPT_UDP_MAX_PEERS`]                              | `size_t` | Maximum number of unauthenticated inbound DTLS handshakes. The default is 1024; set to 0 to disable the limit.                   |
-| `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a> | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                             |
+| [`NNG_OPT_BOUND_PORT`] | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                             |
 
 The DTLS transport does not support TCP-specific options such as
 `NNG_OPT_TCP_NODELAY` or `NNG_OPT_TCP_KEEPALIVE`.

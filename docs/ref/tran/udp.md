@@ -69,8 +69,8 @@ where supported by the underlying platform.
 | --------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
 | [`NNG_OPT_RECVMAXSZ`]                                     | `size_t` | Maximum size of incoming messages, will be limited to at most 65000.                                                |
 | `NNG_OPT_UDP_COPY_MAX`<a name="NNG_OPT_UDP_COPY_MAX"></a> | `size_t` | Threshold above which received messages are "loaned" up, rather than a new message being allocated and copied into. |
-| [`NNG_OPT_UDP_CONN_RETRY`]                                 | `nng_duration` | Interval between connection requests while dialing. The default is 200 milliseconds.                                 |
-| [`NNG_OPT_UDP_CONN_EXPIRE`]                                | `nng_duration` | Time allowed to establish a connection. The default is 5 seconds.                                                   |
+| `NNG_OPT_UDP_CONN_RETRY`<a name="NNG_OPT_UDP_CONN_RETRY"></a> | `nng_duration` | Interval between connection requests while dialing. The default is 200 milliseconds.                                 |
+| `NNG_OPT_UDP_CONN_EXPIRE`<a name="NNG_OPT_UDP_CONN_EXPIRE"></a> | `nng_duration` | Time allowed to establish a connection. The default is 5 seconds.                                                   |
 | `NNG_OPT_UDP_MAX_PEERS`<a name="NNG_OPT_UDP_MAX_PEERS"></a> | `size_t` | Maximum number of remote peers admitted by a listener. The default is 1024; set to 0 to disable the limit. |
 | `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>     | `int`    | The locally bound UDP port number, read-only. A listener reports its bound port; a dialer reports its ephemeral port after opening its UDP socket. |
 
