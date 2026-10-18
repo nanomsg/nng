@@ -527,6 +527,7 @@
 [`NNG_UNIT_MILLIS`]: ../api/stats.md#statistic-units
 [`NNG_UNIT_EVENTS`]: ../api/stats.md#statistic-units
 [`NNG_FLAG_NONBLOCK`]: ../api/sock.md#NNG_FLAG_NONBLOCK
+[`NNG_OPT_BOUND_PORT`]: ../tran/tcp.md#NNG_OPT_BOUND_PORT
 [`NNG_OPT_LISTEN_FD`]: ../api/stream.md#socket-activation
 [`nng_dialer_bind`]: ../api/endpoint.md#binding-a-dialer
 [`nng_stream_dialer_bind`]: ../api/stream.md#binding-a-stream-dialer
@@ -550,6 +551,9 @@
 [`NNG_OPT_TCP_NODELAY`]: ../tran/tcp.md#transport-options
 [`NNG_OPT_TLS_VERIFIED`]: ../tran/tls.md#NNG_OPT_TLS_VERIFIED
 [`NNG_OPT_TLS_PEER_CN`]: ../tran/tls.md#NNG_OPT_TLS_PEER_CN
+[`NNG_OPT_UDP_CONN_RETRY`]: ../tran/udp.md#NNG_OPT_UDP_CONN_RETRY
+[`NNG_OPT_UDP_CONN_EXPIRE`]: ../tran/udp.md#NNG_OPT_UDP_CONN_EXPIRE
+[`NNG_OPT_UDP_MAX_PEERS`]: ../tran/udp.md#NNG_OPT_UDP_MAX_PEERS
 [`NNG_OPT_WS_HEADER`]: ../tran/websocket.md#NNG_OPT_WS_HEADER
 [`NNG_OPT_WS_HEADER_NEXT`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_NEXT
 [`NNG_OPT_WS_HEADER_RESET`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_RESET
