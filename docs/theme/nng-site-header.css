@@ -1,5 +1,6 @@
 :root {
   --nng-site-header-height: 52px;
+  --nng-docs-menu-height: 52px;
 }
 
 @font-face {
@@ -115,16 +116,6 @@ body {
   border-radius: 3px;
 }
 
-.nn-header .nng-header-version-picker {
-  margin-right: 0.25rem;
-}
-
-.nn-header .nng-version-picker select {
-  color: #fff;
-  background: transparent;
-  border-color: rgb(255 255 255 / 55%);
-}
-
 @media screen and (max-width: 600px) {
   .nng-version-label {
     display: none;
@@ -183,6 +174,55 @@ body {
   display: none;
 }
 
+.nng-docs-menu-bar {
+  position: fixed;
+  z-index: 999;
+  top: var(--nng-site-header-height);
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: var(--nng-docs-menu-height);
+  padding: 0 0.75rem;
+  color: #777;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e5e5;
+  box-shadow: 0 2px 3px rgb(0 0 0 / 8%);
+  font-family: "Open Sans", "Trebuchet MS", sans-serif;
+}
+
+.nng-docs-menu-left,
+.nng-docs-menu-right {
+  display: flex;
+  align-items: center;
+}
+
+.nng-docs-menu-right {
+  justify-content: flex-end;
+}
+
+.nng-docs-menu-title {
+  color: #777;
+  font-size: 1.3rem;
+  font-weight: 300;
+  white-space: nowrap;
+}
+
+.nng-docs-menu-bar .nng-version-picker {
+  margin-right: 0;
+}
+
+.nng-docs-menu-bar .nng-version-picker select {
+  color: #555;
+  background: #fff;
+  border-color: #d9d9d9;
+}
+
+body.toc2 {
+  padding-top: calc(var(--nng-site-header-height) + var(--nng-docs-menu-height));
+}
+
 #mdbook-sidebar {
   top: var(--nng-site-header-height);
 }
@@ -217,13 +257,13 @@ html.sidebar-visible #mdbook-menu-bar,
  * below the fixed NNG navigation bar and reserve the bar's stacking layer. */
 @media screen and (min-width: 768px) {
   body.toc2 {
-    padding-top: var(--nng-site-header-height);
+    padding-top: calc(var(--nng-site-header-height) + var(--nng-docs-menu-height));
   }
 
   #toc.toc2 {
-    top: var(--nng-site-header-height);
-    z-index: 999;
-    height: calc(100% - var(--nng-site-header-height));
+    top: calc(var(--nng-site-header-height) + var(--nng-docs-menu-height));
+    z-index: 998;
+    height: calc(100% - var(--nng-site-header-height) - var(--nng-docs-menu-height));
   }
 }
 
@@ -282,5 +322,9 @@ html.sidebar-visible #mdbook-menu-bar,
 
   .nn-header .is-hidden-touch {
     display: none;
+  }
+
+  .nng-docs-menu-title {
+    font-size: 1.1rem;
   }
 }
