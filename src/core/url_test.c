@@ -34,8 +34,9 @@ test_url_http_unix(void)
 	nng_url *url;
 	char     buf[64];
 
-	NUTS_PASS(nng_url_parse(
-	    &url, "http+unix://user@%2Ftmp%2FMyService.sock/request?verbose=true#x"));
+	NUTS_PASS(nng_url_parse(&url,
+	    "http+unix://user@%2Ftmp%2FMyService.sock/"
+	    "request?verbose=true#x"));
 	NUTS_MATCH(nng_url_scheme(url), "http+unix");
 	NUTS_MATCH(nng_url_hostname(url), "%2Ftmp%2FMyService.sock");
 	NUTS_TRUE(nng_url_port(url) == 0);
@@ -44,16 +45,16 @@ test_url_http_unix(void)
 	NUTS_MATCH(nng_url_fragment(url), "x");
 	NUTS_MATCH(nng_url_userinfo(url), "user");
 	NUTS_TRUE(nng_url_sprintf(buf, sizeof(buf), url) ==
-	    strlen("http+unix://%2Ftmp%2FMyService.sock/request?verbose=true#x"));
-	NUTS_MATCH(buf,
-	    "http+unix://%2Ftmp%2FMyService.sock/request?verbose=true#x");
+	    strlen(
+	        "http+unix://%2Ftmp%2FMyService.sock/request?verbose=true#x"));
+	NUTS_MATCH(
+	    buf, "http+unix://%2Ftmp%2FMyService.sock/request?verbose=true#x");
 	nng_url_free(url);
 
-	NUTS_FAIL(nng_url_parse(
-	              &url, "http+unix://%2Ftmp%2Fnng-http.sock:0"),
+	NUTS_FAIL(nng_url_parse(&url, "http+unix://%2Ftmp%2Fnng-http.sock:0"),
 	    NNG_EINVAL);
-	NUTS_FAIL(nng_url_parse(&url, "http+unix:///tmp/nng-http.sock"),
-	    NNG_EINVAL);
+	NUTS_FAIL(
+	    nng_url_parse(&url, "http+unix:///tmp/nng-http.sock"), NNG_EINVAL);
 }
 
 void
@@ -413,7 +414,8 @@ test_url_bad_utf8(void)
 	NUTS_NULL(url);
 	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%e0%80%a0"), NNG_EINVAL);
 	NUTS_NULL(url);
-	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%f0%80%90%80"), NNG_EINVAL);
+	NUTS_FAIL(
+	    nng_url_parse(&url, "http://x.com/x%f0%80%90%80"), NNG_EINVAL);
 	NUTS_NULL(url);
 	NUTS_FAIL(nng_url_parse(&url, "http://x.com/x%ed%a0%80"), NNG_EINVAL);
 	NUTS_NULL(url);
@@ -431,7 +433,8 @@ test_url_good_utf8(void)
 	NUTS_MATCH(nng_url_path(url), "/\xc2\xa2_cents");
 	nng_url_free(url);
 
-	NUTS_PASS(nng_url_parse(&url, "http://www.x.com/%ed%9f%bf%f0%90%80%80"));
+	NUTS_PASS(
+	    nng_url_parse(&url, "http://www.x.com/%ed%9f%bf%f0%90%80%80"));
 	NUTS_ASSERT(url != NULL);
 	NUTS_MATCH(nng_url_path(url), "/\xed\x9f\xbf\xf0\x90\x80\x80");
 	nng_url_free(url);

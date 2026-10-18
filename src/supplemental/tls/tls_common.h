@@ -113,16 +113,16 @@ typedef struct {
 
 extern void nni_tls_fini(nni_tls_conn *conn);
 extern int  nni_tls_init(
-     nni_tls_conn *conn, nng_tls_config *cfg, bool msg_oriented);
+    nni_tls_conn *conn, nng_tls_config *cfg, bool msg_oriented);
 extern int  nni_tls_start(nni_tls_conn *conn, const nni_tls_bio_ops *biops,
-     void *bio, const nng_sockaddr *sa);
+    void *bio, const nng_sockaddr *sa);
 extern void nni_tls_stop(nni_tls_conn *conn);
 extern void nni_tls_close(nni_tls_conn *conn);
 extern void nni_tls_recv(nni_tls_conn *conn, nni_aio *aio);
 extern void nni_tls_send(nni_tls_conn *conn, nni_aio *aio);
 // Ciphertext can remain queued after an upper-layer send completes.
-extern bool nni_tls_send_pending(nni_tls_conn *conn);
-extern bool nni_tls_verified(nni_tls_conn *conn);
+extern bool        nni_tls_send_pending(nni_tls_conn *conn);
+extern bool        nni_tls_verified(nni_tls_conn *conn);
 extern const char *nni_tls_peer_cn(nni_tls_conn *conn);
 extern nng_err     nni_tls_peer_cert(nni_tls_conn *conn, nng_tls_cert **certp);
 extern nng_err     nni_tls_run(nni_tls_conn *conn);

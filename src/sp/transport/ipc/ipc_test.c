@@ -464,9 +464,8 @@ test_ipc_listener_clean_stale(void)
 	sa.sun_family = AF_UNIX;
 	memcpy(sa.sun_path, path, strlen(path) + 1);
 	(void) DeleteFileA(path);
-	NUTS_TRUE((stale = WSASocket(
-	               AF_UNIX, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED)) !=
-	    INVALID_SOCKET);
+	NUTS_TRUE((stale = WSASocket(AF_UNIX, SOCK_STREAM, 0, NULL, 0,
+	               WSA_FLAG_OVERLAPPED)) != INVALID_SOCKET);
 	NUTS_TRUE(bind(stale, (SOCKADDR *) &sa, sizeof(sa)) == 0);
 	closesocket(stale);
 
@@ -617,12 +616,12 @@ void
 test_unix_scheme(void)
 {
 #if defined(NNG_PLATFORM_POSIX) || defined(NNG_HAVE_UNIX_SOCKETS)
-	nng_socket   s1;
-	nng_socket   s2;
-	char         addr2[NNG_MAXADDRLEN + 8];
+	nng_socket s1;
+	nng_socket s2;
+	char       addr2[NNG_MAXADDRLEN + 8];
 #ifdef NNG_PLATFORM_POSIX
-	char         addr1[32];
-	char         rng[20];
+	char addr1[32];
+	char rng[20];
 #endif
 	char        *a1;
 	char        *a2;
@@ -631,7 +630,7 @@ test_unix_scheme(void)
 	nng_msg     *msg;
 	nng_pipe     p;
 #ifdef NNG_PLATFORM_WINDOWS
-	int           id;
+	int id;
 #endif
 
 #ifdef NNG_PLATFORM_POSIX
@@ -646,8 +645,8 @@ test_unix_scheme(void)
 	NUTS_ADDR(a1, "ipc");
 	NUTS_ASSERT(strlen(a1) <=
 	    sizeof(addr2) - strlen("unix://") + strlen("ipc://"));
-	(void) snprintf(addr2, sizeof(addr2), "unix://%s",
-	    a1 + strlen("ipc://"));
+	(void) snprintf(
+	    addr2, sizeof(addr2), "unix://%s", a1 + strlen("ipc://"));
 	a2 = addr2;
 #endif
 

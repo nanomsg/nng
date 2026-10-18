@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -139,7 +139,10 @@ nni_id_map_sys_fini(void)
 	for (int i = 0; i < id_reg_num; i++) {
 		if (id_reg_map[i] != NULL) {
 			nni_id_map_fini(id_reg_map[i]);
-			id_reg_map[i] = NULL;
+			// Allow the map to register again after
+			// reinitialization.
+			id_reg_map[i]->id_registered = false;
+			id_reg_map[i]                = NULL;
 		}
 	}
 	id_reg_num = 0;

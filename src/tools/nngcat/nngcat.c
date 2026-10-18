@@ -21,30 +21,30 @@
 #include <nng/nng.h>
 
 // Globals.  We need this to avoid passing around everything.
-int          format    = 0;
-int          proto     = 0;
-int          verbose   = 0;
-int          delay     = 0;
-nng_duration interval  = NNG_DURATION_INFINITE;
-nng_duration sendtimeo = NNG_DURATION_INFINITE;
-nng_duration recvtimeo = NNG_DURATION_INFINITE;
-void        *data      = NULL;
-size_t       datalen   = 0;
-int          compat    = 0;
-int          async     = 0;
-int          insecure  = 0;
-void        *cacert    = NULL;
-size_t       cacertlen = 0;
-void        *keyfile   = NULL;
-size_t       keylen    = 0;
-void        *certfile  = NULL;
-size_t       certlen   = 0;
-char        *passphrase = NULL;
-uint8_t     *psk        = NULL;
-size_t       psklen     = 0;
+int          format      = 0;
+int          proto       = 0;
+int          verbose     = 0;
+int          delay       = 0;
+nng_duration interval    = NNG_DURATION_INFINITE;
+nng_duration sendtimeo   = NNG_DURATION_INFINITE;
+nng_duration recvtimeo   = NNG_DURATION_INFINITE;
+void        *data        = NULL;
+size_t       datalen     = 0;
+int          compat      = 0;
+int          async       = 0;
+int          insecure    = 0;
+void        *cacert      = NULL;
+size_t       cacertlen   = 0;
+void        *keyfile     = NULL;
+size_t       keylen      = 0;
+void        *certfile    = NULL;
+size_t       certlen     = 0;
+char        *passphrase  = NULL;
+uint8_t     *psk         = NULL;
+size_t       psklen      = 0;
 char        *pskidentity = NULL;
-int          count     = 0;
-int          recvmaxsz = -1;
+int          count       = 0;
+int          recvmaxsz   = -1;
 
 // Options, must start at 1 because zero is sentinel.
 enum options {
@@ -404,7 +404,8 @@ configtls(nng_tls_config *tls)
 	}
 	if ((rv == 0) && (certfile != NULL)) {
 		keyfile = keyfile ? keyfile : certfile;
-		rv = nng_tls_config_own_cert(tls, certfile, keyfile, passphrase);
+		rv      = nng_tls_config_own_cert(
+		    tls, certfile, keyfile, passphrase);
 	}
 	if ((rv == 0) && (cacert != NULL)) {
 		rv = nng_tls_config_ca_chain(tls, cacert, NULL);
@@ -902,19 +903,22 @@ main(int ac, char **av)
 			break;
 		case OPT_PASS:
 			if (passphrase != NULL) {
-				fatal("Passphrase (--pass) may be specified only once.");
+				fatal("Passphrase (--pass) may be specified "
+				      "only once.");
 			}
 			passphrase = arg;
 			break;
 		case OPT_PSK:
 			if (psk != NULL) {
-				fatal("PSK (--psk) may be specified only once.");
+				fatal(
+				    "PSK (--psk) may be specified only once.");
 			}
 			parsepsk(arg);
 			break;
 		case OPT_PSK_IDENTITY:
 			if (pskidentity != NULL) {
-				fatal("PSK identity (--psk-identity) may be specified only once.");
+				fatal("PSK identity (--psk-identity) may be "
+				      "specified only once.");
 			}
 			pskidentity = arg;
 			break;
@@ -952,7 +956,8 @@ main(int ac, char **av)
 		fatal("No address specified.");
 	}
 	if ((psk == NULL) != (pskidentity == NULL)) {
-		fatal("Options --psk and --psk-identity must be specified together.");
+		fatal("Options --psk and --psk-identity must be specified "
+		      "together.");
 	}
 
 	if (compat) {

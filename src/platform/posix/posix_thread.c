@@ -297,20 +297,21 @@ nni_atfork_child(void)
 int
 nni_plat_init(nng_init_params *params)
 {
-	int rv;
+	int rv = NNG_ENOMEM;
 
-	if ((pthread_mutexattr_init(&nni_mxattr) != 0) ||
-	    (pthread_condattr_init(&nni_cvattr) != 0) ||
-	    (pthread_attr_init(&nni_thrattr) != 0)) {
-		// Technically this is leaking, but it should never
-		// occur, so really not worried about it.
-		return (NNG_ENOMEM);
+	if (pthread_mutexattr_init(&nni_mxattr) != 0) {
+		return (rv);
+	}
+	if (pthread_condattr_init(&nni_cvattr) != 0) {
+		goto fail_mutexattr;
+	}
+	if (pthread_attr_init(&nni_thrattr) != 0) {
+		goto fail_condattr;
 	}
 
 #if !defined(NNG_USE_GETTIMEOFDAY) && NNG_USE_CLOCKID != CLOCK_REALTIME
 	if (pthread_condattr_setclock(&nni_cvattr, NNG_USE_CLOCKID) != 0) {
-		nni_plat_fini();
-		return (NNG_ENOMEM);
+		goto fail_thrattr;
 	}
 #endif
 
@@ -320,8 +321,7 @@ nni_plat_init(nng_init_params *params)
 	    (rl.rlim_cur != RLIM_INFINITY) &&
 	    (rl.rlim_cur >= PTHREAD_STACK_MIN) &&
 	    (pthread_attr_setstacksize(&nni_thrattr, rl.rlim_cur) != 0)) {
-		nni_plat_fini();
-		return (NNG_ENOMEM);
+		goto fail_thrattr;
 	}
 #endif
 
@@ -330,14 +330,11 @@ nni_plat_init(nng_init_params *params)
 	    &nni_mxattr, PTHREAD_MUTEX_ERRORCHECK);
 
 	if ((rv = nni_posix_pollq_sysinit(params)) != 0) {
-		nni_plat_fini();
-		return (rv);
+		goto fail_thrattr;
 	}
 
 	if ((rv = nni_posix_resolv_sysinit(params)) != 0) {
-		nni_posix_pollq_sysfini();
-		nni_plat_fini();
-		return (rv);
+		goto fail_pollq;
 	}
 
 	nni_plat_inited = true;
@@ -349,6 +346,16 @@ nni_plat_init(nng_init_params *params)
 	// we just ignore this error.
 	(void) pthread_atfork(NULL, NULL, nni_atfork_child);
 
+	return (0);
+
+fail_pollq:
+	nni_posix_pollq_sysfini();
+fail_thrattr:
+	pthread_attr_destroy(&nni_thrattr);
+fail_condattr:
+	pthread_condattr_destroy(&nni_cvattr);
+fail_mutexattr:
+	pthread_mutexattr_destroy(&nni_mxattr);
 	return (rv);
 }
 

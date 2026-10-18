@@ -26,6 +26,6 @@ typedef struct tls_stream_s {
 
 extern void nni_tls_stream_free(void *arg);
 extern int  nni_tls_stream_alloc(
-     tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio);
+    tls_stream **tsp, nng_tls_config *cfg, nng_aio *user_aio);
 
 #endif

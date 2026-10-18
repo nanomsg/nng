@@ -312,8 +312,8 @@ ipc_listener_stop(void *arg)
 
 	if (f != INVALID_HANDLE_VALUE) {
 		if (accepting) {
-			// The listener is not freed until its IOCP callback observes
-			// this cancellation's completion.
+			// The listener is not freed until its IOCP callback
+			// observes this cancellation's completion.
 			(void) CancelIoEx(f, &l->io.olpd);
 		}
 		(void) DisconnectNamedPipe(f);

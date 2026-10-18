@@ -122,7 +122,7 @@ int
 nni_plat_file_get(const char *name, void **datap, size_t *lenp)
 {
 	int    rv = 0;
-	void * data;
+	void  *data;
 	DWORD  sz;
 	DWORD  nread;
 	HANDLE h;

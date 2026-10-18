@@ -18,7 +18,6 @@
 
 #include "../../src/testing/nuts.h"
 
-
 static void
 test_local_stream(const char *scheme)
 {
@@ -374,8 +373,8 @@ test_ipc_stream_iov_exceeds_int_max(void)
 #elif SIZE_MAX <= UINT32_MAX
 	NUTS_SKIP("Requires 64-bit size_t");
 #else
-	nng_stream_dialer   *d    = NULL;
-	nng_stream_listener *l    = NULL;
+	nng_stream_dialer   *d = NULL;
+	nng_stream_listener *l = NULL;
 	char                *url;
 	nng_aio             *daio = NULL;
 	nng_aio             *laio = NULL;

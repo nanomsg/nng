@@ -438,7 +438,8 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 	// percent-encoded, case-sensitive UNIX socket path.
 	if (strcmp(url->u_scheme, "http+unix") != 0) {
 		for (int i = 0; url->u_hostname[i]; i++) {
-			url->u_hostname[i] = (char) tolower(url->u_hostname[i]);
+			url->u_hostname[i] =
+			    (char) tolower(url->u_hostname[i]);
 		}
 	}
 
@@ -496,8 +497,8 @@ nni_url_parse_inline_inner(nng_url *url, const char *raw)
 	// percent-encoded UNIX socket path, which can be up to three times the
 	// maximum socket-path length.
 	if (strlen(url->u_hostname) >=
-	    ((strcmp(url->u_scheme, "http+unix") == 0) ?
-	        (3 * NNG_MAXADDRLEN) : 256)) {
+	    ((strcmp(url->u_scheme, "http+unix") == 0) ? (3 * NNG_MAXADDRLEN)
+	                                               : 256)) {
 		return (NNG_EINVAL);
 	}
 	if ((strcmp(url->u_scheme, "http+unix") == 0) &&
@@ -582,8 +583,7 @@ nng_url_sprintf(char *str, size_t size, const nng_url *url)
 	if (strcmp(scheme, "http+unix") == 0) {
 		do_port = false;
 	} else if ((strcmp(scheme, "ipc") == 0) ||
-	    (strcmp(scheme, "inproc") == 0) ||
-	    (strcmp(scheme, "unix") == 0) ||
+	    (strcmp(scheme, "inproc") == 0) || (strcmp(scheme, "unix") == 0) ||
 	    (strcmp(scheme, "winpipe") == 0) ||
 	    (strcmp(scheme, "abstract") == 0) ||
 	    (strcmp(scheme, "socket") == 0)) {

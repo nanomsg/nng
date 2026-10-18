@@ -100,7 +100,7 @@ struct nni_socket {
 
 	bool s_closing; // Socket is closing
 	bool s_closed;  // Socket closed, protected by global lock
-	bool s_device;  // Socket is owned by a device, protected by global lock
+	bool s_device; // Socket is owned by a device, protected by global lock
 
 	nni_mtx          s_pipe_cbs_mtx;
 	nni_sock_pipe_cb s_pipe_cbs[NNG_PIPE_EV_NUM];
@@ -204,9 +204,8 @@ sock_get_reconnmaxt(void *s, void *buf, size_t *szp, nni_type t)
 static nng_err
 sock_set_recvmaxsz(void *s, const void *buf, size_t sz, nni_type t)
 {
-	return (
-	    nni_copyin_size(
-	        &SOCK(s)->s_rcvmaxsz, buf, sz, 0, NNI_MAX_RECVMAXSZ, t));
+	return (nni_copyin_size(
+	    &SOCK(s)->s_rcvmaxsz, buf, sz, 0, NNI_MAX_RECVMAXSZ, t));
 }
 
 static nng_err
@@ -1695,7 +1694,8 @@ nni_pipe_remove(nni_pipe *p)
 	if ((d != NULL) && (d->d_pipe == p)) {
 		d->d_pipe = NULL;
 		if (!d->d_stopping) {
-			dialer_timer_start_locked(d); // Kick the timer to redial.
+			dialer_timer_start_locked(
+			    d); // Kick the timer to redial.
 		}
 	}
 	nni_cv_wake(&s->s_cv);

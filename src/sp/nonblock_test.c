@@ -92,7 +92,7 @@ reqthr(void *arg)
 static void
 test_nonblocking(void)
 {
-	#define NCLIENTS 10
+#define NCLIENTS 10
 	nng_socket reqs[NCLIENTS];
 	nng_socket rep;
 

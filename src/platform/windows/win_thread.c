@@ -327,7 +327,8 @@ nni_atomic_cas(nni_atomic_int *v, int comp, int new)
 	return (old == comp);
 }
 
-static unsigned int __stdcall nni_plat_thr_main(void *arg)
+static unsigned int __stdcall
+nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;
 
@@ -419,21 +420,45 @@ nni_plat_init(nng_init_params *params)
 			pfnSetThreadDescription target;
 		} thread_desc;
 
-		thread_desc.source = GetProcAddress(hKernel32, "SetThreadDescription");
-		set_thread_desc   = thread_desc.target;
+		thread_desc.source =
+		    GetProcAddress(hKernel32, "SetThreadDescription");
+		set_thread_desc = thread_desc.target;
 	}
 
-	if (((rv = nni_win_io_sysinit(params)) != 0) ||
-	    ((rv = nni_win_ipc_sysinit()) != 0) ||
-	    ((rv = nni_win_tcp_sysinit()) != 0) ||
-	    ((rv = nni_win_udp_sysinit()) != 0) ||
-	    ((rv = nni_win_resolv_sysinit(params)) != 0)) {
-		goto out;
+	if ((rv = nni_win_io_sysinit(params)) != 0) {
+		goto fail_library;
+	}
+	if ((rv = nni_win_ipc_sysinit()) != 0) {
+		goto fail_io;
+	}
+	if ((rv = nni_win_tcp_sysinit()) != 0) {
+		goto fail_ipc;
+	}
+	if ((rv = nni_win_udp_sysinit()) != 0) {
+		goto fail_tcp;
+	}
+	if ((rv = nni_win_resolv_sysinit(params)) != 0) {
+		goto fail_udp;
 	}
 
-out:
 	ReleaseSRWLockExclusive(&lock);
+	return (0);
 
+fail_udp:
+	nni_win_udp_sysfini();
+fail_tcp:
+	nni_win_tcp_sysfini();
+fail_ipc:
+	nni_win_ipc_sysfini();
+fail_io:
+	nni_win_io_sysfini();
+fail_library:
+	if (hKernel32 != NULL) {
+		FreeLibrary(hKernel32);
+		hKernel32 = NULL;
+	}
+	set_thread_desc = NULL;
+	ReleaseSRWLockExclusive(&lock);
 	return (rv);
 }
 
@@ -447,7 +472,9 @@ nni_plat_fini(void)
 	nni_win_io_sysfini();
 	if (hKernel32 != NULL) {
 		FreeLibrary(hKernel32);
+		hKernel32 = NULL;
 	}
+	set_thread_desc = NULL;
 }
 
 #endif

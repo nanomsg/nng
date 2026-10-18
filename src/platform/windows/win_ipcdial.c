@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -275,6 +275,8 @@ nni_win_ipc_sysinit(void)
 
 	rv = nni_thr_init(&worker->thr, ipc_dial_thr, worker);
 	if (rv != 0) {
+		nni_cv_fini(&worker->cv);
+		nni_mtx_fini(&worker->mtx);
 		return (rv);
 	}
 	nni_thr_set_name(&worker->thr, "nng:ipc:dial");
@@ -288,8 +290,8 @@ nni_win_ipc_sysfini(void)
 {
 	ipc_dial_work *worker = &ipc_connector;
 
-	nni_reap_sys_drain(); // so that listeners get cleaned up.
-
+	// Core shutdown drains the reaper before platform cleanup. During
+	// initialization rollback, the reaper may not have been started yet.
 	nni_mtx_lock(&worker->mtx);
 	worker->exit = 1;
 	nni_cv_wake(&worker->cv);

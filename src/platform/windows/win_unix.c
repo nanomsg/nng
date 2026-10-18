@@ -16,37 +16,37 @@
 
 #ifdef NNG_HAVE_UNIX_SOCKETS
 
-typedef struct unix_dialer unix_dialer;
+typedef struct unix_dialer   unix_dialer;
 typedef struct unix_listener unix_listener;
 
 struct unix_dialer {
 	nng_stream_dialer sd;
-	SOCKADDR_UN        sa;
-	nng_sockaddr       nsa;
-	nni_list           aios;
-	nni_aio           *active;
-	SOCKET             active_s;
-	nni_mtx            mtx;
-	nni_cv             cv;
-	nni_thr            thr;
-	bool               thread_started;
-	bool               closed;
+	SOCKADDR_UN       sa;
+	nng_sockaddr      nsa;
+	nni_list          aios;
+	nni_aio          *active;
+	SOCKET            active_s;
+	nni_mtx           mtx;
+	nni_cv            cv;
+	nni_thr           thr;
+	bool              thread_started;
+	bool              closed;
 };
 
 struct unix_listener {
 	nng_stream_listener sl;
-	SOCKADDR_UN          sa;
-	nng_sockaddr         nsa;
-	SOCKET               s;
-	WSAEVENT             event;
-	nni_list             aios;
-	nni_aio             *active;
-	nni_mtx              mtx;
-	nni_cv               cv;
-	nni_thr              thr;
-	bool                 thread_started;
-	bool                 started;
-	bool                 closed;
+	SOCKADDR_UN         sa;
+	nng_sockaddr        nsa;
+	SOCKET              s;
+	WSAEVENT            event;
+	nni_list            aios;
+	nni_aio            *active;
+	nni_mtx             mtx;
+	nni_cv              cv;
+	nni_thr             thr;
+	bool                thread_started;
+	bool                started;
+	bool                closed;
 };
 
 static nng_err
@@ -70,7 +70,8 @@ unix_make_addr(SOCKADDR_UN *sa, nng_sockaddr *nsa, const nng_url *url)
 static SOCKET
 unix_socket(void)
 {
-	return (WSASocket(AF_UNIX, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED));
+	return (
+	    WSASocket(AF_UNIX, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED));
 }
 
 static nng_err
@@ -162,7 +163,8 @@ unix_dial_thr(void *arg)
 		WSAEVENT event;
 		int      rv;
 
-		while (!d->closed && ((aio = nni_list_first(&d->aios)) == NULL)) {
+		while (
+		    !d->closed && ((aio = nni_list_first(&d->aios)) == NULL)) {
 			nni_cv_wait(&d->cv);
 		}
 		if (d->closed) {
@@ -173,7 +175,8 @@ unix_dial_thr(void *arg)
 		nni_mtx_unlock(&d->mtx);
 
 		if ((s = unix_socket()) == INVALID_SOCKET) {
-			unix_dial_finish(d, aio, s, nni_win_error(WSAGetLastError()));
+			unix_dial_finish(
+			    d, aio, s, nni_win_error(WSAGetLastError()));
 			nni_mtx_lock(&d->mtx);
 			continue;
 		}
@@ -207,7 +210,8 @@ unix_dial_thr(void *arg)
 			rv = NNG_OK;
 		} else {
 			int err = WSAGetLastError();
-			if ((err != WSAEWOULDBLOCK) && (err != WSAEINPROGRESS)) {
+			if ((err != WSAEWOULDBLOCK) &&
+			    (err != WSAEINPROGRESS)) {
 				rv = nni_win_error(err);
 			} else {
 				rv = NNG_EAGAIN;
@@ -223,11 +227,19 @@ unix_dial_thr(void *arg)
 						break;
 					}
 					nni_mtx_unlock(&d->mtx);
-					if (WSAEnumNetworkEvents(s, event, &ne) == SOCKET_ERROR) {
-						rv = nni_win_error(WSAGetLastError());
-					} else if (ne.lNetworkEvents & FD_CONNECT) {
-						rv = ne.iErrorCode[FD_CONNECT_BIT] == 0 ? NNG_OK :
-						    nni_win_error(ne.iErrorCode[FD_CONNECT_BIT]);
+					if (WSAEnumNetworkEvents(s, event,
+					        &ne) == SOCKET_ERROR) {
+						rv = nni_win_error(
+						    WSAGetLastError());
+					} else if (ne.lNetworkEvents &
+					    FD_CONNECT) {
+						rv = ne.iErrorCode
+						            [FD_CONNECT_BIT] ==
+						        0
+						    ? NNG_OK
+						    : nni_win_error(
+						          ne.iErrorCode
+						              [FD_CONNECT_BIT]);
 					}
 				}
 			}
@@ -323,7 +335,8 @@ unix_dialer_free(void *arg)
 }
 
 static nng_err
-unix_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+unix_dialer_get(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(arg);
 	NNI_ARG_UNUSED(name);
@@ -371,13 +384,13 @@ nni_unix_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	nni_thr_set_name(&d->thr, "nng:unix:dial");
 	nni_thr_run(&d->thr);
 	d->thread_started = true;
-	d->sd.sd_free  = unix_dialer_free;
-	d->sd.sd_close = unix_dialer_close;
-	d->sd.sd_stop  = unix_dialer_stop;
-	d->sd.sd_dial  = unix_dialer_dial;
-	d->sd.sd_get   = unix_dialer_get;
-	d->sd.sd_set   = unix_dialer_set;
-	*dp            = &d->sd;
+	d->sd.sd_free     = unix_dialer_free;
+	d->sd.sd_close    = unix_dialer_close;
+	d->sd.sd_stop     = unix_dialer_stop;
+	d->sd.sd_dial     = unix_dialer_dial;
+	d->sd.sd_get      = unix_dialer_get;
+	d->sd.sd_set      = unix_dialer_set;
+	*dp               = &d->sd;
 	return (NNG_OK);
 }
 
@@ -425,13 +438,14 @@ unix_listener_thr(void *arg)
 	unix_listener *l = arg;
 
 	for (;;) {
-		nni_aio *aio;
-		SOCKET   s;
+		nni_aio         *aio;
+		SOCKET           s;
 		WSANETWORKEVENTS ne;
-		int      rv;
+		int              rv;
 
 		nni_mtx_lock(&l->mtx);
-		while (!l->closed && ((aio = nni_list_first(&l->aios)) == NULL)) {
+		while (
+		    !l->closed && ((aio = nni_list_first(&l->aios)) == NULL)) {
 			nni_cv_wait(&l->cv);
 		}
 		if (l->closed) {
@@ -441,14 +455,16 @@ unix_listener_thr(void *arg)
 		l->active = aio;
 		nni_mtx_unlock(&l->mtx);
 
-		(void) WSAWaitForMultipleEvents(1, &l->event, FALSE, 10, FALSE);
+		(void) WSAWaitForMultipleEvents(
+		    1, &l->event, FALSE, 10, FALSE);
 		nni_mtx_lock(&l->mtx);
 		if (l->closed) {
 			nni_mtx_unlock(&l->mtx);
 			return;
 		}
 		nni_mtx_unlock(&l->mtx);
-		if (WSAEnumNetworkEvents(l->s, l->event, &ne) == SOCKET_ERROR) {
+		if (WSAEnumNetworkEvents(l->s, l->event, &ne) ==
+		    SOCKET_ERROR) {
 			continue;
 		}
 		if ((s = accept(l->s, NULL, NULL)) == INVALID_SOCKET) {
@@ -557,7 +573,8 @@ bound:
 		nni_mtx_unlock(&l->mtx);
 		return (rv);
 	}
-	if (WSAEventSelect(s, l->event, FD_ACCEPT | FD_CLOSE) == SOCKET_ERROR) {
+	if (WSAEventSelect(s, l->event, FD_ACCEPT | FD_CLOSE) ==
+	    SOCKET_ERROR) {
 		rv = nni_win_error(WSAGetLastError());
 		WSACloseEvent(l->event);
 		l->event = WSA_INVALID_EVENT;
@@ -590,7 +607,7 @@ unix_listener_close(void *arg)
 {
 	unix_listener *l = arg;
 	nni_aio       *aio;
-	WSAEVENT        event;
+	WSAEVENT       event;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
@@ -645,7 +662,8 @@ unix_listener_free(void *arg)
 }
 
 static nng_err
-unix_listener_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+unix_listener_get(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(arg);
 	NNI_ARG_UNUSED(name);

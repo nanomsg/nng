@@ -105,14 +105,13 @@ nni_http_stream_url(
 		return (NNG_OK);
 	}
 	if ((url->u_port != 0) || (url->u_hostname == NULL) ||
-	    (url->u_hostname[0] == '\0') ||
-	    (pathsz == 0) ||
+	    (url->u_hostname[0] == '\0') || (pathsz == 0) ||
 	    ((len = nni_url_decode((uint8_t *) path, url->u_hostname,
 	          pathsz - 1)) == (size_t) -1) ||
 	    (len == 0) || (memchr(path, '\0', len) != NULL)) {
 		return (NNG_EADDRINVAL);
 	}
-	path[len]              = '\0';
+	path[len] = '\0';
 	if ((path[0] != '/') &&
 	    !((len > 2) && isalpha((uint8_t) path[0]) && (path[1] == ':') &&
 	        ((path[2] == '/') || (path[2] == '\\')))) {

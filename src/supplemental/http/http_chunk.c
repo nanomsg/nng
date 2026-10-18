@@ -45,8 +45,8 @@ struct nng_http_chunks {
 	nni_list         cl_chunks;
 	size_t           cl_maxsz;
 	size_t           cl_total; // total size of all chunks
-	size_t           cl_size; // parsed size (so far)
-	size_t           cl_line; // bytes since last newline
+	size_t           cl_size;  // parsed size (so far)
+	size_t           cl_line;  // bytes since last newline
 	enum chunk_state cl_state;
 };
 

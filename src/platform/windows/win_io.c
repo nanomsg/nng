@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -96,7 +96,8 @@ nni_win_io_sysinit(nng_init_params *params)
 
 	h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, num_thr);
 	if (h == NULL) {
-		return (nni_win_error(GetLastError()));
+		rv = nni_win_error(GetLastError());
+		goto fail;
 	}
 	win_io_h = h;
 
@@ -136,6 +137,8 @@ nni_win_io_sysfini(void)
 	}
 
 	NNI_FREE_STRUCTS(win_io_thrs, win_io_nthr);
+	win_io_thrs = NULL;
+	win_io_nthr = 0;
 }
 
 #endif // NNG_PLATFORM_WINDOWS

@@ -57,14 +57,14 @@ static void
 test_permissions(void)
 {
 #ifdef NNG_PLATFORM_POSIX
-	char        *temp;
-	char        *file;
-	void        *data;
-	size_t       n;
-	mode_t       mode;
+	char  *temp;
+	char  *file;
+	void  *data;
+	size_t n;
+	mode_t mode;
 #ifdef __linux__
-	char       *fifo;
-	int         fd;
+	char *fifo;
+	int   fd;
 #endif
 
 	if (geteuid() == 0) {
@@ -77,8 +77,8 @@ test_permissions(void)
 	NUTS_PASS(nni_file_put(file, "abc", 4));
 	NUTS_PASS(test_file_mode(file, &mode));
 	NUTS_TRUE((mode & (S_IRWXG | S_IRWXO)) == 0);
-	NUTS_PASS(test_chmod_file(file,
-	    S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
+	NUTS_PASS(
+	    test_chmod_file(file, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
 	NUTS_PASS(nni_file_put(file, "def", 4));
 	NUTS_PASS(test_file_mode(file, &mode));
 	NUTS_TRUE((mode & (S_IRWXG | S_IRWXO)) == 0);

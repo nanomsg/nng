@@ -30,8 +30,15 @@ The {{i:`nng_strerror`}} returns the human-readable description of the
 given error in `err`.
 
 The error message returned is a fixed `NUL`-terminated string and may be located in
-read-only or shared memory, so the content must not be modified. The message
-will be in US English.
+read-only or shared memory, so the content must not be modified.
+NNG error messages are in US English. System errors use the platform's
+messages, which may depend on the locale. If no system message is available,
+the message includes the numeric system error code instead.
+
+Messages are safe to use concurrently and remain valid until the final
+[`nng_fini`] call, including across subsequent calls to `nng_strerror`.
+Formatted messages are cached on first use. If the library is not initialized
+or a cache allocation fails, a fixed message without the numeric code is returned.
 
 > [!NOTE]
 > The specific strings associated with specific error messages are

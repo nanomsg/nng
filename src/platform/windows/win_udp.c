@@ -40,8 +40,7 @@ static void udp_recv_start(nni_plat_udp *);
 static void
 nni_win_udp_set_bufsize(SOCKET s)
 {
-#if defined(SOL_SOCKET) && \
-    (defined(SO_RCVBUF) || defined(SO_SNDBUF))
+#if defined(SOL_SOCKET) && (defined(SO_RCVBUF) || defined(SO_SNDBUF))
 	int bufsz = NNG_UDP_SOCK_BUFSZ;
 
 #ifdef SO_RCVBUF

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -32,13 +32,48 @@ nni_plat_printf(const char *fmt, ...)
 	va_end(ap);
 }
 
-const char *
+char *
 nni_plat_strerror(int errnum)
 {
-	if (errnum > NNG_ESYSERR) {
-		errnum -= NNG_ESYSERR;
+	char   buf[256];
+	char  *tmp = buf;
+	char  *msg = NULL;
+	size_t len = sizeof(buf);
+
+	for (;;) {
+#if defined(__GLIBC__) && defined(_GNU_SOURCE)
+		// GNU strerror_r may return either tmp or a static string.
+		char *text = strerror_r(errnum, tmp, len);
+		if ((text != tmp) || (strlen(text) < len - 1)) {
+			msg = nni_strdup(text);
+			break;
+		}
+#else
+		int rv = strerror_r(errnum, tmp, len);
+		if (rv == 0) {
+			msg = nni_strdup(tmp);
+			break;
+		}
+		if (rv != ERANGE) {
+			(void) nni_asprintf(&msg, "System error #%d", errnum);
+			break;
+		}
+#endif
+		if (tmp != buf) {
+			nni_free(tmp, len);
+		}
+		if (len > SIZE_MAX / 2) {
+			return (NULL);
+		}
+		len *= 2;
+		if ((tmp = nni_alloc(len)) == NULL) {
+			return (NULL);
+		}
 	}
-	return (strerror(errnum));
+	if (tmp != buf) {
+		nni_free(tmp, len);
+	}
+	return (msg);
 }
 
 // There are of course other errors than these, but these are the ones

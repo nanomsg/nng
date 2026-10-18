@@ -39,10 +39,7 @@ struct nni_plat_mtx {
 	SRWLOCK srl;
 };
 
-#define NNI_MTX_INITIALIZER  \
-	{                    \
-		SRWLOCK_INIT \
-	}
+#define NNI_MTX_INITIALIZER { SRWLOCK_INIT }
 
 struct nni_plat_cv {
 	CONDITION_VARIABLE cv;

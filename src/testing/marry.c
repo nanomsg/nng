@@ -74,8 +74,8 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 		    (n >= sizeof(tmpdir))) {
 			tmpdir[0] = 0;
 		}
-		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
-		    nng_random());
+		(void) snprintf(
+		    addr, sz, "%s://%snuts%08x", scheme, tmpdir, nng_random());
 		return;
 #else
 		char *tmpdir;
@@ -108,8 +108,8 @@ nuts_scratch_addr(const char *scheme, size_t sz, char *addr)
 		    (n >= sizeof(tmpdir))) {
 			tmpdir[0] = 0;
 		}
-		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
-		    nng_random());
+		(void) snprintf(
+		    addr, sz, "%s://%snuts%08x", scheme, tmpdir, nng_random());
 		return;
 #else
 		char *tmpdir;
@@ -170,8 +170,8 @@ nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
 		    (n >= sizeof(tmpdir))) {
 			tmpdir[0] = 0;
 		}
-		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
-		    nng_random());
+		(void) snprintf(
+		    addr, sz, "%s://%snuts%08x", scheme, tmpdir, nng_random());
 		return;
 #else
 		char *tmpdir;
@@ -204,8 +204,8 @@ nuts_scratch_addr_zero(const char *scheme, size_t sz, char *addr)
 		    (n >= sizeof(tmpdir))) {
 			tmpdir[0] = 0;
 		}
-		(void) snprintf(addr, sz, "%s://%snuts%08x", scheme, tmpdir,
-		    nng_random());
+		(void) snprintf(
+		    addr, sz, "%s://%snuts%08x", scheme, tmpdir, nng_random());
 		return;
 #else
 		char *tmpdir;

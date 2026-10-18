@@ -254,7 +254,8 @@ ipc_listener_set_owner(void *arg, const void *buf, size_t sz, nni_type t)
 	int           owner;
 	nng_err       rv;
 
-	if ((rv = nni_copyin_int(&owner, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
+	if ((rv = nni_copyin_int(&owner, buf, sz, 0, NNI_MAXINT, t)) !=
+	    NNG_OK) {
 		return (rv);
 	}
 	if (l->sa.s_family == NNG_AF_ABSTRACT) {
@@ -278,7 +279,8 @@ ipc_listener_set_group(void *arg, const void *buf, size_t sz, nni_type t)
 	int           group;
 	nng_err       rv;
 
-	if ((rv = nni_copyin_int(&group, buf, sz, 0, NNI_MAXINT, t)) != NNG_OK) {
+	if ((rv = nni_copyin_int(&group, buf, sz, 0, NNI_MAXINT, t)) !=
+	    NNG_OK) {
 		return (rv);
 	}
 	if (l->sa.s_family == NNG_AF_ABSTRACT) {
@@ -397,9 +399,9 @@ ipc_listener_set_file_attrs(ipc_listener *l, const char *path)
 		return (0);
 	}
 	if ((l->owner != (uid_t) -1) || (l->group != (gid_t) -1)) {
-		// Changing ownership normally requires elevated privilege.  This is
-		// deliberately best effort so a listener can still be started by an
-		// unprivileged process.
+		// Changing ownership normally requires elevated privilege.
+		// This is deliberately best effort so a listener can still be
+		// started by an unprivileged process.
 		(void) chown(path, l->owner, l->group);
 	}
 	if ((l->perms != 0) && (chmod(path, l->perms & ~S_IFMT) != 0)) {

@@ -319,7 +319,7 @@ nni_poll_pq_create(nni_posix_pollq *pq)
 		pq->nalloc = 5000;
 	}
 	if (pq->nalloc < 128) { // 20 is minimum allowed per POSIX, but we need
-		                // more for testing
+	                        // more for testing
 		pq->nalloc = 20;
 	}
 	if (((pq->pfds = NNI_ALLOC_STRUCTS(pq->pfds, pq->nalloc)) == NULL) ||

@@ -57,10 +57,9 @@ extern void nni_plat_printf(const char *, ...);
 // nni_plat_strerror allows the platform to use additional error messages
 // for additional error codes.  The err code passed in should be the
 // equivalent of errno or GetLastError, without the NNG_ESYSERR component.
-// The platform should make sure that the returned value will be valid
-// after the call returns.  (If necessary, thread-local storage can be
-// used.)
-extern const char *nni_plat_strerror(int);
+// The returned string is allocated with nni_strdup or nni_asprintf and
+// must be freed with nni_strfree. Returns NULL on allocation failure.
+extern char *nni_plat_strerror(int);
 
 //
 // Memory Management
@@ -259,7 +258,8 @@ uint32_t nni_random(void);
 // nni_plat_init is called to allow the platform the chance to
 // do any necessary initialization.  This will be called before any other API
 // calls. It is permitted to return an error if some critical failure
-// initializing the platform occurs.
+// initializing the platform occurs. On failure, it must release any
+// resources acquired; nni_plat_fini is only called after successful init.
 extern int nni_plat_init(nng_init_params *);
 
 // nni_plat_fini is called to clean up resources.  It is intended to

@@ -112,7 +112,7 @@ struct dtls_pipe {
 	bool          closed;  // true if we are closed (no more send or recv!)
 	bool          dialer;  // true if we are dialer
 	nng_duration  refresh; // milliseconds, for the protocol
-	nng_time      expire; // inactivity expiration time
+	nng_time      expire;  // inactivity expiration time
 	nng_time      next_refresh;
 	nni_list_node node;
 	nni_lmq       rx_mq;
@@ -156,38 +156,39 @@ struct dtls_pipe {
 };
 
 struct dtls_ep {
-	nng_udp        *udp;
-	nni_mtx         mtx;
-	uint16_t        proto;
-	uint16_t        peer;
-	uint16_t        af; // address family
-	bool            fini;
-	bool            started;
-	bool            receiving;
-	bool            closed;
-	nng_url        *url;
-	const char     *host; // for dialers
-	nni_aio        *useraio;
-	nni_aio        *connaio;
-	nni_aio         timeaio;
-	nni_time        next_wake;
-	nni_aio         resaio;
-	bool            dialer;
-	nni_listener   *nlistener;
-	nni_dialer     *ndialer;
-	nni_msg        *rx_payload; // current receive message
-	nng_sockaddr    rx_sa;      // addr for last message
-	nni_aio         tx_aio;     // aio for TX handling
-	nni_aio         rx_aio;     // aio for RX handling
-	nni_id_map      pipes;      // pipes (indexed by id)
-	nni_sockaddr    self_sa;    // our address
-	nni_sockaddr    peer_sa;    // peer address, only for dialer;
-	nni_list        connaios; // aios from accept waiting for a client peer
-	nni_list        connpipes; // pipes waiting to be connected
-	nng_duration    refresh; // refresh interval for connections in milliseconds
+	nng_udp      *udp;
+	nni_mtx       mtx;
+	uint16_t      proto;
+	uint16_t      peer;
+	uint16_t      af; // address family
+	bool          fini;
+	bool          started;
+	bool          receiving;
+	bool          closed;
+	nng_url      *url;
+	const char   *host; // for dialers
+	nni_aio      *useraio;
+	nni_aio      *connaio;
+	nni_aio       timeaio;
+	nni_time      next_wake;
+	nni_aio       resaio;
+	bool          dialer;
+	nni_listener *nlistener;
+	nni_dialer   *ndialer;
+	nni_msg      *rx_payload; // current receive message
+	nng_sockaddr  rx_sa;      // addr for last message
+	nni_aio       tx_aio;     // aio for TX handling
+	nni_aio       rx_aio;     // aio for RX handling
+	nni_id_map    pipes;      // pipes (indexed by id)
+	nni_sockaddr  self_sa;    // our address
+	nni_sockaddr  peer_sa;    // peer address, only for dialer;
+	nni_list      connaios;   // aios from accept waiting for a client peer
+	nni_list      connpipes;  // pipes waiting to be connected
+	nng_duration
+	    refresh; // refresh interval for connections in milliseconds
 	nng_duration    conn_retry;
 	nng_duration    conn_expire;
-	uint16_t        rcvmax;  // max payload, trimmed to uint16_t
+	uint16_t        rcvmax; // max payload, trimmed to uint16_t
 	size_t          max_peers;
 	size_t          pending_peers;
 	nni_resolv_item resolv;
@@ -872,15 +873,15 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	p->peer_addr = *sa;
 	p->id        = nng_sockaddr_hash(sa);
 	nni_time now = nni_clock();
-	p->refresh = ep->dialer ? ep->conn_retry : ep->refresh;
+	p->refresh   = ep->dialer ? ep->conn_retry : ep->refresh;
 	// Keep a finite deadline throughout the TLS and SP negotiations.
 	p->expire =
 	    now + (ep->dialer ? ep->conn_expire : DTLS_PIPE_TIMEOUT(p));
 	p->next_refresh = now + DTLS_PIPE_REFRESH(p);
-	p->pending   = !ep->dialer;
-	p->send_max  = NNG_DTLS_RECVMAX;
-	p->recv_max  = ep->rcvmax;
-	*pp          = p;
+	p->pending      = !ep->dialer;
+	p->send_max     = NNG_DTLS_RECVMAX;
+	p->recv_max     = ep->rcvmax;
+	*pp             = p;
 
 	if (((rv = nni_tls_init(&p->tls, ep->tlscfg, true)) != NNG_OK) ||
 	    ((rv = nni_tls_start(&p->tls, &dtls_bio_ops, p, sa)) != NNG_OK) ||
@@ -1011,7 +1012,8 @@ nni_dtls_test_send_gate(
 		}
 		if (gate != NULL) {
 			// Do not accidentally hold the initial CACK callback
-			// instead of the application write selected by the test.
+			// instead of the application write selected by the
+			// test.
 			nni_pipe_hold(p->npipe);
 			nni_mtx_unlock(&ep->mtx);
 			nni_aio_wait(&p->send_tls_aio);
@@ -1464,7 +1466,8 @@ dtls_ep_init(
 	    "connections closed due to inactive peer", NNG_STAT_COUNTER,
 	    NNG_UNIT_EVENTS);
 	NNI_STAT_LOCK(peer_max_info, "peer_max",
-	    "maximum unauthenticated peers", NNG_STAT_LEVEL, NNG_UNIT_MESSAGES);
+	    "maximum unauthenticated peers", NNG_STAT_LEVEL,
+	    NNG_UNIT_MESSAGES);
 	NNI_STAT_LOCK(peer_reject_info, "peer_reject",
 	    "handshakes rejected at the peer limit", NNG_STAT_COUNTER,
 	    NNG_UNIT_MESSAGES);
@@ -1809,7 +1812,8 @@ dtls_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	dtls_ep *ep = arg;
 	size_t   val;
 	nng_err  rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAX_RECVMAXSZ, t)) == 0) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAX_RECVMAXSZ, t)) ==
+	    0) {
 		if ((val == 0) || (val > NNG_DTLS_RECVMAX)) {
 			val = NNG_DTLS_RECVMAX;
 		}
@@ -1840,9 +1844,9 @@ dtls_ep_get_conn_retry(void *arg, void *v, size_t *szp, nni_opt_type t)
 static nng_err
 dtls_ep_set_conn_retry(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	dtls_ep      *ep = arg;
-	nng_duration  val;
-	nng_err       rv;
+	dtls_ep     *ep = arg;
+	nng_duration val;
+	nng_err      rv;
 
 	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
 		return (rv);
@@ -1875,9 +1879,9 @@ dtls_ep_get_conn_expire(void *arg, void *v, size_t *szp, nni_opt_type t)
 static nng_err
 dtls_ep_set_conn_expire(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	dtls_ep      *ep = arg;
-	nng_duration  val;
-	nng_err       rv;
+	dtls_ep     *ep = arg;
+	nng_duration val;
+	nng_err      rv;
 
 	if ((rv = nni_copyin_ms(&val, v, sz, t)) != NNG_OK) {
 		return (rv);
@@ -1978,7 +1982,7 @@ dtls_ep_match(dtls_ep *ep)
 static void
 dtls_ep_start(dtls_ep *ep)
 {
-	ep->started = true;
+	ep->started   = true;
 	ep->receiving = true;
 	dtls_start_rx(ep);
 }
