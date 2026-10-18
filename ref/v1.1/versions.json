@@ -1,0 +1,80 @@
+{
+  "latest_version": "/ref/v2.0/",
+  "versions": [
+    {
+      "id": "v1.0",
+      "label": "NNG 1.0",
+      "href": "/ref/v1.0/"
+    },
+    {
+      "id": "v1.1",
+      "label": "NNG 1.1",
+      "href": "/ref/v1.1/"
+    },
+    {
+      "id": "v1.2",
+      "label": "NNG 1.2",
+      "href": "/ref/v1.2/"
+    },
+    {
+      "id": "v1.3",
+      "label": "NNG 1.3",
+      "href": "/ref/v1.3/"
+    },
+    {
+      "id": "v1.4",
+      "label": "NNG 1.4",
+      "href": "/ref/v1.4/"
+    },
+    {
+      "id": "v1.5",
+      "label": "NNG 1.5",
+      "href": "/ref/v1.5/"
+    },
+    {
+      "id": "v1.6",
+      "label": "NNG 1.6",
+      "href": "/ref/v1.6/"
+    },
+    {
+      "id": "v1.7",
+      "label": "NNG 1.7",
+      "href": "/ref/v1.7/"
+    },
+    {
+      "id": "v1.8",
+      "label": "NNG 1.8",
+      "href": "/ref/v1.8/"
+    },
+    {
+      "id": "v1.9",
+      "label": "NNG 1.9",
+      "href": "/ref/v1.9/"
+    },
+    {
+      "id": "v1.10",
+      "label": "NNG 1.10",
+      "href": "/ref/v1.10/"
+    },
+    {
+      "id": "v1.11",
+      "label": "NNG 1.11",
+      "href": "/ref/v1.11/"
+    },
+    {
+      "id": "v1.12",
+      "label": "NNG 1.12",
+      "href": "/ref/v1.12/"
+    },
+    {
+      "id": "v2.0",
+      "label": "NNG 2.0",
+      "href": "/ref/v2.0/"
+    },
+    {
+      "id": "dev",
+      "label": "Development (unreleased)",
+      "href": "/ref/dev/"
+    }
+  ]
+}
