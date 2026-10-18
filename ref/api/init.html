@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-10402901.js";
+            window.path_to_searchindex_js = "../searchindex-d6616512.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-c99ee17e.js"></script>
@@ -195,8 +195,8 @@ extern nng_err nng_init(const nng_init_params *params);
 </code></pre>
 <p>Before using other interfaces in this library, it is necessary to initialize
 the library. The <a name="a001"></a><code>nng_init</code> function performs this initialization.</p>
-<p>The function is idempotent, although on tear down, every call to <code>nng_init</code> must
-be paired with a call to <a href="../api/init.html#finalization"><code>nng_fini</code></a> or no resources will be released.
+<p>The function is idempotent, although on tear down, every successful call to
+<code>nng_init</code> must be paired with a call to <a href="../api/init.html#finalization"><code>nng_fini</code></a> or no resources will be released.
 This allows for libraries consuming these interfaces to safely initialize and finalize
 the library without disrupting other consumers in the same process.</p>
 <p>Further, only the first call to this function may have a value of <em>params</em> other than <code>NULL</code>.
@@ -237,8 +237,9 @@ changing these values.</p>
 <pre><code class="language-c">extern void nng_fini(void);
 </code></pre>
 <p>When the consumer is ready to deallocate any resources allocated by the library, it should call
-the <a name="a002"></a><code>nng_fini</code> function. Each call to <code>nng_fini</code> should be paired with an earlier call to
-<a href="../api/init.html#initialization"><code>nng_init</code></a>.</p>
+the <a name="a002"></a><code>nng_fini</code> function. Each call to <code>nng_fini</code> should be paired with an earlier
+successful call to <a href="../api/init.html#initialization"><code>nng_init</code></a>. A failed initialization releases any resources acquired
+and does not require a call to <code>nng_fini</code>. Initialization can be retried.</p>
 <p>After calling <code>nng_fini</code>, the consuming application must not make any other calls to NNG functions,
 except that it may use <code>nng_init</code> to initialize the application for further use.</p>
 <!-- NOTE: This assumes that any page referencing this is located
