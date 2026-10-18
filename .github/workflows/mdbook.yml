@@ -11,17 +11,90 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/mdbook.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      source_ref:
+        description: "Git ref containing the documentation to publish"
+        required: true
+        default: "v2.0.0"
+        type: string
+      version:
+        description: "Major.minor documentation line (for example, 2.0)"
+        required: true
+        default: "2.0"
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  deploy:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.target.outputs.deploy }}
+      destination: ${{ steps.target.outputs.destination }}
+      source_ref: ${{ steps.target.outputs.source_ref }}
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          RELEASE_IS_PRERELEASE: ${{ github.event.release.prerelease }}
+          DISPATCH_SOURCE_REF: ${{ inputs.source_ref }}
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if [ "$EVENT_NAME" = "push" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "destination=ref/dev" >> "$GITHUB_OUTPUT"
+            echo "source_ref=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "destination=ref/dev" >> "$GITHUB_OUTPUT"
+            echo "source_ref=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "$EVENT_NAME" = "release" ]; then
+            if [ "$RELEASE_IS_PRERELEASE" = "true" ]; then
+              echo "deploy=false" >> "$GITHUB_OUTPUT"
+              echo "destination=ref/dev" >> "$GITHUB_OUTPUT"
+              echo "source_ref=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            source_ref="$RELEASE_TAG"
+            version="${source_ref#v}"
+            version="${version%.*}"
+          else
+            source_ref="$DISPATCH_SOURCE_REF"
+            version="$DISPATCH_VERSION"
+          fi
+
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must be major.minor; got '$version'." >&2
+            exit 1
+          fi
+
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+          echo "destination=ref/v$version" >> "$GITHUB_OUTPUT"
+          echo "source_ref=$source_ref" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    if: ${{ github.event_name == 'pull_request' || needs.prepare.outputs.deploy == 'true' }}
     runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.prepare.outputs.source_ref }}
 
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v2
@@ -30,13 +103,18 @@ jobs:
           mdbook-version: "0.5.2"
 
       - run: cargo install mdbook-indexing
+      - name: Set the versioned canonical URL
+        env:
+          DESTINATION: ${{ needs.prepare.outputs.destination }}
+        run: |
+          sed -i "s|site-url = \"/ref/\"|site-url = \"/${DESTINATION}/\"|" docs/book.toml
       - run: mdbook build -d ./docs/book docs
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
-        if: ${{ github.ref == 'refs/heads/main' }}
+        if: ${{ needs.prepare.outputs.deploy == 'true' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./docs/book
-          destination_dir: ./ref
+          destination_dir: ./${{ needs.prepare.outputs.destination }}
           enable_jekyll: true
