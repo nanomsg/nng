@@ -36,8 +36,6 @@ jobs:
       deploy: ${{ steps.target.outputs.deploy }}
       destination: ${{ steps.target.outputs.destination }}
       source_ref: ${{ steps.target.outputs.source_ref }}
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - id: target
         env:
@@ -90,7 +88,8 @@ jobs:
     if: ${{ github.event_name == 'pull_request' || needs.prepare.outputs.deploy == 'true' }}
     runs-on: ubuntu-latest
     concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
+      group: ${{ github.workflow }}-${{ needs.prepare.outputs.deploy == 'true' && 'deploy' || github.run_id }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
