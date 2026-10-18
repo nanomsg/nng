@@ -376,7 +376,17 @@ set(CPACK_PACKAGE_CONTACT "nanomsg@freelists.org")
 set(CPACK_PACKAGE_VENDOR "nanomsg.org")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "nanomsg next generation library")
 set(CPACK_SOURCE_GENERATOR "TBZ2;TGZ;ZIP")
-set(CPACK_SOURCE_IGNORE_FILES "/build/;/.git/;~$;${CPACK_SOURCE_IGNORE_FILES}")
+# Keep workspace-local state and CPack's own output out of source releases.
+set(CPACK_SOURCE_IGNORE_FILES
+    "/build/"
+    "/.git/"
+    "/.context/"
+    "/_CPack_Packages/"
+    "/docs/book/"
+    "/${PROJECT_NAME}-v.*[.]tar[.](bz2|gz)$"
+    "/${PROJECT_NAME}-v.*[.]zip$"
+    "~$"
+    "${CPACK_SOURCE_IGNORE_FILES}")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME
         "${PROJECT_NAME}-v${NNG_PACKAGE_VERSION}-src")
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
