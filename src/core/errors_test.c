@@ -36,10 +36,14 @@ static void
 test_system_errors(void)
 {
 #ifdef NNG_PLATFORM_POSIX
-	NUTS_MATCH(nng_strerror(NNG_ESYSERR + ENOENT), strerror(ENOENT));
-	NUTS_MATCH(nng_strerror(NNG_ESYSERR + EINVAL), strerror(EINVAL));
-	NUTS_MATCH(nng_strerror(NNG_ESYSERR + EIO), strerror(EIO));
-	NUTS_MATCH(nng_strerror(NNG_ESYSERR + EFAULT), strerror(EFAULT));
+	int  errors[] = { 0, ENOENT, EINVAL, EIO, EFAULT };
+	char expected[1024];
+
+	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(errors); i++) {
+		snprintf(expected, sizeof(expected), "%s (%d)",
+		    strerror(errors[i]), errors[i]);
+		NUTS_MATCH(nng_strerror(NNG_ESYSERR | errors[i]), expected);
+	}
 #else
 	char  expected[1024];
 	DWORD len = FormatMessageA(

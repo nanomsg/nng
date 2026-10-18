@@ -32,7 +32,8 @@ given error in `err`.
 The error message returned is a fixed `NUL`-terminated string and may be located in
 read-only or shared memory, so the content must not be modified.
 NNG error messages are in US English. System errors use the platform's
-messages, which may depend on the locale. If no system message is available,
+messages, which may depend on the locale. POSIX system messages also include
+the numeric errno value. If no system message is available,
 the message includes the numeric system error code instead.
 
 Messages are safe to use concurrently and remain valid until the final

@@ -41,17 +41,20 @@ nni_plat_strerror(int errnum)
 	size_t len = sizeof(buf);
 
 	for (;;) {
-#if defined(__GLIBC__) && defined(_GNU_SOURCE)
+#ifdef NNG_HAVE_GNU_STRERROR_R
 		// GNU strerror_r may return either tmp or a static string.
 		char *text = strerror_r(errnum, tmp, len);
 		if ((text != tmp) || (strlen(text) < len - 1)) {
-			msg = nni_strdup(text);
+			(void) nni_asprintf(&msg, "%s (%d)", text, errnum);
 			break;
 		}
 #else
 		int rv = strerror_r(errnum, tmp, len);
 		if (rv == 0) {
-			msg = nni_strdup(tmp);
+			// Some libcs return generic text for unknown errors
+			// even on success. Always retain the code with the
+			// message.
+			(void) nni_asprintf(&msg, "%s (%d)", tmp, errnum);
 			break;
 		}
 		if (rv != ERANGE) {
