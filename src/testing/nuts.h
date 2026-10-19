@@ -77,6 +77,9 @@ extern uint16_t nuts_next_port(void);
 // 64 bytes to ensure no truncation occurs.
 extern void nuts_scratch_addr(const char *, size_t, char *);
 
+// nuts_has_ipv6 reports whether the IPv6 loopback can bind a UDP socket.
+extern bool nuts_has_ipv6(void);
+
 // like nuts_scratch_addr, but attempts to use an autobind (0 port)
 // address instead.
 extern void nuts_scratch_addr_zero(const char *, size_t, char *);
