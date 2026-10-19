@@ -692,7 +692,8 @@ test_sub_stats(void)
 	nng_stats_free(stats);
 
 	NUTS_SEND(pub, "unmatched_data");
-	NUTS_SLEEP(100);
+	NUTS_SEND(pub, "prefix/sync");
+	NUTS_RECV(sub, "prefix/sync");
 
 	NUTS_PASS(nng_stats_get(&stats));
 	NUTS_TRUE(stats != NULL);
