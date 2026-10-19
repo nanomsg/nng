@@ -52,11 +52,27 @@ We have not tested NNG with the commercial version of WolfSSL.
 If you want support for that, please contact Staysail Systems
 to make support arrangements.
 
+For the DTLS transport, wolfSSL must be version 5.8.0 or newer for DTLS 1.2,
+and 5.9.1 or newer when built with DTLS 1.3 enabled. Enable DTLS with
+`--enable-dtls`, configurable MTUs with `--enable-dtls-mtu`, and, for DTLS 1.3,
+`--enable-dtls13`. With CMake, use `WOLFSSL_DTLS=yes`,
+`WOLFSSL_OPENSSLALL=yes` (which enables configurable MTUs), and
+`WOLFSSL_DTLS13=yes` for 1.3.
+
+For interoperability with OpenSSL clients using DTLS 1.2, enable wolfSSL's
+server renegotiation indication by compiling the wolfSSL library with
+`HAVE_SERVER_RENEGOTIATION_INFO` defined.
+This announces the secure renegotiation extension without enabling renegotiation.
+For DTLS 1.3 interoperability with OpenSSL 4.1, compile wolfSSL with
+`WOLFSSL_MAX_SIGALGO=128` so it can accept OpenSSL's longer signature algorithm list.
+
 ## Notes about OpenSSL
 
 OpenSSL requires version 3.5 or newer. (As of this writing, OpenSSL
 3.5 is the most recent long term support - LTS - release of OpenSSL.)
 No effort will be made to support earlier releases.
+DTLS 1.3 requires OpenSSL 4.1 or newer; earlier supported releases use DTLS 1.2.
+OpenSSL 4.1 is currently in beta.
 
 ## Configuring NNG with TLS
 

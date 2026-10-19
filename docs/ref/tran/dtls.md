@@ -1,4 +1,4 @@
-# DTLS Transport (Experimental)
+# DTLS Transport
 
 ## DESCRIPTION
 
@@ -17,9 +17,11 @@ DTLS [dialers][dialer] and [listeners][listener] must be configured with
 [`nng_dialer_set_tls`] or [`nng_listener_set_tls`] before they are started.
 
 > [!NOTE]
-> This transport is _experimental_.
 > It requires TLS support and the `NNG_TRANSPORT_DTLS` build option.
-> When using wolfSSL, version 5.8.0 or newer is required for correct replay protection.
+> When using wolfSSL, version 5.8.0 or newer is required for correct replay protection
+> with DTLS 1.2. Builds with DTLS 1.3 enabled require wolfSSL 5.9.1 or newer.
+> wolfSSL must support configurable MTUs (`--enable-dtls-mtu`, or
+> `WOLFSSL_OPENSSLALL=yes` with CMake).
 > Older wolfSSL versions may still be used for stream TLS with `NNG_TRANSPORT_DTLS=OFF`.
 > It supports unicast UDP endpoints only; multicast and broadcast are not
 > supported.
@@ -79,9 +81,17 @@ engine.
 Use separate configuration objects for DTLS and stream TLS.
 A configuration is bound to its transport type on first use; reusing it for the other type fails with [`NNG_EINVAL`].
 
-The supported protocol version is DTLS 1.2.
-The configured TLS version range must include TLS 1.2;
-a configuration requiring TLS 1.3 fails with [`NNG_ENOTSUP`] when used for DTLS.
+DTLS 1.2 is supported by all three TLS engines.
+DTLS 1.3 is supported with wolfSSL built with DTLS 1.3 enabled, and with
+OpenSSL 4.1 or newer built with DTLS 1.3 enabled.
+Mbed TLS and earlier OpenSSL releases support DTLS 1.2 only.
+
+[`nng_tls_config_version`] uses `NNG_TLS_1_2` and `NNG_TLS_1_3` to select the
+corresponding DTLS versions. The default range permits both; the highest
+mutually supported version is negotiated.
+To require DTLS 1.3, set both limits to `NNG_TLS_1_3` before starting the endpoint.
+If the engine cannot support any DTLS version in the configured range,
+starting the endpoint fails with [`NNG_ENOTSUP`].
 
 The TLS configuration must be set before the dialer or listener is started.
 After a DTLS endpoint has started, attempts to change its TLS configuration or
@@ -129,6 +139,9 @@ The transport maximum is smaller than the 16 KiB DTLS record size to leave room
 for DTLS and transport headers.
 The receive maximum can be configured with [`NNG_OPT_RECVMAXSZ`], but it cannot
 exceed the DTLS transport maximum.
+NNG protocol headers count toward this maximum, so the largest application
+payload depends on the messaging protocol.
+Operating systems may impose a lower limit on UDP datagram size.
 
 Applications are encouraged to use much smaller messages whenever possible.
 Large UDP datagrams are more likely to be fragmented at the IP layer, and a lost

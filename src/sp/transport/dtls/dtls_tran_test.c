@@ -24,6 +24,9 @@ extern nng_err nni_dtls_test_send_gate(
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
+#ifdef __APPLE__
+#include <sys/sysctl.h>
+#endif
 
 // TLS tests.
 
@@ -96,6 +99,7 @@ typedef struct {
 	bool         dropped_server;
 	bool         bad_wire;
 	bool         silence;
+	bool         unified;
 	unsigned     client_records;
 	unsigned     server_records;
 	unsigned     duplicates;
@@ -123,10 +127,13 @@ dtls_proxy_run(void *arg)
 			return;
 		}
 		iov.iov_len = nng_aio_count(p->recv);
-		// DTLS has a 13-byte record header and a 0xfeXX version. TLS
-		// records over UDP (which self-peer tests accepted) must fail.
-		if (iov.iov_len < 13 || buf[1] != 0xfe ||
-		    (buf[2] != 0xff && buf[2] != 0xfd)) {
+		// DTLS 1.3 encrypts the content type in its unified header.
+		// Plaintext handshake records still use the legacy header.
+		bool unified = iov.iov_len >= 2 && (buf[0] & 0xe0) == 0x20;
+		p->unified |= unified;
+		if (!unified &&
+		    (iov.iov_len < 13 || buf[1] != 0xfe ||
+		        (buf[2] != 0xff && buf[2] != 0xfd))) {
 			p->bad_wire = true;
 		}
 		bool from_server = from.s_in.sa_port == p->server.s_in.sa_port;
@@ -155,7 +162,8 @@ dtls_proxy_run(void *arg)
 		}
 		// Replay application records to verify DTLS duplicate
 		// suppression.
-		unsigned copies = !p->silence && buf[0] == 23 ? 2 : 1;
+		unsigned copies =
+		    !p->silence && (buf[0] == 23 || unified) ? 2 : 1;
 		if (copies == 2) {
 			p->duplicates++;
 		}
@@ -273,6 +281,9 @@ test_dtls_negotiated_expiry(void)
 	char                 proxy_url[80];
 	nng_tls_config      *scfg = tls_server_config();
 	nng_tls_config      *ccfg = tls_client_config();
+	// This proxy distinguishes SP records by their DTLS 1.2 content type.
+	NUTS_PASS(nng_tls_config_version(scfg, NNG_TLS_1_2, NNG_TLS_1_2));
+	NUTS_PASS(nng_tls_config_version(ccfg, NNG_TLS_1_2, NNG_TLS_1_2));
 	NUTS_OPEN(server);
 	NUTS_OPEN(client);
 	dtls_deadline_init(&server_events, server);
@@ -1009,8 +1020,9 @@ test_dtls_pending_expiry(void)
 	nng_tls_config_free(scfg);
 }
 
-void
-test_dtls_wire_loss_replay(void)
+static void
+dtls_wire_loss_replay(nng_tls_version server_min, nng_tls_version server_max,
+    nng_tls_version client_min, nng_tls_version client_max, bool expect13)
 {
 	dtls_proxy      p    = { 0 };
 	nng_sockaddr    addr = { 0 };
@@ -1025,6 +1037,8 @@ test_dtls_wire_loss_replay(void)
 	nng_tls_config *c2 = tls_client_config();
 	nng_tls_config *c3 = tls_server_config();
 	nng_tls_config *c4 = tls_client_config();
+	NUTS_PASS(nng_tls_config_version(c1, server_min, server_max));
+	NUTS_PASS(nng_tls_config_version(c2, client_min, client_max));
 
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
@@ -1113,6 +1127,7 @@ test_dtls_wire_loss_replay(void)
 	NUTS_TRUE(p.dropped_server);
 	NUTS_TRUE(!p.bad_wire);
 	NUTS_TRUE(p.duplicates > 0);
+	NUTS_TRUE(p.unified == expect13);
 	nng_aio_free(p.recv);
 	nng_aio_free(p.send);
 	nng_udp_close(p.udp);
@@ -1124,6 +1139,71 @@ test_dtls_wire_loss_replay(void)
 	nng_tls_config_free(c2);
 	nng_tls_config_free(c3);
 	nng_tls_config_free(c4);
+}
+
+static void
+test_dtls_wire_loss_replay(void)
+{
+	dtls_wire_loss_replay(
+	    NNG_TLS_1_2, NNG_TLS_1_2, NNG_TLS_1_2, NNG_TLS_1_2, false);
+}
+
+static void
+test_dtls13_wire_loss_replay(void)
+{
+#ifdef NNG_SUPP_DTLS_1_3
+	dtls_wire_loss_replay(
+	    NNG_TLS_1_3, NNG_TLS_1_3, NNG_TLS_1_3, NNG_TLS_1_3, true);
+#else
+	NUTS_SKIP("engine has no DTLS 1.3 support");
+#endif
+}
+
+static void
+test_dtls_version_fallback(void)
+{
+	// Both sides must honor a peer restricted to 1.2, even if they can
+	// do 1.3.
+	dtls_wire_loss_replay(
+	    NNG_TLS_1_2, NNG_TLS_1_2, NNG_TLS_1_2, NNG_TLS_1_3, false);
+	dtls_wire_loss_replay(
+	    NNG_TLS_1_2, NNG_TLS_1_3, NNG_TLS_1_2, NNG_TLS_1_2, false);
+}
+
+static void
+test_dtls_version_mismatch(void)
+{
+#ifdef NNG_SUPP_DTLS_1_3
+	for (int i = 0; i < 2; i++) {
+		nng_socket      server, client;
+		nng_listener    l;
+		nng_dialer      d;
+		const nng_url  *url;
+		nng_tls_config *scfg = tls_server_config();
+		nng_tls_config *ccfg = tls_client_config();
+		nng_tls_version sv   = i == 0 ? NNG_TLS_1_2 : NNG_TLS_1_3;
+		nng_tls_version cv   = i == 0 ? NNG_TLS_1_3 : NNG_TLS_1_2;
+		NUTS_PASS(nng_tls_config_version(scfg, sv, sv));
+		NUTS_PASS(nng_tls_config_version(ccfg, cv, cv));
+		NUTS_OPEN(server);
+		NUTS_OPEN(client);
+		NUTS_PASS(
+		    nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+		NUTS_PASS(nng_listener_set_tls(l, scfg));
+		NUTS_PASS(nng_listener_start(l, 0));
+		NUTS_PASS(nng_listener_get_url(l, &url));
+		NUTS_PASS(nng_dialer_create_url(&d, client, url));
+		NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+		NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 500));
+		NUTS_TRUE(nng_dialer_start(d, 0) != NNG_OK);
+		NUTS_CLOSE(client);
+		NUTS_CLOSE(server);
+		nng_tls_config_free(ccfg);
+		nng_tls_config_free(scfg);
+	}
+#else
+	NUTS_SKIP("engine has no DTLS 1.3 support");
+#endif
 }
 
 void
@@ -1144,6 +1224,28 @@ test_dtls_tls13_only(void)
 		return;
 	}
 	NUTS_PASS(rv);
+#ifdef NNG_SUPP_DTLS_1_3
+	server = tls_server_config();
+	NUTS_PASS(nng_tls_config_version(server, NNG_TLS_1_3, NNG_TLS_1_3));
+	NUTS_OPEN(s);
+	NUTS_OPEN(peer);
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(peer, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_listener_create(&l, peer, "dtls://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, server));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_PASS(nng_dialer_create_url(&d, s, url));
+	NUTS_PASS(nng_dialer_set_tls(d, c));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	NUTS_SEND(s, "DTLS 1.3 only");
+	NUTS_RECV(peer, "DTLS 1.3 only");
+	NUTS_CLOSE(peer);
+	NUTS_CLOSE(s);
+	nng_tls_config_free(server);
+	nng_tls_config_free(c);
+	return;
+#endif
 	NUTS_OPEN(s);
 	NUTS_PASS(nng_dialer_create(&d, s, "dtls://127.0.0.1:9"));
 	NUTS_PASS(nng_dialer_set_tls(d, c));
@@ -1420,11 +1522,13 @@ test_dtls_recv_max(void)
 	nng_tls_config_free(c1);
 }
 
-void
-test_dtls_recv_large(void)
+static void
+dtls_recv_large(size_t size, nng_tls_version version)
 {
-	char            msg[1024];
-	char            buf[1024];
+
+	// Exercise the advertised limit, including encryption and SP headers.
+	char            msg[16384 - 64];
+	char            buf[16384 - 64];
 	nng_socket      s0;
 	nng_socket      s1;
 	nng_tls_config *c0, *c1;
@@ -1438,8 +1542,11 @@ test_dtls_recv_large(void)
 
 	c0 = tls_server_config();
 	c1 = tls_client_config();
-	NUTS_OPEN(s0);
-	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_tls_config_version(c0, version, version));
+	NUTS_PASS(nng_tls_config_version(c1, version, version));
+	NUTS_PASS(nng_pair0_open(&s0));
+	NUTS_PASS(
+	    nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
 	NUTS_PASS(nng_listener_create(&l, s0, addr));
 	NUTS_PASS(nng_listener_set_tls(l, c0));
 	NUTS_PASS(nng_listener_start(l, 0));
@@ -1447,32 +1554,52 @@ test_dtls_recv_large(void)
 
 	memset(buf, 0, sizeof(buf));
 	memset(msg, 'A', sizeof(msg));
-	NUTS_OPEN(s1);
+	NUTS_PASS(nng_pair0_open(&s1));
 	NUTS_PASS(nng_dialer_create_url(&d, s1, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c1));
 	NUTS_PASS(nng_dialer_start(d, 0));
-	NUTS_PASS(nng_send(s1, msg, sizeof(msg), 0));
-	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
-	sz = sizeof(buf);
-	NUTS_PASS(nng_recv(s0, buf, &sz, 0));
-	NUTS_TRUE(sz == sizeof(msg));
-	int mismatch = 0;
-	for (int i = 0; i < (int) sizeof(msg); i++) {
-		if (buf[i] != msg[i]) {
-			mismatch++;
-			if (mismatch < 6) {
-				NUTS_MSG(
-				    "Mismatch at index %d, sent %x recv %x", i,
-				    msg[i], buf[i]);
-			}
-		}
+	// Empty and small records must also preserve message boundaries.
+	size_t sizes[] = { 0, 1, 1024, size };
+	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(sizes); i++) {
+		NUTS_PASS(nng_send(s1, msg, sizes[i], 0));
+		sz = sizeof(buf);
+		NUTS_PASS(nng_recv(s0, buf, &sz, 0));
+		NUTS_TRUE(sz == sizes[i]);
+		NUTS_TRUE(memcmp(buf, msg, sz) == 0);
 	}
-	NUTS_MSG("total mismatches %d", mismatch);
-	NUTS_TRUE(mismatch == 0);
 	NUTS_CLOSE(s0);
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c0);
 	nng_tls_config_free(c1);
+}
+
+void
+test_dtls_recv_large(void)
+{
+	dtls_recv_large(8192, NNG_TLS_1_2);
+#ifdef NNG_SUPP_DTLS_1_3
+	dtls_recv_large(8192, NNG_TLS_1_3);
+#endif
+}
+
+static void
+test_dtls_message_limit(void)
+{
+#ifdef __APPLE__
+	int    maxdgram;
+	size_t len = sizeof(maxdgram);
+	if (sysctlbyname("net.inet.udp.maxdgram", &maxdgram, &len, NULL, 0) ==
+	        0 &&
+	    maxdgram < 16384) {
+		NUTS_SKIP(
+		    "kernel UDP datagram limit is smaller than a DTLS record");
+		return;
+	}
+#endif
+	dtls_recv_large(16384 - 64, NNG_TLS_1_2);
+#ifdef NNG_SUPP_DTLS_1_3
+	dtls_recv_large(16384 - 64, NNG_TLS_1_3);
+#endif
 }
 
 void
@@ -1808,6 +1935,7 @@ test_dtls_pipe_details(void)
 NUTS_TESTS = {
 
 	{ "dtls wire loss replay", test_dtls_wire_loss_replay },
+	{ "dtls 1.3 wire loss replay", test_dtls13_wire_loss_replay },
 	{ "dtls negotiated expiry", test_dtls_negotiated_expiry },
 	{ "dtls expiry before retry", test_dtls_expiry_before_retry },
 	{ "dtls manual retry", test_dtls_manual_retry },
@@ -1819,6 +1947,8 @@ NUTS_TESTS = {
 	{ "dtls close linger expiry", test_dtls_close_linger_expiry },
 	{ "dtls pending expiry", test_dtls_pending_expiry },
 	{ "dtls TLS 1.3 only", test_dtls_tls13_only },
+	{ "dtls version fallback", test_dtls_version_fallback },
+	{ "dtls version mismatch", test_dtls_version_mismatch },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },
@@ -1826,6 +1956,7 @@ NUTS_TESTS = {
 	{ "dtls connection tunables", test_dtls_conn_tunables },
 	{ "dtls recv max", test_dtls_recv_max },
 	{ "dtls recv large", test_dtls_recv_large },
+	{ "dtls message limit", test_dtls_message_limit },
 	{ "dtls exchange many", test_dtls_exchange_many },
 	{ "dtls reqrep multi", test_dtls_reqrep_multi },
 	{ "dtls pub multi", test_dtls_pub_multi },

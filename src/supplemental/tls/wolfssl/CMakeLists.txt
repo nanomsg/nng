@@ -170,19 +170,30 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         else ()
             set(CMAKE_REQUIRED_LIBRARIES ${NNG_WOLFSSL_TARGET})
         endif ()
+        if (NNG_WOLFSSL_USE_OPTIONS_H)
+            list(APPEND CMAKE_REQUIRED_DEFINITIONS -DWOLFSSL_USE_OPTIONS_H)
+        endif ()
         # Recheck after a dependency upgrade or downgrade in this build tree.
         unset(NNG_WOLFSSL_HAVE_DTLS_VERSION CACHE)
         check_c_source_compiles("\
+            #ifdef WOLFSSL_USE_OPTIONS_H
+            #include <wolfssl/options.h>
+            #endif
+            #include <wolfssl/ssl.h>
             #include <wolfssl/version.h>
             #if LIBWOLFSSL_VERSION_HEX < 0x05008000
             #error wolfSSL 5.8.0 or newer is required for DTLS
+            #endif
+            #if defined(WOLFSSL_DTLS13) && LIBWOLFSSL_VERSION_HEX < 0x05009001
+            #error wolfSSL 5.9.1 or newer is required for DTLS 1.3
             #endif
             int main(void) { return 0; }"
             NNG_WOLFSSL_HAVE_DTLS_VERSION)
         cmake_pop_check_state()
         if (NOT NNG_WOLFSSL_HAVE_DTLS_VERSION)
             message(FATAL_ERROR
-                "DTLS requires wolfSSL 5.8.0 or newer for replay protection. "
+                "DTLS requires wolfSSL 5.8.0 or newer, and 5.9.1 or newer "
+                "when wolfSSL is built with DTLS 1.3 (ACK security and interoperability fixes). "
                 "Upgrade wolfSSL or set NNG_TRANSPORT_DTLS=OFF to use stream TLS only.")
         endif ()
     endif ()
@@ -201,6 +212,34 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
     if (NNG_WOLFSSL_USE_OPTIONS_H)
         list(APPEND CMAKE_REQUIRED_DEFINITIONS
             -DWOLFSSL_USE_OPTIONS_H -DNNG_WOLFSSL_USE_OPTIONS_H)
+    endif ()
+    unset(NNG_WOLFSSL_HAVE_DTLS_MTU CACHE)
+    unset(NNG_WOLFSSL_HAVE_DTLS13 CACHE)
+    check_c_source_compiles("\
+        #ifdef NNG_WOLFSSL_USE_OPTIONS_H
+        #include <wolfssl/options.h>
+        #endif
+        #include <wolfssl/ssl.h>
+        int main(void) {
+            return wolfSSL_dtls_set_mtu((WOLFSSL *) 0, 16384);
+        }" NNG_WOLFSSL_HAVE_DTLS_MTU)
+    if (NNG_TRANSPORT_DTLS AND NOT NNG_WOLFSSL_HAVE_DTLS_MTU)
+        message(FATAL_ERROR
+            "DTLS requires wolfSSL with configurable MTU support. "
+            "Build wolfSSL with --enable-dtls-mtu (or WOLFSSL_OPENSSLALL=yes "
+            "with CMake), or set NNG_TRANSPORT_DTLS=OFF for stream TLS only.")
+    endif ()
+    check_c_source_compiles("\
+        #ifdef NNG_WOLFSSL_USE_OPTIONS_H
+        #include <wolfssl/options.h>
+        #endif
+        #include <wolfssl/ssl.h>
+        #ifndef WOLFSSL_DTLS13
+        #error DTLS 1.3 is unavailable
+        #endif
+        int main(void) { return 0; }" NNG_WOLFSSL_HAVE_DTLS13)
+    if (NNG_WOLFSSL_HAVE_DTLS13)
+        nng_defines(NNG_SUPP_DTLS_1_3)
     endif ()
     check_c_source_compiles("\
         #ifdef NNG_WOLFSSL_USE_OPTIONS_H
