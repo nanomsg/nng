@@ -1273,8 +1273,8 @@ test_dtls_tls13_only(void)
 	nng_tls_config_free(c);
 }
 
-void
-test_dtls_port_zero_bind(void)
+static void
+dtls_port_zero_bind(const char *addr, const char *scheme)
 {
 	nng_socket      s1;
 	nng_socket      s2;
@@ -1282,26 +1282,56 @@ test_dtls_port_zero_bind(void)
 	nng_listener    l;
 	nng_dialer      d;
 	const nng_url  *url;
+	int             port;
 
 	NUTS_ENABLE_LOG(NNG_LOG_DEBUG);
 	c1 = tls_server_config();
 	c2 = tls_client_config();
 	NUTS_OPEN(s1);
+	NUTS_PASS(
+	    nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
 	NUTS_OPEN(s2);
-	NUTS_PASS(nng_listener_create(&l, s1, "dtls://127.0.0.1:0"));
+	NUTS_PASS(
+	    nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	NUTS_PASS(nng_listener_set_tls(l, c1));
 	NUTS_PASS(nng_listener_start(l, 0));
 	NUTS_PASS(nng_listener_get_url(l, &url));
-	NUTS_MATCH(nng_url_scheme(url), "dtls");
+	NUTS_MATCH(nng_url_scheme(url), scheme);
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port > 0);
+	NUTS_TRUE((uint32_t) port == nng_url_port(url));
 	NUTS_PASS(nng_dialer_create_url(&d, s2, url));
 	NUTS_PASS(nng_dialer_set_tls(d, c2));
-	// NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
 	NUTS_PASS(nng_dialer_start(d, 0));
-	nng_msleep(1000);
+	NUTS_PASS(
+	    nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_SEND(s2, "port zero");
+	NUTS_RECV(s1, "port zero");
+	NUTS_SEND(s1, "reply");
+	NUTS_RECV(s2, "reply");
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s1);
 	nng_tls_config_free(c1);
 	nng_tls_config_free(c2);
+}
+
+static void
+test_dtls_port_zero_bind(void)
+{
+	dtls_port_zero_bind("dtls://127.0.0.1:0", "dtls");
+}
+
+static void
+test_dtls_ipv6(void)
+{
+	if (!nuts_has_ipv6()) {
+		NUTS_SKIP("IPv6 loopback is unavailable");
+		return;
+	}
+	dtls_port_zero_bind("dtls6://[::1]:0", "dtls6");
 }
 
 void
@@ -1388,6 +1418,19 @@ test_dtls_malformed_address(void)
 	    nng_listen(s1, "dtls://127.0.0.1.32", NULL, 0), NNG_EADDRINVAL);
 	NUTS_FAIL(
 	    nng_listen(s1, "dtls://127.0.x.1.32", NULL, 0), NNG_EADDRINVAL);
+	const char *invalid[] = {
+		"dtls4://127.0.0.1:1234/path",
+		"dtls4://127.0.0.1:1234?query",
+		"dtls4://127.0.0.1:1234#fragment",
+		"dtls4://user@127.0.0.1:1234",
+	};
+	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(invalid); i++) {
+		NUTS_FAIL(nng_dial(s1, invalid[i], NULL, 0), NNG_EADDRINVAL);
+		NUTS_FAIL(nng_listen(s1, invalid[i], NULL, 0), NNG_EADDRINVAL);
+	}
+	NUTS_FAIL(nng_dial(s1, "dtls4://:1234", NULL, 0), NNG_EADDRINVAL);
+	NUTS_FAIL(
+	    nng_dial(s1, "dtls4://127.0.0.1:0", NULL, 0), NNG_EADDRINVAL);
 	NUTS_CLOSE(s1);
 }
 
@@ -1398,7 +1441,7 @@ test_dtls_no_delay_option(void)
 	nng_socket      s;
 	nng_dialer      d;
 	nng_listener    l;
-	bool            v;
+	bool            v = false;
 	char           *addr;
 	nng_tls_config *dc, *lc;
 
@@ -1475,6 +1518,221 @@ test_dtls_conn_tunables(void)
 	    nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 0), NNG_EINVAL);
 	NUTS_PASS(nng_dialer_close(d));
 	NUTS_CLOSE(s);
+}
+
+static void
+test_dtls_endpoint_options(void)
+{
+	nng_socket      server, client;
+	nng_listener    l;
+	nng_dialer      d;
+	const nng_url  *url;
+	nng_tls_config *cfg;
+	nng_tls_config *scfg = tls_server_config();
+	nng_tls_config *ccfg = tls_client_config();
+	size_t          size;
+	int             port;
+	bool            flag;
+
+	NUTS_OPEN(server);
+	NUTS_PASS(
+	    nng_socket_set_ms(server, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_OPEN(client);
+	NUTS_PASS(
+	    nng_socket_set_ms(client, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port == 0);
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	// Replacing a configuration must leave the caller's reference valid.
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_get_tls(l, &cfg));
+	NUTS_TRUE(cfg == scfg);
+	NUTS_FAIL(
+	    nng_listener_set_bool(l, NNG_OPT_RECVMAXSZ, true), NNG_EBADTYPE);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 0));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &size));
+	NUTS_TRUE(size == 16384 - 64);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 65536));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &size));
+	NUTS_TRUE(size == 16384 - 64);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 512));
+	NUTS_PASS(nng_listener_set_ms(l, NNG_OPT_UDP_CONN_RETRY, 100));
+	NUTS_PASS(nng_listener_set_ms(l, NNG_OPT_UDP_CONN_EXPIRE, 1000));
+	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_UDP_MAX_PEERS, true),
+	    NNG_EBADTYPE);
+	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_UDP_CONN_RETRY, true),
+	    NNG_EBADTYPE);
+	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_UDP_CONN_EXPIRE, true),
+	    NNG_EBADTYPE);
+	NUTS_FAIL(
+	    nng_listener_set_ms(l, NNG_OPT_UDP_CONN_RETRY, -1), NNG_EINVAL);
+	NUTS_FAIL(
+	    nng_listener_set_ms(l, NNG_OPT_UDP_CONN_EXPIRE, -1), NNG_EINVAL);
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port > 0);
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_TRUE((uint32_t) port == nng_url_port(url));
+	NUTS_FAIL(
+	    nng_listener_get_bool(l, NNG_OPT_BOUND_PORT, &flag), NNG_EBADTYPE);
+
+	NUTS_PASS(nng_dialer_create_url(&d, client, url));
+	NUTS_PASS(nng_dialer_get_int(d, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port == 0);
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_get_tls(d, &cfg));
+	NUTS_TRUE(cfg == ccfg);
+	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 256));
+	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &size));
+	NUTS_TRUE(size == 256);
+	NUTS_PASS(nng_dialer_start(d, 0));
+	NUTS_PASS(nng_dialer_get_int(d, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port > 0);
+
+	// Startup freezes both endpoints' transport settings.
+	NUTS_FAIL(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 128), NNG_EBUSY);
+	NUTS_FAIL(
+	    nng_listener_set_size(l, NNG_OPT_UDP_MAX_PEERS, 1), NNG_EBUSY);
+	NUTS_FAIL(
+	    nng_listener_set_ms(l, NNG_OPT_UDP_CONN_RETRY, 50), NNG_EBUSY);
+	NUTS_FAIL(
+	    nng_listener_set_ms(l, NNG_OPT_UDP_CONN_EXPIRE, 500), NNG_EBUSY);
+	NUTS_FAIL(nng_listener_set_tls(l, scfg), NNG_EBUSY);
+	NUTS_FAIL(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 128), NNG_EBUSY);
+	NUTS_FAIL(nng_dialer_set_size(d, NNG_OPT_UDP_MAX_PEERS, 1), NNG_EBUSY);
+	NUTS_FAIL(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_RETRY, 50), NNG_EBUSY);
+	NUTS_FAIL(
+	    nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 500), NNG_EBUSY);
+	NUTS_FAIL(nng_dialer_set_tls(d, ccfg), NNG_EBUSY);
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &size));
+	NUTS_TRUE(size == 512);
+	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &size));
+	NUTS_TRUE(size == 256);
+	NUTS_PASS(
+	    nng_socket_set_ms(server, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(client, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_SEND(client, "settings preserved");
+	NUTS_RECV(server, "settings preserved");
+	NUTS_SEND(server, "settings preserved");
+	NUTS_RECV(client, "settings preserved");
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
+}
+
+static void
+dtls_negotiated_limits(nng_tls_version version)
+{
+	nng_socket      server, client;
+	nng_listener    l;
+	nng_dialer      d;
+	const nng_url  *url;
+	nng_tls_config *scfg = tls_server_config();
+	nng_tls_config *ccfg = tls_client_config();
+	char            data[33], buf[64];
+	nng_msg        *msg;
+	size_t          size;
+
+	NUTS_PASS(nng_tls_config_version(scfg, version, version));
+	NUTS_PASS(nng_tls_config_version(ccfg, version, version));
+	// pair0 has no protocol header to include in the negotiated size.
+	NUTS_PASS(nng_pair0_open(&server));
+	NUTS_PASS(nng_pair0_open(&client));
+	NUTS_PASS(
+	    nng_socket_set_ms(server, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(client, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(server, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(
+	    nng_socket_set_ms(client, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 32));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_PASS(nng_dialer_create_url(&d, client, url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, 16));
+	NUTS_PASS(nng_dialer_start(d, 0));
+
+	memset(data, 'x', sizeof(data));
+	for (unsigned i = 0; i < 2; i++) {
+		nng_socket from = i == 0 ? client : server;
+		nng_socket to   = i == 0 ? server : client;
+		size_t     max  = i == 0 ? 32 : 16;
+		NUTS_PASS(nng_send(from, data, max, 0));
+		NUTS_PASS(nng_recvmsg(to, &msg, 0));
+		NUTS_TRUE(nng_msg_len(msg) == max);
+		NUTS_TRUE(memcmp(nng_msg_body(msg), data, max) == 0);
+		NUTS_PASS(nng_pipe_get_size(
+		    nng_msg_get_pipe(msg), NNG_OPT_RECVMAXSZ, &size));
+		NUTS_TRUE(size == max);
+		nng_msg_free(msg);
+		// One byte over the negotiated limit is dropped by the sender.
+		// A following valid record must arrive on the same connection.
+		NUTS_PASS(nng_send(from, data, max + 1, 0));
+		NUTS_SEND(from, "still connected");
+		size = sizeof(buf);
+		NUTS_PASS(nng_recv(to, buf, &size, 0));
+		NUTS_TRUE(size == sizeof("still connected"));
+		NUTS_TRUE(memcmp(buf, "still connected",
+		              sizeof("still connected")) == 0);
+	}
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
+}
+
+static void
+test_dtls_negotiated_limits(void)
+{
+	dtls_negotiated_limits(NNG_TLS_1_2);
+#ifdef NNG_SUPP_DTLS_1_3
+	dtls_negotiated_limits(NNG_TLS_1_3);
+#endif
+}
+
+static void
+test_dtls_protocol_mismatch(void)
+{
+	nng_socket      server, wrong, client;
+	nng_listener    l;
+	nng_dialer      d;
+	const nng_url  *url;
+	nng_tls_config *scfg = tls_server_config();
+	nng_tls_config *ccfg = tls_client_config();
+	NUTS_OPEN(server);
+	NUTS_OPEN(client);
+	NUTS_PASS(
+	    nng_socket_set_ms(client, NNG_OPT_SENDTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_PASS(nng_req0_open(&wrong));
+	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_get_url(l, &url));
+	NUTS_PASS(nng_dialer_create_url(&d, wrong, url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_set_ms(d, NNG_OPT_UDP_CONN_EXPIRE, 1000));
+	// Authentication can succeed while the SP protocols are incompatible.
+	NUTS_TRUE(nng_dialer_start(d, 0) != NNG_OK);
+	NUTS_CLOSE(wrong);
+	NUTS_PASS(nng_dialer_create_url(&d, client, url));
+	NUTS_PASS(nng_dialer_set_tls(d, ccfg));
+	NUTS_PASS(nng_dialer_start(d, 0));
+	NUTS_PASS(
+	    nng_socket_set_ms(server, NNG_OPT_RECVTIMEO, DTLS_STRESS_TIMEOUT));
+	NUTS_SEND(client, "compatible peer");
+	NUTS_RECV(server, "compatible peer");
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
 }
 
 void
@@ -1950,10 +2208,14 @@ NUTS_TESTS = {
 	{ "dtls version fallback", test_dtls_version_fallback },
 	{ "dtls version mismatch", test_dtls_version_mismatch },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
+	{ "dtls IPv6", test_dtls_ipv6 },
 	{ "dtls malformed address", test_dtls_malformed_address },
 	{ "dtls no delay option", test_dtls_no_delay_option },
 	{ "dtls max peers option", test_dtls_max_peers_option },
 	{ "dtls connection tunables", test_dtls_conn_tunables },
+	{ "dtls endpoint options", test_dtls_endpoint_options },
+	{ "dtls negotiated limits", test_dtls_negotiated_limits },
+	{ "dtls protocol mismatch", test_dtls_protocol_mismatch },
 	{ "dtls recv max", test_dtls_recv_max },
 	{ "dtls recv large", test_dtls_recv_large },
 	{ "dtls message limit", test_dtls_message_limit },

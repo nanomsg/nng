@@ -23,14 +23,15 @@ coverage:
         flags:
           - linux
       linux_wolf_suite:
-        target: auto
-        threshold: 0.5%
+        # Use a fixed floor until main has a baseline for these new flags.
+        target: 70%
+        threshold: 0%
         if_not_found: failure
         flags:
           - linux-wolf
       linux_openssl_suite:
-        target: auto
-        threshold: 0.5%
+        target: 70%
+        threshold: 0%
         if_not_found: failure
         flags:
           - linux-openssl

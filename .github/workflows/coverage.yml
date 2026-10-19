@@ -96,6 +96,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
           disable_search: true
+          # Reports are already generated; do not run gcov again at upload.
+          plugins: noop
           fail_ci_if_error: true
           flags: ${{ matrix.tls.flag }}
 
@@ -140,6 +142,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/lcov.info
           disable_search: true
+          plugins: noop
           fail_ci_if_error: true
           flags: macos
 
@@ -198,5 +201,6 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
           disable_search: true
+          plugins: noop
           fail_ci_if_error: true
           flags: windows
