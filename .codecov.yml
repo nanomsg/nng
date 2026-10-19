@@ -6,6 +6,8 @@ ignore:
  - "src/testing"
  - "perf"
  - "**/*_test.c"
+ # This standalone peer is also a test executable.
+ - "src/sp/transport/dtls/dtls_interop_peer.c"
 
 coverage:
   range: 50..95
@@ -20,6 +22,18 @@ coverage:
         if_not_found: failure
         flags:
           - linux
+      linux_wolf_suite:
+        target: auto
+        threshold: 0.5%
+        if_not_found: failure
+        flags:
+          - linux-wolf
+      linux_openssl_suite:
+        target: auto
+        threshold: 0.5%
+        if_not_found: failure
+        flags:
+          - linux-openssl
       macos_suite:
         target: auto
         threshold: 0.5%
@@ -40,12 +54,17 @@ coverage:
 
 codecov:
   notify:
-    after_n_builds: 3
+    # Three Linux engines, macOS, and Windows.
+    after_n_builds: 5
 
 # Flag definitions to segment coverage charts by pipeline context
 flags:
   linux:
     carryforward: true     # Retains the last healthy report if a rebuild omits it
+  linux-wolf:
+    carryforward: true
+  linux-openssl:
+    carryforward: true
   macos:
     carryforward: true
   windows:

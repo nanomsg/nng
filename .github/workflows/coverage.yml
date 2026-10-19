@@ -12,34 +12,92 @@ permissions:
 
 jobs:
   linux-coverage:
-    name: linux
-    runs-on: [ubuntu-latest]
+    name: linux (${{ matrix.tls.engine }})
+    runs-on: [ubuntu-24.04]
+    strategy:
+      fail-fast: false
+      matrix:
+        tls:
+          - engine: mbed
+            source: mbedtls/mbedtls.c
+            flag: linux
+          - engine: wolf
+            source: wolfssl/wolfssl.c
+            flag: linux-wolf
+          - engine: openssl
+            source: openssl/openssl.c
+            flag: linux-openssl
     steps:
       - name: Check out code
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Install mbedTLS
-        run: sudo apt-get install libmbedtls-dev
+      - name: Install coverage tools
+        run: sudo apt-get update && sudo apt-get install -y ninja-build gcovr
 
-      - name: Install ninja
-        run: sudo apt-get install ninja-build
+      - name: Install mbedTLS
+        if: matrix.tls.engine == 'mbed'
+        run: sudo apt-get install -y libmbedtls-dev
+
+      - name: Build wolfSSL with DTLS 1.3
+        if: matrix.tls.engine == 'wolf'
+        run: |
+          curl -fsSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.9.1-stable.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/wolfssl-5.9.1-stable" -B "$RUNNER_TEMP/wolfssl-build" \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/wolfssl-install" \
+            -DCMAKE_C_FLAGS="-Wno-error=stringop-overflow -DHAVE_SERVER_RENEGOTIATION_INFO -DWOLFSSL_MAX_SIGALGO=128" \
+            -DWOLFSSL_DTLS=yes -DWOLFSSL_DTLS13=yes -DWOLFSSL_OPENSSLALL=yes \
+            -DWOLFSSL_PSK=yes -DWOLFSSL_CRL=yes -DWOLFSSL_EXAMPLES=no -DWOLFSSL_CRYPT_TESTS=no
+          cmake --build "$RUNNER_TEMP/wolfssl-build" --parallel 2
+          cmake --install "$RUNNER_TEMP/wolfssl-build"
+          echo "CMAKE_PREFIX_PATH=$RUNNER_TEMP/wolfssl-install" >> "$GITHUB_ENV"
+
+      - name: Build OpenSSL with DTLS 1.3
+        if: matrix.tls.engine == 'openssl'
+        run: |
+          curl -fsSL https://github.com/openssl/openssl/releases/download/openssl-4.1.0-beta2/openssl-4.1.0-beta2.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/openssl-4.1.0-beta2"
+          ./config --prefix="$RUNNER_TEMP/openssl-install" no-tests
+          make -j2
+          make install_sw
+          echo "OPENSSL_ROOT_DIR=$RUNNER_TEMP/openssl-install" >> "$GITHUB_ENV"
 
       - name: Configure
-        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
+        run: >-
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
+          -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON -DNNG_TRANSPORT_DTLS=ON
+          -DNNG_TLS_ENGINE=${{ matrix.tls.engine }}
 
       - name: Build
-        run: cd build && ninja
+        run: cmake --build build
+
+      - name: Verify DTLS 1.3 is enabled
+        if: matrix.tls.engine != 'mbed'
+        run: grep -E '^NNG_(WOLFSSL|OPENSSL)_HAVE_DTLS13:INTERNAL=1$' build/CMakeCache.txt
 
       - name: Test
-        run: cd build && ctest --output-on-failure
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Collect coverage
+        run: >-
+          gcovr --root . --object-directory build
+          --filter 'src/' --filter 'include/'
+          --lcov --output lcov.info
+
+      - name: Verify DTLS coverage
+        run: >-
+          python3 cmake/NNGCheckCoverage.py lcov.info
+          src/sp/transport/dtls/dtls.c src/supplemental/tls/${{ matrix.tls.source }}
 
       - name: Upload report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: linux
+          files: ./lcov.info
+          disable_search: true
+          fail_ci_if_error: true
+          flags: ${{ matrix.tls.flag }}
 
   darwin-coverage:
     name: darwin
@@ -60,7 +118,7 @@ jobs:
         run: brew install lcov
 
       - name: Configure
-        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON ..
+        run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON -DNNG_TRANSPORT_DTLS=ON ..
 
       - name: Build
         run: cd build && ninja
@@ -71,10 +129,18 @@ jobs:
       - name: Preprocess
         run: cd build && lcov -c -d . -o lcov.info
 
+      - name: Verify DTLS coverage
+        run: >-
+          python3 cmake/NNGCheckCoverage.py build/lcov.info
+          src/sp/transport/dtls/dtls.c src/supplemental/tls/mbedtls/mbedtls.c
+
       - name: Upload report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./build/lcov.info
+          disable_search: true
+          fail_ci_if_error: true
           flags: macos
 
   windows-coverage:
@@ -104,7 +170,7 @@ jobs:
       - name: Configure CMake
         run: >-
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
-          -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=wolf
+          -DNNG_ENABLE_COVERAGE=ON -DNNG_ENABLE_TLS=ON -DNNG_TRANSPORT_DTLS=ON -DNNG_TLS_ENGINE=wolf
           -DWOLFSSL_ROOT_DIR=/ucrt64
 
       - name: Build
@@ -121,10 +187,16 @@ jobs:
           --filter 'src/' --filter 'include/'
           --lcov --output lcov.info
 
+      - name: Verify DTLS coverage
+        run: >-
+          python3 cmake/NNGCheckCoverage.py lcov.info
+          src/sp/transport/dtls/dtls.c src/supplemental/tls/wolfssl/wolfssl.c
+
       - name: Upload report
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
           disable_search: true
+          fail_ci_if_error: true
           flags: windows
