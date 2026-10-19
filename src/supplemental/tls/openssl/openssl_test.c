@@ -158,8 +158,41 @@ test_openssl_tls13_error_queue(void)
 	test_error_queue(NNG_TLS_1_3);
 }
 
+static void
+test_openssl_cert_der(void)
+{
+	nng_tls_cert *cert, *copy;
+	size_t        size = 0;
+	size_t        available;
+	uint8_t       sentinel = 0x5a;
+	uint8_t      *der;
+	char         *name, *copied_name;
+
+	NUTS_PASS(nng_tls_cert_parse_pem(
+	    &cert, nuts_server_crt, strlen(nuts_server_crt)));
+	nng_tls_cert_der(cert, NULL, &size);
+	NUTS_ASSERT(size > 1);
+	available = 1;
+	nng_tls_cert_der(cert, &sentinel, &available);
+	NUTS_TRUE(available == size);
+	NUTS_TRUE(sentinel == 0x5a);
+	der = nng_alloc(size);
+	NUTS_ASSERT(der != NULL);
+	available = size;
+	nng_tls_cert_der(cert, der, &available);
+	NUTS_TRUE(available == size);
+	NUTS_PASS(nng_tls_cert_parse_der(&copy, der, size));
+	NUTS_PASS(nng_tls_cert_subject(cert, &name));
+	NUTS_PASS(nng_tls_cert_subject(copy, &copied_name));
+	NUTS_MATCH(name, copied_name);
+	nng_free(der, size);
+	nng_tls_cert_free(copy);
+	nng_tls_cert_free(cert);
+}
+
 NUTS_TESTS = {
 	{ "openssl TLS 1.2 error queue", test_openssl_tls12_error_queue },
 	{ "openssl TLS 1.3 error queue", test_openssl_tls13_error_queue },
+	{ "openssl certificate DER roundtrip", test_openssl_cert_der },
 	{ NULL, NULL },
 };

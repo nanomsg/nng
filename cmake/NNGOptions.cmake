@@ -141,7 +141,7 @@ option (NNG_TRANSPORT_UDP "Enable UDP transport" ON)
 mark_as_advanced(NNG_TRANSPORT_UDP)
 
 CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_DTLS
-    "Enable DTLS transport (EXPERIMENTAL)" ON
+    "Enable DTLS transport" ON
     "NNG_ENABLE_TLS" OFF)
 mark_as_advanced(NNG_TRANSPORT_DTLS)
 

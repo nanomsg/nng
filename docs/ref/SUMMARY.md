@@ -74,7 +74,7 @@
   - [Inter-Process Transport](./tran/ipc.md)
   - [TCP Transport](./tran/tcp.md)
   - [TLS Transport](./tran/tls.md)
-  - [DTLS Transport (Experimental)](./tran/dtls.md)
+  - [DTLS Transport](./tran/dtls.md)
   - [WebSocket Transport](./tran/websocket.md)
   - [BSD Socket Transport](./tran/socket.md)
   - [UDP Transport](./tran/udp.md)

@@ -58,6 +58,8 @@ struct nng_tls_engine_cert {
 	X509 *crt;
 	char *subject;
 	char *issuer;
+	char *cn;
+	char *alt;
 	char  serial[64]; // maximum binary serial is 20 bytes
 	int   next_alt;
 };
@@ -298,6 +300,8 @@ ossl_timer_cb(void *arg)
 	nni_mtx_unlock(&conn->lock);
 	if (rv < 0) {
 		nni_tls_close(conn);
+	} else {
+		nni_tls_run(conn);
 	}
 }
 
@@ -382,8 +386,11 @@ ossl_conn_recv(nng_tls_engine_conn *ec, uint8_t *buf, size_t *szp)
 	// SSL_get_error inspects this thread's queue, not just this SSL.
 	// Worker threads can retain errors from a different connection.
 	ERR_clear_error();
-	if ((rv = SSL_read_ex(ec->ssl, buf, n, szp)) <= 0) {
-		rv = SSL_get_error(ec->ssl, rv);
+	rv      = SSL_read_ex(ec->ssl, buf, n, szp);
+	int err = rv <= 0 ? SSL_get_error(ec->ssl, rv) : SSL_ERROR_NONE;
+	ossl_timer_schedule(ec);
+	if (rv <= 0) {
+		rv = err;
 		switch (rv) {
 
 		case SSL_ERROR_WANT_READ:
@@ -415,8 +422,11 @@ ossl_conn_send(nng_tls_engine_conn *ec, const uint8_t *buf, size_t *szp)
 	int rv;
 
 	ERR_clear_error();
-	if ((rv = SSL_write_ex(ec->ssl, buf, (*szp), szp)) <= 0) {
-		rv = SSL_get_error(ec->ssl, rv);
+	rv      = SSL_write_ex(ec->ssl, buf, (*szp), szp);
+	int err = rv <= 0 ? SSL_get_error(ec->ssl, rv) : SSL_ERROR_NONE;
+	ossl_timer_schedule(ec);
+	if (rv <= 0) {
+		rv = err;
 		switch (rv) {
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
@@ -517,9 +527,9 @@ ossl_conn_peer_cert(nng_tls_engine_conn *ec, nng_tls_engine_cert **certp)
 static char *
 ossl_conn_peer_cn(nng_tls_engine_conn *ec)
 {
-	X509      *cert;
-	X509_NAME *xn;
-	char      *cn;
+	X509            *cert;
+	const X509_NAME *xn;
+	char            *cn;
 	if ((cert = SSL_get_peer_certificate(ec->ssl)) == NULL) {
 		return (NULL);
 	}
@@ -529,7 +539,7 @@ ossl_conn_peer_cn(nng_tls_engine_conn *ec)
 	}
 	int pos = -1;
 	for (;;) {
-		X509_NAME_ENTRY *entry;
+		const X509_NAME_ENTRY *entry;
 		pos = X509_NAME_get_index_by_NID(xn, NID_commonName, pos);
 		if (pos == -1) {
 			return (NULL);
@@ -538,7 +548,7 @@ ossl_conn_peer_cn(nng_tls_engine_conn *ec)
 		if (entry == NULL) {
 			continue;
 		}
-		ASN1_STRING *as;
+		const ASN1_STRING *as;
 		if ((as = X509_NAME_ENTRY_get_data(entry)) == NULL) {
 			continue;
 		}
@@ -846,13 +856,20 @@ ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 	int               min_ver = cfg->min_ver;
 	int               max_ver = cfg->max_ver;
 	if (datagram) {
+#if defined(DTLS1_3_VERSION) && !defined(OPENSSL_NO_DTLS1_3)
+		min_ver = min_ver == TLS1_3_VERSION ? DTLS1_3_VERSION
+		                                    : DTLS1_2_VERSION;
+		max_ver = max_ver == TLS1_3_VERSION ? DTLS1_3_VERSION
+		                                    : DTLS1_2_VERSION;
+#else
 		if (min_ver > TLS1_2_VERSION) {
 			return (NNG_ENOTSUP);
 		}
-		method  = cfg->mode == NNG_TLS_MODE_SERVER
+		min_ver = max_ver = DTLS1_2_VERSION;
+#endif
+		method = cfg->mode == NNG_TLS_MODE_SERVER
 		    ? DTLS_server_method()
 		    : DTLS_client_method();
-		min_ver = max_ver = DTLS1_2_VERSION;
 	} else {
 		method = cfg->mode == NNG_TLS_MODE_SERVER
 		    ? TLS_server_method()
@@ -904,6 +921,8 @@ ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 static void
 ossl_cert_free(nng_tls_engine_cert *cert)
 {
+	nni_strfree(cert->cn);
+	nni_strfree(cert->alt);
 	if (cert->subject != NULL) {
 		OPENSSL_free(cert->subject);
 	}
@@ -919,11 +938,15 @@ ossl_cert_free(nng_tls_engine_cert *cert)
 static nng_err
 ossl_cert_get_der(nng_tls_engine_cert *cert, uint8_t *buf, size_t *sz)
 {
-	uint8_t *der;
+	uint8_t *der = NULL;
 	int      derSz;
 	derSz = i2d_X509(cert->crt, &der);
+	if (derSz < 0) {
+		return (NNG_ECRYPTO);
+	}
 	if (*sz < (size_t) derSz) {
 		*sz = (size_t) derSz;
+		OPENSSL_free(der);
 		return (NNG_ENOSPC);
 	}
 	*sz = (size_t) derSz;
@@ -973,7 +996,7 @@ ossl_cert_parse_pem(nng_tls_engine_cert **crtp, const char *pem, size_t size)
 static nng_err
 ossl_cert_subject(nng_tls_engine_cert *cert, char **subject)
 {
-	X509_NAME *xn;
+	const X509_NAME *xn;
 
 	if (cert->subject != NULL) {
 		*subject = cert->subject;
@@ -992,7 +1015,7 @@ ossl_cert_subject(nng_tls_engine_cert *cert, char **subject)
 static nng_err
 ossl_cert_issuer(nng_tls_engine_cert *cert, char **issuer)
 {
-	X509_NAME *xn;
+	const X509_NAME *xn;
 
 	if (cert->issuer != NULL) {
 		*issuer = cert->issuer;
@@ -1016,9 +1039,9 @@ ossl_cert_serial(nng_tls_engine_cert *cert, char **serial)
 		return (NNG_OK);
 	}
 
-	const ASN1_INTEGER *as  = X509_get0_serialNumber(cert->crt);
-	BIGNUM             *bn  = ASN1_INTEGER_to_BN(as, NULL);
-	char               *hex = BN_bn2hex(bn);
+	const ASN1_INTEGER *as;
+	BIGNUM             *bn;
+	char               *hex;
 
 	if ((as = X509_get0_serialNumber(cert->crt)) == NULL) {
 		return (NNG_ENOENT);
@@ -1041,10 +1064,14 @@ ossl_cert_serial(nng_tls_engine_cert *cert, char **serial)
 static nng_err
 ossl_cert_subject_cn(nng_tls_engine_cert *cert, char **cn)
 {
-	X509_NAME *xn  = X509_get_subject_name(cert->crt);
-	int        pos = -1;
+	if (cert->cn != NULL) {
+		*cn = cert->cn;
+		return (NNG_OK);
+	}
+	const X509_NAME *xn  = X509_get_subject_name(cert->crt);
+	int              pos = -1;
 	for (;;) {
-		X509_NAME_ENTRY *entry;
+		const X509_NAME_ENTRY *entry;
 		pos = X509_NAME_get_index_by_NID(xn, NID_commonName, pos);
 		if (pos == -1) {
 			return (NNG_ENOENT);
@@ -1053,7 +1080,7 @@ ossl_cert_subject_cn(nng_tls_engine_cert *cert, char **cn)
 		if (entry == NULL) {
 			continue;
 		}
-		ASN1_STRING *as;
+		const ASN1_STRING *as;
 		if ((as = X509_NAME_ENTRY_get_data(entry)) == NULL) {
 			continue;
 		}
@@ -1065,8 +1092,9 @@ ossl_cert_subject_cn(nng_tls_engine_cert *cert, char **cn)
 		// This is probably not particularly needed for most platforms
 		// where nng_free / nng_strfree are thin wrappers around free,
 		// but let's be pedantic about it.
-		*cn = nng_strdup((char *) us);
-		free(us);
+		cert->cn = nng_strdup((char *) us);
+		*cn      = cert->cn;
+		OPENSSL_free(us);
 		return (*cn == NULL ? NNG_ENOMEM : NNG_OK);
 	}
 	return (NNG_ENOENT);
@@ -1086,13 +1114,13 @@ ossl_cert_next_alt(nng_tls_engine_cert *cert, char **alt)
 	}
 	num_names = sk_GENERAL_NAME_num(names);
 	if (cert->next_alt >= num_names) {
-		sk_GENERAL_NAME_free(names);
+		GENERAL_NAMES_free(names);
 		return (NNG_ENOENT);
 	}
 
 	san = sk_GENERAL_NAME_value(names, cert->next_alt);
 	if (san == NULL) {
-		sk_GENERAL_NAME_free(names);
+		GENERAL_NAMES_free(names);
 		return (NNG_ENOENT);
 	}
 
@@ -1106,15 +1134,23 @@ ossl_cert_next_alt(nng_tls_engine_cert *cert, char **alt)
 
 	switch (san->type) {
 	case GEN_DNS:
-		if (san->d.dNSName != NULL && san->d.dNSName->data != NULL) {
-			*alt = nng_strdup((char *) san->d.dNSName->data);
+		if (san->d.dNSName != NULL &&
+		    ASN1_STRING_get0_data(san->d.dNSName) != NULL) {
+			*alt = nng_strdup(
+			    (char *) ASN1_STRING_get0_data(san->d.dNSName));
 		}
 		break;
 	case GEN_IPADD:
-		if (san->d.iPAddress->length == 16) {
+		if (ASN1_STRING_length(san->d.iPAddress) != 4 &&
+		    ASN1_STRING_length(san->d.iPAddress) != 16) {
+			rv = NNG_EINVAL;
+			break;
+		}
+		if (ASN1_STRING_length(san->d.iPAddress) == 16) {
 			af = NNG_AF_INET6;
 		}
-		nni_inet_ntop(af, san->d.iPAddress->data, ip_str);
+		nni_inet_ntop(
+		    af, ASN1_STRING_get0_data(san->d.iPAddress), ip_str);
 		*alt = nng_strdup(ip_str);
 		break;
 	// NB: We only return DNS or IP names for now, not emails or other
@@ -1123,8 +1159,10 @@ ossl_cert_next_alt(nng_tls_engine_cert *cert, char **alt)
 		rv = NNG_ENOENT;
 		break;
 	}
-	sk_GENERAL_NAME_free(names);
+	GENERAL_NAMES_free(names);
 
+	nni_strfree(cert->alt);
+	cert->alt = *alt;
 	if ((*alt == NULL) && (rv == NNG_OK)) {
 		rv = NNG_ENOMEM;
 	}

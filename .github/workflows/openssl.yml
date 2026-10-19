@@ -9,6 +9,9 @@ permissions:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        openssl: ["3.5.4", "4.1.0-beta2"]
     name: build
     runs-on: [ubuntu-24.04]
     steps:
@@ -22,18 +25,18 @@ jobs:
 
       - name: Download OpenSSL source
         run: |
-          # Replace with the desired OpenSSL version
-          OPENSSL_VERSION="openssl-3.5.4"
-          wget https://www.openssl.org/source/${OPENSSL_VERSION}.tar.gz
+          OPENSSL_VERSION="openssl-${{ matrix.openssl }}"
+          wget https://github.com/openssl/openssl/releases/download/${OPENSSL_VERSION}/${OPENSSL_VERSION}.tar.gz
           tar -xzf ${OPENSSL_VERSION}.tar.gz
           mv ${OPENSSL_VERSION} openssl_src
 
       - name: Build OpenSSL
         working-directory: openssl_src
         run: |
-          ./config --prefix=/usr
-          make
-          sudo make install_sw
+          ./config --prefix="$RUNNER_TEMP/openssl-install"
+          make -j2
+          make install_sw
+          echo "OPENSSL_ROOT_DIR=$RUNNER_TEMP/openssl-install" >> "$GITHUB_ENV"
 
       - name: Configure
         run: mkdir build && cd build && cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -D NNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=openssl ..
@@ -43,3 +46,26 @@ jobs:
 
       - name: Test
         run: cd build && ctest --output-on-failure
+
+      - name: Build wolfSSL for DTLS interoperability
+        if: matrix.openssl == '4.1.0-beta2'
+        run: |
+          curl -fsSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.9.1-stable.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          cmake -S "$RUNNER_TEMP/wolfssl-5.9.1-stable" -B "$RUNNER_TEMP/wolfssl-build" \
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/wolfssl-install" \
+            -DCMAKE_C_FLAGS="-Wno-error=stringop-overflow -DHAVE_SERVER_RENEGOTIATION_INFO -DWOLFSSL_MAX_SIGALGO=128" \
+            -DWOLFSSL_DTLS=yes -DWOLFSSL_DTLS13=yes -DWOLFSSL_OPENSSLALL=yes \
+            -DWOLFSSL_PSK=yes -DWOLFSSL_CRL=yes -DWOLFSSL_EXAMPLES=no -DWOLFSSL_CRYPT_TESTS=no
+          cmake --build "$RUNNER_TEMP/wolfssl-build" --parallel 2
+          cmake --install "$RUNNER_TEMP/wolfssl-build"
+          cmake -S . -B build.wolf -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+            -DNNG_ENABLE_TLS=ON -DNNG_TLS_ENGINE=wolf \
+            -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/wolfssl-install"
+          cmake --build build.wolf --target dtls_interop_peer --parallel 2
+
+      - name: Test DTLS between OpenSSL and wolfSSL
+        if: matrix.openssl == '4.1.0-beta2'
+        run: |
+          python3 src/sp/transport/dtls/dtls_interop_test.py \
+            build/src/sp/transport/dtls/dtls_interop_peer \
+            build.wolf/src/sp/transport/dtls/dtls_interop_peer

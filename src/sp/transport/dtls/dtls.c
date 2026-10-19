@@ -21,7 +21,7 @@
 
 #include <string.h>
 
-// Experimental DTLS transport.  Unicast only.
+// DTLS transport.  Unicast only.
 //
 typedef struct dtls_pipe dtls_pipe;
 typedef struct dtls_ep   dtls_ep;

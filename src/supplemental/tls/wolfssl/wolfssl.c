@@ -124,6 +124,7 @@ wolf_material_free(wolf_material *m)
 struct nng_tls_engine_config {
 	WOLFSSL_CTX    *ctx;
 	nng_tls_version min_ver;
+	nng_tls_version max_ver;
 	nng_tls_mode    mode;
 	char           *pass;
 	char           *server_name;
@@ -191,19 +192,69 @@ wolf_conn_fini(nng_tls_engine_conn *ec)
 	wolfSSL_free(ec->ssl);
 }
 
+// Called with the common connection lock held. DTLS 1.3 needs short ACK
+// timeouts as well as retransmissions, including after the handshake.
+#ifdef WOLFSSL_DTLS
+static bool
+wolf_timer_needed(nng_tls_engine_conn *ec)
+{
+	if (!ec->datagram || ec->closed) {
+		return (false);
+	}
+#ifdef WOLFSSL_DTLS13
+	if (wolfSSL_dtls13_has_pending_msg(ec->ssl) ||
+	    wolfSSL_dtls13_use_quick_timeout(ec->ssl)) {
+		return (true);
+	}
+#endif
+	return (!((nni_tls_conn *) ec->tls)->hs_done);
+}
+#endif
+
+static void
+wolf_timer_schedule(nng_tls_engine_conn *ec)
+{
+#ifdef WOLFSSL_DTLS
+	if (wolf_timer_needed(ec)) {
+		nng_duration ms =
+		    wolfSSL_dtls_get_current_timeout(ec->ssl) * 1000;
+#ifdef WOLFSSL_DTLS13
+		if (wolfSSL_dtls13_use_quick_timeout(ec->ssl)) {
+			ms /= 4;
+		}
+#endif
+		nng_time deadline = nni_clock() + ms;
+		if (!ec->timer_active) {
+			ec->deadline     = deadline;
+			ec->timer_active = true;
+			nni_sleep_aio(ms, &ec->timer);
+		} else if (deadline < ec->deadline) {
+			// Shorten for an ACK, but never postpone
+			// retransmission just because another WANT_READ
+			// callback arrived.
+			ec->deadline = deadline;
+			nni_aio_abort(&ec->timer, NNG_EINTR);
+		}
+	}
+#else
+	NNI_ARG_UNUSED(ec);
+#endif
+}
+
 static void
 wolf_timer_cb(void *arg)
 {
 	nng_tls_engine_conn *ec   = arg;
 	nni_tls_conn        *conn = ec->tls;
 	int                  rv   = WOLFSSL_SUCCESS;
-	if (nni_aio_result(&ec->timer) != NNG_OK) {
+	if (nni_aio_result(&ec->timer) != NNG_OK &&
+	    nni_aio_result(&ec->timer) != NNG_EINTR) {
 		return;
 	}
 	nni_mtx_lock(&conn->lock);
 	ec->timer_active = false;
 #ifdef WOLFSSL_DTLS
-	if (!ec->closed && !conn->hs_done) {
+	if (wolf_timer_needed(ec)) {
 		nng_time now = nni_clock();
 		if (now < ec->deadline) {
 			ec->timer_active = true;
@@ -211,20 +262,22 @@ wolf_timer_cb(void *arg)
 			    (nng_duration) (ec->deadline - now), &ec->timer);
 		} else {
 			rv = wolfSSL_dtls_got_timeout(ec->ssl);
-			if (rv == WOLFSSL_SUCCESS) {
-				nng_duration ms =
-				    wolfSSL_dtls_get_current_timeout(ec->ssl) *
-				    1000;
-				ec->deadline     = now + ms;
-				ec->timer_active = true;
-				nni_sleep_aio(ms, &ec->timer);
+			if (rv != WOLFSSL_SUCCESS) {
+				int err = wolfSSL_get_error(ec->ssl, rv);
+				if (err == WOLFSSL_ERROR_WANT_WRITE ||
+				    err == WOLFSSL_ERROR_WANT_READ) {
+					rv = WOLFSSL_SUCCESS;
+				}
 			}
+			wolf_timer_schedule(ec);
 		}
 	}
 #endif
 	nni_mtx_unlock(&conn->lock);
 	if (rv != WOLFSSL_SUCCESS) {
 		nni_tls_close(conn);
+	} else {
+		nni_tls_run(conn);
 	}
 }
 
@@ -259,6 +312,12 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 #ifdef WOLFSSL_DTLS
 	if (ec->datagram) {
 		wolfSSL_dtls_set_using_nonblock(ec->ssl, 1);
+#ifdef WOLFSSL_DTLS_MTU
+		if (wolfSSL_dtls_set_mtu(ec->ssl, NNG_TLS_MAX_SEND_SIZE) !=
+		    WOLFSSL_SUCCESS) {
+			return (NNG_ECRYPTO);
+		}
+#endif
 	}
 #endif
 	return (0);
@@ -278,8 +337,11 @@ static int
 wolf_conn_recv(nng_tls_engine_conn *ec, uint8_t *buf, size_t *szp)
 {
 	int rv;
-	if ((rv = wolfSSL_read(ec->ssl, buf, (int) *szp)) < 0) {
-		rv = wolfSSL_get_error(ec->ssl, rv);
+	rv      = wolfSSL_read(ec->ssl, buf, (int) *szp);
+	int err = rv < 0 ? wolfSSL_get_error(ec->ssl, rv) : 0;
+	wolf_timer_schedule(ec);
+	if (rv < 0) {
+		rv = err;
 		switch (rv) {
 
 		case SSL_ERROR_WANT_READ:
@@ -302,8 +364,11 @@ wolf_conn_send(nng_tls_engine_conn *ec, const uint8_t *buf, size_t *szp)
 {
 	int rv;
 
-	if ((rv = wolfSSL_write(ec->ssl, buf, (int) (*szp))) <= 0) {
-		rv = wolfSSL_get_error(ec->ssl, rv);
+	rv      = wolfSSL_write(ec->ssl, buf, (int) (*szp));
+	int err = rv <= 0 ? wolfSSL_get_error(ec->ssl, rv) : 0;
+	wolf_timer_schedule(ec);
+	if (rv <= 0) {
+		rv = err;
 		switch (rv) {
 		case SSL_ERROR_WANT_READ:
 		case SSL_ERROR_WANT_WRITE:
@@ -325,29 +390,16 @@ wolf_conn_handshake(nng_tls_engine_conn *ec)
 {
 	int rv;
 
-	rv = wolfSSL_negotiate(ec->ssl);
+	rv      = wolfSSL_negotiate(ec->ssl);
+	int err = rv != WOLFSSL_SUCCESS ? wolfSSL_get_error(ec->ssl, rv) : 0;
+	wolf_timer_schedule(ec);
 	if (rv != WOLFSSL_SUCCESS) {
-		rv = wolfSSL_get_error(ec->ssl, rv);
+		rv = err;
 		switch (rv) {
 		case WOLFSSL_SUCCESS:
 			return (0);
 		case WOLFSSL_ERROR_WANT_WRITE:
 		case WOLFSSL_ERROR_WANT_READ:
-#ifdef WOLFSSL_DTLS
-			if (ec->datagram && !ec->closed) {
-				nng_duration ms =
-				    wolfSSL_dtls_get_current_timeout(ec->ssl) *
-				    1000;
-				if (!ec->timer_active) {
-					// Repeated WANT_READ callbacks must
-					// not keep postponing retransmission
-					// indefinitely.
-					ec->deadline     = nni_clock() + ms;
-					ec->timer_active = true;
-					nni_sleep_aio(ms, &ec->timer);
-				}
-			}
-#endif
 			return (NNG_EAGAIN);
 		default:
 			// This can fail if we do not have a certificate
@@ -459,6 +511,7 @@ wolf_config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 {
 	cfg->mode      = mode;
 	cfg->min_ver   = NNG_TLS_1_2;
+	cfg->max_ver   = NNG_TLS_1_3;
 	cfg->auth_mode = mode == NNG_TLS_MODE_SERVER
 	    ? NNG_TLS_AUTH_MODE_NONE
 	    : NNG_TLS_AUTH_MODE_REQUIRED;
@@ -740,6 +793,7 @@ wolf_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	}
 	// wolfSSL does not let us restrict the maximum version.
 	cfg->min_ver = min_ver;
+	cfg->max_ver = max_ver;
 	return (NNG_OK);
 }
 
@@ -753,13 +807,26 @@ wolf_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 	int             auth = SSL_VERIFY_NONE;
 
 	if (datagram) {
-#if defined(WOLFSSL_DTLS) && !defined(WOLFSSL_NO_TLS12)
-		if (cfg->min_ver > NNG_TLS_1_2) {
+#ifdef WOLFSSL_DTLS
+#ifdef WOLFSSL_DTLS13
+		if (cfg->max_ver == NNG_TLS_1_3) {
+			method = cfg->mode == NNG_TLS_MODE_SERVER
+			    ? wolfDTLS_server_method()
+			    : wolfDTLS_client_method();
+		} else
+#endif
+		{
+#ifndef WOLFSSL_NO_TLS12
+			if (cfg->min_ver > NNG_TLS_1_2) {
+				return (NNG_ENOTSUP);
+			}
+			method = cfg->mode == NNG_TLS_MODE_SERVER
+			    ? wolfDTLSv1_2_server_method()
+			    : wolfDTLSv1_2_client_method();
+#else
 			return (NNG_ENOTSUP);
+#endif
 		}
-		method = cfg->mode == NNG_TLS_MODE_SERVER
-		    ? wolfDTLSv1_2_server_method()
-		    : wolfDTLSv1_2_client_method();
 #else
 		return (NNG_ENOTSUP);
 #endif
@@ -771,6 +838,17 @@ wolf_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 	if ((ctx = wolfSSL_CTX_new(method)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+#ifdef WOLFSSL_DTLS
+	if (datagram &&
+	    wolfSSL_CTX_SetMinVersion(ctx,
+#ifdef WOLFSSL_DTLS13
+	        cfg->min_ver == NNG_TLS_1_3 ? WOLFSSL_DTLSV1_3 :
+#endif
+	                                    WOLFSSL_DTLSV1_2) != SSL_SUCCESS) {
+		rv = NNG_ENOTSUP;
+		goto fail;
+	}
+#endif
 	if (!datagram &&
 	    wolfSSL_CTX_SetMinVersion(ctx,
 	        cfg->min_ver == NNG_TLS_1_2

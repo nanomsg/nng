@@ -157,6 +157,10 @@ when creating sessions with _cfg_.
 By default, NNG attempts to use TLS v1.2 and TLS v1.3, subject to TLS engine support.
 If the engine cannot support any version in the requested range, this function returns [`NNG_ENOTSUP`].
 
+For the [DTLS transport], these constants select DTLS 1.2 and DTLS 1.3.
+Availability depends on the TLS engine and its build configuration; an unsupported
+DTLS range is rejected when the endpoint is started.
+
 NNG does not support SSL v2.0, SSL v3.0, TLS v1.0, or TLS v1.1.
 TLS v1.3 zero round trip time (0-RTT) and session resumption are not supported.
 
