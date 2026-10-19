@@ -37,10 +37,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d6616512.js";
+            window.path_to_searchindex_js = "../searchindex-81ab15a5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-c99ee17e.js"></script>
+        <script src="../toc-891a9f83.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -311,6 +311,9 @@ The <code>nng_tls_config_version</code> function restricts the TLS protocol vers
 when creating sessions with <em>cfg</em>.
 By default, NNG attempts to use TLS v1.2 and TLS v1.3, subject to TLS engine support.
 If the engine cannot support any version in the requested range, this function returns <a href="../api/errors.html#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
+<p>For the <a href="../tran/dtls.html">DTLS transport</a>, these constants select DTLS 1.2 and DTLS 1.3.
+Availability depends on the TLS engine and its build configuration; an unsupported
+DTLS range is rejected when the endpoint is started.</p>
 <p>NNG does not support SSL v2.0, SSL v3.0, TLS v1.0, or TLS v1.1.
 TLS v1.3 zero round trip time (0-RTT) and session resumption are not supported.</p>
 <h2 id="using-configuration-objects"><a class="header" href="#using-configuration-objects">Using Configuration Objects</a></h2>

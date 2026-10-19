@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d6616512.js";
+            window.path_to_searchindex_js = "searchindex-81ab15a5.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-c99ee17e.js"></script>
+        <script src="toc-891a9f83.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -416,7 +416,7 @@ that avoid IP fragmentation are recommended.</p>
 limit the number of peers they admit. The transport can also loan larger
 received buffers to the messaging layer to avoid an extra allocation and copy.</p>
 <h3 id="dtls-messaging"><a class="header" href="#dtls-messaging">DTLS Messaging</a></h3>
-<p>The new <a href="#dtls-transport-experimental">DTLS transport</a> adds encryption and authentication
+<p>The new <a href="#dtls-transport">DTLS transport</a> adds encryption and authentication
 to datagram messaging using <code>dtls://</code>, <code>dtls4://</code>, and <code>dtls6://</code> URLs.
 It uses the same <a href="#configuration-objects"><code>nng_tls_config</code></a> objects as stream TLS, making certificate
 or pre-shared-key configuration familiar to applications already using TLS.
@@ -4068,7 +4068,7 @@ both configuring a different TLS configuration object, as well as mutating the e
 <h1 id="tls"><a class="header" href="#tls">TLS</a></h1>
 <p>NNG provides <a name="a001"></a>TLS (<a name="a002"></a>Transport Layer Security) support for transports and
 stream-based services that need encrypted and authenticated communication.
-TLS is used by the <a href="#tls-transport">TLS transport</a>, <a href="#dtls-transport-experimental">DTLS transport</a>, secure <a href="#websocket-transport">WebSocket transport</a>,
+TLS is used by the <a href="#tls-transport">TLS transport</a>, <a href="#dtls-transport">DTLS transport</a>, secure <a href="#websocket-transport">WebSocket transport</a>,
 HTTP clients and servers, and raw <a href="#streams">streams</a> implementations that support it.</p>
 <p>TLS support depends on a TLS engine being available when NNG is built.
 If TLS support is not enabled, the TLS functions may be present as stubs and will return
@@ -4200,6 +4200,9 @@ The <code>nng_tls_config_version</code> function restricts the TLS protocol vers
 when creating sessions with <em>cfg</em>.
 By default, NNG attempts to use TLS v1.2 and TLS v1.3, subject to TLS engine support.
 If the engine cannot support any version in the requested range, this function returns <a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
+<p>For the <a href="#dtls-transport">DTLS transport</a>, these constants select DTLS 1.2 and DTLS 1.3.
+Availability depends on the TLS engine and its build configuration; an unsupported
+DTLS range is rejected when the endpoint is started.</p>
 <p>NNG does not support SSL v2.0, SSL v3.0, TLS v1.0, or TLS v1.1.
 TLS v1.3 zero round trip time (0-RTT) and session resumption are not supported.</p>
 <h2 id="using-configuration-objects"><a class="header" href="#using-configuration-objects">Using Configuration Objects</a></h2>
@@ -6384,7 +6387,7 @@ pre-releases of <a href="https://github.com/nanomsg/nanomsg">libnanomsg</a>, but
 <li><a href="#ipc-transport">Inter-Process Transport</a></li>
 <li><a href="#tcp-transport">TCP</a></li>
 <li><a href="#tls-transport">TLS</a></li>
-<li><a href="#dtls-transport-experimental">DTLS</a></li>
+<li><a href="#dtls-transport">DTLS</a></li>
 <li><a href="#websocket-transport">WebSocket</a></li>
 <li><a href="#socket-transport">BSD Socket</a></li>
 <li><a href="#udp-transport">UDP</a></li>
@@ -6735,7 +6738,7 @@ For richer peer certificate information, use <a href="#peer-certificates"><code>
 <!-- Transports -->
 <!-- Concept index -->
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="dtls-transport-experimental"><a class="header" href="#dtls-transport-experimental">DTLS Transport (Experimental)</a></h1>
+<h1 id="dtls-transport"><a class="header" href="#dtls-transport">DTLS Transport</a></h1>
 <h2 id="description-4"><a class="header" href="#description-4">DESCRIPTION</a></h2>
 <p>The <a name="a001"></a><em>dtls</em> transport<a name="a002"></a> provides encrypted and authenticated
 communication between peers using <a name="a003"></a>DTLS over <a name="a004"></a>UDP.
@@ -6750,9 +6753,11 @@ DTLS <a href="#dialers-and-listeners">dialers</a> and <a href="#dialers-and-list
 <a href="#using-configuration-objects"><code>nng_dialer_set_tls</code></a> or <a href="#using-configuration-objects"><code>nng_listener_set_tls</code></a> before they are started.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>This transport is <em>experimental</em>.
-It requires TLS support and the <code>NNG_TRANSPORT_DTLS</code> build option.
-When using wolfSSL, version 5.8.0 or newer is required for correct replay protection.
+<p>It requires TLS support and the <code>NNG_TRANSPORT_DTLS</code> build option.
+When using wolfSSL, version 5.8.0 or newer is required for correct replay protection
+with DTLS 1.2. Builds with DTLS 1.3 enabled require wolfSSL 5.9.1 or newer.
+wolfSSL must support configurable MTUs (<code>--enable-dtls-mtu</code>, or
+<code>WOLFSSL_OPENSSLALL=yes</code> with CMake).
 Older wolfSSL versions may still be used for stream TLS with <code>NNG_TRANSPORT_DTLS=OFF</code>.
 It supports unicast UDP endpoints only; multicast and broadcast are not
 supported.</p>
@@ -6804,9 +6809,16 @@ Pre-shared key configurations may also be used when supported by the selected TL
 engine.</p>
 <p>Use separate configuration objects for DTLS and stream TLS.
 A configuration is bound to its transport type on first use; reusing it for the other type fails with <a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>.</p>
-<p>The supported protocol version is DTLS 1.2.
-The configured TLS version range must include TLS 1.2;
-a configuration requiring TLS 1.3 fails with <a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a> when used for DTLS.</p>
+<p>DTLS 1.2 is supported by all three TLS engines.
+DTLS 1.3 is supported with wolfSSL built with DTLS 1.3 enabled, and with
+OpenSSL 4.1 or newer built with DTLS 1.3 enabled.
+Mbed TLS and earlier OpenSSL releases support DTLS 1.2 only.</p>
+<p><a href="#tls-versions"><code>nng_tls_config_version</code></a> uses <code>NNG_TLS_1_2</code> and <code>NNG_TLS_1_3</code> to select the
+corresponding DTLS versions. The default range permits both; the highest
+mutually supported version is negotiated.
+To require DTLS 1.3, set both limits to <code>NNG_TLS_1_3</code> before starting the endpoint.
+If the engine cannot support any DTLS version in the configured range,
+starting the endpoint fails with <a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>.</p>
 <p>The TLS configuration must be set before the dialer or listener is started.
 After a DTLS endpoint has started, attempts to change its TLS configuration or
 its receive maximum will fail with <a href="#NNG_EBUSY"><code>NNG_EBUSY</code></a>.</p>
@@ -6848,7 +6860,10 @@ A value of 0 disables this protection.</p>
 The transport maximum is smaller than the 16 KiB DTLS record size to leave room
 for DTLS and transport headers.
 The receive maximum can be configured with <a href="#NNG_OPT_RECVMAXSZ"><code>NNG_OPT_RECVMAXSZ</code></a>, but it cannot
-exceed the DTLS transport maximum.</p>
+exceed the DTLS transport maximum.
+NNG protocol headers count toward this maximum, so the largest application
+payload depends on the messaging protocol.
+Operating systems may impose a lower limit on UDP datagram size.</p>
 <p>Applications are encouraged to use much smaller messages whenever possible.
 Large UDP datagrams are more likely to be fragmented at the IP layer, and a lost
 fragment causes the entire message to be lost.</p>
