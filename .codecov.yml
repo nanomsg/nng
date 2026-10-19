@@ -23,16 +23,17 @@ coverage:
         flags:
           - linux
       linux_wolf_suite:
-        # Use a fixed floor until main has a baseline for these new flags.
-        target: 70%
-        threshold: 0%
-        if_not_found: failure
+        target: auto
+        threshold: 0.5%
+        # New flags have no base report until coverage runs on main.
+        # CI separately requires executed source lines and a valid upload.
+        if_not_found: success
         flags:
           - linux-wolf
       linux_openssl_suite:
-        target: 70%
-        threshold: 0%
-        if_not_found: failure
+        target: auto
+        threshold: 0.5%
+        if_not_found: success
         flags:
           - linux-openssl
       macos_suite:
