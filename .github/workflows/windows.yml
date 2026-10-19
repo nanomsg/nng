@@ -16,13 +16,13 @@ jobs:
     runs-on: [windows-latest]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: vcpkg build
         id: vcpkg
-        uses: johnwason/vcpkg-action@v6
+        uses: johnwason/vcpkg-action@v8
         with:
           pkgs: mbedtls
           triplet: x64-windows

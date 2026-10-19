@@ -65,13 +65,13 @@ jobs:
       group: documentation-publication-${{ needs.prepare.outputs.deploy == 'true' && 'deploy' || github.run_id }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.source_ref }}
 
       # Shared assets come from the publisher revision.  The manual content
       # itself remains the exact historical release selected above.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: publisher
           ref: ${{ github.sha }}
@@ -84,7 +84,7 @@ jobs:
       - name: Install Asciidoctor
         run: gem install asciidoctor -v 2.0.26 --no-document
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: "1.22.x"
 

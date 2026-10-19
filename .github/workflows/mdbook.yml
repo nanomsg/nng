@@ -91,13 +91,13 @@ jobs:
       group: documentation-publication-${{ needs.prepare.outputs.deploy == 'true' && 'deploy' || github.run_id }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.source_ref }}
 
       # Keep version-switching UI and its manifest current when building a
       # historical release tag.  The manual content still comes from the tag.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: publisher
           ref: ${{ github.sha }}
@@ -107,11 +107,11 @@ jobs:
           cp publisher/docs/theme/nng-site-header.css docs/theme/
           cp publisher/docs/theme/nng-site-header.js docs/theme/
 
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v2
-        with:
-          # mdbook-version: 'latest'
-          mdbook-version: "0.5.2"
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install mdBook
+        run: cargo install mdbook --version 0.5.2 --locked
 
       - run: cargo install mdbook-indexing
       - name: Set the versioned canonical URL
@@ -141,7 +141,7 @@ jobs:
       # The versioned manuals are retained; obsolete unversioned assets are
       # removed so /ref/ is only a redirect to the current stable manual.
       - name: Check out published documentation
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         if: ${{ needs.prepare.outputs.deploy == 'true' }}
         with:
           ref: gh-pages

@@ -29,7 +29,7 @@ jobs:
             flag: linux-openssl
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -91,7 +91,7 @@ jobs:
           src/sp/transport/dtls/dtls.c src/supplemental/tls/${{ matrix.tls.source }}
 
       - name: Upload report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
@@ -106,7 +106,7 @@ jobs:
     runs-on: [macos-latest]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -137,7 +137,7 @@ jobs:
           src/sp/transport/dtls/dtls.c src/supplemental/tls/mbedtls/mbedtls.c
 
       - name: Upload report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./build/lcov.info
@@ -154,7 +154,7 @@ jobs:
         shell: msys2 {0}
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -196,7 +196,7 @@ jobs:
           src/sp/transport/dtls/dtls.c src/supplemental/tls/wolfssl/wolfssl.c
 
       - name: Upload report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./lcov.info
