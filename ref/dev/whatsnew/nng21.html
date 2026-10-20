@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-37f70de9.js";
+            window.path_to_searchindex_js = "../searchindex-cc09d6b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-88728f04.js"></script>
@@ -177,16 +177,46 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="whats-new-in-nng-21"><a class="header" href="#whats-new-in-nng-21">What’s New in NNG 2.1</a></h1>
-<p>NNG 2.1 adds new capabilities and refinements across the library.</p>
+<p>NNG 2.1 adds hybrid post-quantum cryptography for TLS connections and support
+for DTLS 1.3.</p>
+<h2 id="post-quantum-cryptography"><a class="header" href="#post-quantum-cryptography">Post-Quantum Cryptography</a></h2>
+<p>NNG now supports hybrid post-quantum key exchange for TLS 1.3 and DTLS 1.3
+connections, including the TLS and DTLS transports, HTTPS, and secure
+WebSockets. Hybrid groups such as <code>X25519MLKEM768</code> combine classical
+elliptic-curve key exchange with the post-quantum ML-KEM key encapsulation
+mechanism. Support depends on the selected TLS engine and its build
+configuration.</p>
+<p>Applications can require hybrid post-quantum key exchange using the new
+<a href="../api/tls.html#key-exchange-groups"><code>nng_tls_config_groups</code></a> API with a hybrid-only group list and a TLS or DTLS
+1.3 version restriction. OpenSSL 3.5 and newer support these groups for TLS;
+DTLS requires OpenSSL 4.1 or newer with DTLS 1.3 enabled. wolfSSL requires a
+build with ML-KEM and hybrid support enabled, as well as DTLS 1.3 support
+when using DTLS.</p>
+<p>Hybrid key exchange works with existing RSA or ECDSA certificates; certificate
+authentication continues to use those classical algorithms. See
+<a href="../api/tls.html#requiring-hybrid-post-quantum-key-exchange">Requiring Hybrid Post-Quantum Key Exchange</a>
+for configuration examples and engine requirements.</p>
 <h2 id="dtls-13-support"><a class="header" href="#dtls-13-support">DTLS 1.3 Support</a></h2>
 <p>The <a href="../tran/dtls.html">DTLS transport</a> now supports DTLS 1.3 as well as DTLS
 1.2. DTLS 1.3 is available with wolfSSL 5.9.1 or newer built with DTLS 1.3
 enabled, and with OpenSSL 4.1 or newer built with DTLS 1.3 enabled. Mbed TLS
 and earlier OpenSSL releases continue to support DTLS 1.2.</p>
 <p>The default TLS configuration negotiates the highest mutually supported DTLS
-version. Applications can use [<code>nng_tls_config_version</code>] to require DTLS 1.3.
+version. Applications can use <a href="../api/tls.html#tls-versions"><code>nng_tls_config_version</code></a> to require DTLS 1.3.
 See the <a href="../tran/dtls.html">DTLS transport</a> reference for engine requirements and
 message size limits.</p>
+<!-- NOTE: This assumes that any page referencing this is located
+     in a directory two levels down.  Meaning ./api/somefile.md or
+     similar.  mdbook cannot accommodate links that are called from
+     different levels in the hierarchy. -->
+<!-- Symbol cross reference -->
+<!-- HTTP -->
+<!-- HTTP Status -->
+<!-- TLS -->
+<!-- Macros -->
+<!-- Protocols -->
+<!-- Transports -->
+<!-- Concept index -->
 
                     </main>
 
