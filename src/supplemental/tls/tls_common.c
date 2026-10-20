@@ -834,6 +834,78 @@ nng_tls_config_version(
 	return (rv);
 }
 
+const char *
+nni_tls_group_name(nng_tls_group group)
+{
+	switch (group) {
+	case NNG_TLS_GRP_SECP256R1:
+		return ("secp256r1");
+	case NNG_TLS_GRP_SECP384R1:
+		return ("secp384r1");
+	case NNG_TLS_GRP_SECP521R1:
+		return ("secp521r1");
+	case NNG_TLS_GRP_X25519:
+		return ("X25519");
+	case NNG_TLS_GRP_X448:
+		return ("X448");
+	case NNG_TLS_GRP_FFDHE2048:
+		return ("ffdhe2048");
+	case NNG_TLS_GRP_FFDHE3072:
+		return ("ffdhe3072");
+	case NNG_TLS_GRP_FFDHE4096:
+		return ("ffdhe4096");
+	case NNG_TLS_GRP_FFDHE6144:
+		return ("ffdhe6144");
+	case NNG_TLS_GRP_FFDHE8192:
+		return ("ffdhe8192");
+	case NNG_TLS_GRP_SECP256R1MLKEM768:
+		return ("SecP256r1MLKEM768");
+	case NNG_TLS_GRP_X25519MLKEM768:
+		return ("X25519MLKEM768");
+	case NNG_TLS_GRP_SECP384R1MLKEM1024:
+		return ("SecP384r1MLKEM1024");
+	default:
+		return (NULL);
+	}
+}
+
+nng_err
+nng_tls_config_groups(
+    nng_tls_config *cfg, const nng_tls_group *groups, size_t count)
+{
+	nng_err rv = NNG_OK;
+
+	if (cfg == NULL) {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&cfg->lock);
+	if (cfg->busy) {
+		rv = NNG_EBUSY;
+	} else if (groups == NULL || count == 0 ||
+	    count > NNI_TLS_MAX_GROUPS) {
+		rv = NNG_EINVAL;
+	} else {
+		for (size_t i = 0; i < count && rv == NNG_OK; i++) {
+			if (nni_tls_group_name(groups[i]) == NULL) {
+				rv = NNG_ENOTSUP;
+			}
+			for (size_t j = 0; j < i; j++) {
+				if (groups[i] == groups[j]) {
+					rv = NNG_EINVAL;
+				}
+			}
+		}
+		if (rv == NNG_OK) {
+			rv = nni_tls_cfg_ops->groups == NULL
+			    ? NNG_ENOTSUP
+			    : nni_tls_cfg_ops->groups(
+			          (void *) (cfg + 1), groups, count);
+		}
+	}
+	nni_mtx_unlock(&cfg->lock);
+	return (rv);
+}
+
 int
 nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
 {

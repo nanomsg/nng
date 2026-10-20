@@ -74,6 +74,13 @@ No effort will be made to support earlier releases.
 DTLS 1.3 requires OpenSSL 4.1 or newer; earlier supported releases use DTLS 1.2.
 OpenSSL 4.1 is currently in beta.
 
+OpenSSL 3.5 and newer support hybrid post-quantum key exchange groups.
+Applications can restrict the allowed groups with `nng_tls_config_groups`;
+combine a hybrid-only list with a TLS 1.3 version restriction to require
+hybrid key exchange. wolfSSL also supports hybrid groups when built with the
+corresponding ML-KEM and hybrid features. Group availability is checked against
+the selected library build; unsupported groups return `NNG_ENOTSUP`.
+
 ## Configuring NNG with TLS
 
 TLS support is not enabled by default, but can be enabled by configuring

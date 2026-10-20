@@ -117,6 +117,7 @@ struct nng_tls_engine_config {
 	int          auth_mode;
 	int          min_ver;
 	int          max_ver;
+	char         groups[NNI_TLS_MAX_GROUPS * 32];
 	nni_list     psks;
 	uint8_t      cookie_key[32];
 };
@@ -910,6 +911,39 @@ ossl_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	return (NNG_OK);
 }
 
+static nng_err
+ossl_config_groups(
+    nng_tls_engine_config *cfg, const nng_tls_group *groups, size_t count)
+{
+	char     list[sizeof(cfg->groups)] = { 0 };
+	SSL_CTX *ctx;
+	size_t   offset = 0;
+
+	for (size_t i = 0; i < count; i++) {
+		int n = snprintf(list + offset, sizeof(list) - offset, "%s%s",
+		    i == 0 ? "" : ":", nni_tls_group_name(groups[i]));
+		if (n < 0 || (size_t) n >= sizeof(list) - offset) {
+			return (NNG_ENOTSUP);
+		}
+		offset += (size_t) n;
+	}
+	// Validate using a temporary context so a failed replacement cannot
+	// partially modify the existing policy. Preparation will apply it to
+	// the context for the selected transport.
+	if ((ctx = SSL_CTX_new(TLS_method())) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	ERR_clear_error();
+	int ok = SSL_CTX_set1_groups_list(ctx, list);
+	SSL_CTX_free(ctx);
+	ERR_clear_error();
+	if (ok != 1) {
+		return (NNG_ENOTSUP);
+	}
+	memcpy(cfg->groups, list, sizeof(list));
+	return (NNG_OK);
+}
+
 static int
 ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 {
@@ -940,6 +974,16 @@ ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 	}
 	if ((ctx = SSL_CTX_new(method)) == NULL) {
 		return (NNG_ENOMEM);
+	}
+	if (cfg->groups[0] != '\0') {
+		ERR_clear_error();
+		if (SSL_CTX_set1_groups_list(ctx, cfg->groups) != 1) {
+			SSL_CTX_free(ctx);
+			ERR_clear_error();
+			return (NNG_ENOTSUP);
+		}
+		// TLS 1.3 PSK authentication must still use a key share.
+		SSL_CTX_clear_options(ctx, SSL_OP_ALLOW_NO_DHE_KEX);
 	}
 	if (!SSL_CTX_set_min_proto_version(ctx, min_ver) ||
 	    !SSL_CTX_set_max_proto_version(ctx, max_ver) ||
@@ -1288,6 +1332,7 @@ static nng_tls_engine_config_ops ossl_config_ops = {
 	.server   = ossl_config_server,
 	.psk      = ossl_config_psk,
 	.version  = ossl_config_version,
+	.groups   = ossl_config_groups,
 };
 
 static nng_tls_engine_conn_ops ossl_conn_ops = {

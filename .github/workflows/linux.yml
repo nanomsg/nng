@@ -56,6 +56,7 @@ jobs:
             -DCMAKE_C_FLAGS="-Wno-error=stringop-overflow -DHAVE_SERVER_RENEGOTIATION_INFO -DWOLFSSL_MAX_SIGALGO=128" \
             -DWOLFSSL_DTLS=yes -DWOLFSSL_DTLS13=${{ matrix.tls.dtls13 }} \
             -DWOLFSSL_OPENSSLALL=yes -DWOLFSSL_PSK=yes -DWOLFSSL_CRL=yes \
+            -DWOLFSSL_EXPERIMENTAL=yes -DWOLFSSL_MLKEM=yes -DWOLFSSL_CURVE25519=yes \
             -DWOLFSSL_EXAMPLES=no -DWOLFSSL_CRYPT_TESTS=no
           cmake --build "$RUNNER_TEMP/wolfssl-build" --parallel 2
           cmake --install "$RUNNER_TEMP/wolfssl-build"

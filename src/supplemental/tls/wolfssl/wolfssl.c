@@ -129,6 +129,8 @@ struct nng_tls_engine_config {
 	char           *pass;
 	char           *server_name;
 	int             auth_mode;
+	int             groups[NNI_TLS_MAX_GROUPS];
+	size_t          group_count;
 	nni_list        psks;
 	nni_list        materials; // PEM data, released after first use
 };
@@ -797,6 +799,39 @@ wolf_config_version(nng_tls_engine_config *cfg, nng_tls_version min_ver,
 	return (NNG_OK);
 }
 
+static nng_err
+wolf_config_groups(
+    nng_tls_engine_config *cfg, const nng_tls_group *groups, size_t count)
+{
+#ifdef NNG_WOLFSSL_HAVE_GROUPS
+	int          ids[NNI_TLS_MAX_GROUPS];
+	WOLFSSL_CTX *ctx;
+	int          rv;
+
+	for (size_t i = 0; i < count; i++) {
+		ids[i] = (int) groups[i]; // wolfSSL uses IANA NamedGroup IDs.
+	}
+	if ((ctx = wolfSSL_CTX_new(cfg->mode == NNG_TLS_MODE_SERVER
+	             ? wolfSSLv23_server_method()
+	             : wolfSSLv23_client_method())) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	rv = wolfSSL_CTX_set_groups(ctx, ids, (int) count);
+	wolfSSL_CTX_free(ctx);
+	if (rv != WOLFSSL_SUCCESS) {
+		return (NNG_ENOTSUP);
+	}
+	memcpy(cfg->groups, ids, count * sizeof(ids[0]));
+	cfg->group_count = count;
+	return (NNG_OK);
+#else
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(groups);
+	NNI_ARG_UNUSED(count);
+	return (NNG_ENOTSUP);
+#endif
+}
+
 static int
 wolf_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 {
@@ -847,6 +882,25 @@ wolf_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 	                                    WOLFSSL_DTLSV1_2) != SSL_SUCCESS) {
 		rv = NNG_ENOTSUP;
 		goto fail;
+	}
+#endif
+#ifdef NNG_WOLFSSL_HAVE_GROUPS
+	if (cfg->group_count != 0) {
+		if (wolfSSL_CTX_set_groups(ctx, cfg->groups,
+		        (int) cfg->group_count) != WOLFSSL_SUCCESS) {
+			rv = NNG_ENOTSUP;
+			goto fail;
+		}
+#ifdef WOLFSSL_TLS13
+		bool key_share = !datagram;
+#ifdef WOLFSSL_DTLS13
+		key_share = key_share || cfg->max_ver == NNG_TLS_1_3;
+#endif
+		if (key_share && wolfSSL_CTX_only_dhe_psk(ctx) != 0) {
+			rv = NNG_ENOTSUP;
+			goto fail;
+		}
+#endif
 	}
 #endif
 	if (!datagram &&
@@ -1201,6 +1255,7 @@ static nng_tls_engine_config_ops wolf_config_ops = {
 	.server   = wolf_config_server,
 	.psk      = wolf_config_psk,
 	.version  = wolf_config_version,
+	.groups   = wolf_config_groups,
 };
 
 static nng_tls_engine_conn_ops wolf_conn_ops = {

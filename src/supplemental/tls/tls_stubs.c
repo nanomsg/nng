@@ -155,6 +155,16 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	return (NNG_ENOTSUP);
 }
 
+nng_err
+nng_tls_config_groups(
+    nng_tls_config *cfg, const nng_tls_group *groups, size_t count)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(groups);
+	NNI_ARG_UNUSED(count);
+	return (NNG_ENOTSUP);
+}
+
 int
 nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 {
