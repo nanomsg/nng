@@ -38,10 +38,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-514b69bc.js";
+            window.path_to_searchindex_js = "searchindex-37f70de9.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-891a9f83.js"></script>
+        <script src="toc-88728f04.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -390,6 +390,26 @@ reference.</p>
 <!-- Protocols -->
 <!-- Transports -->
 <!-- Concept index -->
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="whats-new"><a class="header" href="#whats-new">What’s New</a></h1>
+<p>Numerous features have been added since NNG 1.x. The following chapters
+summarize the changes in each NNG release series.</p>
+<ul>
+<li><a href="#whats-new-in-nng-21">What’s New in NNG 2.1</a></li>
+<li><a href="#whats-new-in-nng-20">What’s New in NNG 2.0</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="whats-new-in-nng-21"><a class="header" href="#whats-new-in-nng-21">What’s New in NNG 2.1</a></h1>
+<p>NNG 2.1 adds new capabilities and refinements across the library.</p>
+<h2 id="dtls-13-support"><a class="header" href="#dtls-13-support">DTLS 1.3 Support</a></h2>
+<p>The <a href="#dtls-transport">DTLS transport</a> now supports DTLS 1.3 as well as DTLS
+1.2. DTLS 1.3 is available with wolfSSL 5.9.1 or newer built with DTLS 1.3
+enabled, and with OpenSSL 4.1 or newer built with DTLS 1.3 enabled. Mbed TLS
+and earlier OpenSSL releases continue to support DTLS 1.2.</p>
+<p>The default TLS configuration negotiates the highest mutually supported DTLS
+version. Applications can use [<code>nng_tls_config_version</code>] to require DTLS 1.3.
+See the <a href="#dtls-transport">DTLS transport</a> reference for engine requirements and
+message size limits.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="whats-new-in-nng-20"><a class="header" href="#whats-new-in-nng-20">What’s New in NNG 2.0</a></h1>
 <p>NNG 2.0 expands the ways applications can communicate, adds more choices for
