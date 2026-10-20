@@ -5,16 +5,19 @@ for DTLS 1.3.
 
 ## Post-Quantum Cryptography
 
-NNG now supports hybrid post-quantum key exchange for TLS 1.3 connections,
-including the TLS transport, HTTPS, and secure WebSockets. Hybrid groups such
-as `X25519MLKEM768` combine classical elliptic-curve key exchange with the
-post-quantum ML-KEM key encapsulation mechanism. The same group configuration
-can also be used with DTLS 1.3 when supported by the selected engine.
+NNG now supports hybrid post-quantum key exchange for TLS 1.3 and DTLS 1.3
+connections, including the TLS and DTLS transports, HTTPS, and secure
+WebSockets. Hybrid groups such as `X25519MLKEM768` combine classical
+elliptic-curve key exchange with the post-quantum ML-KEM key encapsulation
+mechanism. Support depends on the selected TLS engine and its build
+configuration.
 
 Applications can require hybrid post-quantum key exchange using the new
-[`nng_tls_config_groups`] API with a hybrid-only group list and a TLS 1.3
-version restriction. OpenSSL 3.5 and newer support these groups; wolfSSL
-requires a build with ML-KEM and hybrid support enabled.
+[`nng_tls_config_groups`] API with a hybrid-only group list and a TLS or DTLS
+1.3 version restriction. OpenSSL 3.5 and newer support these groups for TLS;
+DTLS requires OpenSSL 4.1 or newer with DTLS 1.3 enabled. wolfSSL requires a
+build with ML-KEM and hybrid support enabled, as well as DTLS 1.3 support
+when using DTLS.
 
 Hybrid key exchange works with existing RSA or ECDSA certificates; certificate
 authentication continues to use those classical algorithms. See
