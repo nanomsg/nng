@@ -94,6 +94,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           ref: ${{ needs.prepare.outputs.source_ref }}
+          persist-credentials: false
 
       # Keep version-switching UI and its manifest current when building a
       # historical release tag.  The manual content still comes from the tag.
@@ -101,6 +102,7 @@ jobs:
         with:
           path: publisher
           ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Install shared documentation assets
         run: |
