@@ -180,6 +180,53 @@ test_tls_config_groups(void)
 	nng_tls_config_free(cfg);
 }
 
+void
+test_tls_config_all_groups(void)
+{
+	const nng_tls_group groups[] = {
+		NNG_TLS_GRP_SECP256R1,
+		NNG_TLS_GRP_SECP384R1,
+		NNG_TLS_GRP_SECP521R1,
+		NNG_TLS_GRP_X25519,
+		NNG_TLS_GRP_X448,
+		NNG_TLS_GRP_FFDHE2048,
+		NNG_TLS_GRP_FFDHE3072,
+		NNG_TLS_GRP_FFDHE4096,
+		NNG_TLS_GRP_FFDHE6144,
+		NNG_TLS_GRP_FFDHE8192,
+		NNG_TLS_GRP_SECP256R1MLKEM768,
+		NNG_TLS_GRP_X25519MLKEM768,
+		NNG_TLS_GRP_SECP384R1MLKEM1024,
+	};
+
+	// Probe every public group, including groups unavailable in this
+	// engine build. Accumulate the accepted groups to exercise a full
+	// list and replacement with lists of increasing length.
+	for (int mode = NNG_TLS_MODE_CLIENT; mode <= NNG_TLS_MODE_SERVER;
+	    mode++) {
+		nng_tls_config *cfg;
+		nng_tls_group   supported[NNI_TLS_MAX_GROUPS];
+		size_t          count = 0;
+
+		NUTS_PASS(nng_tls_config_alloc(&cfg, mode));
+		for (size_t i = 0; i < NNI_NUM_ELEMENTS(groups); i++) {
+			nng_err rv = nng_tls_config_groups(cfg, groups + i, 1);
+			NUTS_TRUE(rv == NNG_OK || rv == NNG_ENOTSUP);
+			if (rv == NNG_OK) {
+				supported[count++] = groups[i];
+				NUTS_PASS(nng_tls_config_groups(
+				    cfg, supported, count));
+			}
+			// Duplicates are invalid even for unsupported groups.
+			const nng_tls_group duplicate[] = { groups[i],
+				groups[i] };
+			NUTS_FAIL(nng_tls_config_groups(cfg, duplicate, 2),
+			    NNG_EINVAL);
+		}
+		nng_tls_config_free(cfg);
+	}
+}
+
 static void
 test_tls_groups_handshake(nng_tls_version version,
     const nng_tls_group *server_groups, size_t server_count,
@@ -343,6 +390,38 @@ test_tls_groups_mismatch(void)
 	const nng_tls_group client[] = { NNG_TLS_GRP_SECP256R1 };
 	test_tls_groups_handshake(
 	    NNG_TLS_1_3, server, 1, client, 1, true, false);
+}
+
+void
+test_tls_groups_p521(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_SECP521R1 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
+}
+
+void
+test_tls_groups_x25519(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_X25519 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
+}
+
+void
+test_tls_groups_x448(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_X448 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
+}
+
+void
+test_tls_groups_ffdhe(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_FFDHE2048 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
 }
 
 void
@@ -1187,9 +1266,14 @@ TEST_LIST = {
 	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },
 	{ "tls config groups", test_tls_config_groups },
+	{ "tls config all groups", test_tls_config_all_groups },
 	{ "tls groups TLS 1.2", test_tls_groups_tls12 },
 	{ "tls groups TLS 1.3", test_tls_groups_tls13 },
 	{ "tls groups mismatch", test_tls_groups_mismatch },
+	{ "tls groups P-521", test_tls_groups_p521 },
+	{ "tls groups X25519", test_tls_groups_x25519 },
+	{ "tls groups X448", test_tls_groups_x448 },
+	{ "tls groups FFDHE", test_tls_groups_ffdhe },
 	{ "tls groups hybrid", test_tls_groups_hybrid },
 	{ "tls groups hybrid mismatch", test_tls_groups_hybrid_mismatch },
 	{ "tls groups hybrid P-256", test_tls_groups_hybrid_p256 },

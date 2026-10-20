@@ -40,7 +40,7 @@ jobs:
         if: matrix.tls.engine == 'mbed'
         run: sudo apt-get install -y libmbedtls-dev
 
-      - name: Build wolfSSL with DTLS 1.3
+      - name: Build wolfSSL with DTLS 1.3 and ML-KEM
         if: matrix.tls.engine == 'wolf'
         run: |
           curl -fsSL https://github.com/wolfSSL/wolfssl/archive/refs/tags/v5.9.1-stable.tar.gz | tar -xz -C "$RUNNER_TEMP"
@@ -48,6 +48,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$RUNNER_TEMP/wolfssl-install" \
             -DCMAKE_C_FLAGS="-Wno-error=stringop-overflow -DHAVE_SERVER_RENEGOTIATION_INFO -DWOLFSSL_MAX_SIGALGO=128" \
             -DWOLFSSL_DTLS=yes -DWOLFSSL_DTLS13=yes -DWOLFSSL_OPENSSLALL=yes \
+            -DWOLFSSL_EXPERIMENTAL=yes -DWOLFSSL_MLKEM=yes -DWOLFSSL_CURVE25519=yes \
             -DWOLFSSL_PSK=yes -DWOLFSSL_CRL=yes -DWOLFSSL_EXAMPLES=no -DWOLFSSL_CRYPT_TESTS=no
           cmake --build "$RUNNER_TEMP/wolfssl-build" --parallel 2
           cmake --install "$RUNNER_TEMP/wolfssl-build"
