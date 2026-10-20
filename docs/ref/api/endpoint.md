@@ -93,6 +93,8 @@ The create-and-start functions can return:
 - [`NNG_ECLOSED`]: The socket is closed.
 - [`NNG_ECONNREFUSED`]: The remote peer refused the initial dial connection.
 - [`NNG_ECONNRESET`]: The remote peer reset the initial dial connection.
+- [`NNG_ECONNSHUT`]: The remote peer closed the connection during negotiation.
+- [`NNG_ECRYPTO`]: A cryptographic error occurred, such as a TLS handshake failure.
 - [`NNG_EINVAL`]: The string URL is invalid.
 - [`NNG_ENOMEM`]: Insufficient memory is available.
 - [`NNG_ENOTSUP`]: The transport is not supported, or does not support dialing or listening.
@@ -187,6 +189,8 @@ Once a dialer or listener has started, it is generally not possible to change it
 - [`NNG_ECLOSED`]: The socket is closed.
 - [`NNG_ECONNREFUSED`]: The remote peer refused the initial connection.
 - [`NNG_ECONNRESET`]: The remote peer reset the initial connection.
+- [`NNG_ECONNSHUT`]: The remote peer closed the connection during negotiation.
+- [`NNG_ECRYPTO`]: A cryptographic error occurred, such as a TLS handshake failure.
 - [`NNG_EINVAL`]: The flags are invalid.
 - [`NNG_ENOENT`]: The dialer handle is invalid.
 - [`NNG_ENOMEM`]: Insufficient memory is available.
