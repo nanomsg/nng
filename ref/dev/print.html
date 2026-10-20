@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-5e448114.js";
+            window.path_to_searchindex_js = "searchindex-514b69bc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-891a9f83.js"></script>
@@ -1435,6 +1435,8 @@ or the socket is closed.</p>
 <li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
 <li><a href="#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial dial connection.</li>
 <li><a href="#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial dial connection.</li>
+<li><a href="#NNG_ECONNSHUT"><code>NNG_ECONNSHUT</code></a>: The remote peer closed the connection during negotiation.</li>
+<li><a href="#NNG_ECRYPTO"><code>NNG_ECRYPTO</code></a>: A cryptographic error occurred, such as a TLS handshake failure.</li>
 <li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The string URL is invalid.</li>
 <li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
 <li><a href="#NNG_ENOTSUP"><code>NNG_ENOTSUP</code></a>: The transport is not supported, or does not support dialing or listening.</li>
@@ -1509,6 +1511,8 @@ The <em>flags</em> argument is ignored and reserved for future use.</p>
 <li><a href="#NNG_ECLOSED"><code>NNG_ECLOSED</code></a>: The socket is closed.</li>
 <li><a href="#NNG_ECONNREFUSED"><code>NNG_ECONNREFUSED</code></a>: The remote peer refused the initial connection.</li>
 <li><a href="#NNG_ECONNRESET"><code>NNG_ECONNRESET</code></a>: The remote peer reset the initial connection.</li>
+<li><a href="#NNG_ECONNSHUT"><code>NNG_ECONNSHUT</code></a>: The remote peer closed the connection during negotiation.</li>
+<li><a href="#NNG_ECRYPTO"><code>NNG_ECRYPTO</code></a>: A cryptographic error occurred, such as a TLS handshake failure.</li>
 <li><a href="#NNG_EINVAL"><code>NNG_EINVAL</code></a>: The flags are invalid.</li>
 <li><a href="#NNG_ENOENT"><code>NNG_ENOENT</code></a>: The dialer handle is invalid.</li>
 <li><a href="#NNG_ENOMEM"><code>NNG_ENOMEM</code></a>: Insufficient memory is available.</li>
