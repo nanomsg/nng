@@ -915,6 +915,7 @@ test_dtls_pending_expiry(void)
 	    &client_events.aio, dtls_deadline_done, &client_events));
 	NUTS_PASS(nng_listener_create(&l, server, "dtls4://127.0.0.1:0"));
 	NUTS_PASS(nng_listener_set_tls(l, scfg));
+	NUTS_PASS(nng_listener_set_ms(l, NNG_OPT_UDP_CONN_EXPIRE, 2000));
 	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_UDP_MAX_PEERS, 1));
 	NUTS_PASS(nng_listener_start(l, 0));
 	NUTS_PASS(nng_listener_get_url(l, &url));
@@ -970,10 +971,10 @@ test_dtls_pending_expiry(void)
 		NUTS_FAIL(client_events.result, NNG_ETIMEDOUT);
 		NUTS_PASS(nng_dialer_close(retry));
 #ifdef NNG_ENABLE_STATS
-		// A pending peer gets the default 25-second negotiation
+		// A pending peer gets the configured negotiation
 		// deadline. TLS traffic alone must not keep it alive forever.
 		bool     expired = false;
-		nng_time until   = nng_clock() + 35000;
+		nng_time until   = nng_clock() + 5000;
 		do {
 			nng_stat       *stats;
 			const nng_stat *listener, *inactive;
@@ -989,10 +990,10 @@ test_dtls_pending_expiry(void)
 			}
 		} while (!expired && nng_clock() < until);
 		NUTS_TRUE(expired);
-		NUTS_AFTER(start + 25000);
+		NUTS_AFTER(start + 2000);
 #else
 		// Still verify slot recovery when statistics are disabled.
-		nng_msleep(25000);
+		nng_msleep(2000);
 #endif
 		// A fresh dialer must be admitted after the half-open peer is
 		// reaped; allow time for TLS and asynchronous pipe cleanup.
@@ -1005,7 +1006,7 @@ test_dtls_pending_expiry(void)
 		NUTS_PASS(nng_dialer_start(retry, NNG_FLAG_NONBLOCK));
 		if (dtls_deadline_wait(
 		        &server_events, 1, 0, false, DTLS_STRESS_TIMEOUT)) {
-			NUTS_TRUE(server_events.added_at >= start + 25000);
+			NUTS_TRUE(server_events.added_at >= start + 2000);
 		}
 		dtls_deadline_wait(&client_events, 1, 0, false, 2000);
 	}

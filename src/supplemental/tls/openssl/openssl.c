@@ -16,6 +16,7 @@
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/hmac.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
@@ -46,6 +47,7 @@ struct nng_tls_engine_conn {
 	void        *tls; // parent conn
 	SSL_CTX     *ctx;
 	SSL         *ssl;
+	char         peer_id[NNG_MAXADDRSTRLEN];
 	int          auth_mode;
 	nng_tls_mode mode;
 	bool         datagram;
@@ -116,7 +118,63 @@ struct nng_tls_engine_config {
 	int          min_ver;
 	int          max_ver;
 	nni_list     psks;
+	uint8_t      cookie_key[32];
 };
+
+// Bind cookies to the UDP source address and port, with a two-minute
+// lifetime. OpenSSL uses these callbacks for DTLS 1.2 HelloVerifyRequest and
+// DTLS 1.3 HelloRetryRequest, before sending the certificate flight.
+// wolfSSL DTLS 1.2 clients accept cookies of at most 32 bytes. Keep the
+// timestamp and a 192-bit truncation of HMAC-SHA256 within that limit.
+#define OSSL_COOKIE_MAC_SIZE 24
+#define OSSL_COOKIE_SIZE (8 + OSSL_COOKIE_MAC_SIZE)
+
+static int
+ossl_cookie_mac(SSL *ssl, const unsigned char *stamp, unsigned char *mac)
+{
+	nng_tls_engine_conn   *ec = SSL_get_app_data(ssl);
+	nng_tls_engine_config *cfg =
+	    SSL_CTX_get_ex_data(SSL_get_SSL_CTX(ssl), ossl_ex_index);
+	unsigned char input[8 + NNG_MAXADDRSTRLEN];
+	unsigned int  len;
+	size_t        peer_len = strlen(ec->peer_id);
+	memcpy(input, stamp, 8);
+	memcpy(input + 8, ec->peer_id, peer_len);
+	return (HMAC(EVP_sha256(), cfg->cookie_key, sizeof(cfg->cookie_key),
+	            input, 8 + peer_len, mac, &len) != NULL &&
+	    len == 32);
+}
+
+static int
+ossl_cookie_generate(SSL *ssl, unsigned char *cookie, unsigned int *len)
+{
+	unsigned char mac[32];
+	uint64_t      stamp = nni_clock();
+	NNI_PUT64(cookie, stamp);
+	if (!ossl_cookie_mac(ssl, cookie, mac)) {
+		return (0);
+	}
+	memcpy(cookie + 8, mac, OSSL_COOKIE_MAC_SIZE);
+	*len = OSSL_COOKIE_SIZE;
+	return (1);
+}
+
+static int
+ossl_cookie_verify(SSL *ssl, const unsigned char *cookie, unsigned int len)
+{
+	unsigned char mac[32];
+	uint64_t      stamp;
+	uint64_t      now = nni_clock();
+	if (len != OSSL_COOKIE_SIZE) {
+		return (0);
+	}
+	NNI_GET64(cookie, stamp);
+	if (stamp > now || now - stamp > 120000 ||
+	    !ossl_cookie_mac(ssl, cookie, mac)) {
+		return (0);
+	}
+	return (CRYPTO_memcmp(mac, cookie + 8, OSSL_COOKIE_MAC_SIZE) == 0);
+}
 
 static void
 tls_log_err(const char *msgid, const char *context, int errnum)
@@ -320,7 +378,6 @@ ossl_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
     const nng_sockaddr *sa)
 {
 	BIO *bio;
-	NNI_ARG_UNUSED(sa);
 	ec->tls       = tls;
 	ec->auth_mode = cfg->auth_mode;
 	ec->mode      = cfg->mode;
@@ -346,11 +403,16 @@ ossl_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 		break;
 	}
 
+	SSL_set_app_data(ec->ssl, ec);
 	SSL_set_bio(ec->ssl, bio, bio);
 	SSL_set_dh_auto(ec->ssl, true);
 	if (ec->datagram) {
 		SSL_set_options(ec->ssl, SSL_OP_NO_QUERY_MTU);
 		SSL_set_mtu(ec->ssl, NNG_TLS_MAX_SEND_SIZE);
+		if (cfg->mode == NNG_TLS_MODE_SERVER) {
+			nng_str_sockaddr(sa, ec->peer_id, sizeof(ec->peer_id));
+			SSL_set_options(ec->ssl, SSL_OP_COOKIE_EXCHANGE);
+		}
 	}
 
 	if (cfg->server_name != NULL) {
@@ -571,6 +633,7 @@ static void
 ossl_config_fini(nng_tls_engine_config *cfg)
 {
 	psk *psk;
+	OPENSSL_cleanse(cfg->cookie_key, sizeof(cfg->cookie_key));
 	SSL_CTX_free(cfg->ctx);
 	X509_STORE_free(cfg->ca);
 	X509_free(cfg->cert);
@@ -887,6 +950,14 @@ ossl_config_prepare(nng_tls_engine_config *cfg, bool datagram)
 		return (NNG_ECRYPTO);
 	}
 	SSL_CTX_set_ex_data(ctx, ossl_ex_index, cfg);
+	if (datagram && cfg->mode == NNG_TLS_MODE_SERVER) {
+		for (unsigned i = 0; i < sizeof(cfg->cookie_key); i += 4) {
+			uint32_t word = nni_random();
+			NNI_PUT32(cfg->cookie_key + i, word);
+		}
+		SSL_CTX_set_cookie_generate_cb(ctx, ossl_cookie_generate);
+		SSL_CTX_set_cookie_verify_cb(ctx, ossl_cookie_verify);
+	}
 	SSL_CTX_set_dh_auto(ctx, true);
 	if (cfg->ca != NULL) {
 		SSL_CTX_set1_cert_store(ctx, cfg->ca);
