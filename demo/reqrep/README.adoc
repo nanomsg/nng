@@ -2,7 +2,7 @@
 
 This is a very simple RPC service using the REQ/REP method.
 It is derived in part from Tim Dysinger's
-https://nng.nanomsg.org/ref/[NNG Reference Manual]
+https://lib.nanomsg.org/gettingstarted/reqrep.html[Getting Started With Nanomsg]
 examples, but we have updated for _nng_, and converted to use binary
 frames across the wire instead of string data.
 
