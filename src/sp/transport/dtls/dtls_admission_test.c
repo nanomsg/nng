@@ -34,10 +34,12 @@ admission_config(nng_tls_mode mode, nng_tls_version version)
 static nng_udp *
 admission_udp(void)
 {
-	nng_sockaddr bind = { 0 };
+	nng_sockaddr bind = { .s_in = {
+		                  .sa_family = NNG_AF_INET,
+		                  .sa_port   = 0,
+		                  .sa_addr   = nuts_be32(0x7f000001),
+		              } };
 	nng_udp     *udp;
-	bind.s_in.sa_family = NNG_AF_INET;
-	bind.s_in.sa_addr   = nuts_be32(0x7f000001);
 	NUTS_PASS(nng_udp_open(&udp, &bind));
 	return (udp);
 }
