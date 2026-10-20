@@ -1,6 +1,25 @@
 # What's New in NNG 2.1
 
-NNG 2.1 adds new capabilities and refinements across the library.
+NNG 2.1 adds hybrid post-quantum cryptography for TLS connections and support
+for DTLS 1.3.
+
+## Post-Quantum Cryptography
+
+NNG now supports hybrid post-quantum key exchange for TLS 1.3 connections,
+including the TLS transport, HTTPS, and secure WebSockets. Hybrid groups such
+as `X25519MLKEM768` combine classical elliptic-curve key exchange with the
+post-quantum ML-KEM key encapsulation mechanism. The same group configuration
+can also be used with DTLS 1.3 when supported by the selected engine.
+
+Applications can require hybrid post-quantum key exchange using the new
+[`nng_tls_config_groups`] API with a hybrid-only group list and a TLS 1.3
+version restriction. OpenSSL 3.5 and newer support these groups; wolfSSL
+requires a build with ML-KEM and hybrid support enabled.
+
+Hybrid key exchange works with existing RSA or ECDSA certificates; certificate
+authentication continues to use those classical algorithms. See
+[Requiring Hybrid Post-Quantum Key Exchange](../api/tls.md#requiring-hybrid-post-quantum-key-exchange)
+for configuration examples and engine requirements.
 
 ## DTLS 1.3 Support
 
@@ -13,12 +32,5 @@ The default TLS configuration negotiates the highest mutually supported DTLS
 version. Applications can use [`nng_tls_config_version`] to require DTLS 1.3.
 See the [DTLS transport](../tran/dtls.md) reference for engine requirements and
 message size limits.
-
-## TLS Key Exchange Groups
-
-[`nng_tls_config_groups`] accepts an array of named key exchange groups,
-including hybrid ML-KEM groups when supported by the selected TLS engine.
-Applications can require hybrid post-quantum key exchange by combining a
-hybrid-only group list with a TLS 1.3 version restriction.
 
 {{#include ../xref.md}}
