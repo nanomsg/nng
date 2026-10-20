@@ -1,5 +1,5 @@
 //
-// Copyright 2024 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -83,6 +83,72 @@ test_udp_pair(void)
 	nng_aio_free(aio2);
 	nng_udp_close(u1);
 	nng_udp_close(u2);
+}
+
+// Errors must survive even when the caller requests a source address, and
+// must not overwrite it with invalid or stale receive state.
+void
+test_udp_recv_errors(void)
+{
+	nng_sockaddr addr = { .s_in = {
+		                  .sa_family = NNG_AF_INET,
+		                  .sa_port   = 0,
+		                  .sa_addr   = nuts_be32(0x7f000001),
+		              } };
+	nng_sockaddr from, unchanged;
+	nng_udp     *udp;
+	nng_aio     *recv, *send;
+	char         buf[32];
+	char         message[] = "after cancellation";
+	nng_iov      riov      = { .iov_buf = buf, .iov_len = sizeof(buf) };
+	nng_iov      siov = { .iov_buf = message, .iov_len = sizeof(message) };
+	NUTS_PASS(nng_udp_open(&udp, &addr));
+	NUTS_PASS(nng_udp_sockname(udp, &addr));
+	NUTS_PASS(nng_aio_alloc(&recv, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&send, NULL, NULL));
+	NUTS_PASS(nng_aio_set_iov(recv, 1, &riov));
+	NUTS_PASS(nng_aio_set_input(recv, 0, &from));
+	memset(&unchanged, 0xa5, sizeof(unchanged));
+
+	// Check before the first datagram, then after a successful receive
+	// has populated the platform's source address buffer.
+	for (unsigned i = 0; i < 2; i++) {
+		memcpy(&from, &unchanged, sizeof(from));
+		nng_aio_set_timeout(recv, 20);
+		nng_udp_recv(udp, recv);
+		nng_aio_wait(recv);
+		NUTS_FAIL(nng_aio_result(recv), NNG_ETIMEDOUT);
+		NUTS_TRUE(nng_aio_count(recv) == 0);
+		NUTS_TRUE(memcmp(&from, &unchanged, sizeof(from)) == 0);
+
+		nng_aio_set_timeout(recv, NNG_DURATION_INFINITE);
+		nng_udp_recv(udp, recv);
+		nng_aio_cancel(recv);
+		nng_aio_wait(recv);
+		NUTS_FAIL(nng_aio_result(recv), NNG_ECANCELED);
+		NUTS_TRUE(nng_aio_count(recv) == 0);
+		NUTS_TRUE(memcmp(&from, &unchanged, sizeof(from)) == 0);
+
+		// The same socket and AIO must still be usable after
+		// cancellation.
+		nng_aio_set_timeout(recv, 1000);
+		nng_aio_set_timeout(send, 1000);
+		NUTS_PASS(nng_aio_set_iov(recv, 1, &riov));
+		NUTS_PASS(nng_aio_set_iov(send, 1, &siov));
+		NUTS_PASS(nng_aio_set_input(send, 0, &addr));
+		nng_udp_recv(udp, recv);
+		nng_udp_send(udp, send);
+		nng_aio_wait(send);
+		nng_aio_wait(recv);
+		NUTS_PASS(nng_aio_result(send));
+		NUTS_PASS(nng_aio_result(recv));
+		NUTS_TRUE(nng_aio_count(recv) == sizeof(message));
+		NUTS_TRUE(memcmp(buf, message, sizeof(message)) == 0);
+		NUTS_TRUE(nng_sockaddr_equal(&from, &addr));
+	}
+	nng_aio_free(recv);
+	nng_aio_free(send);
+	nng_udp_close(udp);
 }
 
 void
@@ -480,6 +546,7 @@ test_udp_send_v6_from_v4(void)
 
 NUTS_TESTS = {
 	{ "udp pair", test_udp_pair },
+	{ "udp receive errors", test_udp_recv_errors },
 	{ "udp scatter gather", test_udp_scatter_gather },
 	{ "udp send recv multi", test_udp_multi_send_recv },
 	{ "udp send no address", test_udp_send_no_addr },

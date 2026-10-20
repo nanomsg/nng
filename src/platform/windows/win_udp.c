@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -232,8 +232,10 @@ udp_recv_cb(nni_win_io *io, int rv, size_t num)
 		u->cancel_rv = 0;
 	}
 
-	// convert address from Windows form...
-	if ((sa = nni_aio_get_input(aio, 0)) != NULL) {
+	// Failed or cancelled receives do not supply a source address. Do not
+	// replace their error with an address conversion failure or copy an
+	// address left over from an earlier receive.
+	if (rv == 0 && (sa = nni_aio_get_input(aio, 0)) != NULL) {
 		if (nni_win_sockaddr2nn(sa, &u->rxsa, sizeof(u->rxsa)) != 0) {
 			rv  = NNG_EADDRINVAL;
 			num = 0;
