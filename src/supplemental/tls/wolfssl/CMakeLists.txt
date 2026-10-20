@@ -159,6 +159,42 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
         nng_defines(NNG_WOLFSSL_USE_OPTIONS_H)
     endif ()
 
+    # Group configuration must replace the supported set, rather than append
+    # to it. Check the API in the actual dependency build configuration.
+    cmake_push_check_state(RESET)
+    if (NNG_WOLFSSL_IN_TREE)
+        set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+        set(CMAKE_REQUIRED_INCLUDES ${NNG_WOLFSSL_CHECK_INCLUDES})
+        set(CMAKE_REQUIRED_DEFINITIONS ${NNG_WOLFSSL_CHECK_DEFINITIONS})
+    else()
+        set(CMAKE_REQUIRED_LIBRARIES ${NNG_WOLFSSL_TARGET})
+    endif()
+    if (NNG_WOLFSSL_USE_OPTIONS_H)
+        list(APPEND CMAKE_REQUIRED_DEFINITIONS -DNNG_WOLFSSL_USE_OPTIONS_H)
+    endif()
+    unset(NNG_WOLFSSL_HAVE_GROUPS CACHE)
+    check_c_source_compiles("\
+        #ifdef NNG_WOLFSSL_USE_OPTIONS_H
+        #include <wolfssl/options.h>
+        #endif
+        #include <wolfssl/ssl.h>
+        #ifndef HAVE_SUPPORTED_CURVES
+        #error supported groups are unavailable
+        #endif
+        int main(void) {
+            int group = 23;
+            int rv = wolfSSL_CTX_set_groups((WOLFSSL_CTX *) 0, &group, 1);
+            #ifdef WOLFSSL_TLS13
+            rv += wolfSSL_CTX_only_dhe_psk((WOLFSSL_CTX *) 0);
+            #endif
+            return rv;
+        }"
+        NNG_WOLFSSL_HAVE_GROUPS)
+    cmake_pop_check_state()
+    if (NNG_WOLFSSL_HAVE_GROUPS)
+        nng_defines(NNG_WOLFSSL_HAVE_GROUPS)
+    endif()
+
     # Older releases can accept replayed DTLS 1.2 application records when
     # built without DTLS 1.3. Keep stream TLS available with those releases.
     if (NNG_TRANSPORT_DTLS)

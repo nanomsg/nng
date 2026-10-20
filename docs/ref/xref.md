@@ -272,6 +272,8 @@
 [`nng_tls_config_server_name`]: ../api/tls.md#certificates-and-keys
 [`nng_tls_config_psk`]: ../api/tls.md#pre-shared-keys
 [`nng_tls_config_version`]: ../api/tls.md#tls-versions
+[`nng_tls_config_groups`]: ../api/tls.md#key-exchange-groups
+[`nng_tls_group`]: ../api/tls.md#key-exchange-groups
 [`nng_device`]: ../api/device.md
 [`nng_device_aio`]: ../api/device.md#asynchronous-devices
 [`nng_socket_set`]: ../api/sock.md#socket-options

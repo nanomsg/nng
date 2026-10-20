@@ -178,6 +178,12 @@ typedef struct nng_tls_engine_config_ops_s {
 	// for v1.3, then NNG_ENOTSUP should be returned.
 	int (*version)(
 	    nng_tls_engine_config *, nng_tls_version, nng_tls_version);
+
+	// groups replaces the allowed groups. Copy the list and reject the
+	// entire update if any group is unsupported, preserving the old
+	// policy.
+	nng_err (*groups)(
+	    nng_tls_engine_config *, const nng_tls_group *, size_t);
 } nng_tls_engine_config_ops;
 
 typedef struct nng_tls_engine_cert_ops_s {
@@ -225,7 +231,8 @@ typedef enum nng_tls_engine_version_e {
 	NNG_TLS_ENGINE_V3      = 3, // refactored API
 	NNG_TLS_ENGINE_V4      = 4, // added cert ops
 	NNG_TLS_ENGINE_V5      = 5, // select transport before first use
-	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V5,
+	NNG_TLS_ENGINE_V6      = 6, // configure allowed key exchange groups
+	NNG_TLS_ENGINE_VERSION = NNG_TLS_ENGINE_V6,
 } nng_tls_engine_version;
 
 typedef struct nng_tls_engine_s {
@@ -266,6 +273,10 @@ typedef struct nng_tls_engine_s {
 
 // Implementation supplies these ops vectors.
 extern nng_tls_engine nng_tls_engine_ops;
+
+// The number of distinct public groups bounds a list without duplicates.
+#define NNI_TLS_MAX_GROUPS 13
+extern const char *nni_tls_group_name(nng_tls_group);
 
 // nng_tls_engine_send is called by the engine to send data over the
 // underlying connection.  It returns zero on success, NNG_EAGAIN if

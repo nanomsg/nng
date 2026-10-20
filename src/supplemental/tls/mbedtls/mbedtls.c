@@ -106,6 +106,11 @@ struct nng_tls_engine_conn {
 
 struct nng_tls_engine_config {
 	mbedtls_ssl_config cfg_ctx;
+#if MBEDTLS_VERSION_NUMBER >= 0x03060000
+	uint16_t groups[NNI_TLS_MAX_GROUPS + 1];
+#elif defined(MBEDTLS_ECP_C)
+	mbedtls_ecp_group_id groups[NNI_TLS_MAX_GROUPS + 1];
+#endif
 	char              *server_name;
 	mbedtls_x509_crt   ca_certs;
 	mbedtls_x509_crl   crl;
@@ -598,6 +603,94 @@ config_init(nng_tls_engine_config *cfg, enum nng_tls_mode mode)
 	}
 
 	return (0);
+}
+
+static bool
+config_group_supported(nng_tls_group group)
+{
+#if MBEDTLS_VERSION_NUMBER >= 0x04010000
+	const uint16_t *supported = mbedtls_ssl_get_supported_group_list();
+	for (; *supported != 0; supported++) {
+		if (*supported == (uint16_t) group) {
+			return (true);
+		}
+	}
+#else
+	// Before 4.1 there is no public supported-groups query. These build
+	// options cover the classical curves supported by this API.
+	switch (group) {
+#if defined(PSA_WANT_ECC_SECP_R1_256) || \
+    defined(MBEDTLS_ECP_DP_SECP256R1_ENABLED)
+	case NNG_TLS_GRP_SECP256R1:
+		return (true);
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_384) || \
+    defined(MBEDTLS_ECP_DP_SECP384R1_ENABLED)
+	case NNG_TLS_GRP_SECP384R1:
+		return (true);
+#endif
+#if defined(PSA_WANT_ECC_SECP_R1_521) || \
+    defined(MBEDTLS_ECP_DP_SECP521R1_ENABLED)
+	case NNG_TLS_GRP_SECP521R1:
+		return (true);
+#endif
+#if defined(PSA_WANT_ECC_MONTGOMERY_255) || \
+    defined(MBEDTLS_ECP_DP_CURVE25519_ENABLED)
+	case NNG_TLS_GRP_X25519:
+		return (true);
+#endif
+#if defined(PSA_WANT_ECC_MONTGOMERY_448) || \
+    defined(MBEDTLS_ECP_DP_CURVE448_ENABLED)
+	case NNG_TLS_GRP_X448:
+		return (true);
+#endif
+	default:
+		break;
+	}
+#endif
+	return (false);
+}
+
+static nng_err
+config_groups(
+    nng_tls_engine_config *cfg, const nng_tls_group *groups, size_t count)
+{
+#if MBEDTLS_VERSION_NUMBER >= 0x03060000
+	uint16_t ids[NNI_TLS_MAX_GROUPS + 1] = { 0 };
+	for (size_t i = 0; i < count; i++) {
+		if (!config_group_supported(groups[i])) {
+			return (NNG_ENOTSUP);
+		}
+		ids[i] = (uint16_t) groups[i];
+	}
+	memcpy(cfg->groups, ids, sizeof(ids));
+	// Mbed TLS retains this pointer, so use configuration-owned storage.
+	mbedtls_ssl_conf_groups(&cfg->cfg_ctx, cfg->groups);
+#if defined(MBEDTLS_SSL_PROTO_TLS1_3)
+	mbedtls_ssl_conf_tls13_key_exchange_modes(
+	    &cfg->cfg_ctx, MBEDTLS_SSL_TLS1_3_KEY_EXCHANGE_MODE_EPHEMERAL_ALL);
+#endif
+	return (NNG_OK);
+#elif defined(MBEDTLS_ECP_C) && !defined(MBEDTLS_DEPRECATED_REMOVED)
+	mbedtls_ecp_group_id ids[NNI_TLS_MAX_GROUPS + 1] = { 0 };
+	for (size_t i = 0; i < count; i++) {
+		const mbedtls_ecp_curve_info *info;
+		if (!config_group_supported(groups[i]) ||
+		    (info = mbedtls_ecp_curve_info_from_tls_id(
+		         (uint16_t) groups[i])) == NULL) {
+			return (NNG_ENOTSUP);
+		}
+		ids[i] = info->grp_id;
+	}
+	memcpy(cfg->groups, ids, sizeof(ids));
+	mbedtls_ssl_conf_curves(&cfg->cfg_ctx, cfg->groups);
+	return (NNG_OK);
+#else
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(groups);
+	NNI_ARG_UNUSED(count);
+	return (NNG_ENOTSUP);
+#endif
 }
 
 static int
@@ -1210,6 +1303,7 @@ static nng_tls_engine_config_ops config_ops = {
 	.server   = config_server_name,
 	.psk      = config_psk,
 	.version  = config_version,
+	.groups   = config_groups,
 };
 
 static nng_tls_engine_conn_ops conn_ops = {

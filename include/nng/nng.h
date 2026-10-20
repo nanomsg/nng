@@ -1580,6 +1580,24 @@ typedef enum nng_tls_version {
 	NNG_TLS_1_3 = 0x304
 } nng_tls_version;
 
+// TLS key exchange groups, using the IANA NamedGroup identifiers.
+// Availability depends on the TLS engine and its build configuration.
+typedef enum nng_tls_group {
+	NNG_TLS_GRP_SECP256R1          = 23,
+	NNG_TLS_GRP_SECP384R1          = 24,
+	NNG_TLS_GRP_SECP521R1          = 25,
+	NNG_TLS_GRP_X25519             = 29,
+	NNG_TLS_GRP_X448               = 30,
+	NNG_TLS_GRP_FFDHE2048          = 256,
+	NNG_TLS_GRP_FFDHE3072          = 257,
+	NNG_TLS_GRP_FFDHE4096          = 258,
+	NNG_TLS_GRP_FFDHE6144          = 259,
+	NNG_TLS_GRP_FFDHE8192          = 260,
+	NNG_TLS_GRP_SECP256R1MLKEM768  = 4587,
+	NNG_TLS_GRP_X25519MLKEM768     = 4588,
+	NNG_TLS_GRP_SECP384R1MLKEM1024 = 4589,
+} nng_tls_group;
+
 // nng_tls_config_alloc creates a TLS configuration using
 // reasonable defaults.  This configuration can be shared
 // with multiple pipes or services/servers.
@@ -1664,6 +1682,14 @@ NNG_DECL int nng_tls_config_psk(
 // for TLS 1.3) then NNG_ENOTSUP will be returned.
 NNG_DECL int nng_tls_config_version(
     nng_tls_config *, nng_tls_version, nng_tls_version);
+
+// nng_tls_config_groups replaces the allowed key exchange groups, in
+// preference order. The nonempty array is copied. Unsupported groups return
+// NNG_ENOTSUP without changing the configuration. TLS versions and certificate
+// algorithms are configured separately. Require TLS 1.3 with a hybrid-only
+// list to require hybrid post-quantum key exchange.
+NNG_DECL nng_err nng_tls_config_groups(
+    nng_tls_config *, const nng_tls_group *, size_t);
 
 // nng_tls_engine_name returns the "name" of the TLS engine.  If no
 // TLS engine support is enabled, then "none" is returned.

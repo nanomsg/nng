@@ -153,6 +153,257 @@ test_tls_config_version(void)
 }
 
 void
+test_tls_config_groups(void)
+{
+	nng_tls_config *cfg;
+	nng_tls_group   groups[]    = { NNG_TLS_GRP_SECP256R1,
+		NNG_TLS_GRP_SECP384R1 };
+	nng_tls_group   invalid[]   = { NNG_TLS_GRP_SECP256R1,
+		(nng_tls_group) 0xffff };
+	nng_tls_group   duplicate[] = { NNG_TLS_GRP_SECP256R1,
+		NNG_TLS_GRP_SECP256R1 };
+
+	NUTS_PASS(nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT));
+	NUTS_FAIL(nng_tls_config_groups(NULL, groups, 1), NNG_EINVAL);
+	NUTS_FAIL(nng_tls_config_groups(cfg, NULL, 1), NNG_EINVAL);
+	NUTS_FAIL(nng_tls_config_groups(cfg, groups, 0), NNG_EINVAL);
+	NUTS_FAIL(nng_tls_config_groups(cfg, groups, NNI_TLS_MAX_GROUPS + 1),
+	    NNG_EINVAL);
+	NUTS_FAIL(nng_tls_config_groups(cfg, invalid, 2), NNG_ENOTSUP);
+	NUTS_FAIL(nng_tls_config_groups(cfg, duplicate, 2), NNG_EINVAL);
+	nng_err rv = nng_tls_config_groups(cfg, groups, 2);
+	NUTS_TRUE(rv == NNG_OK || rv == NNG_ENOTSUP);
+	if (rv == NNG_OK) {
+		// Each successful call replaces the list.
+		NUTS_PASS(nng_tls_config_groups(cfg, groups + 1, 1));
+	}
+	nng_tls_config_free(cfg);
+}
+
+static void
+test_tls_groups_handshake(nng_tls_version version,
+    const nng_tls_group *server_groups, size_t server_count,
+    const nng_tls_group *client_groups, size_t client_count, bool mismatch,
+    bool psk)
+{
+	nng_tls_config      *cfg[2];
+	nng_stream          *stream[2];
+	nng_stream_listener *listener;
+	nng_stream_dialer   *dialer;
+	nng_aio             *aio[2];
+	nng_tls_group        copy[NNI_TLS_MAX_GROUPS];
+	char                 addr[64];
+	int                  port;
+	nng_err              rv;
+	uint8_t              key[32] = { 1, 2, 3, 4 };
+	uint8_t              data[]  = { 1, 2, 3, 4, 5 };
+	uint8_t              received[sizeof(data)];
+	const nng_tls_group  bad[] = { (nng_tls_group) 0xffff };
+
+	// Probe optional capabilities before performing checks: acutest cannot
+	// mark a test skipped after any checks have run.
+	rv = nng_tls_config_alloc(&cfg[0], NNG_TLS_MODE_SERVER);
+	if (rv != NNG_OK) {
+		NUTS_PASS(rv);
+		return;
+	}
+	rv = nng_tls_config_alloc(&cfg[1], NNG_TLS_MODE_CLIENT);
+	if (rv != NNG_OK) {
+		nng_tls_config_free(cfg[0]);
+		NUTS_PASS(rv);
+		return;
+	}
+	for (size_t i = 0; i < 2; i++) {
+		size_t count = i == 0 ? server_count : client_count;
+		const nng_tls_group *groups =
+		    i == 0 ? server_groups : client_groups;
+		if ((rv = nng_tls_config_version(cfg[i], version, version)) !=
+		    NNG_OK) {
+			break;
+		}
+		memcpy(copy, groups, count * sizeof(copy[0]));
+		if ((rv = nng_tls_config_groups(cfg[i], copy, count)) !=
+		    NNG_OK) {
+			break;
+		}
+		memset(copy, 0, sizeof(copy));
+		if (psk &&
+		    (rv = nng_tls_config_psk(
+		         cfg[i], "groups", key, sizeof(key))) != NNG_OK) {
+			break;
+		}
+	}
+	if (rv == NNG_ENOTSUP) {
+		nng_tls_config_free(cfg[0]);
+		nng_tls_config_free(cfg[1]);
+		NUTS_SKIP("TLS version, groups, or PSK unavailable in this "
+		          "engine build");
+		return;
+	}
+	NUTS_PASS(rv);
+	for (size_t i = 0; i < 2; i++) {
+		size_t count = i == 0 ? server_count : client_count;
+		const nng_tls_group *groups =
+		    i == 0 ? server_groups : client_groups;
+		// Preserve the previous list on common-layer and native
+		// rejection.
+		NUTS_FAIL(nng_tls_config_groups(cfg[i], bad, 1), NNG_ENOTSUP);
+		const nng_tls_group hybrid[] = { NNG_TLS_GRP_SECP256R1,
+			NNG_TLS_GRP_X25519MLKEM768 };
+		nng_err replacement = nng_tls_config_groups(cfg[i], hybrid, 2);
+		NUTS_TRUE(replacement == NNG_OK || replacement == NNG_ENOTSUP);
+		if (replacement == NNG_OK) {
+			memcpy(copy, groups, count * sizeof(copy[0]));
+			NUTS_PASS(nng_tls_config_groups(cfg[i], copy, count));
+			memset(copy, 0, sizeof(copy));
+		}
+	}
+	NUTS_PASS(nng_tls_config_own_cert(
+	    cfg[0], nuts_server_crt, nuts_server_key, NULL));
+	NUTS_PASS(nng_tls_config_auth_mode(cfg[1], NNG_TLS_AUTH_MODE_NONE));
+	NUTS_PASS(
+	    nng_stream_listener_alloc(&listener, "tls+tcp://127.0.0.1:0"));
+	NUTS_PASS(nng_stream_listener_set_tls(listener, cfg[0]));
+	NUTS_PASS(nng_stream_listener_listen(listener));
+	NUTS_PASS(
+	    nng_stream_listener_get_int(listener, NNG_OPT_BOUND_PORT, &port));
+	snprintf(addr, sizeof(addr), "tls+tcp://127.0.0.1:%d", port);
+	NUTS_PASS(nng_stream_dialer_alloc(&dialer, addr));
+	NUTS_PASS(nng_stream_dialer_set_tls(dialer, cfg[1]));
+	for (size_t i = 0; i < 2; i++) {
+		NUTS_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
+		nng_aio_set_timeout(aio[i], 5000);
+	}
+	nng_stream_listener_accept(listener, aio[0]);
+	nng_stream_dialer_dial(dialer, aio[1]);
+	for (size_t i = 0; i < 2; i++) {
+		nng_aio_wait(aio[i]);
+		NUTS_PASS(nng_aio_result(aio[i]));
+		stream[i] = nng_aio_get_output(aio[i], 0);
+		NUTS_FAIL(
+		    nng_tls_config_groups(cfg[i], server_groups, server_count),
+		    NNG_EBUSY);
+	}
+	// Streams establish TLS lazily. Application I/O drives the handshake.
+	void *send = nuts_stream_send_start(stream[0], data, sizeof(data));
+	void *recv =
+	    nuts_stream_recv_start(stream[1], received, sizeof(received));
+	int sent = nuts_stream_wait(send);
+	if (mismatch) {
+		// Some engines do not send an alert after a fatal handshake
+		// error. Close the failed sender so the other operation can
+		// finish too.
+		NUTS_TRUE(sent != NNG_OK);
+		NUTS_TRUE(sent != NNG_ETIMEDOUT);
+		nng_stream_close(stream[0]);
+	}
+	int recvd = nuts_stream_wait(recv);
+	if (mismatch) {
+		NUTS_TRUE(recvd != NNG_OK);
+		NUTS_TRUE(recvd != NNG_ETIMEDOUT);
+	} else {
+		NUTS_PASS(sent);
+		NUTS_PASS(recvd);
+		NUTS_TRUE(memcmp(data, received, sizeof(data)) == 0);
+	}
+	for (size_t i = 0; i < 2; i++) {
+		nng_stream_stop(stream[i]);
+		nng_stream_free(stream[i]);
+		nng_aio_free(aio[i]);
+		nng_tls_config_free(cfg[i]);
+	}
+	nng_stream_dialer_free(dialer);
+	nng_stream_listener_free(listener);
+}
+
+void
+test_tls_groups_tls12(void)
+{
+	const nng_tls_group server[] = { NNG_TLS_GRP_SECP384R1,
+		NNG_TLS_GRP_SECP256R1 };
+	const nng_tls_group client[] = { NNG_TLS_GRP_SECP256R1 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_2, server, 2, client, 1, false, false);
+}
+
+void
+test_tls_groups_tls13(void)
+{
+	const nng_tls_group server[] = { NNG_TLS_GRP_SECP384R1,
+		NNG_TLS_GRP_SECP256R1 };
+	const nng_tls_group client[] = { NNG_TLS_GRP_SECP256R1 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, server, 2, client, 1, false, false);
+}
+
+void
+test_tls_groups_mismatch(void)
+{
+	const nng_tls_group server[] = { NNG_TLS_GRP_SECP384R1 };
+	const nng_tls_group client[] = { NNG_TLS_GRP_SECP256R1 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, server, 1, client, 1, true, false);
+}
+
+void
+test_tls_groups_hybrid(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_X25519MLKEM768 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
+}
+
+void
+test_tls_groups_hybrid_mismatch(void)
+{
+	const nng_tls_group server[] = { NNG_TLS_GRP_X25519MLKEM768 };
+	const nng_tls_group client[] = { NNG_TLS_GRP_X25519 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, server, 1, client, 1, true, false);
+}
+
+void
+test_tls_groups_hybrid_p256(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_SECP256R1MLKEM768 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
+}
+
+void
+test_tls_groups_hybrid_p384(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_SECP384R1MLKEM1024 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, false);
+}
+
+void
+test_tls_groups_hybrid_psk(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_X25519MLKEM768 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, true);
+}
+
+void
+test_tls_groups_psk(void)
+{
+	const nng_tls_group groups[] = { NNG_TLS_GRP_SECP256R1 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, groups, 1, groups, 1, false, true);
+}
+
+void
+test_tls_groups_psk_mismatch(void)
+{
+	const nng_tls_group server[] = { NNG_TLS_GRP_SECP384R1 };
+	const nng_tls_group client[] = { NNG_TLS_GRP_SECP256R1 };
+	test_tls_groups_handshake(
+	    NNG_TLS_1_3, server, 1, client, 1, true, true);
+}
+
+void
 test_tls_config_single_identity(void)
 {
 	nng_tls_config    *cfg;
@@ -935,6 +1186,17 @@ TEST_LIST = {
 	{ "tls pending ciphertext send", test_tls_send_pending },
 	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },
+	{ "tls config groups", test_tls_config_groups },
+	{ "tls groups TLS 1.2", test_tls_groups_tls12 },
+	{ "tls groups TLS 1.3", test_tls_groups_tls13 },
+	{ "tls groups mismatch", test_tls_groups_mismatch },
+	{ "tls groups hybrid", test_tls_groups_hybrid },
+	{ "tls groups hybrid mismatch", test_tls_groups_hybrid_mismatch },
+	{ "tls groups hybrid P-256", test_tls_groups_hybrid_p256 },
+	{ "tls groups hybrid P-384", test_tls_groups_hybrid_p384 },
+	{ "tls groups hybrid PSK", test_tls_groups_hybrid_psk },
+	{ "tls groups PSK", test_tls_groups_psk },
+	{ "tls groups PSK mismatch", test_tls_groups_psk_mismatch },
 	{ "tls config single identity", test_tls_config_single_identity },
 	{ "tls conn refused", test_tls_conn_refused },
 	{ "tls large message", test_tls_large_message },

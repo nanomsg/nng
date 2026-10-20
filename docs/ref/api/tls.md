@@ -164,6 +164,84 @@ DTLS range is rejected when the endpoint is started.
 NNG does not support SSL v2.0, SSL v3.0, TLS v1.0, or TLS v1.1.
 TLS v1.3 zero round trip time (0-RTT) and session resumption are not supported.
 
+## Key Exchange Groups
+
+```c
+nng_err nng_tls_config_groups(nng_tls_config *cfg,
+    const nng_tls_group *groups, size_t count);
+```
+
+{{hi:`nng_tls_group`}}
+{{hi:`nng_tls_config_groups`}}
+The `nng_tls_config_groups` function replaces the complete set of allowed
+key exchange groups in _cfg_. The array is ordered by preference, with the
+most preferred group first. The engine and peer determine the final choice;
+an engine may also consider existing key shares to avoid an extra round trip.
+The array is copied, so the caller may modify or release it after this call.
+
+The `nng_tls_group` enumeration provides the following IANA NamedGroup identifiers:
+
+| Constant | Key exchange group |
+| --- | --- |
+| `NNG_TLS_GRP_SECP256R1` | secp256r1 (P-256) |
+| `NNG_TLS_GRP_SECP384R1` | secp384r1 (P-384) |
+| `NNG_TLS_GRP_SECP521R1` | secp521r1 (P-521) |
+| `NNG_TLS_GRP_X25519` | X25519 |
+| `NNG_TLS_GRP_X448` | X448 |
+| `NNG_TLS_GRP_FFDHE2048` | ffdhe2048 |
+| `NNG_TLS_GRP_FFDHE3072` | ffdhe3072 |
+| `NNG_TLS_GRP_FFDHE4096` | ffdhe4096 |
+| `NNG_TLS_GRP_FFDHE6144` | ffdhe6144 |
+| `NNG_TLS_GRP_FFDHE8192` | ffdhe8192 |
+| `NNG_TLS_GRP_X25519MLKEM768` | X25519 + ML-KEM-768 hybrid |
+| `NNG_TLS_GRP_SECP256R1MLKEM768` | P-256 + ML-KEM-768 hybrid |
+| `NNG_TLS_GRP_SECP384R1MLKEM1024` | P-384 + ML-KEM-1024 hybrid |
+
+Every requested group must be supported by the selected TLS engine and its
+build configuration. An unknown or unsupported group returns [`NNG_ENOTSUP`].
+A null array, an empty list, or duplicate entries returns [`NNG_EINVAL`].
+On failure, the previous group configuration is unchanged. Once the
+configuration is in use, this function returns [`NNG_EBUSY`].
+
+If this function is never called, the engine's default group list is used.
+To restore those defaults, allocate a new TLS configuration object.
+The list applies wherever that configuration is used, including TLS streams,
+the TLS transport, HTTPS, and secure WebSockets. DTLS remains subject to the
+engine's supported DTLS versions and groups.
+
+### Requiring Hybrid Post-Quantum Key Exchange
+
+Group selection does not change the TLS version range or certificate algorithms.
+To require hybrid post-quantum key exchange, require TLS 1.3 and configure
+only hybrid groups. For example, in a function returning an NNG error code:
+
+```c
+const nng_tls_group groups[] = {
+    NNG_TLS_GRP_X25519MLKEM768,
+    NNG_TLS_GRP_SECP256R1MLKEM768,
+};
+
+nng_err rv = nng_tls_config_version(cfg, NNG_TLS_1_3, NNG_TLS_1_3);
+if (rv != 0) {
+    return rv;
+}
+return nng_tls_config_groups(cfg, groups, sizeof(groups) / sizeof(groups[0]));
+```
+
+Classical-only peers cannot connect using this configuration. Adding a classical
+group to the array permits classical key exchange. OpenSSL 3.5 and newer support
+these hybrid groups; wolfSSL requires a build with the corresponding ML-KEM and
+hybrid support. Current Mbed TLS releases support classical groups through this
+API and return [`NNG_ENOTSUP`] for the hybrid groups.
+
+For TLS or DTLS 1.3, configuring groups also excludes pure-PSK exchanges that would skip
+key sharing; PSK authentication can still be combined with a permitted group.
+TLS 1.2 exchanges without a group, such as RSA or pure PSK, are not excluded
+by a group list. Use the TLS 1.3 version restriction above when a group exchange
+must be required.
+Existing RSA or ECDSA certificates can authenticate a hybrid key exchange;
+this does not provide post-quantum certificate authentication.
+
 ## Using Configuration Objects
 
 ```c

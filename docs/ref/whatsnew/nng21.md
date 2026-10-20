@@ -13,3 +13,12 @@ The default TLS configuration negotiates the highest mutually supported DTLS
 version. Applications can use [`nng_tls_config_version`] to require DTLS 1.3.
 See the [DTLS transport](../tran/dtls.md) reference for engine requirements and
 message size limits.
+
+## TLS Key Exchange Groups
+
+[`nng_tls_config_groups`] accepts an array of named key exchange groups,
+including hybrid ML-KEM groups when supported by the selected TLS engine.
+Applications can require hybrid post-quantum key exchange by combining a
+hybrid-only group list with a TLS 1.3 version restriction.
+
+{{#include ../xref.md}}
