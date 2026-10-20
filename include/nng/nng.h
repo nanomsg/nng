@@ -862,13 +862,20 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_UDP_CONN_RETRY "udp:conn-retry"
 
 // Time a UDP-based dialer waits for its peer to accept the connection.  The
-// duration must be positive.
+// duration must be positive. DTLS listeners also use this deadline for
+// inbound TLS and NNG protocol negotiation.
 #define NNG_OPT_UDP_CONN_EXPIRE "udp:conn-expire"
 
 // Maximum number of peers admitted by a UDP-based listener.  A value of zero
 // disables the limit.  This option is also supported by DTLS listeners, where
-// it limits unauthenticated handshakes.
+// it limits pending TLS and NNG protocol negotiations, including failed
+// connections whose resources have not yet been released.
 #define NNG_OPT_UDP_MAX_PEERS "udp:max-peers"
+
+// Maximum new inbound DTLS handshakes per second (size_t). The listener
+// permits a burst of this size (default 128); zero disables the rate limit.
+// Set before starting the listener. Values may not exceed UINT32_MAX.
+#define NNG_OPT_DTLS_CONN_RATE "dtls:conn-rate"
 
 // IPC options.  These will largely vary depending on the platform,
 // as POSIX systems have very different options than Windows.

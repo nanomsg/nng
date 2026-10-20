@@ -14,6 +14,7 @@ if (NNG_TRANSPORT_DTLS)
     nng_sources(dtls.c)
     nng_defines(NNG_TRANSPORT_DTLS)
     nng_test(dtls_tran_test)
+    nng_test(dtls_admission_test)
     if (NNG_TESTS)
         add_executable(dtls_interop_peer dtls_interop_peer.c
             ../../../testing/certs.c)

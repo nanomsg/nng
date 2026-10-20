@@ -555,6 +555,7 @@
 [`NNG_OPT_TLS_PEER_CN`]: ../tran/tls.md#NNG_OPT_TLS_PEER_CN
 [`NNG_OPT_UDP_CONN_RETRY`]: ../tran/udp.md#NNG_OPT_UDP_CONN_RETRY
 [`NNG_OPT_UDP_CONN_EXPIRE`]: ../tran/udp.md#NNG_OPT_UDP_CONN_EXPIRE
+[`NNG_OPT_DTLS_CONN_RATE`]: ../tran/dtls.md#peer-admission
 [`NNG_OPT_UDP_MAX_PEERS`]: ../tran/udp.md#NNG_OPT_UDP_MAX_PEERS
 [`NNG_OPT_WS_HEADER`]: ../tran/websocket.md#NNG_OPT_WS_HEADER
 [`NNG_OPT_WS_HEADER_NEXT`]: ../tran/websocket.md#NNG_OPT_WS_HEADER_NEXT

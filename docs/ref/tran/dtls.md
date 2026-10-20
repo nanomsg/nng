@@ -117,20 +117,60 @@ listener is started.
 | ----------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | [`NNG_OPT_RECVMAXSZ`]                                 | `size_t` | Maximum size of incoming messages. Values larger than the DTLS transport maximum are clamped to the transport maximum.          |
 | [`NNG_OPT_UDP_CONN_RETRY`]                             | `nng_duration` | Interval between connection requests while dialing. The default is 200 milliseconds. Only positive values are accepted; `<= 0` returns `NNG_EINVAL`. |
-| [`NNG_OPT_UDP_CONN_EXPIRE`]                            | `nng_duration` | Time allowed to establish a connection. The default is 5 seconds. Only positive values are accepted; `<= 0` returns `NNG_EINVAL`. |
-| [`NNG_OPT_UDP_MAX_PEERS`]                              | `size_t` | Maximum number of unauthenticated inbound DTLS handshakes. The default is 1024; set to 0 to disable the limit.                   |
+| [`NNG_OPT_UDP_CONN_EXPIRE`]                            | `nng_duration` | Time allowed to establish a connection, including inbound listener handshakes. The default is 5 seconds. Only positive values are accepted; `<= 0` returns `NNG_EINVAL`. |
+| [`NNG_OPT_UDP_MAX_PEERS`]                              | `size_t` | Maximum number of pending inbound connections, including connections awaiting cleanup. The default is 1024; set to 0 to disable the limit. |
+| [`NNG_OPT_DTLS_CONN_RATE`]                             | `size_t` | New inbound handshake allocations per second, with a burst of the same size. The default is 128; set to 0 to disable the rate limit. |
 | [`NNG_OPT_BOUND_PORT`] | `int`    | The locally bound UDP port number (1-65535), read-only for [listener] objects only.                                             |
 
 The DTLS transport does not support TCP-specific options such as
 `NNG_OPT_TCP_NODELAY` or `NNG_OPT_TCP_KEEPALIVE`.
 
-## Peer Admission
+### Peer Admission
 
-DTLS only adds a pipe to the socket after TLS has validated an inbound peer.
-Before that point, each source address consumes handshake state. Listeners
-therefore admit at most 1024 unauthenticated peers by default. Configure
-[`NNG_OPT_UDP_MAX_PEERS`] before starting the listener to select another limit.
-A value of 0 disables this protection.
+A listener screens traffic from unknown source addresses before allocating TLS
+state. Only an initial ClientHello fragment with a plausible DTLS record and
+handshake header is admitted. The declared ClientHello length must not exceed
+16 KiB. The screen permits fragmented ClientHello messages when the first
+fragment arrives first; other fragments from unknown sources are discarded until
+the client retransmits the first fragment. wolfSSL and older Mbed TLS versions
+require an unfragmented initial ClientHello before cookie validation.
+
+Each admitted source consumes handshake state even before its address or
+identity has been verified. Cookie exchanges validate the source address before
+the server sends its certificate flight, but admission is not stateless.
+The listener applies two independent limits:
+
+- [`NNG_OPT_UDP_MAX_PEERS`] limits pending inbound connections to 1024 by default.
+  A connection holds a slot through TLS and NNG protocol negotiation. A failed
+  connection continues to hold its slot until its resources have been released.
+  Established connections do not count toward this limit.
+- [`NNG_OPT_DTLS_CONN_RATE`] limits allocations for new inbound handshakes to
+  128 per second by default. The listener starts with credit for 128 allocations;
+  credit replenishes continuously at the configured rate, up to the same burst
+  limit. Failed handshakes also consume credit. This option accepts values from
+  0 through `UINT32_MAX`.
+
+Set these options on the listener before starting it. Setting either option to
+0 disables that limit independently. Attempts to change them after starting the
+listener fail with [`NNG_EBUSY`].
+
+[`NNG_OPT_UDP_CONN_EXPIRE`] sets the deadline for both inbound and outbound
+connection establishment, including TLS and NNG protocol negotiation. The
+listener default is 5 seconds from admission; packets discarded before admission
+do not start a deadline or extend another connection's deadline.
+
+Traffic from existing peers bypasses the admission limits. When a limit is
+reached, new sources are silently discarded and may retry after capacity becomes
+available. Sustained traffic containing plausible ClientHello messages can
+therefore delay legitimate new connections. Applications expecting many new
+connections at once should adjust these limits and the connection deadline for
+their workload.
+
+When statistics are enabled, each listener exposes `peer_pending` for the number
+of pending connections, `peer_alloc` for the number of inbound handshake
+allocations, `peer_invalid` for datagrams rejected by the initial screen,
+`peer_rate` for admissions rejected by the rate limit, and `peer_reject` for
+admissions rejected by the pending connection limit.
 
 ### Maximum Message Size
 
