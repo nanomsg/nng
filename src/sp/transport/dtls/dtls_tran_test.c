@@ -1172,6 +1172,57 @@ test_dtls_version_fallback(void)
 }
 
 static void
+test_dtls_groups(void)
+{
+	nng_socket          server, client;
+	nng_listener        listener;
+	nng_dialer          dialer;
+	const nng_url      *url;
+	nng_tls_config     *scfg, *ccfg;
+	const nng_tls_group groups[] = { NNG_TLS_GRP_SECP384R1,
+		NNG_TLS_GRP_SECP256R1 };
+
+	// Probe before any assertions so unsupported builds can skip.
+	nng_err rv = nng_tls_config_alloc(&scfg, NNG_TLS_MODE_SERVER);
+	if (rv != NNG_OK) {
+		NUTS_PASS(rv);
+		return;
+	}
+	rv = nng_tls_config_groups(scfg, groups, 2);
+	if (rv == NNG_ENOTSUP) {
+		nng_tls_config_free(scfg);
+		NUTS_SKIP("engine has no group configuration support");
+		return;
+	}
+	NUTS_PASS(rv);
+	ccfg = tls_client_config();
+	NUTS_PASS(nng_tls_config_own_cert(
+	    scfg, nuts_server_crt, nuts_server_key, NULL));
+	NUTS_PASS(nng_tls_config_groups(ccfg, groups + 1, 1));
+	NUTS_PASS(nng_tls_config_version(scfg, NNG_TLS_1_2, NNG_TLS_1_2));
+	NUTS_PASS(nng_tls_config_version(ccfg, NNG_TLS_1_2, NNG_TLS_1_2));
+	NUTS_OPEN(server);
+	NUTS_OPEN(client);
+	NUTS_PASS(nng_socket_set_ms(client, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(server, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(
+	    nng_listener_create(&listener, server, "dtls4://127.0.0.1:0"));
+	NUTS_PASS(nng_listener_set_tls(listener, scfg));
+	NUTS_PASS(nng_listener_start(listener, 0));
+	NUTS_PASS(nng_listener_get_url(listener, &url));
+	NUTS_PASS(nng_dialer_create_url(&dialer, client, url));
+	NUTS_PASS(nng_dialer_set_tls(dialer, ccfg));
+	NUTS_PASS(nng_dialer_set_ms(dialer, NNG_OPT_UDP_CONN_EXPIRE, 5000));
+	NUTS_PASS(nng_dialer_start(dialer, 0));
+	NUTS_SEND(client, "DTLS configured groups");
+	NUTS_RECV(server, "DTLS configured groups");
+	NUTS_CLOSE(client);
+	NUTS_CLOSE(server);
+	nng_tls_config_free(ccfg);
+	nng_tls_config_free(scfg);
+}
+
+static void
 test_dtls_version_mismatch(void)
 {
 #ifdef NNG_SUPP_DTLS_1_3
@@ -2207,6 +2258,7 @@ NUTS_TESTS = {
 	{ "dtls pending expiry", test_dtls_pending_expiry },
 	{ "dtls TLS 1.3 only", test_dtls_tls13_only },
 	{ "dtls version fallback", test_dtls_version_fallback },
+	{ "dtls groups", test_dtls_groups },
 	{ "dtls version mismatch", test_dtls_version_mismatch },
 	{ "dtls port zero bind", test_dtls_port_zero_bind },
 	{ "dtls IPv6", test_dtls_ipv6 },
