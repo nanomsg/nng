@@ -5,7 +5,11 @@
 [Preface](./preface.md)
 [Overview](./overview/index.md)
 
-- [What's New in NNG 2.0](./whatsnew/index.md)
+- [What's New](./whatsnew/index.md)
+
+  - [NNG 2.1](./whatsnew/nng21.md)
+
+  - [NNG 2.0](./whatsnew/nng20.md)
 
 - [API Reference](./api/index.md)
 
