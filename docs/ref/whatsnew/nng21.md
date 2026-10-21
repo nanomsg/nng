@@ -26,10 +26,13 @@ for configuration examples and engine requirements.
 
 ## DTLS 1.3 Support
 
-The [DTLS transport](../tran/dtls.md) now supports DTLS 1.3 as well as DTLS
-1.2. DTLS 1.3 is available with wolfSSL 5.9.1 or newer built with DTLS 1.3
-enabled, and with OpenSSL 4.1 or newer built with DTLS 1.3 enabled. Mbed TLS
-and earlier OpenSSL releases continue to support DTLS 1.2.
+The [DTLS transport](../tran/dtls.md) is now supported rather than
+experimental. It provides encrypted, authenticated, message-oriented
+communication over unicast UDP when TLS support and the DTLS transport build
+option are enabled. It supports DTLS 1.3 as well as DTLS 1.2. DTLS 1.3 is
+available with wolfSSL 5.9.1 or newer built with DTLS 1.3 enabled, and with
+OpenSSL 4.1 or newer built with DTLS 1.3 enabled. Mbed TLS and earlier OpenSSL
+releases continue to support DTLS 1.2.
 
 The default TLS configuration negotiates the highest mutually supported DTLS
 version. Applications can use [`nng_tls_config_version`] to require DTLS 1.3.
