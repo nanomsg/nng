@@ -130,3 +130,9 @@ Summary:
   Count of skipped unit tests:    0
 SUCCESS: All unit tests have passed.
 ```
+
+## Long-running DTLS validation
+
+See [DTLS_SOAK.md](DTLS_SOAK.md) for the opt-in, multi-backend soak harness,
+including packet faults, connection churn, admission pressure, and resource
+monitoring.

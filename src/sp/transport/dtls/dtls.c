@@ -163,19 +163,23 @@ struct dtls_pipe {
 };
 
 struct dtls_ep {
-	nng_udp      *udp;
-	nni_mtx       mtx;
-	uint16_t      proto;
-	uint16_t      peer;
-	uint16_t      af; // address family
-	bool          fini;
-	bool          started;
-	bool          receiving;
-	bool          closed;
-	nng_url      *url;
-	const char   *host; // for dialers
-	nni_aio      *useraio;
+	nng_udp    *udp;
+	nni_mtx     mtx;
+	uint16_t    proto;
+	uint16_t    peer;
+	uint16_t    af; // address family
+	bool        fini;
+	bool        started;
+	bool        receiving;
+	bool        closed;
+	nng_url    *url;
+	const char *host; // for dialers
+	// A retry stays separate from connaios until the previous callbacks
+	// have drained. connect_reap holds a dialer reference while
+	// queued/running.
 	nni_aio      *connaio;
+	bool          connecting;
+	nni_reap_node connect_reap;
 	nni_aio       timeaio;
 	nni_time      next_wake;
 	nni_aio       resaio;
@@ -1433,6 +1437,10 @@ dtls_ep_close(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	ep->closed = true;
+	if ((aio = ep->connaio) != NULL) {
+		ep->connaio = NULL;
+		nni_aio_finish_error(aio, NNG_ECONNABORTED);
+	}
 	while ((aio = nni_list_first(&ep->connaios)) != NULL) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, NNG_ECONNABORTED);
@@ -1734,7 +1742,10 @@ dtls_ep_cancel(nni_aio *aio, void *arg, nng_err rv)
 {
 	dtls_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);
-	if (nni_aio_list_active(aio)) {
+	if (ep->connaio == aio) {
+		ep->connaio = NULL;
+		nni_aio_finish_error(aio, rv);
+	} else if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
 		nni_aio_abort(&ep->resaio, rv);
@@ -1827,23 +1838,39 @@ dtls_resolv_cb(void *arg)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+// Called with the endpoint locked, after all callbacks from the old
+// attempt have drained. Only now may they see the new connection AIO.
 static void
-dtls_ep_connect(void *arg, nni_aio *aio)
+dtls_connect_start(dtls_ep *ep, nni_aio *aio)
+{
+	NNI_ASSERT(nni_list_empty(&ep->connaios));
+	nni_list_append(&ep->connaios, aio);
+
+	// lookup the IP address
+	memset(&ep->resolv, 0, sizeof(ep->resolv));
+	ep->resolv.ri_family  = ep->af;
+	ep->resolv.ri_host    = ep->url->u_hostname;
+	ep->resolv.ri_port    = ep->url->u_port;
+	ep->resolv.ri_passive = false;
+	ep->resolv.ri_sa      = &ep->peer_sa;
+	nni_aio_set_timeout(&ep->resaio, NNI_SECOND * 5);
+	nni_resolv(&ep->resolv, &ep->resaio);
+
+	// wake up for retries
+	nni_aio_abort(&ep->timeaio, NNG_EINTR);
+}
+
+// Reconnect is normally invoked by a dialer timer callback. Synchronous
+// TLS stop and AIO waits must run outside the shared callback pool, or
+// concurrent reconnects can exhaust that pool waiting for its own work.
+static void
+dtls_connect_reap(void *arg)
 {
 	dtls_ep   *ep = arg;
 	dtls_pipe *p;
+	nni_aio   *aio;
 
 	nni_mtx_lock(&ep->mtx);
-	if (ep->closed) {
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-	if (!nni_list_empty(&ep->connaios)) {
-		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
 	// Retire the previous attempt before publishing a new connection AIO.
 	// Its late TLS callbacks must not complete the new attempt, and no
 	// old BIO may use the socket after the resolver replaces it.
@@ -1880,32 +1907,57 @@ dtls_ep_connect(void *arg, nni_aio *aio)
 	// must finish before a new connection AIO is visible to the callback.
 	nni_aio_wait(&ep->resaio);
 	nni_mtx_lock(&ep->mtx);
+	ep->connecting = false;
+	if ((aio = ep->connaio) != NULL) {
+		ep->connaio = NULL;
+		NNI_ASSERT(!ep->closed);
+		dtls_connect_start(ep, aio);
+	}
+	nni_mtx_unlock(&ep->mtx);
+	nni_dialer_rele(ep->ndialer);
+}
+
+static nni_reap_list dtls_connect_reap_list = {
+	.rl_offset = offsetof(dtls_ep, connect_reap),
+	.rl_func   = dtls_connect_reap,
+};
+
+static void
+dtls_ep_connect(void *arg, nni_aio *aio)
+{
+	dtls_ep *ep = arg;
+	nng_err  rv;
+
+	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_mtx_unlock(&ep->mtx);
-		return;
+		goto done;
+	}
+	if (ep->connaio != NULL || !nni_list_empty(&ep->connaios)) {
+		nni_aio_finish_error(aio, NNG_EBUSY);
+		goto done;
 	}
 	if (!nni_aio_start(aio, dtls_ep_cancel, ep)) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
+		goto done;
 	}
-	ep->dialer = true;
-	NNI_ASSERT(nni_list_empty(&ep->connaios));
-	nni_list_append(&ep->connaios, aio);
-
-	// lookup the IP address
-	memset(&ep->resolv, 0, sizeof(ep->resolv));
-	ep->resolv.ri_family  = ep->af;
-	ep->resolv.ri_host    = ep->url->u_hostname;
-	ep->resolv.ri_port    = ep->url->u_port;
-	ep->resolv.ri_passive = false;
-	ep->resolv.ri_sa      = &ep->peer_sa;
-	nni_aio_set_timeout(&ep->resaio, NNI_SECOND * 5);
-	nni_resolv(&ep->resolv, &ep->resaio);
-
-	// wake up for retries
-	nni_aio_abort(&ep->timeaio, NNG_EINTR);
-
+	if (!ep->dialer) {
+		// The first attempt has no previous resources to drain.
+		ep->dialer = true;
+		dtls_connect_start(ep, aio);
+		goto done;
+	}
+	if (!ep->connecting) {
+		if ((rv = nni_dialer_hold(ep->ndialer)) != NNG_OK) {
+			nni_aio_finish_error(aio, rv);
+			goto done;
+		}
+		ep->connecting = true;
+		nni_reap(&dtls_connect_reap_list, ep);
+	}
+	// Cancellation can replace this request while cleanup is in progress.
+	// No old resolver or TLS callback may complete it in the meantime.
+	ep->connaio = aio;
+done:
 	nni_mtx_unlock(&ep->mtx);
 }
 

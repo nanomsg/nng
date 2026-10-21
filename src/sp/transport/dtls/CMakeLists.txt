@@ -1,5 +1,5 @@
 #
-# Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -19,5 +19,9 @@ if (NNG_TRANSPORT_DTLS)
         add_executable(dtls_interop_peer dtls_interop_peer.c
             ../../../testing/certs.c)
         target_link_libraries(dtls_interop_peer PRIVATE nng_testing)
+        # Opt-in soak peer; deliberately excluded from routine CTest runs.
+        add_executable(dtls_soak_peer dtls_soak_peer.c
+            ../../../testing/certs.c)
+        target_link_libraries(dtls_soak_peer PRIVATE nng_testing)
     endif ()
 endif()
