@@ -25,6 +25,7 @@ test_req_identity(void)
 	NUTS_PASS(nng_req0_open(&s));
 	NUTS_PASS(nng_socket_proto_id(s, &p));
 	NUTS_TRUE(p == REQ0_SELF);
+	NUTS_TRUE(NNG_PROTOCOL_NUMBER(3, 0) == REQ0_SELF);
 	NUTS_PASS(nng_socket_peer_id(s, &p));
 	NUTS_TRUE(p == REQ0_PEER); // 49
 	NUTS_PASS(nng_socket_proto_name(s, &n));
