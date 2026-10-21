@@ -69,6 +69,15 @@ struct ipc_ep {
 #endif
 };
 
+#ifdef NNG_TEST_LIB
+nni_aio *
+nni_ipc_test_conn_aio(void *arg)
+{
+	ipc_ep *ep = arg;
+	return (&ep->conn_aio);
+}
+#endif
+
 static void ipc_pipe_send_start(ipc_pipe *p);
 static void ipc_pipe_recv_start(ipc_pipe *p);
 static void ipc_pipe_send_cb(void *);
@@ -688,11 +697,14 @@ ipc_ep_accept_cb(void *arg)
 	nng_stream *conn;
 
 	nni_mtx_lock(&ep->mtx);
+	// Stop can replace the result after the provider supplied a stream.
+	// Take ownership of that output even when completion reports an error.
+	conn = nni_aio_get_output(aio, 0);
+	nni_aio_set_output(aio, 0, NULL);
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
+		nng_stream_free(conn);
 		goto error;
 	}
-
-	conn = nni_aio_get_output(aio, 0);
 
 	if (ep->closed) {
 		rv = NNG_ECLOSED;
@@ -746,11 +758,14 @@ ipc_ep_dial_cb(void *arg)
 	nng_stream *conn;
 
 	nni_mtx_lock(&ep->mtx);
+	// Stop can replace the result after the provider supplied a stream.
+	// Take ownership of that output even when completion reports an error.
+	conn = nni_aio_get_output(aio, 0);
+	nni_aio_set_output(aio, 0, NULL);
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
+		nng_stream_free(conn);
 		goto error;
 	}
-
-	conn = nni_aio_get_output(aio, 0);
 
 	if (ep->closed) {
 		nng_stream_free(conn);

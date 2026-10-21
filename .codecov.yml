@@ -6,8 +6,9 @@ ignore:
  - "src/testing"
  - "perf"
  - "**/*_test.c"
- # This standalone peer is also a test executable.
+ # Standalone peers are test executables, not library code.
  - "src/sp/transport/dtls/dtls_interop_peer.c"
+ - "src/sp/transport/dtls/dtls_soak_peer.c"
 
 coverage:
   range: 50..95
