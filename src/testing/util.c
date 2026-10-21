@@ -457,9 +457,8 @@ nuts_tran_huge_msg(const char *scheme, size_t size)
 	nng_msg       *msg;
 	const nng_url *url;
 
-	buf = nng_alloc(size);
-
 	NUTS_SKIP_IF_IPV6_NEEDED_AND_ABSENT(scheme);
+	buf = nng_alloc(size);
 	NUTS_ADDR_ZERO(addr, scheme);
 	NUTS_OPEN(s1);
 	NUTS_OPEN(s2);
