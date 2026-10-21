@@ -12,7 +12,11 @@
 #include <winsock2.h>
 #endif
 
+#include "../../../core/nng_impl.h"
+#include "../../../core/sockimpl.h"
 #include "../../../testing/nuts.h"
+
+extern nni_aio *nni_ipc_test_conn_aio(void *);
 
 #ifdef NNG_PLATFORM_POSIX
 #include <sys/stat.h>
@@ -403,6 +407,87 @@ test_ipc_listen_accept_cancel(void)
 	nng_aio_free(aio);
 	nng_stream_listener_close(l);
 	nng_stream_listener_free(l);
+}
+
+typedef struct {
+	nng_stream stream;
+	unsigned   freed;
+} ipc_test_stream;
+
+static void
+ipc_test_stream_free(void *arg)
+{
+	ipc_test_stream *stream = arg;
+	stream->freed++;
+}
+
+static void
+ipc_test_stream_noop(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
+static void
+ipc_test_stream_io(void *arg, nni_aio *aio)
+{
+	NNI_ARG_UNUSED(arg);
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
+}
+
+static const nng_sockaddr *
+ipc_test_stream_addr(void *arg)
+{
+	static const nng_sockaddr addr = { 0 };
+	NNI_ARG_UNUSED(arg);
+	return (&addr);
+}
+
+static void
+test_ipc_canceled_conn_output(void)
+{
+	nng_socket       sock;
+	nng_listener     listener;
+	nng_dialer       dialer;
+	nni_listener    *l;
+	nni_dialer      *d;
+	char            *addr;
+	ipc_test_stream  accepted = { 0 };
+	ipc_test_stream  dialed   = { 0 };
+	const nng_stream ops      = {
+		.s_free      = ipc_test_stream_free,
+		.s_close     = ipc_test_stream_noop,
+		.s_stop      = ipc_test_stream_noop,
+		.s_send      = ipc_test_stream_io,
+		.s_recv      = ipc_test_stream_io,
+		.s_self_addr = ipc_test_stream_addr,
+		.s_peer_addr = ipc_test_stream_addr,
+	};
+	accepted.stream = dialed.stream = ops;
+
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(sock);
+	NUTS_PASS(nng_listener_create(&listener, sock, addr));
+	NUTS_PASS(nng_dialer_create(&dialer, sock, addr));
+	NUTS_PASS(nni_listener_find(&l, (uint32_t) nng_listener_id(listener)));
+	NUTS_PASS(nni_dialer_find(&d, (uint32_t) nng_dialer_id(dialer)));
+	void            *endpoints[] = { l->l_data, d->d_data };
+	ipc_test_stream *streams[]   = { &accepted, &dialed };
+	for (size_t i = 0; i < NNI_NUM_ELEMENTS(endpoints); i++) {
+		nni_aio *aio = nni_ipc_test_conn_aio(endpoints[i]);
+		// An accept/connect can supply a stream just as AIO stop
+		// replaces its completion with ESTOPPED. The error callback
+		// still owns that stream and must free and detach it.
+		nni_aio_set_output(aio, 0, &streams[i]->stream);
+		nni_aio_finish_error(aio, NNG_ESTOPPED);
+		nni_aio_wait(aio);
+		NUTS_TRUE(streams[i]->freed == 1);
+		NUTS_NULL(nni_aio_get_output(aio, 0));
+	}
+	nni_listener_rele(l);
+	nni_dialer_rele(d);
+	NUTS_CLOSE(sock);
+	NUTS_TRUE(accepted.freed == 1);
+	NUTS_TRUE(dialed.freed == 1);
 }
 
 void
@@ -809,6 +894,7 @@ TEST_LIST = {
 	{ "ipc connect blocking accept", test_ipc_connect_blocking_accept },
 	{ "ipc listen cleanup stale", test_ipc_listener_clean_stale },
 	{ "ipc listen duplicate", test_ipc_listen_duplicate },
+	{ "ipc canceled connection output", test_ipc_canceled_conn_output },
 	{ "unix listen duplicate", test_unix_listener_duplicate },
 	{ "ipc listen accept cancel", test_ipc_listen_accept_cancel },
 	{ "ipc abstract sockets", test_abstract_sockets },
