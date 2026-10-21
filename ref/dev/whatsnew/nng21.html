@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cc09d6b3.js";
+            window.path_to_searchindex_js = "../searchindex-e0955af3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-88728f04.js"></script>
@@ -197,10 +197,13 @@ authentication continues to use those classical algorithms. See
 <a href="../api/tls.html#requiring-hybrid-post-quantum-key-exchange">Requiring Hybrid Post-Quantum Key Exchange</a>
 for configuration examples and engine requirements.</p>
 <h2 id="dtls-13-support"><a class="header" href="#dtls-13-support">DTLS 1.3 Support</a></h2>
-<p>The <a href="../tran/dtls.html">DTLS transport</a> now supports DTLS 1.3 as well as DTLS
-1.2. DTLS 1.3 is available with wolfSSL 5.9.1 or newer built with DTLS 1.3
-enabled, and with OpenSSL 4.1 or newer built with DTLS 1.3 enabled. Mbed TLS
-and earlier OpenSSL releases continue to support DTLS 1.2.</p>
+<p>The <a href="../tran/dtls.html">DTLS transport</a> is now supported rather than
+experimental. It provides encrypted, authenticated, message-oriented
+communication over unicast UDP when TLS support and the DTLS transport build
+option are enabled. It supports DTLS 1.3 as well as DTLS 1.2. DTLS 1.3 is
+available with wolfSSL 5.9.1 or newer built with DTLS 1.3 enabled, and with
+OpenSSL 4.1 or newer built with DTLS 1.3 enabled. Mbed TLS and earlier OpenSSL
+releases continue to support DTLS 1.2.</p>
 <p>The default TLS configuration negotiates the highest mutually supported DTLS
 version. Applications can use <a href="../api/tls.html#tls-versions"><code>nng_tls_config_version</code></a> to require DTLS 1.3.
 See the <a href="../tran/dtls.html">DTLS transport</a> reference for engine requirements and
