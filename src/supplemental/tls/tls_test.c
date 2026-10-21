@@ -64,6 +64,44 @@ test_tls_close_idle_bio(void)
 }
 
 static void
+test_tls_canceled_datagram_bio(void)
+{
+#ifdef NNG_TRANSPORT_DTLS
+	nng_tls_config       *cfg;
+	nni_tls_conn         *conn;
+	nng_msg              *msg;
+	nng_sockaddr          sa  = { 0 };
+	const nni_tls_bio_ops ops = { 0 };
+	size_t                size;
+
+	NUTS_PASS(nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT));
+	size = sizeof(*conn) + nni_tls_engine_conn_size();
+	NUTS_ASSERT((conn = nni_zalloc(size)) != NULL);
+	NUTS_PASS(nni_tls_init(conn, cfg, true));
+	sa.s_in.sa_family = NNG_AF_INET;
+	NUTS_PASS(nni_tls_start(conn, &ops, NULL, &sa));
+
+	// A cancellation can replace the result of a completed receive
+	// before its callback runs. The delivered packet still needs to
+	// be freed even though the callback sees an error.
+	NUTS_PASS(nng_msg_alloc(&msg, 100));
+	NUTS_ASSERT(nni_aio_start(&conn->bio_recv, NULL, NULL));
+	nni_aio_set_msg(&conn->bio_recv, msg);
+	nni_aio_finish_error(&conn->bio_recv, NNG_ECANCELED);
+	nni_aio_wait(&conn->bio_recv);
+	NUTS_NULL(nni_aio_get_msg(&conn->bio_recv));
+	// Clean up on regression as well.
+	nni_msg_free(nni_aio_get_msg(&conn->bio_recv));
+	nni_aio_set_msg(&conn->bio_recv, NULL);
+	nni_tls_fini(conn);
+	nni_free(conn, size);
+	nng_tls_config_free(cfg);
+#else
+	NUTS_SKIP("no DTLS support");
+#endif
+}
+
+static void
 test_tls_send_pending(void)
 {
 	nni_tls_conn conn = { 0 };
@@ -1262,6 +1300,7 @@ test_tls_psk_config_busy(void)
 
 TEST_LIST = {
 	{ "tls close idle BIO", test_tls_close_idle_bio },
+	{ "tls canceled datagram BIO", test_tls_canceled_datagram_bio },
 	{ "tls pending ciphertext send", test_tls_send_pending },
 	{ "tls datagram truncation", test_tls_datagram_truncation },
 	{ "tls config version", test_tls_config_version },

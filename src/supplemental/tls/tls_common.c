@@ -498,6 +498,12 @@ tls_bio_recv_cb(void *arg)
 	nni_mtx_lock(&conn->bio_lock);
 	conn->bio_recv_pend = false;
 	if ((rv = nni_aio_result(aio)) != NNG_OK) {
+		// Cancellation can replace a completed receive's result
+		// before this callback runs, leaving its packet on the AIO.
+		if (conn->msg_oriented) {
+			nni_msg_free(nni_aio_get_msg(aio));
+			nni_aio_set_msg(aio, NULL);
+		}
 		tls_bio_error(conn, rv);
 		nni_mtx_unlock(&conn->bio_lock);
 		tls_conn_err(conn, rv);

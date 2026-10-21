@@ -14,6 +14,8 @@
 
 #include "../../../core/nng_impl.h"
 #include "../../../core/sockimpl.h"
+static void dtls_test_init(void);
+#define TEST_INIT dtls_test_init()
 #include "../../../testing/nuts.h"
 
 // Test-library-only hook for controlling resolver callback completion.
@@ -27,6 +29,19 @@ extern nng_err nni_dtls_test_send_gate(
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #endif
+
+// Use the supported minimum pool so reconnect must leave callback threads
+// available for the operations it cancels.
+static void
+dtls_test_init(void)
+{
+	nng_init_params params = { .num_task_threads = 2 };
+	if (nng_init(&params) != NNG_OK) {
+		abort();
+	}
+	nng_log_set_logger(nuts_logger);
+	nng_log_set_level(NNG_LOG_NONE);
+}
 
 // TLS tests.
 
@@ -446,9 +461,8 @@ test_dtls_retry(bool automatic, bool delayed_reap)
 			goto cleanup;
 		}
 		// Pause the reaper in an unrelated pipe's removal callback.
-		// The failed attempt must still be in the endpoint's pipe map
-		// when we retry, exercising retirement before asynchronous
-		// stop.
+		// The retry must be accepted while old pipe cleanup is queued,
+		// without blocking the dialer's callback thread.
 		nng_mtx_lock(guard_events.mtx);
 		guard_events.hold_remove = true;
 		nng_pipe pipe            = guard_events.pipe;
@@ -473,6 +487,14 @@ test_dtls_retry(bool automatic, bool delayed_reap)
 		if (delayed_reap) {
 			NUTS_PASS(nng_dialer_start(d, NNG_FLAG_NONBLOCK));
 		}
+	}
+	if (delayed_reap) {
+		// Reconnect cleanup is deferred to the reaper. Release the
+		// unrelated callback before waiting for the fresh attempt.
+		nng_mtx_lock(guard_events.mtx);
+		guard_events.release_remove = true;
+		nng_cv_wake(guard_events.cv);
+		nng_mtx_unlock(guard_events.mtx);
 	}
 	if (automatic || delayed_reap) {
 		// Observe a fresh ClientHello source port after the first
@@ -505,12 +527,6 @@ test_dtls_retry(bool automatic, bool delayed_reap)
 		if (!fresh) {
 			goto cleanup;
 		}
-	}
-	if (delayed_reap) {
-		nng_mtx_lock(guard_events.mtx);
-		guard_events.release_remove = true;
-		nng_cv_wake(guard_events.cv);
-		nng_mtx_unlock(guard_events.mtx);
 	}
 	// Replace the silent destination with a real listener. The original
 	// dialer, with its original TLS configuration, must recover.
@@ -736,6 +752,8 @@ test_dtls_close_linger_expiry(void)
 
 typedef struct {
 	nni_dialer *dialer;
+	nng_socket  socket;
+	nng_err     close_result;
 	nng_aio    *aio;
 	nng_mtx    *mtx;
 	nng_cv     *cv;
@@ -770,15 +788,24 @@ dtls_resolver_retry_run(void *arg)
 }
 
 static void
-test_dtls_canceled_resolver_retry(void)
+dtls_resolver_retry_close(void *arg)
+{
+	dtls_resolver_retry *retry = arg;
+	retry->close_result        = nng_socket_close(retry->socket);
+}
+
+static void
+test_dtls_canceled_resolver_retry_case(bool cancel, bool close)
 {
 	nng_socket           server, client;
 	nng_listener         l;
 	nng_dialer           d;
 	nng_aio             *first, *gate[2];
-	nng_thread          *thread   = NULL;
-	bool                 released = false;
-	dtls_resolver_retry  retry    = { 0 };
+	nng_aio             *task;
+	nng_thread          *closer        = NULL;
+	bool                 client_closed = false;
+	bool                 released      = false;
+	dtls_resolver_retry  retry         = { 0 };
 	dtls_deadline_events server_events, client_events;
 	const nng_url       *url;
 	nng_tls_config      *scfg = tls_server_config();
@@ -799,6 +826,7 @@ test_dtls_canceled_resolver_retry(void)
 	NUTS_PASS(nng_mtx_alloc(&retry.mtx));
 	NUTS_PASS(nng_cv_alloc(&retry.cv, retry.mtx));
 	NUTS_PASS(nng_aio_alloc(&first, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&task, dtls_resolver_retry_run, &retry));
 	NUTS_PASS(nng_aio_alloc(&gate[0], dtls_resolver_ready, &retry));
 	NUTS_PASS(nng_aio_alloc(&gate[1], NULL, NULL));
 	NUTS_ASSERT(nni_aio_start(gate[1], NULL, NULL));
@@ -819,26 +847,59 @@ test_dtls_canceled_resolver_retry(void)
 	nng_aio_wait(first);
 	NUTS_FAIL(nng_aio_result(first), NNG_ECANCELED);
 	retry.aio = client_events.aio;
-	NUTS_PASS(nng_thread_create(&thread, dtls_resolver_retry_run, &retry));
+	// Retry from a shared callback thread while the previous resolver
+	// callback is held. The retry must return without waiting for it.
+	NUTS_ASSERT(nni_aio_start(task, NULL, NULL));
+	nni_aio_finish(task, NNG_OK, 0);
 	nng_mtx_lock(retry.mtx);
 	until = nng_clock() + DTLS_STRESS_TIMEOUT;
 	while (!retry.started && nng_cv_until(retry.cv, until) == NNG_OK) { }
 	NUTS_TRUE(retry.started);
-	until = nng_clock() + 200;
+	until = nng_clock() + 1000;
 	while (!retry.returned && nng_cv_until(retry.cv, until) == NNG_OK) { }
 	bool returned = retry.returned;
-	NUTS_TRUE(!returned);
+	NUTS_TRUE(returned);
 	nng_mtx_unlock(retry.mtx);
-	if (returned) {
-		// On regression, remove the premature retry before releasing
-		// the old callback so it cannot start a second receive loop.
+	nng_mtx_lock(client_events.mtx);
+	NUTS_TRUE(!client_events.done);
+	nng_mtx_unlock(client_events.mtx);
+	if (returned && cancel) {
+		// A pending retry can be canceled and replaced before the old
+		// resolver drains, without publishing either to that callback.
 		nni_aio_abort(client_events.aio, NNG_ECANCELED);
 		nng_aio_wait(client_events.aio);
+		NUTS_FAIL(nng_aio_result(client_events.aio), NNG_ECANCELED);
+		nng_mtx_lock(client_events.mtx);
+		client_events.done = false;
+		nng_mtx_unlock(client_events.mtx);
+		retry.dialer->d_ops.d_connect(
+		    retry.dialer->d_data, client_events.aio);
+	}
+	if (returned && close) {
+		// Drop the test's reference, then close the socket while its
+		// resolver callback is still held. Deferred cleanup must own
+		// a reference until it finishes using the endpoint.
+		nni_dialer_rele(retry.dialer);
+		retry.dialer = NULL;
+		retry.socket = client;
+		NUTS_PASS(nng_thread_create(
+		    &closer, dtls_resolver_retry_close, &retry));
+		if (dtls_deadline_wait(
+		        &client_events, 0, 0, true, DTLS_STRESS_TIMEOUT)) {
+			NUTS_FAIL(client_events.result, NNG_ECONNABORTED);
+		}
 	}
 	nni_aio_finish(gate[1], NNG_OK, 0);
 	released = true;
-	nng_thread_destroy(thread);
-	thread = NULL;
+	nng_aio_wait(task);
+	if (closer != NULL) {
+		nng_thread_destroy(closer);
+		client_closed = true;
+		NUTS_PASS(retry.close_result);
+	}
+	if (close || !returned) {
+		goto cleanup;
+	}
 	if (!dtls_deadline_wait(
 	        &client_events, 0, 0, true, DTLS_STRESS_TIMEOUT)) {
 		nni_aio_abort(client_events.aio, NNG_ECANCELED);
@@ -867,19 +928,22 @@ cleanup:
 	if (!released) {
 		nni_aio_finish(gate[1], NNG_OK, 0);
 	}
-	if (thread != NULL) {
-		nng_thread_destroy(thread);
-	}
+	nni_aio_stop(task);
 	nni_aio_stop(client_events.aio);
 	nni_pipe *pipe = nni_aio_get_output(client_events.aio, 0);
 	if (pipe != NULL) {
 		nni_pipe_close(pipe);
 		nni_pipe_rele(pipe);
 	}
-	nni_dialer_rele(retry.dialer);
-	NUTS_CLOSE(client);
+	if (retry.dialer != NULL) {
+		nni_dialer_rele(retry.dialer);
+	}
+	if (!client_closed) {
+		NUTS_CLOSE(client);
+	}
 	NUTS_CLOSE(server);
 	nng_aio_free(first);
+	nng_aio_free(task);
 	nng_aio_free(gate[0]);
 	nng_aio_free(gate[1]);
 	nng_cv_free(retry.cv);
@@ -888,6 +952,24 @@ cleanup:
 	dtls_deadline_fini(&server_events);
 	nng_tls_config_free(ccfg);
 	nng_tls_config_free(scfg);
+}
+
+static void
+test_dtls_canceled_resolver_retry(void)
+{
+	test_dtls_canceled_resolver_retry_case(false, false);
+}
+
+static void
+test_dtls_cancel_pending_retry(void)
+{
+	test_dtls_canceled_resolver_retry_case(true, false);
+}
+
+static void
+test_dtls_close_pending_retry(void)
+{
+	test_dtls_canceled_resolver_retry_case(false, true);
 }
 
 static void
@@ -2252,6 +2334,8 @@ NUTS_TESTS = {
 	{ "dtls automatic retry", test_dtls_automatic_retry },
 	{ "dtls retry before reap", test_dtls_retry_before_reap },
 	{ "dtls canceled resolver retry", test_dtls_canceled_resolver_retry },
+	{ "dtls cancel pending retry", test_dtls_cancel_pending_retry },
+	{ "dtls close pending retry", test_dtls_close_pending_retry },
 	{ "dtls reconnect", test_dtls_reconnect },
 	{ "dtls close pending send", test_dtls_close_pending_send },
 	{ "dtls close linger expiry", test_dtls_close_linger_expiry },
