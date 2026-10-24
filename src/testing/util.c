@@ -49,7 +49,7 @@ nuts_clock(void)
 {
 #ifdef _WIN32
 	return (GetTickCount64());
-#elif defined(CLOCK_MONTONIC)
+#elif defined(CLOCK_MONOTONIC)
 	struct timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
 	uint64_t val;
