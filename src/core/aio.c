@@ -717,7 +717,7 @@ nni_aio_expire_loop(void *arg)
 		q->eq_next = NNI_TIME_NEVER;
 		exp_idx    = 0;
 		while (aio != NULL) {
-			if ((q->eq_stop || aio->a_expire < now) &&
+			if ((q->eq_stop || aio->a_expire <= now) &&
 			    (exp_idx < NNI_EXPIRE_BATCH)) {
 				nni_aio *nxt;
 
