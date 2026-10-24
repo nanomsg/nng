@@ -297,6 +297,22 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 	}
 	if (cfg->server_name != NULL) {
 		int rv = wolfSSL_check_domain_name(ec->ssl, cfg->server_name);
+#ifdef HAVE_SNI
+		// Send SNI like the OpenSSL and Mbed TLS engines do.  Only for
+		// host names: IP literals are not allowed in SNI (RFC 6066),
+		// and check_domain_name rejects those.
+		if (rv == WOLFSSL_SUCCESS && cfg->mode == NNG_TLS_MODE_CLIENT &&
+		    wolfSSL_UseSNI(ec->ssl, WOLFSSL_SNI_HOST_NAME,
+		        cfg->server_name,
+		        (unsigned short) strlen(cfg->server_name)) !=
+		        WOLFSSL_SUCCESS) {
+			wolfSSL_free(ec->ssl);
+			ec->ssl = NULL;
+			return (NNG_ECRYPTO);
+		}
+#else
+#pragma message("nng wolfssl: HAVE_SNI not defined, TLS clients will not send SNI")
+#endif
 #ifdef NNG_WOLFSSL_HAVE_CHECK_IP
 		if (rv != WOLFSSL_SUCCESS) {
 			rv = wolfSSL_check_ip_address(
@@ -314,12 +330,6 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 #ifdef WOLFSSL_DTLS
 	if (ec->datagram) {
 		wolfSSL_dtls_set_using_nonblock(ec->ssl, 1);
-#ifdef WOLFSSL_DTLS_MTU
-		if (wolfSSL_dtls_set_mtu(ec->ssl, NNG_TLS_MAX_SEND_SIZE) !=
-		    WOLFSSL_SUCCESS) {
-			return (NNG_ECRYPTO);
-		}
-#endif
 	}
 #endif
 	return (0);
