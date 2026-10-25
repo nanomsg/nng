@@ -76,6 +76,27 @@ test_ws_redirect_error(const char *address, nng_err error)
 }
 
 static void
+test_ws_redirect_success(nng_socket server, const char *address)
+{
+	nng_socket socket;
+	nng_dialer dialer;
+	char       value = 'x';
+	char       received;
+	size_t     size = sizeof(received);
+
+	NUTS_OPEN(socket);
+	NUTS_PASS(nng_dialer_create(&dialer, socket, address));
+	NUTS_PASS(
+	    nng_dialer_set_bool(dialer, NNG_OPT_WS_FOLLOW_REDIRECTS, true));
+	NUTS_PASS(nng_dialer_start(dialer, 0));
+	NUTS_PASS(nng_send(socket, &value, sizeof(value), 0));
+	NUTS_PASS(nng_recv(server, &received, &size, 0));
+	NUTS_TRUE(size == sizeof(value));
+	NUTS_TRUE(received == value);
+	NUTS_CLOSE(socket);
+}
+
+static void
 test_ws_redirects(void)
 {
 	nng_socket        server_socket;
@@ -87,13 +108,17 @@ test_ws_redirects(void)
 	nng_dialer        fragment_dialer;
 	nng_http_server  *server;
 	nng_http_handler *handler;
+	nng_http_handler *authority_handler;
+	nng_http_handler *bare_handler;
 	nng_http_handler *fragment_handler;
 	nng_http_handler *missing_handler;
+	nng_http_handler *relative_handler;
 	nng_http_handler *redirect_handler;
 	nng_http_handler *unsupported_handler;
 	nng_http_handler *invalid_handler;
 	nng_url          *url;
 	char              address[NNG_MAXADDRLEN];
+	char              location[NNG_MAXADDRLEN];
 	int               port;
 	bool              follow;
 	char              value = 'x';
@@ -129,6 +154,16 @@ test_ws_redirects(void)
 	NUTS_PASS(nng_http_handler_alloc_redirect(&invalid_handler,
 	    "/invalid-target", NNG_HTTP_STATUS_FOUND, "ws://"));
 	NUTS_PASS(nng_http_server_add_handler(server, invalid_handler));
+	snprintf(location, sizeof(location), "//127.0.0.1:%d/target", port);
+	NUTS_PASS(nng_http_handler_alloc_redirect(&authority_handler,
+	    "/authority", NNG_HTTP_STATUS_FOUND, location));
+	NUTS_PASS(nng_http_server_add_handler(server, authority_handler));
+	NUTS_PASS(nng_http_handler_alloc_redirect(
+	    &relative_handler, "/relative", NNG_HTTP_STATUS_FOUND, "target"));
+	NUTS_PASS(nng_http_server_add_handler(server, relative_handler));
+	NUTS_PASS(nng_http_handler_alloc_redirect(
+	    &bare_handler, "/", NNG_HTTP_STATUS_FOUND, "target"));
+	NUTS_PASS(nng_http_server_add_handler(server, bare_handler));
 
 	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/redirect", port);
 	NUTS_OPEN(rejected_socket);
@@ -145,6 +180,14 @@ test_ws_redirects(void)
 	NUTS_PASS(nng_recv(server_socket, &received, &size, 0));
 	NUTS_TRUE(size == sizeof(value));
 	NUTS_TRUE(received == value);
+
+	snprintf(
+	    address, sizeof(address), "ws://127.0.0.1:%d/authority", port);
+	test_ws_redirect_success(server_socket, address);
+	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/relative", port);
+	test_ws_redirect_success(server_socket, address);
+	snprintf(address, sizeof(address), "ws://127.0.0.1:%d", port);
+	test_ws_redirect_success(server_socket, address);
 
 	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/fragment", port);
 	NUTS_OPEN(fragment_socket);
@@ -177,6 +220,12 @@ test_ws_redirects(void)
 	nng_http_handler_free(unsupported_handler);
 	NUTS_PASS(nng_http_server_del_handler(server, invalid_handler));
 	nng_http_handler_free(invalid_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, authority_handler));
+	nng_http_handler_free(authority_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, relative_handler));
+	nng_http_handler_free(relative_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, bare_handler));
+	nng_http_handler_free(bare_handler);
 	nng_http_server_release(server);
 	NUTS_CLOSE(client_socket);
 	NUTS_CLOSE(server_socket);
