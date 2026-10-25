@@ -569,6 +569,7 @@
 [`NNG_OPT_WS_SENDMAXFRAME`]: ../tran/websocket.md#NNG_OPT_WS_SENDMAXFRAME
 [`NNG_OPT_WS_RECVMAXFRAME`]: ../tran/websocket.md#NNG_OPT_WS_RECVMAXFRAME
 [`NNG_OPT_WS_PROTOCOL`]: ../tran/websocket.md#NNG_OPT_WS_PROTOCOL
+[`NNG_OPT_WS_FOLLOW_REDIRECTS`]: ../tran/websocket.md#NNG_OPT_WS_FOLLOW_REDIRECTS
 [`NNG_OPT_WS_SEND_TEXT`]: ../tran/websocket.md#NNG_OPT_WS_SEND_TEXT
 [`NNG_OPT_WS_RECV_TEXT`]: ../tran/websocket.md#NNG_OPT_WS_RECV_TEXT
 [`NNG_SOCKET_INITIALIZER`]: ../api/sock.md#socket-structure

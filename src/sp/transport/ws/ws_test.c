@@ -10,6 +10,8 @@
 
 #include "../../../testing/nuts.h"
 
+#include <nng/http.h>
+
 static void
 test_ws_dialer_bind(void)
 {
@@ -49,6 +51,84 @@ test_ws_url_path_filters(void)
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
+}
+
+static void
+test_ws_redirects(void)
+{
+	nng_socket        server_socket;
+	nng_socket        client_socket;
+	nng_socket        fragment_socket;
+	nng_socket        rejected_socket;
+	nng_listener      listener;
+	nng_dialer        dialer;
+	nng_dialer        fragment_dialer;
+	nng_http_server  *server;
+	nng_http_handler *handler;
+	nng_http_handler *fragment_handler;
+	nng_http_handler *redirect_handler;
+	nng_url          *url;
+	char              address[NNG_MAXADDRLEN];
+	int               port;
+	bool              follow;
+	char              value = 'x';
+	char              received;
+	size_t            size = sizeof(received);
+
+	NUTS_OPEN(server_socket);
+	NUTS_OPEN(client_socket);
+	NUTS_PASS(nng_listen(
+	    server_socket, "ws://127.0.0.1:0/target", &listener, 0));
+	NUTS_PASS(nng_listener_get_int(listener, NNG_OPT_BOUND_PORT, &port));
+
+	snprintf(address, sizeof(address), "http://127.0.0.1:%d", port);
+	NUTS_PASS(nng_url_parse(&url, address));
+	NUTS_PASS(nng_http_server_hold(&server, url));
+	nng_url_free(url);
+	NUTS_PASS(nng_http_handler_alloc_redirect(
+	    &handler, "/redirect", NNG_HTTP_STATUS_FOUND, "/redirect2"));
+	NUTS_PASS(nng_http_server_add_handler(server, handler));
+	NUTS_PASS(nng_http_handler_alloc_redirect(&redirect_handler,
+	    "/redirect2", NNG_HTTP_STATUS_FOUND, "/target"));
+	NUTS_PASS(nng_http_server_add_handler(server, redirect_handler));
+	NUTS_PASS(nng_http_handler_alloc_redirect(&fragment_handler,
+	    "/fragment", NNG_HTTP_STATUS_FOUND, "#fragment"));
+	NUTS_PASS(nng_http_server_add_handler(server, fragment_handler));
+
+	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/redirect", port);
+	NUTS_OPEN(rejected_socket);
+	NUTS_FAIL(nng_dial(rejected_socket, address, NULL, 0), NNG_EPROTO);
+	NUTS_CLOSE(rejected_socket);
+	NUTS_PASS(nng_dialer_create(&dialer, client_socket, address));
+	NUTS_PASS(
+	    nng_dialer_get_bool(dialer, NNG_OPT_WS_FOLLOW_REDIRECTS, &follow));
+	NUTS_TRUE(!follow);
+	NUTS_PASS(
+	    nng_dialer_set_bool(dialer, NNG_OPT_WS_FOLLOW_REDIRECTS, true));
+	NUTS_PASS(nng_dialer_start(dialer, 0));
+	NUTS_PASS(nng_send(client_socket, &value, sizeof(value), 0));
+	NUTS_PASS(nng_recv(server_socket, &received, &size, 0));
+	NUTS_TRUE(size == sizeof(value));
+	NUTS_TRUE(received == value);
+
+	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/fragment", port);
+	NUTS_OPEN(fragment_socket);
+	NUTS_PASS(
+	    nng_dialer_create(&fragment_dialer, fragment_socket, address));
+	NUTS_PASS(nng_dialer_set_bool(
+	    fragment_dialer, NNG_OPT_WS_FOLLOW_REDIRECTS, true));
+	NUTS_FAIL(nng_dialer_start(fragment_dialer, 0), NNG_EPROTO);
+	NUTS_CLOSE(fragment_socket);
+
+	NUTS_PASS(nng_http_server_del_handler(server, handler));
+	nng_http_handler_free(handler);
+	NUTS_PASS(nng_http_server_del_handler(server, redirect_handler));
+	nng_http_handler_free(redirect_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, fragment_handler));
+	nng_http_handler_free(fragment_handler);
+	nng_http_server_release(server);
+	NUTS_CLOSE(client_socket);
+	NUTS_CLOSE(server_socket);
 }
 
 static void
@@ -339,6 +419,7 @@ NUTS_DECLARE_TRAN_TESTS(ws6)
 TEST_LIST = {
 	{ "ws dialer bind", test_ws_dialer_bind },
 	{ "ws url path filters", test_ws_url_path_filters },
+	{ "ws redirects", test_ws_redirects },
 	{ "ws tree listener", test_ws_tree_listener },
 	{ "ws wild card port", test_wild_card_port },
 	{ "ws wild card host", test_wild_card_host },

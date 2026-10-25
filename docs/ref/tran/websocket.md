@@ -17,6 +17,14 @@ TLS configuration objects and certificate APIs are documented in [TLS], and
 the underlying TCP behavior is similar to the [TCP] and [TLS transport] transports.
 WebSocket handshakes use NNG's [HTTP Support](../api/http.md).
 
+By default, WebSocket dialers reject HTTP redirect responses during the
+opening handshake. Set [`NNG_OPT_WS_FOLLOW_REDIRECTS`] to follow them.
+Redirects are limited to ten hops. Relative `Location` values are resolved
+against the current WebSocket URL; absolute `http` and `https` locations are
+treated as `ws` and `wss`, respectively. TLS configuration, TCP options, and
+any configured local bind address are retained for redirected connections.
+User-supplied WebSocket handshake headers are not sent to a different origin.
+
 ### URI Formats
 
 This transport uses URIs using the scheme {{i:`ws://`}}, followed by an
@@ -169,6 +177,7 @@ listener, stream dialer, or stream listener is started.
 | `NNG_OPT_BOUND_PORT`<a name="NNG_OPT_BOUND_PORT"></a>                        | `int`    | The locally bound TCP port number (1-65535), read-only for listener objects only.                                                                                                                                                                                                    |
 | `NNG_OPT_WS_HEADER`<a name="NNG_OPT_WS_HEADER"></a>                          | `string` | Option prefix for HTTP headers. Append the header name to set a handshake header on a dialer or listener, or to retrieve a received header from a connected pipe or stream. For example, `NNG_OPT_WS_HEADER "X-Trace-ID"` refers to the `X-Trace-ID` header.                         |
 | `NNG_OPT_WS_PROTOCOL`<a name="NNG_OPT_WS_PROTOCOL"></a>                      | `string` | WebSocket subprotocol, corresponding to the `Sec-WebSocket-Protocol` header. Scalability Protocol sockets configure this automatically.                                                                                                                                              |
+| `NNG_OPT_WS_FOLLOW_REDIRECTS`<a name="NNG_OPT_WS_FOLLOW_REDIRECTS"></a>      | `bool`   | Dialer-only. Follow HTTP 3xx responses during the opening handshake. Disabled by default; at most ten redirects are followed. Relative locations are supported. Custom handshake headers are sent only when the redirect remains at the original origin. |
 | `NNG_OPT_WS_REQUEST_URI`<a name="NNG_OPT_WS_REQUEST_URI"></a>                | `string` | Read-only request URI sent by the client, available from connected pipes and streams. This is useful for listeners that handle a subtree.                                                                                                                                            |
 | `NNG_OPT_WS_TREE`<a name="NNG_OPT_WS_TREE"></a>                               | `bool`   | Listener-only. When true, accept requests for child paths of the listener URL; the longest matching tree listener handles a request. Set before starting the listener.                                                                                                              |
 | `NNG_OPT_WS_SENDMAXFRAME`<a name="NNG_OPT_WS_SENDMAXFRAME"></a>              | `size`   | Maximum WebSocket frame size to send before fragmenting. The default is 64 KiB. Larger values can improve throughput but may increase latency and peer buffering requirements. There is no WebSocket negotiation for this value.                                                     |
