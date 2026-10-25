@@ -26,7 +26,9 @@ bind address are retained for redirected connections. TLS configuration is
 retained for same-origin redirects; a redirect to a different `wss` origin
 uses a new TLS configuration so SNI and certificate validation use the
 redirect target's hostname. User-supplied WebSocket handshake headers are not
-sent to a different origin.
+sent to a different origin. The transport subprotocol required by Scalability
+Protocol sockets is retained so that those connections can complete their
+handshake.
 
 ### URI Formats
 

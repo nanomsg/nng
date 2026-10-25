@@ -2595,7 +2595,11 @@ ws_conn_cb(void *arg)
 	nni_http_set_static_header(
 	    ws->http, &ws->hdrs.wsversion, "Sec-WebSocket-Version", "13");
 
-	if (d->proto != NULL) {
+	// Scalability Protocol sockets require their subprotocol for a valid
+	// handshake.  Raw streams, on the other hand, use this as a
+	// user-supplied header and must not disclose it across an origin
+	// change.
+	if ((d->proto != NULL) && (ws->send_headers || !ws->isstream)) {
 		nni_http_set_static_header(ws->http, &ws->hdrs.wsproto,
 		    "Sec-WebSocket-Protocol", d->proto);
 	}
