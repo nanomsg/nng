@@ -303,6 +303,20 @@ wolf_conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg,
 			    ec->ssl, cfg->server_name);
 		}
 #endif
+#ifdef HAVE_SNI
+		// RFC 6066 forbids IP literals in SNI. Domain-name checking
+		// accepts them, so classify the name separately. The colon
+		// check also excludes IPv6 when NNG is built without IPv6.
+		nng_sockaddr ip;
+		if (rv == WOLFSSL_SUCCESS && cfg->mode == NNG_TLS_MODE_CLIENT &&
+		    strchr(cfg->server_name, ':') == NULL &&
+		    nni_parse_ip(cfg->server_name, &ip) != 0) {
+			size_t len = strlen(cfg->server_name);
+			rv = len > UINT16_MAX ? WOLFSSL_FAILURE
+			    : wolfSSL_UseSNI(ec->ssl, WOLFSSL_SNI_HOST_NAME,
+			          cfg->server_name, (unsigned short) len);
+		}
+#endif
 		if (rv != WOLFSSL_SUCCESS) {
 			wolfSSL_free(ec->ssl);
 			ec->ssl = NULL;
