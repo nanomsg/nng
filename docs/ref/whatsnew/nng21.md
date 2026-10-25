@@ -3,6 +3,13 @@
 NNG 2.1 adds hybrid post-quantum cryptography for TLS connections and support
 for DTLS 1.3.
 
+## WebSocket Redirects
+
+WebSocket dialers can now opt in to following HTTP redirects during the
+opening handshake with [`NNG_OPT_WS_FOLLOW_REDIRECTS`]. Redirect following is
+disabled by default, supports relative and HTTP(S) locations, and is limited
+to ten hops.
+
 ## Post-Quantum Cryptography
 
 NNG now supports hybrid post-quantum key exchange for TLS 1.3 and DTLS 1.3

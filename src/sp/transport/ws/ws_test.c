@@ -54,6 +54,28 @@ test_ws_url_path_filters(void)
 }
 
 static void
+ws_redirect_no_location(nng_http *conn, void *arg, nng_aio *aio)
+{
+	(void) arg;
+	nng_http_set_status(conn, NNG_HTTP_STATUS_FOUND, NULL);
+	nng_aio_finish(aio, NNG_OK);
+}
+
+static void
+test_ws_redirect_error(const char *address, nng_err error)
+{
+	nng_socket socket;
+	nng_dialer dialer;
+
+	NUTS_OPEN(socket);
+	NUTS_PASS(nng_dialer_create(&dialer, socket, address));
+	NUTS_PASS(
+	    nng_dialer_set_bool(dialer, NNG_OPT_WS_FOLLOW_REDIRECTS, true));
+	NUTS_FAIL(nng_dialer_start(dialer, 0), error);
+	NUTS_CLOSE(socket);
+}
+
+static void
 test_ws_redirects(void)
 {
 	nng_socket        server_socket;
@@ -66,7 +88,10 @@ test_ws_redirects(void)
 	nng_http_server  *server;
 	nng_http_handler *handler;
 	nng_http_handler *fragment_handler;
+	nng_http_handler *missing_handler;
 	nng_http_handler *redirect_handler;
+	nng_http_handler *unsupported_handler;
+	nng_http_handler *invalid_handler;
 	nng_url          *url;
 	char              address[NNG_MAXADDRLEN];
 	int               port;
@@ -94,6 +119,16 @@ test_ws_redirects(void)
 	NUTS_PASS(nng_http_handler_alloc_redirect(&fragment_handler,
 	    "/fragment", NNG_HTTP_STATUS_FOUND, "#fragment"));
 	NUTS_PASS(nng_http_server_add_handler(server, fragment_handler));
+	NUTS_PASS(nng_http_handler_alloc(
+	    &missing_handler, "/missing-location", ws_redirect_no_location));
+	NUTS_PASS(nng_http_server_add_handler(server, missing_handler));
+	NUTS_PASS(nng_http_handler_alloc_redirect(&unsupported_handler,
+	    "/unsupported-scheme", NNG_HTTP_STATUS_FOUND,
+	    "tcp://127.0.0.1:1"));
+	NUTS_PASS(nng_http_server_add_handler(server, unsupported_handler));
+	NUTS_PASS(nng_http_handler_alloc_redirect(&invalid_handler,
+	    "/invalid-target", NNG_HTTP_STATUS_FOUND, "ws://"));
+	NUTS_PASS(nng_http_server_add_handler(server, invalid_handler));
 
 	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/redirect", port);
 	NUTS_OPEN(rejected_socket);
@@ -120,12 +155,28 @@ test_ws_redirects(void)
 	NUTS_FAIL(nng_dialer_start(fragment_dialer, 0), NNG_EPROTO);
 	NUTS_CLOSE(fragment_socket);
 
+	snprintf(address, sizeof(address),
+	    "ws://127.0.0.1:%d/missing-location", port);
+	test_ws_redirect_error(address, NNG_EPROTO);
+	snprintf(address, sizeof(address),
+	    "ws://127.0.0.1:%d/unsupported-scheme", port);
+	test_ws_redirect_error(address, NNG_EPROTO);
+	snprintf(address, sizeof(address), "ws://127.0.0.1:%d/invalid-target",
+	    port);
+	test_ws_redirect_error(address, NNG_EADDRINVAL);
+
 	NUTS_PASS(nng_http_server_del_handler(server, handler));
 	nng_http_handler_free(handler);
 	NUTS_PASS(nng_http_server_del_handler(server, redirect_handler));
 	nng_http_handler_free(redirect_handler);
 	NUTS_PASS(nng_http_server_del_handler(server, fragment_handler));
 	nng_http_handler_free(fragment_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, missing_handler));
+	nng_http_handler_free(missing_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, unsupported_handler));
+	nng_http_handler_free(unsupported_handler);
+	NUTS_PASS(nng_http_server_del_handler(server, invalid_handler));
+	nng_http_handler_free(invalid_handler);
 	nng_http_server_release(server);
 	NUTS_CLOSE(client_socket);
 	NUTS_CLOSE(server_socket);
