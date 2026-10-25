@@ -969,6 +969,11 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // specially.  This is part of the websocket handshake.
 #define NNG_OPT_WS_PROTOCOL "ws:protocol"
 
+// NNG_OPT_WS_FOLLOW_REDIRECTS controls whether a WebSocket dialer follows
+// HTTP redirects received during the opening handshake.  It is disabled by
+// default.  When enabled, up to ten redirects are followed.
+#define NNG_OPT_WS_FOLLOW_REDIRECTS "ws:follow-redirects"
+
 // NNG_OPT_WS_SEND_TEXT is a boolean used to tell the WS stream
 // transport to send text messages.  This is not supported for the
 // core WebSocket transport, but when using streams it might be useful

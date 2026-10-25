@@ -413,6 +413,10 @@ typedef struct nng_http_client nng_http_client;
 
 The {{i:`nng_http_client`}} object is the client side creator for [`nng_http`] objects.
 It is analogous to a [dialer] object used elsewhere in NNG, but it specifically is only for HTTP.
+It does not execute requests or apply redirect policy: applications inspect 3xx
+responses and choose whether and how to create a connection to the location
+they specify. The WebSocket transport is an exception: its opening handshake
+can follow redirects when [`NNG_OPT_WS_FOLLOW_REDIRECTS`] is enabled.
 
 ### Create a Client
 

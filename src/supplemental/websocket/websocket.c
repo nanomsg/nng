@@ -47,6 +47,7 @@ typedef int (*nni_ws_listen_hook)(void *, nng_http *);
 #define WS_DEF_RECVMAX (1U << 20)    // 1MB Message limit (message mode only)
 #define WS_DEF_MAXRXFRAME (1U << 20) // 1MB Frame size (recv)
 #define WS_DEF_MAXTXFRAME (1U << 16) // 64KB Frame size (send)
+#define WS_MAX_REDIRECTS 10
 
 #ifndef WS_DEF_MAXFRAMES
 #define WS_DEF_MAXFRAMES (1 << 12) // 4K frames in a single message
@@ -78,6 +79,9 @@ struct nni_ws {
 	bool             send_text;
 	bool             recv_text;
 	bool             recv_res;
+	bool             client_owned;
+	bool             send_headers;
+	unsigned         redirects;
 	nni_mtx          mtx;
 	nni_list         sendq;
 	nni_list         recvq;
@@ -94,7 +98,9 @@ struct nni_ws {
 	nni_aio          connaio; // connect aio
 	nni_aio         *useraio; // user aio, during HTTP negotiation
 	nng_http        *http;
+	nng_http_client *client;
 	nng_stream      *stream;
+	nng_url         *url;
 	size_t           maxframe;
 	size_t           fragsize;
 	size_t           recvmax; // largest message size
@@ -168,6 +174,9 @@ struct nni_ws_dialer {
 	bool              isstream;
 	bool              send_text;
 	bool              recv_text;
+	bool              follow_redirects;
+	bool              bound;
+	nng_sockaddr      bindaddr;
 	nni_list          headers; // request headers
 	size_t            maxframe;
 	size_t            fragsize;
@@ -1321,6 +1330,10 @@ ws_fini(void *arg)
 	} else if (ws->http) {
 		nni_http_conn_fini(ws->http);
 	}
+	if (ws->client_owned) {
+		nni_http_client_fini(ws->client);
+		nng_url_free(ws->url);
+	}
 
 	nni_aio_fini(&ws->rxaio);
 	nni_aio_fini(&ws->txaio);
@@ -1374,6 +1387,161 @@ ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 	nni_mtx_unlock(&l->mtx);
 }
 
+static bool
+ws_same_origin(const nng_url *a, const nng_url *b)
+{
+	return ((strcmp(a->u_scheme, b->u_scheme) == 0) &&
+	    (a->u_port == b->u_port) &&
+	    (strcmp(a->u_hostname, b->u_hostname) == 0));
+}
+
+// Build a WebSocket URL from a Location header.  HTTP redirect locations are
+// URI references, so permit the common absolute-path and relative-path forms
+// in addition to absolute ws: and wss: URLs.
+static nng_err
+ws_redirect_url(nng_url **urlp, const nng_url *base, const char *location)
+{
+	const char *path;
+	char       *url    = NULL;
+	char       *origin = NULL;
+	nng_url     origin_url;
+	nng_err     rv;
+
+	if ((location == NULL) || (location[0] == '\0')) {
+		return (NNG_EPROTO);
+	}
+	if ((strncmp(location, "http://", 7) == 0) ||
+	    (strncmp(location, "https://", 8) == 0)) {
+		const char *suffix = location + (location[4] == ':' ? 4 : 5);
+		if (nni_asprintf(&url, "%s%s",
+		        location[4] == ':' ? "ws" : "wss", suffix) != 0) {
+			return (NNG_ENOMEM);
+		}
+	} else if (strstr(location, "://") != NULL) {
+		url = nni_strdup(location);
+	} else {
+		origin_url            = *base;
+		origin_url.u_path     = "";
+		origin_url.u_query    = NULL;
+		origin_url.u_fragment = NULL;
+		if ((rv = nni_url_asprintf(&origin, &origin_url)) != NNG_OK) {
+			return (rv);
+		}
+		if (location[0] == '#') {
+			// Fragments are not sent in HTTP requests.  A
+			// fragment-only reference retains the current path and
+			// query.
+			rv = nni_url_asprintf(&url, base);
+		} else if (strncmp(location, "//", 2) == 0) {
+			rv = nni_asprintf(
+			    &url, "%s:%s", base->u_scheme, location);
+		} else if (location[0] == '/') {
+			rv = nni_asprintf(&url, "%s%s", origin, location);
+		} else if (location[0] == '?') {
+			path = base->u_path[0] == '\0' ? "/" : base->u_path;
+			rv   = nni_asprintf(
+			    &url, "%s%s%s", origin, path, location);
+		} else {
+			path = strrchr(base->u_path, '/');
+			if (path == NULL) {
+				rv = nni_asprintf(
+				    &url, "%s/%s", origin, location);
+			} else {
+				rv = nni_asprintf(&url, "%s%.*s/%s", origin,
+				    (int) (path - base->u_path), base->u_path,
+				    location);
+			}
+		}
+		nni_strfree(origin);
+		if (rv != 0) {
+			return (NNG_ENOMEM);
+		}
+	}
+	if (url == NULL) {
+		return (NNG_ENOMEM);
+	}
+	rv = nng_url_parse(urlp, url);
+	nni_strfree(url);
+	if ((rv != NNG_OK) ||
+	    ((strcmp((*urlp)->u_scheme, "ws") != 0) &&
+	        (strcmp((*urlp)->u_scheme, "wss") != 0) &&
+	        (strcmp((*urlp)->u_scheme, "ws4") != 0) &&
+	        (strcmp((*urlp)->u_scheme, "wss4") != 0) &&
+	        (strcmp((*urlp)->u_scheme, "ws6") != 0) &&
+	        (strcmp((*urlp)->u_scheme, "wss6") != 0))) {
+		if (rv == NNG_OK) {
+			nng_url_free(*urlp);
+		}
+		return (NNG_EPROTO);
+	}
+	return (NNG_OK);
+}
+
+static nng_err
+ws_redirect(nni_ws *ws, nni_ws_dialer *d)
+{
+	nng_http_client *client;
+	nng_tls_config  *tls;
+	nng_url         *url;
+	bool             value;
+	size_t           size;
+	nng_err          rv;
+	const char *options[] = { NNG_OPT_TCP_NODELAY, NNG_OPT_TCP_KEEPALIVE,
+		NULL };
+
+	if (ws->redirects == WS_MAX_REDIRECTS) {
+		return (NNG_EPROTO);
+	}
+	if ((rv = ws_redirect_url(&url, ws->url,
+	         nng_http_get_header(ws->http, "Location"))) != NNG_OK) {
+		return (rv);
+	}
+	if ((rv = nni_http_client_init(&client, url)) != NNG_OK) {
+		nng_url_free(url);
+		return (rv);
+	}
+	if ((strncmp(url->u_scheme, "wss", 3) == 0) &&
+	    (nni_http_client_get_tls(d->client, &tls) == NNG_OK)) {
+		if ((rv = nni_http_client_set_tls(client, tls)) != NNG_OK) {
+			goto error;
+		}
+	}
+	for (const char **optionp = options; *optionp != NULL; optionp++) {
+		const char *option = *optionp;
+		size               = sizeof(value);
+		if (nni_http_client_get(d->client, option, &value, &size,
+		        NNI_TYPE_BOOL) == NNG_OK) {
+			if ((rv = nni_http_client_set(client, option, &value,
+			         sizeof(value), NNI_TYPE_BOOL)) != NNG_OK) {
+				goto error;
+			}
+		}
+	}
+	if (d->bound &&
+	    ((rv = nni_http_client_bind(client, &d->bindaddr)) != NNG_OK)) {
+		goto error;
+	}
+	nni_http_conn_fini(ws->http);
+	if (ws->client_owned) {
+		nni_http_client_fini(ws->client);
+		nng_url_free(ws->url);
+	}
+	ws->http         = NULL;
+	ws->url          = url;
+	ws->client       = client;
+	ws->client_owned = true;
+	ws->send_headers = ws_same_origin(d->url, url);
+	ws->recv_res     = false;
+	ws->redirects++;
+	nni_http_client_connect(client, &ws->connaio);
+	return (NNG_OK);
+
+error:
+	nni_http_client_fini(client);
+	nng_url_free(url);
+	return (rv);
+}
+
 static void
 ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 {
@@ -1415,6 +1583,13 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 	}
 
 	status = nni_http_get_status(ws->http);
+	if ((status >= 300) && (status < 400) && d->follow_redirects) {
+		if ((rv = ws_redirect(ws, d)) == NNG_OK) {
+			nni_mtx_unlock(&d->mtx);
+			return;
+		}
+		goto err;
+	}
 	switch (status) {
 	case NNG_HTTP_STATUS_SWITCHING:
 		break;
@@ -2401,7 +2576,7 @@ ws_conn_cb(void *arg)
 	ws->keybuf[24] = '\0';
 
 	if ((rv = nni_http_set_uri(
-	         ws->http, d->url->u_path, d->url->u_query)) != 0) {
+	         ws->http, ws->url->u_path, ws->url->u_query)) != 0) {
 		goto err;
 	}
 
@@ -2419,10 +2594,12 @@ ws_conn_cb(void *arg)
 		    "Sec-WebSocket-Protocol", d->proto);
 	}
 
-	NNI_LIST_FOREACH (&d->headers, hdr) {
-		if ((rv = nni_http_set_header(
-		         ws->http, hdr->name, hdr->value)) != 0) {
-			goto err;
+	if (ws->send_headers) {
+		NNI_LIST_FOREACH (&d->headers, hdr) {
+			if ((rv = nni_http_set_header(
+			         ws->http, hdr->name, hdr->value)) != 0) {
+				goto err;
+			}
 		}
 	}
 
@@ -2540,7 +2717,10 @@ ws_dialer_dial(void *arg, nni_aio *aio)
 	ws->recv_text = d->recv_text;
 	ws->send_text = d->send_text;
 	nni_list_append(&d->wspend, ws);
-	nni_http_client_connect(d->client, &ws->connaio);
+	ws->url          = d->url;
+	ws->client       = d->client;
+	ws->send_headers = true;
+	nni_http_client_connect(ws->client, &ws->connaio);
 	nni_mtx_unlock(&d->mtx);
 }
 
@@ -2556,6 +2736,34 @@ ws_dialer_set_msgmode(void *arg, const void *buf, size_t sz, nni_type t)
 		d->isstream = !b;
 		nni_mtx_unlock(&d->mtx);
 	}
+	return (rv);
+}
+
+static nng_err
+ws_dialer_set_follow_redirects(
+    void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_ws_dialer *d = arg;
+	nng_err        rv;
+	bool           value;
+
+	if ((rv = nni_copyin_bool(&value, buf, sz, t)) == NNG_OK) {
+		nni_mtx_lock(&d->mtx);
+		d->follow_redirects = value;
+		nni_mtx_unlock(&d->mtx);
+	}
+	return (rv);
+}
+
+static nng_err
+ws_dialer_get_follow_redirects(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_ws_dialer *d = arg;
+	nng_err        rv;
+
+	nni_mtx_lock(&d->mtx);
+	rv = nni_copyout_bool(d->follow_redirects, buf, szp, t);
+	nni_mtx_unlock(&d->mtx);
 	return (rv);
 }
 
@@ -2721,6 +2929,11 @@ static const nni_option ws_dialer_options[] = {
 	    .o_set  = ws_dialer_set_msgmode,
 	},
 	{
+	    .o_name = NNG_OPT_WS_FOLLOW_REDIRECTS,
+	    .o_set  = ws_dialer_set_follow_redirects,
+	    .o_get  = ws_dialer_get_follow_redirects,
+	},
+	{
 	    .o_name = NNG_OPT_WS_RECVMAXFRAME,
 	    .o_set  = ws_dialer_set_maxframe,
 	    .o_get  = ws_dialer_get_maxframe,
@@ -2821,8 +3034,15 @@ static nng_err
 ws_dialer_bind(void *arg, const nng_sockaddr *sa)
 {
 	nni_ws_dialer *d = arg;
+	nng_err        rv;
 
-	return (nni_http_client_bind(d->client, sa));
+	if ((rv = nni_http_client_bind(d->client, sa)) == NNG_OK) {
+		nni_mtx_lock(&d->mtx);
+		d->bindaddr = *sa;
+		d->bound    = true;
+		nni_mtx_unlock(&d->mtx);
+	}
+	return (rv);
 }
 
 nng_err
