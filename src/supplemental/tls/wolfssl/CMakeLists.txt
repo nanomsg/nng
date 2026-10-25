@@ -336,4 +336,8 @@ if (NNG_TLS_ENGINE STREQUAL "wolf")
 
     nng_defines(NNG_SUPP_TLS)
     nng_defines(NNG_TLS_ENGINE_WOLFSSL)
+    nng_test(wolfssl_test)
+    if (NNG_TESTS)
+        target_link_libraries(wolfssl_test ${NNG_WOLFSSL_TARGET})
+    endif ()
 endif ()
