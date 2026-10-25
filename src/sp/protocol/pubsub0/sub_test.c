@@ -605,6 +605,239 @@ test_sub_closed_socket(void)
 	NUTS_FAIL(nng_sub0_ctx_unsubscribe(c, NULL, 0), NNG_ECLOSED);
 }
 
+#ifdef NNG_ENABLE_STATS
+static uint64_t
+sub_stat(nng_socket sub, const char *name)
+{
+	nng_stat       *stats;
+	const nng_stat *st;
+	uint64_t        value;
+
+	NUTS_PASS(nng_stats_get(&stats));
+	NUTS_TRUE((st = nng_stat_find_socket(stats, sub)) != NULL);
+	NUTS_TRUE((st = nng_stat_find(st, name)) != NULL);
+	NUTS_TRUE(nng_stat_type(st) ==
+	    ((strcmp(name, "subscriptions") == 0 ||
+	         strcmp(name, "rx_buf_size") == 0)
+	            ? NNG_STAT_LEVEL
+	            : NNG_STAT_COUNTER));
+	NUTS_TRUE(nng_stat_unit(st) ==
+	    (strcmp(name, "subscriptions") == 0 ? NNG_UNIT_NONE
+	                                        : NNG_UNIT_MESSAGES));
+	value = nng_stat_value(st);
+	nng_stats_free(stats);
+	return (value);
+}
+
+static void
+sub_stat_wait(nng_socket sub, const char *name, uint64_t expected)
+{
+	nng_time end = nuts_clock() + 1000;
+	uint64_t value;
+
+	while (
+	    (value = sub_stat(sub, name)) != expected && nuts_clock() < end) {
+		NUTS_SLEEP(1);
+	}
+	NUTS_TRUE(value == expected);
+}
+#endif
+
+static void
+test_sub_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket sub;
+	nng_socket pub;
+	nng_aio   *aio;
+	int        bufsz;
+
+	NUTS_PASS(nng_sub0_open(&sub));
+	NUTS_PASS(nng_pub0_open(&pub));
+	NUTS_PASS(nng_socket_get_int(sub, NNG_OPT_RECVBUF, &bufsz));
+	NUTS_TRUE(sub_stat(sub, "rx_buf_size") == (uint64_t) bufsz);
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 0);
+	NUTS_TRUE(sub_stat(sub, "rx_nomatch") == 0);
+	NUTS_TRUE(sub_stat(sub, "rx_direct") == 0);
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 0);
+	NUTS_TRUE(sub_stat(sub, "rx_discard") == 0);
+
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, NULL, 0));
+	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 2));
+	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
+	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(pub, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 1);
+	NUTS_TRUE(sub_stat(sub, "rx_buf_size") == 2);
+	NUTS_FAIL(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 0), NNG_EINVAL);
+	NUTS_TRUE(sub_stat(sub, "rx_buf_size") == 2);
+
+	NUTS_MARRY(pub, sub);
+
+	// Prefer old: two queued, the third discarded.
+	NUTS_SEND(pub, "one");
+	NUTS_SEND(pub, "two");
+	NUTS_SEND(pub, "three");
+	sub_stat_wait(sub, "rx_discard", 1);
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 2);
+	NUTS_TRUE(sub_stat(sub, "rx_nomatch") == 0);
+	NUTS_RECV(sub, "one");
+	NUTS_RECV(sub, "two");
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 2);
+
+	// A pending receive bypasses the queue.
+	nng_aio_set_timeout(aio, 1000);
+	nng_socket_recv(sub, aio);
+	NUTS_SEND(pub, "four");
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_MATCH(nng_msg_body(nng_aio_get_msg(aio)), "four");
+	nng_msg_free(nng_aio_get_msg(aio));
+	nng_aio_set_msg(aio, NULL);
+	NUTS_TRUE(sub_stat(sub, "rx_direct") == 1);
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 2);
+
+	// Prefer new: all three are queued, replacing the oldest once.
+	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, true));
+	NUTS_SEND(pub, "five");
+	NUTS_SEND(pub, "six");
+	NUTS_SEND(pub, "seven");
+	sub_stat_wait(sub, "rx_discard", 2);
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 5);
+	NUTS_RECV(sub, "six");
+	NUTS_RECV(sub, "seven");
+
+	NUTS_PASS(nng_sub0_socket_unsubscribe(sub, NULL, 0));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "prefix/", 7));
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 1);
+	NUTS_SEND(pub, "unmatched_data");
+	NUTS_SEND(pub, "prefix/sync");
+	NUTS_RECV(sub, "prefix/sync");
+	NUTS_TRUE(sub_stat(sub, "rx_nomatch") == 1);
+
+	// A full queue must not count unmatched messages as overflow.
+	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
+	NUTS_SEND(pub, "prefix/one");
+	NUTS_SEND(pub, "prefix/two");
+	NUTS_SEND(pub, "unmatched_again");
+	sub_stat_wait(sub, "rx_nomatch", 2);
+	NUTS_TRUE(sub_stat(sub, "rx_discard") == 2);
+	NUTS_RECV(sub, "prefix/one");
+	NUTS_RECV(sub, "prefix/two");
+
+	nng_aio_free(aio);
+	NUTS_CLOSE(pub);
+	NUTS_CLOSE(sub);
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
+static void
+test_sub_stats_subscriptions(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket sub;
+	nng_ctx    ctx;
+
+	NUTS_PASS(nng_sub0_open(&sub));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "one", 3));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "one", 3));
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 1);
+	NUTS_FAIL(nng_sub0_socket_unsubscribe(sub, "missing", 7), NNG_ENOENT);
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 1);
+
+	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 2));
+	NUTS_PASS(nng_ctx_open(&ctx, sub));
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "one", 3));
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "two", 3));
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "two", 3));
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 3);
+	NUTS_PASS(nng_ctx_set_int(ctx, NNG_OPT_RECVBUF, 3));
+	NUTS_TRUE(sub_stat(sub, "rx_buf_size") == 2);
+
+	NUTS_PASS(nng_sub0_ctx_unsubscribe(ctx, "two", 3));
+	NUTS_FAIL(nng_sub0_ctx_unsubscribe(ctx, "two", 3), NNG_ENOENT);
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 2);
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "three", 5));
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 3);
+	NUTS_PASS(nng_ctx_close(ctx));
+	sub_stat_wait(sub, "subscriptions", 1);
+	NUTS_PASS(nng_sub0_socket_unsubscribe(sub, "one", 3));
+	NUTS_TRUE(sub_stat(sub, "subscriptions") == 0);
+	NUTS_CLOSE(sub);
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
+static void
+test_sub_stats_contexts(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket sub;
+	nng_socket pub;
+	nng_ctx    ctx;
+	nng_aio   *aio;
+
+	NUTS_PASS(nng_sub0_open(&sub));
+	NUTS_PASS(nng_pub0_open(&pub));
+	NUTS_PASS(nng_socket_set_int(sub, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_bool(sub, NNG_OPT_SUB_PREFNEW, false));
+	NUTS_PASS(nng_socket_set_ms(sub, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_sub0_socket_subscribe(sub, "match", 5));
+	NUTS_PASS(nng_ctx_open(&ctx, sub));
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "match", 5));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_aio_set_timeout(aio, 1000);
+	NUTS_MARRY(pub, sub);
+
+	// One message can be direct in one context and queued in another.
+	nng_ctx_recv(ctx, aio);
+	NUTS_SEND(pub, "match/one");
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_msg_free(nng_aio_get_msg(aio));
+	nng_aio_set_msg(aio, NULL);
+	NUTS_TRUE(sub_stat(sub, "rx_direct") == 1);
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 1);
+
+	// Matching only one context must not increment rx_nomatch.
+	NUTS_PASS(nng_sub0_ctx_subscribe(ctx, "context/", 8));
+	nng_ctx_recv(ctx, aio);
+	NUTS_SEND(pub, "unmatched");
+	NUTS_SEND(pub, "context/sync");
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_msg_free(nng_aio_get_msg(aio));
+	nng_aio_set_msg(aio, NULL);
+	NUTS_TRUE(sub_stat(sub, "rx_nomatch") == 1);
+	NUTS_TRUE(sub_stat(sub, "rx_discard") == 0);
+
+	// Overflow and queueing are counted per matching context.
+	NUTS_SEND(pub, "match/two");
+	sub_stat_wait(sub, "rx_queued", 2);
+	NUTS_TRUE(sub_stat(sub, "rx_discard") == 1);
+	NUTS_SEND(pub, "match/three");
+	sub_stat_wait(sub, "rx_discard", 3);
+	NUTS_TRUE(sub_stat(sub, "rx_queued") == 2);
+	NUTS_TRUE(sub_stat(sub, "rx_nomatch") == 1);
+	NUTS_RECV(sub, "match/one");
+	nng_ctx_recv(ctx, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_MATCH(nng_msg_body(nng_aio_get_msg(aio)), "match/two");
+	nng_msg_free(nng_aio_get_msg(aio));
+	nng_aio_free(aio);
+	NUTS_PASS(nng_ctx_close(ctx));
+	NUTS_CLOSE(pub);
+	NUTS_CLOSE(sub);
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
 TEST_LIST = {
 	{ "sub identity", test_sub_identity },
 	{ "sub cannot send", test_sub_cannot_send },
@@ -630,5 +863,8 @@ TEST_LIST = {
 	{ "sub cooked", test_sub_cooked },
 	{ "sub wrong protocol", test_sub_wrong_protocol },
 	{ "sub closed socket", test_sub_closed_socket },
+	{ "sub stats", test_sub_stats },
+	{ "sub stats subscriptions", test_sub_stats_subscriptions },
+	{ "sub stats contexts", test_sub_stats_contexts },
 	{ NULL, NULL },
 };
