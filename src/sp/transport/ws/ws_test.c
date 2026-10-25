@@ -85,8 +85,8 @@ test_ws_redirects(void)
 	NUTS_PASS(nng_url_parse(&url, address));
 	NUTS_PASS(nng_http_server_hold(&server, url));
 	nng_url_free(url);
-	NUTS_PASS(nng_http_handler_alloc_redirect(
-	    &handler, "/redirect", NNG_HTTP_STATUS_FOUND, "/redirect2"));
+	NUTS_PASS(nng_http_handler_alloc_redirect(&handler, "/redirect",
+	    NNG_HTTP_STATUS_FOUND, "/redirect2?next=https://example.com/"));
 	NUTS_PASS(nng_http_server_add_handler(server, handler));
 	NUTS_PASS(nng_http_handler_alloc_redirect(&redirect_handler,
 	    "/redirect2", NNG_HTTP_STATUS_FOUND, "/target"));

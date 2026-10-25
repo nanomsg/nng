@@ -21,9 +21,12 @@ By default, WebSocket dialers reject HTTP redirect responses during the
 opening handshake. Set [`NNG_OPT_WS_FOLLOW_REDIRECTS`] to follow them.
 Redirects are limited to ten hops. Relative `Location` values are resolved
 against the current WebSocket URL; absolute `http` and `https` locations are
-treated as `ws` and `wss`, respectively. TLS configuration, TCP options, and
-any configured local bind address are retained for redirected connections.
-User-supplied WebSocket handshake headers are not sent to a different origin.
+treated as `ws` and `wss`, respectively. TCP options and any configured local
+bind address are retained for redirected connections. TLS configuration is
+retained for same-origin redirects; a redirect to a different `wss` origin
+uses a new TLS configuration so SNI and certificate validation use the
+redirect target's hostname. User-supplied WebSocket handshake headers are not
+sent to a different origin.
 
 ### URI Formats
 
