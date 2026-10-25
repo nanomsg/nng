@@ -1402,6 +1402,7 @@ static nng_err
 ws_redirect_url(nng_url **urlp, const nng_url *base, const char *location)
 {
 	const char *path;
+	const char *sep;
 	char       *url    = NULL;
 	char       *origin = NULL;
 	nng_url     origin_url;
@@ -1417,7 +1418,8 @@ ws_redirect_url(nng_url **urlp, const nng_url *base, const char *location)
 		        location[4] == ':' ? "ws" : "wss", suffix) != 0) {
 			return (NNG_ENOMEM);
 		}
-	} else if (strstr(location, "://") != NULL) {
+	} else if (((sep = strstr(location, "://")) != NULL) &&
+	    (strcspn(location, "/?#") > (size_t) (sep - location))) {
 		url = nni_strdup(location);
 	} else {
 		origin_url            = *base;
@@ -1500,7 +1502,11 @@ ws_redirect(nni_ws *ws, nni_ws_dialer *d)
 		nng_url_free(url);
 		return (rv);
 	}
+	// A TLS config carries the SNI and peer-verification hostname.  Reuse
+	// it only when that hostname remains valid; a new client otherwise has
+	// the redirect target's hostname in its default TLS config.
 	if ((strncmp(url->u_scheme, "wss", 3) == 0) &&
+	    ws_same_origin(d->url, url) &&
 	    (nni_http_client_get_tls(d->client, &tls) == NNG_OK)) {
 		if ((rv = nni_http_client_set_tls(client, tls)) != NNG_OK) {
 			goto error;
