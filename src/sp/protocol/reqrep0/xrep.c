@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,6 +17,12 @@
 #include "../../../core/platform.h"
 #include "../../../core/protocol.h"
 #include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 #define REP0_SELF 0x31
 #define REP0_PEER 0x30
@@ -39,12 +45,19 @@ static void xrep0_pipe_fini(void *);
 
 // xrep0_sock is our per-socket protocol private structure.
 struct xrep0_sock {
+	nni_sock      *nsock;
 	nni_msgq      *uwq;
 	nni_msgq      *urq;
 	nni_mtx        lk;
 	nni_atomic_int ttl;
 	nni_id_map     pipes;
 	nni_aio        aio_getq;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_drop;
+	nni_stat_item stat_tx_malformed;
+	nni_stat_item stat_ttl_drop;
+	nni_stat_item stat_rx_malformed;
+#endif
 };
 
 // xrep0_pipe is our per-pipe protocol private structure.
@@ -73,6 +86,8 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 {
 	xrep0_sock *s = arg;
 
+	s->nsock = sock;
+
 	nni_mtx_init(&s->lk);
 	nni_aio_init(&s->aio_getq, xrep0_sock_getq_cb, s);
 	nni_atomic_init(&s->ttl);
@@ -81,6 +96,28 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 	s->urq = nni_sock_recvq(sock);
 
 	nni_id_map_init(&s->pipes, 0, 0, false);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_drop_info, "tx_drop",
+	    "messages dropped (peer unavailable or send queue full)",
+	    NNG_STAT_COUNTER, NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_drop, &tx_drop_info, &s->lk);
+	nni_sock_add_stat(sock, &s->stat_tx_drop);
+	NNI_STAT_ATOMIC(tx_malformed_info, "tx_malformed",
+	    "messages dropped (missing routing header)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_tx_malformed, &tx_malformed_info);
+	nni_sock_add_stat(sock, &s->stat_tx_malformed);
+	NNI_STAT_ATOMIC(ttl_drop_info, "ttl_drop",
+	    "messages dropped due to too many hops", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_ttl_drop, &ttl_drop_info);
+	nni_sock_add_stat(sock, &s->stat_ttl_drop);
+	NNI_STAT_ATOMIC(rx_malformed_info, "rx_malformed",
+	    "malformed messages received", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_rx_malformed, &rx_malformed_info);
+	nni_sock_add_stat(sock, &s->stat_rx_malformed);
+#endif
 }
 
 static void
@@ -224,6 +261,7 @@ xrep0_sock_getq_cb(void *arg)
 
 	// We yank the outgoing pipe id from the header
 	if (nni_msg_header_len(msg) < 4) {
+		BUMP_STAT(&s->stat_tx_malformed);
 		nni_msg_free(msg);
 
 		// Look for another message on the upper write queue.
@@ -239,6 +277,7 @@ xrep0_sock_getq_cb(void *arg)
 	nni_mtx_lock(&s->lk);
 	if (((p = nni_id_get(&s->pipes, id)) == NULL) ||
 	    (nni_msgq_tryput(p->sendq, msg) != 0)) {
+		BUMP_STAT(&s->stat_tx_drop);
 		nni_msg_free(msg);
 	}
 	nni_mtx_unlock(&s->lk);
@@ -308,6 +347,7 @@ xrep0_pipe_recv_cb(void *arg)
 		bool     end;
 		uint8_t *body;
 		if (hops > ttl) {
+			BUMP_STAT(&s->stat_ttl_drop);
 			// This isn't malformed, but it has gone through
 			// too many hops.  Do not disconnect, because we
 			// can legitimately receive messages with too many
@@ -316,6 +356,7 @@ xrep0_pipe_recv_cb(void *arg)
 		}
 		hops++;
 		if (nni_msg_len(msg) < 4) {
+			BUMP_STAT(&s->stat_rx_malformed);
 			// Peer is speaking garbage. Kick it.
 			nni_msg_free(msg);
 			nni_pipe_close(p->pipe);
@@ -335,6 +376,7 @@ xrep0_pipe_recv_cb(void *arg)
 	}
 
 	// Go ahead and send it up.
+	nni_sock_bump_rx(s->nsock, nni_msg_len(msg));
 	nni_aio_set_msg(&p->aio_putq, msg);
 	nni_msgq_aio_put(s->urq, &p->aio_putq);
 	return;
@@ -383,6 +425,8 @@ static void
 xrep0_sock_send(void *arg, nni_aio *aio)
 {
 	xrep0_sock *s = arg;
+
+	nni_sock_bump_tx(s->nsock, nni_msg_len(nni_aio_get_msg(aio)));
 
 	nni_msgq_aio_put(s->uwq, aio);
 }

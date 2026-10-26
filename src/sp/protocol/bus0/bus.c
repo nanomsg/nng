@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,6 +15,13 @@
 #include "../../../core/pipe.h"
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
+#include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Bus protocol.  The BUS protocol, each peer sends a message to its peers.
 // However, bus protocols do not "forward" (absent a device).  So in order
@@ -38,6 +45,7 @@ static void bus0_pipe_recv_cb(void *);
 
 // bus0_sock is our per-socket protocol private structure.
 struct bus0_sock {
+	nni_sock    *nsock;
 	nni_list     pipes;
 	nni_mtx      mtx;
 	nni_pollable can_send;
@@ -46,6 +54,11 @@ struct bus0_sock {
 	nni_list     recv_wait;
 	int          send_buf;
 	bool         raw;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_drop;
+	nni_stat_item stat_tx_nopipe;
+	nni_stat_item stat_rx_discard;
+#endif
 };
 
 // bus0_pipe is our per-pipe protocol private structure.
@@ -75,7 +88,7 @@ bus0_sock_init(void *arg, nni_sock *ns)
 {
 	bus0_sock *s = arg;
 
-	NNI_ARG_UNUSED(ns);
+	s->nsock = ns;
 
 	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
@@ -86,6 +99,23 @@ bus0_sock_init(void *arg, nni_sock *ns)
 	s->send_buf = 16;
 
 	s->raw = false;
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_drop_info, "tx_drop",
+	    "messages dropped (send queue full, per pipe)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_drop, &tx_drop_info, &s->mtx);
+	nni_sock_add_stat(ns, &s->stat_tx_drop);
+	NNI_STAT_LOCK(tx_nopipe_info, "tx_nopipe",
+	    "messages discarded (no connected peers)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_nopipe, &tx_nopipe_info, &s->mtx);
+	nni_sock_add_stat(ns, &s->stat_tx_nopipe);
+	NNI_STAT_LOCK(rx_discard_info, "rx_discard",
+	    "messages dropped (receive queue full)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_rx_discard, &rx_discard_info, &s->mtx);
+	nni_sock_add_stat(ns, &s->stat_rx_discard);
+#endif
 }
 
 static void
@@ -231,6 +261,7 @@ bus0_pipe_recv_cb(void *arg)
 	msg = nni_aio_get_msg(&p->aio_recv);
 	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
+	nni_sock_bump_rx(s->nsock, nni_msg_len(msg));
 
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
@@ -243,6 +274,7 @@ bus0_pipe_recv_cb(void *arg)
 	} else if (nni_lmq_put(&s->recv_msgs, msg) == 0) {
 		nni_pollable_raise(&s->can_recv);
 	} else {
+		BUMP_STAT(&s->stat_rx_discard);
 		// dropped message due to no room
 		nni_msg_free(msg);
 	}
@@ -295,6 +327,11 @@ bus0_sock_send(void *arg, nni_aio *aio)
 		return;
 	}
 
+	if (nni_list_empty(&s->pipes)) {
+		BUMP_STAT(&s->stat_tx_nopipe);
+	}
+	nni_sock_bump_tx(s->nsock, len);
+
 	NNI_LIST_FOREACH (&s->pipes, pipe) {
 
 		if (s->raw && nni_pipe_id(pipe->pipe) == sender) {
@@ -310,6 +347,8 @@ bus0_sock_send(void *arg, nni_aio *aio)
 		} else if (!nni_lmq_full(&pipe->send_queue)) {
 			nni_msg_clone(msg);
 			nni_lmq_put(&pipe->send_queue, msg);
+		} else {
+			BUMP_STAT(&s->stat_tx_drop);
 		}
 	}
 	nni_mtx_unlock(&s->mtx);

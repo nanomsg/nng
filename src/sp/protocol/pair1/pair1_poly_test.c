@@ -134,6 +134,8 @@ test_poly_cooked(void)
 	NUTS_PASS(nng_sendmsg(s1, msg, 0));
 	NUTS_FAIL(nng_recvmsg(c2, &msg, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(s1, "tx_drop", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c2);
 }
@@ -223,6 +225,8 @@ test_poly_recv_no_header(void)
 	NUTS_PASS(nng_sendmsg(c, m, 0));
 	NUTS_FAIL(nng_recvmsg(s, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(s, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(c);
 	NUTS_CLOSE(s);
 }
@@ -247,6 +251,8 @@ test_poly_recv_garbage(void)
 	NUTS_PASS(nng_msg_append_u32(m, 0x1000));
 	NUTS_PASS(nng_sendmsg(c, m, 0));
 	NUTS_FAIL(nng_recvmsg(s, &m, 0), NNG_ETIMEDOUT);
+
+	NUTS_STAT(s, "rx_malformed", NNG_UNIT_MESSAGES, 1);
 
 	NUTS_CLOSE(c);
 	NUTS_CLOSE(s);
@@ -315,6 +321,9 @@ test_poly_ttl(void)
 	NUTS_PASS(nng_msg_header_append_u32(msg, 15));
 	NUTS_PASS(nng_sendmsg(c1, msg, 0));
 	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
+
+	NUTS_STAT(s1, "ttl_drop", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(s1, "rx_malformed", NNG_UNIT_MESSAGES, 0);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c1);

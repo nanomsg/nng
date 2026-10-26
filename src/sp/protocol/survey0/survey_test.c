@@ -122,6 +122,8 @@ test_surv_recv_garbage(void)
 	NUTS_PASS(nng_sendmsg(resp, m, 0));
 	NUTS_FAIL(nng_recvmsg(surv, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(surv, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
 }
@@ -148,6 +150,15 @@ test_surv_resp_exchange(void)
 	NUTS_RECV(resp, "ping");
 	NUTS_SEND(resp, "pong");
 	NUTS_RECV(surv, "pong");
+
+	NUTS_STAT(surv, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "tx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(surv, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "rx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(resp, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(resp, "tx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(resp, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(resp, "rx_bytes", NNG_UNIT_BYTES, 5);
 
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
@@ -603,7 +614,88 @@ test_surv_validate_peer(void)
 	nng_stats_free(stats);
 }
 
+static void
+test_survey_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket surv, resp;
+	nng_ctx    ctx;
+	nng_aio   *aio;
+	nng_msg   *msg, *reply, *dup;
+
+	NUTS_PASS(nng_surveyor0_open(&surv));
+	NUTS_PASS(nng_respondent0_open_raw(&resp));
+	NUTS_PASS(nng_socket_set_ms(surv, NNG_OPT_SURVEYOR_SURVEYTIME, 60000));
+	NUTS_PASS(nng_socket_set_ms(resp, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(resp, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_SEND(surv, "no peers");
+	NUTS_STAT(surv, "tx_nopipe", NNG_UNIT_MESSAGES, 1);
+	NUTS_PASS(nng_ctx_open(&ctx, surv));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_aio_set_timeout(aio, 1000);
+	NUTS_MARRY(surv, resp);
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	nng_aio_set_msg(aio, msg);
+	nng_ctx_send(ctx, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_PASS(nng_recvmsg(resp, &reply, 0));
+	for (int i = 0; i < 129; i++) {
+		NUTS_PASS(nng_msg_dup(&dup, reply));
+		NUTS_PASS(nng_sendmsg(resp, dup, 0));
+		NUTS_STAT(surv, "rx_msgs", NNG_UNIT_MESSAGES, i + 1);
+	}
+	NUTS_STAT(surv, "rx_discard", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "rx_nomatch", NNG_UNIT_MESSAGES, 0);
+
+	// Replacing the survey invalidates the old ID and its queued replies.
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	nng_aio_set_msg(aio, msg);
+	nng_ctx_send(ctx, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_PASS(nng_sendmsg(resp, reply, 0));
+	NUTS_STAT(surv, "rx_nomatch", NNG_UNIT_MESSAGES, 1);
+	NUTS_PASS(nng_recvmsg(resp, &reply, 0));
+	NUTS_PASS(nng_sendmsg(resp, reply, 0));
+	nng_ctx_recv(ctx, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_msg_free(nng_aio_get_msg(aio));
+	nng_aio_set_msg(aio, NULL);
+	NUTS_STAT(surv, "rx_discard", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "rx_malformed", NNG_UNIT_MESSAGES, 0);
+	NUTS_STAT(surv, "tx_nopipe", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "tx_drop", NNG_UNIT_MESSAGES, 0);
+	NUTS_PASS(nng_ctx_close(ctx));
+	nng_aio_free(aio);
+	NUTS_CLOSE(surv);
+	NUTS_CLOSE(resp);
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
+static void
+test_survey_send_drop_stats(void)
+{
+	nng_socket surv, resp;
+	NUTS_PASS(nng_surveyor0_open(&surv));
+	NUTS_PASS(nng_respondent0_open(&resp));
+	NUTS_MARRY(surv, resp);
+	for (int i = 0; i < 100; i++) {
+		NUTS_SEND(surv, "survey");
+	}
+	NUTS_STAT_GE(surv, "tx_drop", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "tx_nopipe", NNG_UNIT_MESSAGES, 0);
+	NUTS_STAT(surv, "tx_msgs", NNG_UNIT_MESSAGES, 100);
+	NUTS_CLOSE(surv);
+	NUTS_CLOSE(resp);
+}
+
 TEST_LIST = {
+	{ "survey send drop stats", test_survey_send_drop_stats },
+	{ "survey stats", test_survey_stats },
 	{ "survey identity", test_surv_identity },
 	{ "survey ttl option", test_surv_ttl_option },
 	{ "survey survey time option", test_surv_survey_time_option },

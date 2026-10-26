@@ -311,7 +311,14 @@ test_rep_close_pipe_before_send(void)
 	NUTS_TRUE((m = nng_aio_get_msg(aio1)) != NULL);
 	p = nng_msg_get_pipe(m);
 	NUTS_PASS(nng_pipe_close(p));
+	uint64_t end = nuts_clock() + 1000;
+	while (nng_socket_id(nng_pipe_socket(p)) > 0 && nuts_clock() < end) {
+		NUTS_SLEEP(1);
+	}
+	NUTS_TRUE(nng_socket_id(nng_pipe_socket(p)) < 0);
 	NUTS_PASS(nng_sendmsg(rep, m, 0));
+
+	NUTS_STAT(rep, "tx_drop", NNG_UNIT_MESSAGES, 1);
 
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
@@ -762,11 +769,41 @@ test_rep_recv_garbage(void)
 	NUTS_PASS(nng_sendmsg(req, m, 0));
 	NUTS_FAIL(nng_recvmsg(rep, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(rep, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
+}
+
+static void
+test_rep_ttl_stats(void)
+{
+	nng_socket req, rep;
+	nng_msg   *msg;
+
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_MAXTTL, 1));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_MARRY(req, rep);
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_msg_append_u32(msg, 1));
+	NUTS_PASS(nng_msg_append_u32(msg, 0x80000001u));
+	NUTS_PASS(nng_sendmsg(req, msg, 0));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_msg_header_append_u32(msg, 0x80000002u));
+	NUTS_PASS(nng_msg_append(msg, "valid", 6));
+	NUTS_PASS(nng_sendmsg(req, msg, 0));
+	NUTS_RECV(rep, "valid");
+	NUTS_STAT(rep, "ttl_drop", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(rep, "rx_malformed", NNG_UNIT_MESSAGES, 0);
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
 }
 
 NUTS_TESTS = {
+	{ "rep ttl stats", test_rep_ttl_stats },
 	{ "rep identity", test_rep_identity },
 	{ "rep send bad state", test_rep_send_bad_state },
 	{ "rep poll readable", test_rep_poll_readable },

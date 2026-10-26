@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,6 +15,13 @@
 #include "../../../core/pipe.h"
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
+#include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Pull protocol.  The PULL protocol is the "read" side of a pipeline.
 
@@ -33,11 +40,16 @@ static void pull0_recv_cb(void *);
 
 // pull0_sock is our per-socket protocol private structure.
 struct pull0_sock {
+	nni_sock    *nsock;
 	bool         raw;
 	nni_list     pl; // pipe list (pipes with data ready)
 	nni_list     rq; // recv queue (aio list)
 	nni_mtx      m;
 	nni_pollable readable;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_rx_direct;
+	nni_stat_item stat_rx_queued;
+#endif
 };
 
 // pull0_pipe is our per-pipe protocol private structure.
@@ -54,12 +66,25 @@ static void
 pull0_sock_init(void *arg, nni_sock *sock)
 {
 	pull0_sock *s = arg;
-	NNI_ARG_UNUSED(sock);
+
+	s->nsock = sock;
 
 	nni_aio_list_init(&s->rq);
 	NNI_LIST_INIT(&s->pl, pull0_pipe, node);
 	nni_mtx_init(&s->m);
 	nni_pollable_init(&s->readable);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(rx_direct_info, "rx_direct",
+	    "messages delivered to a waiting receiver", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_rx_direct, &rx_direct_info, &s->m);
+	nni_sock_add_stat(sock, &s->stat_rx_direct);
+	NNI_STAT_LOCK(rx_queued_info, "rx_queued",
+	    "messages held on a pipe awaiting a receiver", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_rx_queued, &rx_queued_info, &s->m);
+	nni_sock_add_stat(sock, &s->stat_rx_queued);
+#endif
 }
 
 static void
@@ -157,6 +182,7 @@ pull0_recv_cb(void *arg)
 	m = nni_aio_get_msg(ap);
 	nni_aio_set_msg(ap, NULL);
 	nni_msg_set_pipe(m, nni_pipe_id(p->p));
+	nni_sock_bump_rx(s->nsock, nni_msg_len(m));
 
 	nni_mtx_lock(&s->m);
 	if (p->closed) {
@@ -165,6 +191,7 @@ pull0_recv_cb(void *arg)
 		return;
 	}
 	if (nni_list_empty(&s->rq)) {
+		BUMP_STAT(&s->stat_rx_queued);
 		nni_list_append(&s->pl, p);
 		if (nni_list_first(&s->pl) == p) {
 			nni_pollable_raise(&s->readable);
@@ -174,6 +201,7 @@ pull0_recv_cb(void *arg)
 		return;
 	}
 	nni_pipe_recv(p->p, ap);
+	BUMP_STAT(&s->stat_rx_direct);
 	as = nni_list_first(&s->rq);
 	nni_aio_list_remove(as);
 	nni_mtx_unlock(&s->m);

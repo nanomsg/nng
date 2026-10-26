@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -18,6 +18,13 @@
 #include "../../../core/platform.h"
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
+#include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Surveyor protocol.  The SURVEYOR protocol is the "survey" side of the
 // survey pattern.  This is useful for building service discovery, voting, etc.
@@ -50,6 +57,7 @@ struct surv0_ctx {
 
 // surv0_sock is our per-socket protocol private structure.
 struct surv0_sock {
+	nni_sock      *nsock;
 	int            ttl;
 	nni_list       pipes;
 	nni_mtx        mtx;
@@ -58,6 +66,13 @@ struct surv0_sock {
 	nni_pollable   writable;
 	nni_pollable   readable;
 	nni_atomic_int send_buf;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_drop;
+	nni_stat_item stat_tx_nopipe;
+	nni_stat_item stat_rx_discard;
+	nni_stat_item stat_rx_nomatch;
+	nni_stat_item stat_rx_malformed;
+#endif
 };
 
 // surv0_pipe is our per-pipe protocol private structure.
@@ -216,6 +231,8 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 
 	nni_mtx_lock(&sock->mtx);
 
+	nni_sock_bump_tx(sock->nsock, len);
+
 	// Abort everything outstanding.
 	surv0_ctx_abort(ctx, NNG_ECANCELED);
 
@@ -232,6 +249,9 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 	// regardless of whether there are any pipes or not.  If no pipes,
 	// then it just gets discarded.
 	nni_aio_set_msg(aio, NULL);
+	if (nni_list_empty(&sock->pipes)) {
+		BUMP_STAT(&sock->stat_tx_nopipe);
+	}
 	NNI_LIST_FOREACH (&sock->pipes, pipe) {
 
 		// if the pipe isn't busy, then send this message direct.
@@ -243,6 +263,8 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 		} else if (!nni_lmq_full(&pipe->send_queue)) {
 			nni_msg_clone(msg);
 			nni_lmq_put(&pipe->send_queue, msg);
+		} else {
+			BUMP_STAT(&sock->stat_tx_drop);
 		}
 	}
 
@@ -273,7 +295,7 @@ surv0_sock_init(void *arg, nni_sock *s)
 {
 	surv0_sock *sock = arg;
 
-	NNI_ARG_UNUSED(s);
+	sock->nsock = s;
 
 	NNI_LIST_INIT(&sock->pipes, surv0_pipe, node);
 	nni_mtx_init(&sock->mtx);
@@ -297,6 +319,35 @@ surv0_sock_init(void *arg, nni_sock *s)
 	surv0_ctx_init(&sock->ctx, sock);
 
 	sock->ttl = 8;
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_drop_info, "tx_drop",
+	    "surveys dropped (send queue full, per pipe)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&sock->stat_tx_drop, &tx_drop_info, &sock->mtx);
+	nni_sock_add_stat(s, &sock->stat_tx_drop);
+	NNI_STAT_LOCK(tx_nopipe_info, "tx_nopipe",
+	    "surveys discarded (no connected peers)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&sock->stat_tx_nopipe, &tx_nopipe_info, &sock->mtx);
+	nni_sock_add_stat(s, &sock->stat_tx_nopipe);
+	NNI_STAT_LOCK(rx_discard_info, "rx_discard",
+	    "replies dropped (receive queue full)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(
+	    &sock->stat_rx_discard, &rx_discard_info, &sock->mtx);
+	nni_sock_add_stat(s, &sock->stat_rx_discard);
+	NNI_STAT_LOCK(rx_nomatch_info, "rx_nomatch",
+	    "replies dropped (no matching survey)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(
+	    &sock->stat_rx_nomatch, &rx_nomatch_info, &sock->mtx);
+	nni_sock_add_stat(s, &sock->stat_rx_nomatch);
+	NNI_STAT_ATOMIC(rx_malformed_info, "rx_malformed",
+	    "malformed messages received", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&sock->stat_rx_malformed, &rx_malformed_info);
+	nni_sock_add_stat(s, &sock->stat_rx_malformed);
+#endif
 }
 
 static void
@@ -441,6 +492,7 @@ surv0_pipe_recv_cb(void *arg)
 
 	// We yank 4 bytes of body, and move them to the header.
 	if (nni_msg_len(msg) < 4) {
+		BUMP_STAT(&sock->stat_rx_malformed);
 		// Peer sent us garbage.  Kick it.
 		nni_msg_free(msg);
 		nni_pipe_close(p->pipe);
@@ -448,12 +500,16 @@ surv0_pipe_recv_cb(void *arg)
 	}
 	id = nni_msg_trim_u32(msg);
 	nni_msg_header_append_u32(msg, id);
+	nni_sock_bump_rx(sock->nsock, nni_msg_len(msg));
 
 	nni_mtx_lock(&sock->mtx);
 	// Best effort at delivery.  Discard if no context or context is
 	// unable to receive it.
-	if (((ctx = nni_id_get(&sock->surveys, id)) == NULL) ||
-	    (nni_lmq_full(&ctx->recv_lmq))) {
+	if ((ctx = nni_id_get(&sock->surveys, id)) == NULL) {
+		BUMP_STAT(&sock->stat_rx_nomatch);
+		nni_msg_free(msg);
+	} else if (nni_lmq_full(&ctx->recv_lmq)) {
+		BUMP_STAT(&sock->stat_rx_discard);
 		nni_msg_free(msg);
 	} else if ((aio = nni_list_first(&ctx->recv_queue)) != NULL) {
 		nni_list_remove(&ctx->recv_queue, aio);

@@ -201,6 +201,45 @@ obtained via {{i:`nng_stat_timestamp`}}. The timestamp is given
 in milliseconds since a reference time, and the reference time used
 here is the same reference time used for [`nng_clock`].
 
+## Protocol Counters
+
+For REQ/REP, PUSH/PULL, SURVEYOR/RESPONDENT, PAIR, and BUS, socket traffic
+counters (`tx_msgs`, `tx_bytes`, `rx_msgs`, and `rx_bytes`) describe traffic
+at the protocol boundary. They are distinct from pipe counters maintained by
+transports. Socket byte counts exclude headers
+added by the protocol. A broadcast is counted once on the sending socket,
+and REQ retransmissions are counted separately from application submissions.
+These counters do not acknowledge delivery to a peer application.
+
+The following additional socket counters help explain protocol behavior.
+Context activity is aggregated on its owning socket. All entries are
+`NNG_STAT_COUNTER` values with `NNG_UNIT_MESSAGES`, except `already`, which
+has `NNG_UNIT_NONE`.
+
+| Protocol | Counters | Meaning |
+| --- | --- | --- |
+| REQ | `tx_retry` | Retransmissions, including retries after disconnection. |
+| REQ | `rx_nomatch` | Replies discarded because the request is no longer waiting for a reply, including canceled requests and duplicate replies. |
+| REQ, REP, SURVEYOR, RESPONDENT | `rx_malformed` | Messages discarded because their wire headers are incomplete or invalid. Available in cooked and raw modes. |
+| REP, RESPONDENT | `ttl_drop` | Requests or surveys discarded because their routing backtrace exceeds the hop limit. Available in cooked and raw modes. |
+| REP, RESPONDENT | `tx_drop` | Replies discarded because the destination pipe is gone; in raw mode, also replies discarded because the destination queue is full. |
+| Raw REP, raw RESPONDENT | `tx_malformed` | Outgoing messages discarded because the routing header is missing. |
+| PUSH | `tx_direct`, `tx_queued` | Messages handed directly to a pipe or placed in the socket send buffer. A deferred send is counted when it reaches one of these destinations. |
+| PUSH | `tx_blocked` | Send operations deferred until a pipe or buffer space is available. Includes operations subsequently canceled or timed out. |
+| PULL | `rx_direct`, `rx_queued` | Messages delivered to a waiting receive operation or held on a pipe until a receiver is available. |
+| SURVEYOR, BUS | `tx_drop` | Copies discarded because a peer's send queue is full. Counts each affected pipe separately. |
+| SURVEYOR, BUS | `tx_nopipe` | Sends discarded because there are no connected peers. |
+| Cooked SURVEYOR | `rx_nomatch`, `rx_discard` | Replies discarded because no survey matches the ID, or the matching context's receive queue is full. |
+| BUS | `rx_discard` | Messages discarded because the socket receive queue is full. |
+| PAIRv0, PAIRv1 | `already` | Connections rejected because the socket already has a peer. |
+| PAIRv1 | `rx_malformed`, `tx_malformed`, `ttl_drop`, `tx_drop` | Invalid received headers, invalid raw send headers, excessive hops, and undeliverable polyamorous sends. |
+
+The PUSH, PULL, and BUS counters apply in cooked and raw modes; the
+SURVEYOR send counters also apply in both modes. Queue counters are
+cumulative events, rather than current queue occupancy. Drop counters
+describe protocol decisions; they do not include every possible transport
+failure, allocation failure, or message discarded during shutdown.
+
 ## See Also
 
 [`nng_clock`]

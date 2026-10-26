@@ -315,6 +315,48 @@ extern const char *nuts_ecdsa_client_crt;
 
 #define NUTS_TESTS TEST_LIST
 
+#ifdef NNG_ENABLE_STATS
+// Protocol callbacks can run after a send completes.  Allow them to catch up
+// before checking a counter, while also checking its public metadata.
+static inline bool
+nuts_stat_wait(
+    nng_socket sock, const char *name, int unit, uint64_t want, bool at_least)
+{
+	uint64_t end = nuts_clock() + 1000;
+	uint64_t value;
+	do {
+		nng_stat       *stats;
+		const nng_stat *st;
+		NUTS_PASS(nng_stats_get(&stats));
+		st = nng_stat_find_socket(stats, sock);
+		NUTS_ASSERT(st != NULL);
+		st = nng_stat_find(st, name);
+		NUTS_ASSERT(st != NULL);
+		NUTS_TRUE(nng_stat_type(st) == NNG_STAT_COUNTER);
+		NUTS_TRUE(nng_stat_unit(st) == unit);
+		value = nng_stat_value(st);
+		nng_stats_free(stats);
+		if (value == want || (at_least && value > want)) {
+			return (true);
+		}
+		if (value > want) {
+			break;
+		}
+		nuts_sleep(1);
+	} while (nuts_clock() < end);
+	NUTS_MSG("stat %s: expected %llu, got %llu", name,
+	    (unsigned long long) want, (unsigned long long) value);
+	return (false);
+}
+#define NUTS_STAT(sock, name, unit, value) \
+	NUTS_TRUE(nuts_stat_wait(sock, name, unit, value, false))
+#define NUTS_STAT_GE(sock, name, unit, value) \
+	NUTS_TRUE(nuts_stat_wait(sock, name, unit, value, true))
+#else
+#define NUTS_STAT(sock, name, unit, value) ((void) 0)
+#define NUTS_STAT_GE(sock, name, unit, value) ((void) 0)
+#endif
+
 #define NUTS_PROTO(x, y) (((x) << 4u) | (y))
 
 #define NUTS_ENABLE_LOG(level) nuts_set_logger(level)

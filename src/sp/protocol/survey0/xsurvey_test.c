@@ -209,6 +209,8 @@ test_xsurvey_recv_garbage(void)
 	NUTS_PASS(nng_sendmsg(resp, m, 0));
 	NUTS_FAIL(nng_recvmsg(surv, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(surv, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
 }
@@ -250,6 +252,11 @@ test_xsurvey_recv_header(void)
 	NUTS_TRUE(id == 0x80000123u);
 
 	nng_msg_free(m);
+
+	NUTS_STAT(resp, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(resp, "tx_bytes", NNG_UNIT_BYTES, 0);
+	NUTS_STAT(surv, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "rx_bytes", NNG_UNIT_BYTES, 0);
 
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
@@ -306,12 +313,14 @@ test_xsurvey_close_pipe_during_send(void)
 	NUTS_TRUE(nng_pipe_id(p1) > 0);
 	NUTS_TRUE(nng_pipe_id(p2) > 0);
 
-	for (unsigned i = 0; i < 20; i++) {
+	for (unsigned i = 0; i < 100; i++) {
 		NUTS_PASS(nng_msg_alloc(&m, 4));
 		NUTS_PASS(nng_msg_header_append_u32(m, i | 0x80000000u));
 		NUTS_SLEEP(10);
 		NUTS_PASS(nng_sendmsg(surv, m, 0));
 	}
+
+	NUTS_STAT_GE(surv, "tx_drop", NNG_UNIT_MESSAGES, 1);
 
 	NUTS_PASS(nng_pipe_close(p1));
 	NUTS_CLOSE(surv);
@@ -368,12 +377,31 @@ test_xsurvey_broadcast(void)
 	NUTS_RECV(resp1, "hello");
 	NUTS_RECV(resp2, "hello");
 
+	NUTS_STAT(surv, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "tx_bytes", NNG_UNIT_BYTES, 6);
+	NUTS_STAT(resp1, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(resp1, "rx_bytes", NNG_UNIT_BYTES, 6);
+	NUTS_STAT(resp2, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(resp2, "rx_bytes", NNG_UNIT_BYTES, 6);
+
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp1);
 	NUTS_CLOSE(resp2);
 }
 
+static void
+test_xsurvey_no_peer_stats(void)
+{
+	nng_socket surv;
+	NUTS_PASS(nng_surveyor0_open_raw(&surv));
+	NUTS_SEND(surv, "no peers");
+	NUTS_STAT(surv, "tx_nopipe", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(surv, "tx_drop", NNG_UNIT_MESSAGES, 0);
+	NUTS_CLOSE(surv);
+}
+
 TEST_LIST = {
+	{ "xsurvey no peer stats", test_xsurvey_no_peer_stats },
 	{ "xsurvey identity", test_xsurveyor_identity },
 	{ "xsurvey raw", test_xsurveyor_raw },
 	{ "xsurvey no context", test_xsurvey_no_context },

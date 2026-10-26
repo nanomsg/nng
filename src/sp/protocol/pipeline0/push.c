@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,6 +17,13 @@
 #include "../../../core/pipe.h"
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
+#include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Push protocol.  The PUSH protocol is the "write" side of a pipeline.
 // Push distributes fairly, or tries to, by giving messages in round-robin
@@ -39,11 +46,17 @@ static void push0_pipe_ready(push0_pipe *);
 
 // push0_sock is our per-socket protocol private structure.
 struct push0_sock {
+	nni_sock    *nsock;
 	nni_lmq      wq; // list of messages queued
 	nni_list     aq; // list of aio senders waiting
 	nni_list     pl; // list of pipes ready to send
 	nni_pollable writable;
 	nni_mtx      m;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_direct;
+	nni_stat_item stat_tx_queued;
+	nni_stat_item stat_tx_blocked;
+#endif
 };
 
 // push0_pipe is our per-pipe protocol private structure.
@@ -60,13 +73,31 @@ static void
 push0_sock_init(void *arg, nni_sock *sock)
 {
 	push0_sock *s = arg;
-	NNI_ARG_UNUSED(sock);
+
+	s->nsock = sock;
 
 	nni_mtx_init(&s->m);
 	nni_aio_list_init(&s->aq);
 	NNI_LIST_INIT(&s->pl, push0_pipe, node);
 	nni_lmq_init(&s->wq, 0); // initially we start unbuffered.
 	nni_pollable_init(&s->writable);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_direct_info, "tx_direct",
+	    "messages sent without buffering", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_direct, &tx_direct_info, &s->m);
+	nni_sock_add_stat(sock, &s->stat_tx_direct);
+	NNI_STAT_LOCK(tx_queued_info, "tx_queued",
+	    "messages placed in send buffer", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_queued, &tx_queued_info, &s->m);
+	nni_sock_add_stat(sock, &s->stat_tx_queued);
+	NNI_STAT_LOCK(tx_blocked_info, "tx_blocked",
+	    "send operations deferred (no pipe or buffer space)",
+	    NNG_STAT_COUNTER, NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_blocked, &tx_blocked_info, &s->m);
+	nni_sock_add_stat(sock, &s->stat_tx_blocked);
+#endif
 }
 
 static void
@@ -208,9 +239,11 @@ push0_pipe_ready(push0_pipe *p)
 			m = nni_aio_get_msg(a);
 			l = nni_msg_len(m);
 			nni_lmq_put(&s->wq, m);
+			BUMP_STAT(&s->stat_tx_queued);
 		}
 
 	} else if ((a = nni_list_first(&s->aq)) != NULL) {
+		BUMP_STAT(&s->stat_tx_direct);
 		// Looks like we had the unbuffered case, but
 		// someone was waiting.
 		nni_aio_list_remove(a);
@@ -278,12 +311,15 @@ push0_sock_send(void *arg, nni_aio *aio)
 	m = nni_aio_get_msg(aio);
 	l = nni_msg_len(m);
 
+	nni_sock_bump_tx(s->nsock, l);
+
 	nni_mtx_lock(&s->m);
 
 	// First we want to see if we can send it right now.
 	// Note that we don't block the sender until the read is complete,
 	// only until we have committed to send it.
 	if ((p = nni_list_first(&s->pl)) != NULL) {
+		BUMP_STAT(&s->stat_tx_direct);
 		nni_list_remove(&s->pl, p);
 		// NB: We won't have had any waiters in the message queue
 		// or the aio queue, because we would not put the pipe
@@ -302,6 +338,7 @@ push0_sock_send(void *arg, nni_aio *aio)
 
 	// Can we queue it?
 	if (nni_lmq_put(&s->wq, m) == 0) {
+		BUMP_STAT(&s->stat_tx_queued);
 		// Yay, we can.  So we're done.
 		nni_aio_set_msg(aio, NULL);
 		nni_aio_finish(aio, 0, l);
@@ -316,6 +353,7 @@ push0_sock_send(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&s->m);
 		return;
 	}
+	BUMP_STAT(&s->stat_tx_blocked);
 	nni_aio_list_append(&s->aq, aio);
 	nni_mtx_unlock(&s->m);
 }

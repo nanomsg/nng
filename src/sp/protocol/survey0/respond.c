@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -18,6 +18,13 @@
 #include "../../../core/pipe.h"
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
+#include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Respondent protocol.  The RESPONDENT protocol is the "replier" side of
 // the surveyor pattern.  This is useful for building service discovery, or
@@ -53,6 +60,7 @@ struct resp0_ctx {
 
 // resp0_sock is our per-socket protocol private structure.
 struct resp0_sock {
+	nni_sock      *nsock;
 	nni_mtx        mtx;
 	nni_atomic_int ttl;
 	nni_id_map     pipes;
@@ -61,6 +69,11 @@ struct resp0_sock {
 	nni_list       recvq;
 	nni_pollable   readable;
 	nni_pollable   writable;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_drop;
+	nni_stat_item stat_ttl_drop;
+	nni_stat_item stat_rx_malformed;
+#endif
 };
 
 // resp0_pipe is our per-pipe protocol private structure.
@@ -180,7 +193,10 @@ resp0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 
+	nni_sock_bump_tx(s->nsock, nni_msg_len(msg));
+
 	if ((p = nni_id_get(&s->pipes, pid)) == NULL) {
+		BUMP_STAT(&s->stat_tx_drop);
 		// Surveyor has left the building.  Just discard the reply.
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_set_msg(aio, NULL);
@@ -224,7 +240,7 @@ resp0_sock_init(void *arg, nni_sock *nsock)
 {
 	resp0_sock *s = arg;
 
-	NNI_ARG_UNUSED(nsock);
+	s->nsock = nsock;
 
 	nni_mtx_init(&s->mtx);
 	nni_id_map_init(&s->pipes, 0, 0, false);
@@ -241,6 +257,23 @@ resp0_sock_init(void *arg, nni_sock *nsock)
 	// Readability comes when there is something on the socket.
 	nni_pollable_init(&s->writable);
 	nni_pollable_init(&s->readable);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_drop_info, "tx_drop",
+	    "replies dropped (peer disconnected)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_drop, &tx_drop_info, &s->mtx);
+	nni_sock_add_stat(nsock, &s->stat_tx_drop);
+	NNI_STAT_ATOMIC(ttl_drop_info, "ttl_drop",
+	    "messages dropped due to too many hops", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_ttl_drop, &ttl_drop_info);
+	nni_sock_add_stat(nsock, &s->stat_ttl_drop);
+	NNI_STAT_ATOMIC(rx_malformed_info, "rx_malformed",
+	    "malformed messages received", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_rx_malformed, &rx_malformed_info);
+	nni_sock_add_stat(nsock, &s->stat_rx_malformed);
+#endif
 }
 
 static void
@@ -342,6 +375,7 @@ resp0_pipe_close(void *arg)
 	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
 		nni_aio *aio;
 		nni_msg *msg;
+		BUMP_STAT(&s->stat_tx_drop);
 		nni_list_remove(&p->sendq, ctx);
 		aio       = ctx->saio;
 		ctx->saio = NULL;
@@ -494,10 +528,12 @@ resp0_pipe_recv_cb(void *arg)
 		uint8_t *body;
 
 		if (hops > ttl) {
+			BUMP_STAT(&s->stat_ttl_drop);
 			goto drop;
 		}
 		hops++;
 		if (nni_msg_len(msg) < 4) {
+			BUMP_STAT(&s->stat_rx_malformed);
 			// Peer is speaking garbage, kick it.
 			nni_msg_free(msg);
 			nni_aio_set_msg(&p->aio_recv, NULL);
@@ -515,6 +551,7 @@ resp0_pipe_recv_cb(void *arg)
 		}
 	}
 
+	nni_sock_bump_rx(s->nsock, nni_msg_len(msg));
 	len = nni_msg_header_len(msg);
 
 	nni_mtx_lock(&s->mtx);

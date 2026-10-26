@@ -262,7 +262,52 @@ test_pull_cooked(void)
 	NUTS_CLOSE(s);
 }
 
+static void
+test_pull_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	for (int raw = 0; raw < 2; raw++) {
+		nng_socket push, pull;
+		nng_aio   *aio;
+
+		NUTS_PASS(nng_push0_open(&push));
+		NUTS_PASS(
+		    raw ? nng_pull0_open_raw(&pull) : nng_pull0_open(&pull));
+		NUTS_PASS(nng_socket_set_ms(push, NNG_OPT_SENDTIMEO, 1000));
+		NUTS_PASS(nng_socket_set_ms(pull, NNG_OPT_RECVTIMEO, 1000));
+		NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+		nng_aio_set_timeout(aio, 1000);
+		NUTS_MARRY(push, pull);
+		nng_socket_recv(pull, aio);
+		NUTS_SEND(push, "direct");
+		nng_aio_wait(aio);
+		NUTS_PASS(nng_aio_result(aio));
+		nng_msg_free(nng_aio_get_msg(aio));
+		nng_aio_set_msg(aio, NULL);
+		NUTS_STAT(pull, "rx_direct", NNG_UNIT_MESSAGES, 1);
+		NUTS_STAT(pull, "rx_queued", NNG_UNIT_MESSAGES, 0);
+
+		NUTS_SEND(push, "held");
+		NUTS_STAT(pull, "rx_queued", NNG_UNIT_MESSAGES, 1);
+		NUTS_RECV(pull, "held");
+		NUTS_STAT(pull, "rx_direct", NNG_UNIT_MESSAGES, 1);
+		NUTS_STAT(pull, "rx_queued", NNG_UNIT_MESSAGES, 1);
+
+		NUTS_STAT(push, "tx_msgs", NNG_UNIT_MESSAGES, 2);
+		NUTS_STAT(push, "tx_bytes", NNG_UNIT_BYTES, 12);
+		NUTS_STAT(pull, "rx_msgs", NNG_UNIT_MESSAGES, 2);
+		NUTS_STAT(pull, "rx_bytes", NNG_UNIT_BYTES, 12);
+		nng_aio_free(aio);
+		NUTS_CLOSE(push);
+		NUTS_CLOSE(pull);
+	}
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
 TEST_LIST = {
+	{ "pull stats", test_pull_stats },
 	{ "pull identity", test_pull_identity },
 	{ "pull cannot send", test_pull_cannot_send },
 	{ "pull no context", test_pull_no_context },
