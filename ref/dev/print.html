@@ -38,7 +38,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e0955af3.js";
+            window.path_to_searchindex_js = "searchindex-334e1f41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-88728f04.js"></script>
@@ -402,6 +402,11 @@ summarize the changes in each NNG release series.</p>
 <h1 id="whats-new-in-nng-21"><a class="header" href="#whats-new-in-nng-21">What’s New in NNG 2.1</a></h1>
 <p>NNG 2.1 adds hybrid post-quantum cryptography for TLS connections and support
 for DTLS 1.3.</p>
+<h2 id="websocket-redirects"><a class="header" href="#websocket-redirects">WebSocket Redirects</a></h2>
+<p>WebSocket dialers can now opt in to following HTTP redirects during the
+opening handshake with <a href="#NNG_OPT_WS_FOLLOW_REDIRECTS"><code>NNG_OPT_WS_FOLLOW_REDIRECTS</code></a>. Redirect following is
+disabled by default, supports relative and HTTP(S) locations, and is limited
+to ten hops.</p>
 <h2 id="post-quantum-cryptography"><a class="header" href="#post-quantum-cryptography">Post-Quantum Cryptography</a></h2>
 <p>NNG now supports hybrid post-quantum key exchange for TLS 1.3 and DTLS 1.3
 connections, including the TLS and DTLS transports, HTTPS, and secure
@@ -4843,7 +4848,11 @@ transactions on those connections.</p>
 <pre><code class="language-c">typedef struct nng_http_client nng_http_client;
 </code></pre>
 <p>The <a name="a029"></a><code>nng_http_client</code> object is the client side creator for <a href="#connection-object"><code>nng_http</code></a> objects.
-It is analogous to a <a href="#dialers-and-listeners">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
+It is analogous to a <a href="#dialers-and-listeners">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.
+It does not execute requests or apply redirect policy: applications inspect 3xx
+responses and choose whether and how to create a connection to the location
+they specify. The WebSocket transport is an exception: its opening handshake
+can follow redirects when <a href="#NNG_OPT_WS_FOLLOW_REDIRECTS"><code>NNG_OPT_WS_FOLLOW_REDIRECTS</code></a> is enabled.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
 <pre><code class="language-c">nng_err nng_http_client_alloc(nng_http_client **clientp, const nng_url *url);
 </code></pre>
@@ -7062,6 +7071,18 @@ The protocol details for Scalability Protocol sockets are documented in the
 TLS configuration objects and certificate APIs are documented in <a href="#tls">TLS</a>, and
 the underlying TCP behavior is similar to the <a href="#tcp-transport">TCP</a> and <a href="#tls-transport">TLS transport</a> transports.
 WebSocket handshakes use NNG’s <a href="#http-support">HTTP Support</a>.</p>
+<p>By default, WebSocket dialers reject HTTP redirect responses during the
+opening handshake. Set <a href="#NNG_OPT_WS_FOLLOW_REDIRECTS"><code>NNG_OPT_WS_FOLLOW_REDIRECTS</code></a> to follow them.
+Redirects are limited to ten hops. Relative <code>Location</code> values are resolved
+against the current WebSocket URL; absolute <code>http</code> and <code>https</code> locations are
+treated as <code>ws</code> and <code>wss</code>, respectively. TCP options and any configured local
+bind address are retained for redirected connections. TLS configuration is
+retained for same-origin redirects; a redirect to a different <code>wss</code> origin
+uses a new TLS configuration so SNI and certificate validation use the
+redirect target’s hostname. User-supplied WebSocket handshake headers are not
+sent to a different origin. The transport subprotocol required by Scalability
+Protocol sockets is retained so that those connections can complete their
+handshake.</p>
 <h3 id="uri-formats-4"><a class="header" href="#uri-formats-4">URI Formats</a></h3>
 <p>This transport uses URIs using the scheme <a name="a003"></a><code>ws://</code>, followed by an
 <a name="a004"></a>IP address or <a name="a005"></a>hostname, an optional TCP port number, and an
@@ -7192,6 +7213,7 @@ listener, stream dialer, or stream listener is started.</p>
 <tr><td><code>NNG_OPT_BOUND_PORT</code><a name="NNG_OPT_BOUND_PORT"></a></td><td><code>int</code></td><td>The locally bound TCP port number (1-65535), read-only for listener objects only.</td></tr>
 <tr><td><code>NNG_OPT_WS_HEADER</code><a name="NNG_OPT_WS_HEADER"></a></td><td><code>string</code></td><td>Option prefix for HTTP headers. Append the header name to set a handshake header on a dialer or listener, or to retrieve a received header from a connected pipe or stream. For example, <code>NNG_OPT_WS_HEADER "X-Trace-ID"</code> refers to the <code>X-Trace-ID</code> header.</td></tr>
 <tr><td><code>NNG_OPT_WS_PROTOCOL</code><a name="NNG_OPT_WS_PROTOCOL"></a></td><td><code>string</code></td><td>WebSocket subprotocol, corresponding to the <code>Sec-WebSocket-Protocol</code> header. Scalability Protocol sockets configure this automatically.</td></tr>
+<tr><td><code>NNG_OPT_WS_FOLLOW_REDIRECTS</code><a name="NNG_OPT_WS_FOLLOW_REDIRECTS"></a></td><td><code>bool</code></td><td>Dialer-only. Follow HTTP 3xx responses during the opening handshake. Disabled by default; at most ten redirects are followed. Relative locations are supported. Custom handshake headers are sent only when the redirect remains at the original origin.</td></tr>
 <tr><td><code>NNG_OPT_WS_REQUEST_URI</code><a name="NNG_OPT_WS_REQUEST_URI"></a></td><td><code>string</code></td><td>Read-only request URI sent by the client, available from connected pipes and streams. This is useful for listeners that handle a subtree.</td></tr>
 <tr><td><code>NNG_OPT_WS_TREE</code><a name="NNG_OPT_WS_TREE"></a></td><td><code>bool</code></td><td>Listener-only. When true, accept requests for child paths of the listener URL; the longest matching tree listener handles a request. Set before starting the listener.</td></tr>
 <tr><td><code>NNG_OPT_WS_SENDMAXFRAME</code><a name="NNG_OPT_WS_SENDMAXFRAME"></a></td><td><code>size</code></td><td>Maximum WebSocket frame size to send before fragmenting. The default is 64 KiB. Larger values can improve throughput but may increase latency and peer buffering requirements. There is no WebSocket negotiation for this value.</td></tr>

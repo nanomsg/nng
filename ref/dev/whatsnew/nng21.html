@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e0955af3.js";
+            window.path_to_searchindex_js = "../searchindex-334e1f41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-88728f04.js"></script>
@@ -179,6 +179,11 @@
                         <h1 id="whats-new-in-nng-21"><a class="header" href="#whats-new-in-nng-21">What’s New in NNG 2.1</a></h1>
 <p>NNG 2.1 adds hybrid post-quantum cryptography for TLS connections and support
 for DTLS 1.3.</p>
+<h2 id="websocket-redirects"><a class="header" href="#websocket-redirects">WebSocket Redirects</a></h2>
+<p>WebSocket dialers can now opt in to following HTTP redirects during the
+opening handshake with <a href="../tran/websocket.html#NNG_OPT_WS_FOLLOW_REDIRECTS"><code>NNG_OPT_WS_FOLLOW_REDIRECTS</code></a>. Redirect following is
+disabled by default, supports relative and HTTP(S) locations, and is limited
+to ten hops.</p>
 <h2 id="post-quantum-cryptography"><a class="header" href="#post-quantum-cryptography">Post-Quantum Cryptography</a></h2>
 <p>NNG now supports hybrid post-quantum key exchange for TLS 1.3 and DTLS 1.3
 connections, including the TLS and DTLS transports, HTTPS, and secure

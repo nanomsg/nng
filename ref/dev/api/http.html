@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e0955af3.js";
+            window.path_to_searchindex_js = "../searchindex-334e1f41.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-88728f04.js"></script>
@@ -503,7 +503,11 @@ transactions on those connections.</p>
 <pre><code class="language-c">typedef struct nng_http_client nng_http_client;
 </code></pre>
 <p>The <a name="a029"></a><code>nng_http_client</code> object is the client side creator for <a href="../api/http.html#connection-object"><code>nng_http</code></a> objects.
-It is analogous to a <a href="../api/endpoint.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.</p>
+It is analogous to a <a href="../api/endpoint.html">dialer</a> object used elsewhere in NNG, but it specifically is only for HTTP.
+It does not execute requests or apply redirect policy: applications inspect 3xx
+responses and choose whether and how to create a connection to the location
+they specify. The WebSocket transport is an exception: its opening handshake
+can follow redirects when <a href="../tran/websocket.html#NNG_OPT_WS_FOLLOW_REDIRECTS"><code>NNG_OPT_WS_FOLLOW_REDIRECTS</code></a> is enabled.</p>
 <h3 id="create-a-client"><a class="header" href="#create-a-client">Create a Client</a></h3>
 <pre><code class="language-c">nng_err nng_http_client_alloc(nng_http_client **clientp, const nng_url *url);
 </code></pre>
