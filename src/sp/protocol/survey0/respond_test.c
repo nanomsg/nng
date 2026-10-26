@@ -199,7 +199,14 @@ test_resp_close_pipe_before_send(void)
 	NUTS_TRUE((m = nng_aio_get_msg(aio1)) != NULL);
 	p = nng_msg_get_pipe(m);
 	NUTS_PASS(nng_pipe_close(p));
+	uint64_t end = nuts_clock() + 1000;
+	while (nng_socket_id(nng_pipe_socket(p)) > 0 && nuts_clock() < end) {
+		NUTS_SLEEP(1);
+	}
+	NUTS_TRUE(nng_socket_id(nng_pipe_socket(p)) < 0);
 	NUTS_PASS(nng_sendmsg(resp, m, 0));
+
+	NUTS_STAT(resp, "tx_drop", NNG_UNIT_MESSAGES, 1);
 
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
@@ -479,6 +486,8 @@ test_resp_recv_garbage(void)
 	NUTS_PASS(nng_sendmsg(surv, m, 0));
 	NUTS_FAIL(nng_recvmsg(resp, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(resp, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(surv);
 	NUTS_CLOSE(resp);
 }
@@ -557,6 +566,12 @@ test_resp_ttl_drop(void)
 	NUTS_RECV(resp, "PASS3");
 
 	NUTS_FAIL(nng_recvmsg(resp, &m, 0), NNG_ETIMEDOUT);
+
+	NUTS_STAT(resp, "ttl_drop", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(resp, "rx_malformed", NNG_UNIT_MESSAGES, 0);
+
+	NUTS_STAT(resp, "rx_msgs", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(resp, "rx_bytes", NNG_UNIT_BYTES, 12);
 
 	NUTS_CLOSE(resp);
 	NUTS_CLOSE(surv);

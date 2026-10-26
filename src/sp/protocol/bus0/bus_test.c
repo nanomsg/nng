@@ -61,6 +61,17 @@ test_bus_star(void)
 	NUTS_RECV(s2, "one");
 	NUTS_RECV(s3, "one");
 
+	NUTS_STAT(s1, "tx_msgs", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(s1, "tx_bytes", NNG_UNIT_BYTES, 8);
+	NUTS_STAT(s1, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(s1, "rx_bytes", NNG_UNIT_BYTES, 4);
+	NUTS_STAT(s2, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(s2, "tx_bytes", NNG_UNIT_BYTES, 4);
+	NUTS_STAT(s2, "rx_msgs", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(s2, "rx_bytes", NNG_UNIT_BYTES, 8);
+	NUTS_STAT(s3, "rx_msgs", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(s3, "rx_bytes", NNG_UNIT_BYTES, 8);
+
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(s2);
 	NUTS_CLOSE(s3);
@@ -411,7 +422,126 @@ test_bug1247(void)
 	NUTS_CLOSE(bus1);
 }
 
+static void
+test_bus_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	for (int raw = 0; raw < 2; raw++) {
+		nng_socket sender, receiver;
+		NUTS_PASS(
+		    raw ? nng_bus0_open_raw(&sender) : nng_bus0_open(&sender));
+		NUTS_PASS(raw ? nng_bus0_open_raw(&receiver)
+		              : nng_bus0_open(&receiver));
+		NUTS_PASS(nng_socket_set_ms(sender, NNG_OPT_SENDTIMEO, 1000));
+		NUTS_PASS(
+		    nng_socket_set_ms(receiver, NNG_OPT_RECVTIMEO, 1000));
+		NUTS_PASS(nng_socket_set_int(receiver, NNG_OPT_RECVBUF, 1));
+		NUTS_SEND(sender, "no peers");
+		NUTS_STAT(sender, "tx_nopipe", NNG_UNIT_MESSAGES, 1);
+		NUTS_MARRY(sender, receiver);
+		NUTS_SEND(sender, "first");
+		// One message is buffered; a second is discarded at the
+		// receiver.
+		NUTS_SEND(sender, "second");
+		NUTS_STAT(receiver, "rx_discard", NNG_UNIT_MESSAGES, 1);
+		NUTS_RECV(receiver, "first");
+		NUTS_SEND(sender, "third");
+		NUTS_RECV(receiver, "third");
+		NUTS_STAT(receiver, "rx_discard", NNG_UNIT_MESSAGES, 1);
+		NUTS_STAT(sender, "tx_drop", NNG_UNIT_MESSAGES, 0);
+		NUTS_STAT(sender, "tx_nopipe", NNG_UNIT_MESSAGES, 1);
+		NUTS_CLOSE(sender);
+		NUTS_CLOSE(receiver);
+	}
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
+#ifdef NNG_ENABLE_STATS
+typedef struct {
+	nng_mtx *mtx;
+	nng_cv  *cv;
+	bool     connected;
+} bus_peer_note;
+
+static void
+bus_peer_connected(nng_pipe pipe, nng_pipe_ev ev, void *arg)
+{
+	bus_peer_note *note = arg;
+	(void) pipe;
+	(void) ev;
+	nng_mtx_lock(note->mtx);
+	note->connected = true;
+	nng_cv_wake(note->cv);
+	nng_mtx_unlock(note->mtx);
+}
+#endif
+
+static void
+test_bus_send_drop_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket         bus;
+	nng_stream_dialer *dialer;
+	nng_stream        *peer;
+	nng_aio           *aio;
+	nng_msg           *msg;
+	bus_peer_note      note      = { 0 };
+	uint8_t            header[8] = { 0, 'S', 'P', 0, 0, BUS0_PEER, 0, 0 };
+	uint8_t            received[8];
+	char              *addr;
+
+	// Complete SP negotiation with a peer that then stops reading. This
+	// exercises actual transport backpressure on the per-peer send queue.
+	NUTS_ADDR(addr, "tcp");
+	NUTS_PASS(nng_bus0_open(&bus));
+	NUTS_PASS(nng_socket_set_int(bus, NNG_OPT_SENDBUF, 1));
+	NUTS_PASS(nng_mtx_alloc(&note.mtx));
+	NUTS_PASS(nng_cv_alloc(&note.cv, note.mtx));
+	NUTS_PASS(nng_pipe_notify(
+	    bus, NNG_PIPE_EV_ADD_POST, bus_peer_connected, &note));
+	NUTS_PASS(nng_listen(bus, addr, NULL, 0));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_aio_set_timeout(aio, 1000);
+	NUTS_PASS(nng_stream_dialer_alloc(&dialer, addr));
+	nng_stream_dialer_dial(dialer, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	peer = nng_aio_get_output(aio, 0);
+	NUTS_PASS(nuts_stream_wait(
+	    nuts_stream_recv_start(peer, received, sizeof(received))));
+	NUTS_PASS(nuts_stream_wait(
+	    nuts_stream_send_start(peer, header, sizeof(header))));
+	nng_mtx_lock(note.mtx);
+	nng_time end = nng_clock() + 1000;
+	while (!note.connected && nng_clock() < end) {
+		(void) nng_cv_until(note.cv, end);
+	}
+	NUTS_TRUE(note.connected);
+	nng_mtx_unlock(note.mtx);
+
+	for (int i = 0; i < 32; i++) {
+		NUTS_PASS(nng_msg_alloc(&msg, 1024 * 1024));
+		NUTS_PASS(nng_sendmsg(bus, msg, 0));
+	}
+	NUTS_STAT_GE(bus, "tx_drop", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(bus, "tx_nopipe", NNG_UNIT_MESSAGES, 0);
+	NUTS_STAT(bus, "tx_msgs", NNG_UNIT_MESSAGES, 32);
+	NUTS_CLOSE(bus);
+	nng_stream_free(peer);
+	nng_stream_dialer_free(dialer);
+	nng_aio_free(aio);
+	nng_cv_free(note.cv);
+	nng_mtx_free(note.mtx);
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
 TEST_LIST = {
+	{ "bus send drop stats", test_bus_send_drop_stats },
+	{ "bus stats", test_bus_stats },
 	{ "bus identity", test_bus_identity },
 	{ "bus star", test_bus_star },
 	{ "bus device", test_bus_device },

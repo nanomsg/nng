@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -18,6 +18,12 @@
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
 #include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Request protocol.  The REQ protocol is the "request" side of a
 // request-reply pair.  This is useful for building RPC clients, for example.
@@ -60,6 +66,7 @@ struct req0_ctx {
 
 // A req0_sock is our per-socket protocol private structure.
 struct req0_sock {
+	nni_sock      *nsock;
 	nni_duration   retry;
 	bool           closed;
 	bool           retry_active; // true if retry aio running
@@ -77,6 +84,11 @@ struct req0_sock {
 	nni_pollable   writable;
 	nni_duration   retry_tick; // clock interval for retry timer
 	nni_mtx        mtx;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_retry;
+	nni_stat_item stat_rx_nomatch;
+	nni_stat_item stat_rx_malformed;
+#endif
 };
 
 // A req0_pipe is our per-pipe protocol private structure.
@@ -99,7 +111,7 @@ req0_sock_init(void *arg, nni_sock *sock)
 {
 	req0_sock *s = arg;
 
-	NNI_ARG_UNUSED(sock);
+	s->nsock = sock;
 
 	// Request IDs are 32 bits, with the high order bit set.
 	// We start at a random point, to minimize likelihood of
@@ -128,6 +140,22 @@ req0_sock_init(void *arg, nni_sock *sock)
 
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_retry_info, "tx_retry", "request retransmissions",
+	    NNG_STAT_COUNTER, NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_retry, &tx_retry_info, &s->mtx);
+	nni_sock_add_stat(sock, &s->stat_tx_retry);
+	NNI_STAT_LOCK(rx_nomatch_info, "rx_nomatch",
+	    "replies dropped (no matching request)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_rx_nomatch, &rx_nomatch_info, &s->mtx);
+	nni_sock_add_stat(sock, &s->stat_rx_nomatch);
+	NNI_STAT_ATOMIC(rx_malformed_info, "rx_malformed",
+	    "malformed messages received", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_rx_malformed, &rx_malformed_info);
+	nni_sock_add_stat(sock, &s->stat_rx_malformed);
+#endif
 }
 
 static void
@@ -344,6 +372,7 @@ req0_recv_cb(void *arg)
 		goto malformed;
 	}
 	id = nni_msg_trim_u32(msg);
+	nni_sock_bump_rx(s->nsock, nni_msg_len(msg));
 
 	// Schedule another receive while we are processing this.
 	nni_mtx_lock(&s->mtx);
@@ -354,6 +383,7 @@ req0_recv_cb(void *arg)
 	// Look for a context to receive it.
 	if (((ctx = nni_id_get(&s->requests, id)) == NULL) ||
 	    (ctx->send_aio != NULL) || (ctx->rep_msg != NULL)) {
+		BUMP_STAT(&s->stat_rx_nomatch);
 		nni_mtx_unlock(&s->mtx);
 		// No waiting context, we have not sent the request out to
 		// the wire yet, or context already has a reply ready.
@@ -390,6 +420,7 @@ req0_recv_cb(void *arg)
 	return;
 
 malformed:
+	BUMP_STAT(&s->stat_rx_malformed);
 	nni_msg_free(msg);
 	nni_pipe_close(p->pipe);
 }
@@ -528,6 +559,9 @@ req0_run_send_queue(req0_sock *s, nni_aio_completions *sent_list)
 			nni_pollable_clear(&s->writable);
 		}
 
+		if (ctx->send_aio == NULL) {
+			BUMP_STAT(&s->stat_tx_retry);
+		}
 		if ((aio = ctx->send_aio) != NULL) {
 			ctx->send_aio = NULL;
 			nni_aio_bump_count(aio, ctx->req_len);
@@ -712,6 +746,8 @@ req0_ctx_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
+	nni_sock_bump_tx(s->nsock, nni_msg_len(msg));
+
 	// Sending a new request cancels the old one, including any
 	// outstanding reply.
 	if (ctx->recv_aio != NULL) {

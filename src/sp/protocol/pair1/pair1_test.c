@@ -63,6 +63,15 @@ test_mono_cooked(void)
 	NUTS_MATCH(nng_msg_body(msg), "BETA");
 
 	nng_msg_free(msg);
+	NUTS_STAT(s1, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(s1, "tx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(s1, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(s1, "rx_bytes", NNG_UNIT_BYTES, 6);
+	NUTS_STAT(c1, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(c1, "tx_bytes", NNG_UNIT_BYTES, 6);
+	NUTS_STAT(c1, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(c1, "rx_bytes", NNG_UNIT_BYTES, 5);
+
 	NUTS_CLOSE(c1);
 	NUTS_CLOSE(s1);
 }
@@ -101,6 +110,8 @@ test_mono_faithful(void)
 	APPEND_STR(msg, "TWO");
 	NUTS_PASS(nng_sendmsg(c2, msg, 0));
 	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
+
+	NUTS_STAT_GE(s1, "already", NNG_UNIT_NONE, 1);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c1);
@@ -258,6 +269,8 @@ test_mono_raw_header(void)
 	NUTS_PASS(nng_msg_trim_u32(msg, &v));
 	NUTS_TRUE(v == 0xFEEDFACE);
 	nng_msg_free(msg);
+
+	NUTS_STAT(c1, "tx_malformed", NNG_UNIT_MESSAGES, 3);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c1);
@@ -417,6 +430,9 @@ test_pair1_ttl(void)
 	NUTS_PASS(nng_sendmsg(c1, msg, 0));
 	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(s1, "ttl_drop", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(s1, "rx_malformed", NNG_UNIT_MESSAGES, 0);
+
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c1);
 }
@@ -470,6 +486,8 @@ test_pair1_recv_no_header(void)
 	NUTS_PASS(nng_sendmsg(c, m, 0));
 	NUTS_FAIL(nng_recvmsg(s, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(s, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(c);
 	NUTS_CLOSE(s);
 }
@@ -494,6 +512,8 @@ test_pair1_recv_garbage(void)
 	NUTS_PASS(nng_msg_header_append_u32(m, 0x1000));
 	NUTS_PASS(nng_sendmsg(c, m, 0));
 	NUTS_FAIL(nng_recvmsg(s, &m, 0), NNG_ETIMEDOUT);
+
+	NUTS_STAT(s, "rx_malformed", NNG_UNIT_MESSAGES, 1);
 
 	NUTS_CLOSE(c);
 	NUTS_CLOSE(s);

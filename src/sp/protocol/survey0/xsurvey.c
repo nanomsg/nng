@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,6 +17,12 @@
 #include "../../../core/platform.h"
 #include "../../../core/protocol.h"
 #include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Surveyor protocol.  The SURVEYOR protocol is the "survey" side of the
 // survey pattern.  This is useful for building service discovery, voting, etc.
@@ -37,12 +43,18 @@ static void xsurv0_recv_cb(void *);
 
 // surv0_sock is our per-socket protocol private structure.
 struct xsurv0_sock {
+	nni_sock      *nsock;
 	nni_list       pipes;
 	nni_aio        aio_getq;
 	nni_msgq      *uwq;
 	nni_msgq      *urq;
 	nni_mtx        mtx;
 	nni_atomic_int ttl;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_tx_drop;
+	nni_stat_item stat_tx_nopipe;
+	nni_stat_item stat_rx_malformed;
+#endif
 };
 
 // surv0_pipe is our per-pipe protocol private structure.
@@ -71,6 +83,8 @@ xsurv0_sock_init(void *arg, nni_sock *nsock)
 {
 	xsurv0_sock *s = arg;
 
+	s->nsock = nsock;
+
 	nni_aio_init(&s->aio_getq, xsurv0_sock_getq_cb, s);
 	NNI_LIST_INIT(&s->pipes, xsurv0_pipe, node);
 	nni_mtx_init(&s->mtx);
@@ -79,6 +93,23 @@ xsurv0_sock_init(void *arg, nni_sock *nsock)
 	s->urq = nni_sock_recvq(nsock);
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(tx_drop_info, "tx_drop",
+	    "surveys dropped (send queue full, per pipe)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_drop, &tx_drop_info, &s->mtx);
+	nni_sock_add_stat(nsock, &s->stat_tx_drop);
+	NNI_STAT_LOCK(tx_nopipe_info, "tx_nopipe",
+	    "surveys discarded (no connected peers)", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init_lock(&s->stat_tx_nopipe, &tx_nopipe_info, &s->mtx);
+	nni_sock_add_stat(nsock, &s->stat_tx_nopipe);
+	NNI_STAT_ATOMIC(rx_malformed_info, "rx_malformed",
+	    "malformed messages received", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_rx_malformed, &rx_malformed_info);
+	nni_sock_add_stat(nsock, &s->stat_rx_malformed);
+#endif
 }
 
 static void
@@ -256,6 +287,7 @@ xsurv0_recv_cb(void *arg)
 		uint8_t *body;
 
 		if (nni_msg_len(msg) < 4) {
+			BUMP_STAT(&p->psock->stat_rx_malformed);
 			// Peer gave us garbage, so kick it.
 			nni_msg_free(msg);
 			nni_pipe_close(p->npipe);
@@ -276,6 +308,7 @@ xsurv0_recv_cb(void *arg)
 		nni_msg_trim(msg, sizeof(uint32_t));
 	}
 
+	nni_sock_bump_rx(p->psock->nsock, nni_msg_len(msg));
 	nni_aio_set_msg(&p->aio_putq, msg);
 	nni_msgq_aio_put(p->psock->urq, &p->aio_putq);
 }
@@ -315,9 +348,13 @@ xsurv0_sock_getq_cb(void *arg)
 	nni_aio_set_msg(&s->aio_getq, NULL);
 
 	nni_mtx_lock(&s->mtx);
+	if (nni_list_empty(&s->pipes)) {
+		BUMP_STAT(&s->stat_tx_nopipe);
+	}
 	NNI_LIST_FOREACH (&s->pipes, p) {
 		nni_msg_clone(msg);
 		if (nni_msgq_tryput(p->sendq, msg) != 0) {
+			BUMP_STAT(&s->stat_tx_drop);
 			nni_msg_free(msg);
 		}
 	}
@@ -341,6 +378,8 @@ static void
 xsurv0_sock_send(void *arg, nni_aio *aio)
 {
 	xsurv0_sock *s = arg;
+
+	nni_sock_bump_tx(s->nsock, nni_msg_len(nni_aio_get_msg(aio)));
 
 	nni_msgq_aio_put(s->uwq, aio);
 }

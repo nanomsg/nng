@@ -64,6 +64,15 @@ test_cooked(void)
 	NUTS_MATCH(nng_msg_body(msg), "BETA");
 
 	nng_msg_free(msg);
+	NUTS_STAT(s1, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(s1, "tx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(s1, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(s1, "rx_bytes", NNG_UNIT_BYTES, 6);
+	NUTS_STAT(c1, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(c1, "tx_bytes", NNG_UNIT_BYTES, 6);
+	NUTS_STAT(c1, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(c1, "rx_bytes", NNG_UNIT_BYTES, 5);
+
 	NUTS_CLOSE(c1);
 	NUTS_CLOSE(s1);
 }
@@ -102,6 +111,8 @@ test_faithful(void)
 	APPEND_STR(msg, "TWO");
 	NUTS_PASS(nng_sendmsg(c2, msg, 0));
 	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
+
+	NUTS_STAT_GE(s1, "already", NNG_UNIT_NONE, 1);
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c1);

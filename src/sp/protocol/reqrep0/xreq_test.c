@@ -231,6 +231,8 @@ test_xreq_recv_garbage(void)
 	NUTS_PASS(nng_sendmsg(rep, m, 0));
 	NUTS_FAIL(nng_recvmsg(req, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(req, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
 }
@@ -272,6 +274,11 @@ test_xreq_recv_header(void)
 	NUTS_TRUE(id == 0x80000123u);
 
 	nng_msg_free(m);
+
+	NUTS_STAT(rep, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(rep, "tx_bytes", NNG_UNIT_BYTES, 0);
+	NUTS_STAT(req, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(req, "rx_bytes", NNG_UNIT_BYTES, 0);
 
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);

@@ -353,7 +353,7 @@ pair1_pipe_recv_cb(void *arg)
 		return;
 	}
 
-	nni_sock_bump_rx(s->sock, len);
+	nni_sock_bump_rx(s->sock, nni_msg_len(msg));
 
 	// Store the hop count in the header.
 	nni_msg_header_append_u32(msg, hdr);

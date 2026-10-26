@@ -142,6 +142,8 @@ test_req_recv_garbage(void)
 	NUTS_PASS(nng_sendmsg(rep, m, 0));
 	NUTS_FAIL(nng_recvmsg(req, &m, 0), NNG_ETIMEDOUT);
 
+	NUTS_STAT(req, "rx_malformed", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
 }
@@ -169,6 +171,18 @@ test_req_rep_exchange(void)
 	NUTS_SEND(rep, "pong");
 	NUTS_RECV(req, "pong");
 
+	NUTS_STAT(req, "tx_retry", NNG_UNIT_MESSAGES, 0);
+	NUTS_STAT(req, "rx_nomatch", NNG_UNIT_MESSAGES, 0);
+
+	NUTS_STAT(req, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(req, "tx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(req, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(req, "rx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(rep, "tx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(rep, "tx_bytes", NNG_UNIT_BYTES, 5);
+	NUTS_STAT(rep, "rx_msgs", NNG_UNIT_MESSAGES, 1);
+	NUTS_STAT(rep, "rx_bytes", NNG_UNIT_BYTES, 5);
+
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
 }
@@ -195,6 +209,8 @@ test_req_resend(void)
 	NUTS_RECV(rep, "ping");
 	NUTS_RECV(rep, "ping");
 	NUTS_RECV(rep, "ping");
+
+	NUTS_STAT_GE(req, "tx_retry", NNG_UNIT_MESSAGES, 2);
 
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep);
@@ -235,6 +251,8 @@ test_req_resend_reconnect(void)
 	NUTS_SEND(rep2, "rep2");
 	NUTS_RECV(req, "rep2");
 
+	NUTS_STAT(req, "tx_retry", NNG_UNIT_MESSAGES, 1);
+
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep2);
 }
@@ -272,6 +290,8 @@ test_req_resend_disconnect(void)
 	NUTS_RECV(rep2, "ping");
 	NUTS_SEND(rep2, "rep2");
 	NUTS_RECV(req, "rep2");
+
+	NUTS_STAT(req, "tx_retry", NNG_UNIT_MESSAGES, 1);
 
 	NUTS_CLOSE(req);
 	NUTS_CLOSE(rep2);
@@ -976,7 +996,66 @@ test_req_validate_peer(void)
 	nng_stats_free(stats);
 }
 
+static void
+test_req_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	nng_socket req, rep;
+	nng_ctx    ctx;
+	nng_aio   *aio;
+	nng_msg   *msg, *old, *dup;
+
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_rep0_open_raw(&rep));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_REQ_RESENDTIME, 60000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_ctx_open(&ctx, req));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_aio_set_timeout(aio, 1000);
+	NUTS_MARRY(req, rep);
+
+	for (int i = 0; i < 2; i++) {
+		NUTS_PASS(nng_msg_alloc(&msg, 0));
+		nng_aio_set_msg(aio, msg);
+		nng_ctx_send(ctx, aio);
+		nng_aio_wait(aio);
+		NUTS_PASS(nng_aio_result(aio));
+		NUTS_PASS(nng_recvmsg(rep, &msg, 0));
+		if (i == 0) {
+			old = msg;
+		}
+	}
+	// The second send canceled the first request.
+	NUTS_PASS(nng_sendmsg(rep, old, 0));
+	NUTS_STAT(req, "rx_nomatch", NNG_UNIT_MESSAGES, 1);
+	NUTS_PASS(nng_msg_dup(&dup, msg));
+	NUTS_PASS(nng_sendmsg(rep, msg, 0));
+	NUTS_PASS(nng_sendmsg(rep, dup, 0));
+	NUTS_STAT(req, "rx_nomatch", NNG_UNIT_MESSAGES, 2);
+	nng_ctx_recv(ctx, aio);
+	nng_aio_wait(aio);
+	NUTS_PASS(nng_aio_result(aio));
+	nng_msg_free(nng_aio_get_msg(aio));
+	nng_aio_set_msg(aio, NULL);
+	NUTS_STAT(req, "rx_malformed", NNG_UNIT_MESSAGES, 0);
+	NUTS_STAT(req, "tx_retry", NNG_UNIT_MESSAGES, 0);
+	NUTS_STAT(req, "tx_msgs", NNG_UNIT_MESSAGES, 2);
+	NUTS_STAT(req, "tx_bytes", NNG_UNIT_BYTES, 0);
+	NUTS_STAT(req, "rx_msgs", NNG_UNIT_MESSAGES, 3);
+	NUTS_STAT(req, "rx_bytes", NNG_UNIT_BYTES, 0);
+
+	NUTS_PASS(nng_ctx_close(ctx));
+	nng_aio_free(aio);
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
 NUTS_TESTS = {
+	{ "req stats", test_req_stats },
 	{ "req identity", test_req_identity },
 	{ "req ttl option", test_req_ttl_option },
 	{ "req resend option", test_req_resend_option },

@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,6 +15,13 @@
 #include "../../../core/pipe.h"
 #include "../../../core/pollable.h"
 #include "../../../core/protocol.h"
+#include "../../../core/socket.h"
+
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
 
 // Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
 // While a peer is connected to the server, all other peer connection
@@ -35,6 +42,7 @@ static void pair0_pipe_send(pair0_pipe *, nni_msg *);
 
 // pair0_sock is our per-socket protocol private structure.
 struct pair0_sock {
+	nni_sock    *nsock;
 	pair0_pipe  *p;
 	nni_mtx      mtx;
 	nni_lmq      wmq;
@@ -45,6 +53,9 @@ struct pair0_sock {
 	nni_pollable writable;
 	bool         rd_ready; // pipe ready for read
 	bool         wr_ready; // pipe ready for write
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_already;
+#endif
 };
 
 // A pair0_pipe is our per-pipe protocol private structure.  We keep
@@ -62,7 +73,8 @@ static void
 pair0_sock_init(void *arg, nni_sock *sock)
 {
 	pair0_sock *s = arg;
-	NNI_ARG_UNUSED(sock);
+
+	s->nsock = sock;
 
 	nni_mtx_init(&s->mtx);
 
@@ -74,6 +86,13 @@ pair0_sock_init(void *arg, nni_sock *sock)
 	nni_pollable_init(&s->readable);
 
 	s->p = NULL;
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_LOCK(already_info, "already",
+	    "pipes rejected (already connected)", NNG_STAT_COUNTER,
+	    NNG_UNIT_NONE);
+	nni_stat_init_lock(&s->stat_already, &already_info, &s->mtx);
+	nni_sock_add_stat(sock, &s->stat_already);
+#endif
 }
 
 static void
@@ -168,6 +187,7 @@ pair0_pipe_start(void *arg)
 
 	nni_mtx_lock(&s->mtx);
 	if (s->p != NULL) {
+		BUMP_STAT(&s->stat_already);
 		nni_mtx_unlock(&s->mtx);
 		nng_log_warn("NNG-PAIR-BUSY",
 		    "Peer pipe protocol %d is already paired, rejected.",
@@ -211,6 +231,7 @@ pair0_pipe_recv_cb(void *arg)
 	msg = nni_aio_get_msg(&p->aio_recv);
 	// Store the pipe ID.
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
+	nni_sock_bump_rx(s->nsock, nni_msg_len(msg));
 
 	nni_mtx_lock(&s->mtx);
 
@@ -348,6 +369,8 @@ pair0_sock_send(void *arg, nni_aio *aio)
 
 	m   = nni_aio_get_msg(aio);
 	len = nni_msg_len(m);
+
+	nni_sock_bump_tx(s->nsock, len);
 
 	nni_mtx_lock(&s->mtx);
 	if (s->wr_ready) {

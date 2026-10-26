@@ -1,5 +1,5 @@
 //
-// Copyright 2025 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,6 +16,12 @@
 #include "../../../core/protocol.h"
 #include "../../../core/socket.h"
 
+#ifdef NNG_ENABLE_STATS
+#define BUMP_STAT(x) nni_stat_inc(x, 1)
+#else
+#define BUMP_STAT(x)
+#endif
+
 #define REQ0_SELF 0x30
 #define REQ0_PEER 0x31
 #define REQ0_SELF_NAME "req"
@@ -29,9 +35,13 @@ typedef struct xreq0_sock xreq0_sock;
 
 // An xreq0_sock is our per-socket protocol private structure.
 struct xreq0_sock {
+	nni_sock      *nsock;
 	nni_msgq      *uwq;
 	nni_msgq      *urq;
 	nni_atomic_int ttl;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item stat_rx_malformed;
+#endif
 };
 
 // A req0_pipe is our per-pipe protocol private structure.
@@ -55,10 +65,19 @@ xreq0_sock_init(void *arg, nni_sock *sock)
 {
 	xreq0_sock *s = arg;
 
+	s->nsock = sock;
+
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
 	s->uwq = nni_sock_sendq(sock);
 	s->urq = nni_sock_recvq(sock);
+#ifdef NNG_ENABLE_STATS
+	NNI_STAT_ATOMIC(rx_malformed_info, "rx_malformed",
+	    "malformed messages received", NNG_STAT_COUNTER,
+	    NNG_UNIT_MESSAGES);
+	nni_stat_init(&s->stat_rx_malformed, &rx_malformed_info);
+	nni_sock_add_stat(sock, &s->stat_rx_malformed);
+#endif
 }
 
 static void
@@ -221,6 +240,7 @@ xreq0_recv_cb(void *arg)
 		uint8_t *body;
 
 		if (nni_msg_len(msg) < 4) {
+			BUMP_STAT(&sock->stat_rx_malformed);
 			// Peer gave us garbage, so kick it.
 			nni_msg_free(msg);
 			nni_pipe_close(p->pipe);
@@ -240,6 +260,7 @@ xreq0_recv_cb(void *arg)
 		}
 		nni_msg_trim(msg, sizeof(uint32_t));
 	}
+	nni_sock_bump_rx(sock->nsock, nni_msg_len(msg));
 	nni_aio_set_msg(&p->aio_putq, msg);
 	nni_msgq_aio_put(sock->urq, &p->aio_putq);
 }
@@ -248,6 +269,8 @@ static void
 xreq0_sock_send(void *arg, nni_aio *aio)
 {
 	xreq0_sock *s = arg;
+
+	nni_sock_bump_tx(s->nsock, nni_msg_len(nni_aio_get_msg(aio)));
 
 	nni_msgq_aio_put(s->uwq, aio);
 }

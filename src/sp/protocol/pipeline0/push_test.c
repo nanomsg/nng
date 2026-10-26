@@ -495,7 +495,69 @@ test_push_send_buffer(void)
 	NUTS_CLOSE(s);
 }
 
+static void
+test_push_stats(void)
+{
+#ifdef NNG_ENABLE_STATS
+	for (int raw = 0; raw < 2; raw++) {
+		nng_socket push, pull;
+		nng_msg   *msg;
+		nng_aio   *aio;
+
+		NUTS_PASS(
+		    raw ? nng_push0_open_raw(&push) : nng_push0_open(&push));
+		NUTS_PASS(nng_pull0_open(&pull));
+		NUTS_PASS(nng_socket_set_int(push, NNG_OPT_SENDBUF, 1));
+		NUTS_PASS(nng_socket_set_ms(pull, NNG_OPT_RECVTIMEO, 1000));
+		NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+		nng_aio_set_timeout(aio, 1000);
+		NUTS_SEND(push, "buffered");
+		NUTS_STAT(push, "tx_queued", NNG_UNIT_MESSAGES, 1);
+		NUTS_STAT(push, "tx_direct", NNG_UNIT_MESSAGES, 0);
+		NUTS_STAT(push, "tx_blocked", NNG_UNIT_MESSAGES, 0);
+
+		// Cancellation leaves ownership with the sender and isn't a
+		// send.
+		NUTS_PASS(nng_msg_alloc(&msg, 0));
+		nng_aio_set_msg(aio, msg);
+		nng_socket_send(push, aio);
+		NUTS_STAT(push, "tx_blocked", NNG_UNIT_MESSAGES, 1);
+		nng_aio_cancel(aio);
+		nng_aio_wait(aio);
+		NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+		NUTS_TRUE(nng_aio_get_msg(aio) == msg);
+		NUTS_STAT(push, "tx_queued", NNG_UNIT_MESSAGES, 1);
+
+		// This deferred send will enter the buffer when a pipe
+		// connects.
+		nng_socket_send(push, aio);
+		NUTS_STAT(push, "tx_blocked", NNG_UNIT_MESSAGES, 2);
+		NUTS_MARRY(push, pull);
+		nng_aio_wait(aio);
+		NUTS_PASS(nng_aio_result(aio));
+		NUTS_TRUE(nng_aio_get_msg(aio) == NULL);
+		NUTS_RECV(pull, "buffered");
+		NUTS_PASS(nng_recvmsg(pull, &msg, 0));
+		nng_msg_free(msg);
+		NUTS_STAT(push, "tx_queued", NNG_UNIT_MESSAGES, 2);
+		NUTS_STAT(push, "tx_direct", NNG_UNIT_MESSAGES, 0);
+
+		NUTS_PASS(nng_socket_set_int(push, NNG_OPT_SENDBUF, 0));
+		NUTS_SEND(push, "direct");
+		NUTS_RECV(pull, "direct");
+		NUTS_STAT(push, "tx_direct", NNG_UNIT_MESSAGES, 1);
+		NUTS_STAT(push, "tx_queued", NNG_UNIT_MESSAGES, 2);
+		nng_aio_free(aio);
+		NUTS_CLOSE(push);
+		NUTS_CLOSE(pull);
+	}
+#else
+	NUTS_SKIP("Statistics disabled");
+#endif
+}
+
 TEST_LIST = {
+	{ "push stats", test_push_stats },
 	{ "push identity", test_push_identity },
 	{ "push cannot recv", test_push_cannot_recv },
 	{ "push no context", test_push_no_context },
