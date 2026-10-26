@@ -180,6 +180,7 @@ test_ws_redirects(void)
 	NUTS_PASS(nng_recv(server_socket, &received, &size, 0));
 	NUTS_TRUE(size == sizeof(value));
 	NUTS_TRUE(received == value);
+	NUTS_CLOSE(client_socket);
 
 	snprintf(
 	    address, sizeof(address), "ws://127.0.0.1:%d/authority", port);
@@ -227,7 +228,6 @@ test_ws_redirects(void)
 	NUTS_PASS(nng_http_server_del_handler(server, bare_handler));
 	nng_http_handler_free(bare_handler);
 	nng_http_server_release(server);
-	NUTS_CLOSE(client_socket);
 	NUTS_CLOSE(server_socket);
 }
 
