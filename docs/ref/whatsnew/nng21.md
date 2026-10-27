@@ -7,7 +7,7 @@ counters for messaging activity and outcomes.
 ## Protocol Statistics
 
 Protocol sockets now expose additional statistics through [`nng_stats_get`],
-including application-boundary message and byte counters and counters for
+including protocol-boundary socket traffic counters and counters for
 protocol-specific events such as retries, queueing, discarded messages, and
 malformed input. These counters help distinguish normal protocol behavior
 from transport-level activity. See [Protocol Counters](../api/stats.md#protocol-counters)
