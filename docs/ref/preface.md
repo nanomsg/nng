@@ -76,6 +76,10 @@ We're just getting started.
 We would like to thank Janjaap Bos, at Capitar IT Group BV.
 Without his patronage, neither NNG nor this book would be possible.
 
+We would also like to thank [Vectioneer](https://vectioneer.com) for their
+generous sponsorship of NNG through GitHub Sponsors for over six years.
+Their sustained support has helped make the continued development of NNG possible.
+
 We would also like to thank Martin S&#250;strik for creating the original
 nanomsg project, the foundation upon which all of this work is based.
 
