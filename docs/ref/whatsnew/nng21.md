@@ -1,7 +1,17 @@
 # What's New in NNG 2.1
 
 NNG 2.1 adds hybrid post-quantum cryptography for TLS connections and support
-for DTLS 1.3.
+for DTLS 1.3. It also expands socket statistics with protocol-specific
+counters for messaging activity and outcomes.
+
+## Protocol Statistics
+
+Protocol sockets now expose additional statistics through [`nng_stats_get`],
+including application-boundary message and byte counters and counters for
+protocol-specific events such as retries, queueing, discarded messages, and
+malformed input. These counters help distinguish normal protocol behavior
+from transport-level activity. See [Protocol Counters](../api/stats.md#protocol-counters)
+for the counters available for each protocol.
 
 ## WebSocket Redirects
 
