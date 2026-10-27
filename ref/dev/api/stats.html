@@ -37,7 +37,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-334e1f41.js";
+            window.path_to_searchindex_js = "../searchindex-3fd10e3b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-88728f04.js"></script>
@@ -338,6 +338,47 @@ The following units may be returned from <a name="a024"></a><code>nng_stat_unit<
 obtained via <a name="a030"></a><code>nng_stat_timestamp</code>. The timestamp is given
 in milliseconds since a reference time, and the reference time used
 here is the same reference time used for <a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a>.</p>
+<h2 id="protocol-counters"><a class="header" href="#protocol-counters">Protocol Counters</a></h2>
+<p>For REQ/REP, PUSH/PULL, SURVEYOR/RESPONDENT, PAIR, and BUS, socket traffic
+counters (<code>tx_msgs</code>, <code>tx_bytes</code>, <code>rx_msgs</code>, and <code>rx_bytes</code>) describe traffic
+at the protocol boundary. They are distinct from pipe counters maintained by
+transports. Socket byte counts exclude headers
+added by the protocol. A broadcast is counted once on the sending socket,
+and REQ retransmissions are counted separately from application submissions.
+These counters do not acknowledge delivery to a peer application.</p>
+<p>The following additional socket counters help explain protocol behavior.
+Context activity is aggregated on its owning socket. All entries are
+<code>NNG_STAT_COUNTER</code> values with <code>NNG_UNIT_MESSAGES</code>, except <code>already</code>, which
+has <code>NNG_UNIT_NONE</code>.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Protocol</th><th>Counters</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td>REQ</td><td><code>tx_retry</code></td><td>Retransmissions, including retries after disconnection.</td></tr>
+<tr><td>REQ</td><td><code>rx_nomatch</code></td><td>Replies discarded because the request is no longer waiting for a reply, including canceled requests and duplicate replies.</td></tr>
+<tr><td>REQ, REP, SURVEYOR, RESPONDENT</td><td><code>rx_malformed</code></td><td>Messages discarded because their wire headers are incomplete or invalid. Available in cooked and raw modes.</td></tr>
+<tr><td>REP, RESPONDENT</td><td><code>ttl_drop</code></td><td>Requests or surveys discarded because their routing backtrace exceeds the hop limit. Available in cooked and raw modes.</td></tr>
+<tr><td>REP, RESPONDENT</td><td><code>tx_drop</code></td><td>Replies discarded because the destination pipe is gone; in raw mode, also replies discarded because the destination queue is full.</td></tr>
+<tr><td>Raw REP, raw RESPONDENT</td><td><code>tx_malformed</code></td><td>Outgoing messages discarded because the routing header is missing.</td></tr>
+<tr><td>PUSH</td><td><code>tx_direct</code>, <code>tx_queued</code></td><td>Messages handed directly to a pipe or placed in the socket send buffer. A deferred send is counted when it reaches one of these destinations.</td></tr>
+<tr><td>PUSH</td><td><code>tx_blocked</code></td><td>Send operations deferred until a pipe or buffer space is available. Includes operations subsequently canceled or timed out.</td></tr>
+<tr><td>PULL</td><td><code>rx_direct</code>, <code>rx_queued</code></td><td>Messages delivered to a waiting receive operation or held on a pipe until a receiver is available.</td></tr>
+<tr><td>SURVEYOR, BUS</td><td><code>tx_drop</code></td><td>Copies discarded because a peer’s send queue is full. Counts each affected pipe separately.</td></tr>
+<tr><td>SURVEYOR, BUS</td><td><code>tx_nopipe</code></td><td>Sends discarded because there are no connected peers.</td></tr>
+<tr><td>Cooked SURVEYOR</td><td><code>rx_nomatch</code>, <code>rx_discard</code></td><td>Replies discarded because no survey matches the ID, or the matching context’s receive queue is full.</td></tr>
+<tr><td>BUS</td><td><code>rx_discard</code></td><td>Messages discarded because the socket receive queue is full.</td></tr>
+<tr><td>PAIRv0, PAIRv1</td><td><code>already</code></td><td>Connections rejected because the socket already has a peer.</td></tr>
+<tr><td>PAIRv1</td><td><code>rx_malformed</code>, <code>tx_malformed</code>, <code>ttl_drop</code>, <code>tx_drop</code></td><td>Invalid received headers, invalid raw send headers, excessive hops, and undeliverable polyamorous sends.</td></tr>
+</tbody>
+</table>
+</div>
+<p>The PUSH, PULL, and BUS counters apply in cooked and raw modes; the
+SURVEYOR send counters also apply in both modes. Queue counters are
+cumulative events, rather than current queue occupancy. Drop counters
+describe protocol decisions; they do not include every possible transport
+failure, allocation failure, or message discarded during shutdown.</p>
 <h2 id="see-also"><a class="header" href="#see-also">See Also</a></h2>
 <p><a href="../api/time.html#get-the-current-time"><code>nng_clock</code></a></p>
 <!-- NOTE: This assumes that any page referencing this is located
