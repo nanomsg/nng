@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - "docs/**"
+      - "tools/release/**"
       - ".github/workflows/mdbook.yml"
   pull_request:
     paths:
       - "docs/**"
+      - "tools/release/**"
       - ".github/workflows/mdbook.yml"
   release:
     types: [published]
@@ -125,23 +127,13 @@ jobs:
       - name: Add the documentation version manifest
         run: cp publisher/docs/versions.json docs/book/versions.json
 
-      - name: Prepare current stable reference redirect
-        run: |
-          latest_version="$(jq -er '.latest_version | strings | select(test("^/ref/v[0-9]+\\.[0-9]+/$"))' publisher/docs/versions.json)"
-          mkdir -p redirect
-          sed "s|__LATEST_VERSION__|$latest_version|g" publisher/docs/ref-redirect.html.in > redirect/index.html
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        if: ${{ needs.prepare.outputs.deploy == 'true' }}
+      - uses: actions/setup-go@v6
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/book
-          destination_dir: ./${{ needs.prepare.outputs.destination }}
-          enable_jekyll: true
+          go-version: "1.22.x"
+          cache: false
 
-      # The versioned manuals are retained; obsolete unversioned assets are
-      # removed so /ref/ is only a redirect to the current stable manual.
+      # Publish the manual and its routing metadata in one commit, retaining
+      # the deployed manifest across dev builds and historical republication.
       - name: Check out published documentation
         uses: actions/checkout@v5
         if: ${{ needs.prepare.outputs.deploy == 'true' }}
@@ -149,23 +141,19 @@ jobs:
           ref: gh-pages
           path: pages
 
-      - name: Replace unversioned manual with stable redirect
+      - name: Publish manual, selector, and stable redirect
         if: ${{ needs.prepare.outputs.deploy == 'true' }}
+        env:
+          DESTINATION: ${{ needs.prepare.outputs.destination }}
         run: |
-          mkdir -p pages/ref
-          for published_path in pages/ref/* pages/ref/.[!.]* pages/ref/..?*; do
-            [ -e "$published_path" ] || continue
-            entry="${published_path##*/}"
-            case "$entry" in
-              dev|v[0-9]*|index.html) continue ;;
-            esac
-            git -C pages rm -r --ignore-unmatch -- "ref/$entry"
-          done
-          cp redirect/index.html pages/ref/index.html
-          git -C pages add ref/index.html
+          go run publisher/tools/release/main.go publish-docs \
+            --pages pages --book docs/book --version "${DESTINATION#ref/}" \
+            --manifest publisher/docs/versions.json \
+            --redirect-template publisher/docs/ref-redirect.html.in
+          git -C pages add -A
           if ! git -C pages diff --cached --quiet; then
             git -C pages config user.name "github-actions[bot]"
             git -C pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git -C pages commit -m "docs: redirect unversioned reference manual"
+            git -C pages commit -m "docs: publish ${DESTINATION} and update manual routing"
             git -C pages push
           fi

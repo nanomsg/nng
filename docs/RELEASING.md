@@ -12,7 +12,7 @@ update your local `main` from `origin`. Check that its CI is green.
 First preview the release and the next development version:
 
 ```sh
-go run tools/release/main.go prepare --minor --dry-run
+go run tools/release/main.go prepare --minor --docs --dry-run
 ```
 
 With a header declaring `2.1.0-dev`, this prints:
@@ -21,6 +21,7 @@ With a header declaring `2.1.0-dev`, this prints:
 Current: 2.1.0-dev
 Release: 2.1.0 (tag v2.1.0)
 Next development: 2.2.0-dev
+Docs: include /ref/v2.1/ and promote after deployment (without downgrading latest).
 Dry run: preview only. Preparation requires a clean main checkout and an unused release tag.
 ```
 
@@ -32,7 +33,7 @@ preparing the release.
 To prepare the displayed transition:
 
 ```sh
-go run tools/release/main.go prepare --minor
+go run tools/release/main.go prepare --minor --docs
 ```
 
 The release version is detected from `include/nng/nng.h` by removing its `dev`
@@ -48,14 +49,27 @@ Micro is the patch field (`NNG_PATCH_VERSION`). An explicit next version is
 also supported, with an optional release version to check against the header:
 
 ```sh
-go run tools/release/main.go prepare --next 2.2.0 --dry-run
-go run tools/release/main.go prepare 2.1.0 --next 2.2.0
+go run tools/release/main.go prepare --next 2.2.0 --docs --dry-run
+go run tools/release/main.go prepare 2.1.0 --next 2.2.0 --docs
 ```
 
 Actual preparation requires a clean `main` checkout declaring a development
 version, an unused local release tag, and a newer next version. The helper
 changes all four version definitions in `include/nng/nng.h` together; CMake
 derives its versions from that header.
+
+`--docs` also adds the release line to `docs/versions.json` and requests it as
+the latest stable manual, without downgrading a newer line. This manifest
+change is included in the release commit and tag. Published selectors and
+redirects advance only when that version's built manual is published.
+Omitting `--docs` keeps the source manifest unchanged and prints a warning
+reminder to review documentation routing before publication. Existing manual
+publication still runs; the flag opts into selector and stable promotion.
+
+Preparation prompts you to type the release tag, such as `v2.1.0`, before
+creating commits. A mismatched answer or end of input cancels the operation.
+Use `--force` to skip confirmation in automation; version, branch, and clean
+checkout checks still apply. A dry run never prompts or makes changes.
 
 It creates two commits: the final `2.1.0` version with an empty suffix, then
 `2.2.0-dev`. After both commits succeed, it creates an annotated `v2.1.0` tag
@@ -92,6 +106,9 @@ remote refs unchanged. Existing remote tags and branch protection remain in
 effect. The remote must allow the intended branch update; if it requires PRs,
 preserve both commits through the PR and publish the existing tag afterward.
 Squashing the two commits would remove the release commit from main's history.
+Pushing also prompts for the exact release tag. `push v2.1.0 --force` skips
+that confirmation and retains the atomic push and safety checks; it does not
+force-update remote refs.
 
 Wait for the **release / validate-tag** workflow to pass. It checks that the
 tag's version matches the header with an empty suffix, then builds and tests
@@ -104,16 +121,27 @@ Create the GitHub release from the existing `v2.1.0` tag after validation.
 The helper leaves publication as a separate step.
 
 The documentation workflow publishes the tagged manual to `/ref/v2.1/`.
-Coordinate the 2.1 entry and `latest_version` in `docs/versions.json` with
-publication, then verify the version selector and stable `/ref/` redirect.
-Advance the stable redirect once the new manual exists. The helper manages
-library versions and Git refs; documentation content and routing are reviewed
-separately.
+For a release prepared with `--docs`, it publishes the manual, shared version
+selector, and stable `/ref/` redirect together in one `gh-pages` commit, after
+the manual builds successfully. Verify the selector and redirect after the
+Pages deployment completes.
+
+The source manifest records the requested latest version; the deployed
+manifest at `/ref/dev/versions.json` records what is actually published.
+Development builds hide version entries whose manuals are not deployed and
+keep the stable redirect unchanged while release publication is pending.
+Later development builds and historical manual republication retain the
+latest deployed version, even if their source manifest is older.
+
+Both mdBook and legacy AsciiDoc publication use the helper's `publish-docs`
+command to stage this combined change in a local `gh-pages` checkout. The
+workflow commits and pushes only after staging succeeds. Publication does
+not edit `main`, and repeated publication is idempotent.
 
 ## Helper tests
 
 ```sh
-go test tools/release/main.go tools/release/main_test.go
+go test tools/release/*.go
 ```
 
 The tests use temporary repositories and local bare remotes, including
