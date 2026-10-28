@@ -1,5 +1,5 @@
 {
-  "latest_version": "/ref/v2.0/",
+  "latest_version": "/ref/v2.1/",
   "versions": [
     {
       "id": "v1.0",
@@ -70,6 +70,11 @@
       "id": "v2.0",
       "label": "NNG 2.0",
       "href": "/ref/v2.0/"
+    },
+    {
+      "id": "v2.1",
+      "label": "NNG 2.1",
+      "href": "/ref/v2.1/"
     },
     {
       "id": "dev",
