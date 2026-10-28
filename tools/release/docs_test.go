@@ -8,6 +8,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -96,7 +97,7 @@ func TestDocsDryRunDoesNotWriteManifest(t *testing.T) {
 }
 
 func TestPrepareConfirmation(t *testing.T) {
-	for _, input := range []string{"", "no\n", "yes\n", "v2.2.0\n"} {
+	for _, input := range []string{"", "no\n", "yes\n", "v2.2.0\n", "v2.1.0", "v2.1.0\r", "v2.1.0 "} {
 		r := testRepo(t)
 		r.in = strings.NewReader(input)
 		head := gitTest(t, r.dir, "rev-parse", "HEAD")
@@ -131,7 +132,7 @@ func TestForceKeepsSafetyChecks(t *testing.T) {
 }
 
 func TestPushConfirmation(t *testing.T) {
-	for _, mode := range []string{"cancel", "confirm", "force"} {
+	for _, mode := range []string{"cancel", "unterminated tag", "confirm", "force"} {
 		t.Run(mode, func(t *testing.T) {
 			r := testRepo(t)
 			prepareTest(t, r)
@@ -143,12 +144,15 @@ func TestPushConfirmation(t *testing.T) {
 			if mode == "confirm" {
 				r.in = strings.NewReader("v2.1.0\n")
 			}
+			if mode == "unterminated tag" {
+				r.in = strings.NewReader("v2.1.0")
+			}
 			if mode == "force" {
 				args = append(args, "--force")
 			}
 			err := r.pushRelease(args)
-			if mode == "cancel" {
-				if err == nil || gitTest(t, remote, "for-each-ref", "--format=%(refname)") != "" {
+			if mode == "cancel" || mode == "unterminated tag" {
+				if err == nil || !strings.Contains(err.Error(), "canceled") || gitTest(t, remote, "for-each-ref", "--format=%(refname)") != "" {
 					t.Fatal("canceled push changed remote")
 				}
 			} else if err != nil {
@@ -157,6 +161,27 @@ func TestPushConfirmation(t *testing.T) {
 				t.Fatal("confirmed push did not update remote")
 			}
 		})
+	}
+}
+
+type failedConfirmationReader struct {
+	err error
+}
+
+func (r failedConfirmationReader) Read([]byte) (int, error) {
+	return 0, r.err
+}
+
+func TestConfirmationReadError(t *testing.T) {
+	want := errors.New("input failed")
+	r := repository{in: failedConfirmationReader{err: want}, out: io.Discard}
+	if err := r.confirm("v2.1.0", "prepare"); !errors.Is(err, want) {
+		t.Fatalf("confirmation did not preserve the read error: %v", err)
+	}
+	// A complete CRLF-terminated line remains valid terminal input.
+	r.in = strings.NewReader("v2.1.0\r\n")
+	if err := r.confirm("v2.1.0", "prepare"); err != nil {
+		t.Fatal(err)
 	}
 }
 
@@ -267,6 +292,25 @@ func TestDocsWithoutPromotionAndFutureRequest(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.latest(t, "/ref/v2.0/", false)
+}
+
+func TestModernPublicationUpdatesLegacySelector(t *testing.T) {
+	f := newDocsFixture(t)
+	legacyDir := filepath.Join(f.pages, "ref/v1.12")
+	writeTest(t, filepath.Join(legacyDir, "index.html"), "historical manual content")
+	f.request(t, "v1.12")
+	f.request(t, "v2.1")
+	if err := f.publish("v2.1"); err != nil {
+		t.Fatal(err)
+	}
+	manifest, err := readManifest(filepath.Join(legacyDir, "versions.json"))
+	if err != nil || manifest.Latest != "/ref/v2.1/" {
+		t.Fatalf("legacy selector was not updated: %s, %v", manifest.Latest, err)
+	}
+	if readTest(t, filepath.Join(legacyDir, "index.html")) != "historical manual content" {
+		t.Fatal("modern publication changed historical manual content")
+	}
+	f.latest(t, "/ref/v2.1/", true)
 }
 
 func TestDevBuildDoesNotPromoteExistingManual(t *testing.T) {

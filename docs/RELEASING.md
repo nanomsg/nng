@@ -67,7 +67,8 @@ reminder to review documentation routing before publication. Existing manual
 publication still runs; the flag opts into selector and stable promotion.
 
 Preparation prompts you to type the release tag, such as `v2.1.0`, before
-creating commits. A mismatched answer or end of input cancels the operation.
+creating commits. Submit the confirmation with Enter; a mismatched answer or
+input ending before the newline cancels the operation, even if the tag matches.
 Use `--force` to skip confirmation in automation; version, branch, and clean
 checkout checks still apply. A dry run never prompts or makes changes.
 
@@ -196,6 +197,14 @@ Both mdBook and legacy AsciiDoc publication use the helper's `publish-docs`
 command to stage this combined change in a local `gh-pages` checkout. The
 workflow commits and pushes only after staging succeeds. Publication does
 not edit `main`, and repeated publication is idempotent.
+
+The publication triggers differ: mdBook publishes development docs on relevant
+`main` pushes and release docs when a final GitHub release is published.
+Historical 1.x AsciiDoc manuals are rendered and published by explicitly
+dispatching `docs-asciidoc` with the desired 1.x tag and release line. Its PR
+trigger validates the renderer without deploying. Modern releases do not
+re-render historical 1.x manual content; the shared selector and deployed
+version manifests are updated by normal publication for both formats.
 
 ## Helper tests
 
