@@ -215,7 +215,10 @@ func (r repository) confirm(tag, action string) error {
 		input = os.Stdin
 	}
 	line, err := bufio.NewReader(input).ReadString('\n')
-	if err != nil && err != io.EOF {
+	if err == io.EOF {
+		return fmt.Errorf("canceled: input ended before confirmation for %s", tag)
+	}
+	if err != nil {
 		return fmt.Errorf("read confirmation: %w", err)
 	}
 	if strings.TrimSpace(line) != tag {
