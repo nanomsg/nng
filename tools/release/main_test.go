@@ -197,7 +197,7 @@ func TestInferredVersionPreparation(t *testing.T) {
 			r := testRepo(t)
 			writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 2, minor: 1, patch: 7, suffix: "dev"}))
 			gitTest(t, r.dir, "commit", "-am", "start at nonzero micro")
-			opts, err := parsePrepare([]string{tc.flag}, io.Discard)
+			opts, err := parsePrepare([]string{tc.flag, "--force"}, io.Discard)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -245,6 +245,9 @@ func TestDryRunPreservesRepository(t *testing.T) {
 				if !strings.Contains(output.String(), want) {
 					t.Fatalf("preview missing %q: %s", want, &output)
 				}
+			}
+			if !strings.Contains(output.String(), "WARNING: --docs was not supplied") {
+				t.Fatal("missing documentation reminder")
 			}
 			after, _ := os.ReadFile(filepath.Join(r.dir, headerPath))
 			if string(before) != string(after) || refs != gitTest(t, r.dir, "show-ref") || status != gitTest(t, r.dir, "status", "--porcelain") {

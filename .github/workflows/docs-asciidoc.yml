@@ -6,6 +6,7 @@ on:
       - "docs/theme/**"
       - "docs/versions.json"
       - "tools/pubrefman/**"
+      - "tools/release/**"
       - ".github/workflows/docs-asciidoc.yml"
   workflow_dispatch:
     inputs:
@@ -87,6 +88,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: "1.22.x"
+          cache: false
 
       - name: Render legacy reference manual
         run: |
@@ -97,11 +99,26 @@ jobs:
             -version "${{ needs.prepare.outputs.version }}"
           cp publisher/docs/versions.json legacy-book/versions.json
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Check out published documentation
+        uses: actions/checkout@v5
         if: ${{ needs.prepare.outputs.deploy == 'true' }}
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./legacy-book
-          destination_dir: ./${{ needs.prepare.outputs.destination }}
-          enable_jekyll: true
+          ref: gh-pages
+          path: pages
+
+      - name: Publish manual, selector, and stable redirect
+        if: ${{ needs.prepare.outputs.deploy == 'true' }}
+        env:
+          DESTINATION: ${{ needs.prepare.outputs.destination }}
+        run: |
+          go run publisher/tools/release/main.go publish-docs \
+            --pages pages --book legacy-book --version "${DESTINATION#ref/}" \
+            --manifest publisher/docs/versions.json \
+            --redirect-template publisher/docs/ref-redirect.html.in
+          git -C pages add -A
+          if ! git -C pages diff --cached --quiet; then
+            git -C pages config user.name "github-actions[bot]"
+            git -C pages config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git -C pages commit -m "docs: publish ${DESTINATION} and update manual routing"
+            git -C pages push
+          fi
