@@ -115,6 +115,65 @@ tag's version matches the header with an empty suffix, then builds and tests
 the exact tagged source in Release mode with Mbed TLS enabled. Other platform
 checks on `main` validate the subsequent development commit.
 
+### Recovering from a rejected push
+
+A rejected atomic push leaves the remote refs unchanged, but the two prepared
+commits and release tag still exist locally. Do not rerun `prepare` immediately:
+the local header now declares the next development version, and the release
+tag already exists. For a transient connection or permission problem, resolve
+the problem and retry `push` with the existing prepared history.
+
+Before rebuilding the release, check the remote tag:
+
+```sh
+git ls-remote --tags origin refs/tags/v2.1.0
+```
+
+If this command fails, resolve the connection or authentication problem first;
+failure does not establish that the tag is absent. If it prints a tag, keep
+the local history intact and inspect the remote tag and `origin/main` before
+deciding how to proceed. The release may already have been pushed, or the
+version may be in use by another commit. Do not overwrite a published tag;
+`prepare` checks only local tags.
+
+If the query succeeds with no output and the push was rejected because
+`origin/main` advanced, inspect the local state:
+
+```sh
+git branch --show-current
+git status --short
+git log -2 --name-status
+git rev-parse HEAD~2
+git rev-parse HEAD^ 'v2.1.0^{commit}'
+```
+
+Continue only on a clean `main` with exactly the two expected preparation
+commits and no additional work. The last command must print the same commit
+twice: the release tag must point to the parent of the development bump.
+Record the pre-release commit printed by `HEAD~2`, then preserve the prepared
+history on a backup branch before removing the unpublished local tag:
+
+```sh
+git branch backup/release-v2.1.0 HEAD &&
+git tag -d v2.1.0 &&
+git reset --keep backup/release-v2.1.0~2 &&
+git pull --ff-only origin main
+```
+
+The command chain stops on a failure, including an existing backup branch;
+inspect and resolve that failure before continuing. The backup retains both
+prepared commits. Preview the updated release plan, then run `prepare` again
+using the intended increment and documentation choices:
+
+```sh
+go run tools/release/main.go prepare --minor --docs --dry-run
+go run tools/release/main.go prepare --minor --docs
+```
+
+Review the regenerated commits and tag, then retry `push`. For branch-protection
+rejections that require a PR, follow the PR procedure above rather than resetting
+and repeatedly preparing the same release.
+
 ## Publish
 
 Create the GitHub release from the existing `v2.1.0` tag after validation.
