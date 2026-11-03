@@ -1,5 +1,6 @@
 //
 // Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Mohd Quamar Tyagi <Tyagiquamar@users.noreply.github.com>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -189,6 +190,51 @@ test_url_clone(void)
 	NUTS_MATCH(nng_url_path(url), "/somewhere");
 	NUTS_MATCH(nng_url_query(url), "result=yes");
 	NUTS_MATCH(nng_url_fragment(url), "chapter1");
+	NUTS_NULL(nng_url_userinfo(url));
+	nng_url_free(url);
+	nng_url_free(src);
+}
+
+void
+test_url_clone_long(void)
+{
+	nng_url *url;
+	nng_url *src;
+	char     raw[256];
+
+	// Longer than NNG_MAXADDRLEN, so the parsed URL keeps a heap buffer.
+	memset(raw, 'a', sizeof(raw) - 1);
+	raw[sizeof(raw) - 1] = '\0';
+	memcpy(raw, "http://example.com/", strlen("http://example.com/"));
+
+	NUTS_PASS(nng_url_parse(&src, raw));
+	NUTS_ASSERT(src != NULL);
+	NUTS_PASS(nng_url_clone(&url, src));
+	NUTS_ASSERT(url != NULL);
+	NUTS_MATCH(nng_url_scheme(url), "http");
+	NUTS_MATCH(nng_url_hostname(url), "example.com");
+	NUTS_TRUE(nng_url_port(url) == 80);
+	NUTS_MATCH(nng_url_path(url), nng_url_path(src));
+	NUTS_NULL(nng_url_query(url));
+	NUTS_NULL(nng_url_fragment(url));
+	NUTS_NULL(nng_url_userinfo(url));
+	nng_url_free(url);
+	nng_url_free(src);
+}
+
+void
+test_url_clone_path_url(void)
+{
+	nng_url *url;
+	nng_url *src;
+
+	NUTS_PASS(nng_url_parse(&src, "winpipe://nng-test"));
+	NUTS_PASS(nng_url_clone(&url, src));
+	NUTS_MATCH(nng_url_scheme(url), "winpipe");
+	NUTS_MATCH(nng_url_path(url), "nng-test");
+	NUTS_NULL(nng_url_hostname(url));
+	NUTS_NULL(nng_url_query(url));
+	NUTS_NULL(nng_url_fragment(url));
 	NUTS_NULL(nng_url_userinfo(url));
 	nng_url_free(url);
 	nng_url_free(src);
@@ -595,6 +641,8 @@ NUTS_TESTS = {
 	{ "url tcp port", test_url_tcp_port },
 	{ "url bare ws", test_url_bare_ws },
 	{ "url clone", test_url_clone },
+	{ "url clone long", test_url_clone_long },
+	{ "url clone path url", test_url_clone_path_url },
 	{ "url ssh", test_url_ssh },
 	{ "url bad scheme", test_url_bad_scheme },
 	{ "url bad v6", test_url_bad_ipv6 },
