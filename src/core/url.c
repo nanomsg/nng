@@ -1,5 +1,6 @@
 //
 // Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2026 Mohd Quamar Tyagi <Tyagiquamar@users.noreply.github.com>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -646,7 +647,7 @@ nng_err
 nni_url_clone_inline(nng_url *dst, const nng_url *src)
 {
 	if (src->u_bufsz != 0) {
-		if ((dst->u_buffer = nni_alloc(dst->u_bufsz)) == NULL) {
+		if ((dst->u_buffer = nni_alloc(src->u_bufsz)) == NULL) {
 			return (NNG_ENOMEM);
 		}
 		dst->u_bufsz = src->u_bufsz;
@@ -657,8 +658,11 @@ nni_url_clone_inline(nng_url *dst, const nng_url *src)
 		    dst->u_static + (src->u_buffer - src->u_static);
 	}
 
-	dst->u_hostname = dst->u_buffer + (src->u_hostname - src->u_buffer);
-	dst->u_path     = dst->u_buffer + (src->u_path - src->u_buffer);
+	if (src->u_hostname != NULL) {
+		dst->u_hostname =
+		    dst->u_buffer + (src->u_hostname - src->u_buffer);
+	}
+	dst->u_path = dst->u_buffer + (src->u_path - src->u_buffer);
 
 	if (src->u_userinfo != NULL) {
 		dst->u_userinfo =
@@ -686,7 +690,7 @@ nng_url_clone(nng_url **dstp, const nng_url *src)
 	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_url_clone_inline(dst, src) != NNG_OK)) {
+	if ((rv = nni_url_clone_inline(dst, src)) != NNG_OK) {
 		NNI_FREE_STRUCT(dst);
 		return (rv);
 	}
