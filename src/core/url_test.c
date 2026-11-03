@@ -1,6 +1,5 @@
 //
 // Copyright 2026 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2026 Mohd Quamar Tyagi <Tyagiquamar@users.noreply.github.com>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
