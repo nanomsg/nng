@@ -369,7 +369,7 @@ func TestV1125PatchVersionMismatchRegression(t *testing.T) {
 	gitTest(t, r.dir, "tag", "-a", "v1.12.5", "-m", "NNG 1.12.5")
 
 	err := r.check("v1.12.5")
-	wantErr := "tag v1.12.5 requires version 1.12.5 with an empty suffix; header declares 1.12.4"
+	wantErr := "tag v1.12.5 requires version 1.12.5; header declares 1.12.4"
 	if err == nil || err.Error() != wantErr {
 		t.Fatalf("check(v1.12.5) = %v; want exact error %q", err, wantErr)
 	}
@@ -379,7 +379,7 @@ func TestV1125PatchVersionMismatchRegression(t *testing.T) {
 		t.Fatalf("check(v1.12.4) via working-tree fallback failed: %v", err)
 	}
 	err = r.check("v1.12.6")
-	wantFallbackErr := "tag v1.12.6 requires version 1.12.6 with an empty suffix; header declares 1.12.4"
+	wantFallbackErr := "tag v1.12.6 requires version 1.12.6; header declares 1.12.4"
 	if err == nil || err.Error() != wantFallbackErr {
 		t.Fatalf("check(v1.12.6) via working-tree fallback = %v; want %q", err, wantFallbackErr)
 	}
@@ -394,11 +394,22 @@ func TestPrereleaseTagSuffixValidation(t *testing.T) {
 	if err := r.check("v2.1.0-rc.1"); err != nil {
 		t.Fatalf("expected v2.1.0-rc.1 to pass check, got: %v", err)
 	}
-	if err := r.check("v2.1.0-rc.2"); err == nil || !strings.Contains(err.Error(), `requires version 2.1.0-rc.2 (suffix "rc.2"); header declares 2.1.0-rc.1`) {
-		t.Fatalf("expected mismatch for v2.1.0-rc.2, got: %v", err)
+	// Case: want.suffix != "" and got.suffix != ""
+	wantRc2Err := `tag v2.1.0-rc.2 requires version 2.1.0-rc.2 (suffix "rc.2"); header declares 2.1.0-rc.1 (suffix "rc.1")`
+	if err := r.check("v2.1.0-rc.2"); err == nil || err.Error() != wantRc2Err {
+		t.Fatalf("check(v2.1.0-rc.2) = %v; want exact error %q", err, wantRc2Err)
 	}
-	if err := r.check("v2.1.0"); err == nil || !strings.Contains(err.Error(), "requires version 2.1.0 with an empty suffix; header declares 2.1.0-rc.1") {
-		t.Fatalf("expected mismatch for final tag v2.1.0 against rc.1 header, got: %v", err)
+	// Case: want.suffix == "" and got.suffix != ""
+	wantFinalErr := `tag v2.1.0 requires version 2.1.0 with an empty suffix; header declares 2.1.0-rc.1 (suffix "rc.1")`
+	if err := r.check("v2.1.0"); err == nil || err.Error() != wantFinalErr {
+		t.Fatalf("check(v2.1.0) = %v; want exact error %q", err, wantFinalErr)
+	}
+	// Case: want.suffix != "" and got.suffix == ""
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 2, minor: 1, patch: 0, suffix: ""}))
+	gitTest(t, r.dir, "commit", "-am", "prepare final 2.1.0")
+	wantPrereleaseOnFinalErr := `tag v2.1.0-rc.3 requires version 2.1.0-rc.3 (suffix "rc.3"); header declares 2.1.0 with an empty suffix`
+	if err := r.check("v2.1.0-rc.3"); err == nil || err.Error() != wantPrereleaseOnFinalErr {
+		t.Fatalf("check(v2.1.0-rc.3) = %v; want exact error %q", err, wantPrereleaseOnFinalErr)
 	}
 	for _, invalidTag := range []string{"v2.1.0-dev", "v2.1.0-", "v2.1.0-rc..1"} {
 		if err := r.check(invalidTag); err == nil {
