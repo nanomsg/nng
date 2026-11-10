@@ -519,6 +519,29 @@ test_msg_reserve(void)
 }
 
 void
+test_msg_insert_preserves_existing_data(void)
+{
+	nng_msg    *msg;
+	const char  initial[] = "ABCDEFGH";
+	char        prefix[33];
+
+	memset(prefix, 'X', sizeof(prefix));
+
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_msg_append(msg, initial, 8));
+	NUTS_ASSERT(nng_msg_len(msg) == 8);
+
+	NUTS_PASS(nng_msg_insert(msg, prefix, sizeof(prefix)));
+	NUTS_ASSERT(nng_msg_len(msg) == 8 + sizeof(prefix));
+
+	const uint8_t *body = nng_msg_body(msg);
+	NUTS_ASSERT(memcmp(body, prefix, sizeof(prefix)) == 0);
+	NUTS_ASSERT(memcmp(body + sizeof(prefix), initial, 8) == 0);
+
+	nng_msg_free(msg);
+}
+
+void
 test_msg_insert_stress(void)
 {
 	char junk[1024];
@@ -562,6 +585,7 @@ TEST_LIST = {
 	{ "msg header u32", test_msg_header_uint64 },
 	{ "msg capacity", test_msg_capacity },
 	{ "msg reserve", test_msg_reserve },
+	{ "msg insert preserves data", test_msg_insert_preserves_existing_data },
 	{ "msg insert stress", test_msg_insert_stress },
 	{ NULL, NULL },
 };
