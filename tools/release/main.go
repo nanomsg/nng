@@ -352,10 +352,16 @@ func (r repository) check(tag string) error {
 		return err
 	}
 	if got != want {
-		if want.suffix == "" {
-			return fmt.Errorf("tag %s requires version %s with an empty suffix; header declares %s", tag, want, got)
+		if got.suffix == want.suffix {
+			return fmt.Errorf("tag %s requires version %s; header declares %s", tag, want, got)
 		}
-		return fmt.Errorf("tag %s requires version %s (suffix %q); header declares %s", tag, want, want.suffix, got)
+		if want.suffix == "" {
+			return fmt.Errorf("tag %s requires version %s with an empty suffix; header declares %s (suffix %q)", tag, want, got, got.suffix)
+		}
+		if got.suffix == "" {
+			return fmt.Errorf("tag %s requires version %s (suffix %q); header declares %s with an empty suffix", tag, want, want.suffix, got)
+		}
+		return fmt.Errorf("tag %s requires version %s (suffix %q); header declares %s (suffix %q)", tag, want, want.suffix, got, got.suffix)
 	}
 	fmt.Fprintf(r.out, "%s matches the tagged header (%s).\n", tag, got)
 	return nil
