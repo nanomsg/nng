@@ -2,10 +2,12 @@ name: release
 
 on:
   push:
-    branches: [main]
+    branches: [main, nng1]
     tags: ["v*"]
   pull_request:
     types: [opened, synchronize, reopened]
+  release:
+    types: [published, created, edited, prereleased, released]
 
 permissions:
   contents: read
@@ -25,7 +27,7 @@ jobs:
         run: go test tools/release/*.go
 
   validate-tag:
-    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'release'
     needs: helper
     runs-on: ubuntu-24.04
     steps:
@@ -39,7 +41,7 @@ jobs:
           cache: false
       - name: Check tag against library version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || github.ref_name }}
         run: go run tools/release/main.go check "$RELEASE_TAG"
       - name: Install build dependencies
         run: sudo apt-get update && sudo apt-get install -y ninja-build libmbedtls-dev

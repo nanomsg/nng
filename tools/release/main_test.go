@@ -359,3 +359,93 @@ func TestAtomicPushRejectsBothRefs(t *testing.T) {
 		t.Fatal("atomic push left a partially updated remote")
 	}
 }
+
+func TestV1125PatchVersionMismatchRegression(t *testing.T) {
+	r := testRepo(t)
+	// Exact state of nanomsg/nng at tag v1.12.5 (437a5f74):
+	// NNG_MAJOR_VERSION 1, NNG_MINOR_VERSION 12, NNG_PATCH_VERSION 4, NNG_RELEASE_SUFFIX ""
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 1, minor: 12, patch: 4, suffix: ""}))
+	gitTest(t, r.dir, "commit", "-am", "v1.12.5 tagged with NNG_PATCH_VERSION 4")
+	gitTest(t, r.dir, "tag", "-a", "v1.12.5", "-m", "NNG 1.12.5")
+
+	err := r.check("v1.12.5")
+	wantErr := "tag v1.12.5 requires version 1.12.5 with an empty suffix; header declares 1.12.4"
+	if err == nil || err.Error() != wantErr {
+		t.Fatalf("check(v1.12.5) = %v; want exact error %q", err, wantErr)
+	}
+
+	// Also verify fallback to working-tree include/nng/nng.h when refs/tags/<tag> is absent locally
+	if err := r.check("v1.12.4"); err != nil {
+		t.Fatalf("check(v1.12.4) via working-tree fallback failed: %v", err)
+	}
+	err = r.check("v1.12.6")
+	wantFallbackErr := "tag v1.12.6 requires version 1.12.6 with an empty suffix; header declares 1.12.4"
+	if err == nil || err.Error() != wantFallbackErr {
+		t.Fatalf("check(v1.12.6) via working-tree fallback = %v; want %q", err, wantFallbackErr)
+	}
+}
+
+func TestPrereleaseTagSuffixValidation(t *testing.T) {
+	r := testRepo(t)
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 2, minor: 1, patch: 0, suffix: "rc.1"}))
+	gitTest(t, r.dir, "commit", "-am", "prepare 2.1.0-rc.1")
+	gitTest(t, r.dir, "tag", "-a", "v2.1.0-rc.1", "-m", "NNG 2.1.0-rc.1")
+
+	if err := r.check("v2.1.0-rc.1"); err != nil {
+		t.Fatalf("expected v2.1.0-rc.1 to pass check, got: %v", err)
+	}
+	if err := r.check("v2.1.0-rc.2"); err == nil || !strings.Contains(err.Error(), `requires version 2.1.0-rc.2 (suffix "rc.2"); header declares 2.1.0-rc.1`) {
+		t.Fatalf("expected mismatch for v2.1.0-rc.2, got: %v", err)
+	}
+	if err := r.check("v2.1.0"); err == nil || !strings.Contains(err.Error(), "requires version 2.1.0 with an empty suffix; header declares 2.1.0-rc.1") {
+		t.Fatalf("expected mismatch for final tag v2.1.0 against rc.1 header, got: %v", err)
+	}
+	for _, invalidTag := range []string{"v2.1.0-dev", "v2.1.0-", "v2.1.0-rc..1"} {
+		if err := r.check(invalidTag); err == nil {
+			t.Fatalf("expected invalid tag %q to be rejected", invalidTag)
+		}
+	}
+}
+
+func TestMaintenanceBranchNng1PrepareAndPush(t *testing.T) {
+	r := testRepo(t)
+	gitTest(t, r.dir, "checkout", "-b", "nng1")
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 1, minor: 12, patch: 6, suffix: "dev"}))
+	gitTest(t, r.dir, "commit", "-am", "start 1.12.6-dev on nng1")
+
+	// Reject 2.x release on nng1
+	if err := r.prepare(version{major: 2, minor: 1, patch: 0}, version{major: 2, minor: 2, patch: 0}); err == nil || !strings.Contains(err.Error(), "nng1 is for NNG 1.x releases") {
+		t.Fatalf("expected 2.x release on nng1 to be rejected, got: %v", err)
+	}
+
+	opts, err := parsePrepare([]string{"1.12.6", "--micro", "--force"}, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.prepareRelease(opts); err != nil {
+		t.Fatalf("prepareRelease on nng1 failed: %v", err)
+	}
+	if err := r.checkPrepared("v1.12.6"); err != nil {
+		t.Fatalf("checkPrepared on nng1 failed: %v", err)
+	}
+
+	remote := t.TempDir()
+	gitTest(t, remote, "init", "--bare")
+	gitTest(t, r.dir, "remote", "add", "origin", remote)
+	if err := r.push("v1.12.6"); err != nil {
+		t.Fatalf("push on nng1 failed: %v", err)
+	}
+	for _, ref := range []string{"refs/heads/nng1", "refs/tags/v1.12.6"} {
+		if gitTest(t, remote, "rev-parse", ref) != gitTest(t, r.dir, "rev-parse", ref) {
+			t.Fatalf("remote %s does not match local", ref)
+		}
+	}
+
+	// Reject 1.x release on main
+	gitTest(t, r.dir, "checkout", "main")
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 1, minor: 12, patch: 7, suffix: "dev"}))
+	gitTest(t, r.dir, "commit", "-am", "1.12.7-dev on main")
+	if err := r.prepare(version{major: 1, minor: 12, patch: 7}, version{major: 1, minor: 12, patch: 8}); err == nil || !strings.Contains(err.Error(), "main is for NNG 2.x+ releases") {
+		t.Fatalf("expected 1.x release on main to be rejected, got: %v", err)
+	}
+}

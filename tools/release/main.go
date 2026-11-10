@@ -52,6 +52,8 @@ func (v version) after(other version) bool {
 
 var versionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 
+var prereleaseSuffixPattern = regexp.MustCompile(`^[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*$`)
+
 func parseVersion(s string) (version, error) {
 	m := versionPattern.FindStringSubmatch(s)
 	if m == nil {
@@ -88,8 +90,8 @@ func readVersion(data string) (version, error) {
 		return v, err
 	}
 	suffix, err := strconv.Unquote(values[3])
-	if err != nil || (suffix != "" && suffix != "dev") {
-		return v, fmt.Errorf("expected NNG_RELEASE_SUFFIX to be empty or dev; got %s", values[3])
+	if err != nil || (suffix != "" && !prereleaseSuffixPattern.MatchString(suffix)) {
+		return v, fmt.Errorf("expected NNG_RELEASE_SUFFIX to be empty, dev, or a pre-release suffix; got %s", values[3])
 	}
 	v.suffix = suffix
 	return v, nil
@@ -248,10 +250,10 @@ func (r repository) prepareRelease(opts prepareOptions) error {
 		fmt.Fprintln(r.out, "WARNING: --docs was not supplied; review the documentation selector and latest redirect before publishing.")
 	}
 	if opts.dryRun {
-		fmt.Fprintln(r.out, "Dry run: preview only. Preparation requires a clean main checkout and an unused release tag.")
+		fmt.Fprintln(r.out, "Dry run: preview only. Preparation requires a clean release branch checkout (main or nng1) and an unused release tag.")
 		return nil
 	}
-	if err := r.cleanMain(); err != nil {
+	if _, err := r.cleanReleaseBranch(release); err != nil {
 		return err
 	}
 	if !opts.force {
@@ -272,43 +274,64 @@ func (r repository) git(args ...string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
-func (r repository) cleanMain() error {
+func (r repository) cleanReleaseBranch(v version) (string, error) {
 	branch, err := r.git("symbolic-ref", "--short", "HEAD")
 	if err != nil {
-		return err
+		return "", err
 	}
-	if branch != "main" {
-		return fmt.Errorf("run from main; current branch is %s", branch)
+	switch branch {
+	case "main":
+		if v.major != 0 && v.major < 2 {
+			return "", fmt.Errorf("main is for NNG 2.x+ releases; release %s belongs on nng1", v)
+		}
+	case "nng1":
+		if v.major != 0 && v.major != 1 {
+			return "", fmt.Errorf("nng1 is for NNG 1.x releases; release %s belongs on main", v)
+		}
+	default:
+		return "", fmt.Errorf("run from main or nng1; current branch is %s", branch)
 	}
 	status, err := r.git("status", "--porcelain", "--untracked-files=normal")
 	if err != nil {
-		return err
+		return "", err
 	}
 	if status != "" {
-		return fmt.Errorf("commit or remove working tree changes before preparing or pushing a release:\n%s", status)
+		return "", fmt.Errorf("commit or remove working tree changes before preparing or pushing a release:\n%s", status)
 	}
 	for _, state := range []string{"MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "rebase-merge", "rebase-apply"} {
 		path, err := r.git("rev-parse", "--git-path", state)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if !filepath.IsAbs(path) {
 			path = filepath.Join(r.dir, path)
 		}
 		if _, err := os.Stat(path); err == nil {
-			return fmt.Errorf("finish the Git operation recorded by %s first", state)
+			return "", fmt.Errorf("finish the Git operation recorded by %s first", state)
 		} else if !os.IsNotExist(err) {
-			return err
+			return "", err
 		}
 	}
-	return nil
+	return branch, nil
 }
 
 func tagVersion(tag string) (version, error) {
 	if !strings.HasPrefix(tag, "v") {
 		return version{}, fmt.Errorf("expected a tag such as v2.1.0; got %q", tag)
 	}
-	return parseVersion(strings.TrimPrefix(tag, "v"))
+	rest := strings.TrimPrefix(tag, "v")
+	base, suffix, hasSuffix := strings.Cut(rest, "-")
+	v, err := parseVersion(base)
+	if err != nil {
+		return version{}, err
+	}
+	if hasSuffix {
+		if suffix == "" || suffix == "dev" || !prereleaseSuffixPattern.MatchString(suffix) {
+			return version{}, fmt.Errorf("expected a valid release or pre-release tag; got %q", tag)
+		}
+		v.suffix = suffix
+	}
+	return v, nil
 }
 
 func (r repository) check(tag string) error {
@@ -318,14 +341,21 @@ func (r repository) check(tag string) error {
 	}
 	data, err := r.git("show", "refs/tags/"+tag+":"+headerPath)
 	if err != nil {
-		return err
+		raw, readErr := os.ReadFile(filepath.Join(r.dir, headerPath))
+		if readErr != nil {
+			return err
+		}
+		data = string(raw)
 	}
 	got, err := readVersion(data)
 	if err != nil {
 		return err
 	}
 	if got != want {
-		return fmt.Errorf("tag %s requires version %s with an empty suffix; header declares %s", tag, want, got)
+		if want.suffix == "" {
+			return fmt.Errorf("tag %s requires version %s with an empty suffix; header declares %s", tag, want, got)
+		}
+		return fmt.Errorf("tag %s requires version %s (suffix %q); header declares %s", tag, want, want.suffix, got)
 	}
 	fmt.Fprintf(r.out, "%s matches the tagged header (%s).\n", tag, got)
 	return nil
@@ -350,7 +380,8 @@ func (r repository) prepareWithDocs(release, next version, docs bool) error {
 	if !next.after(release) {
 		return fmt.Errorf("next development version %s must be newer than %s", next, release)
 	}
-	if err := r.cleanMain(); err != nil {
+	branch, err := r.cleanReleaseBranch(release)
+	if err != nil {
 		return err
 	}
 	data, err := os.ReadFile(filepath.Join(r.dir, headerPath))
@@ -406,19 +437,24 @@ func (r repository) prepareWithDocs(release, next version, docs bool) error {
 	if err := r.commitVersion(string(data), next, "release: start "+next.String()); err != nil {
 		return fmt.Errorf("release commit %s exists, but the development bump failed; finish that commit before creating %s: %w", releaseCommit, tag, err)
 	}
-	// Create the tag last, after main has returned to a development version.
+	// Create the tag last, after the release branch has returned to a development version.
 	if _, err := r.git("tag", "-a", tag, releaseCommit, "-m", "NNG "+release.String()); err != nil {
 		return fmt.Errorf("both version commits exist; tag creation failed (release commit %s): %w", releaseCommit, err)
 	}
 	if err := r.checkPrepared(tag); err != nil {
 		return err
 	}
-	fmt.Fprintf(r.out, "Prepared %s at %s; main is now %s.\nReview git log -2 -p, then run:\n  go run tools/release/main.go push %s\n", tag, releaseCommit, next, tag)
+	fmt.Fprintf(r.out, "Prepared %s at %s; %s is now %s.\nReview git log -2 -p, then run:\n  go run tools/release/main.go push %s\n", tag, releaseCommit, branch, next, tag)
 	return nil
 }
 
 func (r repository) checkPrepared(tag string) error {
-	if err := r.cleanMain(); err != nil {
+	release, err := tagVersion(tag)
+	if err != nil {
+		return err
+	}
+	branch, err := r.cleanReleaseBranch(release)
+	if err != nil {
 		return err
 	}
 	if err := r.check(tag); err != nil {
@@ -434,7 +470,7 @@ func (r repository) checkPrepared(tag string) error {
 	}
 	p := strings.Fields(parents)
 	if len(p) != 2 || p[1] != releaseCommit {
-		return fmt.Errorf("main must be exactly one development-version commit after %s", tag)
+		return fmt.Errorf("%s must be exactly one development-version commit after %s", branch, tag)
 	}
 	releaseData, err := r.git("show", releaseCommit+":"+headerPath)
 	if err != nil {
@@ -448,9 +484,8 @@ func (r repository) checkPrepared(tag string) error {
 	if err != nil {
 		return err
 	}
-	release, _ := tagVersion(tag)
 	if next.suffix != "dev" || !next.after(release) {
-		return fmt.Errorf("main must declare a newer development version; got %s", next)
+		return fmt.Errorf("%s must declare a newer development version; got %s", branch, next)
 	}
 	changed, err := r.git("diff", "--name-only", releaseCommit, "HEAD")
 	if err != nil {
@@ -463,15 +498,23 @@ func (r repository) checkPrepared(tag string) error {
 }
 
 func (r repository) push(tag string) error {
+	release, err := tagVersion(tag)
+	if err != nil {
+		return err
+	}
+	branch, err := r.cleanReleaseBranch(release)
+	if err != nil {
+		return err
+	}
 	if err := r.checkPrepared(tag); err != nil {
 		return err
 	}
-	output, err := r.git("push", "--atomic", "--no-follow-tags", "origin", "refs/heads/main", "refs/tags/"+tag)
+	output, err := r.git("push", "--atomic", "--no-follow-tags", "origin", "refs/heads/"+branch, "refs/tags/"+tag)
 	if err != nil {
 		return err
 	}
 	fmt.Fprintln(r.out, output)
-	fmt.Fprintf(r.out, "Pushed main and %s. Wait for release / validate-tag before publishing.\n", tag)
+	fmt.Fprintf(r.out, "Pushed %s and %s. Wait for release / validate-tag before publishing.\n", branch, tag)
 	return nil
 }
 
@@ -494,11 +537,19 @@ func (r repository) pushRelease(args []string) error {
 	if tag == "" {
 		return fmt.Errorf("usage: release push TAG [--force]")
 	}
+	release, err := tagVersion(tag)
+	if err != nil {
+		return err
+	}
+	branch, err := r.cleanReleaseBranch(release)
+	if err != nil {
+		return err
+	}
 	if err := r.checkPrepared(tag); err != nil {
 		return err
 	}
 	if !*force {
-		if err := r.confirm(tag, "push main and the release tag to origin"); err != nil {
+		if err := r.confirm(tag, "push "+branch+" and the release tag to origin"); err != nil {
 			return err
 		}
 	}
