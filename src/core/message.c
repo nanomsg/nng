@@ -305,7 +305,7 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 			size_t shift = ((ch->ch_cap - needed) / 2);
 			shift        = (shift + (sizeof(uint64_t) - 1)) &
 			    ~(sizeof(uint64_t) - 1);
-			memmove(ch->ch_buf + shift, ch->ch_ptr, ch->ch_len);
+			memmove(ch->ch_buf + shift + len, ch->ch_ptr, ch->ch_len);
 			ch->ch_ptr = ch->ch_buf + shift;
 		} else {
 			grow = true;
