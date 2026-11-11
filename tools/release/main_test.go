@@ -433,6 +433,11 @@ func TestMaintenanceBranchNng1PrepareAndPush(t *testing.T) {
 		t.Fatalf("expected 2.x release on nng1 to be rejected, got: %v", err)
 	}
 
+	// Reject 2.x next version on nng1
+	if err := r.prepare(version{major: 1, minor: 12, patch: 6}, version{major: 2, minor: 0, patch: 0}); err == nil || !strings.Contains(err.Error(), "nng1 is for NNG 1.x releases; next version 2.0.0 belongs on main") {
+		t.Fatalf("expected 2.x next version on nng1 to be rejected, got: %v", err)
+	}
+
 	opts, err := parsePrepare([]string{"1.12.6", "--micro", "--force"}, io.Discard)
 	if err != nil {
 		t.Fatal(err)
