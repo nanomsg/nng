@@ -136,6 +136,67 @@ test_sfd_accept_multi(void)
 }
 
 void
+test_sfd_accept_queued(void)
+{
+#ifdef NNG_HAVE_SOCKETPAIR
+	nng_stream_listener *l;
+	nng_stream          *streams[16];
+	nng_aio             *aio;
+	nng_iov              iov;
+	int                  peers[16];
+	const int            counts[] = { 3, 16 };
+	uint8_t              markers[16];
+	uint8_t              value;
+
+	NUTS_PASS(nng_stream_listener_alloc(&l, "socket://"));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_aio_set_timeout(aio, 1000);
+
+	for (size_t batch = 0; batch < sizeof(counts) / sizeof(counts[0]);
+	    batch++) {
+		// Queue every descriptor before accepting any connections.
+		for (int i = 0; i < counts[batch]; i++) {
+			int fds[2];
+			NUTS_PASS(nng_socket_pair(fds));
+			NUTS_PASS(nng_stream_listener_set_int(
+			    l, NNG_OPT_SOCKET_FD, fds[0]));
+			peers[i] = fds[1];
+			// Reusing a descriptor must give a wrong marker, not
+			// wait for more data from an already-read peer.
+			memset(markers, i, sizeof(markers));
+			NUTS_ASSERT(write(peers[i], markers,
+			                sizeof(markers)) == sizeof(markers));
+		}
+		for (int i = 0; i < counts[batch]; i++) {
+			nng_stream_listener_accept(l, aio);
+			nng_aio_wait(aio);
+			NUTS_PASS(nng_aio_result(aio));
+			streams[i]  = nng_aio_get_output(aio, 0);
+			iov.iov_buf = &value;
+			iov.iov_len = sizeof(value);
+			NUTS_PASS(nng_aio_set_iov(aio, 1, &iov));
+			nng_stream_recv(streams[i], aio);
+			nng_aio_wait(aio);
+			NUTS_PASS(nng_aio_result(aio));
+			NUTS_ASSERT(nng_aio_count(aio) == sizeof(value));
+			NUTS_ASSERT(value == i);
+		}
+		for (int i = 0; i < counts[batch]; i++) {
+			nng_stream_close(streams[i]);
+			nng_stream_free(streams[i]);
+			close(peers[i]);
+		}
+	}
+	nng_aio_free(aio);
+	nng_stream_listener_close(l);
+	nng_stream_listener_free(l);
+#else
+	NUTS_SKIP("no socketpair");
+#endif
+}
+
+void
 test_sfd_exchange(void)
 {
 #ifdef NNG_HAVE_SOCKETPAIR
@@ -603,6 +664,7 @@ NUTS_TESTS = {
 	{ "socket listen", test_sfd_listen },
 	{ "socket accept", test_sfd_accept },
 	{ "socket accept multi", test_sfd_accept_multi },
+	{ "socket accept queued", test_sfd_accept_queued },
 	{ "socket exchange", test_sfd_exchange },
 	{ "socket exchange late", test_sfd_exchange_late },
 	{ "socket recv max", test_sfd_recv_max },
