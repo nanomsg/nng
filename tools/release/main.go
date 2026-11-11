@@ -258,7 +258,11 @@ func (r repository) prepareRelease(opts prepareOptions) error {
 		fmt.Fprintln(r.out, "Dry run: preview only. Preparation requires a clean release branch checkout (main or nng1) and an unused release tag.")
 		return nil
 	}
-	if _, err := r.cleanReleaseBranch(release); err != nil {
+	branch, err := r.cleanReleaseBranch(release)
+	if err != nil {
+		return err
+	}
+	if err := checkBranchVersionLine(branch, next, "next version"); err != nil {
 		return err
 	}
 	if !opts.force {
@@ -280,23 +284,31 @@ func (r repository) git(args ...string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+// checkBranchVersionLine verifies that v belongs to the release line of branch.
+func checkBranchVersionLine(branch string, v version, role string) error {
+	switch branch {
+	case "main":
+		if v.major != 0 && v.major < 2 {
+			return fmt.Errorf("main is for NNG 2.x+ releases; %s %s belongs on nng1", role, v)
+		}
+	case "nng1":
+		if v.major != 0 && v.major != 1 {
+			return fmt.Errorf("nng1 is for NNG 1.x releases; %s %s belongs on main", role, v)
+		}
+	default:
+		return fmt.Errorf("run from main or nng1; current branch is %s", branch)
+	}
+	return nil
+}
+
 // cleanReleaseBranch verifies a clean checkout on the release branch matching v.
 func (r repository) cleanReleaseBranch(v version) (string, error) {
 	branch, err := r.git("symbolic-ref", "--short", "HEAD")
 	if err != nil {
 		return "", err
 	}
-	switch branch {
-	case "main":
-		if v.major != 0 && v.major < 2 {
-			return "", fmt.Errorf("main is for NNG 2.x+ releases; release %s belongs on nng1", v)
-		}
-	case "nng1":
-		if v.major != 0 && v.major != 1 {
-			return "", fmt.Errorf("nng1 is for NNG 1.x releases; release %s belongs on main", v)
-		}
-	default:
-		return "", fmt.Errorf("run from main or nng1; current branch is %s", branch)
+	if err := checkBranchVersionLine(branch, v, "release"); err != nil {
+		return "", err
 	}
 	status, err := r.git("status", "--porcelain", "--untracked-files=normal")
 	if err != nil {
@@ -396,6 +408,9 @@ func (r repository) prepareWithDocs(release, next version, docs bool) error {
 	}
 	branch, err := r.cleanReleaseBranch(release)
 	if err != nil {
+		return err
+	}
+	if err := checkBranchVersionLine(branch, next, "next version"); err != nil {
 		return err
 	}
 	data, err := os.ReadFile(filepath.Join(r.dir, headerPath))
