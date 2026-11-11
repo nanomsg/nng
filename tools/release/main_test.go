@@ -360,6 +360,7 @@ func TestAtomicPushRejectsBothRefs(t *testing.T) {
 	}
 }
 
+// TestV1125PatchVersionMismatchRegression verifies that check rejects a tag whose patch macro lags the tag version.
 func TestV1125PatchVersionMismatchRegression(t *testing.T) {
 	r := testRepo(t)
 	// Exact state of nanomsg/nng at tag v1.12.5 (437a5f74):
@@ -367,6 +368,7 @@ func TestV1125PatchVersionMismatchRegression(t *testing.T) {
 	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 1, minor: 12, patch: 4, suffix: ""}))
 	gitTest(t, r.dir, "commit", "-am", "v1.12.5 tagged with NNG_PATCH_VERSION 4")
 	gitTest(t, r.dir, "tag", "-a", "v1.12.5", "-m", "NNG 1.12.5")
+	gitTest(t, r.dir, "tag", "-a", "v1.12.4", "-m", "NNG 1.12.4")
 
 	err := r.check("v1.12.5")
 	wantErr := "tag v1.12.5 requires version 1.12.5; header declares 1.12.4"
@@ -374,22 +376,22 @@ func TestV1125PatchVersionMismatchRegression(t *testing.T) {
 		t.Fatalf("check(v1.12.5) = %v; want exact error %q", err, wantErr)
 	}
 
-	// Also verify fallback to working-tree include/nng/nng.h when refs/tags/<tag> is absent locally
 	if err := r.check("v1.12.4"); err != nil {
-		t.Fatalf("check(v1.12.4) via working-tree fallback failed: %v", err)
+		t.Fatalf("check(v1.12.4) failed: %v", err)
 	}
-	err = r.check("v1.12.6")
-	wantFallbackErr := "tag v1.12.6 requires version 1.12.6; header declares 1.12.4"
-	if err == nil || err.Error() != wantFallbackErr {
-		t.Fatalf("check(v1.12.6) via working-tree fallback = %v; want %q", err, wantFallbackErr)
+	if err := r.check("v1.12.6"); err == nil {
+		t.Fatal("expected check(v1.12.6) to fail for nonexistent tag")
 	}
 }
 
+// TestPrereleaseTagSuffixValidation verifies pre-release suffix validation and mismatch diagnostics.
 func TestPrereleaseTagSuffixValidation(t *testing.T) {
 	r := testRepo(t)
 	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 2, minor: 1, patch: 0, suffix: "rc.1"}))
 	gitTest(t, r.dir, "commit", "-am", "prepare 2.1.0-rc.1")
 	gitTest(t, r.dir, "tag", "-a", "v2.1.0-rc.1", "-m", "NNG 2.1.0-rc.1")
+	gitTest(t, r.dir, "tag", "-a", "v2.1.0-rc.2", "-m", "NNG 2.1.0-rc.2")
+	gitTest(t, r.dir, "tag", "-a", "v2.1.0", "-m", "NNG 2.1.0")
 
 	if err := r.check("v2.1.0-rc.1"); err != nil {
 		t.Fatalf("expected v2.1.0-rc.1 to pass check, got: %v", err)
@@ -407,6 +409,7 @@ func TestPrereleaseTagSuffixValidation(t *testing.T) {
 	// Case: want.suffix != "" and got.suffix == ""
 	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 2, minor: 1, patch: 0, suffix: ""}))
 	gitTest(t, r.dir, "commit", "-am", "prepare final 2.1.0")
+	gitTest(t, r.dir, "tag", "-a", "v2.1.0-rc.3", "-m", "NNG 2.1.0-rc.3")
 	wantPrereleaseOnFinalErr := `tag v2.1.0-rc.3 requires version 2.1.0-rc.3 (suffix "rc.3"); header declares 2.1.0 with an empty suffix`
 	if err := r.check("v2.1.0-rc.3"); err == nil || err.Error() != wantPrereleaseOnFinalErr {
 		t.Fatalf("check(v2.1.0-rc.3) = %v; want exact error %q", err, wantPrereleaseOnFinalErr)
@@ -418,6 +421,7 @@ func TestPrereleaseTagSuffixValidation(t *testing.T) {
 	}
 }
 
+// TestMaintenanceBranchNng1PrepareAndPush verifies release preparation and pushing on the nng1 maintenance branch.
 func TestMaintenanceBranchNng1PrepareAndPush(t *testing.T) {
 	r := testRepo(t)
 	gitTest(t, r.dir, "checkout", "-b", "nng1")

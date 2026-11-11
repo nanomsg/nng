@@ -7,7 +7,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   release:
-    types: [published, created, edited, prereleased, released]
+    types: [published]
 
 permissions:
   contents: read

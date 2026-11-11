@@ -54,6 +54,7 @@ var versionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[
 
 var prereleaseSuffixPattern = regexp.MustCompile(`^[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*$`)
 
+// parseVersion parses a major.minor.patch semantic version string.
 func parseVersion(s string) (version, error) {
 	m := versionPattern.FindStringSubmatch(s)
 	if m == nil {
@@ -72,10 +73,12 @@ func parseVersion(s string) (version, error) {
 
 var fields = []string{"NNG_MAJOR_VERSION", "NNG_MINOR_VERSION", "NNG_PATCH_VERSION", "NNG_RELEASE_SUFFIX"}
 
+// fieldPattern returns a regular expression matching a C #define for name.
 func fieldPattern(name string) *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^#define[ \t]+` + name + `[ \t]+([^\r\n]+)`)
 }
 
+// readVersion extracts and validates the NNG version macros from header text.
 func readVersion(data string) (version, error) {
 	values := make([]string, len(fields))
 	for i, name := range fields {
@@ -97,6 +100,7 @@ func readVersion(data string) (version, error) {
 	return v, nil
 }
 
+// replaceVersion substitutes the NNG version macros in header text with v.
 func replaceVersion(data string, v version) string {
 	values := []string{fmt.Sprint(v.major), fmt.Sprint(v.minor), fmt.Sprint(v.patch), strconv.Quote(v.suffix)}
 	for i, name := range fields {
@@ -229,6 +233,7 @@ func (r repository) confirm(tag, action string) error {
 	return nil
 }
 
+// prepareRelease validates release options and prepares the release and next development commits.
 func (r repository) prepareRelease(opts prepareOptions) error {
 	data, err := os.ReadFile(filepath.Join(r.dir, headerPath))
 	if err != nil {
@@ -264,6 +269,7 @@ func (r repository) prepareRelease(opts prepareOptions) error {
 	return r.prepareWithDocs(release, next, opts.docs)
 }
 
+// git runs a Git command in the repository directory and returns trimmed output.
 func (r repository) git(args ...string) (string, error) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = r.dir
@@ -274,6 +280,7 @@ func (r repository) git(args ...string) (string, error) {
 	return strings.TrimSpace(string(output)), nil
 }
 
+// cleanReleaseBranch verifies a clean checkout on the release branch matching v.
 func (r repository) cleanReleaseBranch(v version) (string, error) {
 	branch, err := r.git("symbolic-ref", "--short", "HEAD")
 	if err != nil {
@@ -315,6 +322,7 @@ func (r repository) cleanReleaseBranch(v version) (string, error) {
 	return branch, nil
 }
 
+// tagVersion parses a release or pre-release Git tag such as v2.1.0 or v2.1.0-rc.1.
 func tagVersion(tag string) (version, error) {
 	if !strings.HasPrefix(tag, "v") {
 		return version{}, fmt.Errorf("expected a tag such as v2.1.0; got %q", tag)
@@ -334,6 +342,7 @@ func tagVersion(tag string) (version, error) {
 	return v, nil
 }
 
+// check verifies that the version declared in the tagged header matches tag.
 func (r repository) check(tag string) error {
 	want, err := tagVersion(tag)
 	if err != nil {
@@ -341,11 +350,7 @@ func (r repository) check(tag string) error {
 	}
 	data, err := r.git("show", "refs/tags/"+tag+":"+headerPath)
 	if err != nil {
-		raw, readErr := os.ReadFile(filepath.Join(r.dir, headerPath))
-		if readErr != nil {
-			return err
-		}
-		data = string(raw)
+		return err
 	}
 	got, err := readVersion(data)
 	if err != nil {
@@ -367,6 +372,7 @@ func (r repository) check(tag string) error {
 	return nil
 }
 
+// commitVersion writes v into the header file and commits it with message.
 func (r repository) commitVersion(data string, v version, message string, extraPaths ...string) error {
 	if err := os.WriteFile(filepath.Join(r.dir, headerPath), []byte(replaceVersion(data, v)), 0o644); err != nil {
 		return err
@@ -378,10 +384,12 @@ func (r repository) commitVersion(data string, v version, message string, extraP
 	return err
 }
 
+// prepare creates the release commit, tag, and next development commit without documentation manifest changes.
 func (r repository) prepare(release, next version) error {
 	return r.prepareWithDocs(release, next, false)
 }
 
+// prepareWithDocs creates the release commit, annotated tag, and next development commit.
 func (r repository) prepareWithDocs(release, next version, docs bool) error {
 	if !next.after(release) {
 		return fmt.Errorf("next development version %s must be newer than %s", next, release)
@@ -454,6 +462,7 @@ func (r repository) prepareWithDocs(release, next version, docs bool) error {
 	return nil
 }
 
+// checkPrepared verifies that HEAD is one development-bump commit ahead of tag.
 func (r repository) checkPrepared(tag string) error {
 	release, err := tagVersion(tag)
 	if err != nil {
@@ -503,6 +512,7 @@ func (r repository) checkPrepared(tag string) error {
 	return nil
 }
 
+// push atomically pushes the release branch and tag to origin after preflight checks.
 func (r repository) push(tag string) error {
 	release, err := tagVersion(tag)
 	if err != nil {
@@ -524,6 +534,7 @@ func (r repository) push(tag string) error {
 	return nil
 }
 
+// pushRelease parses push flags, confirms with the user unless forced, and pushes tag.
 func (r repository) pushRelease(args []string) error {
 	tag := ""
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
