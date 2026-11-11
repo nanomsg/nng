@@ -89,7 +89,7 @@ sfd_start_conn(sfd_listener *l, nni_aio *aio)
 	NNI_ASSERT(l->listen_cnt > 0);
 	fd = l->listen_q[0];
 	for (int i = 1; i < l->listen_cnt; i++) {
-		l->listen_q[i] = l->listen_q[i + 1];
+		l->listen_q[i - 1] = l->listen_q[i];
 	}
 	l->listen_cnt--;
 	if ((rv = nni_sfd_conn_alloc(&c, fd)) != 0) {
