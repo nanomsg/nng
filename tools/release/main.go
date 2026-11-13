@@ -517,6 +517,9 @@ func (r repository) checkPrepared(tag string) error {
 	if next.suffix != "dev" || !next.after(release) {
 		return fmt.Errorf("%s must declare a newer development version; got %s", branch, next)
 	}
+	if err := checkBranchVersionLine(branch, next, "next version"); err != nil {
+		return err
+	}
 	changed, err := r.git("diff", "--name-only", releaseCommit, "HEAD")
 	if err != nil {
 		return err
