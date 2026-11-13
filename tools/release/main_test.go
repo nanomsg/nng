@@ -469,3 +469,30 @@ func TestMaintenanceBranchNng1PrepareAndPush(t *testing.T) {
 		t.Fatalf("expected 1.x release on main to be rejected, got: %v", err)
 	}
 }
+
+func TestCheckPreparedRejectsMismatchedBranchVersionLine(t *testing.T) {
+	r := testRepo(t)
+	gitTest(t, r.dir, "checkout", "-b", "nng1")
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 1, minor: 12, patch: 6, suffix: "dev"}))
+	gitTest(t, r.dir, "commit", "-am", "start 1.12.6-dev on nng1")
+
+	opts, err := parsePrepare([]string{"1.12.6", "--micro", "--force"}, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.prepareRelease(opts); err != nil {
+		t.Fatalf("prepareRelease on nng1 failed: %v", err)
+	}
+	if err := r.checkPrepared("v1.12.6"); err != nil {
+		t.Fatalf("checkPrepared on nng1 failed: %v", err)
+	}
+
+	// Bump HEAD to 2.0.0-dev on nng1, which is after 1.12.6 but violates the nng1 release line.
+	writeTest(t, filepath.Join(r.dir, headerPath), replaceVersion(testHeader, version{major: 2, minor: 0, patch: 0, suffix: "dev"}))
+	gitTest(t, r.dir, "commit", "-a", "--amend", "--no-edit")
+
+	want := "nng1 is for NNG 1.x releases; next version 2.0.0-dev belongs on main"
+	if err := r.checkPrepared("v1.12.6"); err == nil || !strings.Contains(err.Error(), want) {
+		t.Fatalf("checkPrepared(v1.12.6) error = %v, want substring %q", err, want)
+	}
+}
