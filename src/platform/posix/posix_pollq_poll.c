@@ -234,6 +234,13 @@ nni_poll_thr(void *arg)
 			// process adds first
 			nni_mtx_lock(&pq->mtx);
 			nni_plat_pipe_clear(pq->wakerfd);
+			if (pq->closed) {
+				// Not every platform reports POLLHUP on the
+				// waker once its write end is closed (QNX
+				// reports POLLIN only), so stop on the flag.
+				nni_mtx_unlock(&pq->mtx);
+				break;
+			}
 			while ((pfd = nni_list_first(&pq->addq)) != NULL) {
 				nni_list_remove(&pq->addq, pfd);
 				nni_list_append(&pq->pollq, pfd);
@@ -268,6 +275,9 @@ static void
 nni_poll_pq_destroy(nni_posix_pollq *pq)
 {
 	if (pq->init) {
+		nni_mtx_lock(&pq->mtx);
+		pq->closed = true;
+		nni_mtx_unlock(&pq->mtx);
 		nni_plat_pipe_raise(pq->wakewfd);
 
 		(void) close(pq->wakewfd);
