@@ -150,7 +150,7 @@ nni_lmq_resize(nni_lmq *lmq, size_t cap)
 	lmq->lmq_alloc = alloc;
 	lmq->lmq_mask  = alloc - 1;
 	lmq->lmq_len   = len;
-	lmq->lmq_put   = len;
+	lmq->lmq_put   = len & lmq->lmq_mask;
 	lmq->lmq_get   = 0;
 
 	return (0);
