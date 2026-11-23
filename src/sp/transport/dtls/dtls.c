@@ -108,6 +108,7 @@ struct dtls_pipe {
 	nng_udp     *udp; // protected by lower_mtx; NULL when retired
 	nni_pipe    *npipe;
 	nng_sockaddr peer_addr;
+	nng_sockaddr self_addr;
 	uint64_t     id; // hash of peer address
 	uint16_t     peer;
 	uint16_t     proto;
@@ -916,6 +917,10 @@ dtls_pipe_alloc(dtls_ep *ep, dtls_pipe **pp, const nng_sockaddr *sa)
 	// Keep a finite deadline throughout the TLS and SP negotiations.
 	p->expire       = now + ep->conn_expire;
 	p->next_refresh = now + DTLS_PIPE_REFRESH(p);
+
+	// Get this info now so we can avoid system calls later.
+	(void) nng_udp_sockname(ep->udp, &p->self_addr);
+
 	if (!ep->dialer) {
 		if ((rv = nni_listener_hold(ep->nlistener)) != NNG_OK) {
 			nni_pipe_close(p->npipe);
@@ -1392,7 +1397,7 @@ static const nng_sockaddr *
 dtls_pipe_self_addr(void *arg)
 {
 	dtls_pipe *p = arg;
-	return (&p->ep->self_sa);
+	return (&p->self_addr);
 }
 
 static void

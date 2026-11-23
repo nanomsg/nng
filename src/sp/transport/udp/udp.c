@@ -118,6 +118,7 @@ struct udp_pipe {
 	udp_ep        *ep;
 	nni_pipe      *npipe;
 	nng_sockaddr   peer_addr;
+	nng_sockaddr   self_addr;
 	uint16_t       peer;
 	uint16_t       proto;
 	uint64_t       id;
@@ -274,6 +275,9 @@ udp_pipe_start(udp_pipe *p, udp_ep *ep, const nng_sockaddr *sa)
 	p->id        = nng_sockaddr_hash(sa);
 	p->expire = now + (p->dialer ? ep->conn_expire : UDP_PIPE_TIMEOUT(p));
 
+	// Get this info now so we can avoid system calls later.
+	(void) nng_udp_sockname(ep->udp, &p->self_addr);
+
 	return (udp_add_pipe(ep, p));
 }
 
@@ -288,7 +292,7 @@ static const nng_sockaddr *
 udp_pipe_self_addr(void *arg)
 {
 	udp_pipe *p = arg;
-	return (&p->ep->self_sa);
+	return (&p->self_addr);
 }
 
 static void

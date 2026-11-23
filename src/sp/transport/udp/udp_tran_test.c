@@ -89,6 +89,53 @@ test_udp_port_zero_bind(void)
 }
 
 void
+test_udp_pipe_self_addr(void)
+{
+	nng_socket     s1;
+	nng_socket     s2;
+	nng_listener   l;
+	const nng_url *u;
+	int            port;
+	nng_msg       *msg;
+	nng_pipe       p;
+	nng_sockaddr   la;
+	nng_sockaddr   ra;
+
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_listen(s1, "udp://127.0.0.1:0", &l, 0));
+	NUTS_PASS(nng_listener_get_int(l, NNG_OPT_BOUND_PORT, &port));
+	NUTS_TRUE(port != 0);
+	NUTS_PASS(nng_listener_get_url(l, &u));
+	NUTS_PASS(nng_dial_url(s2, u, NULL, 0));
+
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_sendmsg(s2, msg, 0));
+	NUTS_PASS(nng_recvmsg(s1, &msg, 0));
+	p = nng_msg_get_pipe(msg);
+	NUTS_PASS(nng_pipe_self_addr(p, &la));
+	NUTS_TRUE(la.s_family == NNG_AF_INET);
+	NUTS_TRUE(la.s_in.sa_addr == nuts_be32(0x7f000001));
+	NUTS_TRUE(la.s_in.sa_port == nuts_be16((uint16_t) port));
+	NUTS_PASS(nng_pipe_peer_addr(p, &ra));
+	NUTS_TRUE(ra.s_in.sa_port != 0);
+
+	NUTS_PASS(nng_sendmsg(s1, msg, 0));
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	p = nng_msg_get_pipe(msg);
+	NUTS_PASS(nng_pipe_self_addr(p, &la));
+	NUTS_TRUE(la.s_family == NNG_AF_INET);
+	NUTS_TRUE(la.s_in.sa_addr == 0);
+	NUTS_TRUE(la.s_in.sa_port == ra.s_in.sa_port);
+
+	nng_msg_free(msg);
+	NUTS_CLOSE(s2);
+	NUTS_CLOSE(s1);
+}
+
+void
 test_udp_non_local_address(void)
 {
 	nng_socket s1;
@@ -684,6 +731,7 @@ NUTS_TESTS = {
 	{ "udp wild card bind", test_udp_wild_card_bind },
 	{ "udp port zero bind", test_udp_port_zero_bind },
 	{ "udp local address connect", test_udp_local_address_connect },
+	{ "udp pipe self address", test_udp_pipe_self_addr },
 	{ "udp non-local address", test_udp_non_local_address },
 	{ "udp malformed address", test_udp_malformed_address },
 	{ "udp recv max", test_udp_recv_max },
