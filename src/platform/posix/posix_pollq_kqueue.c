@@ -214,6 +214,7 @@ nni_posix_poll_thr(void *arg)
 		struct kevent  evs[NNI_MAX_KQUEUE_EVENTS];
 		nni_posix_pfd *pf;
 		unsigned       revents;
+		bool           reap = false;
 
 		n = kevent(pq->kq, NULL, 0, evs, NNI_MAX_KQUEUE_EVENTS, NULL);
 
@@ -234,7 +235,10 @@ nni_posix_poll_thr(void *arg)
 					return;
 				}
 				nni_plat_pipe_clear(pq->wake_rfd);
-				nni_posix_pollq_reap(pq);
+
+				// Reap after the batch: later events may still
+				// refer to a pfd that reaping would free.
+				reap = true;
 				continue;
 			}
 			pf = (void *) ev->udata;
@@ -245,6 +249,9 @@ nni_posix_poll_thr(void *arg)
 			nni_atomic_and(&pf->events, (int) (~revents));
 
 			pf->cb(pf->arg, revents);
+		}
+		if (reap) {
+			nni_posix_pollq_reap(pq);
 		}
 	}
 }
