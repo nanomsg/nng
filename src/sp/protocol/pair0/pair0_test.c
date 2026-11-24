@@ -472,6 +472,230 @@ test_pair0_poll_writable(void)
 	NUTS_CLOSE(s1);
 }
 
+// Closing a socket while other threads receive or send on it must not hang
+// or crash.  Each round closes the receiver during traffic, then the sender;
+// several workers run rounds in parallel.
+#define PAIR0_CLOSE_RACE_WORKERS 8
+#define PAIR0_CLOSE_RACE_ROUNDS 100
+#define PAIR0_CLOSE_RACE_SCHEME "inproc"
+
+typedef struct {
+	nng_socket rx;
+	nng_socket tx;
+	nng_mtx   *mtx;
+	nng_cv    *cv;
+	bool       traffic; // set after the receiver got its first message
+} pair0_close_race;
+
+static void
+pair0_close_race_send(void *arg)
+{
+	pair0_close_race *r = arg;
+	nng_msg          *m;
+
+	while (nng_msg_alloc(&m, 64) == 0) {
+		if (nng_sendmsg(r->tx, m, 0) != 0) {
+			nng_msg_free(m);
+			return;
+		}
+	}
+}
+
+static void
+pair0_close_race_recv(void *arg)
+{
+	pair0_close_race *r = arg;
+	nng_msg          *m;
+
+	while (nng_recvmsg(r->rx, &m, 0) == 0) {
+		nng_msg_free(m);
+		nng_mtx_lock(r->mtx);
+		r->traffic = true;
+		nng_cv_wake(r->cv);
+		nng_mtx_unlock(r->mtx);
+	}
+}
+
+static void
+pair0_close_race_worker(void *arg)
+{
+	int *failed = arg;
+
+	for (int i = 0; i < PAIR0_CLOSE_RACE_ROUNDS; i++) {
+		pair0_close_race r;
+		nng_thread      *rx_thr = NULL;
+		nng_thread      *tx_thr = NULL;
+		char             addr[NNG_MAXADDRLEN];
+		bool             ok;
+		bool             traffic;
+
+		memset(&r, 0, sizeof(r));
+
+		// NUTS_ADDR uses a static buffer; the workers need their own.
+		nuts_scratch_addr(PAIR0_CLOSE_RACE_SCHEME, sizeof(addr), addr);
+		ok = (nng_mtx_alloc(&r.mtx) == 0) &&
+		    (nng_cv_alloc(&r.cv, r.mtx) == 0) &&
+		    (nng_pair0_open(&r.rx) == 0) &&
+		    (nng_pair0_open(&r.tx) == 0) &&
+		    (nng_listen(r.rx, addr, NULL, 0) == 0) &&
+		    (nng_dial(r.tx, addr, NULL, 0) == 0) &&
+		    (nng_thread_create(&rx_thr, pair0_close_race_recv, &r) ==
+		        0) &&
+		    (nng_thread_create(&tx_thr, pair0_close_race_send, &r) ==
+		        0);
+		if (!ok) {
+			// Closing the sockets stops the threads that started.
+			(*failed)++;
+			nng_socket_close(r.rx);
+			nng_socket_close(r.tx);
+			if (rx_thr != NULL) {
+				nng_thread_destroy(rx_thr);
+			}
+			if (tx_thr != NULL) {
+				nng_thread_destroy(tx_thr);
+			}
+			if (r.cv != NULL) {
+				nng_cv_free(r.cv);
+			}
+			if (r.mtx != NULL) {
+				nng_mtx_free(r.mtx);
+			}
+			return;
+		}
+
+		// Wait for the first message, so the close is during traffic.
+		nng_mtx_lock(r.mtx);
+		nng_time until = nng_clock() + 5000;
+		while (!r.traffic && (nng_cv_until(r.cv, until) == 0)) { }
+		traffic = r.traffic;
+		nng_mtx_unlock(r.mtx);
+		if (!traffic) {
+			(*failed)++; // no traffic: this round tested nothing
+		}
+		nng_msleep(nng_random() % 3);
+		nng_socket_close(r.rx);
+		nng_socket_close(r.tx);
+		nng_thread_destroy(rx_thr); // hangs here without the fix
+		nng_thread_destroy(tx_thr);
+		nng_cv_free(r.cv);
+		nng_mtx_free(r.mtx);
+		if (!traffic) {
+			return; // stop after a failed round
+		}
+	}
+}
+
+static void
+test_pair0_close_during_traffic(void)
+{
+	nng_thread *workers[PAIR0_CLOSE_RACE_WORKERS] = { NULL };
+	int         failed[PAIR0_CLOSE_RACE_WORKERS]  = { 0 };
+	int         started                           = 0;
+
+	// Join the started workers before reporting a failure to start one.
+	for (int i = 0; i < PAIR0_CLOSE_RACE_WORKERS; i++) {
+		if (nng_thread_create(&workers[i], pair0_close_race_worker,
+		        &failed[i]) != 0) {
+			break;
+		}
+		started++;
+	}
+	for (int i = 0; i < PAIR0_CLOSE_RACE_WORKERS; i++) {
+		if (workers[i] != NULL) {
+			nng_thread_destroy(workers[i]);
+		}
+	}
+	NUTS_TRUE(started == PAIR0_CLOSE_RACE_WORKERS);
+	for (int i = 0; i < PAIR0_CLOSE_RACE_WORKERS; i++) {
+		NUTS_TRUE(failed[i] == 0);
+	}
+}
+
+// A socket that keeps sending while its peer pipe is replaced (peers dial,
+// read and close, one after another) must not crash.
+#define PAIR0_RECONNECT_WORKERS 8
+#define PAIR0_RECONNECT_ROUNDS 20
+#define PAIR0_RECONNECT_PEERS 20
+
+static void
+pair0_reconnect_send(void *arg)
+{
+	nng_socket *s = arg;
+	nng_msg    *m;
+
+	while (nng_msg_alloc(&m, 32) == 0) {
+		if (nng_sendmsg(*s, m, 0) != 0) {
+			nng_msg_free(m);
+			return;
+		}
+	}
+}
+
+static void
+pair0_reconnect_worker(void *arg)
+{
+	int *failed = arg;
+
+	for (int i = 0; i < PAIR0_RECONNECT_ROUNDS; i++) {
+		nng_socket  s   = NNG_SOCKET_INITIALIZER;
+		nng_thread *thr = NULL;
+		char        addr[NNG_MAXADDRLEN];
+
+		// NUTS_ADDR uses a static buffer; the workers need their own.
+		nuts_scratch_addr(PAIR0_CLOSE_RACE_SCHEME, sizeof(addr), addr);
+		if ((nng_pair0_open(&s) != 0) ||
+		    (nng_listen(s, addr, NULL, 0) != 0) ||
+		    (nng_thread_create(&thr, pair0_reconnect_send, &s) != 0)) {
+			(*failed)++;
+			nng_socket_close(s);
+			if (thr != NULL) {
+				nng_thread_destroy(thr);
+			}
+			return;
+		}
+		for (int j = 0; j < PAIR0_RECONNECT_PEERS; j++) {
+			nng_socket peer;
+			nng_msg   *m;
+			if (nng_pair0_open(&peer) != 0) {
+				continue;
+			}
+			nng_socket_set_ms(peer, NNG_OPT_RECVTIMEO, 2);
+			if ((nng_dial(peer, addr, NULL, 0) == 0) &&
+			    (nng_recvmsg(peer, &m, 0) == 0)) {
+				nng_msg_free(m);
+			}
+			nng_socket_close(peer);
+		}
+		nng_socket_close(s);
+		nng_thread_destroy(thr);
+	}
+}
+
+static void
+test_pair0_send_during_reconnect(void)
+{
+	nng_thread *workers[PAIR0_RECONNECT_WORKERS] = { NULL };
+	int         failed[PAIR0_RECONNECT_WORKERS]  = { 0 };
+	int         started                          = 0;
+
+	for (int i = 0; i < PAIR0_RECONNECT_WORKERS; i++) {
+		if (nng_thread_create(&workers[i], pair0_reconnect_worker,
+		        &failed[i]) != 0) {
+			break;
+		}
+		started++;
+	}
+	for (int i = 0; i < PAIR0_RECONNECT_WORKERS; i++) {
+		if (workers[i] != NULL) {
+			nng_thread_destroy(workers[i]);
+		}
+	}
+	NUTS_TRUE(started == PAIR0_RECONNECT_WORKERS);
+	for (int i = 0; i < PAIR0_RECONNECT_WORKERS; i++) {
+		NUTS_TRUE(failed[i] == 0);
+	}
+}
+
 NUTS_TESTS = {
 	{ "pair0 identity", test_identity },
 	{ "pair0 cooked", test_cooked },
@@ -490,6 +714,8 @@ NUTS_TESTS = {
 	{ "pair0 recv buffer", test_pair0_recv_buffer },
 	{ "pair0 poll readable", test_pair0_poll_readable },
 	{ "pair0 poll writable", test_pair0_poll_writable },
+	{ "pair0 close during traffic", test_pair0_close_during_traffic },
+	{ "pair0 send during reconnect", test_pair0_send_during_reconnect },
 
 	{ NULL, NULL },
 };

@@ -38,7 +38,7 @@ typedef struct pair1_sock pair1_sock;
 static void pair1_pipe_send_cb(void *);
 static void pair1_pipe_recv_cb(void *);
 static void pair1_pipe_fini(void *);
-static void pair1_send_sched(pair1_sock *);
+static void pair1_send_sched(pair1_sock *, pair1_pipe *);
 static void pair1_pipe_send(pair1_pipe *, nni_msg *);
 
 // pair1_sock is our per-socket protocol private structure.
@@ -56,6 +56,7 @@ struct pair1_sock {
 	nni_pollable   readable;
 	bool           rd_ready; // pipe ready for read
 	bool           wr_ready; // pipe ready for write
+	bool           closed;   // set by pair1_sock_close, under mtx
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item stat_poly;
@@ -295,7 +296,7 @@ pair1_pipe_start(void *arg)
 	s->rd_ready = false;
 	nni_mtx_unlock(&s->mtx);
 
-	pair1_send_sched(s);
+	pair1_send_sched(s, p);
 
 	// And the pipe read of course.
 	nni_pipe_recv(p->pipe, &p->aio_recv);
@@ -360,6 +361,15 @@ pair1_pipe_recv_cb(void *arg)
 
 	nni_mtx_lock(&s->mtx);
 
+	// pair1_pipe_stop may have detached this pipe while this callback
+	// was running; its message can no longer be delivered.
+	if (s->p != p) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_set_msg(&p->aio_recv, NULL);
+		nni_msg_free(msg);
+		return;
+	}
+
 	// if anyone is blocking, then the lmq will be empty, and
 	// we should deliver it there.
 	if ((a = nni_list_first(&s->raq)) != NULL) {
@@ -383,7 +393,7 @@ pair1_pipe_recv_cb(void *arg)
 }
 
 static void
-pair1_send_sched(pair1_sock *s)
+pair1_send_sched(pair1_sock *s, pair1_pipe *from)
 {
 	pair1_pipe *p;
 	nni_msg    *m;
@@ -392,7 +402,9 @@ pair1_send_sched(pair1_sock *s)
 
 	nni_mtx_lock(&s->mtx);
 
-	if ((p = s->p) == NULL) {
+	// pair1_pipe_stop detaches a pipe before stopping its send aio, so a
+	// late callback of an old pipe must not schedule a send on a new one.
+	if (((p = s->p) == NULL) || (p != from)) {
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
@@ -445,7 +457,7 @@ pair1_pipe_send_cb(void *arg)
 		return;
 	}
 
-	pair1_send_sched(p->pair);
+	pair1_send_sched(p->pair, p);
 }
 
 static void
@@ -461,6 +473,10 @@ pair1_sock_close(void *arg)
 	nni_aio    *a;
 	nni_msg    *m;
 	nni_mtx_lock(&s->mtx);
+
+	// The socket stays reachable until nni_sock_close marks it closed;
+	// later receives and sends must fail rather than queue.
+	s->closed = true;
 	while (((a = nni_list_first(&s->raq)) != NULL) ||
 	    ((a = nni_list_first(&s->waq)) != NULL)) {
 		nni_aio_list_remove(a);
@@ -571,6 +587,11 @@ inject:
 #endif
 
 	nni_mtx_lock(&s->mtx);
+	if (s->closed) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
 	if (s->wr_ready) {
 		pair1_pipe *p = s->p;
 		if (nni_lmq_full(&s->wmq)) {
@@ -611,6 +632,11 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 	nni_msg    *m;
 
 	nni_mtx_lock(&s->mtx);
+	if (s->closed) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
 	p = s->p;
 
 	// Buffered read.  If there is a message waiting for us, pick
