@@ -874,10 +874,192 @@ test_ipc_security_descriptor(void)
 	NUTS_CLOSE(s);
 }
 
+// Closing both ends of a connection while messages flow must not hang or
+// crash.  Each round runs request/reply traffic and closes both sockets at
+// the same moment from two threads; several workers run rounds in parallel.
+#define IPC_CLOSE_RACE_WORKERS 8
+#define IPC_CLOSE_RACE_ROUNDS 100
+
+typedef struct {
+	nng_socket rep;
+	nng_socket req;
+	nng_mtx   *mtx;
+	nng_cv    *cv;
+	bool       go;      // tells the close thread to close the req socket
+	bool       traffic; // set after the first reply was received
+} ipc_close_race;
+
+static void
+ipc_close_race_reply(void *arg)
+{
+	ipc_close_race *r = arg;
+	nng_msg        *m;
+	int             rv;
+
+	while (((rv = nng_recvmsg(r->rep, &m, 0)) == 0) ||
+	    (rv == NNG_ETIMEDOUT)) {
+		if ((rv == 0) && (nng_sendmsg(r->rep, m, 0) != 0)) {
+			nng_msg_free(m);
+		}
+	}
+}
+
+static void
+ipc_close_race_request(void *arg)
+{
+	ipc_close_race *r = arg;
+	nng_msg        *m;
+	int             rv;
+
+	while (nng_msg_alloc(&m, 64) == 0) {
+		if (nng_sendmsg(r->req, m, 0) != 0) {
+			nng_msg_free(m);
+			return;
+		}
+		if ((rv = nng_recvmsg(r->req, &m, 0)) == 0) {
+			nng_msg_free(m);
+			nng_mtx_lock(r->mtx);
+			r->traffic = true;
+			nng_cv_wake(r->cv);
+			nng_mtx_unlock(r->mtx);
+		} else if (rv != NNG_ETIMEDOUT) {
+			return;
+		}
+	}
+}
+
+static void
+ipc_close_race_close_req(void *arg)
+{
+	ipc_close_race *r = arg;
+
+	nng_mtx_lock(r->mtx);
+	while (!r->go) {
+		nng_cv_wait(r->cv);
+	}
+	nng_mtx_unlock(r->mtx);
+	nng_socket_close(r->req);
+}
+
+static void
+ipc_close_race_worker(void *arg)
+{
+	int *failed = arg;
+
+	for (int i = 0; i < IPC_CLOSE_RACE_ROUNDS; i++) {
+		ipc_close_race r;
+		nng_thread    *rep_thr   = NULL;
+		nng_thread    *req_thr   = NULL;
+		nng_thread    *close_thr = NULL;
+		char           addr[NNG_MAXADDRLEN];
+		bool           ok;
+		bool           traffic;
+
+		memset(&r, 0, sizeof(r));
+
+		// NUTS_ADDR uses a static buffer; the workers need their own.
+#ifdef NNG_PLATFORM_WINDOWS
+		nuts_scratch_addr("winpipe", sizeof(addr), addr);
+#else
+		nuts_scratch_addr("ipc", sizeof(addr), addr);
+#endif
+		ok = (nng_mtx_alloc(&r.mtx) == 0) &&
+		    (nng_cv_alloc(&r.cv, r.mtx) == 0) &&
+		    (nng_rep0_open(&r.rep) == 0) &&
+		    (nng_req0_open(&r.req) == 0) &&
+		    (nng_socket_set_ms(r.rep, NNG_OPT_RECVTIMEO, 100) == 0) &&
+		    (nng_socket_set_ms(r.req, NNG_OPT_RECVTIMEO, 100) == 0) &&
+		    (nng_listen(r.rep, addr, NULL, 0) == 0) &&
+		    (nng_dial(r.req, addr, NULL, 0) == 0) &&
+		    (nng_thread_create(&rep_thr, ipc_close_race_reply, &r) ==
+		        0) &&
+		    (nng_thread_create(&req_thr, ipc_close_race_request, &r) ==
+		        0) &&
+		    (nng_thread_create(
+		         &close_thr, ipc_close_race_close_req, &r) == 0);
+		if (!ok) {
+			// Closing the sockets stops the threads that started.
+			(*failed)++;
+			nng_socket_close(r.rep);
+			nng_socket_close(r.req);
+			if (rep_thr != NULL) {
+				nng_thread_destroy(rep_thr);
+			}
+			if (req_thr != NULL) {
+				nng_thread_destroy(req_thr);
+			}
+			if (close_thr !=
+			    NULL) { // only set if its start failed
+				nng_thread_destroy(close_thr);
+			}
+			if (r.cv != NULL) {
+				nng_cv_free(r.cv);
+			}
+			if (r.mtx != NULL) {
+				nng_mtx_free(r.mtx);
+			}
+			return;
+		}
+
+		// Wait for the first reply, so the close is during traffic.
+		nng_mtx_lock(r.mtx);
+		nng_time until = nng_clock() + 5000;
+		while (!r.traffic && (nng_cv_until(r.cv, until) == 0)) { }
+		traffic = r.traffic;
+		nng_mtx_unlock(r.mtx);
+		if (!traffic) {
+			(*failed)++; // no traffic: this round tested nothing
+		}
+		nng_msleep(nng_random() % 3);
+
+		nng_mtx_lock(r.mtx);
+		r.go = true;
+		nng_cv_wake(r.cv);
+		nng_mtx_unlock(r.mtx);
+		nng_socket_close(r.rep); // hangs here without the fix
+
+		nng_thread_destroy(close_thr);
+		nng_thread_destroy(rep_thr);
+		nng_thread_destroy(req_thr);
+		nng_cv_free(r.cv);
+		nng_mtx_free(r.mtx);
+		if (!traffic) {
+			return; // stop after a failed round
+		}
+	}
+}
+
+void
+test_ipc_close_during_traffic(void)
+{
+	nng_thread *workers[IPC_CLOSE_RACE_WORKERS] = { NULL };
+	int         failed[IPC_CLOSE_RACE_WORKERS]  = { 0 };
+	int         started                         = 0;
+
+	// Join the started workers before reporting a failure to start one.
+	for (int i = 0; i < IPC_CLOSE_RACE_WORKERS; i++) {
+		if (nng_thread_create(
+		        &workers[i], ipc_close_race_worker, &failed[i]) != 0) {
+			break;
+		}
+		started++;
+	}
+	for (int i = 0; i < IPC_CLOSE_RACE_WORKERS; i++) {
+		if (workers[i] != NULL) {
+			nng_thread_destroy(workers[i]);
+		}
+	}
+	NUTS_TRUE(started == IPC_CLOSE_RACE_WORKERS);
+	for (int i = 0; i < IPC_CLOSE_RACE_WORKERS; i++) {
+		NUTS_TRUE(failed[i] == 0);
+	}
+}
+
 TEST_LIST = {
 #if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_HAVE_UNIX_SOCKETS)
 	{ "ipc unavailable", test_ipc_unavailable },
 	{ "ipc winpipe scheme", test_winpipe_scheme },
+	{ "ipc close during traffic", test_ipc_close_during_traffic },
 #else
 	{ "ipc path too long", test_path_too_long },
 	{ "ipc dialer perms", test_ipc_dialer_perms },
@@ -905,6 +1087,7 @@ TEST_LIST = {
 	{ "ipc winpipe scheme", test_winpipe_scheme },
 	{ "ipc peer id", test_ipc_pipe_peer },
 	{ "ipc security descriptor", test_ipc_security_descriptor },
+	{ "ipc close during traffic", test_ipc_close_during_traffic },
 #endif
 	{ NULL, NULL },
 };
